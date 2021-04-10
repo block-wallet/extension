@@ -1,0 +1,9 @@
+[submodule ".make"]
+	path = .make
+	url = git@github.com:Blank-Wallet/blank-make.git
+[submodule "packages/ui"]
+	path = packages/ui
+	url = git@github.com:Blank-Wallet/extension-ui.git
+[submodule "packages/background"]
+	path = packages/background
+	url = git@github.com:Blank-Wallet/extension-background.git

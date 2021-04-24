@@ -1,0 +1,27 @@
+{
+  "author": "Blank",
+  "background": {
+    "scripts": ["hot-reload.js", "background.js"]
+  },
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_title": "Blank Wallet"
+  },
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "description": "The most private, non-custodial ethereum wallet",
+  "homepage_url": "https://www.goblank.io/",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "manifest_version": 2,
+  "name": "Blank Wallet",
+  "permissions": ["storage", "unlimitedStorage", "notifications"],
+  "short_name": "Blank",
+  "version": "0.1.0",
+  "web_accessible_resources": [
+    "snarks/tornado/tornadoProvingKey.bin",
+    "snarks/tornado/tornado.json"
+  ]
+}

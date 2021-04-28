@@ -6,11 +6,21 @@ process.env.BABEL_ENV = 'production'
 process.env.NODE_ENV = 'production'
 
 const plugins = [
-  new Dotenv(),
+  new Dotenv(
+    {
+      path: "./packages/background/.env"
+    }
+  ),
   new webpack.IgnorePlugin(/^worker_threads$/),
   new webpack.IgnorePlugin(/^fs$/),
+  new webpack.BannerPlugin({
+    banner: 'var window = self;',
+    raw: true,
+    entryOnly: true,
+    test: /\.worker.js?$/,
+  }),
 ]
-console.log(__dirname)
+
 module.exports = {
   mode: 'production',
   entry: './packages/background/src/background.ts',

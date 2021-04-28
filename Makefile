@@ -16,10 +16,13 @@ test/background:
 
 install:
 	@yarn install
+	@cd packages/background && yarn install
+	@cd packages/ui && yarn install
+	
 
 cp/snarks:
-	mkdir -p dist/snarks/tornado
-	cp utils/tornado/* dist/snarks/tornado
+	@mkdir -p dist/snarks/tornado
+	@cp utils/tornado/* dist/snarks/tornado
 	
 ### build background
 build/background:
@@ -29,16 +32,18 @@ build/background:
 		npx webpack --config ./scripts/background/webpack.config.js; \
 	fi
 
-build:
-	echo 'Building app...'
-	rm -rf dist
-	cd packages/ui/ && yarn build:tailwind
-	cd packages/ui/ && node ../../scripts/ui/scripts/build.js
-	mkdir -p dist
-	cp -r build/* dist
-	rm -rf build
-	cp dist/index.html dist/tab.html
-	mv dist/index.html dist/popup.html
+build/ui:
+	@echo 'Building app...'
+	@rm -rf dist
+	@cd packages/ui/ && yarn build:tailwind
+	@cd packages/ui/ && node ../../scripts/ui/scripts/build.js
+	@mkdir -p dist
+	@cp -r packages/ui/build/* dist
+	@rm -rf packages/ui/build
+	@cp dist/index.html dist/tab.html
+	@mv dist/index.html dist/popup.html
 
-	@$(MAKE) build/background
-	@$(MAKE) cp/snarks
+build:
+	@$(MAKE) build/ui --no-print-directory
+	@$(MAKE) build/background --no-print-directory
+	@$(MAKE) cp/snarks --no-print-directory

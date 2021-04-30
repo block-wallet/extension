@@ -11,7 +11,6 @@ test:
 	$(MAKE) test/background
 
 test/background:
-	#@nyc --reporter=text mocha
 	cd packages/background/ && yarn nyc -a --reporter=html --reporter=text mocha './test' --require esm  --require isomorphic-fetch --require jsdom-global/register --require ts-node/register 'test/**/*.test.ts' --exit
 
 install:

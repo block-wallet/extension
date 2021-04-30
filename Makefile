@@ -26,7 +26,7 @@ cp/snarks:
 	
 ### build background
 build/background:
-	if [ $(BRANCH) != "master" ]; then \
+	@if [ $(BRANCH) != "master" ]; then \
 		npx webpack --config ./scripts/background/webpack.dev.js; \
 	else \
 		npx webpack --config ./scripts/background/webpack.config.js; \

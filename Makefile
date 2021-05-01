@@ -6,7 +6,6 @@ INLINE_RUNTIME_CHUNK	:= false
 GENERATE_SOURCEMAP		:= false
 TS_NODE_PROJECT			:= tsconfig.json
 
-
 test:
 	$(MAKE) test/background
 

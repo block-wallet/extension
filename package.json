@@ -86,9 +86,5 @@
     "webpack-merge": "^5.7.3",
     "workbox-webpack-plugin": "5.1.4",
     "worker-loader": "^3.0.8"
-  },
-  "dependencies": {
-    "-": "^0.0.1",
-    "D": "^1.0.0"
   }
 }

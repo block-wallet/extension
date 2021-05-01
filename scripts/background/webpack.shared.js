@@ -22,12 +22,12 @@ const plugins = [
     entryOnly: true,
     test: /\.worker.js?$/,
   }),
-  new ESLintWebpackPlugin(
-    {
-      extensions: ["ts"],
-      eslintPath: require.resolve("eslint")
-    }
-  ),
+  // new ESLintWebpackPlugin(
+  //   {
+  //     extensions: ["ts"],
+  //     eslintPath: require.resolve("eslint"),
+  //   }
+  // ),
   new PrettierPlugin()
 ]
 

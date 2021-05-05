@@ -1,14 +1,18 @@
 # Blank Wallet Extension
 
-## How to clone 
-The first time you need to type
+# Guideline
 
-`git clone https://github.com/Blank-Wallet/extension`
+See [guideline](docs/guideline.md)
+# 🤦 TL;DR
 
-`git submodule update --init --recursive`
+```bash
+git clone https://github.com/Blank-Wallet/extension
+cd extension
+git submodule update --init --recursive
+make git/branch/checkout BRANCH=master
+cd packages/background && cp env.orig .env
+```
 
-## How to build
+> 👉 Complete the variables value inside .env
 
-Run in the root folder
-`make build`
 

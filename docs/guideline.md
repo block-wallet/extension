@@ -80,7 +80,7 @@ To commit your change(s) in any number of submodule(s)/package(s) simply run:
 make git/commit-push/all MSG="<my commit message>"
 ```
  
-This will **commit** and **push** changes for each submodule/package under [packages](packages) _automatically_.
+This will **commit** and **push** changes for each submodule/package under [packages](../packages) _automatically_.
  
 ### ⤵ Updating from github
  
@@ -93,7 +93,7 @@ To pull down changes from github use:
 make update BRANCH=<branch name>
 ```
  
-This will **pull** down changes for each submodule under [packages](packages) _automatically_.
+This will **pull** down changes for each submodule under [packages](../packages) _automatically_.
  
 ### 🆕 Creating a new branch
  
@@ -103,13 +103,13 @@ When you are working on something that does not relate to an existing branch, cr
 make git/branch/new BRANCH=<feat/some-awesome-feature>
 ```
  
-This will create the new branch inside of all [packages](packages) _automatically_.
+This will create the new branch inside of all [packages](../packages) _automatically_.
  
 When you've made your changes, and you're ready to commit see: [Committing changes locally](#-committing-changes-locally)
  
 ### 📇 Switching branches
  
-This will **checkout** the desired branch for each submodule/package under [packages](packages) _automatically_.
+This will **checkout** the desired branch for each submodule/package under [packages](../packages) _automatically_.
  
 ```bash
 make git/branch/checkout BRANCH=<branch name>

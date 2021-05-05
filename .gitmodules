@@ -7,3 +7,6 @@
 [submodule "packages/background"]
 	path = packages/background
 	url = git@github.com:Blank-Wallet/extension-background.git
+[submodule "packages/provider"]
+	path = packages/provider
+	url = git@github.com:Blank-Wallet/extension-provider.git

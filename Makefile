@@ -13,6 +13,9 @@ test:
 
 
 install:
+	@cd packages/background && rm -rf node_modules
+	@cd packages/ui && rm -rf node_modules
+	@cd packages/provider && rm -rf node_modules
 	@cd packages/background && yarn install
 	@cd packages/ui && yarn install
 	@cd packages/provider && yarn install

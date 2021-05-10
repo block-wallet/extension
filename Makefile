@@ -15,6 +15,7 @@ test:
 install:
 	@cd packages/background && yarn install
 	@cd packages/ui && yarn install
+	@cd packages/provider && yarn install
 	
 
 cp/snarks:

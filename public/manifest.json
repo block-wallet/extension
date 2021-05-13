@@ -44,6 +44,6 @@
   "web_accessible_resources": [
     "snarks/tornado/tornadoProvingKey.bin",
     "snarks/tornado/tornado.json",
-    "web3.js"
+    "blankProvider.js"
   ]
 }

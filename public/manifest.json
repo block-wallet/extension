@@ -17,7 +17,15 @@
   },
   "manifest_version": 2,
   "name": "Blank Wallet",
-  "permissions": ["storage", "unlimitedStorage", "notifications"],
+  "permissions": [
+    "storage", 
+    "notifications",
+    "https://*.infura.io/*",
+    "https://*.etherscan.io/*",
+    "https://*.bscscan.com/*",
+    "https://*.coingecko.com/*",
+    "https://*.goblank.io/*"
+  ],
   "short_name": "Blank",
   "version": "0.1.0",
   "web_accessible_resources": [

@@ -9,12 +9,19 @@ GENERATE_SOURCEMAP		:= false
 TS_NODE_PROJECT			:= tsconfig.json
 
 
+depcheck:
+	@cd packages/background && npx depcheck
+	@cd packages/ui && npx depcheck
 
 test/background:
 	@cd packages/background && $(MAKE) test/background
 
+test/ui:
+	@cd packages/ui && $(MAKE) test/ui
+
 test:
 	$(MAKE) test/background
+	$(MAKE) test/ui
 
 
 install:

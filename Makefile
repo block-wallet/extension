@@ -37,7 +37,13 @@ cp/snarks:
 	@mkdir -p dist/snarks/tornado
 	@cp utils/tornado/* dist/snarks/tornado
 
-build:
+build/ui:
 	@cd packages/ui && $(MAKE) build/ui --no-print-directory
+
+build/background:
 	@cd packages/background && $(MAKE) build/background --no-print-directory
+
+build:
+	@$(MAKE) build/ui --no-print-directory
+	@$(MAKE) build/background --no-print-directory
 	@$(MAKE) cp/snarks --no-print-directory

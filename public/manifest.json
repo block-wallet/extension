@@ -20,11 +20,17 @@
   "permissions": [
     "storage", 
     "notifications",
+    "https://*.goblank.io/*",
     "https://*.infura.io/*",
     "https://*.etherscan.io/*",
     "https://*.bscscan.com/*",
-    "https://*.coingecko.com/*",
-    "https://*.goblank.io/*"
+    "https://api.coingecko.com/api/*",
+    "https://ethgasstation.info/json/ethgasAPI.json",
+    "https://gas-oracle.zoltu.io/",
+    "https://www.etherchain.org/api/gasPriceOracle",
+    "https://gasprice.poa.network/",
+    "https://www.gasnow.org/api/v3/gas/price",
+    "https://api.anyblock.tools/ethereum/latest-minimum-gasprice"
   ],
   "short_name": "Blank",
   "version": "0.1.0",

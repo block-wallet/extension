@@ -25,7 +25,8 @@
   "manifest_version": 2,
   "name": "Blank Wallet",
   "permissions": [
-    "storage", 
+    "activeTab",
+    "storage",
     "notifications",
     "https://*.goblank.io/*",
     "https://*.infura.io/*",

@@ -3,6 +3,13 @@
   "background": {
     "scripts": ["hot-reload.js", "background.js"]
   },
+  "content_scripts": [
+    {
+      "js": ["content.js"],
+      "matches": ["http://*/*", "https://*/*"],
+      "run_at": "document_start"
+    }
+  ],
   "browser_action": {
     "default_popup": "popup.html",
     "default_title": "Blank Wallet"
@@ -18,7 +25,8 @@
   "manifest_version": 2,
   "name": "Blank Wallet",
   "permissions": [
-    "storage", 
+    "activeTab",
+    "storage",
     "notifications",
     "https://*.goblank.io/*",
     "https://*.infura.io/*",
@@ -36,6 +44,7 @@
   "version": "0.1.0",
   "web_accessible_resources": [
     "snarks/tornado/tornadoProvingKey.bin",
-    "snarks/tornado/tornado.json"
+    "snarks/tornado/tornado.json",
+    "blankProvider.js"
   ]
 }

@@ -14,7 +14,6 @@
     "default_popup": "popup.html",
     "default_title": "Blank Wallet"
   },
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "description": "The most private, non-custodial ethereum wallet",
   "homepage_url": "https://www.goblank.io/",
   "icons": {

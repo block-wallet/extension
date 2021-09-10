@@ -47,7 +47,7 @@ build/provider:
 	@cd packages/provider && $(MAKE) build/provider --no-print-directory
 
 build:
-	@$(MAKE) build/ui --no-print-directory
 	@$(MAKE) build/background --no-print-directory
 	@$(MAKE) build/provider --no-print-directory
+	@$(MAKE) build/ui --no-print-directory
 	@$(MAKE) cp/snarks --no-print-directory

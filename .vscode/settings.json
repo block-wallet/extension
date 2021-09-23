@@ -1,5 +1,5 @@
 {
     "editor.formatOnSave": true,
     "files.eol": "\n",
-    "prettier.useEditorConfig": true,
+    "prettier.useEditorConfig": true
 }

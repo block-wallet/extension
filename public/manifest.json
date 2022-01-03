@@ -1,49 +1,43 @@
 {
-  "author": "Blank",
-  "background": {
-    "scripts": ["hot-reload.js", "background.js"]
-  },
-  "content_scripts": [
-    {
-      "js": ["content.js"],
-      "matches": ["http://*/*", "https://*/*"],
-      "run_at": "document_start"
-    }
-  ],
-  "browser_action": {
-    "default_popup": "popup.html",
-    "default_title": "Blank Wallet"
-  },
-  "description": "The most private, non-custodial ethereum wallet",
-  "homepage_url": "https://www.goblank.io/",
-  "icons": {
-    "16": "icons/icon-16.png",
-    "48": "icons/icon-48.png",
-    "128": "icons/icon-128.png"
-  },
-  "manifest_version": 2,
-  "name": "Blank Wallet",
-  "permissions": [
-    "activeTab",
-    "storage",
-    "notifications",
-    "https://*.goblank.io/*",
-    "https://*.infura.io/*",
-    "https://*.etherscan.io/*",
-    "https://*.bscscan.com/*",
-    "https://api.coingecko.com/api/*",
-    "https://ethgasstation.info/json/ethgasAPI.json",
-    "https://gas-oracle.zoltu.io/",
-    "https://www.etherchain.org/api/gasPriceOracle",
-    "https://gasprice.poa.network/",
-    "https://www.gasnow.org/api/v3/gas/price",
-    "https://api.anyblock.tools/ethereum/latest-minimum-gasprice"
-  ],
-  "short_name": "Blank",
-  "version": "0.1.0",
-  "web_accessible_resources": [
-    "snarks/tornado/tornadoProvingKey.bin",
-    "snarks/tornado/tornado.json",
-    "blankProvider.js"
-  ]
+    "author": "Blank",
+    "background": {
+        "scripts": ["hot-reload.js", "background.js"]
+    },
+    "content_scripts": [
+        {
+            "js": ["content.js"],
+            "matches": ["http://*/*", "https://*/*"],
+            "run_at": "document_start"
+        }
+    ],
+    "browser_action": {
+        "default_popup": "popup.html",
+        "default_title": "Blank Wallet"
+    },
+    "description": "The most private, non-custodial ethereum wallet",
+    "homepage_url": "https://www.goblank.io/",
+    "icons": {
+        "16": "icons/icon-16.png",
+        "48": "icons/icon-48.png",
+        "128": "icons/icon-128.png"
+    },
+    "manifest_version": 2,
+    "name": "Blank Wallet",
+    "permissions": [
+        "activeTab",
+        "storage",
+        "notifications",
+        "https://*.goblank.io/*",
+        "https://*.infura.io/*",
+        "https://*.etherscan.io/*",
+        "https://*.bscscan.com/*",
+        "https://*.polygonscan.com/*"
+    ],
+    "short_name": "Blank",
+    "version": "0.1.1",
+    "web_accessible_resources": [
+        "snarks/tornado/tornadoProvingKey.bin",
+        "snarks/tornado/tornado.json",
+        "blankProvider.js"
+    ]
 }

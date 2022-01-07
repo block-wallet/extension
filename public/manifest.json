@@ -21,6 +21,7 @@
         "48": "icons/icon-48.png",
         "128": "icons/icon-128.png"
     },
+    "content_security_policy": "script-src 'self' 'wasm-eval'; object-src 'self'",
     "manifest_version": 2,
     "name": "Blank Wallet",
     "permissions": [

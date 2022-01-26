@@ -1,12 +1,12 @@
 [submodule ".make"]
 	path = .make
-	url = git@github.com:Blank-Wallet/blank-make.git
+	url = git@github.com:Block-Wallet/block-make.git
 [submodule "packages/ui"]
 	path = packages/ui
-	url = git@github.com:Blank-Wallet/extension-ui.git
+	url = git@github.com:Block-Wallet/extension-ui.git
 [submodule "packages/background"]
 	path = packages/background
-	url = git@github.com:Blank-Wallet/extension-background.git
+	url = git@github.com:Block-Wallet/extension-background.git
 [submodule "packages/provider"]
 	path = packages/provider
-	url = git@github.com:Blank-Wallet/extension-provider.git
+	url = git@github.com:Block-Wallet/extension-provider.git

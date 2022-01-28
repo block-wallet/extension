@@ -1,5 +1,5 @@
 {
-    "author": "Blank",
+    "author": "BlockWallet",
     "background": {
         "scripts": ["hot-reload.js", "background.js"]
     },
@@ -12,10 +12,10 @@
     ],
     "browser_action": {
         "default_popup": "popup.html",
-        "default_title": "Blank Wallet"
+        "default_title": "BlockWallet"
     },
-    "description": "The most private, non-custodial ethereum wallet",
-    "homepage_url": "https://www.goblank.io/",
+    "description": "The most private, non-custodial cryptocurrency wallet",
+    "homepage_url": "https://www.blockwallet.io/",
     "icons": {
         "16": "icons/icon-16.png",
         "48": "icons/icon-48.png",
@@ -23,7 +23,7 @@
     },
     "content_security_policy": "script-src 'self' 'wasm-eval'; object-src 'self'",
     "manifest_version": 2,
-    "name": "Blank Wallet",
+    "name": "BlockWallet",
     "permissions": [
         "activeTab",
         "storage",
@@ -33,7 +33,7 @@
         "https://*.bscscan.com/*",
         "https://*.polygonscan.com/*"
     ],
-    "short_name": "Blank",
+    "short_name": "BlockWallet",
     "version": "0.1.2",
     "web_accessible_resources": [
         "snarks/tornado/tornadoProvingKey.bin",

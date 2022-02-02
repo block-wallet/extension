@@ -46,8 +46,12 @@ build/background:
 build/provider:
 	@cd packages/provider && $(MAKE) build/provider --no-print-directory
 
+cp/release-notes:
+	@cp release-notes.json dist
+
 build:
 	@$(MAKE) build/background --no-print-directory
 	@$(MAKE) build/provider --no-print-directory
 	@$(MAKE) build/ui --no-print-directory
 	@$(MAKE) cp/snarks --no-print-directory
+	@$(MAKE) cp/release-notes --no-print-directory

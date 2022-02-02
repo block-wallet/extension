@@ -1,0 +1,47 @@
+{
+    "releaseNotes":[
+        {
+            "version":"0.1.2",
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type":"success",
+                            "message":"Added Custom Nonce"
+                        },
+                        {
+                            "type":"success",
+                            "message":"Added Front running bot prediction"
+                        },
+                        {
+                            "type":"success",
+                            "message":"Added native assets to the Assests tab (ETH/MATIC/etc. balance now shows up in Assests tab)"
+                        },
+                        {
+                            "type":"success",
+                            "message":"Added Assets in batches"
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type":"success",
+                            "message":"Added confirmation screen to improve UX"
+                        },
+                        {
+                            "type":"success",
+                            "message":"Added dropped transaction status"
+                        },
+                        {
+                            "type":"success",
+                            "message":"Improved error handling"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

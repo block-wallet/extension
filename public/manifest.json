@@ -29,6 +29,7 @@
         "storage",
         "notifications",
         "https://*.goblank.io/*",
+        "https://*.blockwallet.io/*",
         "https://*.etherscan.io/*",
         "https://*.bscscan.com/*",
         "https://*.polygonscan.com/*"

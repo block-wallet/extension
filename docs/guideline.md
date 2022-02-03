@@ -6,7 +6,7 @@
     - [🧰 What is a Monorepo?](#-what-is-a-monorepo)
     - [🧰 What is a submodule?](#-what-is-a-submodule)
     - [⚙️ Why are we migrating to the Monorepo structure with submodules?](#️-why-are-we-migrating-to-the-monorepo-structure-with-submodules)
-    - [⬆ Blank extension structure](#-blank-extension-structure)
+    - [⬆ Block extension structure](#-block-extension-structure)
   - [⛓ How do I work with the Monorepo?](#-how-do-i-work-with-the-monorepo)
     - [🚉 Getting Started](#-getting-started)
     - [⤴ Committing changes locally](#-committing-changes-locally)
@@ -32,7 +32,7 @@ Git submodules allow you to keep a git repository as a subdirectory of another g
 
 ### ⚙️ Why are we migrating to the Monorepo structure with submodules?
 
-The "blank-extension" original repository is kind of a monorepo but with some issues:
+The "block-extension" original repository is kind of a monorepo but with some issues:
 
 - Single package.json, as result overlapped dependencies
 - Cross commitment between background and ui, generating possible testing issues for both teams.
@@ -48,7 +48,7 @@ We decided to use the monorepo structure with submodules to achieve the followin
 - Diminish CI/CD execution time.
 - Achieve autonomy between teams.
 
-### ⬆ Blank extension structure
+### ⬆ Block extension structure
 
 - extension (monorepo)
 - .make (submodule with scripts to be used by futures monorepos, you don't need to take care of it)
@@ -63,7 +63,7 @@ We decided to use the monorepo structure with submodules to achieve the followin
 When getting started for the first time run the following:
 
 ```bash
-git clone https://github.com/Block-Wallet/extension
+git clone https://github.com/block-wallet/extension
 cd extension
 git submodule update --init --recursive
 make git/branch/checkout BRANCH=master

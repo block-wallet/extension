@@ -34,7 +34,7 @@
         "https://*.polygonscan.com/*"
     ],
     "short_name": "BlockWallet",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "web_accessible_resources": [
         "snarks/tornado/tornadoProvingKey.bin",
         "snarks/tornado/tornado.json",

@@ -50,6 +50,7 @@ cp/release-notes:
 	@cp release-notes.json dist
 
 build:
+	@rm -Rf dist/
 	@$(MAKE) build/background --no-print-directory
 	@$(MAKE) build/provider --no-print-directory
 	@$(MAKE) build/ui --no-print-directory

@@ -7,6 +7,8 @@ MODULES					:= $(shell ls $(MODULES_DIR))
 INLINE_RUNTIME_CHUNK	:= false
 GENERATE_SOURCEMAP		:= false
 TS_NODE_PROJECT			:= tsconfig.json
+ENVIRONMENT				?= dev
+
 
 
 depcheck:
@@ -51,7 +53,7 @@ cp/release-notes:
 
 build:
 	@rm -Rf dist/
-	@$(MAKE) build/background --no-print-directory
+	@$(MAKE) ENVIRONMENT=$(ENVIRONMENT) build/background --no-print-directory
 	@$(MAKE) build/provider --no-print-directory
 	@$(MAKE) build/ui --no-print-directory
 	@$(MAKE) cp/snarks --no-print-directory

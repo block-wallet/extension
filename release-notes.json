@@ -1,3 +1,39 @@
 {
-    "releaseNotes":[]
+    "releaseNotes": [
+        {
+            "version": "0.1.6",
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added support for certain DApp requests - BlockWallet now supports many new DApps!"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added feature to speed-up or cancel pending transactions"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added asset view"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added confirmation and error screens across the app, improving UX"
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Multiple bug fixes"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
 }

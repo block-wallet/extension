@@ -34,6 +34,37 @@
                     ]
                 }
             ]
+        },
+        {
+            "version": "0.1.7",
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added an about page"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improve user flow for the address book"
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Fix Tornado errors"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Fix several visual bugs"
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

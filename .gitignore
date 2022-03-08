@@ -40,4 +40,5 @@ package-lock.json
 
 .idea
 
-blank-extension.zip
+block-extension.zip
+release-notes.example

@@ -74,4 +74,4 @@ build/prod-zip:
 	@$(MAKE) build/ui --no-print-directory
 	@$(MAKE) cp/snarks --no-print-directory
 	@$(MAKE) cp/release-notes --no-print-directory
-	@zip -r -D blank-extension dist/
+	@zip -r -D block-extension.zip dist/

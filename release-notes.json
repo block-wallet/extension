@@ -43,6 +43,10 @@
                     "notes": [
                         {
                             "type": "success",
+                            "message": "Added feature to turn off BlockWallet being the default wallet in the settings. Now also other browser wallets can be used!"
+                        },
+                        {
+                            "type": "success",
                             "message": "Added an about page"
                         },
                         {

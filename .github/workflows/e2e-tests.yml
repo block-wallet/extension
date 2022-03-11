@@ -39,9 +39,9 @@ jobs:
 
       - name: Checkout monorepo
         uses: actions/checkout@v2
-
-      - name: Download submodules
-        run: git submodule update --init --recursive
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
 
       - name: Dependency UI cache
         uses: actions/cache@v2

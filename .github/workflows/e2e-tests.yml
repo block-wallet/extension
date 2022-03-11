@@ -41,6 +41,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: "true"
+          token: ${{ secrets.USER_PAT }}:${{ secrets.PAT }}
 
       - name: Dependency UI cache
         uses: actions/cache@v2

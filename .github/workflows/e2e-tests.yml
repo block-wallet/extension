@@ -39,7 +39,8 @@ jobs:
 
       - name: Checkout monorepo
         uses: actions/checkout@v2
-        submodules: true
+        with:
+          submodules: "true"
 
       - name: Dependency UI cache
         uses: actions/cache@v2

@@ -39,6 +39,8 @@ jobs:
 
       - name: Checkout monorepo
         uses: actions/checkout@v2
+
+      - name: Download submodules
         run: git submodule update --init --recursive
 
       - name: Dependency UI cache

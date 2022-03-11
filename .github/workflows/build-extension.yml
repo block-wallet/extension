@@ -1,0 +1,156 @@
+name: Build extension workflow
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: false
+        type: string
+    secrets:
+      USER_PAT:
+        required: true
+      PAT:
+        required: true
+
+jobs:
+  build-extension:
+    runs-on: [self-hosted]
+    env:
+      GH_ACCESS_TOKEN: ${{ secrets.USER_PAT }}:${{ secrets.PAT }}
+    steps:
+      - name: Extract branch name
+        shell: bash
+        run: echo "::set-output name=branch::$(echo ${{ inputs.ref }})"
+        id: current_branch
+
+      - name: Configure git
+        run: git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
+
+      - run: echo "::set-output name=branch::$(git ls-remote https://${{ secrets.USER_PAT }}:${{ secrets.PAT }}@github.com/block-wallet/extension.git ${{ steps.current_branch.outputs.branch }})"
+        id: monorepo-branch
+
+      - run: echo "::set-output name=branch::$(git ls-remote https://${{ secrets.USER_PAT }}:${{ secrets.PAT }}@github.com/block-wallet/extension-provider.git ${{ steps.current_branch.outputs.branch }})"
+        id: provider-branch
+
+      - run: echo "::set-output name=branch::$(git ls-remote https://${{ secrets.USER_PAT }}:${{ secrets.PAT }}@github.com/block-wallet/extension-ui.git ${{ steps.current_branch.outputs.branch }})"
+        id: ui-branch
+
+      - run: echo "::set-output name=branch::$(git ls-remote https://${{ secrets.USER_PAT }}:${{ secrets.PAT }}@github.com/block-wallet/extension-background.git ${{ steps.current_branch.outputs.branch }})"
+        id: background-branch
+
+      - name: Checkout monorepo
+        uses: actions/checkout@v2
+        if: ${{ (steps.monorepo-branch.outputs.branch == '') }}
+        with:
+          repository: block-wallet/extension
+          ref: refs/heads/master
+          token: ${{ secrets.PAT }}
+
+      - name: Checkout ui
+        uses: actions/checkout@v2
+        if: ${{ (steps.ui-branch.outputs.branch == '') }}
+        with:
+          repository: block-wallet/extension-ui
+          ref: refs/heads/master
+          path: packages/ui/
+          token: ${{ secrets.PAT }}
+
+      - name: Checkout provider
+        uses: actions/checkout@v2
+        if: ${{ (steps.provider-branch.outputs.branch == '') }}
+        with:
+          repository: block-wallet/extension-provider
+          ref: refs/heads/master
+          path: packages/provider/
+          token: ${{ secrets.PAT }}
+
+      - name: Checkout monorepo - feature branch
+        uses: actions/checkout@v2
+        if: ${{ (steps.monorepo-branch.outputs.branch != '') }}
+        with:
+          repository: block-wallet/extension
+          ref: ${{ steps.current_branch.outputs.branch }}
+          token: ${{ secrets.PAT }}
+
+      - name: Checkout ui - feature branch
+        uses: actions/checkout@v2
+        if: ${{ (steps.ui-branch.outputs.branch != '') }}
+        with:
+          repository: block-wallet/extension-ui
+          ref: ${{ steps.current_branch.outputs.branch }}
+          path: packages/ui/
+          token: ${{ secrets.PAT }}
+
+      - name: Checkout provider - feature branch
+        uses: actions/checkout@v2
+        if: ${{ (steps.provider-branch.outputs.branch != '') }}
+        with:
+          repository: block-wallet/extension-provider
+          ref: ${{ github.head_ref }}
+          path: packages/provider/
+          token: ${{ secrets.PAT }}
+
+      - name: Checkout background - feature branch
+        uses: actions/checkout@v2
+        if: ${{ (steps.background-branch.outputs.branch != '') }}
+        with:
+          repository: block-wallet/extension-background
+          ref: ${{ steps.current_branch.outputs.branch }}
+          path: packages/background/
+          token: ${{ secrets.PAT }}
+
+      - name: Checkout make scripts
+        uses: actions/checkout@v2
+        with:
+          repository: block-wallet/block-make
+          ref: refs/heads/main
+          path: .make
+          token: ${{ secrets.PAT }}
+
+      - name: Dependency UI cache
+        uses: actions/cache@v2
+        id: cache-ui
+        with:
+          key: background-ci-${{ runner.os }}-${{ hashFiles('packages/ui/package.json') }}
+          path: "packages/ui/node_modules"
+
+      - name: Dependency provider cache
+        uses: actions/cache@v2
+        id: cache-provider
+        with:
+          key: background-ci-${{ runner.os }}-${{ hashFiles('packages/provider/package.json') }}
+          path: "packages/provider/node_modules"
+
+      - name: Dependency background cache
+        if: ${{ github.event.inputs.cache != 'true' }}
+        uses: actions/cache@v2
+        id: cache-background
+        with:
+          key: background-ci-${{ runner.os }}-${{ hashFiles('packages/background/package.json') }}
+          path: "packages/background/node_modules"
+
+      - name: Install UI dependencies
+        if: ${{ (steps.cache-ui.outputs.cache-hit != 'true') || (github.event.inputs.cache == 'true') }}
+        run: cd packages/ui/ && yarn install --cache-folder .ui-cache
+
+      - name: Install background dependencies
+        if: ${{ (steps.cache-background.outputs.cache-hit != 'true') || (github.event.inputs.cache == 'true') }}
+        run: cd packages/background/ && yarn install --cache-folder .background-cache
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+
+      - name: Install provider dependencies
+        if: ${{ (steps.cache-provider.outputs.cache-hit != 'true') || (github.event.inputs.cache == 'true') }}
+        run: cd packages/provider/ && yarn install --cache-folder .provider-cache
+
+      - name: Build extension
+        run: make build/prod
+        env:
+          CI: false
+
+      - name: Save extension folder
+        uses: actions/upload-artifact@v2
+        with:
+          name: blockwallet-extension
+          if-no-files-found: error
+          path: dist

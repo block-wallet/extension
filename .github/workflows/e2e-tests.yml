@@ -131,7 +131,7 @@ jobs:
       - name: "UI Tests - Chrome"
         run: yarn run test:e2e
         env:
-          ETHERSCAN_KEY: RV8AXRT2ITEFMK3HRTX6DQZQCWB7QA6ZHD
+          ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
           # Recommended: pass the GitHub token lets this action correctly
           # determine the unique run id necessary to re-run the checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

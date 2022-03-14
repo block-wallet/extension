@@ -1,22 +1,18 @@
 {
     "author": "BlockWallet",
     "background": {
-        "scripts": [
-            "hot-reload.js",
-            "background.js"
-        ]
+        "scripts": ["hot-reload.js", "background.js"]
     },
     "content_scripts": [
         {
-            "js": [
-                "content.js"
-            ],
-            "matches": [
-                "http://*/*",
-                "https://*/*"
-            ],
+            "js": ["content.js"],
+            "matches": ["http://*/*", "https://*/*"],
             "run_at": "document_start",
             "all_frames": true
+        },
+        {
+            "matches": ["*://connect.trezor.io/*/popup.html"],
+            "js": ["trezor/content-script.js"]
         }
     ],
     "browser_action": {

@@ -39,9 +39,33 @@ jobs:
 
       - name: Checkout monorepo
         uses: actions/checkout@v2
+
+      - name: Checkout ui
+        uses: actions/checkout@v2
+        if: ${{ (steps.ui-branch.outputs.branch == '') }}
         with:
+          repository: block-wallet/extension-ui
+          ref: refs/heads/master
+          path: packages/ui/
           token: ${{ secrets.PAT }}
-          submodules: recursive
+
+      - name: Checkout provider
+        uses: actions/checkout@v2
+        if: ${{ (steps.provider-branch.outputs.branch == '') }}
+        with:
+          repository: block-wallet/extension-provider
+          ref: refs/heads/master
+          path: packages/provider/
+          token: ${{ secrets.PAT }}
+
+      - name: Checkout background
+        uses: actions/checkout@v2
+        if: ${{ (steps.background-branch.outputs.branch == '') }}
+        with:
+          repository: block-wallet/extension-background
+          ref: refs/heads/master
+          path: packages/background/
+          token: ${{ secrets.PAT }}
 
       - name: Dependency UI cache
         uses: actions/cache@v2

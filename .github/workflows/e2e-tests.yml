@@ -105,7 +105,7 @@ jobs:
 
   ui-chrome-tests:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
-    container: [self-hosted, cypress]
+    runs-on: [self-hosted, cypress]
     needs: install-extension
     env:
       GH_ACCESS_TOKEN: ${{ secrets.USER_PAT }}:${{ secrets.PAT }}

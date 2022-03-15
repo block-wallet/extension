@@ -27,10 +27,14 @@ jobs:
 
       - name: Checkout monorepo
         uses: actions/checkout@v2
-        with:
-          submodules: "recursive"
-          token: ${{ secrets.PAT }}
 
+      - name: Checkout make scripts
+        uses: actions/checkout@v2
+        with:
+          repository: block-wallet/block-make
+          ref: refs/heads/main
+          path: .make
+          token: ${{ secrets.PAT }}
       - name: Checkout ui
         uses: actions/checkout@v2
         with:

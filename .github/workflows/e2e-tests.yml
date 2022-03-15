@@ -106,11 +106,10 @@ jobs:
   ui-chrome-tests:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    container: cypress/browsers:node16.13.2-chrome97-ff96
+    container: [self-hosted, cypress]
     needs: install-extension
     env:
       GH_ACCESS_TOKEN: ${{ secrets.USER_PAT }}:${{ secrets.PAT }}
-      NODE_VERSION: 16.13.2
     steps:
       - name: Checkout
         uses: actions/checkout@v2

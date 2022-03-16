@@ -69,6 +69,33 @@
                     ]
                 }
             ]
+        },
+        {
+            "version": "0.1.9",
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Release of the BlockWallet phishing protection! A unique piece of generative art on certain wallet pages will now protect you against different phishing attacks."
+                        },
+                        {
+                            "type": "success",
+                            "message": "A label in the account page will now show which accounts are connected to the current DApp."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Several bug fixes"
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

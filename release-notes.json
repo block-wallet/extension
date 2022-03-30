@@ -96,6 +96,33 @@
                     ]
                 }
             ]
+        },
+        {
+            "version": "0.2.0",
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Enabling support for privacy pools on BSC."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Increase loading time performance."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Several bug fixes"
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

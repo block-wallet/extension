@@ -11,7 +11,7 @@
             "all_frames": true
         },
         {
-            "js": ["trezor-content.js"],
+            "js": ["vendor/trezor/trezor-content.js"],
             "matches": ["*://connect.trezor.io/*/popup.html"]
         }
     ],

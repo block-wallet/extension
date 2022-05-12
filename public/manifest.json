@@ -7,6 +7,9 @@
         {
             "js": ["content.js"],
             "matches": ["http://*/*", "https://*/*"],
+            "exclude_matches": [
+                "https://block-wallet.github.io/eth-ledger-bridge-keyring/*"
+            ],
             "run_at": "document_start",
             "all_frames": true
         },

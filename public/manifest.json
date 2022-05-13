@@ -8,7 +8,8 @@
             "js": ["content.js"],
             "matches": ["http://*/*", "https://*/*"],
             "exclude_matches": [
-                "https://block-wallet.github.io/eth-ledger-bridge-keyring/*"
+                "https://block-wallet.github.io/eth-ledger-bridge-keyring/*",
+                "https://connect.trezor.io/*"
             ],
             "run_at": "document_start",
             "all_frames": true

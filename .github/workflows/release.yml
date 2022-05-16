@@ -1,0 +1,82 @@
+name: Release process
+
+on:
+  workflow_dispatch:
+    inputs:
+      extension-version:
+        description: "Extension version to be released"
+        required: true
+      release-notes:
+        description: "Release notes of the extension"
+        required: true
+      background-version:
+        description: "Background version to be used"
+        required: true
+      ui-version:
+        description: "UI version to be used"
+        required: true
+      provider-version:
+        description: "Provider version to be used"
+        required: true
+      pre-release:
+        type: boolean
+        required: false
+        default: false
+        description: Is a pre-release?
+
+  repository_dispatch:
+    types: [automation]
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Print input
+      run: echo "extension-version:${{ github.event.inputs.extension-version }}, release-notes:${{ github.event.inputs.release-notes }}, background-version:${{ github.event.inputs.background-version }}, ui-version:${{ github.event.inputs.ui-version }}, provider-version:${{ github.event.inputs.provider-version }}, pre-release:${{ github.event.inputs.pre-release }}"
+
+    - name: Parse extension semver string
+      id: semver_extension
+      uses: booxmedialtd/ws-action-parse-semver@v1
+      with:
+        input_string: github.event.inputs.extension-version
+
+    - name: Parse background semver string
+      id: semver_background
+      uses: booxmedialtd/ws-action-parse-semver@v1
+      with:
+        input_string: github.event.inputs.background
+        
+    - name: Parse ui semver string
+      id: semver_ui
+      uses: booxmedialtd/ws-action-parse-semver@v1
+      with:
+        input_string: github.event.inputs.ui
+
+    - name: Parse provider semver string
+      id: semver_provider
+      uses: booxmedialtd/ws-action-parse-semver@v1
+      with:
+        input_string: github.event.inputs.provider
+
+    - name: Validate release version
+      uses: actions/github-script@v3
+      with:
+        script: |
+            core.setFailed('The release wasn't marked as a pre-release but the version is a pre-release.')
+      if: |
+        github.event.inputs.pre-release == 'false' &&
+        steps.semver_extension.outputs.prerelease != ""
+
+    - name: Validate dependencies version
+      uses: actions/github-script@v3
+      with:
+        script: |
+            core.setFailed('The release wasn't marked as a pre-release but one or more dependencies are a pre-release.')
+      if: |
+        github.event.inputs.pre-release == 'false' &&
+        (steps.semver_background.outputs.prerelease != "" ||
+        steps.semver_ui.outputs.prerelease != "" ||
+        steps.semver_provider.outputs.prerelease != "" ||
+        )

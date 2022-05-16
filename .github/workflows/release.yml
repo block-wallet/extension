@@ -28,9 +28,6 @@ on:
         default: false
         description: Is a pre-release?
 
-  repository_dispatch:
-    types: [automation]
-
 jobs:
   greet:
     runs-on: ubuntu-latest

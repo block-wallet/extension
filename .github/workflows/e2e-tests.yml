@@ -3,7 +3,7 @@ name: Extension e2e testing
 on:
   pull_request:
     branches:
-      - master
+      - thsbranchdoesnotexist
 
   workflow_dispatch:
     inputs:

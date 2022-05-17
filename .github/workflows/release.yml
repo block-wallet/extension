@@ -1,0 +1,135 @@
+name: Release process
+
+on:
+  pull_request:
+    branches:
+      - feature/add-build-pipeline
+
+  workflow_dispatch:
+    inputs:
+      extension-version:
+        description: "Extension version to be released"
+        required: true
+      release-notes:
+        description: "Release notes of the extension"
+        required: true
+      background-version:
+        description: "Background version to be used"
+        required: true
+      ui-version:
+        description: "UI version to be used"
+        required: true
+      provider-version:
+        description: "Provider version to be used"
+        required: true
+      pre-release:
+        type: boolean
+        required: false
+        default: false
+        description: Is a pre-release?
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GH_ACCESS_TOKEN: ${{ secrets.USER_PAT }}:${{ secrets.PAT }}
+    steps:
+      - name: Print input
+        run: |
+          echo "extension-version:${{ github.event.inputs.extension-version }}, \
+                release-notes:${{ github.event.inputs.release-notes }}, \
+                background-version:${{ github.event.inputs.background-version }}, \
+                ui-version:${{ github.event.inputs.ui-version }}, \
+                provider-version:${{ github.event.inputs.provider-version }}, \
+                pre-release:${{ github.event.inputs.pre-release }}"
+
+      - name: Parse extension semver string
+        id: semver_extension
+        uses: booxmedialtd/ws-action-parse-semver@v1
+        with:
+          input_string: github.event.inputs.extension-version
+
+      - name: Parse background semver string
+        id: semver_background
+        uses: booxmedialtd/ws-action-parse-semver@v1
+        with:
+          input_string: github.event.inputs.background
+
+      - name: Parse ui semver string
+        id: semver_ui
+        uses: booxmedialtd/ws-action-parse-semver@v1
+        with:
+          input_string: github.event.inputs.ui
+
+      - name: Parse provider semver string
+        id: semver_provider
+        uses: booxmedialtd/ws-action-parse-semver@v1
+        with:
+          input_string: github.event.inputs.provider
+
+      - name: Validate release version
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('The release wasn't marked as a pre-release but the version is a pre-release.')
+        if: |
+          github.event.inputs.pre-release == 'false' &&
+          steps.semver_extension.outputs.prerelease != ""
+
+      - name: Validate dependencies version
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('The release wasn't marked as a pre-release but one or more dependencies are a pre-release.')
+        if: |
+          github.event.inputs.pre-release == 'false' &&
+          (steps.semver_background.outputs.prerelease != "" ||
+          steps.semver_ui.outputs.prerelease != "" ||
+          steps.semver_provider.outputs.prerelease != "" ||
+          )
+
+      - uses: actions/checkout@v3
+        name: Check if ${{github.event.inputs.background-version}} exists in background
+        with:
+          repository: block-wallet/extension-background
+          ref: ${{ github.event.inputs.background-version }}
+          token: ${{ secrets.PAT }}
+
+      - uses: actions/checkout@v3
+        name: Check if ${{github.event.inputs.ui-version}} exists in ui
+        with:
+          repository: block-wallet/extension-ui
+          ref: ${{ github.event.inputs.ui-version }}
+          token: ${{ secrets.PAT }}
+
+      - uses: actions/checkout@v3
+        name: Check if ${{github.event.inputs.provider-version}} exists in provider
+        with:
+          repository: block-wallet/extension-provider
+          ref: ${{ github.event.inputs.provider-version }}
+          token: ${{ secrets.PAT }}
+
+      - name: Validate release notes
+        run: |
+          jq -e . >/dev/null 2>&1 <<<  ${{ github.event.inputs.release-notes }}
+
+      - name: Install semver package
+        run: |
+          wget -O /usr/local/bin/semver \https://raw.githubusercontent.com/fsaintjacques/semver-tool/master/src/semver
+          chmod +x /usr/local/bin/semver
+
+      - name: Compare current tag with the latest one
+        id: tag_comparison
+        run: |
+          latest_tag=$(git describe --tag --abbrev=0 2> /dev/null || echo 0.0.0)
+          latest_tag=$(echo ${tag:1})
+          result=$(semver compare ${{github.event.inputs.extension-version}} $tag)
+          echo '::set-output name=result::$result'
+
+      - name: Fail if the current tag is not greater than the latest one
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('The input tag is not greater than the latest tag.')
+        if: |
+          steps.tag_comparison.outputs.result != 1

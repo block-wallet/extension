@@ -35,7 +35,13 @@ jobs:
       GH_ACCESS_TOKEN: ${{ secrets.USER_PAT }}:${{ secrets.PAT }}
     steps:
       - name: Print input
-        run: echo "extension-version:${{ github.event.inputs.extension-version }}, release-notes:${{ github.event.inputs.release-notes }}, background-version:${{ github.event.inputs.background-version }}, ui-version:${{ github.event.inputs.ui-version }}, provider-version:${{ github.event.inputs.provider-version }}, pre-release:${{ github.event.inputs.pre-release }}"
+        run: |
+          echo "extension-version:${{ github.event.inputs.extension-version }}, \
+                release-notes:${{ github.event.inputs.release-notes }}, \
+                background-version:${{ github.event.inputs.background-version }}, \
+                ui-version:${{ github.event.inputs.ui-version }}, \
+                provider-version:${{ github.event.inputs.provider-version }}, \
+                pre-release:${{ github.event.inputs.pre-release }}"
 
       - name: Parse extension semver string
         id: semver_extension

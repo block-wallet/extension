@@ -1,9 +1,6 @@
 name: Release process
 
 on:
-  pull_request:
-    branches:
-      - feature/add-build-pipeline
 
   workflow_dispatch:
     inputs:

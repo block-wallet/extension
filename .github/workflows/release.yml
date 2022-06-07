@@ -7,13 +7,13 @@ on:
 
 env:
   S3_PATH: s3://releases.blockwallet.io/extension
-  S3_URL: https://s3.eu-central-1.amazonaws.com/releases.blockwallet.io/extension
 
 jobs:
   release:
     outputs:
       extension: ${{ steps.get_metadata.outputs.extension }}
       html_url: ${{ steps.create_release.outputs.html_url }}
+      s3_url: ${{ steps.get_metadata.outputs.s3_url }}
     if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'automated') && contains(github.event.pull_request.labels.*.name, 'release')
     runs-on: [self-hosted, release]
     steps:
@@ -44,12 +44,14 @@ jobs:
           notes="${notes//'%'/'%25'}"     # hack to share multiline strings as action output
           notes="${notes//$'\n'/'%0A'}"   # hack to share multiline strings as action output
           notes="${notes//$'\r'/'%0D'}"   # hack to share multiline strings as action output
+          s3_url=$(echo "${S3_PATH/s3/https}")
           echo "::set-output name=extension::$extension"
           echo "::set-output name=background::$background"
           echo "::set-output name=provider::$provider"
           echo "::set-output name=ui::$ui"
           echo "::set-output name=pre-release::$prerelease"
           echo "::set-output name=notes::$notes"
+          echo "::set-output name=s3_url::$s3_url"
 
       - name: Install semver package
         run: |
@@ -88,8 +90,9 @@ jobs:
           generateReleaseNotes: true
           body: |
             # Extension 
-            - [zip](${{ env.S3_URL }}/block-wallet-${{ steps.get_metadata.outputs.extension }}.zip)
-            - [sha256 checksum](${{ env.S3_URL }}/block-wallet-${{ steps.get_metadata.outputs.extension }}.checksum)
+
+            - [zip](${{ steps.get_metadata.outputs.s3_url }}/block-wallet-${{ steps.get_metadata.outputs.extension }}.zip)
+            - [sha256 checksum](${{ steps.get_metadata.outputs.s3_url }}/block-wallet-${{ steps.get_metadata.outputs.extension }}.checksum)
 
             ${{ steps.get_metadata.outputs.notes }}
 
@@ -115,7 +118,7 @@ jobs:
               "attachments": [
                 {
                   "color": "good",
-                  "pretext": "New release ${{ needs.release.outputs.extension }}: <${{ env.S3_URL }}/block-wallet-${{ needs.release.outputs.extension }}.zip| extension.zip> and <${{ env.S3_URL }}/block-wallet-${{ needs.release.outputs.extension }}.checksum| checksum>. After uploading it to the store please publish the GitHub Release to finish the release process.\nCC: <@U01H6J242BY>, <@U01HRUM7XUH>",
+                  "pretext": "New release ${{ needs.release.outputs.extension }}: <${{ needs.release.outputs.s3_url }}/block-wallet-${{ needs.release.outputs.extension }}.zip| extension.zip> and <${{ needs.release.outputs.s3_url }}/block-wallet-${{ needs.release.outputs.extension }}.checksum| checksum>. After uploading it to the store please publish the GitHub Release to finish the release process.\nCC: <@U01H6J242BY>, <@U01HRUM7XUH>",
                   "author_name": "GitHub Release ${{ needs.release.outputs.extension }}",
                   "author_link": "${{ needs.release.outputs.html_url }}",
                   "title": "GitHub Release ${{ needs.release.outputs.extension }} has been created as a draft."

@@ -34,6 +34,10 @@ install:
 	@cd packages/ui && yarn install
 	@cd packages/provider && yarn install
 
+install/ci:
+	@cd packages/background && yarn install --prefer-offline --frozen-lockfile
+	@cd packages/ui && yarn install --prefer-offline --frozen-lockfile
+	@cd packages/provider && yarn install --prefer-offline --frozen-lockfile
 
 cp/snarks:
 	@mkdir -p dist/snarks/tornado

@@ -30,7 +30,6 @@ env:
   EXTENSION_NAME: block-wallet-${{ github.event.inputs.extension-version }}
   ARTIFACTS_FOLDER: artifacts
   S3_PATH: s3://releases.blockwallet.io/extension
-  S3_URL: https://s3.eu-central-1.amazonaws.com/releases.blockwallet.io/extension
   CHROME_VERSION: 97.0.4692.71
   TARGET_BRANCH: master
 
@@ -178,8 +177,8 @@ jobs:
 
       - name: Initialize mandatory git config
         run: |
-          git config --global user.name leablock
-          git config --global user.email leandro@blockwallet.io
+          git config --global user.name release_process
+          git config --global user.email release_process@blockwallet.io
           git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
 
       - name: Create release branch
@@ -276,19 +275,11 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
-      - name: Install UI dependencies
-        run: |
-          cd packages/ui/ && yarn install --prefer-offline --frozen-lockfile
-
-      - name: Install background dependencies
-        run: |
-          cd packages/background/ && yarn install --prefer-offline --frozen-lockfile
+      - name: Install packages dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-
-      - name: Install provider dependencies
         run: |
-          cd packages/provider/ && yarn install --prefer-offline --frozen-lockfile
+          make install/ci
 
       - name: Build extension
         env:
@@ -440,8 +431,8 @@ jobs:
 
       - name: Initialize mandatory git config
         run: |
-          git config --global user.name leablock
-          git config --global user.email leandro@blockwallet.io
+          git config --global user.name release_process
+          git config --global user.email release_process@blockwallet.io
           git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
 
       - name: Install GitHub cli
@@ -456,8 +447,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PAT }}
         run: |
+          s3_url=$(echo "${S3_PATH/s3/https}")
           pr_title="[Automated] Extension release ${{ github.event.inputs.extension-version }}"
-          pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip](${{ env.S3_URL }}/${{ env.EXTENSION_NAME }}.zip)\n - [SHA256 checksum](${{ env.S3_URL }}/${{ env.EXTENSION_NAME }}.checksum)\n\n## Dependencies :link: \n\n\n - Background: [${{ github.event.inputs.background-version }}](https://github.com/block-wallet/extension-background/releases/tag/${{ github.event.inputs.background-version }})\n - UI: [${{ github.event.inputs.ui-version }}](https://github.com/block-wallet/extension-ui/releases/tag/${{ github.event.inputs.ui-version }})\n - Provider: [${{ github.event.inputs.provider-version }}](https://github.com/block-wallet/extension-provider/releases/tag/${{ github.event.inputs.provider-version }})\n")
+          pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip]($s3_url/${{ env.EXTENSION_NAME }}.zip)\n - [SHA256 checksum]($s3_url/${{ env.EXTENSION_NAME }}.checksum)\n\n## Dependencies :link: \n\n\n - Background: [${{ github.event.inputs.background-version }}](https://github.com/block-wallet/extension-background/releases/tag/${{ github.event.inputs.background-version }})\n - UI: [${{ github.event.inputs.ui-version }}](https://github.com/block-wallet/extension-ui/releases/tag/${{ github.event.inputs.ui-version }})\n - Provider: [${{ github.event.inputs.provider-version }}](https://github.com/block-wallet/extension-provider/releases/tag/${{ github.event.inputs.provider-version }})\n")
           pr_reviewer="block-wallet/releasereviewers"
           pr_assignee="leablock"
           pr_label="automated,release"
@@ -475,6 +467,8 @@ jobs:
             --assignee "$pr_assignee"  \
             --no-maintainer-edit \
             --draft
+
+          sleep 5
 
           url=$(gh pr list --state open --label "$pr_label" --base "$TARGET_BRANCH" --head "$RELEASE_BRANCH" --json url |  jq ".[0].url" | tr -d '"')
           echo "::set-output name=pr_url::$url"

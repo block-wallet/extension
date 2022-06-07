@@ -53,35 +53,35 @@ jobs:
         uses: booxmedialtd/ws-action-parse-semver@v1
         with:
           input_string: ${{ github.event.inputs.extension-version }}
-          version_extractor_regex: 'v(.*)$'
+          version_extractor_regex: "v(.*)$"
 
       - name: Parse and validate background semver string
         id: semver_background
         uses: booxmedialtd/ws-action-parse-semver@v1
         with:
           input_string: ${{ github.event.inputs.background-version }}
-          version_extractor_regex: 'v(.*)$'
+          version_extractor_regex: "v(.*)$"
 
       - name: Parse and validate ui semver string
         id: semver_ui
         uses: booxmedialtd/ws-action-parse-semver@v1
         with:
           input_string: ${{ github.event.inputs.ui-version }}
-          version_extractor_regex: 'v(.*)$'
+          version_extractor_regex: "v(.*)$"
 
       - name: Parse and validate provider semver string
         id: semver_provider
         uses: booxmedialtd/ws-action-parse-semver@v1
         with:
           input_string: ${{ github.event.inputs.provider-version }}
-          version_extractor_regex: 'v(.*)$'
+          version_extractor_regex: "v(.*)$"
 
       - name: Validate release notes is a valid JSON
         env:
           DATA: "${{ github.event.inputs.release-notes }}"
-          READ_ONLY: 1 
+          READ_ONLY: 1
         run: |
-          wget https://raw.githubusercontent.com/leablock/release_helpers/main/validate_release_notes_and_convert_to_markdown.py -O validate_release_notes_and_convert_to_markdown.py
+          wget https://raw.githubusercontent.com/block-wallet/release-helpers/main/validate_release_notes_and_convert_to_markdown.py -O validate_release_notes_and_convert_to_markdown.py
           python3 validate_release_notes_and_convert_to_markdown.py
 
       - name: Validate the extension version
@@ -100,7 +100,7 @@ jobs:
             echo "The release wasn't marked as a pre-release but one or more dependencies version are a pre-release"
             exit 1
           fi
-        if: ${{ github.event.inputs.pre-release == 'false' }} 
+        if: ${{ github.event.inputs.pre-release == 'false' }}
 
       - name: Validate release branch
         run: |
@@ -133,7 +133,7 @@ jobs:
 
       - name: Install semver package
         run: |
-          wget -O /usr/local/bin/semver \https://raw.githubusercontent.com/leablock/release_helpers/main/semver
+          wget -O /usr/local/bin/semver \https://raw.githubusercontent.com/block-wallet/release-helpers/main/semver
           chmod +x /usr/local/bin/semver
 
       - name: Check out code
@@ -196,10 +196,10 @@ jobs:
         env:
           VERSION: ${{ steps.remove_preffix.outputs.version }}
         run: |
-          wget https://raw.githubusercontent.com/leablock/release_helpers/main/update_file.py -O update_file.py
+          wget https://raw.githubusercontent.com/block-wallet/release-helpers/main/update_file.py -O update_file.py
           FILE=package.json python3 update_file.py
           FILE=public/manifest.json python3 update_file.py
-      
+
       - name: Update release notes
         env:
           VERSION: ${{ steps.remove_preffix.outputs.version }}
@@ -207,7 +207,7 @@ jobs:
         run: |
           FILE=release-notes.json python3 update_file.py
           rm update_file.py
-      
+
       - name: Commit package.json, manifest.json and release-notes.json
         id: version_commit
         run: |
@@ -273,7 +273,7 @@ jobs:
 
       - uses: actions/cache@v3
         with:
-          path: '**/node_modules'
+          path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install UI dependencies
@@ -340,7 +340,7 @@ jobs:
         with:
           name: blockwallet-extension
           path: blockwallet-extension
-      
+
       - name: Install Cypress linux dependencies
         run: |
           apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
@@ -353,8 +353,8 @@ jobs:
         uses: actions/cache@v3
         id: cache-chrome
         with:
-            path: /usr/src/google-chrome-stable_current_amd64.deb
-            key: ${{ env.CHROME_VERSION }}
+          path: /usr/src/google-chrome-stable_current_amd64.deb
+          key: ${{ env.CHROME_VERSION }}
 
       - name: Download Chrome
         if: steps.cache-chrome.outputs.cache-hit != 'true'
@@ -405,7 +405,7 @@ jobs:
           aws-region: eu-central-1
 
       - name: Upload to S3
-        run: | 
+        run: |
           aws s3 cp --recursive $ARTIFACTS_FOLDER $S3_PATH
 
       - name: Upload version and notes to S3
@@ -422,14 +422,13 @@ jobs:
                     
           aws s3 cp version.json $S3_PATH/version.json
 
-          wget https://raw.githubusercontent.com/leablock/release_helpers/main/validate_release_notes_and_convert_to_markdown.py -O validate_release_notes_and_convert_to_markdown.py
+          wget https://raw.githubusercontent.com/block-wallet/release-helpers/main/validate_release_notes_and_convert_to_markdown.py -O validate_release_notes_and_convert_to_markdown.py
           python3 validate_release_notes_and_convert_to_markdown.py
 
           aws s3 cp notes.md $S3_PATH/notes.md
 
-
   pull_request:
-    outputs: 
+    outputs:
       pr_url: ${{ steps.create_pull_request.outputs.pr_url }}
     needs: package
     runs-on: [self-hosted, release]
@@ -438,7 +437,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.PAT }}
-      
+
       - name: Initialize mandatory git config
         run: |
           git config --global user.name leablock
@@ -459,13 +458,13 @@ jobs:
         run: |
           pr_title="[Automated] Extension release ${{ github.event.inputs.extension-version }}"
           pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip](${{ env.S3_URL }}/${{ env.EXTENSION_NAME }}.zip)\n - [SHA256 checksum](${{ env.S3_URL }}/${{ env.EXTENSION_NAME }}.checksum)\n\n## Dependencies :link: \n\n\n - Background: [${{ github.event.inputs.background-version }}](https://github.com/block-wallet/extension-background/releases/tag/${{ github.event.inputs.background-version }})\n - UI: [${{ github.event.inputs.ui-version }}](https://github.com/block-wallet/extension-ui/releases/tag/${{ github.event.inputs.ui-version }})\n - Provider: [${{ github.event.inputs.provider-version }}](https://github.com/block-wallet/extension-provider/releases/tag/${{ github.event.inputs.provider-version }})\n")
-          pr_reviewer="leablock" #TODO
+          pr_reviewer="leablock"
           pr_assignee="leablock"
           pr_label="automated,release"
-          
+
           gh label create --force "automated" --description "PR made by an automation" --color "bcf5db"
           gh label create --force "release" --description "Extension release" --color "0e8a16"
-          
+
           gh pr create \
             --base "$TARGET_BRANCH" \
             --head "$RELEASE_BRANCH" \
@@ -488,24 +487,24 @@ jobs:
       - name: Slack notification - Ready to release
         uses: 8398a7/action-slack@v3
         with:
-            status: custom
-            fields: repo,workflow
-            github_token: ${{ secrets.PAT }}
-            custom_payload: |
+          status: custom
+          fields: repo,workflow
+          github_token: ${{ secrets.PAT }}
+          custom_payload: |
+            {
+              "text": "*Release (manual)* for ${{ github.event.inputs.extension-version }} finished.",
+              "attachments": [
                 {
-                  "text": "*Release (manual)* for ${{ github.event.inputs.extension-version }} finished.",
-                  "attachments": [
-                    {
-                      "color": "good",
-                      "pretext": "The pull request was created. After reviewing it, please merge it to continue the release process that will launch *Release (automated)*. CC: <@U01H6J242BY>",
-                      "author_name": "GitHub Pull Request ${{ github.event.inputs.extension-version }}",
-                      "author_link": "${{ needs.pull_request.outputs.pr_url }}",
-                      "title": "GitHub Pull Request for the release ${{ github.event.inputs.extension-version }} created as draft"
-                    }
-                  ]
+                  "color": "good",
+                  "pretext": "The pull request was created. After reviewing it, please merge it to continue the release process that will launch *Release (automated)*. CC: <@U01H6J242BY>",
+                  "author_name": "GitHub Pull Request ${{ github.event.inputs.extension-version }}",
+                  "author_link": "${{ needs.pull_request.outputs.pr_url }}",
+                  "title": "GitHub Pull Request for the release ${{ github.event.inputs.extension-version }} created as draft"
                 }
+              ]
+            }
         env:
-            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_BLOCKWALLET_RELEASES }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_BLOCKWALLET_RELEASES }}
   error:
     if: failure()
     needs: [validation, build, tests, package, pull_request, notify]
@@ -514,10 +513,10 @@ jobs:
       - name: Slack notification - CI status
         uses: 8398a7/action-slack@v3
         with:
-            status: failure
-            fields: workflow
-            github_token: ${{ secrets.PAT }}
+          status: failure
+          fields: workflow
+          github_token: ${{ secrets.PAT }}
         env:
-            SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_ALERTS_RELEASES }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_ALERTS_RELEASES }}
 
       # use custom actions

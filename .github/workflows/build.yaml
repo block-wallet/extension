@@ -163,7 +163,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
         with:
-          #submodules: true
           token: ${{ secrets.PAT }}
           ref: ${{ env.TARGET_BRANCH }}
 
@@ -512,5 +511,3 @@ jobs:
           github_token: ${{ secrets.PAT }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_ALERTS_RELEASES }}
-
-      # use custom actions

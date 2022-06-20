@@ -1,0 +1,142 @@
+name: Release (automated)
+
+on:
+  pull_request:
+    types:
+      - closed
+
+env:
+  S3_PATH: s3://releases.blockwallet.io/extension
+
+jobs:
+  release:
+    outputs:
+      extension: ${{ steps.get_metadata.outputs.extension }}
+      html_url: ${{ steps.create_release.outputs.html_url }}
+      s3_url: ${{ steps.get_metadata.outputs.s3_url }}
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'automated') && contains(github.event.pull_request.labels.*.name, 'release')
+    runs-on: [self-hosted, release]
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_RELEASE_BUCKET }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_RELEASE_BUCKET }}
+          aws-region: eu-central-1
+
+      - name: Install AWS cli
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip -o awscliv2.zip
+          ./aws/install --update
+
+      - name: Get release version and notes
+        id: get_metadata
+        run: |
+          aws s3 cp $S3_PATH/version.json .
+          aws s3 cp $S3_PATH/notes.md .
+          extension=$(cat version.json | jq -r .extension)
+          background=$(cat version.json| jq -r .background)
+          provider=$(cat version.json| jq -r .provider)
+          ui=$(cat version.json| jq -r .ui)
+          prerelease=$(cat version.json| jq -r .prerelease)
+          notes=$(cat notes.md)
+          notes="${notes//'%'/'%25'}"     # hack to share multiline strings as action output
+          notes="${notes//$'\n'/'%0A'}"   # hack to share multiline strings as action output
+          notes="${notes//$'\r'/'%0D'}"   # hack to share multiline strings as action output
+          s3_url=$(echo "${S3_PATH/s3/https}")
+          echo "::set-output name=extension::$extension"
+          echo "::set-output name=background::$background"
+          echo "::set-output name=provider::$provider"
+          echo "::set-output name=ui::$ui"
+          echo "::set-output name=pre-release::$prerelease"
+          echo "::set-output name=notes::$notes"
+          echo "::set-output name=s3_url::$s3_url"
+
+      - name: Install semver package
+        run: |
+          wget -O /usr/local/bin/semver \https://raw.githubusercontent.com/block-wallet/release-helpers/main/semver
+          chmod +x /usr/local/bin/semver
+
+      - name: Compare release version with the latest tag
+        id: tag_comparison
+        run: |
+          latest_tag=$(git ls-remote --tags --sort='v:refname' origin | cut --delimiter='/' --fields=3 | tail -n 1)
+          if [[ -z $latest_tag ]]
+          then
+            result=1
+          else
+            result=$(semver compare ${{ steps.get_metadata.outputs.extension }} $latest_tag)
+          fi
+          echo "::set-output name=result::$result"
+
+      - name: Parse extension semver string
+        id: semver_extension
+        uses: booxmedialtd/ws-action-parse-semver@v1
+        with:
+          input_string: ${{ steps.get_metadata.outputs.extension }}
+          version_extractor_regex: "v(.*)$"
+
+      - name: Create release
+        uses: ncipollo/release-action@v1.10.0
+        if: ${{ steps.tag_comparison.outputs.result == 1 }}
+        id: create_release
+        with:
+          draft: true
+          prerelease: ${{ steps.get_metadata.outputs.pre-release }}
+          tag: "${{ steps.get_metadata.outputs.extension }}"
+          commit: "master"
+          token: ${{ secrets.PAT }}
+          generateReleaseNotes: true
+          body: |
+            # Extension 
+
+            - [zip](${{ steps.get_metadata.outputs.s3_url }}/block-wallet-${{ steps.get_metadata.outputs.extension }}.zip)
+            - [sha256 checksum](${{ steps.get_metadata.outputs.s3_url }}/block-wallet-${{ steps.get_metadata.outputs.extension }}.checksum)
+
+            ${{ steps.get_metadata.outputs.notes }}
+
+            # Dependencies
+            - Background: [${{ steps.get_metadata.outputs.background }}](https://github.com/block-wallet/extension-background/releases/tag/${{ steps.get_metadata.outputs.background }})
+            - Provider: [${{ steps.get_metadata.outputs.provider }}](https://github.com/block-wallet/extension-provider/releases/tag/${{ steps.get_metadata.outputs.provider }})
+            - UI: [${{ steps.get_metadata.outputs.ui }}](https://github.com/block-wallet/extension-ui/releases/tag/${{ steps.get_metadata.outputs.ui }})
+  notify:
+    if: success()
+    needs: [release]
+    runs-on: [self-hosted, release]
+    steps:
+      - name: Slack notification - Release
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          fields: repo,workflow
+          github_token: ${{ secrets.PAT }}
+          custom_payload: |
+            {
+              "text": "*Release (automated)* for ${{ needs.release.outputs.extension }} finished.",
+              "attachments": [
+                {
+                  "color": "good",
+                  "pretext": "New release ${{ needs.release.outputs.extension }}: <${{ needs.release.outputs.s3_url }}/block-wallet-${{ needs.release.outputs.extension }}.zip| extension.zip> and <${{ needs.release.outputs.s3_url }}/block-wallet-${{ needs.release.outputs.extension }}.checksum| checksum>. After uploading it to the store please publish the GitHub Release to finish the release process.\nCC: <@U01H6J242BY>, <@U01HRUM7XUH>",
+                  "author_name": "GitHub Release ${{ needs.release.outputs.extension }}",
+                  "author_link": "${{ needs.release.outputs.html_url }}",
+                  "title": "GitHub Release ${{ needs.release.outputs.extension }} has been created as a draft."
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_BLOCKWALLET_RELEASES }}
+  error:
+    if: failure()
+    needs: [release, notify]
+    runs-on: [self-hosted, release]
+    steps:
+      - name: Slack notification - CI status
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          fields: workflow
+          github_token: ${{ secrets.PAT }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_ALERTS_RELEASES }}

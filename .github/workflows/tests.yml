@@ -21,102 +21,51 @@ jobs:
     runs-on: [self-hosted, node]
 
     steps:
-      - run: echo "::set-output name=branch::$(git ls-remote https://${{ secrets.USER_PAT }}:${{ secrets.PAT }}@github.com/block-wallet/extension.git ${{ github.head_ref }})"
-        id: monorepo-branch
-
-      - run: echo "::set-output name=branch::$(git ls-remote https://${{ secrets.USER_PAT }}:${{ secrets.PAT }}@github.com/block-wallet/extension-provider.git ${{ github.head_ref }})"
-        id: provider-branch
-
-      - run: echo "::set-output name=branch::$(git ls-remote https://${{ secrets.USER_PAT }}:${{ secrets.PAT }}@github.com/block-wallet/extension-ui.git ${{ github.head_ref }})"
-        id: ui-branch
 
       - run: echo "::set-output name=name::background_${{ github.event.number }}_$(date +"%FT%T").zip"
         id: zip
 
-      - run: echo "::set-output name=title::$(gh pr view https://${{ secrets.USER_PAT }}:${{ secrets.PAT }}@github.com/block-wallet/extension-background/pull/${{ github.event.number }} --json title --jq '.title')"
-        id: pr
-
       - name: Checkout monorepo
         uses: actions/checkout@v2
-        if: ${{ (steps.monorepo-branch.outputs.branch == '') }}
-        with:
-          repository: block-wallet/extension
-          ref: refs/heads/master
-          token: ${{ secrets.PAT }}
 
-      - name: Checkout ui
-        uses: actions/checkout@v2
-        if: ${{ (steps.ui-branch.outputs.branch == '') }}
+      - name: Dependency UI cache
+        if: ${{ github.event.inputs.cache != 'true' }}
+        uses: actions/cache@v2
+        id: cache-ui
         with:
-          repository: block-wallet/extension-ui
-          ref: refs/heads/master
-          path: packages/ui/
-          token: ${{ secrets.PAT }}
+            key: ci-v1-${{ runner.os }}-${{ hashFiles('packages/ui/package.json') }}
+            path: "packages/ui/node_modules"
 
-      - name: Checkout provider
-        uses: actions/checkout@v2
-        if: ${{ (steps.provider-branch.outputs.branch == '') }}
+      - name: Dependency provider cache
+        uses: actions/cache@v2
+        id: cache-provider
         with:
-          repository: block-wallet/extension-provider
-          ref: refs/heads/master
-          path: packages/provider/
-          token: ${{ secrets.PAT }}
+            key: ci-v1-${{ runner.os }}-${{ hashFiles('packages/provider/package.json') }}
+            path: "packages/provider/node_modules"
 
-      - name: Checkout monorepo - feature branch
-        uses: actions/checkout@v2
-        if: ${{ (steps.monorepo-branch.outputs.branch != '') }}
+      - name: Dependency background cache
+        uses: actions/cache@v2
+        id: cache-background
         with:
-          repository: block-wallet/extension
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.PAT }}
+            key: ci-v1-${{ runner.os }}-${{ hashFiles('packages/background/package.json') }}
+            path: "packages/background/node_modules"
 
-      - name: Checkout ui - feature branch
-        uses: actions/checkout@v2
-        if: ${{ (steps.ui-branch.outputs.branch != '') }}
-        with:
-          repository: block-wallet/extension-ui
-          ref: ${{ github.head_ref }}
-          path: packages/ui/
-          token: ${{ secrets.PAT }}
+      - name: Install UI dependencies
+        if: ${{ (steps.cache-ui.outputs.cache-hit != 'true') || (github.event.inputs.cache == 'true') }}
+        run: cd packages/ui/ && yarn install --prefer-offline --frozen-lockfile --cache-folder .ui-cache
 
-      - name: Checkout provider - feature branch
-        uses: actions/checkout@v2
-        if: ${{ (steps.provider-branch.outputs.branch != '') }}
-        with:
-          repository: block-wallet/extension-provider
-          ref: ${{ github.head_ref }}
-          path: packages/provider/
-          token: ${{ secrets.PAT }}
-
-      - name: Checkout make scripts
-        uses: actions/checkout@v2
-        with:
-          repository: block-wallet/block-make
-          ref: refs/heads/main
-          path: .make
-          token: ${{ secrets.PAT }}
-
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          path: packages/background/
-
-      - name: Dependencies cache
-        id: cache-cypress
-        uses: actions/cache@v3
-        with:
-          path: |
-            **/node_modules
-          key: ci-v1-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
-
-      - name: Install packages dependencies
+      - name: Install background dependencies
+        if: ${{ (steps.cache-background.outputs.cache-hit != 'true') || (github.event.inputs.cache == 'true') }}
+        run: cd packages/background/ && yarn install --prefer-offline --frozen-lockfile --cache-folder .background-cache
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
-        run: |
-          make install/ci
+            GITHUB_TOKEN: ${{ secrets.PAT }}
+
+      - name: Install provider dependencies
+        if: ${{ (steps.cache-provider.outputs.cache-hit != 'true') || (github.event.inputs.cache == 'true') }}
+        run: cd packages/provider/ && yarn install --prefer-offline --frozen-lockfile --cache-folder .provider-cache
 
       - name: Build extension
-        run: ENVIRONMENT=prod make build
+        run: yarn build-prod
         env:
           CI: false
 
@@ -131,7 +80,7 @@ jobs:
           aws-region: us-east-2
 
       - name: Upload zip to S3
-        run: aws s3 cp ${{ steps.zip.outputs.name }} s3://releases.blockwallet.io/background/tmp/
+        run: aws s3 cp ${{ steps.zip.outputs.name }} s3://releases.blockwallet.io/tmp/
 
       - name: Slack notification - CI status
         uses: 8398a7/action-slack@v3
@@ -153,11 +102,11 @@ jobs:
               "attachments": [
                 {
                   "color": "#0d118c",
-                  "pretext": "<http://releases.blockwallet.io/background/tmp/${{ steps.zip.outputs.name }}|Download> temp PR build",
-                  "author_name": "Background",
-                  "author_link": "https://github.com/block-wallet/extension-background",
+                  "pretext": "<http://releases.blockwallet.io/tmp/${{ steps.zip.outputs.name }}|Download> temp PR build",
+                  "author_name": "Extension",
+                  "author_link": "https://github.com/block-wallet/extension",
                   "title": "${{ steps.pr.outputs.title }} #${{ github.event.number }}",
-                  "title_link": "https://github.com/block-wallet/extension-background/pull/${{ github.event.number }}",
+                  "title_link": "https://github.com/block-wallet/extension/pull/${{ github.event.number }}",
                   "fields": [
                     {
                         "title": "Branch",
@@ -166,7 +115,7 @@ jobs:
                     },
                     {
                         "title": "Commit",
-                        "value": "<https://github.com/block-wallet/extension-background/commit/${{github.event.pull_request.head.sha}}|${{github.event.pull_request.head.sha}}>",
+                        "value": "<https://github.com/block-wallet/extension/commit/${{github.event.pull_request.head.sha}}|${{github.event.pull_request.head.sha}}>",
                         "short": true
                     }
                   ]
@@ -190,87 +139,47 @@ jobs:
       - run: echo "::set-output name=branch::$(git ls-remote https://${{ secrets.USER_PAT }}:${{ secrets.PAT }}@github.com/block-wallet/extension-ui.git ${{ github.head_ref }})"
         id: ui-branch
 
-      - name: Checkout monorepo
-        uses: actions/checkout@v2
-        if: ${{ (steps.monorepo-branch.outputs.branch == '') }}
-        with:
-          repository: block-wallet/extension
-          ref: refs/heads/master
-          token: ${{ secrets.PAT }}
-
-      - name: Checkout ui
-        uses: actions/checkout@v2
-        if: ${{ (steps.ui-branch.outputs.branch == '') }}
-        with:
-          repository: block-wallet/extension-ui
-          ref: refs/heads/master
-          path: packages/ui/
-          token: ${{ secrets.PAT }}
-
-      - name: Checkout provider
-        uses: actions/checkout@v2
-        if: ${{ (steps.provider-branch.outputs.branch == '') }}
-        with:
-          repository: block-wallet/extension-provider
-          ref: refs/heads/master
-          path: packages/provider/
-          token: ${{ secrets.PAT }}
-
-      - name: Checkout monorepo - feature branch
-        uses: actions/checkout@v2
-        if: ${{ (steps.monorepo-branch.outputs.branch != '') }}
-        with:
-          repository: block-wallet/extension
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.PAT }}
-
-      - name: Checkout ui - feature branch
-        uses: actions/checkout@v2
-        if: ${{ (steps.ui-branch.outputs.branch != '') }}
-        with:
-          repository: block-wallet/extension-ui
-          ref: ${{ github.head_ref }}
-          path: packages/ui/
-          token: ${{ secrets.PAT }}
-
-      - name: Checkout provider - feature branch
-        uses: actions/checkout@v2
-        if: ${{ (steps.provider-branch.outputs.branch != '') }}
-        with:
-          repository: block-wallet/extension-provider
-          ref: ${{ github.head_ref }}
-          path: packages/provider/
-          token: ${{ secrets.PAT }}
-
-      - name: Checkout make scripts
-        uses: actions/checkout@v2
-        with:
-          repository: block-wallet/block-make
-          ref: refs/heads/main
-          path: .make
-          token: ${{ secrets.PAT }}
-
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          path: packages/background/
 
-      - name: Dependencies cache
-        id: cache-cypress
-        uses: actions/cache@v3
+      - name: Dependency UI cache
+        if: ${{ github.event.inputs.cache != 'true' }}
+        uses: actions/cache@v2
+        id: cache-ui
         with:
-          path: |
-            **/node_modules
-          key: ci-v1-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+            key: ci-v1-${{ runner.os }}-${{ hashFiles('packages/ui/package.json') }}
+            path: "packages/ui/node_modules"
 
-      - name: Install packages dependencies
+      - name: Dependency provider cache
+        uses: actions/cache@v2
+        id: cache-provider
+        with:
+            key: ci-v1-${{ runner.os }}-${{ hashFiles('packages/provider/package.json') }}
+            path: "packages/provider/node_modules"
+
+      - name: Dependency background cache
+        uses: actions/cache@v2
+        id: cache-background
+        with:
+            key: ci-v1-${{ runner.os }}-${{ hashFiles('packages/background/package.json') }}
+            path: "packages/background/node_modules"
+
+      - name: Install UI dependencies
+        if: ${{ (steps.cache-ui.outputs.cache-hit != 'true') || (github.event.inputs.cache == 'true') }}
+        run: cd packages/ui/ && yarn install --prefer-offline --frozen-lockfile --cache-folder .ui-cache
+
+      - name: Install background dependencies
+        if: ${{ (steps.cache-background.outputs.cache-hit != 'true') || (github.event.inputs.cache == 'true') }}
+        run: cd packages/background/ && yarn install --prefer-offline --frozen-lockfile --cache-folder .background-cache
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
-        run: |
-          make install/ci
+            GITHUB_TOKEN: ${{ secrets.PAT }}
 
-      - name: Test background
-        run: make test/background
+      - name: Install provider dependencies
+        if: ${{ (steps.cache-provider.outputs.cache-hit != 'true') || (github.event.inputs.cache == 'true') }}
+        run: cd packages/provider/ && yarn install --prefer-offline --frozen-lockfile --cache-folder .provider-cache
+
+      - name: Test
+        run: yarn test
 
       - name: Slack notification
         uses: 8398a7/action-slack@v3

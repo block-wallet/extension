@@ -105,11 +105,89 @@
                     "notes": [
                         {
                             "type": "success",
-                            "message": "Enabling support for privacy pools on BSC."
+                            "message": "Enabling support for privacy pools on BNB Chain."
                         },
                         {
                             "type": "success",
                             "message": "Increase loading time performance."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Several bug fixes"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "version": "0.2.1",
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Add support for Polygon Privacy Pools"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Restore last wallet state after re-opening the wallet"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Add advanced privacy pool data"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improved gas prices modal"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Change name 'BSC Network' to 'BNB Chain' according to rebrand"
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Several bug fixes"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "version": "0.2.3",
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Add incoming ERC20 Transactions"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added advanced privacy information"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Gas prices modal re-design"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Removed deprecated testnets"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Add support for unstoppable domains"
                         }
                     ]
                 },

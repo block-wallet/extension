@@ -1,0 +1,35 @@
+.fade-enter,
+.fade-enter-active,
+.fade-enter-done .fade-exit,
+.fade-exit-active,
+.fade-exit-done {
+  will-change: transform;
+}
+
+.fade-enter {
+  position: relative;
+  opacity: 0;
+  transform: translateY(0rem);
+}
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease-in-out;
+  transition-delay: 0.15s;
+  z-index: 2;
+}
+.fade-exit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-exit-active {
+  opacity: 0;
+  z-index: 1;
+  transform: translateY(0rem);
+  transition: opacity 0.1s ease-out, transform 0.2s ease-in;
+}

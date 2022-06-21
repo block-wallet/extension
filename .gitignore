@@ -1,6 +1,10 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-/node_modules
+# bundle size report
+bundle_size_report.html
+
+# eslint report
+eslint-report.html
 
 # dependencies
 /node_modules
@@ -14,8 +18,6 @@
 # production
 /build
 /dist
-
-yarn.lock
 
 # misc
 .DS_Store
@@ -40,5 +42,6 @@ package-lock.json
 
 .idea
 
-block-extension.zip
-release-notes.example
+token-list.json
+rates-ids-list.json
+asset-platforms-ids-list.json

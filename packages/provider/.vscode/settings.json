@@ -1,0 +1,17 @@
+{
+    "editor.formatOnSave": true,
+    "prettier.useEditorConfig": true,
+    "mochaExplorer.files": "test/**/*.test.ts",
+    "mochaExplorer.require": [
+        "ts-node/register",
+        "tsconfig-paths/register",
+        "jsdom-global/register",
+        "isomorphic-fetch"
+    ],
+    "mochaExplorer.monkeyPatch": false,
+    "mochaExplorer.env": {
+        "TS_NODE_PROJECT": "tsconfig.json",
+        "TS_NODE_COMPILER_OPTIONS": "{\"module\": \"commonjs\" }"
+    },
+    "files.eol": "\n"
+}

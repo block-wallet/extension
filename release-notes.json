@@ -162,6 +162,45 @@
                     ]
                 }
             ]
+        },
+        {
+            "version": "0.2.3",
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Add incoming ERC20 Transactions"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added advanced privacy information"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Gas prices modal re-design"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Removed deprecated testnets"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Add support for unstoppable domains"
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Several bug fixes"
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

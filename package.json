@@ -3,9 +3,6 @@
     "version": "0.2.3",
     "private": true,
     "scripts": {
-        "build": "make build"
-    },
-    "scripts": {
         "install": "make install/ci",
         "install-fresh": "make install",
         "build": "make build",

@@ -159,6 +159,8 @@ jobs:
   build:
     needs: validation
     runs-on: [self-hosted, release]
+    outputs:
+      version_without_preffix: ${{ steps.remove_preffix.outputs.version }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -296,6 +298,10 @@ jobs:
   tests:
     needs: build
     runs-on: [self-hosted, release]
+    env:
+      WIDTH: 357
+      HEIGHT: 610
+      DBUS_SESSION_BUS_ADDRESS: /dev/null
     steps:
       - name: Checkout e2e repository
         uses: actions/checkout@v2
@@ -357,27 +363,62 @@ jobs:
 
       - name: UI Tests - Chrome
         run: |
-          DBUS_SESSION_BUS_ADDRESS=/dev/null yarn run test:e2e
+          yarn run test:e2e
         env:
           ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
           GITHUB_TOKEN: ${{ secrets.PAT }}
           TEST_TAGS: puppeteer,extension
 
+      - name: Take the release notes screenshot
+        run: |
+          yarn run test:e2e
+        env:
+          EXTENSION_VERSION: ${{ needs.build.outputs.version_without_preffix }}
+          TEST_TAGS: release-notes
+          BROWSER_WIDTH: ${{ env.WIDTH }}
+          BROWSER_HEIGHT: ${{ env.HEIGHT }}
+
+      - name: Install ImageMagick (needed for convert)
+        run: |
+          apt install -y imagemagick
+
+      - name: Cut the screenshot
+        run: |
+          convert screenshots/release-notes-${{ needs.build.outputs.version_without_preffix }}.png -crop ${{ env.WIDTH }}x${{ env.HEIGHT }}+0+0 $EXTENSION_NAME.png
+
+      - name: Save screenshot of release notes
+        uses: actions/upload-artifact@v2
+        with:
+          name: screenshot
+          if-no-files-found: error
+          path: ${{ env.EXTENSION_NAME }}.png
+
   package:
     needs: tests
     runs-on: [self-hosted, release]
     steps:
+      - name: Delete artifacts folders
+        run: |
+          rm -rf screenshot
+          rm -rf blockwallet-extension
+
       - name: Download the extension built folder
         uses: actions/download-artifact@v2
         with:
           name: blockwallet-extension
           path: blockwallet-extension
 
+      - name: Download the extension screenshot (release notes)
+        uses: actions/download-artifact@v2
+        with:
+          name: screenshot
+          path: screenshot
+
       - name: Zip extension
         id: zip
         run: |
           apt install -y zip
-          mkdir $ARTIFACTS_FOLDER
+          mkdir -p $ARTIFACTS_FOLDER
           mv blockwallet-extension dist
           zip -r -D $ARTIFACTS_FOLDER/$EXTENSION_NAME.zip dist/
 
@@ -397,6 +438,7 @@ jobs:
       - name: Upload to S3
         run: |
           aws s3 cp --recursive $ARTIFACTS_FOLDER $S3_PATH
+          aws s3 cp screenshot/$EXTENSION_NAME.png $S3_PATH/$EXTENSION_NAME.png
 
       - name: Upload version and notes to S3
         env:
@@ -448,7 +490,7 @@ jobs:
         run: |
           s3_url=$(echo "${S3_PATH/s3/https}")
           pr_title="[Automated] Extension release ${{ github.event.inputs.extension-version }}"
-          pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip]($s3_url/${{ env.EXTENSION_NAME }}.zip)\n - [SHA256 checksum]($s3_url/${{ env.EXTENSION_NAME }}.checksum)\n\n## Dependencies :link: \n\n\n - Background: [${{ github.event.inputs.background-version }}](https://github.com/block-wallet/extension-background/releases/tag/${{ github.event.inputs.background-version }})\n - UI: [${{ github.event.inputs.ui-version }}](https://github.com/block-wallet/extension-ui/releases/tag/${{ github.event.inputs.ui-version }})\n - Provider: [${{ github.event.inputs.provider-version }}](https://github.com/block-wallet/extension-provider/releases/tag/${{ github.event.inputs.provider-version }})\n")
+          pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip]($s3_url/${{ env.EXTENSION_NAME }}.zip)\n - [Release notes screenshot]($s3_url/${{ env.EXTENSION_NAME }}.png)\n - [SHA256 checksum]($s3_url/${{ env.EXTENSION_NAME }}.checksum)\n\n## Dependencies :link: \n\n\n - Background: [${{ github.event.inputs.background-version }}](https://github.com/block-wallet/extension-background/releases/tag/${{ github.event.inputs.background-version }})\n - UI: [${{ github.event.inputs.ui-version }}](https://github.com/block-wallet/extension-ui/releases/tag/${{ github.event.inputs.ui-version }})\n - Provider: [${{ github.event.inputs.provider-version }}](https://github.com/block-wallet/extension-provider/releases/tag/${{ github.event.inputs.provider-version }})\n")
           pr_reviewer="block-wallet/releasereviewers"
           pr_assignee="leablock"
           pr_label="automated,release"

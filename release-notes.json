@@ -201,6 +201,20 @@
                     ]
                 }
             ]
+        },
+        {
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added support for Trezor and Ledger hardware wallets"
+                        }
+                    ]
+                }
+            ],
+            "version": "0.3.0"
         }
     ]
 }

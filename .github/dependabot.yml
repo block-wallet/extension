@@ -1,0 +1,58 @@
+version: 2
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    labels:
+      - "workflow"
+      - "dependencies"
+    reviewers:
+      - "block-wallet/devopsreviewers"
+
+  # Maintain dependencies for npm in background
+  - package-ecosystem: "npm"
+    directory: "/packages/background"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "background"
+      prefix-development: "background dev"
+      include: "scope"
+    labels:
+      - "background"
+      - "dependencies"
+    reviewers:
+      - "block-wallet/backgroundreviewers"
+
+  # Maintain dependencies for npm in provider
+  - package-ecosystem: "npm"
+    directory: "/packages/provider"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "provider"
+      prefix-development: "provider dev"
+      include: "scope"
+    labels:
+      - "provider"
+      - "dependencies"
+    reviewers:
+      - "block-wallet/providerreviewers"
+
+  # Maintain dependencies for npm in ui
+  - package-ecosystem: "npm"
+    directory: "/packages/ui"
+    schedule:
+      interval: "daily"
+    commit-message:
+      # Prefix all commit messages with "npm"
+      prefix: "ui"
+      prefix-development: "ui dev"
+      include: "scope"
+    labels:
+      - "ui"
+      - "dependencies"
+    reviewers:
+      - "block-wallet/uireviewers"

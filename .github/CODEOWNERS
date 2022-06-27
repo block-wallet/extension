@@ -1,0 +1,17 @@
+# Lines starting with '#' are comments.
+# Each line is a file pattern followed by one or more owners.
+
+# These owners will be the default owners for everything in the repo.
+*       @ImanH @devops
+
+/packages/background @block-wallet/backgroundreviewers
+/packages/ui @block-wallet/uireviewers
+/packages/provider @block-wallet/providerreviewers
+
+/.github/ @devops
+Makefile @devops
+
+package.json @block-wallet/releasereviewers
+release-notes.json  @block-wallet/releasereviewers
+/public/ @block-wallet/releasereviewers
+

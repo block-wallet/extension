@@ -29,7 +29,7 @@ jobs:
       - name: Validate branch name
         uses: deepakputhraya/action-branch-name@master
         with:
-          regex: '^(chore|docs|feat|fix|refactor|style|test|release){1}([\w \/])+'
+          regex: '^(chore|docs|feat|fix|refactor|style|test|release|dependabot){1}([\w \/])+'
           ignore: master
           min_length: 5
           max_length: 50

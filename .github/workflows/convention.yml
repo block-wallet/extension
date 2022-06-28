@@ -11,38 +11,25 @@ env:
   CONVENTION: "^(chore|docs|feat|fix|refactor|style|test)"
 
 jobs:
-  commits:
+  validation:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
-    runs-on: [self-hosted, node]
+    runs-on: [self-hosted, dev]
     steps:
-      - name: Checkout the current branch
-        uses: actions/checkout@v2
+      - name: Validate commit messages
+        uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: '^(chore|docs|feat|fix|refactor|style|test|release){1}(\([\w\-\.]+\))?(!)?: ([\w ])+([\s\S]*)'
+          flags: "gm"
+          excludeDescription: "true"
+          excludeTitle: "true"
+          checkAllCommitMessages: "true"
+          accessToken: ${{ secrets.PAT }}
+          error: "Please, fix the invalid commit message/s."
 
-      - name: Validate commits convention
-        run: |
-          commits=$(git log master^..HEAD --oneline)
-          regex=$CONVENTION"{1}(\([[:alnum:]._-]+\))?(!)?: ([[:alnum:]])+([[:space:][:print:][:punct:]]*)"
-          IFS=$'\n'
-          error=
-          for commit in $commits
-          do
-              message=$(echo ${commit:8})
-              if [[ ! $message =~ $regex ]]; then
-                  echo "Invalid commit: \"$message\"."
-                  error=1
-              fi
-          done
-
-          if [[ ! $error = "" ]]; then
-              echo "Fix the commit messages using \"git commit --amend\"."
-              exit 1
-          fi
-
-      - name: Validate commits convention
-        run: |
-          regex=$CONVENTION"{1}/([[:alnum:]])+([[:punct:]]*)"
-          if [[ ! $GITHUB_REF_NAME =~ $regex ]]; then
-              echo "Invalid branch name: \"$GITHUB_REF_NAME\"."
-              echo "Create a new branch from this one using a valid name."
-              exit 1
-          fi
+      - name: Validate branch name
+        uses: deepakputhraya/action-branch-name@master
+        with:
+          regex: '^(chore|docs|feat|fix|refactor|style|test|release){1}([\w \/])+'
+          ignore: master
+          min_length: 5
+          max_length: 50

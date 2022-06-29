@@ -6,6 +6,8 @@ on:
 env:
   BLOCK_WALLET_URL: url.txt
   BLOCK_WALLET_FOLDER: blockwallet-build
+  CHROME_VERSION: 97.0.4692.71
+  S3_PATH: s3://releases.blockwallet.io/tmp/
 
 jobs:
   lint:
@@ -123,7 +125,7 @@ jobs:
   build:
     env:
       ENVIRONMENT: prod
-      NODE_APP: production
+      NODE_ENV: production
     runs-on: [self-hosted, node]
     steps:
       - name: Checkout monorepo
@@ -218,9 +220,8 @@ jobs:
 
       - name: Upload zip to S3
         run: |
-          s3_url=s3://releases.blockwallet.io/tmp/
-          aws s3 cp ${{ steps.zip.outputs.file }} $s3_url
-          s3_url_https=$(echo "${s3_url/s3/https}")
+          aws s3 cp ${{ steps.zip.outputs.file }} $S3_PATH
+          s3_url_https=$(echo "${S3_PATH/s3/https}")
           echo $s3_url_https > $BLOCK_WALLET_URL
 
       - name: Save extension link

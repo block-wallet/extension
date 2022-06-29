@@ -6,8 +6,6 @@ on:
 jobs:
   lint:
     runs-on: [self-hosted, node]
-    env:
-      NODE_ENV: development
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2
@@ -16,7 +14,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "packages/ui/node_modules"
-          key: ${{ runner.os }}-dev-modules-${{ hashFiles('packages/ui/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Check lint in ui
         run: |
@@ -28,7 +26,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "packages/background/node_modules"
-          key: ${{ runner.os }}-dev-modules-${{ hashFiles('packages/background/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Check lint in background
         run: |
@@ -40,7 +38,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "packages/provider/node_modules"
-          key: ${{ runner.os }}-dev-modules-${{ hashFiles('packages/provider/yarn.lock') }}
+          key: ${{ runner.os }}-modules-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Check lint in provider
         run: |
@@ -50,8 +48,6 @@ jobs:
 
   test_and_build:
     runs-on: [self-hosted, node]
-    env:
-      NODE_ENV: production
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2

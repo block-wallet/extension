@@ -139,7 +139,8 @@ jobs:
 
       - name: Install UI dependencies
         run: |
-          cd packages/ui/ && yarn install --prefer-offline --frozen-lockfile
+          cd packages/ui/
+          yarn install --prefer-offline --frozen-lockfile
 
       - name: Dependency Background cache
         uses: actions/cache@v3
@@ -148,7 +149,10 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Install background dependencies
-        run: cd packages/background/ && yarn install --prefer-offline --frozen-lockfile
+        run: |
+          cd packages/background/
+          npm install -g typescript@$(jq -r .devDependencies.typescript package.json)
+          yarn install --prefer-offline --frozen-lockfile
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
 
@@ -159,7 +163,9 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install provider dependencies
-        run: cd packages/provider/ && yarn install --prefer-offline --frozen-lockfile
+        run: |
+          cd packages/provider/
+          yarn install --prefer-offline --frozen-lockfile
 
       - name: Install node
         uses: actions/setup-node@v3

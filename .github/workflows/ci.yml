@@ -2,18 +2,18 @@ name: CI
 
 on:
   push:
-  #   branches:
-  #     - master
+    branches:
+      - main
 
-  # workflow_dispatch:
-  #   inputs:
-  #     cache:
-  #       description: "Delete cache"
-  #       required: false
-  #       default: "true"
+  workflow_dispatch:
+    inputs:
+      cache:
+        description: "Delete cache"
+        required: false
+        default: "true"
 
-  # repository_dispatch:
-  #   types: [automation]
+  repository_dispatch:
+    types: [automation]
 
 jobs:
   lint:

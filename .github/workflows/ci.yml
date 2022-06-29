@@ -3,6 +3,10 @@ name: CI
 on:
   push:
 
+env:
+  BLOCK_WALLET_URL: url.txt
+  BLOCK_WALLET_FOLDER: blockwallet-build
+
 jobs:
   lint:
     runs-on: [self-hosted, node]
@@ -217,14 +221,14 @@ jobs:
           s3_url=s3://releases.blockwallet.io/tmp/
           aws s3 cp ${{ steps.zip.outputs.file }} $s3_url
           s3_url_https=$(echo "${s3_url/s3/https}")
-          echo $s3_url_https > blockwallet-build.txt
+          echo $s3_url_https > $BLOCK_WALLET_URL
 
       - name: Save extension link
         uses: actions/upload-artifact@v2
         with:
-          name: blockwallet-build
+          name: ${{ env.BLOCK_WALLET_FOLDER }}
           if-no-files-found: error
-          path: url.txt
+          path: ${{ env.BLOCK_WALLET_URL }}
 
   e2e:
     needs: [build]
@@ -293,16 +297,16 @@ jobs:
       - name: Download the extension
         uses: actions/download-artifact@v2
         with:
-          name: blockwallet-build
-          path: blockwallet-build
+          name: ${{ env.BLOCK_WALLET_FOLDER }}
+          path: ${{ env.BLOCK_WALLET_FOLDER }}
 
       - name: Download extension
         run: |
           apt install -y unzip
-          rm -rf blockwallet-extension
-          url=$(cat blockwallet-build/url.txt)
+          url=$(cat $BLOCK_WALLET_FOLDER/$BLOCK_WALLET_URL)
           wget $url -O blockwallet-extension.zip
-          unzip blockwallet-extension
+          rm -rf blockwallet-extension
+          unzip blockwallet-extension.zip
           mv dist blockwallet-extension
 
       - name: UI Tests - Chrome

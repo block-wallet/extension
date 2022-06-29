@@ -3,36 +3,55 @@ name: CI
 on:
   push:
 
-env:
-  EXTENSION_NAME: block-wallet-${GITHUB_SHA::7}
-
 jobs:
   lint:
     runs-on: [self-hosted, node]
+    env:
+      NODE_ENV: development
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2
 
+      - name: Dependency UI cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/ui/node_modules"
+          key: ${{ runner.os }}-dev-modules-${{ hashFiles('packages/ui/yarn.lock') }}
+
       - name: Check lint in ui
         run: |
           cd packages/ui/
-          yarn install  --production=false 
+          yarn install
           yarn lint
+
+      - name: Dependency Background cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/background/node_modules"
+          key: ${{ runner.os }}-dev-modules-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Check lint in background
         run: |
           cd packages/background/
-          yarn install --production=false 
+          yarn install
           yarn lint
+
+      - name: Dependency Provider cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/provider/node_modules"
+          key: ${{ runner.os }}-dev-modules-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Check lint in provider
         run: |
           cd packages/provider/
-          yarn install --production=false 
+          yarn install
           yarn lint
 
   test_and_build:
     runs-on: [self-hosted, node]
+    env:
+      NODE_ENV: production
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2
@@ -104,8 +123,11 @@ jobs:
           CI: false
 
       - name: Zip build
+        id: zip
         run: |
-          zip -r -D $EXTENSION_NAME dist/
+          file=block-wallet-${GITHUB_SHA::7}
+          zip -r -D $file dist/
+          echo "::set-output name=file::$file"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -117,7 +139,7 @@ jobs:
       - name: Upload zip to S3
         run: |
           s3_url=s3://releases.blockwallet.io/tmp/
-          aws s3 cp $EXTENSION_NAME $s3_url
+          aws s3 cp ${{ steps.zip.outputs.file }} $s3_url
           s3_url_https=$(echo "${s3_url/s3/https}")
           echo $s3_url_https > blockwallet-build.txt
 

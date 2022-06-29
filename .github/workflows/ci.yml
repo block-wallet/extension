@@ -8,7 +8,7 @@ jobs:
     runs-on: [self-hosted, node]
     steps:
       - name: Checkout monorepo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Dependency UI cache
         uses: actions/cache@v3
@@ -123,7 +123,7 @@ jobs:
         run: |
           file=block-wallet-${GITHUB_SHA::7}
           zip -r -D $file dist/
-          echo "::set-output name=file::$file"
+          echo "::set-output name=file::$file.zip"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1

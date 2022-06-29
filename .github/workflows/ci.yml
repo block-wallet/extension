@@ -15,6 +15,9 @@ on:
   repository_dispatch:
     types: [automation]
 
+env:
+  EXTENSION_NAME: block-wallet-${GITHUB_SHA::7}
+
 jobs:
   lint:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
@@ -121,7 +124,7 @@ jobs:
           CI: false
 
       - name: Zip build
-        run: zip -r -D ${{ steps.zip.outputs.name }} dist/
+        run: zip -r -D $EXTENSION_NAME dist/
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -133,7 +136,7 @@ jobs:
       - name: Upload zip to S3
         run: |
           s3_url=s3://releases.blockwallet.io/tmp/
-          aws s3 cp ${{ steps.zip.outputs.name }} $s3_url
+          aws s3 cp $EXTENSION_NAME $s3_url
           s3_url_https=$(echo "${s3_url/s3/https}")
           echo $s3_url_https > blockwallet-build.txt
 

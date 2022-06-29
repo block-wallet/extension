@@ -26,7 +26,7 @@ jobs:
       - name: Check lint in ui
         run: |
           cd packages/ui/
-          yarn install --production=false 
+          yarn install  --production=false 
           yarn lint
 
       - name: Check lint in background

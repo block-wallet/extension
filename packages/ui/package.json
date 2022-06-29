@@ -166,6 +166,7 @@
         "storybook": "run-p build:tailwind:dev start:storybook",
         "test": "jest",
         "test:watch": "jest --watch",
+        "lint": "eslint src --ext .ts --quiet",
         "eslint-report": "eslint src --ext .tsx,.ts -o eslint-report.html -f html"
     },
     "eslintConfig": {

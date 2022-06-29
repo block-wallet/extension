@@ -217,8 +217,8 @@ jobs:
       - name: Download extension
         run: |
           apt install -y unzip
-          url=$(cat blockwallet-build/url.txt)
           rm -rf blockwallet-extension
+          url=$(cat blockwallet-build/url.txt)
           wget $url -O blockwallet-extension.zip
           unzip blockwallet-extension
           mv dist blockwallet-extension

@@ -312,3 +312,4 @@ jobs:
           ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
           GITHUB_TOKEN: ${{ secrets.PAT }}
           TEST_TAGS: puppeteer,extension
+# If main -> send slack

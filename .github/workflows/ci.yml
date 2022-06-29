@@ -169,7 +169,7 @@ jobs:
 
       - name: Build background
         run: |
-          cd packages/brackground
+          cd packages/background
           npm install -g typescript@$(jq -r .devDependencies.typescript package.json)
           make build/background
         env:
@@ -177,7 +177,7 @@ jobs:
 
       - name: Build provider
         run: |
-          cd packages/brackground
+          cd packages/provider
           npm install -g typescript@$(jq -r .devDependencies.typescript package.json)
           make build/provider
         env:

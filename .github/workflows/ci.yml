@@ -45,8 +45,7 @@ jobs:
           cd packages/provider/
           yarn install
           yarn lint
-
-  test_and_build:
+  test:
     runs-on: [self-hosted, node]
     steps:
       - name: Checkout monorepo
@@ -112,6 +111,54 @@ jobs:
           cd packages/background
           #make test/background
 
+  build:
+    runs-on: [self-hosted, node]
+    steps:
+      - name: Checkout monorepo
+        uses: actions/checkout@v2
+
+      - name: Dependency UI cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/ui/node_modules"
+          key: ${{ runner.os }}-modules-${{ hashFiles('packages/ui/yarn.lock') }}
+
+      - name: Install UI dependencies
+        run: |
+          cd packages/ui/ && yarn install --prefer-offline --frozen-lockfile
+
+      - name: Dependency Background cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/background/node_modules"
+          key: ${{ runner.os }}-modules-${{ hashFiles('packages/background/yarn.lock') }}
+
+      - name: Install background dependencies
+        run: cd packages/background/ && yarn install --prefer-offline --frozen-lockfile
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+
+      - name: Dependency Provider cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/provider/node_modules"
+          key: ${{ runner.os }}-modules-${{ hashFiles('packages/provider/yarn.lock') }}
+
+      - name: Install provider dependencies
+        run: cd packages/provider/ && yarn install --prefer-offline --frozen-lockfile
+
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install yarn
+        run: |
+          curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+          echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+          sudo apt update
+          apt install -y yarn --no-install-recommends
+
       - name: Build extension
         run: |
           yarn build-prod
@@ -147,7 +194,7 @@ jobs:
           path: url.txt
 
   e2e:
-    needs: [test_and_build]
+    needs: [build]
     runs-on: [self-hosted, node]
 
     steps:

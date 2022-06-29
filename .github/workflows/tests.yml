@@ -1,0 +1,232 @@
+name: Tests
+
+on:
+  push:
+  #   branches:
+  #     - main
+
+  # workflow_dispatch:
+  #   inputs:
+  #     cache:
+  #       description: "Delete cache"
+  #       required: false
+  #       default: "true"
+
+  # repository_dispatch:
+  #   types: [automation]
+
+jobs:
+  lint:
+    # if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, node]
+    steps:
+      - name: Checkout monorepo
+        uses: actions/checkout@v2
+
+      - name: Check lint in ui
+        run: |
+          cd packages/ui/
+          yarn install --production=false 
+          yarn lint
+
+      - name: Check lint in background
+        run: |
+          cd packages/background/
+          yarn install  --production=false 
+          yarn lint
+
+      - name: Check lint in provider
+        run: |
+          cd packages/provider/
+          yarn install --production=false 
+          yarn lint
+
+  test_and_build:
+    # if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, node]
+    steps:
+      - name: Checkout monorepo
+        uses: actions/checkout@v2
+
+      - name: Dependency UI cache
+        if: ${{ github.event.inputs.cache != 'true' }}
+        uses: actions/cache@v2
+        id: cache-ui
+        with:
+          key: ci-v1-${{ runner.os }}-${{ hashFiles('packages/ui/package.json') }}
+          path: "packages/ui/node_modules"
+
+      - name: Dependency provider cache
+        uses: actions/cache@v2
+        id: cache-provider
+        with:
+          key: ci-v1-${{ runner.os }}-${{ hashFiles('packages/provider/package.json') }}
+          path: "packages/provider/node_modules"
+
+      - name: Dependency background cache
+        uses: actions/cache@v2
+        id: cache-background
+        with:
+          key: ci-v1-${{ runner.os }}-${{ hashFiles('packages/background/package.json') }}
+          path: "packages/background/node_modules"
+
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install yarn
+        run: |
+          curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+          echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+          sudo apt update
+          apt install -y yarn --no-install-recommends
+
+      - name: Install UI dependencies
+        if: ${{ (steps.cache-ui.outputs.cache-hit != 'true') || (github.event.inputs.cache == 'true') }}
+        run: |
+          cd packages/ui/ && yarn install --prefer-offline --frozen-lockfile --cache-folder .ui-cache
+
+      - name: Install background dependencies
+        if: ${{ (steps.cache-background.outputs.cache-hit != 'true') || (github.event.inputs.cache == 'true') }}
+        run: cd packages/background/ && yarn install --prefer-offline --frozen-lockfile --cache-folder .background-cache
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+
+      - name: Install provider dependencies
+        if: ${{ (steps.cache-provider.outputs.cache-hit != 'true') || (github.event.inputs.cache == 'true') }}
+        run: cd packages/provider/ && yarn install --prefer-offline --frozen-lockfile --cache-folder .provider-cache
+
+      - name: Test ui
+        run: |
+          cd packages/ui
+          make test/ui
+        env:
+          INFURA_PROJECT_ID: ${{ secrets.INFURA_PROJECT_ID }}
+          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+
+      - name: Test provider
+        run: |
+          cd packages/provider
+          make test/provider
+
+      - name: Test background
+        run: |
+          cd packages/background
+          make test/background
+
+      - name: Build extension
+        run: yarn build-prod
+        env:
+          CI: false
+
+      - name: Zip build
+        run: zip -r -D ${{ steps.zip.outputs.name }} dist/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_RELEASE_BUCKET }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_RELEASE_BUCKET }}
+          aws-region: us-east-2
+
+      - name: Upload zip to S3
+        run: |
+          s3_url=s3://releases.blockwallet.io/tmp/
+          aws s3 cp ${{ steps.zip.outputs.name }} $s3_url
+          s3_url_https=$(echo "${s3_url/s3/https}")
+          echo $s3_url_https > blockwallet-build.txt
+
+      - name: Save extension link
+        uses: actions/upload-artifact@v2
+        with:
+          name: blockwallet-build
+          if-no-files-found: error
+          path: url.txt
+
+  e2e:
+    needs: [test_and_build]
+    runs-on: [self-hosted, node]
+
+    steps:
+      - name: Checkout e2e repository
+        uses: actions/checkout@v2
+        with:
+          repository: block-wallet/e2e-tests
+          ref: refs/heads/main
+          token: ${{ secrets.PAT }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_RELEASE_BUCKET }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_RELEASE_BUCKET }}
+          aws-region: us-east-2
+
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install yarn
+        run: |
+          curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+          echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+          sudo apt update
+          apt install -y yarn --no-install-recommends
+
+      - name: Cache e2e dependencies and cypress binary
+        id: cache-cypress
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+            ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install Cypress linux dependencies
+        run: |
+          apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
+
+      - name: Install e2e dependencies
+        run: |
+          yarn install --prefer-offline --frozen-lockfile
+
+      - name: Cache Chrome
+        uses: actions/cache@v3
+        id: cache-chrome
+        with:
+          path: /usr/src/google-chrome-stable_current_amd64.deb
+          key: ${{ env.CHROME_VERSION }}
+
+      - name: Download Chrome
+        if: steps.cache-chrome.outputs.cache-hit != 'true'
+        run: |
+          wget -O /usr/src/google-chrome-stable_current_amd64.deb "http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_$CHROME_VERSION-1_amd64.deb"
+
+      - name: Install Chrome
+        run: |
+          apt install -y /usr/src/google-chrome-stable_current_amd64.deb
+
+      - name: Download the extension
+        uses: actions/download-artifact@v2
+        with:
+          name: blockwallet-build
+          path: blockwallet-build
+
+      - name: Download extension
+        run: |
+          apt install -y unzip
+          rm -rf blockwallet-extension
+          url=$(cat blockwallet-build/url.txt)
+          wget $url -O blockwallet-extension.zip
+          unzip blockwallet-extension
+          mv dist blockwallet-extension
+
+      - name: UI Tests - Chrome
+        run: |
+          DBUS_SESSION_BUS_ADDRESS=/dev/null yarn run test:e2e
+        env:
+          ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          TEST_TAGS: puppeteer,extension

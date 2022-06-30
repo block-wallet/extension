@@ -151,11 +151,12 @@ jobs:
       - name: Install background dependencies
         run: |
           cd packages/background/
-          npm install --dev typescript@$(jq -r .devDependencies.typescript package.json)
-          npm link typescript
+          #npm install --dev typescript@$(jq -r .devDependencies.typescript package.json)
+          #npm link typescript
           yarn install --prefer-offline --frozen-lockfile
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
+          NODE_ENV: development
 
       - name: Dependency Provider cache
         uses: actions/cache@v3

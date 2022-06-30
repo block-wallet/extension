@@ -151,8 +151,7 @@ jobs:
       - name: Install background dependencies
         run: |
           cd packages/background/
-          npm install typescript@$(jq -r .devDependencies.typescript package.json)
-          npm link typescript
+          yarn global add typescript@$(jq -r .devDependencies.typescript package.json)
           yarn install --prefer-offline --frozen-lockfile
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}

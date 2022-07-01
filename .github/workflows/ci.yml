@@ -16,6 +16,15 @@ jobs:
       - name: Checkout monorepo
         uses: actions/checkout@v3
 
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install yarn
+        run: |
+          npm install --global yarn
+
       - name: Dependency UI cache
         uses: actions/cache@v3
         with:
@@ -57,6 +66,15 @@ jobs:
       - name: Checkout monorepo
         uses: actions/checkout@v2
 
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install yarn
+        run: |
+          npm install --global yarn
+
       - name: Dependency UI cache
         uses: actions/cache@v3
         with:
@@ -92,18 +110,6 @@ jobs:
           cd packages/provider/
           yarn install --prefer-offline --frozen-lockfile
 
-      - name: Install node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
-
-      - name: Install yarn
-        run: |
-          curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-          echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-          sudo apt update
-          apt install -y yarn --no-install-recommends
-
       - name: Test ui
         run: |
           cd packages/ui
@@ -129,6 +135,15 @@ jobs:
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2
+
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install yarn
+        run: |
+          npm install --global yarn
 
       - name: Dependency UI cache
         uses: actions/cache@v3
@@ -164,18 +179,6 @@ jobs:
         run: |
           cd packages/provider/
           yarn install --prefer-offline --frozen-lockfile
-
-      - name: Install node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
-
-      - name: Install yarn
-        run: |
-          curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-          echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-          sudo apt update
-          apt install -y yarn --no-install-recommends
 
       - name: Build background
         run: |
@@ -258,10 +261,7 @@ jobs:
 
       - name: Install yarn
         run: |
-          curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-          echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-          sudo apt update
-          apt install -y yarn --no-install-recommends
+          npm install --global yarn
 
       - name: Cache e2e dependencies and cypress binary
         id: cache-cypress

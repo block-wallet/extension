@@ -157,7 +157,7 @@ jobs:
           cd packages/background/
           npm install -g typescript@$(jq -r .devDependencies.typescript package.json)
           npm install -g ts-node@$(jq -r .devDependencies.ts-node package.json)
-          yarn install --prefer-offline --frozen-lockfile
+          yarn install --prefer-offline #--frozen-lockfile
 
       - name: Dependency Provider cache
         uses: actions/cache@v3

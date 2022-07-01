@@ -83,6 +83,10 @@
         "webpack-cli": "^4.6.0",
         "@types/node": "^16.9.1"
     },
+    "installDependencies": {
+        "typescript": "^4.0.3",
+        "ts-node": "^9.1.1"
+    },
     "resolutions": {
         "webpack/**/glob-parent": "^5.1.2",
         "webpack/**/set-value": "^4.0.1",

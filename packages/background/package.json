@@ -94,6 +94,6 @@
         "build": "make build/background",
         "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html",
         "lint": "eslint src --ext .ts --quiet",
-        "postinstall": "yarn ts-node postInstall.ts"
+        "postinstall": "npx ts-node postInstall.ts"
     }
 }

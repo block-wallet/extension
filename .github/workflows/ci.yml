@@ -185,21 +185,48 @@ jobs:
           cd packages/provider/
           yarn install --prefer-offline --frozen-lockfile
 
+      - name: Cache background build
+        id: build-background
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/background/dist
+          key: ${{ runner.os }}-package-${{ hashFiles('packages/background') }}
+
       - name: Build background
+        if: steps.build-background.outputs.cache-hit != 'true'
         run: |
           cd packages/background
           make build/background
         env:
           CI: false
 
+      - name: Cache provider build
+        id: build-provider
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/provider/dist
+          key: ${{ runner.os }}-package-${{ hashFiles('packages/provider') }}
+
       - name: Build provider
+        if: steps.build-provider.outputs.cache-hit != 'true'
         run: |
           cd packages/provider
           make build/provider
         env:
           CI: false
 
+      - name: Cache ui build
+        id: build-ui
+        uses: actions/cache@v3
+        with:
+          path: |
+            packages/ui/dist
+          key: ${{ runner.os }}-package-${{ hashFiles('packages/ui') }}
+
       - name: Build ui
+        if: steps.build-ui.outputs.cache-hit != 'true'
         run: |
           cd packages/ui
           make build/ui

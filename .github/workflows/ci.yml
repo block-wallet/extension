@@ -156,7 +156,7 @@ jobs:
         run: |
           cd packages/background/
           npm install -g typescript@$(jq -r .devDependencies.typescript package.json)
-          npm install -g ts-node@$(jq -r .devDependencies.ts-node package.json)
+          npm install -g ts-node@$(jq --arg tsnode ts-node -r '.devDependencies[$tsnode]' package.json)
           yarn install --prefer-offline #--frozen-lockfile
 
       - name: Dependency Provider cache
@@ -196,7 +196,7 @@ jobs:
         run: |
           cd packages/provider
           yarn global add typescript@$(jq -r .devDependencies.typescript package.json)
-          yarn global add webpack-cli@$(jq -r .devDependencies.webpack-cli package.json)
+          yarn global add webpack-cli@$(jq --arg webpackcli webpack-cli -r '.devDependencies[$webpackcli]' package.json)
           make build/provider
         env:
           CI: false

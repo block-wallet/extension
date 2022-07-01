@@ -80,7 +80,8 @@
     },
     "buildDependencies": {
         "typescript": "^4.0.3",
-        "webpack-cli": "^4.6.0"
+        "webpack-cli": "^4.6.0",
+        "@types/node": "^16.9.1"
     },
     "resolutions": {
         "webpack/**/glob-parent": "^5.1.2",
@@ -98,6 +99,6 @@
         "build": "make build/background",
         "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html",
         "lint": "eslint src --ext .ts --quiet",
-        "postinstall": "npx ts-node postInstall.ts"
+        "postinstall": "yarn ts-node postInstall.ts"
     }
 }

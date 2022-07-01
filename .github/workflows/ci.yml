@@ -239,7 +239,7 @@ jobs:
 
   e2e:
     needs: [build]
-    runs-on: [self-hosted, node]
+    runs-on: [self-hosted, large]
 
     steps:
       - name: Checkout e2e repository
@@ -320,4 +320,3 @@ jobs:
           ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
           GITHUB_TOKEN: ${{ secrets.PAT }}
           TEST_TAGS: puppeteer,extension
-# If main -> send slack

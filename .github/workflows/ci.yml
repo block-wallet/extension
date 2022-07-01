@@ -134,7 +134,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "packages/ui/node_modules"
-          key: ${{ runner.os }}-prod-modules-${{ hashFiles('packages/ui/yarn.lock') }}
+          key: ${{ runner.os }}-all-modules-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Install UI dependencies
         env:
@@ -152,7 +152,6 @@ jobs:
       - name: Install background dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-          NODE_ENV: ""
         run: |
           cd packages/background/
           yarn install --prefer-offline --frozen-lockfile
@@ -164,8 +163,6 @@ jobs:
           key: ${{ runner.os }}-all-modules-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install provider dependencies
-        env:
-          NODE_ENV: ""
         run: |
           cd packages/provider/
           yarn install --prefer-offline --frozen-lockfile
@@ -199,7 +196,6 @@ jobs:
       - name: Build ui
         run: |
           cd packages/ui
-          yarn global add typescript@$(jq -r .devDependencies.typescript package.json)
           make build/ui
         env:
           CI: false

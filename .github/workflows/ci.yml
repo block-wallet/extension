@@ -110,6 +110,11 @@ jobs:
           cd packages/provider/
           yarn install --prefer-offline --frozen-lockfile
 
+      - name: Build tailwind
+        run: |
+          cd packages/ui
+          yarn build:tailwind
+
       - name: Test ui
         run: |
           cd packages/ui
@@ -201,7 +206,7 @@ jobs:
         env:
           CI: false
 
-      - name: Build cp
+      - name: Copy snarks and release notes
         run: |
           make cp/snarks
           make cp/release-notes

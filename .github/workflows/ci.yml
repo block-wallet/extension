@@ -155,7 +155,8 @@ jobs:
           NODE_ENV: production
         run: |
           cd packages/background/
-          yarn global add typescript@$(jq -r .devDependencies.typescript package.json)
+          npm install -g typescript@$(jq -r .devDependencies.typescript package.json)
+          npm install -g ts-node@$(jq -r .devDependencies.ts-node package.json)
           yarn install --prefer-offline #--frozen-lockfile
 
       - name: Dependency Provider cache

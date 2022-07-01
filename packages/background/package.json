@@ -78,6 +78,10 @@
         "webpack-cli": "^4.6.0",
         "worker-loader": "^3.0.8"
     },
+    "buildDependencies": {
+        "typescript": "^4.0.3",
+        "webpack-cli": "^4.6.0"
+    },
     "resolutions": {
         "webpack/**/glob-parent": "^5.1.2",
         "webpack/**/set-value": "^4.0.1",

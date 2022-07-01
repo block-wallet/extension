@@ -187,8 +187,7 @@ jobs:
       - name: Build background
         run: |
           cd packages/background
-          yarn global add typescript@$(jq -r .devDependencies.typescript package.json)
-          yarn global add webpack-cli@$(jq -r .devDependencies.webpack-cli package.json)
+          npx handpick --target=buildDependencies --manager=yarn
           make build/background
         env:
           CI: false

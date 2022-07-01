@@ -224,9 +224,10 @@ jobs:
 
       - name: Upload zip to S3
         run: |
-          aws s3 cp ${{ steps.zip.outputs.file }} $S3_PATH
+          zip=${{ steps.zip.outputs.file }} 
+          aws s3 cp $zip $S3_PATH
           s3_url_https=$(echo "${S3_PATH/s3/https}")
-          echo $s3_url_https${{ steps.zip.outputs.file }} > $BLOCK_WALLET_URL
+          echo "$s3_url_https""$zip" > $BLOCK_WALLET_URL
           cat $BLOCK_WALLET_URL
 
       - name: Save extension link

@@ -227,6 +227,7 @@ jobs:
           aws s3 cp ${{ steps.zip.outputs.file }} $S3_PATH
           s3_url_https=$(echo "${S3_PATH/s3/https}")
           echo $s3_url_https${{ steps.zip.outputs.file }} > $BLOCK_WALLET_URL
+          cat $BLOCK_WALLET_URL
 
       - name: Save extension link
         uses: actions/upload-artifact@v2

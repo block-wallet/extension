@@ -147,28 +147,25 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "packages/background/node_modules"
-          key: ${{ runner.os }}-prod-modules-${{ hashFiles('packages/background/yarn.lock') }}
+          key: ${{ runner.os }}-all-modules-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Install background dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-          NODE_ENV: production
+          NODE_ENV: ""
         run: |
           cd packages/background/
-          npm install -g typescript@$(jq -r .devDependencies.typescript package.json)
-          npm install -g ts-node@$(jq --arg tsnode ts-node -r '.devDependencies[$tsnode]' package.json)
-          npm link typescript ts-node
-          yarn install --prefer-offline #--frozen-lockfile
+          yarn install --prefer-offline --frozen-lockfile
 
       - name: Dependency Provider cache
         uses: actions/cache@v3
         with:
           path: "packages/provider/node_modules"
-          key: ${{ runner.os }}-prod-modules-${{ hashFiles('packages/provider/yarn.lock') }}
+          key: ${{ runner.os }}-all-modules-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install provider dependencies
         env:
-          NODE_ENV: production
+          NODE_ENV: ""
         run: |
           cd packages/provider/
           yarn install --prefer-offline --frozen-lockfile
@@ -188,7 +185,6 @@ jobs:
       - name: Build background
         run: |
           cd packages/background
-          npx handpick --target=buildDependencies --manager=yarn
           make build/background
         env:
           CI: false
@@ -196,8 +192,6 @@ jobs:
       - name: Build provider
         run: |
           cd packages/provider
-          yarn global add typescript@$(jq -r .devDependencies.typescript package.json)
-          yarn global add webpack-cli@$(jq --arg webpackcli webpack-cli -r '.devDependencies[$webpackcli]' package.json)
           make build/provider
         env:
           CI: false

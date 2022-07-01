@@ -61,7 +61,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "packages/ui/node_modules"
-          key: ${{ runner.os }}-test-modules-${{ hashFiles('packages/ui/yarn.lock') }}
+          key: ${{ runner.os }}-all-modules-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Install UI dependencies
         run: |
@@ -72,7 +72,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "packages/background/node_modules"
-          key: ${{ runner.os }}-test-modules-${{ hashFiles('packages/background/yarn.lock') }}
+          key: ${{ runner.os }}-all-modules-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Install background dependencies
         run: |
@@ -85,7 +85,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "packages/provider/node_modules"
-          key: ${{ runner.os }}-test-modules-${{ hashFiles('packages/provider/yarn.lock') }}
+          key: ${{ runner.os }}-all-modules-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install provider dependencies
         run: |
@@ -125,7 +125,6 @@ jobs:
   build:
     env:
       ENVIRONMENT: prod
-      NODE_ENV: production
     runs-on: [self-hosted, node]
     steps:
       - name: Checkout monorepo
@@ -135,9 +134,11 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "packages/ui/node_modules"
-          key: ${{ runner.os }}-modules-${{ hashFiles('packages/ui/yarn.lock') }}
+          key: ${{ runner.os }}-prod-modules-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Install UI dependencies
+        env:
+          NODE_ENV: production
         run: |
           cd packages/ui/
           yarn install --prefer-offline --frozen-lockfile
@@ -146,25 +147,24 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "packages/background/node_modules"
-          key: ${{ runner.os }}-modules-${{ hashFiles('packages/background/yarn.lock') }}
+          key: ${{ runner.os }}-all-modules-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Install background dependencies
         run: |
           cd packages/background/
-          #npm install --dev typescript@$(jq -r .devDependencies.typescript package.json)
-          #npm link typescript
           yarn install --prefer-offline --frozen-lockfile
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-          NODE_ENV: development
 
       - name: Dependency Provider cache
         uses: actions/cache@v3
         with:
           path: "packages/provider/node_modules"
-          key: ${{ runner.os }}-modules-${{ hashFiles('packages/provider/yarn.lock') }}
+          key: ${{ runner.os }}-prod-modules-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install provider dependencies
+        env:
+          NODE_ENV: production
         run: |
           cd packages/provider/
           yarn install --prefer-offline --frozen-lockfile

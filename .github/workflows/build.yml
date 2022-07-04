@@ -30,8 +30,7 @@ jobs:
     steps:
       - name: Print user input
         run: |
-          echo -e "Versions:\n
-              extension-version: ${{ github.event.inputs.extension-version }}\n \
+          echo -e extension-version: ${{ github.event.inputs.extension-version }}
           echo -e pre-release: ${{ github.event.inputs.pre-release }}
           echo -e release-notes: ${{ github.event.inputs.release-notes }}
 
@@ -155,19 +154,19 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "packages/ui/node_modules"
-          key: ${{ runner.os }}-all-modules-${{ hashFiles('packages/ui/yarn.lock') }}
+          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Dependency Background cache
         uses: actions/cache@v3
         with:
           path: "packages/background/node_modules"
-          key: ${{ runner.os }}-all-modules-${{ hashFiles('packages/background/yarn.lock') }}
+          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Dependency Provider cache
         uses: actions/cache@v3
         with:
           path: "packages/provider/node_modules"
-          key: ${{ runner.os }}-all-modules-${{ hashFiles('packages/provider/yarn.lock') }}
+          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
         env:

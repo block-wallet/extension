@@ -206,10 +206,7 @@ jobs:
 
       - name: Install yarn
         run: |
-          curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-          echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-          sudo apt update
-          apt install -y yarn --no-install-recommends
+          npm install --global yarn
 
       - name: Cache e2e dependencies and cypress binary
         id: cache-cypress
@@ -299,9 +296,6 @@ jobs:
         run: |
           echo "{" > version.json
           echo "\"extension\": \"${{ github.event.inputs.extension-version }}\"," >> version.json
-          echo "\"background\": \"${{ github.event.inputs.background-version }}\"," >> version.json
-          echo "\"provider\": \"${{ github.event.inputs.provider-version }}\"," >> version.json
-          echo "\"ui\": \"${{ github.event.inputs.ui-version }}\"," >> version.json
           echo "\"prerelease\": \"${{ github.event.inputs.pre-release }}\"" >> version.json
           echo "}"  >> version.json
 
@@ -343,7 +337,7 @@ jobs:
         run: |
           s3_url=$(echo "${S3_PATH/s3/https}")
           pr_title="[Automated] Extension release ${{ github.event.inputs.extension-version }}"
-          pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip]($s3_url/${{ env.EXTENSION_NAME }}.zip)\n - [SHA256 checksum]($s3_url/${{ env.EXTENSION_NAME }}.checksum)\n\n## Dependencies :link: \n\n\n - Background: [${{ github.event.inputs.background-version }}](https://github.com/block-wallet/extension-background/releases/tag/${{ github.event.inputs.background-version }})\n - UI: [${{ github.event.inputs.ui-version }}](https://github.com/block-wallet/extension-ui/releases/tag/${{ github.event.inputs.ui-version }})\n - Provider: [${{ github.event.inputs.provider-version }}](https://github.com/block-wallet/extension-provider/releases/tag/${{ github.event.inputs.provider-version }})\n")
+          pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip]($s3_url/${{ env.EXTENSION_NAME }}.zip)\n - [SHA256 checksum]($s3_url/${{ env.EXTENSION_NAME }}.checksum)\n\n")
           pr_reviewer="block-wallet/releasereviewers"
           pr_assignee="leablock"
           pr_label="automated,release"

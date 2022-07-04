@@ -129,7 +129,7 @@ jobs:
   build:
     env:
       ENVIRONMENT: prod
-    runs-on: [self-hosted, node]
+    runs-on: [self-hosted, large]
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2

@@ -38,6 +38,7 @@
     "scripts": {
         "test": "make test/provider",
         "build": "make build/provider",
+        "lint": "eslint src --ext .ts --quiet",
         "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html"
     }
 }

@@ -5,6 +5,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    commit-message:
+      prefix: "chore: workflow"
     labels:
       - "workflow"
       - "dependencies"
@@ -17,8 +19,7 @@ updates:
     schedule:
       interval: "daily"
     commit-message:
-      prefix: "background"
-      prefix-development: "background dev"
+      prefix: "chore: backgrnd"
       include: "scope"
     labels:
       - "background"
@@ -32,8 +33,7 @@ updates:
     schedule:
       interval: "daily"
     commit-message:
-      prefix: "provider"
-      prefix-development: "provider dev"
+      prefix: "chore: provider"
       include: "scope"
     labels:
       - "provider"
@@ -48,8 +48,7 @@ updates:
       interval: "daily"
     commit-message:
       # Prefix all commit messages with "npm"
-      prefix: "ui"
-      prefix-development: "ui dev"
+      prefix: "chore: ui"
       include: "scope"
     labels:
       - "ui"

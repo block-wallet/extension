@@ -1,0 +1,33 @@
+name: Convention
+
+on:
+  pull_request:
+    branches:
+      - master
+
+  repository_dispatch:
+    types: [automation]
+
+jobs:
+  validation:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
+    runs-on: [self-hosted, dev]
+    steps:
+      - name: Validate commit messages
+        uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: '^(chore|docs|feat|fix|refactor|style|test){1}(\([\w\-\.]+\))?(!)?: ([\w ])+([\s\S]*)'
+          flags: "gm"
+          excludeDescription: "true"
+          excludeTitle: "true"
+          checkAllCommitMessages: "true"
+          accessToken: ${{ secrets.PAT }}
+          error: "Please, fix the invalid commit message/s."
+
+      - name: Validate branch name
+        uses: deepakputhraya/action-branch-name@master
+        with:
+          regex: '^(chore|docs|feat|fix|refactor|style|test|release|dependabot){1}([\w \/])+'
+          ignore: master
+          min_length: 5
+          max_length: 50

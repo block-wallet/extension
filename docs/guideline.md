@@ -4,18 +4,13 @@
 - [Monorepo guideline](#monorepo-guideline)
   - [Explanation](#explanation)
     - [🧰 What is a Monorepo?](#-what-is-a-monorepo)
-    - [⚙️ Why are we migrating to the Monorepo structure with submodules?](#️-why-are-we-migrating-to-the-monorepo-structure-with-submodules)
+    - [⚙️ Why are we using a Monorepo?](#️-why-are-we-using-a-monorepo)
     - [⬆ Block extension structure](#-block-extension-structure)
   - [⛓ How do I work with the Monorepo?](#-how-do-i-work-with-the-monorepo)
     - [🚉 Getting Started](#-getting-started)
-    - [⤴ Committing changes locally](#-committing-changes-locally)
-    - [⤵ Updating from github](#-updating-from-github)
     - [🆕 Creating a new branch](#-creating-a-new-branch)
-    - [📇 Switching branches](#-switching-branches)
-    - [⚠️ Keep in mind](#️-keep-in-mind)
-  - [Common cases to take advantage of the structure](#common-cases-to-take-advantage-of-the-structure)
-- [Appendix](#appendix)
-  - [🛠 `make` commands](#-make-commands)
+    - [⤴ Committing changes](#-committing-changes)
+    - [⤴ Open a Pull Request](#-open-a-pull-request)
 
 # Monorepo guideline
 

@@ -1,6 +1,6 @@
 # Workflows
 
-There are some different GitHub workflows each one with a specific purpose:
+There are some different GitHub in this repository. Each of them with a specific purpose:
 
 ## Build
 

@@ -93,5 +93,5 @@ See the [Acknowledgments](docs/acknowledgments.md) file for details
 [Github](https://github.com/block-wallet)
 [Twitter](https://twitter.com/GetBlockWallet)
 [Telegram](https://t.me/blockwallet)
-[LinkedIn](https://www.linkedin.com/company/
+[LinkedIn](https://www.linkedin.com/company/block-wallet/)
 [Mail](mailto:hello@blockwallet.io)

@@ -11,7 +11,7 @@ env:
 
 jobs:
   lint:
-    runs-on: [self-hosted, node]
+    runs-on: [self-hosted, release]
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v3
@@ -65,7 +65,7 @@ jobs:
           yarn lint
 
   test:
-    runs-on: [self-hosted, node]
+    runs-on: [self-hosted, release]
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2
@@ -129,7 +129,7 @@ jobs:
   build:
     env:
       ENVIRONMENT: prod
-    runs-on: [self-hosted, large]
+    runs-on: [self-hosted, release]
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2
@@ -226,7 +226,7 @@ jobs:
 
   e2e:
     needs: [build]
-    runs-on: [self-hosted, large]
+    runs-on: [self-hosted, release]
 
     steps:
       - name: Checkout e2e repository

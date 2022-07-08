@@ -26,7 +26,7 @@ env:
 
 jobs:
   validation:
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted]
     steps:
       - name: Print user input
         run: |
@@ -86,7 +86,7 @@ jobs:
 
   build:
     needs: validation
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted, large]
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -189,7 +189,7 @@ jobs:
 
   tests:
     needs: build
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted, large]
     steps:
       - name: Checkout e2e repository
         uses: actions/checkout@v2
@@ -256,7 +256,7 @@ jobs:
 
   package:
     needs: tests
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted, small]
     steps:
       - name: Download the extension built folder
         uses: actions/download-artifact@v2
@@ -309,7 +309,7 @@ jobs:
     outputs:
       pr_url: ${{ steps.create_pull_request.outputs.pr_url }}
     needs: package
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted, small]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -363,7 +363,7 @@ jobs:
   notify:
     if: success()
     needs: [validation, build, tests, package, pull_request]
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted, small]
     steps:
       - name: Slack notification - Ready to release
         uses: 8398a7/action-slack@v3
@@ -389,7 +389,7 @@ jobs:
   error:
     if: failure()
     needs: [validation, build, tests, package, pull_request, notify]
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted, small]
     steps:
       - name: Slack notification - CI status
         uses: 8398a7/action-slack@v3

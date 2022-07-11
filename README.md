@@ -1,27 +1,97 @@
+[![CI](https://github.com/block-wallet/extension/actions/workflows/ci.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/ci.yml) [![Release (manual)](https://github.com/block-wallet/extension/actions/workflows/build.yaml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/build.yaml) [![Release (automated)](https://github.com/block-wallet/extension/actions/workflows/release.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/release.yml)
+
 # Block Wallet Extension
 
-## Guideline
+The most private, non-custodial cryptocurrency wallet
+The first crypto wallet protecting you on Web3 without any compromises. Stay safe with BlockWallet.
 
-See [guideline](docs/guideline.md)
+Supporting Ethereum, BNB Chain, Polygon, Avalanche, Fantom, and Arbitrum.
 
-## TL;DR
+BlockWallet is for you if:
 
-```bash
-git clone git@github.com:block-wallet/extension.git
-cd extension
-git submodule update --init --recursive
-make git/branch/checkout BRANCH=master
+- You frequently use DApps and DEXes.
+- You want your tools working smoothly, every time.
+- You care about your personal data and security online.
+- You are tired of overly-cluttered and confusing crypto wallets.
+
+## Getting Started
+
+See the [guideline](docs/guideline.md)
+
+### Prerequisites
+
+- Node.js: version at [.nvmrc](.nvmrc)
+- Yarn
+- Make
+
+### Installing
+
+To install all the dependencies run the command
+
+```
 make install
-cd packages/background && cp env.orig .env
-cd ../provider && cp env.orig .env
 ```
 
-> 👉 Complete the variables value inside .env
+### Build
 
-## FAQ
+Once you installed everything run the command
 
-- ### git@github.com: Permission denied (publickey)
+```
+make build
+```
 
-  - Create an ssh key opening a terminal and using `ssh-keygen` (you can press enter for every input).
-  - In a terminal type `cat ~/.ssh/id_rsa.pub` and copy the content.
-  - Add the ssh key to github following this [guide](https://docs.github.com/en/github/authenticating-to-github/adding-a-new-ssh-key-to-your-github-account) from step 2.
+## Running the tests
+
+Once you build the extension run the command
+
+```
+make test
+```
+
+## Coding style
+
+Every [package](packages) has it own coding style. In order to check the styles run the command
+
+```
+make lint
+```
+
+## Release
+
+The release process uses a combination of two GitHub workflows called [build](.github/workflows/build.yml) and [release](.github/workflows/release.yml) and finally a manual step to upload the new extension version to the [Chrome Web Store](https://chrome.google.com/webstore/detail/blockwallet/bopcbmipnjdcdfflfgjdgdjejmgpoaab). See the [GitHub releases](https://github.com/block-wallet/extension/releases)
+
+## Built With
+
+* [Node.js](https://nodejs.org/)
+* [Typescript](https://www.typescriptlang.org/)
+* [React.js](https://reactjs.org/)
+
+## Contributing
+
+Please read [CONTRIBUTING.md](docs/contributing.md) for details on our code of conduct, and the process for submitting pull requests to us.
+
+## Versioning
+
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+
+## Authors
+
+See the list of [contributors](https://github.com/block-wallet/extension/graphs/contributors) who participated in this project.
+
+## License
+
+See the [LICENSE](LICENSE) file for details
+
+## Acknowledgments
+
+See the [Acknowledgments](docs/acknowledgments.md) file for details
+
+# Socials
+
+[Web](https://blockwallet.io/)
+[Medium](http://blockwallet.medium.com/)
+[Github](https://github.com/block-wallet)
+[Twitter](https://twitter.com/GetBlockWallet)
+[Telegram](https://t.me/blockwallet)
+[LinkedIn](https://www.linkedin.com/company/block-wallet/)
+[Mail](mailto:hello@blockwallet.io)

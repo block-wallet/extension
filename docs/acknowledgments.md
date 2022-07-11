@@ -14,7 +14,13 @@ Ulysse: https://github.com/Ulydev
 
 Olga: https://github.com/helgonaft
 
-Rodrigo: https://github.com/RodrigoCalvo
+Rodrigo: https://github.com/rodr-r
+
+Martin: https://github.com/martnLecam
+
+Facundo: https://github.com/fpezzola
+
+Leandro: https://github.com/leablock
 
 Alexandre: https://github.com/s0wcy
 

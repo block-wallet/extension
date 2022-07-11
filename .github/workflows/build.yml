@@ -224,6 +224,7 @@ jobs:
 
       - name: Install Cypress linux dependencies
         run: |
+          apt update
           apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
 
       - name: Install e2e dependencies
@@ -267,6 +268,7 @@ jobs:
       - name: Zip extension
         id: zip
         run: |
+          apt update
           apt install -y zip
           mkdir $ARTIFACTS_FOLDER
           mv blockwallet-extension dist
@@ -326,8 +328,8 @@ jobs:
         run: |
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          sudo apt update
-          sudo apt install gh
+          apt update
+          apt install gh
 
       - name: Create Pull Request
         id: create_pull_request

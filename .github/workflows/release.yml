@@ -15,7 +15,7 @@ jobs:
       html_url: ${{ steps.create_release.outputs.html_url }}
       s3_url: ${{ steps.get_metadata.outputs.s3_url }}
     if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'automated') && contains(github.event.pull_request.labels.*.name, 'release')
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted, small]
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -93,7 +93,7 @@ jobs:
   notify:
     if: success()
     needs: [release]
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted, small]
     steps:
       - name: Slack notification - Release
         if: success()
@@ -120,7 +120,7 @@ jobs:
   error:
     if: failure()
     needs: [release, notify]
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted, small]
     steps:
       - name: Slack notification - CI status
         uses: 8398a7/action-slack@v3

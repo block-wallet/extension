@@ -11,7 +11,7 @@ env:
 
 jobs:
   lint:
-    runs-on: [self-hosted, node]
+    runs-on: [self-hosted, small]
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v3
@@ -65,7 +65,7 @@ jobs:
           yarn lint
 
   test:
-    runs-on: [self-hosted, node]
+    runs-on: [self-hosted]
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2
@@ -263,6 +263,8 @@ jobs:
 
       - name: Install Cypress linux dependencies
         run: |
+          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
+          apt update
           apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
 
       - name: Install e2e dependencies

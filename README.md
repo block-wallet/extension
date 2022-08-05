@@ -72,7 +72,7 @@ Please read [CONTRIBUTING.md](docs/contributing.md) for details on our code of c
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/block-wallet/extension/tags). 
 
 ## Authors
 
@@ -89,9 +89,15 @@ See the [Acknowledgments](docs/acknowledgments.md) file for details
 # Socials
 
 [Web](https://blockwallet.io/)
+
 [Medium](http://blockwallet.medium.com/)
+
 [Github](https://github.com/block-wallet)
+
 [Twitter](https://twitter.com/GetBlockWallet)
+
 [Telegram](https://t.me/blockwallet)
+
 [LinkedIn](https://www.linkedin.com/company/block-wallet/)
+
 [Mail](mailto:hello@blockwallet.io)

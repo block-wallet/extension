@@ -50,11 +50,11 @@ cd extension
 
 ### 🆕 Creating a new branch
 
-When you are working on something that does not relate to an existing branch, create one from master. Remember to follow the [convention](docs/convention.md) for the branch names.
+When you are working on something that does not relate to an existing branch, create one from master. Remember to follow the [convention](convention.md) for the branch names.
 
 ### ⤴ Committing changes
 
-To commit your change(s) just add your file/s and then commit your changes with a message that follows the [convention](docs/convention.md).
+To commit your change(s) just add your file/s and then commit your changes with a message that follows the [convention](convention.md).
 
 
 ### ⤴ Open a Pull Request

@@ -40,7 +40,7 @@ Once you installed everything run the command
 make build
 ```
 
-## Running the tests
+### Running the tests
 
 Once you build the extension run the command
 
@@ -48,7 +48,7 @@ Once you build the extension run the command
 make test
 ```
 
-## Coding style
+### Coding style
 
 Every [package](packages) has it own coding style. In order to check the styles run the command
 
@@ -56,7 +56,7 @@ Every [package](packages) has it own coding style. In order to check the styles 
 make lint
 ```
 
-## Release
+### Release
 
 The release process uses a combination of two GitHub workflows called [build](.github/workflows/build.yml) and [release](.github/workflows/release.yml) and finally a manual step to upload the new extension version to the [Chrome Web Store](https://chrome.google.com/webstore/detail/blockwallet/bopcbmipnjdcdfflfgjdgdjejmgpoaab). See the [GitHub releases](https://github.com/block-wallet/extension/releases)
 

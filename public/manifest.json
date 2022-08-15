@@ -1,20 +1,12 @@
 {
     "author": "BlockWallet",
     "background": {
-        "scripts": [
-            "hot-reload.js",
-            "background.js"
-        ]
+        "service_worker": "background.js"
     },
     "content_scripts": [
         {
-            "js": [
-                "content.js"
-            ],
-            "matches": [
-                "http://*/*",
-                "https://*/*"
-            ],
+            "js": ["content.js"],
+            "matches": ["http://*/*", "https://*/*"],
             "exclude_matches": [
                 "https://block-wallet.github.io/eth-ledger-bridge-keyring/*",
                 "https://connect.trezor.io/*"
@@ -23,15 +15,11 @@
             "all_frames": true
         },
         {
-            "js": [
-                "vendor/trezor/trezor-content.js"
-            ],
-            "matches": [
-                "*://connect.trezor.io/*/popup.html"
-            ]
+            "js": ["vendor/trezor/trezor-content.js"],
+            "matches": ["*://connect.trezor.io/*/popup.html"]
         }
     ],
-    "browser_action": {
+    "action": {
         "default_popup": "popup.html",
         "default_title": "BlockWallet"
     },
@@ -42,23 +30,23 @@
         "48": "icons/icon-48.png",
         "128": "icons/icon-128.png"
     },
-    "content_security_policy": "script-src 'self' 'wasm-eval'; object-src 'self'",
-    "manifest_version": 2,
+    "content_security_policy": {
+        "extension_pages": "script-src 'self' 'wasm-eval'; object-src 'self'"
+    },
+    "manifest_version": 3,
     "name": "BlockWallet",
-    "permissions": [
-        "activeTab",
-        "storage",
-        "notifications",
-        "https://*.blockwallet.io/*",
-        "https://*.etherscan.io/*",
-        "https://*.bscscan.com/*",
-        "https://*.polygonscan.com/*"
-    ],
+    "permissions": ["activeTab", "storage", "notifications"],
+    "host_permissions": ["https://*.blockwallet.io/*"],
     "short_name": "BlockWallet",
     "version": "0.3.0",
     "web_accessible_resources": [
-        "snarks/tornado/tornadoProvingKey.bin",
-        "snarks/tornado/tornado.json",
-        "blankProvider.js"
+        {
+            "resources": [
+                "snarks/tornado/tornadoProvingKey.bin",
+                "snarks/tornado/tornado.json",
+                "blankProvider.js"
+            ],
+            "matches": ["https://*/*"]
+        }
     ]
 }

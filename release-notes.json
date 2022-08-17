@@ -222,7 +222,7 @@
                     "title": "Updates",
                     "notes": [
                         {
-                            "type": "success",
+                            "type": "warn",
                             "message": "Remove Tornado functionality"
                         },
                         {

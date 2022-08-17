@@ -1,6 +1,5 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
-import { Network } from '../../../../utils/constants/networks';
 
 /**
  * This migration adds the websocket rpc endpoints to the current networks

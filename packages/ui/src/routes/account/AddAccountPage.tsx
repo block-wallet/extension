@@ -1,5 +1,4 @@
-import React, { useEffect } from "react"
-import { InferType } from "yup"
+import { useEffect } from "react"
 import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
@@ -23,21 +22,20 @@ import useNewAccountHelper from "./useNewAccountHelper"
 const createAccountSchema = yup.object({
     accountName: yup.string().max(40, "Account name is too long"),
 })
-type createAccountFormData = InferType<typeof createAccountSchema>
+type createAccountFormData = { accountName: string }
 
 const AddAccountPage = () => {
     const history = useHistory()
     const { run, isLoading, isSuccess, isError, reset } = useAsyncInvoke()
     const { isOpen, status, dispatch } = useWaitingDialog()
-    const {
-        suggestedAccountName,
-        checkAccountNameAvailablility,
-    } = useNewAccountHelper()
+    const { suggestedAccountName, checkAccountNameAvailablility } =
+        useNewAccountHelper()
     const {
         register,
         handleSubmit,
-        errors,
         setError,
+
+        formState: { errors },
     } = useForm<createAccountFormData>({
         resolver: yupResolver(createAccountSchema),
     })
@@ -50,10 +48,8 @@ const AddAccountPage = () => {
         data.accountName = data.accountName.trim()
 
         try {
-            const {
-                isAvailable,
-                error: accountNameErr,
-            } = checkAccountNameAvailablility(data.accountName)
+            const { isAvailable, error: accountNameErr } =
+                checkAccountNameAvailablility(data.accountName)
 
             if (!isAvailable) {
                 throw new Error(accountNameErr)
@@ -74,10 +70,15 @@ const AddAccountPage = () => {
                 })
             )
         } catch (error: any) {
-            setError("accountName", {
-                message: error.message ?? "Error creating the account",
-                shouldFocus: true,
-            })
+            setError(
+                "accountName",
+                {
+                    message: error.message ?? "Error creating the account",
+                },
+                {
+                    shouldFocus: true,
+                }
+            )
         }
     })
 
@@ -143,8 +144,7 @@ const AddAccountPage = () => {
                         <TextInput
                             appearance="outline"
                             label="Account Name"
-                            name="accountName"
-                            register={register}
+                            {...register("accountName")}
                             placeholder={suggestedAccountName}
                             error={errors.accountName?.message}
                             autoFocus={true}

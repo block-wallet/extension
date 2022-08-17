@@ -22,9 +22,10 @@
         "resolveJsonModule": true,
         "isolatedModules": false,
         "noEmit": true,
-        "jsx": "react",
+        "jsx": "react-jsx",
         "typeRoots": ["./node_modules/@types", "./../background/src/typings"],
         "experimentalDecorators": true
     },
-    "include": ["src", "../background/src"]
+    "include": ["src", "../background/src"],
+    "exclude": ["src/stories"]
 }

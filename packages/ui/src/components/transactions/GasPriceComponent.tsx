@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useRef, useState, useEffect } from "react"
+import { FunctionComponent, useRef, useState, useEffect } from "react"
 import classnames from "classnames"
 import { BigNumber } from "ethers"
 
@@ -173,10 +173,8 @@ type GasAdvancedForm = InferType<typeof schema>
 // Advanced tab. Allows users to enter manual fee values.
 const GasSelectorAdvanced = (props: GasComponentProps) => {
     const { gasFees, selectedOption, getGasOption, setSelectedGas } = props
-    const {
-        estimatedBaseFee: baseFeePerGas,
-        gasPricesLevels,
-    } = useGasPriceData()
+    const { estimatedBaseFee: baseFeePerGas, gasPricesLevels } =
+        useGasPriceData()
     const { gasLowerCap } = useSelectedNetwork()
 
     const defaultFees: TransactionFeeData = {
@@ -198,11 +196,12 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
     const {
         register,
         handleSubmit,
-        errors,
         setValue,
         getValues,
         setError,
         clearErrors,
+
+        formState: { errors },
     } = useForm<GasAdvancedForm>({
         defaultValues: {
             gasLimit: formatUnits(
@@ -335,8 +334,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                     </label>
                     <input
                         type="text"
-                        name="gasLimit"
-                        ref={register}
+                        {...register("gasLimit")}
                         className={classnames(
                             Classes.inputBordered,
                             "w-full",
@@ -390,8 +388,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                     <EndLabel label="GWEI">
                         <input
                             type="text"
-                            name="maxPriorityFeePerGas"
-                            ref={register}
+                            {...register("maxPriorityFeePerGas")}
                             className={classnames(
                                 Classes.inputBordered,
                                 "w-full",
@@ -424,13 +421,6 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                             }}
                             tabIndex={2}
                         />
-                        <div
-                            className={classnames(
-                                "absolute inset-y-0 right-8 flex items-center"
-                            )}
-                        >
-                            <span className="text-gray-500 text-sm">GWEI</span>
-                        </div>
                     </EndLabel>
                     {/* ERROR */}
                     <span
@@ -452,11 +442,10 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                     <label className="leading-loose text-xs font-medium  mb-1">
                         Max fee (per gas)
                     </label>
-                    <div className="flex flex-row relative w-full">
+                    <EndLabel label="GWEI">
                         <input
                             type="text"
-                            name="maxFeePerGas"
-                            ref={register}
+                            {...register("maxFeePerGas")}
                             className={classnames(
                                 Classes.inputBordered,
                                 "w-full",
@@ -488,14 +477,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                             }}
                             tabIndex={3}
                         />
-                        <div
-                            className={classnames(
-                                "absolute inset-y-0 right-8 flex items-center"
-                            )}
-                        >
-                            <span className="text-gray-500 text-sm">GWEI</span>
-                        </div>
-                    </div>
+                    </EndLabel>
                     {/* ERROR */}
                     <span
                         className={classnames(
@@ -570,17 +552,11 @@ const GasPriceComponent: FunctionComponent<{
     useOnClickOutside(ref, () => setActive(false))
 
     //State
-    const {
-        exchangeRates,
-        nativeCurrency,
-        localeInfo,
-        networkNativeCurrency,
-    } = useBlankState()!
+    const { exchangeRates, nativeCurrency, localeInfo, networkNativeCurrency } =
+        useBlankState()!
 
-    const {
-        estimatedBaseFee: baseFeePerGas,
-        gasPricesLevels,
-    } = useGasPriceData()
+    const { estimatedBaseFee: baseFeePerGas, gasPricesLevels } =
+        useGasPriceData()
 
     const {
         defaultNetworkLogo,
@@ -595,10 +571,8 @@ const GasPriceComponent: FunctionComponent<{
         showEstimationError ?? false
     )
 
-    const [
-        transactionSpeeds,
-        setTransactionSpeeds,
-    ] = useState<TransactionSpeed>(getTransactionSpeeds(gasPricesLevels))
+    const [transactionSpeeds, setTransactionSpeeds] =
+        useState<TransactionSpeed>(getTransactionSpeeds(gasPricesLevels))
 
     const getGasOption = (label: string, gasFees: TransactionFeeData) => {
         const {

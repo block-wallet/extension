@@ -4,9 +4,10 @@ import {
     TransactionStatus,
 } from '../controllers/transactions/utils/types';
 import {
-    createExplorerLink,
-    createAccountLink,
+    createCustomAccountLink,
+    createCustomExplorerLink,
 } from '@block-wallet/explorer-link';
+import { getChainListItem } from './chainlist';
 
 export const showSetUpCompleteNotification = (): void => {
     const url = '';
@@ -16,6 +17,7 @@ export const showSetUpCompleteNotification = (): void => {
 
     showNotification(title, message, url);
 };
+
 export const showTransactionNotification = (txMeta: TransactionMeta): void => {
     const { status, transactionCategory } = txMeta;
 
@@ -49,11 +51,21 @@ export const showBlankContractNotification = (
 
 export const showIncomingTransactionNotification = (
     account: string,
-    chainId: string
+    chainId: number,
+    section?: '' | 'tokentxns' | 'tokentxnsErc721' | 'tokentxnsErc1155'
 ): void => {
+    const explorerUrl = getExplorerUrl(chainId);
+    if (!explorerUrl) {
+        return;
+    }
+
     addOnClickListener();
 
-    const url = createAccountLink(account as string, String(chainId));
+    const url = createCustomAccountLink(
+        account as string,
+        explorerUrl,
+        section
+    );
     const title = 'Incoming Transaction';
     const message = 'An incoming transaction to your address was confirmed!';
 
@@ -61,13 +73,21 @@ export const showIncomingTransactionNotification = (
 };
 
 const showSucceededTransaction = (txMeta: TransactionMeta) => {
+    const { chainId, transactionParams } = txMeta;
+    if (!chainId) {
+        return;
+    }
+
+    const explorerUrl = getExplorerUrl(chainId);
+    if (!explorerUrl) {
+        return;
+    }
+
     addOnClickListener();
 
-    const { chainId, transactionParams } = txMeta;
     const { hash, nonce } = transactionParams;
 
-    const url = createExplorerLink(hash as string, String(chainId));
-
+    const url = createCustomExplorerLink(hash as string, explorerUrl);
     const title = 'Transaction confirmed';
     const message = `Transaction with nonce ${nonce} confirmed!`;
 
@@ -75,13 +95,21 @@ const showSucceededTransaction = (txMeta: TransactionMeta) => {
 };
 
 const showSucceededBlankInteraction = (txMeta: TransactionMeta) => {
+    const { chainId, transactionParams } = txMeta;
+    if (!chainId) {
+        return;
+    }
+
+    const explorerUrl = getExplorerUrl(chainId);
+    if (!explorerUrl) {
+        return;
+    }
+
     addOnClickListener();
 
-    const { chainId, transactionParams } = txMeta;
     const { hash } = transactionParams;
 
-    const url = createExplorerLink(hash as string, String(chainId));
-
+    const url = createCustomExplorerLink(hash as string, explorerUrl);
     const title = 'Blank interaction succeeded';
     const message = 'Privacy Smart Contract interaction has been confirmed!';
 
@@ -89,13 +117,21 @@ const showSucceededBlankInteraction = (txMeta: TransactionMeta) => {
 };
 
 const showFailedTransaction = (txMeta: TransactionMeta) => {
+    const { chainId, transactionParams } = txMeta;
+    if (!chainId) {
+        return;
+    }
+
+    const explorerUrl = getExplorerUrl(chainId);
+    if (!explorerUrl) {
+        return;
+    }
+
     addOnClickListener();
 
-    const { chainId, transactionParams } = txMeta;
     const { hash, nonce } = transactionParams;
 
-    const url = createExplorerLink(hash as string, String(chainId));
-
+    const url = createCustomExplorerLink(hash as string, explorerUrl);
     const title = 'Transaction failed';
     const message = `Transaction with nonce ${nonce} failed!`;
 
@@ -103,13 +139,21 @@ const showFailedTransaction = (txMeta: TransactionMeta) => {
 };
 
 const showFailedBlankInteraction = (txMeta: TransactionMeta) => {
+    const { chainId, transactionParams } = txMeta;
+    if (!chainId) {
+        return;
+    }
+
+    const explorerUrl = getExplorerUrl(chainId);
+    if (!explorerUrl) {
+        return;
+    }
+
     addOnClickListener();
 
-    const { chainId, transactionParams } = txMeta;
     const { hash } = transactionParams;
 
-    const url = createExplorerLink(hash as string, String(chainId));
-
+    const url = createCustomExplorerLink(hash as string, explorerUrl);
     const title = 'Blank interaction failed';
     const message = 'Privacy Smart Contract interaction failed!';
 
@@ -151,4 +195,23 @@ const linkToEtherscan = (url: string) => {
     if (url.startsWith('https://')) {
         chrome.tabs.create({ url: url });
     }
+};
+
+const getExplorerUrl = (chainId: number) => {
+    if (isNaN(chainId)) {
+        return undefined;
+    }
+
+    const network = getChainListItem(chainId);
+    if (!network) {
+        return undefined;
+    }
+    if (!network.explorers || !network.explorers.length) {
+        return undefined;
+    }
+    if (!network.explorers.some((e) => e.url)) {
+        return undefined;
+    }
+
+    return network.explorers.find((e) => e.url)?.url;
 };

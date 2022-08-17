@@ -1,4 +1,3 @@
-import React from "react"
 import { useErrorHandler } from "react-error-boundary"
 
 // Components
@@ -14,9 +13,12 @@ import { classnames } from "../../styles/classes"
 // Assets
 import book from "../../assets/images/icons/book.svg"
 import spanner from "../../assets/images/icons/spanner.svg"
+import eyeBlue from "../../assets/images/icons/eye_blue.svg"
+
 import logoutIcon from "../../assets/images/icons/logout.svg"
 import account from "../../assets/images/icons/account.svg"
 import about from "../../assets/images/icons/about.svg"
+//import networkCloud from "../../assets/images/icons/network_cloud.svg"
 import usb from "../../assets/images/icons/usb.svg"
 
 // Context
@@ -27,9 +29,11 @@ import classNames from "classnames"
 import GenericTooltip from "../../components/label/GenericTooltip"
 import AppVersion from "../../components/AppVersion"
 import { openHardwareConnect } from "../../context/commActions"
+import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 
 const SettingsPage = () => {
     const { isSeedPhraseBackedUp, isImportingDeposits } = useBlankState()!
+    const { isTornadoEnabled } = useSelectedNetwork()
     const handleError = useErrorHandler()
     const history = useOnMountHistory()
 
@@ -39,6 +43,12 @@ const SettingsPage = () => {
             label: "Account",
             to: "/accounts/menu",
         },
+        //Prevent access to Networks.
+        /* {
+            icon: networkCloud,
+            label: "Networks",
+            to: "/settings/networks",
+        }, */
         {
             icon: book,
             label: "Address Book",
@@ -55,11 +65,20 @@ const SettingsPage = () => {
             onClick: () => openHardwareConnect(),
         },
         {
+            icon: eyeBlue,
+            label: "Privacy",
+            to: "/settings/privacy",
+        },
+        {
             icon: about,
             label: "About",
             to: "/settings/about",
         },
     ]
+
+    const filteredOptions = options.filter((opt) => {
+        return opt.label === "Privacy" ? isTornadoEnabled : true
+    })
 
     const logout = () => {
         try {
@@ -123,7 +142,7 @@ const SettingsPage = () => {
                 <div className="flex flex-col space-y-1">
                     <div className="flex flex-col space-y-4">
                         <VerticalSelect
-                            options={options}
+                            options={filteredOptions}
                             value={undefined}
                             onChange={(option) => {
                                 if (option.onClick) {

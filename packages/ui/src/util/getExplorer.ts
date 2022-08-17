@@ -1,8 +1,10 @@
-import { Networks } from "@block-wallet/background/utils/constants/networks"
 import {
-    createExplorerLink,
-    createAccountLink,
-    getExplorerName,
+    Network,
+    Networks,
+} from "@block-wallet/background/utils/constants/networks"
+import {
+    createCustomExplorerLink,
+    createCustomAccountLink,
 } from "@block-wallet/explorer-link"
 import { capitalize } from "./capitalize"
 
@@ -14,13 +16,20 @@ export const getChainIdFromNetwork = (networks: Networks, network?: String) => {
     return Object.values(networks).find((i) => i.name === network)?.chainId
 }
 
+export const getNetworkFromChainId = (
+    networks: Networks,
+    chainId: number
+): Network | undefined => {
+    return Object.values(networks).find((i) => i.chainId === chainId)
+}
+
 /**
  * Util to return a formatted network name from a given chain id
  *
  * @param chainId - Chain id hex string
  * @returns Chain name or 'Unknown'
  */
-export const getNetworkFromChainId = (
+export const getNetworkNameFromChainId = (
     networks: Networks,
     chainId: number,
     nameOrDesc: "name" | "desc" = "name"
@@ -38,21 +47,42 @@ export const getNetworkFromChainId = (
 
 export const generateExplorerLink = (
     networks: Networks,
-    network: string,
+    networkName: string,
     value: string,
     type: "tx" | "address"
 ) => {
-    const chainId = String(getChainIdFromNetwork(networks, network))
+    const chainId = getChainIdFromNetwork(networks, networkName)
+    if (!chainId) {
+        return undefined
+    }
+
+    const network = getNetworkFromChainId(networks, chainId)
+    if (!network) {
+        return undefined
+    }
+
+    if (!network.blockExplorerUrls || network.blockExplorerUrls.length < 1) {
+        return undefined
+    }
 
     if (type === "tx") {
-        return createExplorerLink(value, chainId)
+        return createCustomExplorerLink(value, network.blockExplorerUrls[0])
     } else if (type === "address") {
-        return createAccountLink(value, chainId)
+        return createCustomAccountLink(value, network.blockExplorerUrls[0])
     }
 }
 
-export const getExplorerTitle = (networks: Networks, network: string) => {
-    const chainId = String(getChainIdFromNetwork(networks, network))
+export const getExplorerTitle = (networks: Networks, networkName: string) => {
+    const chainId = getChainIdFromNetwork(networks, networkName)
 
-    return getExplorerName(chainId)
+    if (!chainId) {
+        return "Explorer"
+    }
+
+    const network = getNetworkFromChainId(networks, chainId)
+    if (!networkName) {
+        return "Explorer"
+    }
+
+    return network?.blockExplorerName || "Explorer"
 }

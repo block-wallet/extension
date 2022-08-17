@@ -1,4 +1,3 @@
-import React from "react"
 import classnames from "classnames"
 
 const EndLabel = ({
@@ -6,7 +5,7 @@ const EndLabel = ({
     children,
     className,
 }: {
-    label: string
+    label: string | JSX.Element
     children: React.ReactNode
     className?: string
 }) => (
@@ -14,7 +13,7 @@ const EndLabel = ({
         {children}
         <div
             className={classnames(
-                "absolute inset-y-0 right-8 flex items-center",
+                "absolute inset-y-0 right-2 flex items-center",
                 className
             )}
         >

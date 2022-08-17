@@ -195,7 +195,7 @@ export class PreferencesController extends BaseController<PreferencesControllerS
      */
     public async assignNewPhishingPreventionImage(
         phishingPreventionImage: string
-    ) {
+    ): Promise<void> {
         this.antiPhishingImage = phishingPreventionImage;
     }
 
@@ -209,7 +209,7 @@ export class PreferencesController extends BaseController<PreferencesControllerS
     /**
      * Gets antiPhishingImage value
      */
-    public get antiPhishingImage() {
+    public get antiPhishingImage(): string {
         return this.store.getState().antiPhishingImage;
     }
 
@@ -257,14 +257,14 @@ export class PreferencesController extends BaseController<PreferencesControllerS
         this.store.updateState({ releaseNotesSettings });
     }
 
-    public get releaseNotesSettings() {
+    public get releaseNotesSettings(): ReleaseNotesSettings {
         return this.store.getState().releaseNotesSettings;
     }
 
     /**
      * Updates the anti-phishing protection flag status in the store.
      */
-    public updateAntiPhishingProtectionStatus(enabled: boolean) {
+    public updateAntiPhishingProtectionStatus(enabled: boolean): void {
         return this.store.updateState({
             settings: {
                 ...this.settings,
@@ -276,7 +276,7 @@ export class PreferencesController extends BaseController<PreferencesControllerS
     /**
      * Updates the release notes subscription flag status in the store.
      */
-    public updateReleseNotesSubscriptionStatus(enabled: boolean) {
+    public updateReleseNotesSubscriptionStatus(enabled: boolean): void {
         return this.store.updateState({
             settings: {
                 ...this.settings,
@@ -288,7 +288,7 @@ export class PreferencesController extends BaseController<PreferencesControllerS
     /**
      * Update the default browser wallet flag status in the store.
      */
-    public updateDefaultBrowserWalletStatus(enabled: boolean) {
+    public updateDefaultBrowserWalletStatus(enabled: boolean): void {
         return this.store.updateState({
             settings: {
                 ...this.settings,

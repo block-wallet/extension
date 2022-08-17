@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import classnames from "classnames"
 import { Link, useHistory } from "react-router-dom"
 import { formatUnits } from "ethers/lib/utils"
@@ -33,7 +33,6 @@ import { useConnectedSite } from "../context/hooks/useConnectedSite"
 import { useTokensList } from "../context/hooks/useTokensList"
 
 // Assets
-import eye from "../assets/images/icons/eye.svg"
 import TokenSummary from "../components/TokenSummary"
 import GasPricesInfo from "../components/gas/GasPricesInfo"
 
@@ -145,6 +144,8 @@ const PopupPage = () => {
     const account = useSelectedAccount()
     const { nativeToken } = useTokensList()
     const network = useSelectedNetwork()
+    //const sendsEnabled = network.isSendEnabled
+    //const swapsEnabled = network.isSwapEnabled
 
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
 
@@ -290,24 +291,35 @@ const PopupPage = () => {
                                     Send
                                 </span>
                             </Link>
-                            {network.isTornadoEnabled && (
+                            {/* Prevent access to swaps feature*/}
+                            {/*  {swapsEnabled && (
                                 <Link
-                                    to="/privacy"
+                                    to="/swap"
                                     draggable={false}
-                                    className="flex flex-col items-center space-y-2 group"
+                                    className={classnames(
+                                        "flex flex-col items-center space-y-2 group",
+                                        (!sendsEnabled ||
+                                            !state.isUserNetworkOnline) &&
+                                            "pointer-events-none"
+                                    )}
                                 >
-                                    <div className="group w-8 h-8 flex items-center overflow-hidden transition duration-300 rounded-full bg-primary-300 group-hover:opacity-75">
-                                        <img
-                                            alt="Privacy"
-                                            src={eye}
-                                            className="w-full h-3 group-hover:animate-privacy-rotate select-none"
-                                        />
+                                    <div
+                                        className={classnames(
+                                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                            !sendsEnabled ||
+                                                !state.isUserNetworkOnline
+                                                ? "bg-gray-300"
+                                                : "bg-primary-300"
+                                        )}
+                                        style={{ transform: "scaleY(-1)" }}
+                                    >
+                                        <DoubleArrowHoverAnimation />
                                     </div>
                                     <span className="text-xs font-medium">
-                                        Privacy
+                                        Swap
                                     </span>
                                 </Link>
-                            )}
+                            )} */}
                         </TokenSummary.Actions>
                     </TokenSummary>
                     <ActivityAssetsView initialTab={state.popupTab} />

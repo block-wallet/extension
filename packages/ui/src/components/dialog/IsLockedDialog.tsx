@@ -1,4 +1,3 @@
-import React from "react"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import ExclamationCircleIconFull from "../icons/ExclamationCircleIconFull"
 import FullScreenDialog from "./FullScreenDialog"

@@ -2,7 +2,7 @@ import {
     Note,
     ReleaseNote,
 } from "@block-wallet/background/controllers/PreferencesController"
-import React, { FC } from "react"
+import { FC } from "react"
 import { useHistory } from "react-router-dom"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
 import PopupFooter from "../popup/PopupFooter"
@@ -42,7 +42,7 @@ const ReleaseNotesInfo: FC<ReleaseNotesInfoProps> = ({
                 </PopupFooter>
             }
         >
-            <div className="w-full p-6 bg-white bg-opacity-75 scroll-smooth scroll-auto overflow-y-scroll">
+            <div className="w-full p-6 bg-white bg-opacity-75 scroll-smooth overflow-y-scroll">
                 <Info>
                     <Info.Title>What's new on BlockWallet</Info.Title>
                     <div className="p-1 pt-6">

@@ -5,7 +5,8 @@ import type {
     RawSignatureData,
     WatchAssetReq,
 } from "@block-wallet/background/utils/types/ethereum"
-import React, { FunctionComponent } from "react"
+import { FunctionComponent, useEffect } from "react"
+
 import useNextRequestRoute from "../../context/hooks/useNextRequestRoute"
 import { DappReq, useDappRequest } from "../../context/hooks/useDappRequest"
 import { Redirect } from "react-router"
@@ -39,7 +40,7 @@ export const DappRequest: FunctionComponent<{
         latestDappRequest,
         DAPP_FEEDBACK_WINDOW_TIMEOUT
     )
-    React.useEffect(() => {
+    useEffect(() => {
         setNextRequest(
             latestDappRequest,
             typeof latestDappRequest === "undefined" ||
@@ -61,7 +62,7 @@ export const DappRequest: FunctionComponent<{
     return layoutRender({
         dappReqData: nextRequest.dappReqData,
         origin: nextRequest.origin,
-        requestCount: nextRequest.requestCount,
+        requestCount: latestDappRequest?.requestCount ?? 1,
         requestId: nextRequest.requestId,
         siteMetadata: nextRequest.siteMetadata,
         status: nextRequest.status,

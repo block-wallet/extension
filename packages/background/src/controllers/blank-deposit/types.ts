@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import TornadoConfig from './tornado/config/config';
 
 /**
@@ -220,3 +219,8 @@ export const DERIVATIONS_FORWARD = 10;
  * Default Tornado deposits block confirmations
  */
 export const DEFAULT_TORNADO_CONFIRMATION = 4;
+
+/**
+ * Default transaction receipt timeout
+ */
+export const DEFAULT_TX_RECEIPT_TIMEOUT = 60000;

@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { FunctionComponent } from "react"
 
 import { formatUnits } from "ethers/lib/utils"
@@ -58,10 +58,8 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
     menu,
     onClickAccount,
 }) => {
-    const [
-        confirmationDialog,
-        setConfirmationDialog,
-    ] = useState<ConfirmDialogState>({ isOpen: false })
+    const [confirmationDialog, setConfirmationDialog] =
+        useState<ConfirmDialogState>({ isOpen: false })
     const { isHovering: isHoveringMenu, getIsHoveringProps } = useIsHovering()
     const { copied, onCopy } = useCopyToClipboard(account?.address)
     const { chainId, nativeCurrency } = useSelectedNetwork()
@@ -192,10 +190,11 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             <Dropdown>
                                 <Dropdown.Menu id="account-menu">
                                     {menu.map((menuItem, indx) => {
-                                        const optionMenuMetadata = getAccountMenuOptionMetadata(
-                                            menuItem,
-                                            account
-                                        )
+                                        const optionMenuMetadata =
+                                            getAccountMenuOptionMetadata(
+                                                menuItem,
+                                                account
+                                            )
                                         return (
                                             <Dropdown.MenuItem
                                                 key={`${menuItem.optionType}_${indx}`}

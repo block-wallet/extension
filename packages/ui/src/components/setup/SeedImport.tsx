@@ -1,11 +1,10 @@
-import React, { FunctionComponent, useCallback, useState } from "react"
+import { FunctionComponent, useCallback, useState } from "react"
 import { Classes, classnames } from "../../styles"
 import LinkButton from "../button/LinkButton"
 import Divider from "../Divider"
 import PasswordInput from "../input/PasswordInput"
 import Spinner from "../spinner/Spinner"
 import * as yup from "yup"
-import { InferType } from "yup"
 import { isValidMnemonic } from "ethers/lib/utils"
 import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
@@ -31,7 +30,11 @@ const schema = yup.object().shape({
         .required("You must accept the Terms of Use.")
         .oneOf([true], "You must accept the Terms of Use."),
 })
-type SeedImportFormData = InferType<typeof schema>
+type SeedImportFormData = {
+    password: string
+    passwordConfirmation: string
+    acceptTOU: boolean
+}
 
 const numberOfWordsOptions: number[] = []
 for (let i = 12; i <= 24; i += 3) {
@@ -55,18 +58,26 @@ const SeedImport: FunctionComponent<{
         register,
         handleSubmit,
         setError,
-        errors,
+        trigger,
+        watch,
+        formState: { errors },
     } = useForm<SeedImportFormData>({
         resolver: yupResolver(schema),
     })
 
+    const passwordConfirmationWatch = watch("passwordConfirmation")
     const onSubmit = handleSubmit(async (data: SeedImportFormData) => {
         try {
             if (passwordScore < 3) {
-                return setError("password", {
-                    message: "Password is not strong enough",
-                    shouldFocus: true,
-                })
+                return setError(
+                    "password",
+                    {
+                        message: "Password is not strong enough",
+                    },
+                    {
+                        shouldFocus: true,
+                    }
+                )
             }
 
             if (!isValidMnemonic(seedPhrase.join(" "))) {
@@ -159,7 +170,10 @@ const SeedImport: FunctionComponent<{
                             {numberOfWordsOptions.map(
                                 (numberOfWords: number) => {
                                     return (
-                                        <Select.Option value={numberOfWords}>
+                                        <Select.Option
+                                            value={numberOfWords}
+                                            key={numberOfWords}
+                                        >
                                             {`${numberOfWords}-word Seed Phrase`}
                                         </Select.Option>
                                     )
@@ -179,9 +193,10 @@ const SeedImport: FunctionComponent<{
                                 const wordnN = i + 1
                                 return (
                                     <PasswordInput
+                                        key={`word_${i}`}
                                         placeholder={`Enter word #${wordnN}`}
                                         name={`word_${i}`}
-                                        register={register}
+                                        //register={register}
                                         value={seedPhrase[i]}
                                         onChange={(e: any) => {
                                             e.preventDefault()
@@ -191,9 +206,8 @@ const SeedImport: FunctionComponent<{
                                             )
                                         }}
                                         onPaste={(e: any) => {
-                                            const newSP = e.clipboardData.getData(
-                                                "text"
-                                            )
+                                            const newSP =
+                                                e.clipboardData.getData("text")
 
                                             if (newSP.trim().match(/\s/u)) {
                                                 e.preventDefault()
@@ -215,7 +229,12 @@ const SeedImport: FunctionComponent<{
                     <PasswordInput
                         label="New Password"
                         placeholder="Enter New Password"
-                        register={register}
+                        {...register("password", {
+                            onChange: () => {
+                                passwordConfirmationWatch &&
+                                    trigger("passwordConfirmation")
+                            },
+                        })}
                         error={errors.password?.message}
                         strengthBar={true}
                         setPasswordScore={setPasswordScore}
@@ -225,8 +244,7 @@ const SeedImport: FunctionComponent<{
                     <PasswordInput
                         label="Confirm Password"
                         placeholder="Confirm New Password"
-                        name="passwordConfirmation"
-                        register={register}
+                        {...register("passwordConfirmation")}
                         error={errors.passwordConfirmation?.message}
                     />
                 </div>
@@ -235,9 +253,8 @@ const SeedImport: FunctionComponent<{
                         <input
                             type="checkbox"
                             className={Classes.checkbox}
-                            name="acceptTOU"
                             id="acceptTOU"
-                            ref={register}
+                            {...register("acceptTOU")}
                         />
                         <label htmlFor="acceptTOU" className="text-xs">
                             I have read and agree to the{" "}

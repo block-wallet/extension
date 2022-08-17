@@ -1,5 +1,5 @@
 import classnames from "classnames"
-import React, { FunctionComponent, useRef, useState } from "react"
+import { FunctionComponent, useRef, useState } from "react"
 import { Classes } from "../../styles"
 import { useOnClickOutside } from "../../util/useOnClickOutside"
 import CloseIcon from "../icons/CloseIcon"

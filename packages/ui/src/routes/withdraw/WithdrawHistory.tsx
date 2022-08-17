@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 
 // Components
 import PopupLayout from "../../components/popup/PopupLayout"
 import PopupHeader from "../../components/popup/PopupHeader"
-import WithdrawDisplay from "../../components/withdraw/WithdrawDisplay"
 
 // Context
 import { useBlankState } from "../../context/background/backgroundHooks"
+import DepositDisplay from "../../components/privacy/DepositDisplay"
 
 // Component
 const WithdrawHistory = () => {
@@ -32,8 +32,11 @@ const WithdrawHistory = () => {
                 {Array.isArray(withdrawals) && withdrawals.length > 0 ? (
                     withdrawals.map((withdraw: any, i: number) => {
                         return (
-                            <WithdrawDisplay
-                                withdraw={withdraw}
+                            <DepositDisplay
+                                currencyPair={withdraw.pair}
+                                id={withdraw.blankDepositId}
+                                status="WITHDRAWN"
+                                time={withdraw.time}
                                 key={`withdrawal-${i}`}
                             />
                         )

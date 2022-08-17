@@ -25,7 +25,7 @@ import { getNetworkControllerInstance } from '../mocks/mock-network-instance';
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
 import KeyringControllerDerivated from '@block-wallet/background/controllers/KeyringControllerDerivated';
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
-import { TransactionWatcherController } from '@block-wallet/background/controllers/erc-20/TransactionWatcherController';
+import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
 import {
     ITokens,
     Token,

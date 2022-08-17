@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { BlankAppState } from '../../utils/constants/initialState';
 import { BigNumber } from 'ethers';
 import BaseStorageStore from './BaseStorageStore';
+import { TransactionTypeEnum } from '@block-wallet/background/controllers/TransactionWatcherController';
 
 export default class BlankStorageStore extends BaseStorageStore<BlankAppState> {
     constructor() {
@@ -48,28 +48,26 @@ export default class BlankStorageStore extends BaseStorageStore<BlankAppState> {
                 rebuildBigNumbers(value.AccountTrackerController.accounts);
 
                 // Rebuild ERC20 Transactions
-                if ('ERC20TransactionWatcherControllerState' in value) {
+                if ('TransactionWatcherControllerState' in value) {
                     for (const chainId in value
-                        .ERC20TransactionWatcherControllerState.transactions) {
+                        .TransactionWatcherControllerState.transactions) {
                         const transactionByAddress =
-                            value.ERC20TransactionWatcherControllerState
+                            value.TransactionWatcherControllerState
                                 .transactions[parseInt(chainId)];
 
                         for (const address in transactionByAddress) {
                             const transactions = transactionByAddress[address];
-                            for (const transactionHash in transactions.incomingTransactions) {
-                                rebuildBigNumbers(
-                                    transactions.incomingTransactions[
-                                        transactionHash
-                                    ]
-                                );
-                            }
-                            for (const transactionHash in transactions.outgoingTransactions) {
-                                rebuildBigNumbers(
-                                    transactions.outgoingTransactions[
-                                        transactionHash
-                                    ]
-                                );
+                            for (const type in transactions) {
+                                const transactionType =
+                                    type as TransactionTypeEnum;
+                                for (const transactionHash in transactions[
+                                    transactionType
+                                ].transactions) {
+                                    rebuildBigNumbers(
+                                        transactions[transactionType]
+                                            .transactions[transactionHash]
+                                    );
+                                }
                             }
                         }
                     }

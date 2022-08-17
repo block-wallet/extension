@@ -1,5 +1,3 @@
-import React from "react"
-
 import PopupLayout from "../../components/popup/PopupLayout"
 import PopupHeader from "../../components/popup/PopupHeader"
 import AppVersion from "../../components/AppVersion"

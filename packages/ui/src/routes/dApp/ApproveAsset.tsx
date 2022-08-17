@@ -9,7 +9,7 @@ import MiniCheckmark from "../../components/icons/MiniCheckmark"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
-import React, { useState, useEffect, FunctionComponent } from "react"
+import { useState, useEffect, FunctionComponent, useCallback } from "react"
 import Tooltip from "../../components/label/Tooltip"
 import useNextRequestRoute from "../../context/hooks/useNextRequestRoute"
 import {
@@ -131,10 +131,8 @@ export interface ApproveAssetProps {
 }
 
 const ApproveAssetPage = () => {
-    const {
-        transaction: nextTransaction,
-        transactionCount,
-    } = useNonSubmittedExternalTransaction()
+    const { transaction: nextTransaction, transactionCount } =
+        useNonSubmittedExternalTransaction()
     const route = useNextRequestRoute()
     const [currentTx, setCurrentTx] = useDebouncedState<TransactionMeta>(
         nextTransaction,
@@ -175,11 +173,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const selectedAccountBalance = useSelectedAccountBalance()
     const { nativeToken } = useTokensList()
 
-    const {
-        isDeviceUnlinked,
-        checkDeviceIsLinked,
-        resetDeviceLinkStatus,
-    } = useCheckAccountDeviceLinked()
+    const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
+        useCheckAccountDeviceLinked()
 
     // Get tx
     const { transaction: txById, params } = useTransactionById(transactionId)
@@ -209,10 +204,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const [isTokenLoading, setIsTokenLoading] = useState(true)
     const [isNameLoading, setIsNameLoading] = useState(true)
 
-    const [
-        transactionAdvancedData,
-        setTransactionAdvancedData,
-    ] = useState<TransactionAdvancedData>({})
+    const [transactionAdvancedData, setTransactionAdvancedData] =
+        useState<TransactionAdvancedData>({})
 
     const [hasBalance, setHasBalance] = useState(true)
     const [gasEstimationFailed, setGasEstimationFailed] = useState(false)
@@ -248,33 +241,26 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const defaultAllowance = transaction.advancedData?.allowance!
     const networkName = capitalize(desc)
 
-    const {
-        status,
-        isOpen,
-        dispatch,
-        texts,
-        titles,
-        closeDialog,
-        gifs,
-    } = useTransactionWaitingDialog(
-        transaction
-            ? {
-                  id: transactionId,
-                  status: transaction.status,
-                  error: transaction.error as Error,
-                  epochTime: transaction?.approveTime,
-              }
-            : undefined,
-        HardwareWalletOpTypes.APPROVE_ALLOWANCE,
-        account.accountType,
-        {
-            reject: React.useCallback(() => {
-                if (transactionId) {
-                    rejectTransaction(transactionId)
-                }
-            }, [transactionId]),
-        }
-    )
+    const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
+        useTransactionWaitingDialog(
+            transaction
+                ? {
+                      id: transactionId,
+                      status: transaction.status,
+                      error: transaction.error as Error,
+                      epochTime: transaction?.approveTime,
+                  }
+                : undefined,
+            HardwareWalletOpTypes.APPROVE_ALLOWANCE,
+            account.accountType,
+            {
+                reject: useCallback(() => {
+                    if (transactionId) {
+                        rejectTransaction(transactionId)
+                    }
+                }, [transactionId]),
+            }
+        )
 
     // To prevent calculations on every render, force dependency array to only check state value that impacts
     useEffect(() => {
@@ -384,7 +370,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         register,
         handleSubmit,
         setValue,
-        errors,
+
+        formState: { errors },
     } = useForm<CustomAllowanceForm>({
         resolver: yupResolver(schema),
     })
@@ -458,7 +445,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                             feeData: {
                                 gasLimit: defaultGas.gasLimit,
                                 maxFeePerGas: defaultGas.maxFeePerGas!,
-                                maxPriorityFeePerGas: defaultGas.maxPriorityFeePerGas!,
+                                maxPriorityFeePerGas:
+                                    defaultGas.maxPriorityFeePerGas!,
                             },
                         }}
                         setGas={(gasFees) => {
@@ -568,8 +556,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 </p>
                 <input
                     type="text"
-                    name="customAllowance"
-                    ref={register}
+                    {...register("customAllowance")}
                     className={classnames(
                         Classes.inputBordered,
                         !isCustomSelected && "text-gray-400",

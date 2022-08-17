@@ -1,6 +1,6 @@
-import React, { useContext } from 'react'
-import Modal from 'react-modal'
-import { ModalContext } from '../context/ModalContext'
+import { useContext } from "react"
+import Modal from "react-modal"
+import { ModalContext } from "../context/ModalContext"
 
 const GlobalModal = () => {
     const { isOpen, content, close } = useContext(ModalContext)

@@ -1,9 +1,10 @@
-import React, { FC } from "react"
+import { FC } from "react"
 import classnames from "classnames"
 
 interface RoundedIconButtonProps {
     Icon: React.ElementType
     disabled: boolean
+    children: React.ReactNode
 }
 
 const RoundedIconButton: FC<RoundedIconButtonProps> = ({

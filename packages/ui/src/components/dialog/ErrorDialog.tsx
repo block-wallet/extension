@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect } from "react"
+import { FunctionComponent, useEffect } from "react"
 import { CgDanger } from "react-icons/cg"
 import classnames from "classnames"
 

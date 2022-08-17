@@ -1,20 +1,20 @@
 {
     "name": "@block-wallet/background",
-    "version": "0.4.5",
+    "version": "0.6.0",
     "private": true,
     "dependencies": {
-        "@block-wallet/explorer-link": "https://github.com/block-wallet/explorer-link",
+        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.14",
+        "@block-wallet/eth-ledger-bridge-keyring": "https://github.com/block-wallet/eth-ledger-bridge-keyring",
+        "@block-wallet/explorer-link": "https://github.com/block-wallet/explorer-link#v2.2.2",
         "@ethereumjs/tx": "^3.2.1",
         "@unstoppabledomains/resolution": "^7.1.4",
-        "@block-wallet/eth-ledger-bridge-keyring": "https://github.com/block-wallet/eth-ledger-bridge-keyring",
-        "assets": "https://github.com/block-wallet/assets",
         "async-mutex": "^0.3.2",
         "axios": "^0.21.1",
-        "banned-assets": "git+https://github.com/block-wallet/banned-assets",
+        "banned-assets": "https://github.com/block-wallet/banned-assets#v0.0.1",
         "bip39": "^3.0.3",
         "blake3": "^2.1.4",
         "browser-passworder": "^2.0.3",
-        "circomlib": "git+https://github.com/tornadocash/circomlib.git#3b492f9801573eebcfe1b6c584afe8a3beecf2b4",
+        "circomlib": "https://github.com/block-wallet/circomlib#v0.0.1",
         "compare-versions": "^3.6.0",
         "eth-ens-namehash": "^2.0.8",
         "eth-keyring-controller": "^6.2.0",
@@ -29,9 +29,9 @@
         "loglevel": "^1.7.1",
         "phishing-prevention": "git+https://github.com/block-wallet/phishing-prevention#4708461673825816104b8a6cf5260ecb29b75c61",
         "schema-validator": "git+https://github.com/block-wallet/schema-validator.git",
-        "snarkjs": "git+https://github.com/block-wallet/snarkjs.git#4b9003c21f480149c2f21c14156efe6b6cafd8e0",
+        "snarkjs": "https://github.com/block-wallet/snarkjs.git#v0.1.21",
         "uuid": "^8.3.2",
-        "websnark": "git+https://github.com/tornadocash/websnark.git#4c0af6a8b65aabea3c09f377f63c44e7a58afa6d"
+        "websnark": "https://github.com/block-wallet/websnark#v0.0.1"
     },
     "devDependencies": {
         "@types/bn.js": "^5.1.0",
@@ -70,7 +70,7 @@
         "sinon-chrome": "^3.0.1",
         "ts-loader": "^8.0.14",
         "ts-mocha": "^8.0.0",
-        "ts-node": "^9.1.1",
+        "ts-node": "^10.9.1",
         "ts-pnp": "1.2.0",
         "typescript": "^4.0.3",
         "webpack": "4.44.2",
@@ -79,6 +79,9 @@
         "worker-loader": "^3.0.8"
     },
     "resolutions": {
+        "**/websnark": "https://github.com/block-wallet/websnark#v0.0.1",
+        "**/snarkjs": "https://github.com/block-wallet/snarkjs.git#v0.1.21",
+        "**/circomlib": "https://github.com/block-wallet/circomlib#v0.0.1",
         "webpack/**/glob-parent": "^5.1.2",
         "webpack/**/set-value": "^4.0.1",
         "circomlib/**/yargs-parser": "^18.1.2",
@@ -92,8 +95,6 @@
     "scripts": {
         "test": "make test/background",
         "build": "make build/background",
-        "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html",
-        "lint": "eslint src --ext .ts --quiet",
-        "postinstall": "npx ts-node postInstall.ts"
+        "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html"
     }
 }

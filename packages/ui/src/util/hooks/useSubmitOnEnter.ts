@@ -15,12 +15,11 @@ export interface submitOnEnterProps {
  * @param isFormValid flag that indicates if the form is valid, this applies when the form implements Yup client-side validations.
  * @param isEnabled flag that indicates if submit button is enabled according to page logic.
  */
-const useSubmitOnEnter = ({ onSubmit, isFormValid, isEnabled }: submitOnEnterProps = { onSubmit: undefined, isEnabled: true, isFormValid: true }) => {
+const useSubmitOnEnter = ({ onSubmit = undefined, isFormValid = true, isEnabled = true }: submitOnEnterProps) => {
     const canSubmit = useRef(isEnabled)
     const { run, isError } = useAsyncInvoke()
 
     useEffect(() => {
-
         // Callback function
         const cb = (e: KeyboardEvent) => {
             if (!onSubmit || e.key !== "Enter") return
@@ -30,7 +29,6 @@ const useSubmitOnEnter = ({ onSubmit, isFormValid, isEnabled }: submitOnEnterPro
             if (!canSubmit.current) return
 
             canSubmit.current = false
-
             run(onSubmit().catch(err => log.error(err)))
         }
 
@@ -40,9 +38,10 @@ const useSubmitOnEnter = ({ onSubmit, isFormValid, isEnabled }: submitOnEnterPro
         // Cleanup
         return () => window.removeEventListener("keypress", cb)
 
-        // Only on first render
+        // Only re-creates the listener if the callback function changes due to some forms not implementing yup (gets values at submit time)
+        // and using a function that relies on state values so we should adjust the callback when that state changes.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [onSubmit])
 
     // This effect handles the case where the form is invalid "client side" after submitting, then the user corrects
     // the values so we allow submitting again. useForm hook validations are triggered onSubmit and if the form was invalid

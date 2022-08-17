@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-empty-function */
 // Explicitly disabled no-empty-pattern on this file as some actions need generic param typing but receive empty objects.
 /* eslint-disable no-empty-pattern */
@@ -51,11 +50,11 @@ import type {
     RequestVerifySeedPhrase,
     RequestWalletCreate,
     RequestWalletImport,
-    RequestIsSwapApproved,
-    RequestApproveSwap,
-    RequestGetSwapQuote,
-    RequestGetSwap,
-    RequestExecuteSwap,
+    RequestCheckExchangeAllowance,
+    RequestApproveExchange,
+    RequestGetExchangeQuote,
+    RequestGetExchange,
+    RequestExecuteExchange,
     ResponseType,
     SubscriptionMessageTypes,
     TransportRequestMessage,
@@ -105,11 +104,16 @@ import type {
     RequestWalletGetHDPath,
     RequestWalletSetHDPath,
     RequestDepositAllowance,
+    RequestRemoveNetwork,
+    RequestGetChainData,
+    RequestGetRpcChainId,
+    RequestSearchChains,
     RequestIsDeviceConnected,
     RequestReconnectDevice,
     RequestRejectDappRequest,
     RequestRemoveHardwareWallet,
     RequestGenerateOnDemandReleaseNotes,
+    RequestEditNetwork,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -149,12 +153,14 @@ import {
 import { BlankDepositController } from './blank-deposit/BlankDepositController';
 
 import { GasPricesController } from './GasPricesController';
-import { IncomingTransactionController } from './IncomingTransactionController';
 import {
     TokenController,
     TokenControllerProps,
 } from './erc-20/TokenController';
-import { SwapController, Swap } from './SwapController';
+import ExchangeController, {
+    SwapParameters,
+    SwapQuote,
+} from './ExchangeController';
 import { ITokens, Token } from './erc-20/Token';
 import { ImportStrategy, getAccountJson } from '../utils/account';
 import { ActivityListController } from './ActivityListController';
@@ -205,9 +211,13 @@ import { FEATURES } from '../utils/constants/features';
 
 import { toError } from '../utils/toError';
 
-import { TransactionWatcherController } from './erc-20/TransactionWatcherController';
+import { getCustomRpcChainId } from '../utils/ethereumChain';
+import { getChainListItem, searchChainsByTerm } from '../utils/chainlist';
+import { ChainListItem } from '@block-wallet/chains-assets';
+import { Network } from '../utils/constants/networks';
 
 import { generateOnDemandReleaseNotes } from '../utils/userPreferences';
+import { TransactionWatcherController } from './TransactionWatcherController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -231,7 +241,6 @@ export default class BlankController extends EventEmitter {
     private readonly accountTrackerController: AccountTrackerController;
     private readonly preferencesController: PreferencesController;
     private readonly transactionController: TransactionController;
-    private readonly incomingTransactionController: IncomingTransactionController;
     private readonly tornadoEventsService: TornadoEventsService;
     private readonly blankDepositController: BlankDepositController;
     private readonly exchangeRatesController: ExchangeRatesController;
@@ -239,7 +248,7 @@ export default class BlankController extends EventEmitter {
     private readonly blankStateStore: BlankStorageStore;
     private readonly tokenOperationsController: TokenOperationsController;
     private readonly tokenController: TokenController;
-    private readonly swapController: SwapController;
+    private readonly exchangeController: ExchangeController;
     private readonly blankProviderController: BlankProviderController;
     private readonly activityListController: ActivityListController;
     private readonly permissionsController: PermissionsController;
@@ -341,13 +350,6 @@ export default class BlankController extends EventEmitter {
             }
         );
 
-        this.incomingTransactionController = new IncomingTransactionController(
-            this.networkController,
-            this.preferencesController,
-            this.blockUpdatesController,
-            initState.IncomingTransactionController
-        );
-
         this.transactionController = new TransactionController(
             this.networkController,
             this.preferencesController,
@@ -382,21 +384,13 @@ export default class BlankController extends EventEmitter {
             this.transactionController
         );
 
-        this.swapController = new SwapController({
-            networkController: this.networkController,
-            gasPricesController: this.gasPricesController,
-            preferencesController: this.preferencesController,
-            transactionController: this.transactionController,
-            tokenOperationsController: this.tokenOperationsController,
-        });
-
         this.transactionWatcherController = new TransactionWatcherController(
             this.networkController,
             this.preferencesController,
             this.blockUpdatesController,
             this.tokenController,
             this.transactionController,
-            initState.ERC20TransactionWatcherControllerState
+            initState.TransactionWatcherControllerState
         );
 
         this.accountTrackerController = new AccountTrackerController(
@@ -413,7 +407,6 @@ export default class BlankController extends EventEmitter {
         this.activityListController = new ActivityListController(
             this.transactionController,
             this.blankDepositController,
-            this.incomingTransactionController,
             this.preferencesController,
             this.networkController,
             this.transactionWatcherController
@@ -436,6 +429,14 @@ export default class BlankController extends EventEmitter {
             preferencesController: this.preferencesController,
         });
 
+        this.exchangeController = new ExchangeController(
+            this.networkController,
+            this.preferencesController,
+            this.tokenOperationsController,
+            this.transactionController,
+            this.tokenController
+        );
+
         this.store = new ComposedStore<BlankAppState>({
             NetworkController: this.networkController.store,
             AppStateController: this.appStateController.store,
@@ -447,14 +448,12 @@ export default class BlankController extends EventEmitter {
             ExchangeRatesController: this.exchangeRatesController.store,
             GasPricesController: this.gasPricesController.store,
             BlankDepositController: this.blankDepositController.store,
-            IncomingTransactionController:
-                this.incomingTransactionController.store,
             TokenController: this.tokenController.store,
             PermissionsController: this.permissionsController.store,
             AddressBookController: this.addressBookController.store,
             BlockUpdatesController: this.blockUpdatesController.store,
             BlockFetchController: this.blockFetchController.store,
-            ERC20TransactionWatcherControllerState:
+            TransactionWatcherControllerState:
                 this.transactionWatcherController.store,
         });
 
@@ -469,8 +468,6 @@ export default class BlankController extends EventEmitter {
             ExchangeRatesController: this.exchangeRatesController.store,
             GasPricesController: this.gasPricesController.store,
             BlankDepositController: this.blankDepositController.UIStore,
-            IncomingTransactionController:
-                this.incomingTransactionController.store,
             TokenController: this.tokenController.store,
             ActivityListController: this.activityListController.store,
             PermissionsController: this.permissionsController.store,
@@ -630,13 +627,13 @@ export default class BlankController extends EventEmitter {
             }
         });
 
-        log.debug('[in]', source);
+        log.trace('[in]', source);
 
         const promise = this.handle(id, message, request, port, portId);
 
         promise
             .then((response): void => {
-                log.debug('[out]', source);
+                log.trace('[out]', source);
 
                 if (!isPortConnected) {
                     throw new Error('Port has been disconnected');
@@ -795,6 +792,22 @@ export default class BlankController extends EventEmitter {
                 return this.attemptRejectDappRequest(
                     request as RequestConfirmDappRequest
                 );
+            case Messages.EXCHANGE.CHECK_ALLOWANCE:
+                return this.checkExchangeAllowance(
+                    request as RequestCheckExchangeAllowance
+                );
+            case Messages.EXCHANGE.APPROVE:
+                return this.approveExchange(request as RequestApproveExchange);
+            case Messages.EXCHANGE.GET_QUOTE:
+                return this.getExchangeQuote(
+                    request as RequestGetExchangeQuote
+                );
+            case Messages.EXCHANGE.GET_EXCHANGE:
+                return this.getExchangeParameters(
+                    request as RequestGetExchange
+                );
+            case Messages.EXCHANGE.EXECUTE:
+                return this.executeExchange(request as RequestExecuteExchange);
             case Messages.EXTERNAL.REQUEST:
                 return this.externalRequestHandle(
                     request as RequestExternalRequest,
@@ -812,6 +825,16 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.NETWORK.ADD_NETWORK:
                 return this.addNetwork(request as RequestAddNetwork);
+            case Messages.NETWORK.EDIT_NETWORK:
+                return this.editNetwork(request as RequestEditNetwork);
+            case Messages.NETWORK.REMOVE_NETWORK:
+                return this.removeNetwork(request as RequestRemoveNetwork);
+            case Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS:
+                return this.getChainData(request as RequestGetChainData);
+            case Messages.NETWORK.GET_RPC_CHAIN_ID:
+                return this.getRpcChainId(request as RequestGetRpcChainId);
+            case Messages.NETWORK.SEARCH_CHAINS:
+                return this.searchChainsByTerm(request as RequestSearchChains);
             case Messages.PASSWORD.VERIFY:
                 return this.passwordVerify(request as RequestPasswordVerify);
             // case Messages.PASSWORD.CHANGE:
@@ -948,16 +971,6 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.EXTERNAL.EVENT_SUBSCRIPTION:
                 return this.blankProviderEventSubscribe(id, port, portId);
-            case Messages.SWAP.IS_APPROVED:
-                return this.isSwapApproved(request as RequestIsSwapApproved);
-            case Messages.SWAP.APPROVE:
-                return this.approveSwap(request as RequestApproveSwap);
-            case Messages.SWAP.GET_QUOTE:
-                return this.getSwapQuote(request as RequestGetSwapQuote);
-            case Messages.SWAP.GET_SWAP:
-                return this.getSwap(request as RequestGetSwap);
-            case Messages.SWAP.EXECUTE_SWAP:
-                return this.executeSwap(request as RequestExecuteSwap);
             case Messages.ADDRESS_BOOK.CLEAR:
                 return this.addressBookClear(
                     request as RequestAddressBookClear
@@ -1244,9 +1257,6 @@ export default class BlankController extends EventEmitter {
     }: RequestAccountRemove): Promise<boolean> {
         await this.accountTrackerController.removeAccount(address);
         this.transactionController.wipeTransactionsByAddress(address);
-        await this.incomingTransactionController.removeIncomingTransactionsByAddress(
-            address
-        );
         this.permissionsController.removeAllPermissionsOfAccount(address);
         await this.keyringController.removeAccount(address);
         this.transactionWatcherController.removeTransactionsByAddress(address);
@@ -1788,6 +1798,104 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * Checks if the given account has enough allowance to make the exchange
+     *
+     * @param account User account
+     * @param amount Amount to be spended
+     * @param exchangeType Exchange type
+     * @param tokenAddress Asset to be spended address
+     */
+    private async checkExchangeAllowance({
+        account,
+        amount,
+        exchangeType,
+        tokenAddress,
+    }: RequestCheckExchangeAllowance): Promise<boolean> {
+        return this.exchangeController.checkExchangeAllowance(
+            account,
+            BigNumber.from(amount),
+            exchangeType,
+            tokenAddress
+        );
+    }
+
+    /**
+     * Submits an approval transaction to setup asset allowance
+     *
+     * @param allowance User selected allowance
+     * @param amount Exchange amount
+     * @param exchangeType The exchange type
+     * @param feeData Transaction gas fee data
+     * @param tokenAddress Spended asset token address
+     * @param customNonce Custom transaction nonce
+     */
+    private async approveExchange({
+        allowance,
+        amount,
+        exchangeType,
+        feeData,
+        tokenAddress,
+        customNonce,
+    }: RequestApproveExchange): Promise<boolean> {
+        return this.exchangeController.approveExchange(
+            BigNumber.from(allowance),
+            BigNumber.from(amount),
+            exchangeType,
+            feeData,
+            tokenAddress,
+            customNonce
+        );
+    }
+
+    /**
+     * Gets a quote for the specified exchange type and parameters
+     *
+     * @param exchangeType Exchange type
+     * @param quoteParams Quote parameters
+     */
+    private async getExchangeQuote({
+        exchangeType,
+        quoteParams,
+    }: RequestGetExchangeQuote): Promise<SwapQuote> {
+        return this.exchangeController.getExchangeQuote(
+            exchangeType,
+            quoteParams
+        );
+    }
+
+    /**
+     * Fetch the transaction parameters to make the exchange
+     *
+     * @param exchangeType Exchange type
+     * @param exchangeParams Exchange parameters
+     */
+    private async getExchangeParameters({
+        exchangeType,
+        exchangeParams,
+    }: RequestGetExchange): Promise<SwapParameters> {
+        return this.exchangeController.getExchangeParameters(
+            exchangeType,
+            exchangeParams
+        );
+    }
+
+    /**
+     * Executes the exchange
+     *
+     * @param exchangeType Exchange type
+     * @param exchangeParams Exchange parameters
+     */
+    private async executeExchange({
+        exchangeType,
+        exchangeParams,
+    }: RequestExecuteExchange): Promise<string> {
+        return this.exchangeController.executeExchange(
+            exchangeType,
+            exchangeParams
+        );
+    }
+
+    /**
      * Handles the request sent by in-page provider from the DAPP
      *
      */
@@ -1869,22 +1977,74 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * addNetwork
      *
-     * @param name name of the network
-     * @param chainId chain identifier of the network
-     * @param rpcUrl
-     * @param currencySymbol
-     * @param blockExporerUrl
+     * @param name The name of the network
+     * @param chainId The chain identifier of the network
+     * @param rpcUrl The chain RPC url
+     * @param currencySymbol The native currency symbol
+     * @param blockExporerUrl The chain block explorer url
      */
     private async addNetwork({
-        name,
         chainId,
+        name,
         rpcUrl,
-        currencySymbol,
         blockExplorerUrl,
+        currencySymbol,
+        test,
     }: RequestAddNetwork): Promise<void> {
-        //return this.preferencesController.addNetwork(...);
-        return;
+        return this.networkController.addNetwork({
+            chainId: Number(chainId),
+            chainName: name,
+            rpcUrls: [rpcUrl],
+            blockExplorerUrls: [blockExplorerUrl],
+            nativeCurrency: {
+                symbol: currencySymbol,
+            },
+            test: test,
+        });
+    }
+
+    /**
+     * editNetwork
+     *
+     * @param chainId The chain identifier of the network
+     * @param updates.rpcUrl The chain RPC url
+     * @param updates.blockExplorerUrl  The chain block explorer url (Optional)
+     */
+    private async editNetwork(request: RequestEditNetwork): Promise<void> {
+        return this.networkController.editNetwork(Number(request.chainId), {
+            blockExplorerUrls: [request.updates.blockExplorerUrl || ''],
+            rpcUrls: [request.updates.rpcUrl],
+            name: request.updates.name,
+        });
+    }
+
+    /**
+     * removeNetwork
+     *
+     * @param chainId chain identifier of the network
+     */
+    private async removeNetwork({ chainId }: RequestRemoveNetwork) {
+        return this.networkController.removeNetwork(chainId);
+    }
+
+    /**
+     * getChainData
+     *
+     * @param chainId chain identifier of the network
+     */
+    private async getChainData({ chainId }: RequestGetChainData) {
+        return getChainListItem(chainId);
+    }
+
+    /**
+     * getRpcChainId
+     *
+     * @param rpcUrl rpc url of the network
+     */
+    private async getRpcChainId({ rpcUrl }: RequestGetRpcChainId) {
+        return getCustomRpcChainId(rpcUrl);
     }
 
     /**
@@ -2014,7 +2174,7 @@ export default class BlankController extends EventEmitter {
         });
 
         // As we don't care about the result here, ignore errors in transaction result
-        result.catch((_) => {});
+        result.catch(() => {});
 
         // Approve it
         try {
@@ -2064,7 +2224,7 @@ export default class BlankController extends EventEmitter {
                 });
 
             // As we don't care about the result here, ignore errors in transaction result
-            result.catch((_) => {});
+            result.catch(() => {});
 
             const { nativeCurrency, iconUrls } = this.networkController.network;
             const logo = iconUrls ? iconUrls[0] : '';
@@ -2327,7 +2487,7 @@ export default class BlankController extends EventEmitter {
         this.preferencesController.setShowDefaultWalletPreferences(true);
 
         // Get manifest version and init the release notes settings
-        const appVersion = await getVersion();
+        const appVersion = getVersion();
         this.preferencesController.initReleaseNotesSettings(appVersion);
 
         // Set account tracker
@@ -2416,7 +2576,6 @@ export default class BlankController extends EventEmitter {
 
         // Force network to be mainnet if it is not provided
         let network: string = AvailableNetworks.MAINNET;
-        let runImportDeposits = true;
 
         if (defaultNetwork) {
             const fullNetwork =
@@ -2424,19 +2583,11 @@ export default class BlankController extends EventEmitter {
             //only allow test networks
             if (fullNetwork && fullNetwork.test) {
                 network = defaultNetwork;
-                runImportDeposits = fullNetwork.features.includes(
-                    FEATURES.TORNADO
-                );
             }
         }
         await this.networkController.setNetwork(network);
 
         await this.blankDepositController.initialize();
-
-        if (runImportDeposits) {
-            // Asynchronously import the deposits
-            this.blankDepositController.importDeposits(password, seedPhrase);
-        }
 
         // reconstruct past erc20 transfers
         this.transactionWatcherController.fetchTransactions();
@@ -2766,60 +2917,6 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
-     * Check if a token is already approved for a swap
-     *
-     * @param amount amount to swap
-     * @param tokenAddress token address
-     */
-    private async isSwapApproved({
-        amount,
-        tokenAddress,
-    }: RequestIsSwapApproved): Promise<boolean> {
-        return this.swapController.isApproved(amount, tokenAddress);
-    }
-
-    /**
-     * Approve a token for swaps
-     *
-     * @param amount amount to swap
-     * @param tokenAddress token address
-     */
-    private async approveSwap({
-        tokenAddress,
-    }: RequestApproveSwap): Promise<boolean> {
-        return this.swapController.approveSender(tokenAddress);
-    }
-
-    /**
-     * Get a quote for a swap
-     *
-     * @param quoteParams QuoteParameters
-     */
-    private async getSwapQuote({
-        quoteParams,
-    }: RequestGetSwapQuote): Promise<BigNumber> {
-        return this.swapController.getQuote(quoteParams);
-    }
-
-    /**
-     * Get details for a swap
-     *
-     * @param swapParams SwapParameters
-     */
-    private async getSwap({ swapParams }: RequestGetSwap): Promise<Swap> {
-        return this.swapController.getSwap(swapParams);
-    }
-
-    /**
-     * Execute a swap
-     *
-     * @param swap a Swap
-     */
-    private async executeSwap({ swap }: RequestExecuteSwap): Promise<string> {
-        return this.swapController.executeSwap(swap); // returns transaction hash
-    }
-
-    /**
      * Remove all entries in the book
      *
      */
@@ -3011,6 +3108,27 @@ export default class BlankController extends EventEmitter {
      */
     private getAllCurrencies(): Currency[] {
         return getCurrencies();
+    }
+
+    private searchChainsByTerm({
+        term,
+    }: {
+        term: string;
+    }): Promise<{ chain: ChainListItem; isEnabled: boolean }[]> {
+        const filteredChains = searchChainsByTerm(term);
+        const networkByChainId = new Map<number, Network>();
+        Object.values(this.networkController.networks).map((network) => {
+            networkByChainId.set(network.chainId, network);
+        });
+        return Promise.resolve(
+            filteredChains.map((chain) => {
+                return {
+                    chain,
+                    isEnabled:
+                        networkByChainId.get(chain.chainId)?.enable ?? false,
+                };
+            })
+        );
     }
 
     /**

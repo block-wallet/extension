@@ -14,6 +14,7 @@ import { PreferencesController } from '../PreferencesController';
 import { Mutex } from 'async-mutex';
 import initialState from '../../utils/constants/initialState';
 import { TokenOperationsController } from './transactions/Transaction';
+import { BasicToken } from '@block-wallet/background/utils/types/1inch';
 
 const tokenAddressParamNotPresentError = new Error('token address is required');
 const tokenParamNotPresentError = new Error('token is required');
@@ -626,4 +627,27 @@ export class TokenController extends BaseController<TokenControllerState> {
     public clearTokens(): void {
         this.store.setState(initialState.TokenController);
     }
+
+    /**
+     * Attemps to add a token to the user's token list.
+     */
+    public attemptAddToken = async (token: BasicToken): Promise<void> => {
+        const tokenExists = (await this.getUserTokens())[token.address];
+
+        //If token to doesn't exists, then attempt to add
+        if (tokenExists) {
+            return;
+        }
+
+        const fullToken = await this.search(token.address);
+        if (!fullToken || !fullToken.length) {
+            return;
+        }
+        const firstToken = fullToken[0];
+        //If the token has no symbol, ensure that the user adds it manually.
+        if (!firstToken.symbol) {
+            return;
+        }
+        return this.addCustomToken(firstToken);
+    };
 }

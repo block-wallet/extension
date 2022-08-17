@@ -1,8 +1,8 @@
 import log, { LogLevelDesc } from "loglevel"
-import React from "react"
-import ReactDOM from "react-dom"
+import { StrictMode } from "react"
 import Modal from "react-modal"
 import App from "./App"
+import { createRoot } from "react-dom/client"
 
 import "./styles"
 
@@ -11,9 +11,10 @@ log.setLevel((process.env.LOG_LEVEL as LogLevelDesc) || "error")
 
 Modal.setAppElement("#root")
 
-ReactDOM.render(
-    <React.StrictMode>
+const container = document.getElementById("root")
+const root = createRoot(container!)
+root.render(
+    <StrictMode>
         <App />
-    </React.StrictMode>,
-    document.getElementById("root")
+    </StrictMode>
 )

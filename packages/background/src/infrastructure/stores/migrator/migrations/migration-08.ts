@@ -54,6 +54,7 @@ export default {
             blockExplorerUrls: ['https://mumbai.polygonscan.com'],
             etherscanApiUrl: 'https://mumbai.polygonscan.com',
             actionsTimeIntervals: ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+            nativelySupported: true,
         };
 
         updatedNetworks.LOCALHOST = {

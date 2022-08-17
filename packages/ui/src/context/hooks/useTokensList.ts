@@ -8,7 +8,12 @@ export type TokenWithBalance = { token: Token; balance: BigNumber }
 
 export type TokenList = TokenWithBalance[]
 
-export const useTokensList = () => {
+interface TokenListInfo {
+    nativeToken: TokenWithBalance
+    currentNetworkTokens: TokenWithBalance[]
+}
+
+export const useTokensList = (): TokenListInfo => {
     const { balances } = useSelectedAccount()
     const { nativeCurrency, defaultNetworkLogo, chainId } = useSelectedNetwork()
 

@@ -1,12 +1,10 @@
-import React from "react"
-
 import PageLayout from "../../components/PageLayout"
 import Divider from "../../components/Divider"
-import { importWallet } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
-import { getQueryParameter } from "../../util/url"
 import SeedImport from "../../components/setup/SeedImport"
+import { importWallet } from "../../context/commActions"
+import { getQueryParameter } from "../../util/url"
 
 const SeedImportPage = () => {
     const history: any = useOnMountHistory()

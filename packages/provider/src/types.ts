@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import BlankProvider from './provider/BlankProvider';
 import { JSONRPCMethod } from '@block-wallet/background/utils/types/ethereum';
 

@@ -154,7 +154,7 @@ export default class BlockFetchController extends BaseController<BlockFetchContr
                                     );
                                 }
                             })
-                            .catch((err) => {
+                            .catch(() => {
                                 this._updateState(chainId, {
                                     checkingOffChainSupport: false,
                                 });

@@ -6,7 +6,7 @@ import LoadingOverlay from "../../components/loading/LoadingOverlay"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
-import React, { useState, useEffect, FunctionComponent } from "react"
+import { useState, useEffect, FunctionComponent, useCallback } from "react"
 import Tooltip from "../../components/label/Tooltip"
 import useNextRequestRoute from "../../context/hooks/useNextRequestRoute"
 import {
@@ -130,7 +130,6 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     const [accountWarningClosed, setAccountWarningClosed] = useState(false)
     const [isLoading, setIsLoading] = useState(transaction.loadingGasValues)
     const [isNameLoading, setIsNameLoading] = useState(true)
-    const [showDialog, setShowDialog] = useState(false)
 
     const [
         transactionAdvancedData,
@@ -192,7 +191,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
         HardwareWalletOpTypes.APPROVE_ALLOWANCE,
         account.accountType,
         {
-            reject: React.useCallback(() => {
+            reject: useCallback(() => {
                 if (transactionId) {
                     rejectTransaction(transactionId)
                 }

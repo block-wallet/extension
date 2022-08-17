@@ -1,4 +1,4 @@
-import * as React from "react"
+import { useCallback, useReducer, useRef } from "react"
 import { mergeReducer } from "../reducerUtils"
 
 export enum Status {
@@ -37,29 +37,29 @@ const defaultInitialState = {
  * ```
  */
 function useAsyncInvoke<T>(initialState: AsyncState<T> = {}) {
-    const initialStateRef = React.useRef<AsyncState<T>>({
+    const initialStateRef = useRef<AsyncState<T>>({
         ...defaultInitialState,
         ...initialState,
     })
-    const [{ status, data, error }, setState] = React.useReducer(
+    const [{ status, data, error }, setState] = useReducer(
         mergeReducer<AsyncState<T>, any>(),
         initialStateRef.current
     )
 
-    const setData = React.useCallback(
-        (data) => setState({ data, status: Status.SUCCESS }),
+    const setData = useCallback(
+        (data: any) => setState({ data, status: Status.SUCCESS }),
         [setState]
     )
-    const setError = React.useCallback(
-        (error) => setState({ error, status: Status.ERROR }),
+    const setError = useCallback(
+        (error: any) => setState({ error, status: Status.ERROR }),
         [setState]
     )
-    const reset = React.useCallback(() => setState(initialStateRef.current), [
+    const reset = useCallback(() => setState(initialStateRef.current), [
         setState,
     ])
 
-    const run = React.useCallback(
-        (promise) => {
+    const run = useCallback(
+        (promise: Promise<any>) => {
             if (!promise || !promise.then) {
                 throw new Error(
                     `The argument passed to useAsyncInvoke().run must be a promise.`

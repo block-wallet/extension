@@ -47,6 +47,8 @@ const getRequestRouteAndStatus = (
                 ? "/asset"
                 : type === DappReq.SWITCH_NETWORK
                 ? "/chain/switch"
+                : type === DappReq.ADD_ETHEREUM_CHAIN
+                ? "/chain/add"
                 : "",
     }))
 

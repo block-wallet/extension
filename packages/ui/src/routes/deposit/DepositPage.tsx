@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { BigNumber } from "ethers"
 import { parseUnits } from "ethers/lib/utils"
 
@@ -7,7 +7,7 @@ import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import VerticalSelect from "../../components/input/VerticalSelect"
 
-import { Classes } from "../../styles/classes"
+import { Classes, classnames } from "../../styles/classes"
 
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
@@ -18,11 +18,15 @@ import { KnownCurrencies } from "@block-wallet/background/controllers/blank-depo
 import { usePendingDeposits } from "../../context/hooks/usePendingDeposits"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import Spinner from "../../components/spinner/Spinner"
-import { AssetSelection } from "../../components/assets/tokens/AssetSelection"
-import { useDepositTokens } from "../../context/hooks/useDepositTokens"
-import { TokenWithBalance } from "../../context/hooks/useTokensList"
+import {
+    AssetListType,
+    AssetSelection,
+} from "../../components/assets/AssetSelection"
+import {
+    TokenWithBalance,
+    useTokensList,
+} from "../../context/hooks/useTokensList"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
-import useGetAssetByTokenAddress from "../../util/hooks/useGetAssetByTokenAddress"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 import {
     getDepositInstanceAllowance,
@@ -66,9 +70,8 @@ interface DepositPageLocationState {
 const DepositPage = () => {
     const history = useOnMountHistory()
     const account = useSelectedAccount()
-    const { chainId, nativeCurrency } = useSelectedNetwork()
-    const tokens = useDepositTokens()
-    const nativeToken = useGetAssetByTokenAddress("0x0")
+    const { chainId } = useSelectedNetwork()
+    const { nativeToken } = useTokensList()
     const { settings } = useBlankState()!
     const [persistedState, setPersistedState] = useLocalStorageState(
         "deposit.form",
@@ -79,13 +82,16 @@ const DepositPage = () => {
         }
     )
 
-    const {
-        preSelectedAsset: historySelectedAsset,
-        isAssetDetailsPage,
-    } = history.location.state as DepositPageLocationState
+    const { preSelectedAsset: historySelectedAsset, isAssetDetailsPage } =
+        history.location.state as DepositPageLocationState
 
-    const [selectedCurrency, setSelectedCurrency] = useState<KnownCurrencies>()
-    const [selectedToken, setSelectedToken] = useState<TokenWithBalance>()
+    const preSelectedAsset = historySelectedAsset ?? nativeToken
+
+    const [selectedCurrency, setSelectedCurrency] = useState<KnownCurrencies>(
+        preSelectedAsset.token.symbol.toLowerCase() as KnownCurrencies
+    )
+    const [selectedToken, setSelectedToken] =
+        useState<TokenWithBalance>(preSelectedAsset)
 
     const [amountsList, setAmountsList] = useState<Array<any>>([])
 
@@ -94,27 +100,25 @@ const DepositPage = () => {
         [k: string]: boolean
     }>({})
 
-    const [disabledOptions, setDisabledOptions] = useState<boolean[]>([])
-
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
-    const preSelectedAsset = historySelectedAsset ?? nativeToken
+    const chainTokensWithBalance = Object.values(
+        account.balances[chainId].tokens
+    )
 
     const selectedTokenBalance = useMemo(() => {
-        const keys = Object.keys(account.balances[chainId].tokens)
-
-        const key = keys.find((key) => {
-            return (
-                account.balances[chainId].tokens[
-                    key
-                ].token.symbol.toLowerCase() === selectedCurrency?.toLowerCase()
-            )
-        })
-
-        return key
-            ? BigNumber.from(account.balances[chainId].tokens[key].balance)
+        const selectedTokenWithBalance = chainTokensWithBalance.find(
+            ({ token }) => {
+                return (
+                    token.symbol.toLowerCase() ===
+                    selectedCurrency?.toLowerCase()
+                )
+            }
+        )
+        return selectedTokenWithBalance
+            ? BigNumber.from(selectedTokenWithBalance.balance)
             : BigNumber.from(0)
-    }, [selectedCurrency, account.balances, chainId])
+    }, [selectedCurrency, chainTokensWithBalance])
 
     useEffect(() => {
         if (!selectedCurrency) return
@@ -129,29 +133,18 @@ const DepositPage = () => {
         )
     }, [selectedCurrency, globalPendingDeposits])
 
-    useEffect(() => {
-        if (!selectedCurrency || !selectedToken) return
+    const disabledOptions = useMemo(() => {
+        if (!selectedCurrency || !selectedToken) return []
 
         const amounts: string[] = getCurrencyAmountList(selectedCurrency)
 
-        setDisabledOptions(
-            amounts.map((amount: string) =>
-                selectedTokenBalance.lt(
-                    parseUnits(amount, selectedToken.token.decimals)
-                )
+        return amounts.map((amount: string) => {
+            const r = selectedTokenBalance.lt(
+                parseUnits(amount, selectedToken.token.decimals)
             )
-        )
-    }, [selectedCurrency, selectedTokenBalance, nativeCurrency, selectedToken])
-
-    useEffect(() => {
-        if (!preSelectedAsset || selectedToken) return
-
-        setSelectedToken(preSelectedAsset)
-        setSelectedCurrency(
-            preSelectedAsset.token.symbol.toLowerCase() as KnownCurrencies
-        )
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+            return r
+        })
+    }, [selectedCurrency, selectedTokenBalance, selectedToken])
 
     const dismissExternalAccountWarning = () => {
         setUserSettings({
@@ -258,7 +251,7 @@ const DepositPage = () => {
                         settings.hideDepositsExternalAccountsWarning
                     }
                     collapsedMessage={
-                        <div className="text-center justify-center bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-bold justify-center">
+                        <div className="text-center bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-bold justify-center">
                             <AiOutlineWarning className="w-4 h-4 yellow-300" />
                             <span className="text-xs text-yellow-900">
                                 <span className="font-bold">
@@ -270,23 +263,34 @@ const DepositPage = () => {
                     onDismiss={dismissExternalAccountWarning}
                 />
             )}
-            <div className="flex flex-col p-6 py-2 space-y-1">
-                <AssetSelection
-                    assets={tokens}
-                    defaultAsset={preSelectedAsset}
-                    onAssetChange={(asset) => {
-                        setSelectedToken(asset)
-                        setSelectedCurrency(
-                            asset.token.symbol.toLowerCase() as KnownCurrencies
-                        )
-                        setPersistedState({
-                            asset,
-                            amount: "",
-                        })
-                    }}
-                    topMargin={76}
-                    bottomMargin={64}
-                />
+            <div
+                className={classnames(
+                    "flex flex-col px-6 space-y-1",
+                    isInternalAccount(account.accountType)
+                        ? "py-6"
+                        : "pt-3 pb-6"
+                )}
+            >
+                <div className="mb-2">
+                    <p className="mb-2 text-sm text-gray-600">Asset</p>
+                    <AssetSelection
+                        selectedAsset={selectedToken}
+                        selectedAssetList={AssetListType.DEPOSIT}
+                        onAssetChange={(asset) => {
+                            setSelectedToken(asset)
+                            setSelectedCurrency(
+                                asset.token.symbol.toLowerCase() as KnownCurrencies
+                            )
+                            setPersistedState({
+                                asset,
+                                amount: "",
+                            })
+                        }}
+                        topMargin={100}
+                        bottomMargin={45}
+                    />
+                </div>
+
                 {selectedCurrency && (
                     <>
                         <label htmlFor="address" className={Classes.inputLabel}>

@@ -1,5 +1,3 @@
-import React from 'react'
-
 const AccountIcon = (props: any) => (
     <svg
         viewBox="0 0 30 30"

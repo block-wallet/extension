@@ -1,5 +1,5 @@
 import classnames from "classnames"
-import React from "react"
+import { PropsWithChildren } from "react"
 import Icon, { IconName } from "../Icon"
 import { DropdownCompoundMember } from "./Dropdown"
 import { useDropdownContext } from "./DropdownContext"
@@ -17,7 +17,7 @@ export interface DropdownMenuItemProps {
     selected?: boolean
 }
 
-export const DropdownMenu: React.FC<DropdownMenuProps> &
+export const DropdownMenu: React.FC<PropsWithChildren<DropdownMenuProps>> &
     DropdownCompoundMember = ({
     children,
     id = "dropdownMenu",
@@ -45,13 +45,9 @@ export const DropdownMenu: React.FC<DropdownMenuProps> &
     )
 }
 
-export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
-    onClick,
-    children,
-    className,
-    value,
-    selected,
-}) => {
+export const DropdownMenuItem: React.FC<
+    PropsWithChildren<DropdownMenuItemProps>
+> = ({ onClick, children, className, value, selected }) => {
     const { onClickItem } = useDropdownContext()
     return (
         <li

@@ -1,28 +1,30 @@
 import classnames from "classnames"
-import React, { FunctionComponent, useEffect, useState } from "react"
+import { FunctionComponent, useEffect, useState } from "react"
 
 const ToggleButton: FunctionComponent<{
-    register?: any
     //inidicate the ID if you have more than one toggle input in the same screen to avoid collisions
     id?: string
     label?: string
     inputName?: string
     disabled?: boolean
+    readOnly?: boolean
     defaultChecked: boolean
-    onToggle: (checked: boolean) => void
+    onToggle?: (checked: boolean) => void
 }> = ({
-    register,
     label,
     inputName,
     disabled = false,
     defaultChecked,
+    readOnly,
     onToggle,
     id = "toggleInput",
 }) => {
     const [isChecked, setIsCheked] = useState(defaultChecked)
 
     useEffect(() => {
-        onToggle(isChecked)
+        if (onToggle) {
+            onToggle(isChecked)
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isChecked])
 
@@ -36,12 +38,17 @@ const ToggleButton: FunctionComponent<{
         ? "bg-primary-300"
         : "bg-primary-200"
 
+    const onClick = () => {
+        if (!disabled && !readOnly) {
+            setIsCheked(!isChecked)
+        }
+    }
     return (
         <label
             htmlFor={id}
             className={classnames(
                 "flex items-center justify-between w-full",
-                !disabled && "cursor-pointer"
+                !disabled && !readOnly && "cursor-pointer"
             )}
         >
             {label && <div className="font-bold text-sm">{label}</div>}
@@ -60,14 +67,12 @@ const ToggleButton: FunctionComponent<{
                 ></div>
                 <input
                     type="checkbox"
-                    ref={register}
                     id={id}
                     name={inputName ?? "toggleInput"}
                     className="sr-only"
                     disabled={disabled}
-                    onClick={() => {
-                        setIsCheked(!isChecked)
-                    }}
+                    readOnly={readOnly}
+                    onClick={onClick}
                 />
             </div>
         </label>

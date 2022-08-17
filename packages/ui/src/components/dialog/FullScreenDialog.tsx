@@ -1,13 +1,15 @@
-import React, { FunctionComponent, useRef } from "react"
+import { FunctionComponent, PropsWithChildren, useRef } from "react"
 import { CSSTransition } from "react-transition-group"
 import "../../router/routeTransitions.css"
 import { classnames } from "../../styles"
 import { useOnClickOutside } from "../../util/useOnClickOutside"
 
-const FullScreenDialog: FunctionComponent<{
-    open: boolean
-    onClickOutside?: () => void
-}> = ({ children, open, onClickOutside }) => {
+const FullScreenDialog: FunctionComponent<
+    PropsWithChildren<{
+        open: boolean
+        onClickOutside?: () => void
+    }>
+> = ({ children, open, onClickOutside }) => {
     const nodeRef = useRef(null)
     const ref = useRef(null)
     useOnClickOutside(ref, () => onClickOutside?.())

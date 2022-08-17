@@ -1,4 +1,4 @@
-import React, { FC } from "react"
+import { FC } from "react"
 import { LINKS } from "../../util/constants"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
 import PopupFooter from "../popup/PopupFooter"

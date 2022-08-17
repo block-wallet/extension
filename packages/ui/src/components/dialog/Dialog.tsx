@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useRef } from "react"
+import { FunctionComponent, useRef } from "react"
 import { useOnClickOutside } from "../../util/useOnClickOutside"
 import { CSSTransition } from "react-transition-group"
 import "../../router/routeTransitions.css"

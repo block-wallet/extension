@@ -1,23 +1,29 @@
-import React, { FunctionComponent, useEffect, useState } from "react"
-import classnames from "classnames"
-import PopupFooter from "../../components/popup/PopupFooter"
-import PopupHeader from "../../components/popup/PopupHeader"
-import PopupLayout from "../../components/popup/PopupLayout"
-import { DappReq } from "../../context/hooks/useDappRequest"
-import { confirmDappRequest } from "../../context/commActions"
-import { DappRequestParams } from "@block-wallet/background/utils/types/ethereum"
-import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
-import InfoComponent from "../../components/InfoComponent"
+import { FunctionComponent, useEffect, useState } from "react"
 import { CgArrowsExchangeV } from "react-icons/cg"
-import { getNetworkFromChainId } from "../../util/getExplorer"
+
+import { DappRequestParams } from "@block-wallet/background/utils/types/ethereum"
+
+import { DappReq } from "../../context/hooks/useDappRequest"
 import { useBlankState } from "../../context/background/backgroundHooks"
+import { confirmDappRequest } from "../../context/commActions"
+import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
+
+import PopupFooter from "../../components/popup/PopupFooter"
+import PopupLayout from "../../components/popup/PopupLayout"
+import InfoComponent from "../../components/InfoComponent"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
-import { Classes } from "../../styles"
-import { DappRequest, DappRequestProps } from "./DappRequest"
+import NetworkDisplayBadge from "../../components/chain/NetworkDisplayBadge"
 import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
+
+import { getNetworkNameFromChainId } from "../../util/getExplorer"
+import { Classes } from "../../styles"
+import { DappRequest, DappRequestProps } from "./DappRequest"
 import { DAPP_FEEDBACK_WINDOW_TIMEOUT } from "../../util/constants"
+import Divider from "../../components/Divider"
+import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
+import DAppOrigin from "../../components/dApp/DAppOrigin"
 
 const SwitchEthereumChainPage = () => {
     return (
@@ -30,49 +36,30 @@ const SwitchEthereumChainPage = () => {
     )
 }
 
-const NetworkComponent = ({
-    network,
-    iconColor,
-    className,
-}: {
-    network: string
-    iconColor: string
-    className?: string
-}) => {
-    return (
-        <div
-            className={classnames(
-                "w-3/6 mx-20 relative flex flex-row items-center justify-center p-1 px-4 pr-1 text-gray-600 rounded-xl group border border-primary-200 text-xs",
-                className
-            )}
-        >
-            <span
-                className={`relative inline-flex rounded-full -ml-2 h-2 w-2 mr-2 animate-pulse ${iconColor} pointer-events-none`}
-            ></span>
-            <span>{network}</span>
-        </div>
-    )
-}
-
 const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
     requestId,
     siteMetadata,
     dappReqData,
 }) => {
     const { availableNetworks } = useBlankState()!
-    const { chainId: currentNetworkChainId } = useSelectedNetwork()
+    const network = useSelectedNetwork()
     const { status, isOpen, dispatch, texts, titles } = useWaitingDialog()
 
+    const currentNetworkChainId = network.chainId
+
     // Get the network names
-    const {
-        chainId: newNetworkChainId,
-    } = dappReqData as DappRequestParams[DappReq.SWITCH_NETWORK]
+    const { chainId: newNetworkChainId } =
+        dappReqData as DappRequestParams[DappReq.SWITCH_NETWORK]
 
     const [currentNetworkName, setCurrentNetworkName] = useState(
-        getNetworkFromChainId(availableNetworks, currentNetworkChainId, "desc")
+        getNetworkNameFromChainId(
+            availableNetworks,
+            currentNetworkChainId,
+            "desc"
+        )
     )
     const [newNetworkName, setNewNetworkName] = useState(
-        getNetworkFromChainId(availableNetworks, newNetworkChainId, "desc")
+        getNetworkNameFromChainId(availableNetworks, newNetworkChainId, "desc")
     )
 
     const [currentSiteMetadata, setSiteMetadata] = useState(siteMetadata)
@@ -81,14 +68,18 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
         // Check that this wasn't the last request and popup is still open to prevent
         // displaying same network on both labels
         setCurrentNetworkName(
-            getNetworkFromChainId(
+            getNetworkNameFromChainId(
                 availableNetworks,
                 currentNetworkChainId,
                 "desc"
             )
         )
         setNewNetworkName(
-            getNetworkFromChainId(availableNetworks, newNetworkChainId, "desc")
+            getNetworkNameFromChainId(
+                availableNetworks,
+                newNetworkChainId,
+                "desc"
+            )
         )
         setSiteMetadata(siteMetadata)
     }, [
@@ -145,14 +136,7 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
 
     return (
         <PopupLayout
-            header={
-                <PopupHeader
-                    icon={currentSiteMetadata.iconURL}
-                    title={currentSiteMetadata.name}
-                    close={false}
-                    backButton={false}
-                />
-            }
+            header={<DAppPopupHeader title="Switch Network" />}
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
@@ -189,7 +173,11 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
                 timeout={DAPP_FEEDBACK_WINDOW_TIMEOUT}
                 hideButton
             />
-
+            <DAppOrigin
+                iconURL={currentSiteMetadata.iconURL}
+                name={currentSiteMetadata.name}
+            />
+            <Divider />
             <div className="flex flex-col p-6 space-y-4 h-full justify-between">
                 {/* Header */}
                 <div className="flex flex-col space-y-2 text-sm">
@@ -204,9 +192,12 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
 
                 <div className="flex flex-col space-y-6">
                     {/* Current network */}
-                    <NetworkComponent
+                    <NetworkDisplayBadge
                         iconColor="bg-green-500"
+                        className="min-w-[50%] max-w-[80%] py-1 m-auto"
                         network={currentNetworkName}
+                        truncate={true}
+                        fill={false}
                     />
 
                     {/* Switch Line */}
@@ -222,9 +213,12 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
                     </div>
 
                     {/* New network */}
-                    <NetworkComponent
+                    <NetworkDisplayBadge
                         iconColor="bg-blue-500"
+                        className="min-w-[50%] max-w-[80%] py-1 m-auto"
                         network={newNetworkName}
+                        truncate={true}
+                        fill={false}
                     />
                 </div>
                 {/* Info component */}

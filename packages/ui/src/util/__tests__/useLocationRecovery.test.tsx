@@ -1,5 +1,5 @@
 /* eslint-disable testing-library/render-result-naming-convention */
-import React, { FC } from "react"
+import { FC } from "react"
 import { act, render } from "@testing-library/react"
 import { Route, Router } from "react-router-dom"
 import {

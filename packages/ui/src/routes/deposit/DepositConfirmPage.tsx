@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
@@ -60,6 +60,14 @@ let freezedAmounts = {
 }
 
 const depositError = "There was an error while making the deposit."
+
+export interface DepositConfirmLocalState {
+    amount: string
+    selectedCurrency: KnownCurrencies
+    selectedToken: TokenWithBalance
+    isAssetDetailsPage: boolean
+}
+
 const DepositConfirmPage = () => {
     const history: any = useOnMountHistory()
     let {
@@ -67,16 +75,10 @@ const DepositConfirmPage = () => {
         selectedToken,
         selectedCurrency,
         isAssetDetailsPage,
-    } = useMemo(
-        () =>
-            history.location.state as {
-                amount: string
-                selectedCurrency: KnownCurrencies
-                selectedToken: TokenWithBalance
-                isAssetDetailsPage: boolean
-            },
-        [history.location.state]
-    )
+    } = useMemo(() => history.location.state as DepositConfirmLocalState, [
+        history.location.state,
+    ])
+
     const [persistedData, setPersistedData] = useLocalStorageState(
         "deposits.confirm",
         {
@@ -86,6 +88,7 @@ const DepositConfirmPage = () => {
             volatile: true,
         }
     )
+
     const { clear: clearLocationRecovery } = useLocationRecovery()
     const {
         transaction: inProgressTransaction,
@@ -144,7 +147,7 @@ const DepositConfirmPage = () => {
         HardwareWalletOpTypes.SIGN_TRANSACTION,
         selectedAccount.accountType,
         {
-            reject: React.useCallback(() => {
+            reject: useCallback(() => {
                 if (inProgressTransaction?.id) {
                     rejectTransaction(inProgressTransaction?.id)
                 }
@@ -526,7 +529,9 @@ const DepositConfirmPage = () => {
                         </div>
                     </div>
                     <div className="text-xs text-gray-600 mt-0.5">
-                        <span className="font-bold">{anonimitySet || "-"}</span>{" "}
+                        <span className="font-bold">
+                            {anonimitySet[0] || "-"}
+                        </span>{" "}
                         <span>equal user deposits</span>
                     </div>
                 </div>

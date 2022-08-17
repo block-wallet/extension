@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { useHistory } from "react-router-dom"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import ToggleButton from "../../components/button/ToggleButton"
@@ -14,10 +14,8 @@ const ReleaseNotesPreferencesPage = () => {
     const { settings } = useBlankState()!
     const { run, isSuccess, isError, isLoading } = useAsyncInvoke()
     const history = useHistory()
-    const [
-        subscribedReleaseNotes,
-        setSubscribedToReleaseNotes,
-    ] = useState<boolean>(settings.subscribedToReleaseaNotes)
+    const [subscribedReleaseNotes, setSubscribedToReleaseNotes] =
+        useState<boolean>(settings.subscribedToReleaseaNotes)
 
     const onSave = async () => {
         run(toggleReleaseNotesSubscription(subscribedReleaseNotes))

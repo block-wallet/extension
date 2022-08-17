@@ -14,7 +14,6 @@ import {
     BlankDepositController,
     PendingWithdrawalsStore,
 } from '@block-wallet/background/controllers/blank-deposit/BlankDepositController';
-import { IncomingTransactionController } from '@block-wallet/background/controllers/IncomingTransactionController';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
 import {
     TokenController,
@@ -28,7 +27,7 @@ import BlockUpdatesController from '@block-wallet/background/controllers/block-u
 import { TornadoEventsService } from '@block-wallet/background/controllers/blank-deposit/tornado/TornadoEventsService';
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
-import { TransactionWatcherController } from '@block-wallet/background/controllers/erc-20/TransactionWatcherController';
+import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
 
 describe('Address book controller implementation', function () {
     const accounts = {
@@ -53,7 +52,6 @@ describe('Address book controller implementation', function () {
     let blankDepositController: BlankDepositController;
     let tokenOperationsController: TokenOperationsController;
     let tokenController: TokenController;
-    let incomingTransactionController: IncomingTransactionController;
     let blockFetchController: BlockFetchController;
     let blockUpdatesController: BlockUpdatesController;
     let transactionWatcherController: TransactionWatcherController;
@@ -133,12 +131,6 @@ describe('Address book controller implementation', function () {
             },
             tornadoEventsService,
         });
-        incomingTransactionController = new IncomingTransactionController(
-            networkController,
-            preferencesController,
-            blockUpdatesController,
-            {} as any
-        );
         transactionWatcherController = new TransactionWatcherController(
             networkController,
             preferencesController,
@@ -152,7 +144,6 @@ describe('Address book controller implementation', function () {
         activityListController = new ActivityListController(
             transactionController,
             blankDepositController,
-            incomingTransactionController,
             preferencesController,
             networkController,
             transactionWatcherController

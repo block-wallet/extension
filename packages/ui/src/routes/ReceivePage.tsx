@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import PopupLayout from "../components/popup/PopupLayout"
 import PopupHeader from "../components/popup/PopupHeader"
 import CopyTooltip from "../components/label/СopyToClipboardTooltip"

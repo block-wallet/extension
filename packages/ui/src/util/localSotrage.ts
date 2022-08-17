@@ -12,6 +12,10 @@ function saveLocalStorageItem(
         return undefined
     }
 
+    if (!data) {
+        return window.localStorage.removeItem(key)
+    }
+
     let toStore = {
         value: data,
         windowId,

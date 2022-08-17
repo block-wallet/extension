@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import NetworkController, { NetworkEvents } from './NetworkController';
 import { BaseController } from '../infrastructure/BaseController';
 import { BigNumber, ethers } from 'ethers';
@@ -41,12 +40,13 @@ export enum AccountStatus {
     HIDDEN = 'HIDDEN',
 }
 
+import checksummedAddress from '../utils/checksummedAddress';
 import {
-    ERC20Transactions,
+    TransactionByHash,
+    TransactionTypeEnum,
     TransactionWatcherController,
     TransactionWatcherControllerEvents,
-} from './erc-20/TransactionWatcherController';
-import checksummedAddress from '../utils/checksummedAddress';
+} from './TransactionWatcherController';
 
 export interface AccountBalanceToken {
     token: Token;
@@ -222,6 +222,22 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         );
 
         this._transactionWatcherController.on(
+            TransactionWatcherControllerEvents.INCOMING_TRANSACTION,
+            async (
+                _: number,
+                address: string,
+                transactionType: TransactionTypeEnum
+            ) => {
+                if (transactionType === TransactionTypeEnum.Native) {
+                    await this.updateAccounts({
+                        addresses: [address],
+                        assetAddresses: [NATIVE_TOKEN_ADDRESS],
+                    });
+                }
+            }
+        );
+
+        this._transactionWatcherController.on(
             TransactionWatcherControllerEvents.NEW_ERC20_TRANSACTIONS,
             async (chainId: number, accountAddress: string) => {
                 const assetAddresses: string[] = [];
@@ -242,38 +258,13 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         this._transactionWatcherController.on(
             TransactionWatcherControllerEvents.NEW_KNOWN_ERC20_TRANSACTIONS,
             async (
-                chainId: number,
+                _: number,
                 accountAddress: string,
-                erc20Transactions: ERC20Transactions
+                tokenAddresses: string[]
             ) => {
-                const assetAddresses: string[] = [];
-
-                for (const transactionHash in erc20Transactions.incomingTransactions) {
-                    const contractAddress =
-                        erc20Transactions.incomingTransactions[transactionHash]
-                            .transactionReceipt?.contractAddress;
-                    if (
-                        contractAddress &&
-                        !assetAddresses.includes(contractAddress)
-                    ) {
-                        assetAddresses.push(contractAddress);
-                    }
-                }
-                for (const transactionHash in erc20Transactions.outgoingTransactions) {
-                    const contractAddress =
-                        erc20Transactions.outgoingTransactions[transactionHash]
-                            .transactionReceipt?.contractAddress;
-                    if (
-                        contractAddress &&
-                        !assetAddresses.includes(contractAddress)
-                    ) {
-                        assetAddresses.push(contractAddress);
-                    }
-                }
-
                 await this.updateAccounts({
                     addresses: [accountAddress],
-                    assetAddresses,
+                    assetAddresses: tokenAddresses,
                 });
             }
         );

@@ -1,4 +1,11 @@
-import React, { useRef, useState, FC } from "react"
+import {
+    useRef,
+    useState,
+    FC,
+    PropsWithChildren,
+    Children,
+    ReactElement,
+} from "react"
 import { IconName } from "../Icon"
 import { useOnClickOutside } from "../../../util/useOnClickOutside"
 import {
@@ -24,12 +31,14 @@ export interface DropdownCompoundMember {
 }
 
 interface CompoundProps {
-    Menu: React.FC<DropdownMenuProps> & DropdownCompoundMember
-    Button: React.FC<DropdownButtonBaseProps> & DropdownCompoundMember
-    MenuItem: React.FC<DropdownMenuItemProps>
+    Menu: React.FC<PropsWithChildren<DropdownMenuProps>> &
+        DropdownCompoundMember
+    Button: React.FC<PropsWithChildren<DropdownButtonBaseProps>> &
+        DropdownCompoundMember
+    MenuItem: React.FC<PropsWithChildren<DropdownMenuItemProps>>
 }
 
-const Dropdown: FC<DropdownProps> & CompoundProps = ({
+const Dropdown: FC<PropsWithChildren<DropdownProps>> & CompoundProps = ({
     children,
     onClickItem,
 }) => {
@@ -38,8 +47,8 @@ const Dropdown: FC<DropdownProps> & CompoundProps = ({
     useOnClickOutside(ref, () => setIsShowingMenu(false))
     let menuRender = null
     let buttonRender = null
-    React.Children.forEach(children, (child) => {
-        const { type } = child as React.ReactElement<any>
+    Children.forEach(children, (child) => {
+        const { type } = child as ReactElement<any>
         const compundMember = (type as DropdownCompoundMember).compoundName
         if (compundMember === "DropdownMenu") {
             menuRender = child

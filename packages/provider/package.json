@@ -1,6 +1,6 @@
 {
     "name": "@block-wallet/provider",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "private": true,
     "dependencies": {
         "@metamask/safe-event-emitter": "^2.0.0",
@@ -38,7 +38,7 @@
     "scripts": {
         "test": "make test/provider",
         "build": "make build/provider",
-        "lint": "eslint src --ext .ts --quiet",
-        "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html"
+        "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html",
+        "lint": "eslint src --ext .ts --quiet"
     }
 }

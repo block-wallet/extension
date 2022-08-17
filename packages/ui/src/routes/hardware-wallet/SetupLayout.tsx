@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react"
+import { FC, PropsWithChildren } from "react"
 import IsLockedDialog from "../../components/dialog/IsLockedDialog"
 import Divider from "../../components/Divider"
 import PageLayout from "../../components/PageLayout"
@@ -9,7 +9,7 @@ type SetupLayoutProps = {
     buttons: React.ReactNode
 }
 
-const HardwareWalletSetupLayout: FunctionComponent<SetupLayoutProps> = ({
+const HardwareWalletSetupLayout: FC<PropsWithChildren<SetupLayoutProps>> = ({
     children,
     title,
     subtitle,

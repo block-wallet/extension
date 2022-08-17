@@ -1,19 +1,19 @@
-import React from "react"
 import { useHistory, useParams } from "react-router-dom"
 import { Devices } from "../../context/commTypes"
 import ConnectDeviceStepsLayout from "./ConnectDeviceStepsLayout"
 import { DEVICE_CONNECTION_STEPS } from "../../util/connectionStepUtils"
 import useHardwareWalletConnect from "../../util/hooks/useHardwareWalletConnect"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
+import { useState, useMemo } from "react"
 
 const HardwareWalletReconnectionPage = () => {
     const history = useHistory()
     //As this flow starts with a redirection from the background, we can't grab the vendor from the history state.
     const { vendor } = useParams() as { vendor: Devices }
     const { connect, isLoading } = useHardwareWalletConnect(true)
-    const [deviceNotReady, setDeviceNotReady] = React.useState(false)
+    const [deviceNotReady, setDeviceNotReady] = useState(false)
 
-    const deviceSteps = React.useMemo(() => {
+    const deviceSteps = useMemo(() => {
         const deviceSteps = DEVICE_CONNECTION_STEPS[vendor as Devices] || []
         if (!deviceSteps) {
             history.push("/hardware-wallet")

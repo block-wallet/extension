@@ -1,16 +1,16 @@
-import React, { FunctionComponent } from 'react'
-import { classnames } from '../../styles/classes'
+import { FunctionComponent } from "react"
+import { classnames } from "../../styles/classes"
 
 const ErrorMessage: FunctionComponent<{
     error?: string | undefined
-}> = ({ error = '' }) => {
+}> = ({ error = "" }) => {
     return (
         <span
             className={classnames(
-                'text-red-500 text-xs break-words',
-                error ? '' : 'hidden'
+                "text-red-500 text-xs break-words",
+                error ? "" : "hidden"
             )}
-            title={error || ''}
+            title={error || ""}
         >
             {error || <>&nbsp;</>}
         </span>

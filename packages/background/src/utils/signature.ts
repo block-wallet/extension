@@ -87,7 +87,10 @@ export const validateSignature = <TSignatureType extends SignatureMethods>(
 
         // Parse params for v3 and v4
         if (typeof nParams.data === 'string') {
-            nParams.data = JSON.parse(nParams.data);
+            const typedData = JSON.parse(nParams.data);
+            nParams.data = sanitizeTypedData(typedData);
+
+
         }
     }
 
@@ -159,7 +162,7 @@ export const validateTypedData = <
         let chainId;
 
         if (typeof data.domain.chainId === 'string') {
-            chainId = parseInt(data.domain.chainId, 16);
+            chainId = parseInt(data.domain.chainId);
         } else {
             chainId = data.domain.chainId;
         }
@@ -194,8 +197,37 @@ export const hexToString = (hex: string): string => {
     let output = '';
 
     for (let i = 0; i < strippedHex.length; i += 2) {
-        output += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+        output += String.fromCharCode(parseInt(hex.substring(i, 2), 16));
     }
 
     return output;
 };
+
+
+const sanitizeTypedData = (typedData: TypedMessage<MessageSchema>): any => {
+
+    try {
+        // Check and remove null values from the typed data primary type.
+        const uint256Properties = typedData.types[typedData.primaryType].filter(t => t.type === 'uint256');
+
+        if (!uint256Properties) return typedData;
+
+
+        // Loop properties
+        for (const k in uint256Properties) {
+            const propertyName = uint256Properties[k].name;
+
+            // If an uint256 property has null value, we replace it with a 0 to prevent errors.
+            if (typedData.message[propertyName] === null)
+                typedData.message[propertyName] = 0;
+
+        }
+
+        return typedData;
+    } catch (error) {
+        return typedData;
+    }
+
+
+}
+

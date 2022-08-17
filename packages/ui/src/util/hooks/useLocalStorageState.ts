@@ -1,19 +1,21 @@
-import { useCallback, useEffect, useState } from "react"
+import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { useHistory } from "react-router-dom"
 import useWindowId from "../../context/hooks/useWindowId"
 import {
+    clearVolatileLocalStorageItems,
     generateVolatileLocalStorageKey,
     retrieveLocalStorageItem,
     saveLocalStorageItem,
 } from "../localSotrage"
 
-interface Options<T> {
+export interface useLocalStorageStateOptions<T> {
     initialValue: T | undefined
     volatile?: boolean
     ttl?: number //in millis
+    deserializer?: (rawData: any) => T //must be memoized
 }
 
-const defaultOptions: Options<any> = {
+const defaultOptions: useLocalStorageStateOptions<any> = {
     initialValue: {},
     volatile: true,
 }
@@ -31,7 +33,10 @@ const defaultOptions: Options<any> = {
  * @param stateOptions
  * @returns [state,setState]
  */
-function useLocalStorageState<T>(key: string, stateOptions: Options<T>) {
+function useLocalStorageState<T>(
+    key: string,
+    stateOptions: useLocalStorageStateOptions<T>
+): [T, Dispatch<SetStateAction<T>>] {
     const { initialValue, volatile, ttl } = {
         ...defaultOptions,
         ...stateOptions,
@@ -43,39 +48,26 @@ function useLocalStorageState<T>(key: string, stateOptions: Options<T>) {
 
     // State to store our value
     // Pass initial state function to useState so logic is only executed once
-    const [state, setState] = useState(() => {
+    const [state, setState] = useState<T>(() => {
         const data = retrieveLocalStorageItem(storageKey, windowId, ttl)
         if (!data) {
             saveLocalStorageItem(storageKey, initialValue, windowId)
             return initialValue
         }
-        return data
+        return stateOptions.deserializer
+            ? stateOptions.deserializer(data)
+            : data
     })
-    // Return a wrapped version of useState's setter function that ...
-    // ... persists the new value to localStorage.
-    const setValue = useCallback(
-        (value: T | null) => {
-            try {
-                // Allow value to be a function so we have same API as useState
-                const valueToStore =
-                    value instanceof Function ? value(state) : value
-                // Save state
-                setState(valueToStore)
-                // Save to local storage
-                saveLocalStorageItem(storageKey, valueToStore, windowId)
-            } catch (error) {
-                // A more advanced implementation would handle the error case
-                console.log(error)
-            }
-        },
-        [windowId, state, storageKey]
-    )
+
+    useEffect(() => {
+        saveLocalStorageItem(storageKey, state, windowId)
+    }, [state, storageKey, windowId])
 
     useEffect(() => {
         let unlisten: any = null
         if (volatile) {
             unlisten = history.listen(() => {
-                setValue(null)
+                clearVolatileLocalStorageItems()
             })
         }
         return () => {
@@ -85,7 +77,7 @@ function useLocalStorageState<T>(key: string, stateOptions: Options<T>) {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
-    return [state, setValue]
+    return [state, setState]
 }
 
 export default useLocalStorageState

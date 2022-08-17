@@ -10,10 +10,6 @@ describe('Preferences Controller', function () {
     });
 
     it('should get and set selected address', async function () {
-        expect(preferencesController.getSelectedAddress()).to.equal(
-            '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1'
-        );
-
         preferencesController.setSelectedAddress(
             '0xbda8c7b7b5d0579eb18996d1f684a434e4ff701f' // not checksummed
         );

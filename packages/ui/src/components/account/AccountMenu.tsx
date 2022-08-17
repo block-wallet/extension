@@ -1,4 +1,3 @@
-import React from "react"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import VerticalSelect from "../input/VerticalSelect"
 import PopupHeader from "../popup/PopupHeader"
@@ -97,6 +96,7 @@ const AccountMenu = () => {
                         account={account}
                         actionButtons={[
                             <div
+                                key={`current-account-action-button-1`}
                                 onClick={() => {
                                     history.push({
                                         pathname: "/accounts/menu/edit",

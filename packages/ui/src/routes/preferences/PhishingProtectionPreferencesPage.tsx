@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { ButtonWithIcon } from "../../components/button/ButtonWithIcon"
 import ToggleButton from "../../components/button/ToggleButton"
 import AntiPhishing from "../../components/phishing/AntiPhishing"

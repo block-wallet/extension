@@ -16,10 +16,10 @@ export default {
             balanceFetch: 20 * SECOND,
             gasPricesUpdate: 8 * SECOND,
             exchangeRatesFetch: 1 * MINUTE,
-            incomingTransactionsUpdate: 20 * SECOND,
+            // incomingTransactionsUpdate: 20 * SECOND,
             transactionsStatusesUpdate: 8 * SECOND,
             providerSubscriptionsUpdate: 8 * SECOND,
-            erc20TransactionWatcherUpdate: 30 * SECOND,
+            transactionWatcherUpdate: 30 * SECOND,
         };
 
         const FAST_TIME_INTERVALS_DEFAULT_VALUES = {
@@ -28,10 +28,10 @@ export default {
                 blockNumberPull: 4 * SECOND,
                 balanceFetch: 8 * SECOND,
                 gasPricesUpdate: 3 * SECOND,
-                incomingTransactionsUpdate: 8 * SECOND,
+                // incomingTransactionsUpdate: 8 * SECOND,
                 transactionsStatusesUpdate: 3 * SECOND,
                 providerSubscriptionsUpdate: 3 * SECOND,
-                erc20TransactionWatcherUpdate: 15 * SECOND,
+                transactionWatcherUpdate: 15 * SECOND,
             },
         };
 
@@ -41,10 +41,10 @@ export default {
                 blockNumberPull: 20 * SECOND,
                 balanceFetch: 30 * SECOND,
                 gasPricesUpdate: 19 * SECOND,
-                incomingTransactionsUpdate: 40 * SECOND,
+                // incomingTransactionsUpdate: 40 * SECOND,
                 transactionsStatusesUpdate: 19 * SECOND,
                 providerSubscriptionsUpdate: 19 * SECOND,
-                erc20TransactionWatcherUpdate: 40 * SECOND,
+                transactionWatcherUpdate: 40 * SECOND,
             },
         };
 

@@ -1,4 +1,4 @@
-import React from "react"
+import { PropsWithChildren } from "react"
 import classnames from "classnames"
 export enum TypographyType {
     TITLE = "title",
@@ -15,7 +15,7 @@ interface TypographyProps {
     extraProps?: any
 }
 
-const Typography: React.FC<TypographyProps> = ({
+const Typography: React.FC<PropsWithChildren<TypographyProps>> = ({
     children,
     type,
     className,

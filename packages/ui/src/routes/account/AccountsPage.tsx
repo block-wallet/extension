@@ -1,4 +1,3 @@
-import React from "react"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import AccountSelect from "../../components/account/AccountSelect"

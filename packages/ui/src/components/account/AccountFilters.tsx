@@ -1,4 +1,4 @@
-import React from "react"
+import { Fragment } from "react"
 import {
     AccountFilter,
     getAccountFilterValue,
@@ -53,21 +53,22 @@ const AccountFilters: React.FC<AccountFilterProps> = ({
                 <Dropdown.Button>
                     <DropdownOutlinedIconButton iconName={IconName.GROUP} />
                 </Dropdown.Button>
-                <Dropdown.Menu id="filter-menu" className="w-28 p-1">
+                <Dropdown.Menu id="filter-menu" className="w-28">
                     {getFilterOptions(customFilters).map(
                         ({ value, label, divider }) => {
                             return (
-                                <React.Fragment key={value}>
+                                <Fragment key={value}>
                                     {divider && <Divider />}
                                     <Dropdown.MenuItem
                                         value={value}
                                         selected={selectedFilters.includes(
                                             value
                                         )}
+                                        className="font-normal text-black"
                                     >
                                         {label}
                                     </Dropdown.MenuItem>
-                                </React.Fragment>
+                                </Fragment>
                             )
                         }
                     )}

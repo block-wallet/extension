@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import { useCallback, useEffect } from "react"
 import { useWaitingDialog } from "../../components/dialog/WaitingDialog"
 import {
     AccountType,
@@ -13,6 +13,7 @@ import Divider from "../../components/Divider"
 import ClickableText from "../../components/button/ClickableText"
 import { isHardwareWallet } from "../../util/account"
 import { useBlankState } from "../background/backgroundHooks"
+import useCountdown from "../../util/hooks/useCountdown"
 
 const messages: {
     [key in HardwareWalletOpTypes]: {
@@ -123,20 +124,6 @@ const useTransactionTimeout = () => {
     return txSignTimeout
 }
 
-const calculateRemainingSeconds = (
-    txTimeout: number | undefined,
-    txTime: number | undefined
-): number | null => {
-    if (txTime && txTimeout) {
-        const now = new Date()
-        const timeFromTransaction = now.getTime() - txTime
-        const remainingTime = Math.max(txTimeout - timeFromTransaction, 0)
-        const remainingSeconds = Math.abs(remainingTime / 1000)
-        return remainingSeconds
-    }
-    return null
-}
-
 const WaitingHWConfirmation = ({
     message,
     operation,
@@ -150,21 +137,8 @@ const WaitingHWConfirmation = ({
     txTime?: number
     txTimeout?: number
 }) => {
-    const [remainingSeconds, setRemainingSeconds] = React.useState<
-        number | null
-    >(() => {
-        return calculateRemainingSeconds(txTimeout, txTime)
-    })
-    const intervalRef = React.useRef<NodeJS.Timeout | undefined>()
+    const { value: remainingSeconds } = useCountdown(txTime, txTimeout)
 
-    useEffect(() => {
-        intervalRef.current = setInterval(() => {
-            setRemainingSeconds(calculateRemainingSeconds(txTimeout, txTime))
-        }, 1000) //run every 1 second
-        return () => {
-            intervalRef.current && clearInterval(intervalRef.current)
-        }
-    }, [txTime, txTimeout])
     return (
         <div className="flex flex-col items-center justify-center">
             {message}
@@ -216,7 +190,9 @@ export const useTransactionWaitingDialog = (
         reject: () => void
     }
 ) => {
-    const { texts, titles, dispatch, status, isOpen, gifs } = useWaitingDialog()
+    const { texts, titles, dispatch, status, isOpen, gifs } = useWaitingDialog({
+        defaultStatus: "idle",
+    })
     const txTimeout = useTransactionTimeout()
     useEffect(() => {
         if (transaction?.status) {
@@ -319,7 +295,7 @@ export const useTransactionWaitingDialog = (
     ])
 
     return {
-        closeDialog: () => dispatch({ type: "close" }),
+        closeDialog: useCallback(() => dispatch({ type: "close" }), [dispatch]),
         isOpen,
         texts,
         titles,

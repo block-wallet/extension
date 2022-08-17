@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-empty-interface */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { BigNumber, ethers } from 'ethers';
@@ -263,7 +262,7 @@ export abstract class SignedTransaction
             });
 
         // As we don't care about the result here, ignore errors in transaction result
-        result.catch((_) => {});
+        result.catch(() => {});
 
         return meta;
     }

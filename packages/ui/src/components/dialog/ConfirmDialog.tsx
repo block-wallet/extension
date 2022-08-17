@@ -1,5 +1,5 @@
 import classnames from "classnames"
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import { Classes } from "../../styles"
 import CloseIcon from "../icons/CloseIcon"
 import Dialog from "./Dialog"

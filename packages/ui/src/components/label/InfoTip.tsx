@@ -1,9 +1,8 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { FunctionComponent } from "react"
 import classnames from "classnames"
 import ExclamationCircleIconFull from "../icons/ExclamationCircleIconFull"
 import CloseIcon from "../icons/CloseIcon"
-import MiniCheckmark from "../icons/MiniCheckmark"
 
 const infoBgStyle = {
     backgroundColor: "#e2f6ff",

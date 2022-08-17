@@ -1,4 +1,4 @@
-import React, { useState, FC } from "react"
+import { useState, FC } from "react"
 import { useHistory } from "react-router-dom"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import ToggleButton from "../../components/button/ToggleButton"

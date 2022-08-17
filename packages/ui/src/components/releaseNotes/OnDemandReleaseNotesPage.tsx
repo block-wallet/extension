@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from "react"
+import { FC, useEffect } from "react"
 import { useParams } from "react-router-dom"
 import ReleaseNotesInfo from "../info/ReleaseNotesInfo"
 import { generateOnDemandReleaseNotes } from "../../context/commActions"

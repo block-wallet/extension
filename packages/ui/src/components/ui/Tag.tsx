@@ -1,8 +1,9 @@
-import React from "react"
+import { FC, PropsWithChildren } from "react"
 import classnames from "classnames"
 
 interface BadgeProps {
     profile: "default" | "success" | "error" | "warning" | "info" | "dark"
+    size?: "sm" | "md"
 }
 
 const PROFILE_COLORS = {
@@ -33,12 +34,18 @@ const PROFILE_COLORS = {
     },
 }
 
-const Tag: React.FC<BadgeProps> = ({ children, profile }) => {
+const Tag: FC<PropsWithChildren<BadgeProps>> = ({
+    children,
+    profile,
+    size,
+}) => {
     const { backgroundColor, textColor } = PROFILE_COLORS[profile]
+    const tagSize = size || "md"
     return (
         <span
             className={classnames(
-                "px-1 py-1 text-xs rounded-md",
+                "px-1 py-0.5 rounded-md",
+                tagSize === "sm" ? "text-xxs" : "text-xs",
                 backgroundColor,
                 textColor
             )}

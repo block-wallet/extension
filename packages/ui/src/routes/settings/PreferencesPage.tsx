@@ -1,4 +1,3 @@
-import React from "react"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import pin from "../../assets/images/icons/pin.svg"

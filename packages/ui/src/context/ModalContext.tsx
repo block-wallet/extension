@@ -1,4 +1,4 @@
-import React, { createContext, FunctionComponent, useState } from 'react'
+import { createContext, useState } from "react"
 
 type ModalState = {
     isOpen: boolean
@@ -14,7 +14,11 @@ export const ModalContext = createContext<ModalState>({
     close: () => null,
 })
 
-export const ModalProvider: FunctionComponent = ({ children }) => {
+export const ModalProvider = ({
+    children,
+}: {
+    children: React.ReactNode | undefined
+}) => {
     const [isOpen, setIsOpen] = useState(false)
     const [content, setContent] = useState<React.ReactNode>()
     const open = (n: React.ReactNode) => {

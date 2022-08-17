@@ -1,4 +1,3 @@
-import React from 'react'
 import PopupLayout from '../../components/popup/PopupLayout'
 import cross from '../../assets/images/icons/cross.svg'
 import classnames from 'classnames'

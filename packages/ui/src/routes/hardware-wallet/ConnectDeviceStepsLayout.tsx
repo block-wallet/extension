@@ -1,4 +1,3 @@
-import React from "react"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import HardwareWalletSetupLayout from "./SetupLayout"
 import classnames from "classnames"

@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import AccountDisplay from "../account/AccountDisplay"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import { Classes, classnames } from "../../styles"

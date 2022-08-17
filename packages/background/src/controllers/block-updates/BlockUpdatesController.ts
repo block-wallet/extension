@@ -1,10 +1,9 @@
-import { Mutex } from 'async-mutex';
-import log from 'loglevel';
 import { BaseController } from '../../infrastructure/BaseController';
 import BlockFetchController from './BlockFetchController';
 import NetworkController, { NetworkEvents } from './../NetworkController';
 import { ActionIntervalController } from './ActionIntervalController';
 import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES } from '../../utils/constants/networks';
+import { MINUTE } from '../../utils/constants/time';
 
 export interface BlockUpdatesControllerState {
     blockData: {
@@ -22,7 +21,7 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
     private readonly _blockNumberPullIntervalController: ActionIntervalController;
 
     private activeSubscriptions = false;
-    private backgroundAvailableActiveSubscriptions = false;
+    private backgroundAvailableActiveSubscriptions = true;
 
     constructor(
         private readonly _networkController: NetworkController,
@@ -48,13 +47,16 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
          * is any transaction pending of confirmation.
          */
         this.on(BlockUpdatesEvents.CONTROLLER_UPDATE_SUBSCRIPTION, () => {
-            if (
-                this.activeSubscriptions ||
-                this.backgroundAvailableActiveSubscriptions
-            ) {
+            if (this.activeSubscriptions) {
                 this._blockFetchController.addNewOnBlockListener(
                     this._networkController.network.chainId,
                     this._blockUpdates
+                );
+            } else if (this.backgroundAvailableActiveSubscriptions) {
+                this._blockFetchController.addNewOnBlockListener(
+                    this._networkController.network.chainId,
+                    this._blockUpdates,
+                    MINUTE * 2
                 );
             } else {
                 this._blockFetchController.removeAllOnBlockListener();
@@ -86,21 +88,6 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
                 },
             });
         }
-    };
-
-    /**
-     * setBackgroundAvailableActiveSubscriptions
-     *
-     * sets backgroundAvailableActiveSubscriptions, if it is set to true
-     * the block update will be fetched no matter the wallet is blocked or
-     */
-    public setBackgroundAvailableActiveSubscriptions = (
-        backgroundAvailableActiveSubscriptions: boolean
-    ): void => {
-        this.backgroundAvailableActiveSubscriptions =
-            backgroundAvailableActiveSubscriptions;
-
-        this.emit(BlockUpdatesEvents.CONTROLLER_UPDATE_SUBSCRIPTION);
     };
 
     /**
@@ -188,15 +175,13 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
                         );
                     }
 
-                    if (this.backgroundAvailableActiveSubscriptions) {
-                        // Emit new block subscription
-                        this.emit(
-                            BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
-                            chainId, // Update chainId
-                            currentBlock, // Old block number
-                            blockNumber // New block number
-                        );
-                    }
+                    // Emit new block subscription
+                    this.emit(
+                        BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
+                        chainId, // Update chainId
+                        currentBlock, // Old block number
+                        blockNumber // New block number
+                    );
                 }
             });
         }

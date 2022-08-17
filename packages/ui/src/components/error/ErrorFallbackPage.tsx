@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import { Classes, classnames } from "../../styles"
 import PopupFooter from "../popup/PopupFooter"
 import PopupHeader from "../popup/PopupHeader"

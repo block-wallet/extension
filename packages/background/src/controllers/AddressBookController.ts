@@ -276,7 +276,7 @@ export class AddressBookController extends BaseController<AddressBookControllerM
                 case TransactionCategories.CONTRACT_DEPLOYMENT:
                 case TransactionCategories.CONTRACT_INTERACTION:
                 case TransactionCategories.TOKEN_METHOD_APPROVE:
-                case TransactionCategories.BLANK_SWAP:
+                case TransactionCategories.EXCHANGE:
                 case TransactionCategories.INCOMING:
                     continue;
                 case TransactionCategories.BLANK_WITHDRAWAL:

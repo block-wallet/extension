@@ -1,13 +1,21 @@
-import React, { FC } from "react"
+import { FC } from "react"
+import classnames from "classnames"
 
 interface TokenSummaryMembers {
-    Balances: FC
-    TokenBalance: FC<{ title?: string }>
-    ExchangeRateBalance: FC<{ title?: string }>
-    Actions: FC
+    Balances: FC<{ children: React.ReactNode }>
+    TokenBalance: FC<{
+        title?: string
+        children: React.ReactNode
+        className?: string
+    }>
+    ExchangeRateBalance: FC<{ title?: string; children: React.ReactNode }>
+    Actions: FC<{ children: React.ReactNode }>
 }
 
-const TokenSummary: FC<{ minHeight?: string | number }> &
+const TokenSummary: FC<{
+    minHeight?: string | number
+    children: React.ReactNode
+}> &
     TokenSummaryMembers = ({ children, minHeight }) => {
     return (
         <div
@@ -19,21 +27,31 @@ const TokenSummary: FC<{ minHeight?: string | number }> &
     )
 }
 
-const Balances: FC = ({ children }) => {
+const Balances = ({ children }: { children: React.ReactNode }) => {
     return (
         <div className="flex flex-col items-center space-y-1">{children}</div>
     )
 }
 
-const TokenBalance: FC<{ title?: string }> = ({ children, title }) => {
+const TokenBalance: FC<{
+    title?: string
+    className?: string
+    children: React.ReactNode
+}> = ({ children, title, className }) => {
     return (
-        <span className="text-2xl font-bold" title={title}>
+        <span
+            className={classnames("text-2xl font-bold", className)}
+            title={title}
+        >
             {children}
         </span>
     )
 }
 
-const ExchangeRateBalance: FC<{ title?: string }> = ({ children, title }) => {
+const ExchangeRateBalance: FC<{
+    title?: string
+    children: React.ReactNode
+}> = ({ children, title }) => {
     return (
         <span className="text-sm text-gray-600" title={title}>
             {children}
@@ -41,7 +59,7 @@ const ExchangeRateBalance: FC<{ title?: string }> = ({ children, title }) => {
     )
 }
 
-const Actions: FC = ({ children }) => {
+const Actions = ({ children }: { children: React.ReactNode }) => {
     return (
         <div className="flex flex-row items-center justify-around w-full">
             {children}

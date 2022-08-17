@@ -49,7 +49,7 @@ export const openPopup = async (): Promise<void> => {
             await openExtensionWindow();
         }
     } finally {
-        release();
+        setTimeout(() => release(), 1000);
     }
 };
 

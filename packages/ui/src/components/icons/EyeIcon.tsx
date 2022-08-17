@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import classnames from "classnames"
 const EyeIcon: FunctionComponent<{ className?: string }> = ({ className }) => {
     return (

@@ -1,4 +1,3 @@
-import React from "react"
 import CenteredTextCircle from "../../components/icons/CenteredTextCircle"
 import classnames from "classnames"
 const TEXT_SIZES_CLASSES = {

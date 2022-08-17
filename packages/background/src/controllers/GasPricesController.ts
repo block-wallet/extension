@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BaseController } from '../infrastructure/BaseController';
 import NetworkController, { NetworkEvents } from './NetworkController';
 import { BigNumber, utils } from 'ethers';
@@ -175,7 +174,9 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                     .maxPriorityFeePerGas || '0';
 
                             newValue = Number(
-                                utils.formatEther(feeData.maxPriorityFeePerGas!)
+                                utils.formatEther(
+                                    feeData.maxPriorityFeePerGas || '0'
+                                )
                             );
                             oldValue = Number(utils.formatEther(oldGasPrice));
                         } else {
@@ -184,7 +185,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                     .gasPrice || '0';
 
                             newValue = Number(
-                                utils.formatEther(feeData.gasPrice!)
+                                utils.formatEther(feeData.gasPrice || '0')
                             );
                             oldValue = Number(utils.formatEther(oldGasPrice));
                         }
@@ -395,16 +396,18 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                     const rewardsFast: BigNumber[] = [];
 
                     // add all rewards to rewards array
-                    for (let i = 0; i < feeHistory.reward!.length; i++) {
-                        rewardsSlow.push(
-                            BigNumber.from(feeHistory.reward![i][0])
-                        );
-                        rewardsAverage.push(
-                            BigNumber.from(feeHistory.reward![i][1])
-                        );
-                        rewardsFast.push(
-                            BigNumber.from(feeHistory.reward![i][2])
-                        );
+                    if (feeHistory.reward) {
+                        for (let i = 0; i < feeHistory.reward.length; i++) {
+                            rewardsSlow.push(
+                                BigNumber.from(feeHistory.reward[i][0])
+                            );
+                            rewardsAverage.push(
+                                BigNumber.from(feeHistory.reward[i][1])
+                            );
+                            rewardsFast.push(
+                                BigNumber.from(feeHistory.reward[i][2])
+                            );
+                        }
                     }
 
                     // sort rewards array lowest to highest

@@ -1,7 +1,7 @@
 /* Wrapper element that contains this component should have class "group relative" */
 
 import classnames from "classnames"
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import { ImCheckmark } from "react-icons/im"
 
 const CopyTooltip: FunctionComponent<{

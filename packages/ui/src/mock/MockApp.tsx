@@ -1,4 +1,3 @@
-import React from "react"
 import { FunctionComponent, useEffect } from "react"
 import { useHistory } from "react-router-dom"
 import MockBackgroundState from "./MockBackgroundState"

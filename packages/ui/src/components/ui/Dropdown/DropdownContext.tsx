@@ -1,4 +1,4 @@
-import React from "react"
+import { createContext, useContext } from "react"
 
 interface DropdownContextData {
     isShowingMenu: boolean
@@ -6,12 +6,12 @@ interface DropdownContextData {
     onClickItem?: (value: any) => void //Callback invoked when the user clicks one item of the Menu
 }
 
-const DropdownContext = React.createContext<DropdownContextData>({
+const DropdownContext = createContext<DropdownContextData>({
     isShowingMenu: false,
     toggleMenu: (e: Event) => {},
     onClickItem: (value: any) => {},
 })
 
-export const useDropdownContext = () => React.useContext(DropdownContext)
+export const useDropdownContext = () => useContext(DropdownContext)
 
 export default DropdownContext

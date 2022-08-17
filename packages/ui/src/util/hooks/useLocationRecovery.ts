@@ -5,7 +5,7 @@ import useLocalStorageState from "./useLocalStorageState"
 const LAST_LOCATION_KEY = "lastLocation"
 
 const useLocationRecovery = () => {
-    const [lastLocation, setLastLocation] = useLocalStorageState(
+    const [lastLocation, setLastLocation] = useLocalStorageState<any>(
         LAST_LOCATION_KEY,
         {
             initialValue: undefined,

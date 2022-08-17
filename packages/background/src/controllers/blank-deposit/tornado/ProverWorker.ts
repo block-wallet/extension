@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type * as blake3 from 'blake3/esm/browser';
 import * as WebsnarkUtils from 'websnark/src/utils';
 import buildGroth16 from 'websnark/src/groth16';

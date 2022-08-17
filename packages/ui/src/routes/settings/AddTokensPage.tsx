@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { FixedSizeList as List } from "react-window"
 import AutoSizer from "react-virtualized-auto-sizer"
@@ -36,8 +36,32 @@ import Spinner from "../../components/spinner/Spinner"
 
 // Main component
 const AddTokensPage = () => {
+    const history = useOnMountHistory()
     return (
-        <PopupLayout header={<PopupHeader title="Add Tokens" close="/" />}>
+        <PopupLayout
+            header={
+                <PopupHeader
+                    title="Add Tokens"
+                    onClose={(e) => {
+                        e.preventDefault()
+                        history.push("/")
+                    }}
+                    onBack={(e) => {
+                        e.preventDefault()
+                        const state =
+                            history.location.state?.addTokenState || {}
+                        if (state.redirectTo) {
+                            history.replace({
+                                pathname: state.redirectTo,
+                                state,
+                            })
+                        } else {
+                            history.replace("/")
+                        }
+                    }}
+                />
+            }
+        >
             <div className="flex flex-col flex-1 w-full">
                 <SearchToken />
             </div>
@@ -64,7 +88,7 @@ const searchTokenSchema = yup.object().shape({
         })
         .required("Please enter a token name"),
 })
-type searchTokenFormData = InferType<typeof searchTokenSchema>
+type searchTokenFormData = { tokenName: string }
 
 const customTokenSchema = yup.object({
     tokenAddress: yup
@@ -91,10 +115,9 @@ type customTokenFormData = InferType<typeof customTokenSchema>
 // Sub components
 const SearchToken = () => {
     const history = useOnMountHistory()
-    const { register, handleSubmit } = useForm<searchTokenFormData>({
+    const { register } = useForm<searchTokenFormData>({
         resolver: yupResolver(searchTokenSchema),
     })
-
     // State
     const [isSearchEmpty, setIsSearchEmpty] = useState<boolean>(true)
     const [results, setResults] = useState<TokenResponse[]>([])
@@ -113,13 +136,16 @@ const SearchToken = () => {
     }, [results])
 
     // Handlers
-    const onSubmit = handleSubmit(async () => {
+    const onSubmit = async () => {
         try {
             // Valid form data
             if (selected.length > 0) {
                 history.push({
                     pathname: "/settings/tokens/add/confirm",
-                    state: { tokens: selected },
+                    state: {
+                        tokens: selected,
+                        ...(history.location.state || {}),
+                    },
                 })
             } else {
                 // Prevent manual form submission
@@ -129,10 +155,9 @@ const SearchToken = () => {
             // Invalid form data
             console.log(event)
         }
-    })
+    }
 
-    const onChange = (event: any) => {
-        const value = event.target.value
+    const onChange = (value: string) => {
         // Update input value & check if empty
         value === "" ? setIsSearchEmpty(true) : setIsSearchEmpty(false)
 
@@ -166,6 +191,12 @@ const SearchToken = () => {
         }
     }
 
+    useEffect(() => {
+        if (history.location.state?.searchValue) {
+            onChange(history.location.state?.searchValue)
+        }
+    }, [history.location.state?.searchValue])
+
     const onClick = (token: TokenResponse) => {
         // Check if the token is already selected
         if (!selected.some((el) => el.address === token.address)) {
@@ -197,12 +228,11 @@ const SearchToken = () => {
 
     return (
         <>
-            <form
+            <div
                 id="search-form"
                 className={`flex flex-col justify-between w-full ${
                     !isCustomTokenView ? " h-full" : ""
                 } `}
-                onSubmit={onSubmit}
             >
                 <div className="flex-1 flex flex-col w-full h-0 max-h-screen overflow-auto hide-scroll">
                     <div className="flex flex-col flex-1 w-full">
@@ -214,14 +244,19 @@ const SearchToken = () => {
                             {/* INPUT */}
                             <div className="w-full p-6 pb-2 bg-white fixed z-20">
                                 <SearchInput
+                                    {...register("tokenName")}
                                     name="tokenName"
-                                    ref={register}
-                                    placeholder="Search Tokens or fill in Address"
+                                    placeholder="Search Tokens by name or fill in Address"
                                     disabled={false}
-                                    autofocus={true}
-                                    onChange={onChange}
+                                    onChange={(e: any) =>
+                                        onChange(e.target.value)
+                                    }
+                                    autoFocus={true}
                                     debounced
                                     minSearchChar={3}
+                                    defaultValue={
+                                        history.location.state?.searchValue
+                                    }
                                 />
                             </div>
 
@@ -396,7 +431,7 @@ const SearchToken = () => {
                         </div>
                     </div>
                 </div>
-            </form>
+            </div>
             {isCustomTokenView ? (
                 <CustomToken customTokenAddress={tokenAddress} />
             ) : (
@@ -409,7 +444,7 @@ const SearchToken = () => {
                             label="Next"
                             formId="search-form"
                             disabled={selected.length === 0}
-                            type="submit"
+                            onClick={onSubmit}
                         />
                     </PopupFooter>
                 </>
@@ -442,9 +477,10 @@ const CustomToken = (props: any) => {
     const {
         register,
         handleSubmit,
-        errors,
         setError,
         setValue,
+
+        formState: { errors },
     } = useForm<customTokenFormData>({
         resolver: yupResolver(customTokenSchema),
     })
@@ -474,7 +510,7 @@ const CustomToken = (props: any) => {
 
     useEffect(() => {
         setValue("tokenAddress", result.address)
-        setValue("tokenDecimals", result.decimals)
+        setValue("tokenDecimals", result.decimals?.toString() ?? "")
         setValue("tokenSymbol", result.symbol)
     }, [result.address, result.decimals, result.symbol, setValue])
 
@@ -526,7 +562,10 @@ const CustomToken = (props: any) => {
 
                     history.push({
                         pathname: "/settings/tokens/add/confirm",
-                        state: { tokens: [tokenToAdd] },
+                        state: {
+                            tokens: [tokenToAdd],
+                            ...(history.location.state || {}),
+                        },
                     })
                 }
             )
@@ -636,15 +675,15 @@ const CustomToken = (props: any) => {
                                     appearance="outline"
                                     label="Token Contract Address"
                                     placeholder={result.address || "Address"}
-                                    name="tokenAddress"
-                                    register={register}
+                                    {...register("tokenAddress", {
+                                        onChange: (e) => {
+                                            onAddressChange(e.target.value)
+                                        },
+                                    })}
                                     error={errors.tokenAddress?.message}
                                     autoFocus={true}
                                     maxLength={42}
                                     defaultValue={result.address}
-                                    onChange={(e) =>
-                                        onAddressChange(e.target.value)
-                                    }
                                 />
                             </div>
 
@@ -655,12 +694,12 @@ const CustomToken = (props: any) => {
                                     label="Token Symbol"
                                     placeholder={result.symbol || "ETH"}
                                     defaultValue={result.symbol}
-                                    name="tokenSymbol"
-                                    register={register}
                                     error={errors.tokenSymbol?.message}
-                                    onChange={(e) =>
-                                        onSymbolChange(e.target.value)
-                                    }
+                                    {...register("tokenSymbol", {
+                                        onChange: (e) => {
+                                            onSymbolChange(e.target.value)
+                                        },
+                                    })}
                                 />
                             </div>
 
@@ -675,12 +714,12 @@ const CustomToken = (props: any) => {
                                             : "18"
                                     }
                                     defaultValue={result.decimals || ""}
-                                    name="tokenDecimals"
-                                    register={register}
                                     error={errors.tokenDecimals?.message}
-                                    onChange={(e) =>
-                                        onDecimalsChange(e.target.value)
-                                    }
+                                    {...register("tokenDecimals", {
+                                        onChange: (e) => {
+                                            onDecimalsChange(e.target.value)
+                                        },
+                                    })}
                                 />
                             </div>
 

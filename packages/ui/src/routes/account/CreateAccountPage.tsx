@@ -1,13 +1,19 @@
-import React, { AriaAttributes } from "react"
+import { AriaAttributes } from "react"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import { openHardwareConnect } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import Icon, { IconName } from "../../components/ui/Icon"
 import classNames from "classnames"
+import { PropsWithChildren } from "react"
 
 const CardFrame: React.FC<
-    { onClick: () => void; role?: string; disabled?: boolean } & AriaAttributes
+    PropsWithChildren<{
+        onClick: () => void
+        role?: string
+        disabled?: boolean
+    }> &
+        AriaAttributes
 > = ({ children, onClick, role, disabled = false, ...ariaProps }) => {
     return (
         <div

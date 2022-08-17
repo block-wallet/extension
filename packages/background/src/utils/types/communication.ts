@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import { Flatten } from './helpers';
 import { BlankAppUIState } from '../constants/initialState';
@@ -24,10 +23,11 @@ import {
 } from '../../controllers/transactions/utils/types';
 import { ImportStrategy, ImportArguments } from '../account';
 import {
-    QuoteParameters,
     SwapParameters,
-    Swap,
-} from '../../controllers/SwapController';
+    ExchangeType,
+    SwapQuote,
+    SwapTransaction,
+} from '../../controllers/ExchangeController';
 import {
     ProviderEvents,
     SiteMetadata,
@@ -39,7 +39,7 @@ import {
     AddressBookEntry,
     NetworkAddressBook,
 } from '@block-wallet/background/controllers/AddressBookController';
-import { DappRequestConfirmOptions } from './ethereum';
+import { DappReq, DappRequestConfirmOptions } from './ethereum';
 import { TransactionGasEstimation } from '@block-wallet/background/controllers/transactions/TransactionController';
 import {
     PopupTabs,
@@ -49,6 +49,8 @@ import {
 import { TransactionFeeData } from '@block-wallet/background/controllers/erc-20/transactions/SignedTransaction';
 import { Currency } from '../currency';
 import { Devices } from './hardware';
+import { OneInchSwapQuoteParams, OneInchSwapRequestParams } from './1inch';
+import { ChainListItem } from '@block-wallet/chains-assets';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -110,6 +112,14 @@ enum DAPP {
     ATTEMPT_REJECT_REQUEST = 'ATTEMPT_REJECT_DAPP_REQUEST',
 }
 
+enum EXCHANGE {
+    CHECK_ALLOWANCE = 'CHECK_ALLOWANCE',
+    APPROVE = 'APPROVE_EXCHANGE',
+    GET_QUOTE = 'GET_EXCHANGE_QUOTE',
+    GET_EXCHANGE = 'GET_EXCHANGE',
+    EXECUTE = 'EXECUTE_EXCHANGE',
+}
+
 export enum EXTERNAL {
     EVENT_SUBSCRIPTION = 'EVENT_SUBSCRIPTION',
     REQUEST = 'EXTERNAL_REQUEST',
@@ -125,6 +135,11 @@ enum NETWORK {
     CHANGE = 'NETWORK_CHANGE',
     SET_SHOW_TEST_NETWORKS = 'SHOW_TEST_NETWORKS',
     ADD_NETWORK = 'ADD_NETWORK',
+    EDIT_NETWORK = 'EDIT_NETWORK',
+    REMOVE_NETWORK = 'REMOVE_NETWORK',
+    GET_SPECIFIC_CHAIN_DETAILS = 'GET_SPECIFIC_CHAIN_DETAILS',
+    GET_RPC_CHAIN_ID = 'GET_RPC_CHAIN_ID',
+    SEARCH_CHAINS = 'SEARCH_CHAINS',
 }
 
 enum PASSWORD {
@@ -213,14 +228,6 @@ enum TOKEN {
     SEARCH_TOKEN = 'SEARCH_TOKEN',
 }
 
-enum SWAP {
-    IS_APPROVED = 'IS_SWAP_APPROVED',
-    APPROVE = 'APPROVE_SWAP',
-    GET_QUOTE = 'GET_SWAP_QUOTE',
-    GET_SWAP = 'GET_SWAP',
-    EXECUTE_SWAP = 'EXECUTE_SWAP',
-}
-
 enum ADDRESS_BOOK {
     CLEAR = 'CLEAR',
     DELETE = 'DELETE',
@@ -245,6 +252,7 @@ export const Messages = {
     BLANK,
     CONTENT,
     DAPP,
+    EXCHANGE,
     EXTERNAL,
     NETWORK,
     PASSWORD,
@@ -255,7 +263,6 @@ export const Messages = {
     TRANSACTION,
     WALLET,
     TOKEN,
-    SWAP,
     ADDRESS_BOOK,
     BROWSER,
     FILTERS,
@@ -343,6 +350,14 @@ export interface RequestSignatures {
     ];
     [Messages.DAPP.CONFIRM_REQUEST]: [RequestConfirmDappRequest, void];
     [Messages.DAPP.ATTEMPT_REJECT_REQUEST]: [RequestRejectDappRequest, void];
+    [Messages.EXCHANGE.CHECK_ALLOWANCE]: [
+        RequestCheckExchangeAllowance,
+        boolean
+    ];
+    [Messages.EXCHANGE.APPROVE]: [RequestApproveExchange, boolean];
+    [Messages.EXCHANGE.GET_QUOTE]: [RequestGetExchangeQuote, SwapQuote];
+    [Messages.EXCHANGE.GET_EXCHANGE]: [RequestGetExchange, SwapParameters];
+    [Messages.EXCHANGE.EXECUTE]: [RequestExecuteExchange, string];
     [Messages.EXTERNAL.REQUEST]: [RequestExternalRequest, unknown];
     [Messages.EXTERNAL.SETUP_PROVIDER]: [undefined, ProviderSetupData];
     [Messages.EXTERNAL.SET_ICON]: [RequestSetIcon, boolean];
@@ -352,6 +367,17 @@ export interface RequestSignatures {
         boolean
     ];
     [Messages.NETWORK.ADD_NETWORK]: [RequestAddNetwork, void];
+    [Messages.NETWORK.EDIT_NETWORK]: [RequestEditNetwork, void];
+    [Messages.NETWORK.REMOVE_NETWORK]: [RequestRemoveNetwork, void];
+    [Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS]: [
+        RequestGetChainData,
+        ChainListItem
+    ];
+    [Messages.NETWORK.GET_RPC_CHAIN_ID]: [RequestGetRpcChainId, number];
+    [Messages.NETWORK.SEARCH_CHAINS]: [
+        RequestSearchChains,
+        { name: string; logo: string }
+    ];
     [Messages.PASSWORD.VERIFY]: [RequestPasswordVerify, boolean];
     [Messages.PASSWORD.CHANGE]: [RequestPasswordChange, boolean];
     [Messages.PERMISSION.ADD_NEW]: [RequestAddNewSiteWithPermissions, boolean];
@@ -440,11 +466,6 @@ export interface RequestSignatures {
         boolean,
         ExternalEventSubscription
     ];
-    [Messages.SWAP.IS_APPROVED]: [RequestIsSwapApproved, boolean];
-    [Messages.SWAP.APPROVE]: [RequestApproveSwap, boolean];
-    [Messages.SWAP.GET_QUOTE]: [RequestGetSwapQuote, BigNumber];
-    [Messages.SWAP.GET_SWAP]: [RequestGetSwap, Swap];
-    [Messages.SWAP.EXECUTE_SWAP]: [RequestExecuteSwap, string];
     [Messages.ADDRESS_BOOK.CLEAR]: [RequestAddressBookClear, boolean];
     [Messages.ADDRESS_BOOK.DELETE]: [RequestAddressBookDelete, boolean];
     [Messages.ADDRESS_BOOK.SET]: [RequestAddressBookSet, boolean];
@@ -578,7 +599,7 @@ export interface RequestSetIdleTimeout {
 export interface RequestConfirmDappRequest {
     id: string;
     isConfirmed: boolean;
-    confirmOptions?: DappRequestConfirmOptions;
+    confirmOptions?: DappRequestConfirmOptions[DappReq];
 }
 
 export interface RequestRejectDappRequest {
@@ -587,6 +608,36 @@ export interface RequestRejectDappRequest {
 
 export interface RequestReconnectDevice {
     address: string;
+}
+export interface RequestCheckExchangeAllowance {
+    account: string;
+    amount: BigNumber;
+    exchangeType: ExchangeType;
+    tokenAddress: string;
+}
+
+export interface RequestApproveExchange {
+    allowance: BigNumber;
+    amount: BigNumber;
+    exchangeType: ExchangeType;
+    feeData: TransactionFeeData;
+    tokenAddress: string;
+    customNonce?: number;
+}
+
+export interface RequestGetExchangeQuote {
+    exchangeType: ExchangeType;
+    quoteParams: OneInchSwapQuoteParams;
+}
+
+export interface RequestGetExchange {
+    exchangeType: ExchangeType;
+    exchangeParams: OneInchSwapRequestParams;
+}
+
+export interface RequestExecuteExchange {
+    exchangeType: ExchangeType;
+    exchangeParams: SwapTransaction;
 }
 
 export type RequestExternalRequest = RequestArguments;
@@ -687,6 +738,32 @@ export interface RequestAddNetwork {
     chainId: string;
     currencySymbol: string;
     blockExplorerUrl: string;
+    test: boolean;
+}
+
+export interface RequestEditNetwork {
+    chainId: string;
+    updates: {
+        rpcUrl: string;
+        blockExplorerUrl?: string;
+        name: string;
+    };
+}
+
+export interface RequestRemoveNetwork {
+    chainId: number;
+}
+
+export interface RequestGetChainData {
+    chainId: number;
+}
+
+export interface RequestGetRpcChainId {
+    rpcUrl: string;
+}
+
+export interface RequestSearchChains {
+    term: string;
 }
 
 export interface RequestPasswordVerify {
@@ -886,28 +963,6 @@ export interface RequestSearchToken {
     exact?: boolean;
     accountAddress?: string;
     chainId?: number;
-}
-
-export interface RequestIsSwapApproved {
-    amount: BigNumber;
-    tokenAddress: string;
-}
-
-export interface RequestApproveSwap {
-    tokenAddress: string;
-    customGasPrice?: BigNumber;
-}
-
-export interface RequestGetSwapQuote {
-    quoteParams: QuoteParameters;
-}
-
-export interface RequestGetSwap {
-    swapParams: SwapParameters;
-}
-
-export interface RequestExecuteSwap {
-    swap: Swap;
 }
 
 export interface RequestAntiPhishingImage {}

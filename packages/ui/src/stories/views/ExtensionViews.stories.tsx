@@ -1,4 +1,3 @@
-import React from "react"
 import { Meta } from "@storybook/react"
 import { MockPopup } from "../../mock/MockApp"
 import { BigNumber } from "@ethersproject/bignumber"
@@ -12,6 +11,7 @@ import { parseEther } from "@ethersproject/units"
 import { CurrencyAmountPair } from "@block-wallet/background/controllers/blank-deposit/types"
 import { DappReq } from "../../context/hooks/useDappRequest"
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
+import { NormalizedAddEthereumChainParameter } from "@block-wallet/background/utils/types/ethereum"
 
 export const Popup = () => (
     <MockPopup
@@ -128,22 +128,6 @@ export const PopupTransactions = () => (
                 ],
             },
             transactions: mockTxs,
-            incomingTransactions: {
-                "0x0": {
-                    goerli: { lastBlockQueried: 500, list: mockTxsByHash },
-                    mainnet: { lastBlockQueried: 500, list: {} },
-                    arbitrum: { lastBlockQueried: 500, list: {} },
-                    optimism: { lastBlockQueried: 500, list: {} },
-                    bsc: { lastBlockQueried: 500, list: {} },
-                    polygon: { lastBlockQueried: 500, list: {} },
-                    avalancheC: { lastBlockQueried: 500, list: {} },
-                    bsc_testnet: { lastBlockQueried: 500, list: {} },
-                    kovan: { lastBlockQueried: 500, list: {} },
-                    ropsten: { lastBlockQueried: 500, list: {} },
-                    rinkeby: { lastBlockQueried: 500, list: {} },
-                    localhost: { lastBlockQueried: 500, list: {} },
-                },
-            },
         }}
     />
 )
@@ -332,6 +316,44 @@ export const SwitchEthereumChain = () => (
                     params: {
                         chainId: 56,
                     },
+                    originId: "1",
+                },
+            },
+        }}
+    />
+)
+
+export const AddEthereumChain = () => (
+    <MockPopup
+        location="/chain/add"
+        assignBlankState={{
+            dappRequests: {
+                "1": {
+                    origin: "http://app.blockwallet.io/",
+                    siteMetadata: {
+                        name: "BlockWallet",
+                        iconURL: "http://app.blockwallet.io/icons/icon-128.png",
+                    },
+                    time: 1,
+                    type: DappReq.ADD_ETHEREUM_CHAIN,
+                    params: {
+                        chainId: 56,
+                        blockExplorerUrl: "https://bscscan.com",
+                        chainName: "Binance Smart Chain Mainnet",
+                        iconUrl:
+                            "https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/smartchain/info/logo.png",
+                        nativeCurrency: {
+                            name: "Binance Chain Native Token",
+                            symbol: "BNB",
+                            decimals: 18,
+                        },
+                        rpcUrl: "https://bsc-node.blockwallet.io",
+                        validations: {
+                            knownIcon: false,
+                            knownBlockExplorer: true,
+                            knownRpcUrl: true,
+                        },
+                    } as NormalizedAddEthereumChainParameter,
                     originId: "1",
                 },
             },

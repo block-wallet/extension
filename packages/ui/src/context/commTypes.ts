@@ -58,6 +58,14 @@ enum DAPP {
     ATTEMPT_REJECT_REQUEST = "ATTEMPT_REJECT_DAPP_REQUEST",
 }
 
+enum EXCHANGE {
+    CHECK_ALLOWANCE = "CHECK_ALLOWANCE",
+    APPROVE = "APPROVE_EXCHANGE",
+    GET_QUOTE = "GET_EXCHANGE_QUOTE",
+    GET_EXCHANGE = "GET_EXCHANGE",
+    EXECUTE = "EXECUTE_EXCHANGE",
+}
+
 enum EXTERNAL {
     SET_SITE_DATA = "SET_SITE_DATA",
     REQUEST = "EXTERNAL_REQUEST",
@@ -68,6 +76,11 @@ enum NETWORK {
     CHANGE = "NETWORK_CHANGE",
     SET_SHOW_TEST_NETWORKS = "SHOW_TEST_NETWORKS",
     ADD_NETWORK = "ADD_NETWORK",
+    EDIT_NETWORK = "EDIT_NETWORK",
+    REMOVE_NETWORK = "REMOVE_NETWORK",
+    GET_SPECIFIC_CHAIN_DETAILS = "GET_SPECIFIC_CHAIN_DETAILS",
+    GET_RPC_CHAIN_ID = "GET_RPC_CHAIN_ID",
+    SEARCH_CHAINS = "SEARCH_CHAINS",
 }
 
 enum PASSWORD {
@@ -179,6 +192,7 @@ export const Messages = {
     BACKGROUND,
     BLANK,
     DAPP,
+    EXCHANGE,
     EXTERNAL,
     NETWORK,
     PASSWORD,
@@ -217,7 +231,7 @@ export enum TransactionCategories {
     TOKEN_METHOD_TRANSFER = "transfer",
     TOKEN_METHOD_INCOMING_TRANSFER = "incoming_transfer",
     TOKEN_METHOD_TRANSFER_FROM = "transferfrom",
-    BLANK_SWAP = "blankSwap",
+    EXCHANGE = "exchange",
 }
 
 export enum PendingWithdrawalStatus {
@@ -272,6 +286,15 @@ export enum TransactionType {
     LEGACY = 0,
     ACCESS_LIST_EIP2930 = 1,
     FEE_MARKET_EIP1559 = 2,
+}
+
+/**
+ * Exchange types
+ */
+export enum ExchangeType {
+    SWAP_1INCH = "SWAP_1INCH",
+    SWAP_COWSWAP = "SWAP_COWSWAP",
+    LIMIT_1INCH = "LIMIT_1INCH",
 }
 
 /**

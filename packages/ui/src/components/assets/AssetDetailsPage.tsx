@@ -1,5 +1,5 @@
 import { formatUnits } from "ethers/lib/utils"
-import React, { useState } from "react"
+import { useState } from "react"
 import { Link } from "react-router-dom"
 import { deleteCustomToken } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
@@ -27,7 +27,6 @@ import ConfirmDialog from "../dialog/ConfirmDialog"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
 import SuccessDialog from "../dialog/SuccessDialog"
 import { formatName } from "../../util/formatAccount"
-import eye from "../../assets/images/icons/eye.svg"
 import Icon, { IconName } from "../ui/Icon"
 
 const AssetDetailsPage = () => {
@@ -38,7 +37,7 @@ const AssetDetailsPage = () => {
 
     const account = useSelectedAccount()
     const currencyFormatter = useCurrencyFromatter()
-    const { isSendEnabled, isTornadoEnabled } = useSelectedNetwork()
+    const { isSendEnabled } = useSelectedNetwork()
     const asset = useGetAssetByTokenAddress(address)
     const isNative = isNativeTokenAddress(address)
     const tokenTransactions = useTokenTransactions(asset?.token?.symbol)
@@ -87,7 +86,7 @@ const AssetDetailsPage = () => {
                     actions={
                         !isNative
                             ? [
-                                <a
+                                  <a
                                       href={generateExplorerLink(
                                           availableNetworks,
                                           selectedNetwork,
@@ -98,24 +97,24 @@ const AssetDetailsPage = () => {
                                       rel="noopener noreferrer"
                                       key={1}
                                   >
-                                    <div
+                                      <div
                                           className={classnames(
                                               "text-grey-900 cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-t-md",
                                               optionsWidth
                                           )}
                                       >
-                                        <div className="pl-1 pr-1 w-8">
-                                            <img
+                                          <div className="pl-1 pr-1 w-8">
+                                              <img
                                                   width={"16"}
                                                   height={"16"}
                                                   src={openExternal}
                                                   alt={`View on ${explorerName}`}
                                               />
-                                        </div>
-                                        <span>View on {explorerName}</span>
-                                    </div>
-                                </a>,
-                                <div
+                                          </div>
+                                          <span>View on {explorerName}</span>
+                                      </div>
+                                  </a>,
+                                  <div
                                       key={2}
                                       onClick={() => {
                                           setConfirmOpen(true)
@@ -125,14 +124,14 @@ const AssetDetailsPage = () => {
                                           optionsWidth
                                       )}
                                   >
-                                    <div className="pl-1 pr-1 w-8">
-                                        <Icon
+                                      <div className="pl-1 pr-1 w-8">
+                                          <Icon
                                               name={IconName.TRASH_BIN}
                                               profile="danger"
                                           />
-                                    </div>
-                                    <span>Remove Token</span>
-                                </div>,
+                                      </div>
+                                      <span>Remove Token</span>
+                                  </div>,
                               ]
                             : undefined
                     }
@@ -165,9 +164,15 @@ const AssetDetailsPage = () => {
                     <TokenSummary.Balances>
                         <AssetIcon filled asset={token} />
                         <TokenSummary.TokenBalance
+                            className="flex flex-row space-x-1"
                             title={`${formattedTokenBalance} ${token.symbol}`}
                         >
-                            {`${roundedTokenBalance} ${token.symbol}`}
+                            <span
+                                className="truncate w-full max-w-xs"
+                                style={{ maxWidth: "18rem" }}
+                            >
+                                {roundedTokenBalance}
+                            </span>
                         </TokenSummary.TokenBalance>
                         <TokenSummary.ExchangeRateBalance>
                             {currencyFormatter.format(
@@ -196,31 +201,43 @@ const AssetDetailsPage = () => {
                                 Send
                             </RoundedIconButton>
                         </Link>
-                        {isTornadoEnabled && asset.isDepositable && (
+                        {/* Prevent access to swaps/}
+                        {/* {isSwapEnabled && (
                             <Link
                                 to={{
-                                    pathname: "/privacy",
+                                    pathname: "/swap",
                                     state: {
-                                        isAssetDetailsPage: true,
-                                        preSelectedAsset: asset,
+                                        fromToken: asset.token,
+                                        fromTokenBalance: asset.balance,
+                                        fromAssetPage: true,
                                         transitionDirection: "left",
                                     },
                                 }}
                                 draggable={false}
-                                className="flex flex-col items-center space-y-2 group"
+                                className={classnames(
+                                    "flex flex-col items-center space-y-2 group",
+                                    (!isSendEnabled ||
+                                        !state.isUserNetworkOnline) &&
+                                        "pointer-events-none"
+                                )}
                             >
-                                <div className="group w-8 h-8 flex items-center overflow-hidden transition duration-300 rounded-full bg-primary-300 group-hover:opacity-75">
-                                    <img
-                                        alt="Privacy"
-                                        src={eye}
-                                        className="w-full h-3 group-hover:animate-privacy-rotate select-none"
-                                    />
+                                <div
+                                    className={classnames(
+                                        "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                        !isSendEnabled ||
+                                            !state.isUserNetworkOnline
+                                            ? "bg-gray-300"
+                                            : "bg-primary-300"
+                                    )}
+                                    style={{ transform: "scaleY(-1)" }}
+                                >
+                                    <DoubleArrowHoverAnimation />
                                 </div>
                                 <span className="text-xs font-medium">
-                                    Privacy
+                                    Swap
                                 </span>
                             </Link>
-                        )}
+                        )} */}
                     </TokenSummary.Actions>
                 </TokenSummary>
                 <div className="flex flex-col flex-1 w-full space-y-0 border-t border-gray-200">

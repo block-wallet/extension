@@ -6,6 +6,10 @@
     user-select: text !important;
 }
 
+.allow-select-all {
+    user-select: all !important;
+}
+
 html.popup,
 html.popup body,
 html body.popup {

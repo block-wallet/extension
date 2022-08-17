@@ -1,5 +1,3 @@
-import React from 'react'
-
 const CloseIcon = (props: any) => (
     <svg
         width={props?.size ?? '12'}

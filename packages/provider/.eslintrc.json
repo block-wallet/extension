@@ -13,17 +13,10 @@
         "ecmaVersion": 12,
         "sourceType": "module"
     },
-    "plugins": [
-        "@typescript-eslint"
-    ],
-    "ignorePatterns": [
-        "**/*.js",
-        "test/"
-    ],
+    "plugins": ["@typescript-eslint"],
+    "ignorePatterns": ["**/*.js", "test/"],
     "rules": {
-        "@typescript-eslint/no-empty-interface": [
-            "warn"
-        ],
-        "no-console": 2
+        "@typescript-eslint/no-empty-interface": ["warn"],
+        "@typescript-eslint/no-explicit-any": "off"
     }
 }

@@ -1,6 +1,6 @@
 import { Messages } from "../commTypes"
 import BackgroundReducer from "./backgroundReducer"
-import React, { useReducer, useEffect } from "react"
+import { useReducer, useEffect } from "react"
 import { subscribeState, getState } from "../commActions"
 import BackgroundContext, { initBackgroundState } from "./backgroundContext"
 import { isPortConnected } from "../setup"

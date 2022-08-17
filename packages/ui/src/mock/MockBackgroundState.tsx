@@ -1,4 +1,5 @@
-import React, { FunctionComponent, useReducer } from "react"
+import { FunctionComponent, useReducer } from "react"
+
 import { BigNumber } from "@ethersproject/bignumber"
 import BackgroundContext, {
     BackgroundStateType,
@@ -154,8 +155,7 @@ export const initBackgroundState: BackgroundStateType = {
                                     address:
                                         "0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60",
                                     decimals: 18,
-                                    logo:
-                                        "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B175474E89094C44Da98b954EedeAC495271d0F/logo.png",
+                                    logo: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B175474E89094C44Da98b954EedeAC495271d0F/logo.png",
                                 },
                                 balance: BigNumber.from("0x056bc75e2d63100000"),
                             },
@@ -178,8 +178,7 @@ export const initBackgroundState: BackgroundStateType = {
                                     name: "USDC",
                                     address:
                                         "0xD87Ba7A50B2E7E660f678A895E4B72E7CB4CCd9C",
-                                    logo:
-                                        "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png",
+                                    logo: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png",
                                     type: "ERC20",
                                 },
                                 balance: BigNumber.from("0x0bebc200"),
@@ -191,8 +190,7 @@ export const initBackgroundState: BackgroundStateType = {
                                     name: "Tether USD",
                                     address:
                                         "0xb7FC2023D96AEa94Ba0254AA5Aeb93141e4aad66",
-                                    logo:
-                                        "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png",
+                                    logo: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png",
                                     type: "ERC20",
                                 },
                                 balance: BigNumber.from("0x0"),
@@ -204,8 +202,7 @@ export const initBackgroundState: BackgroundStateType = {
                                     name: "Wrapped BTC",
                                     address:
                                         "0xC04B0d3107736C32e19F1c62b2aF67BE61d63a05",
-                                    logo:
-                                        "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599/logo.png",
+                                    logo: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599/logo.png",
                                     type: "ERC20",
                                 },
                                 balance: BigNumber.from("0x0"),
@@ -414,7 +411,6 @@ export const initBackgroundState: BackgroundStateType = {
                 baseFee: BigNumber.from("0x02540be400"),
             },
         },
-        incomingTransactions: {},
         showTestNetworks: true,
         showWelcomeMessage: false,
         showDefaultWalletPreferences: false,
@@ -451,6 +447,7 @@ export const initBackgroundState: BackgroundStateType = {
                 rpcUrls: [`https://mainnet-node.blockwallet.io`],
                 blockExplorerUrls: ["https://etherscan.io"],
                 actionsTimeIntervals: {} as ActionsTimeInterval,
+                nativelySupported: true,
             },
             ARBITRUM: {
                 name: "arbitrum",
@@ -471,6 +468,7 @@ export const initBackgroundState: BackgroundStateType = {
                 rpcUrls: ["https://arbitrum-node.blockwallet.io"],
                 blockExplorerUrls: ["https://arbiscan.io"],
                 actionsTimeIntervals: {} as ActionsTimeInterval,
+                nativelySupported: true,
             },
             OPTIMISM: {
                 name: "optimism",
@@ -491,6 +489,7 @@ export const initBackgroundState: BackgroundStateType = {
                 rpcUrls: ["https://optimism-node.blockwallet.io"],
                 blockExplorerUrls: ["https://optimistic.etherscan.io"],
                 actionsTimeIntervals: {} as ActionsTimeInterval,
+                nativelySupported: true,
             },
             BSC: {
                 name: "bsc",
@@ -514,6 +513,7 @@ export const initBackgroundState: BackgroundStateType = {
                 rpcUrls: ["https://bsc-node.blockwallet.io"],
                 blockExplorerUrls: ["https://bscscan.com"],
                 actionsTimeIntervals: {} as ActionsTimeInterval,
+                nativelySupported: true,
             },
             GOERLI: {
                 name: "goerli",
@@ -534,6 +534,7 @@ export const initBackgroundState: BackgroundStateType = {
                 rpcUrls: [`https://goerli-node.blockwallet.io`],
                 blockExplorerUrls: ["https://goerli.etherscan.io"],
                 actionsTimeIntervals: {} as ActionsTimeInterval,
+                nativelySupported: true,
             },
             ROPSTEN: {
                 name: "ropsten",
@@ -554,6 +555,7 @@ export const initBackgroundState: BackgroundStateType = {
                 rpcUrls: [`https://ropsten-node.blockwallet.io`],
                 blockExplorerUrls: ["https://ropsten.etherscan.io"],
                 actionsTimeIntervals: {} as ActionsTimeInterval,
+                nativelySupported: true,
             },
             KOVAN: {
                 name: "kovan",
@@ -574,6 +576,7 @@ export const initBackgroundState: BackgroundStateType = {
                 rpcUrls: [`https://kovan-node.blockwallet.io`],
                 blockExplorerUrls: ["https://kovan.etherscan.io"],
                 actionsTimeIntervals: {} as ActionsTimeInterval,
+                nativelySupported: true,
             },
             RINKEBY: {
                 name: "rinkeby",
@@ -594,6 +597,7 @@ export const initBackgroundState: BackgroundStateType = {
                 rpcUrls: [`https://rinkeby-node.blockwallet.io`],
                 blockExplorerUrls: ["https://rinkeby.etherscan.io"],
                 actionsTimeIntervals: {} as ActionsTimeInterval,
+                nativelySupported: true,
             },
             BSC_TESTNET: {
                 name: "bsc_testnet",
@@ -617,6 +621,7 @@ export const initBackgroundState: BackgroundStateType = {
                 rpcUrls: ["https://data-seed-prebsc-1-s1.binance.org:8545/"],
                 blockExplorerUrls: ["https://testnet.bscscan.io"],
                 actionsTimeIntervals: {} as ActionsTimeInterval,
+                nativelySupported: true,
             },
             LOCALHOST: {
                 name: "localhost",
@@ -636,6 +641,7 @@ export const initBackgroundState: BackgroundStateType = {
                 showGasLevels: false,
                 rpcUrls: ["http://localhost:8545"],
                 actionsTimeIntervals: {} as ActionsTimeInterval,
+                nativelySupported: true,
             },
         },
         dappRequests: {
@@ -661,6 +667,7 @@ export const initBackgroundState: BackgroundStateType = {
 
 const MockBackgroundState: FunctionComponent<{
     assignBlankState?: Partial<BackgroundStateType["blankState"]>
+    children: React.ReactNode | undefined
 }> = ({ assignBlankState, children }) => {
     const injectedBackgroundState = {
         ...initBackgroundState,

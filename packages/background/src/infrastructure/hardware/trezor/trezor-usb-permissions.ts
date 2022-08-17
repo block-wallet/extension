@@ -18,7 +18,8 @@ const switchToPopupTab = (event?: any) => {
             },
             (current) => {
                 if (current.length < 0) return;
-                chrome.tabs.remove(current[0].id!);
+                const id = current[0].id;
+                chrome.tabs.remove(Number(id));
             }
         );
     }
@@ -30,7 +31,8 @@ const switchToPopupTab = (event?: any) => {
         },
         (tabs) => {
             if (tabs.length < 0) return;
-            chrome.tabs.update(tabs[0].id!, { active: true });
+            const id = tabs[0].id;
+            chrome.tabs.update(Number(id), { active: true });
         }
     );
 };

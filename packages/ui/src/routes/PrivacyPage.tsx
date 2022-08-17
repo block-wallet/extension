@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 
 // Components
 import PopupHeader from "../components/popup/PopupHeader"
@@ -40,10 +40,8 @@ const PrivacyPage = () => {
 
     const [isLoading, setIsLoading] = useState(false)
     const [showReconstructDialog, setShowReconstructDialog] = useState(false)
-    const [
-        showReconstructSuccessDialog,
-        setShowReconstructSuccessDialog,
-    ] = useState(false)
+    const [showReconstructSuccessDialog, setShowReconstructSuccessDialog] =
+        useState(false)
 
     const thereIsImportDepositErrors =
         importingErrors && importingErrors.length > 0

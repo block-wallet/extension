@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { BigNumber, ethers, utils } from 'ethers';
+import { BigNumber, ethers, providers, utils } from 'ethers';
 import sinon from 'sinon';
 import { babyJub, pedersenHash } from 'circomlib';
 
@@ -1027,8 +1027,31 @@ describe('TornadoService', () => {
                 })
             );
         sinon
-            .stub(TornadoService.prototype as any, 'waitForTransactionReceipt')
-            .returns(Promise.resolve());
+            .stub(
+                transactionController['_contractSignatureParser'],
+                'fetchABIFromEtherscan'
+            )
+            .returns(Promise.resolve(undefined));
+        sinon
+            .stub(transactionController['_contractSignatureParser'], 'lookup')
+            .returns(Promise.resolve(['multicall(uint256,bytes[])']));
+        sinon
+            .stub(
+                ethers.providers.StaticJsonRpcProvider.prototype,
+                'getTransaction'
+            )
+            .returns(
+                Promise.resolve({
+                    blockNumber: 1,
+                    timestamp: new Date().getTime() / 1000,
+                } as any)
+            );
+        sinon
+            .stub(
+                ethers.providers.StaticJsonRpcProvider.prototype,
+                'waitForTransaction'
+            )
+            .returns(Promise.resolve({} as any));
 
         // Unlock vault
         await tornadoService.unlock(testPass, mnemonic);

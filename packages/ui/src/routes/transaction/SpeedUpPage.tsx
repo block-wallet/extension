@@ -1,4 +1,3 @@
-import React from "react"
 import Common from "../../components/CancelSpeedUpCommon"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import Price from "../../components/transactions/Price"

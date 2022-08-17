@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from "react"
+import { FunctionComponent, useState } from "react"
 import TransactionDetailsBasic from "./TransactionDetailsBasic"
 import TransactionDetailsAdvanced from "./TransactionDetailsAdvanced"
 import Dialog from "../dialog/Dialog"
@@ -93,13 +93,13 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
                     }}
                 />
                 <div
-                    className="flex flex-col h-80 overflow-auto py-4 -ml-3 px-3"
+                    className="flex flex-col h-[17rem] overflow-auto py-4 -ml-3 px-3"
                     style={{ width: "calc(100% + 1.5rem)" }}
                 >
                     <TabComponent transaction={transaction} nonce={nonce} />
                 </div>
             </div>
-            <div className="-mx-6">
+            <div className="-mx-3">
                 <Divider />
             </div>
             <button

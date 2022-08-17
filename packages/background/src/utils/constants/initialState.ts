@@ -21,7 +21,6 @@ import { GasPricesControllerState } from '../../controllers/GasPricesController'
 import { BigNumber } from '@ethersproject/bignumber';
 
 import { TokenControllerState } from '../../controllers/erc-20/TokenController';
-import { IncomingTransactionControllerState } from '../../controllers/IncomingTransactionController';
 import { INITIAL_NETWORKS } from './networks';
 import { IActivityListState } from '../../controllers/ActivityListController';
 import { PermissionsControllerState } from '../../controllers/PermissionsController';
@@ -45,8 +44,8 @@ import {
     BlockFetchControllerState,
     BLOCKS_TO_WAIT_BEFORE_CHECHKING_FOR_CHAIN_SUPPORT,
 } from '../../controllers/block-updates/BlockFetchController';
-import { ERC20TransactionWatcherControllerState } from '@block-wallet/background/controllers/erc-20/TransactionWatcherController';
 import { SIGN_TRANSACTION_TIMEOUT } from './time';
+import { TransactionWatcherControllerState } from '@block-wallet/background/controllers/TransactionWatcherController';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -59,13 +58,12 @@ export type BlankAppState = {
     BlockUpdatesController: BlockUpdatesControllerState;
     ExchangeRatesController: ExchangeRatesControllerState;
     GasPricesController: GasPricesControllerState;
-    IncomingTransactionController: IncomingTransactionControllerState;
     TokenController: TokenControllerState;
     PermissionsController: PermissionsControllerState;
     NetworkController: NetworkControllerState;
     AddressBookController: AddressBookControllerMemState;
     BlockFetchController: BlockFetchControllerState;
-    ERC20TransactionWatcherControllerState: ERC20TransactionWatcherControllerState;
+    TransactionWatcherControllerState: TransactionWatcherControllerState;
 };
 
 export type BlankAppUIState = {
@@ -79,7 +77,6 @@ export type BlankAppUIState = {
     BlockUpdatesController: BlockUpdatesControllerState;
     ExchangeRatesController: ExchangeRatesControllerState;
     GasPricesController: GasPricesControllerState;
-    IncomingTransactionController: IncomingTransactionControllerState;
     ActivityListController: IActivityListState;
     TokenController: TokenControllerState;
     PermissionsController: PermissionsControllerState;
@@ -93,9 +90,7 @@ export type BlankAppStoreConfig<S> = {
 };
 
 const initialState: BlankAppState = {
-    ERC20TransactionWatcherControllerState: {
-        transactions: {},
-    } as ERC20TransactionWatcherControllerState,
+    TransactionWatcherControllerState: { transactions: {} },
     BlockFetchController: {
         blockFetchData: {
             1: {
@@ -211,9 +206,6 @@ const initialState: BlankAppState = {
                 },
             },
         },
-    },
-    IncomingTransactionController: {
-        incomingTransactions: {},
     },
     TokenController: {
         userTokens: {} as IAccountTokens,

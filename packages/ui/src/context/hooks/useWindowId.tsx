@@ -1,15 +1,19 @@
-import React from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 import LoadingOverlay from "../../components/loading/LoadingOverlay"
 import { getWindowId } from "../commActions"
 
-export const WindowIdContext = React.createContext({
+export const WindowIdContext = createContext({
     windowId: "",
 })
 
-const WindowIdProvider: React.FC = ({ children }) => {
-    const [windowId, setWindowId] = React.useState("")
+const WindowIdProvider = ({
+    children,
+}: {
+    children: React.ReactNode | undefined
+}) => {
+    const [windowId, setWindowId] = useState("")
 
-    React.useEffect(() => {
+    useEffect(() => {
         async function get() {
             const wId = await getWindowId()
             setWindowId(wId)
@@ -24,7 +28,7 @@ const WindowIdProvider: React.FC = ({ children }) => {
     )
 }
 
-const useWindowId = () => React.useContext(WindowIdContext)
+const useWindowId = () => useContext(WindowIdContext)
 
 export { WindowIdProvider }
 export default useWindowId

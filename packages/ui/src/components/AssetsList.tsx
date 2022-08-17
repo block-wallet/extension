@@ -1,5 +1,5 @@
 import { BigNumber } from "ethers"
-import React, { FunctionComponent, useState } from "react"
+import { Fragment, FunctionComponent, useState } from "react"
 
 import { useBlankState } from "../context/background/backgroundHooks"
 import { useOnMountHistory } from "../context/hooks/useOnMount"
@@ -136,10 +136,10 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
             {assets
                 .filter((t) => !deletedTokens.includes(t.token.address))
                 .map((a, i) => (
-                    <React.Fragment key={i}>
+                    <Fragment key={i}>
                         {i > 0 ? <hr /> : null}
                         <Asset asset={a} pushDeleteTokens={pushDeleteTokens} />
-                    </React.Fragment>
+                    </Fragment>
                 ))}
         </div>
     )

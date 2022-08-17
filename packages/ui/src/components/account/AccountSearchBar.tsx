@@ -1,5 +1,5 @@
 import classnames from "classnames"
-import React, { FunctionComponent, useEffect, useRef, useState } from "react"
+import { FunctionComponent, useEffect, useRef, useState } from "react"
 import { ActionButton } from "../button/ActionButton"
 
 // Assets
@@ -13,7 +13,11 @@ const AccountSearchBar: FunctionComponent<{
     createAccountTo?: any
     onChange: (value: string) => void
     setIsSearching: (isSearching: boolean) => void
-}> = ({ createAccountTo = "/accounts/create", onChange, setIsSearching }) => {
+}> = ({
+    createAccountTo = { pathname: "/accounts/create" },
+    onChange,
+    setIsSearching,
+}) => {
     const [searchBarVisible, setSearchBarVisible] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
 
@@ -67,7 +71,7 @@ const AccountSearchBar: FunctionComponent<{
                 <input
                     ref={inputRef}
                     className={classnames(
-                        "bg-transparent p-0 border-none w-10/12",
+                        "bg-transparent p-0 border-none w-10/12 font-normal",
                         "transition-opacity",
                         searchBarVisible
                             ? "opacity-100 duration-100 delay-500 flex-1"

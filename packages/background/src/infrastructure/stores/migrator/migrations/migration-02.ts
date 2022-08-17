@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GasPricesControllerState } from '@block-wallet/background/controllers/GasPricesController';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { BigNumber } from 'ethers';

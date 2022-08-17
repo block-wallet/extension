@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useState, useRef } from "react"
+import { forwardRef, useState, useRef } from "react"
 
 // Style
 import classnames from "classnames"
@@ -16,8 +16,8 @@ import CheckmarkCircle from "../icons/CheckmarkCircle"
 type SearchInputProps = {
     label?: string
     placeholder?: string
-    name?: string
     register?: any
+    name?: string
     error?: string
     warning?: string
     disabled?: boolean
@@ -29,6 +29,8 @@ type SearchInputProps = {
     debounced?: boolean
     debounceTime?: number
     minSearchChar?: number
+    defaultValue?: string
+    inputClassName?: string
 }
 
 /**
@@ -51,8 +53,9 @@ type SearchInputProps = {
  * @param debounced - If set to true, onChange will only be triggered after the user didn't change the input for `debounceTime`.
  * @param debounceTime - Set the debouncing time.
  * @param minSearchChar - Set a minimum char before triggering `onChange`. Note that this has the priority over `onChange` and `debounce`.
+ * @param defaultValue - In AssetSelection we already have a value which was previously looked for. So we paste it as default in case of "add new token"
  */
-const SearchInput = forwardRef<SearchInputProps, any>(
+const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     (
         {
             label,
@@ -70,20 +73,18 @@ const SearchInput = forwardRef<SearchInputProps, any>(
             debounceTime = 300,
             minSearchChar = 0,
             register,
+            defaultValue,
+            inputClassName,
         }: SearchInputProps,
         ref
     ) => {
         const inputRef = useRef(null)
         const timeoutIdRef = useRef<ReturnType<typeof setTimeout>>()
         // State
-        const [forwardedRef, setForwardedRef] = useState<any>(null)
         const [isFocus, setIsFocus] = useState<boolean>(false)
         const [search, setSearch] = useState<string>("")
 
         // Hooks
-        useEffect(() => {
-            setForwardedRef(ref)
-        }, [ref])
 
         useOnClickOutside(inputRef, () => {
             if (search === "") setIsFocus(false)
@@ -125,13 +126,14 @@ const SearchInput = forwardRef<SearchInputProps, any>(
                         type="text"
                         ref={useMergeRefs(
                             inputRef,
-                            forwardedRef ? forwardedRef : null,
+                            ref,
                             register ? register : null
                         )}
                         className={classnames(
                             Classes.inputBordered,
                             "w-full relative z-0 outline-none	transition-all delay-100",
                             isFocus ? "pl-2" : "pl-9",
+                            inputClassName,
                             isValid
                                 ? "border-green-400 focus:border-green-400"
                                 : ""
@@ -162,6 +164,7 @@ const SearchInput = forwardRef<SearchInputProps, any>(
                         }}
                         onPaste={onPaste}
                         onFocus={() => setIsFocus(true)}
+                        defaultValue={defaultValue ?? ""}
                     />
 
                     <CheckmarkCircle

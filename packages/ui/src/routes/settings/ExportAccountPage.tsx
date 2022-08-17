@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
@@ -48,7 +48,7 @@ const schema = yup.object({
             is: (value: any) => !!value,
             then: (rule: any) =>
                 rule
-                    .required("Required")
+                    .required("Pleas confirm the encrypting password")
                     .oneOf(
                         [yup.ref("encryptingPassword"), null],
                         "Encrypting passwords must match."
@@ -64,17 +64,16 @@ const ExportAccountPage = () => {
 
     const account = useSelectedAccount()
     const blankState = useBlankState()!
-    const [
-        isVerificationInProgress,
-        setIsVerificationInProgress,
-    ] = useState<boolean>(false)
+    const [isVerificationInProgress, setIsVerificationInProgress] =
+        useState<boolean>(false)
     const {
         register,
         handleSubmit,
         setError,
-        errors,
         watch,
         setValue,
+
+        formState: { errors },
     } = useForm<ExportAccountFormData>({
         defaultValues: {
             exportType: "key",
@@ -124,10 +123,15 @@ const ExportAccountPage = () => {
                 state: { exportData, exportType: data.exportType },
             })
         } catch (e) {
-            setError("password", {
-                message: e.message,
-                shouldFocus: true,
-            })
+            setError(
+                "password",
+                {
+                    message: e.message,
+                },
+                {
+                    shouldFocus: true,
+                }
+            )
             setIsVerificationInProgress(false)
 
             return Promise.reject()
@@ -172,7 +176,7 @@ const ExportAccountPage = () => {
                             <PasswordInput
                                 label="Your Password"
                                 placeholder="Your Password"
-                                register={register}
+                                {...register("password")}
                                 error={errors.password?.message}
                                 autoFocus={true}
                             />
@@ -226,7 +230,7 @@ const ExportAccountPage = () => {
                                         <PasswordInput
                                             label="Encrypting Password"
                                             placeholder="Encrypting Password"
-                                            register={register}
+                                            {...register("encryptingPassword")}
                                             error={
                                                 errors.encryptingPassword
                                                     ?.message
@@ -238,7 +242,9 @@ const ExportAccountPage = () => {
                                     <PasswordInput
                                         label="Confirm Encrypting Password"
                                         placeholder="Confirm Encrypting Password"
-                                        register={register}
+                                        {...register(
+                                            "encryptingPasswordConfirmation"
+                                        )}
                                         error={
                                             errors
                                                 .encryptingPasswordConfirmation

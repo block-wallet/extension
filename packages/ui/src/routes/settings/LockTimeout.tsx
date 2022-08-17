@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import PopupFooter from "../../components/popup/PopupFooter"
@@ -34,7 +34,7 @@ const LockTimeout = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [timeoutEnabled])
 
-    const onSave = async () => {
+    const onSave = useCallback(async () => {
         try {
             dispatch({ type: "open", payload: { status: "loading" } })
 
@@ -45,7 +45,7 @@ const LockTimeout = () => {
             dispatch({ type: "setStatus", payload: { status: "error" } })
             // throw new Error("Could not update the lock timeout")
         }
-    }
+    }, [dispatch, selectedTimeout])
 
     return (
         <PopupLayout

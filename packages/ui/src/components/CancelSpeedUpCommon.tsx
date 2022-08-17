@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react"
+import { useMemo, useState, useEffect, useCallback } from "react"
 import * as yup from "yup"
 import { InferType } from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
@@ -97,9 +97,10 @@ const calcGasPrice = (
     type: TransactionType,
     fees: Omit<fees, "maxPriorityFeePerGas">
 ) => {
-    return (type !== TransactionType.FEE_MARKET_EIP1559
-        ? fees.gasPrice
-        : fees.maxFeePerGas
+    return (
+        type !== TransactionType.FEE_MARKET_EIP1559
+            ? fees.gasPrice
+            : fees.maxFeePerGas
     ).mul(fees.gasLimit)
 }
 
@@ -135,9 +136,11 @@ const CancelAndSpeedUpComponent = ({
     })
 
     const txObj = useTransactionById(
-        (history.location.state as {
-            txId: string
-        }).txId
+        (
+            history.location.state as {
+                txId: string
+            }
+        ).txId
     )
 
     if (!txObj.transaction) {
@@ -211,7 +214,13 @@ const CancelAndSpeedUpComponent = ({
 
     const transactionType = getTransactionType(transaction.transactionParams)
 
-    const { errors, setValue, register, getValues } = useForm<formData>({
+    const {
+        setValue,
+        register,
+        getValues,
+
+        formState: { errors },
+    } = useForm<formData>({
         resolver: yupResolver(formSchema),
         defaultValues: {
             gasLimit: formatUnits(
@@ -224,41 +233,31 @@ const CancelAndSpeedUpComponent = ({
         },
     })
 
-    const {
-        status,
-        isOpen,
-        dispatch,
-        texts,
-        titles,
-        closeDialog,
-        gifs,
-    } = useTransactionWaitingDialog(
-        replacementTx
-            ? {
-                  id: replacementTx?.id,
-                  status: replacementTx.status,
-                  error: replacementTx.error as Error,
-                  epochTime: replacementTx?.approveTime,
-              }
-            : undefined,
-        type === "cancel"
-            ? HardwareWalletOpTypes.SIGN_CANCEL
-            : HardwareWalletOpTypes.SIGN_SPEEDUP,
-        accountType,
-        {
-            reject: React.useCallback(() => {
-                if (replacementTx?.id) {
-                    rejectReplacementTransaction(replacementTx.id)
-                }
-            }, [replacementTx?.id]),
-        }
-    )
+    const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
+        useTransactionWaitingDialog(
+            replacementTx
+                ? {
+                      id: replacementTx?.id,
+                      status: replacementTx.status,
+                      error: replacementTx.error as Error,
+                      epochTime: replacementTx?.approveTime,
+                  }
+                : undefined,
+            type === "cancel"
+                ? HardwareWalletOpTypes.SIGN_CANCEL
+                : HardwareWalletOpTypes.SIGN_SPEEDUP,
+            accountType,
+            {
+                reject: useCallback(() => {
+                    if (replacementTx?.id) {
+                        rejectReplacementTransaction(replacementTx.id)
+                    }
+                }, [replacementTx?.id]),
+            }
+        )
 
-    const {
-        checkDeviceIsLinked,
-        isDeviceUnlinked,
-        resetDeviceLinkStatus,
-    } = useCheckAccountDeviceLinked()
+    const { checkDeviceIsLinked, isDeviceUnlinked, resetDeviceLinkStatus } =
+        useCheckAccountDeviceLinked()
 
     const [error, setError] = useState<
         | {
@@ -289,10 +288,8 @@ const CancelAndSpeedUpComponent = ({
                         gasPrice,
                     })
                 } else {
-                    const {
-                        maxFeePerGas,
-                        maxPriorityFeePerGas,
-                    } = price as FeeMarketEIP1559Values
+                    const { maxFeePerGas, maxPriorityFeePerGas } =
+                        price as FeeMarketEIP1559Values
 
                     setNewFees({
                         ...newFees,
@@ -512,7 +509,12 @@ const CancelAndSpeedUpComponent = ({
                 type: "notEnoughFunds",
                 message: `Not enough funds to ${type} the transaction`,
             })
-    }, [error, notEnoughFunds])
+    }, [error, notEnoughFunds, type])
+
+    const { ref: gasLimitRef } = register("gasLimit")
+    const { ref: gasPriceRef } = register("gasPrice")
+    const { ref: maxPriorityFeePerGasRef } = register("maxPriorityFeePerGas")
+    const { ref: maxFeePerGasRef } = register("maxFeePerGas")
 
     return (
         <>
@@ -623,7 +625,7 @@ const CancelAndSpeedUpComponent = ({
                     }
                 }}
             />
-            <form className="w-full h-full" onSubmit={onSubmit}>
+            <div className="w-full h-full">
                 <PopupLayout
                     header={
                         <PopupHeader
@@ -644,6 +646,7 @@ const CancelAndSpeedUpComponent = ({
                         <PopupFooter>
                             <ButtonWithLoading
                                 label="Submit"
+                                onClick={onSubmit}
                                 isLoading={isLoading}
                                 disabled={
                                     Object.values(customErrors).filter(
@@ -661,7 +664,8 @@ const CancelAndSpeedUpComponent = ({
                                 {
                                     gasLimit: oldGasLimit,
                                     gasPrice: oldGasPrice,
-                                    maxPriorityFeePerGas: oldMaxPriorityFeePerGas,
+                                    maxPriorityFeePerGas:
+                                        oldMaxPriorityFeePerGas,
                                     maxFeePerGas: oldMaxFeePerGas,
                                 },
                                 {
@@ -722,7 +726,7 @@ const CancelAndSpeedUpComponent = ({
                                 })}
                                 error={errors.gasLimit?.message || ""}
                                 warning={warning.gasLimit}
-                                register={register}
+                                ref={gasLimitRef}
                             />
                         </div>
                         <div
@@ -769,7 +773,7 @@ const CancelAndSpeedUpComponent = ({
                                         ),
                                     })
                                 })}
-                                register={register}
+                                ref={gasPriceRef}
                                 endLabel="GWEI"
                             />
                         </div>
@@ -798,7 +802,7 @@ const CancelAndSpeedUpComponent = ({
                                         ? ""
                                         : warning.maxPriorityFeePerGas
                                 }
-                                register={register}
+                                ref={maxPriorityFeePerGasRef}
                                 onKeyDown={handleKeyDown}
                                 onChange={handleChangeAmountGwei((value) => {
                                     setValue("maxPriorityFeePerGas", value, {
@@ -845,7 +849,7 @@ const CancelAndSpeedUpComponent = ({
                                         ? ""
                                         : warning.maxFeePerGas
                                 }
-                                register={register}
+                                ref={maxFeePerGasRef}
                                 onKeyDown={handleKeyDown}
                                 onChange={handleChangeAmountGwei((value) => {
                                     setValue("maxFeePerGas", value, {
@@ -892,7 +896,7 @@ const CancelAndSpeedUpComponent = ({
                         )}
                     </div>
                 </PopupLayout>
-            </form>
+            </div>
         </>
     )
 }

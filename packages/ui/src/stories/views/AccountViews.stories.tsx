@@ -1,4 +1,3 @@
-import React from "react"
 import { Meta } from "@storybook/react"
 import { MockPopup } from "../../mock/MockApp"
 import { initBackgroundState } from "../../mock/MockBackgroundState"

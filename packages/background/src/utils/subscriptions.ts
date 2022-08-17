@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { isHexString } from 'ethers/lib/utils';
 import { isValidHexAddress } from '../controllers/transactions/utils/utils';
 import { Block } from './types/ethereum';

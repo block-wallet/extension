@@ -1,4 +1,3 @@
-import React from "react"
 import { Devices } from "../context/commTypes"
 export interface ConnectionSeptInfo {
     label: string | string[] | React.ReactElement[]
@@ -14,8 +13,7 @@ export const DEVICE_RECONNECTION_WARNING_STEPS: StepData = {
         { label: "Your device is unlocked" },
         {
             label: "The Ethereum App is open",
-            info:
-                "Always use the Ledger Ethereum App in combination with BlockWallet",
+            info: "Always use the Ledger Ethereum App in combination with BlockWallet",
         },
     ],
     TREZOR: [
@@ -30,8 +28,7 @@ export const DEVICE_CONNECTION_STEPS: StepData = {
         { label: "Enter Ledger pin to unlock" },
         {
             label: "Open the Ethereum App",
-            info:
-                "Always use the Ledger Ethereum App in combination with BlockWallet",
+            info: "Always use the Ledger Ethereum App in combination with BlockWallet",
         },
         { label: 'Click "Continue" below and select your Ledger' },
     ],

@@ -1,5 +1,4 @@
 import { BigNumber } from "ethers"
-import { formatUnits } from "ethers/lib/utils"
 import { DEFAULT_DECIMALS } from "./constants"
 import { convertAmount } from "./convertAmount"
 
@@ -26,9 +25,7 @@ export function toCurrencyAmount(
     exchangeRate: number,
     decimals: number = DEFAULT_DECIMALS // Ether default
 ): number {
-    return parseFloat(
-        formatUnits(convertAmount(amount, exchangeRate), decimals)
-    )
+    return convertAmount(amount, exchangeRate, decimals)
 }
 
 export function formatCurrency(

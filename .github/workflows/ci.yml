@@ -198,6 +198,9 @@ jobs:
       - name: Zip build
         id: zip
         run: |
+          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
+          apt update
+          apt install -y zip
           file=block-wallet-${GITHUB_SHA::7}
           zip -r -D $file dist/
           echo "::set-output name=file::$file.zip"

@@ -167,33 +167,11 @@ jobs:
         run: |
           make install/ci
 
-      - name: Build background
-        run: |
-          cd packages/background
-          make build/background
+      - name: Build extension
         env:
           CI: false
-
-      - name: Build provider
         run: |
-          cd packages/provider
-          make build/provider
-        env:
-          CI: false
-
-      - name: Build ui
-        run: |
-          cd packages/ui
-          make build/ui
-        env:
-          CI: false
-
-      - name: Copy snarks and release notes
-        run: |
-          make cp/snarks
-          make cp/release-notes
-        env:
-          CI: false
+          make build/prod
 
       - name: Zip build
         id: zip
@@ -220,7 +198,7 @@ jobs:
           echo "$s3_url_https""$zip" > $BLOCK_WALLET_URL
           cat $BLOCK_WALLET_URL
 
-      - name: Save extension link
+      - name: Save extension url
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.BLOCK_WALLET_FOLDER }}
@@ -290,7 +268,7 @@ jobs:
         run: |
           apt install -y /usr/src/google-chrome-stable_current_amd64.deb
 
-      - name: Download the extension
+      - name: Download the extension url
         uses: actions/download-artifact@v2
         with:
           name: ${{ env.BLOCK_WALLET_FOLDER }}

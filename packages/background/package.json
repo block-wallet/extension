@@ -95,6 +95,7 @@
     "scripts": {
         "test": "make test/background",
         "build": "make build/background",
-        "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html"
+        "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html",
+        "lint": "eslint src --ext .ts --quiet"
     }
 }

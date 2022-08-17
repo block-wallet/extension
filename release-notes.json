@@ -215,6 +215,41 @@
                 }
             ],
             "version": "0.3.0"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Remove Tornado functionality"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Large performance increases"
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Fix issues with password entry"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Fix issues with hardware wallet use"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Several other bug fixes"
+                        }
+                    ]
+                }
+            ],
+            "version": "0.3.1"
         }
     ]
 }

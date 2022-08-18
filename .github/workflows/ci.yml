@@ -174,7 +174,7 @@ jobs:
           make build/prod
 
       - name: Zip build
-        if: startsWith(github.ref_name, 'dependabot/') == 'false'
+        if: startsWith(github.ref_name, 'dependabot/') == false
         id: zip
         run: |
           apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
@@ -185,7 +185,7 @@ jobs:
           echo "::set-output name=file::$file.zip"
 
       - name: Configure AWS credentials
-        if: startsWith(github.ref_name, 'dependabot/') == 'false'
+        if: startsWith(github.ref_name, 'dependabot/') == false
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_RELEASE_BUCKET }}
@@ -193,7 +193,7 @@ jobs:
           aws-region: us-east-2
 
       - name: Upload zip to S3
-        if: startsWith(github.ref_name, 'dependabot/') == 'false'
+        if: startsWith(github.ref_name, 'dependabot/') == false
         run: |
           zip=${{ steps.zip.outputs.file }} 
           aws s3 cp $zip $S3_PATH
@@ -202,7 +202,7 @@ jobs:
           cat $BLOCK_WALLET_URL
 
       - name: Save extension url
-        if: startsWith(github.ref_name, 'dependabot/') == 'false'
+        if: startsWith(github.ref_name, 'dependabot/') == false
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.BLOCK_WALLET_FOLDER }}
@@ -212,7 +212,7 @@ jobs:
   e2e:
     needs: [build]
     runs-on: [self-hosted, large]
-    if: startsWith(github.ref_name, 'dependabot/') == 'false'
+    if: startsWith(github.ref_name, 'dependabot/') == false
     steps:
       - name: Checkout e2e repository
         uses: actions/checkout@v2

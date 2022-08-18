@@ -24,7 +24,7 @@
         "ethereumjs-wallet": "^1.0.1",
         "ethers": "^5.4.0",
         "fixed-merkle-tree": "^0.6.0",
-        "idb": "^6.0.0",
+        "idb": "^7.0.2",
         "lodash": "^4.17.21",
         "loglevel": "^1.7.1",
         "phishing-prevention": "git+https://github.com/block-wallet/phishing-prevention#4708461673825816104b8a6cf5260ecb29b75c61",

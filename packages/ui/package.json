@@ -61,7 +61,7 @@
         "@types/styled-components": "^5.1.9",
         "@types/w3c-web-hid": "^1.0.3",
         "@typescript-eslint/eslint-plugin": "^5.30.6",
-        "@typescript-eslint/parser": "^5.30.6",
+        "@typescript-eslint/parser": "^5.33.1",
         "autoprefixer": "^10.4.2",
         "babel-eslint": "^10.1.0",
         "babel-jest": "^26.6.0",

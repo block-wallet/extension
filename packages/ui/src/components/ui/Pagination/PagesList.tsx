@@ -1,11 +1,13 @@
-import React from "react"
+import { PropsWithChildren } from "react"
 import classnames from "classnames"
 
-const PageButton: React.FC<{
-    onClick: () => void
-    selected: boolean
-    disabled?: boolean
-}> = ({ children, onClick, selected, disabled }) => {
+const PageButton: React.FC<
+    PropsWithChildren<{
+        onClick: () => void
+        selected: boolean
+        disabled?: boolean
+    }>
+> = ({ children, onClick, selected, disabled }) => {
     return (
         <div
             className={classnames(

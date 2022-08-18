@@ -1,4 +1,3 @@
-import React, { FC } from "react"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import {
     dismissReleaseNotes,
@@ -9,7 +8,7 @@ import DefaultWalletPreferencesPage from "../../routes/preferences/DefaultWallet
 import ReleaseNotesInfo from "../info/ReleaseNotesInfo"
 import WelcomeInfo from "../info/WelcomeInfo"
 
-const WalletNews: FC = ({ children }) => {
+const WalletNews = ({ children }: { children: React.ReactNode }) => {
     const state = useBlankState()!
     if (state?.showWelcomeMessage) {
         if (state?.showDefaultWalletPreferences) {

@@ -7,17 +7,21 @@ import MiniCheckmark from "../../components/icons/MiniCheckmark"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
-import React, { useEffect, useState, FunctionComponent, useMemo } from "react"
 import {
+    useEffect,
+    useState,
+    FunctionComponent,
+    useMemo,
+    useCallback,
+} from "react"
+import {
+    approveExchange,
     blankDepositAllowance,
     getApproveTransactionGasLimit,
     getLatestGasPrice,
 } from "../../context/commActions"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
-import {
-    TokenWithBalance,
-    useTokensList,
-} from "../../context/hooks/useTokensList"
+import { useTokensList } from "../../context/hooks/useTokensList"
 import { APPROVE_GAS_COST } from "../../util/constants"
 import { AdvancedSettings } from "../../components/transactions/AdvancedSettings"
 import { BigNumber, ethers } from "ethers"
@@ -25,7 +29,6 @@ import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes, classnames } from "../../styles/classes"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import { InferType } from "yup"
-import { KnownCurrencies } from "@block-wallet/background/controllers/blank-deposit/types"
 import { capitalize } from "../../util/capitalize"
 import { formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
@@ -47,13 +50,24 @@ import { isHardwareWallet } from "../../util/account"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { HardwareWalletOpTypes } from "../../context/commTypes"
 import { rejectTransaction } from "../../context/commActions"
+import { DepositConfirmLocalState } from "../deposit/DepositConfirmPage"
+import { SwapConfirmPageLocalState } from "../swap/SwapConfirmPage"
+import { ExchangeType } from "../../context/commTypes"
 
 const UNLIMITED_ALLOWANCE = ethers.constants.MaxUint256
+
+interface ApprovePageState {
+    assetAllowance: BigNumber
+    isCustomSelected: boolean
+    isCustomAllowanceSaved: boolean
+    submitted: boolean
+}
 
 const INITIAL_VALUE_PERSISTED_DATA = {
     assetAllowance: UNLIMITED_ALLOWANCE,
     isCustomSelected: false,
     isCustomAllowanceSaved: false,
+    submitted: false,
 }
 
 // Schema
@@ -123,12 +137,7 @@ export interface ApprovePageLocalState {
     assetAddress: string
     minAllowance?: BigNumber
     isSwap?: boolean
-    nextLocationState: {
-        amount: string
-        selectedToken: TokenWithBalance
-        selectedCurrency: KnownCurrencies
-        isAssetDetailsPage: boolean
-    }
+    nextLocationState: SwapConfirmPageLocalState | DepositConfirmLocalState
 }
 
 const ApprovePage: FunctionComponent<{}> = () => {
@@ -140,27 +149,21 @@ const ApprovePage: FunctionComponent<{}> = () => {
         minAllowance,
         isSwap = false,
         nextLocationState,
-    } = useMemo(() => history.location.state as ApprovePageLocalState, [
-        history.location.state,
-    ])
-
-    // Get data from window.localStorage
-    const [persistedData, setPersistedData] = useLocalStorageState(
-        "approve.form",
-        {
-            initialValue: {
-                ...INITIAL_VALUE_PERSISTED_DATA,
-                submitted: false,
-            },
-            volatile: true,
-        }
+    } = useMemo(
+        () => history.location.state as ApprovePageLocalState,
+        [history.location.state]
     )
 
+    // Get data from window.localStorage
+    const [persistedData, setPersistedData] =
+        useLocalStorageState<ApprovePageState>("approve.form", {
+            initialValue: INITIAL_VALUE_PERSISTED_DATA,
+            volatile: true,
+        })
+
     // Hooks
-    const {
-        transaction: inProgressTransaction,
-        clearTransaction,
-    } = useInProgressInternalTransaction()
+    const { transaction: inProgressTransaction, clearTransaction } =
+        useInProgressInternalTransaction()
     useEffect(() => {
         // Tx was either rejected or submitted when the pop-up was closed.
         // If we opened back the pop-up, and there aren't any pending transactions,
@@ -176,58 +179,32 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const { nativeToken } = useTokensList()
     const { gasPricesLevels } = useGasPriceData()
 
-    const {
-        status,
-        isOpen,
-        dispatch,
-        texts,
-        titles,
-        closeDialog,
-        gifs,
-    } = useTransactionWaitingDialog(
-        inProgressTransaction
-            ? {
-                  status: inProgressTransaction?.status,
-                  error: inProgressTransaction?.error as Error,
-                  epochTime: inProgressTransaction?.approveTime,
-              }
-            : undefined,
-        HardwareWalletOpTypes.APPROVE_ALLOWANCE,
-        selectedAccount.accountType,
-        {
-            reject: React.useCallback(() => {
-                if (inProgressTransaction?.id) {
-                    rejectTransaction(inProgressTransaction?.id)
-                }
-            }, [inProgressTransaction?.id]),
-        }
-    )
+    const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
+        useTransactionWaitingDialog(
+            inProgressTransaction
+                ? {
+                      status: inProgressTransaction?.status,
+                      error: inProgressTransaction?.error as Error,
+                      epochTime: inProgressTransaction?.approveTime,
+                  }
+                : undefined,
+            HardwareWalletOpTypes.APPROVE_ALLOWANCE,
+            selectedAccount.accountType,
+            {
+                reject: useCallback(() => {
+                    if (inProgressTransaction?.id) {
+                        rejectTransaction(inProgressTransaction?.id)
+                    }
+                }, [inProgressTransaction?.id]),
+            }
+        )
 
     // Local state
-    const setAssetAllowance = (newAllowance: BigNumber) => {
-        setPersistedData((prev: any) => {
-            console.log(prev)
-            return {
-                ...prev,
-                assetAllowance: newAllowance,
-            }
-        })
-    }
     const setIsCustomSelected = (isCustomSelected: boolean) => {
-        setPersistedData((prev: any) => {
-            console.log(prev)
+        setPersistedData((prev: ApprovePageState) => {
             return {
                 ...prev,
                 isCustomSelected,
-            }
-        })
-    }
-    const setIsCustomAllowanceSaved = (isCustomAllowanceSaved: boolean) => {
-        setPersistedData((prev: any) => {
-            console.log(prev)
-            return {
-                ...prev,
-                isCustomAllowanceSaved,
             }
         })
     }
@@ -235,10 +212,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const { isCustomSelected, assetAllowance, isCustomAllowanceSaved } =
         persistedData || INITIAL_VALUE_PERSISTED_DATA
 
-    const [
-        isEditAllowanceSection,
-        setIsEditAllowanceSection,
-    ] = useState<boolean>(false)
+    const [isEditAllowanceSection, setIsEditAllowanceSection] =
+        useState<boolean>(false)
     const [isGasUpdating, setIsGasUpdating] = useState<boolean>(false)
     const [hasBalance, setHasBalance] = useState<boolean>(false)
     const [customNonce, setCustomNonce] = useState<number | undefined>()
@@ -267,7 +242,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
         register,
         handleSubmit,
         setValue,
-        errors,
+
+        formState: { errors },
     } = useForm<CustomAllowanceForm>({
         resolver: yupResolver(schema),
     })
@@ -295,6 +271,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 shouldValidate: true,
             })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEditAllowanceSection])
 
     const handleChangeAllowance = (event: any) => {
@@ -314,11 +291,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
         })
     }
 
-    const {
-        isDeviceUnlinked,
-        checkDeviceIsLinked,
-        resetDeviceLinkStatus,
-    } = useCheckAccountDeviceLinked()
+    const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
+        useCheckAccountDeviceLinked()
 
     // Gas
     const [defaultGas, setDefaultGas] = useState<{
@@ -353,7 +327,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     gasLimit: BigNumber.from(
                         (
                             await getApproveTransactionGasLimit(
-                                localAsset.token.address
+                                localAsset.token.address,
+                                isSwap ? selectedAccount.address : "deposit"
                             )
                         ).gasLimit
                     ),
@@ -366,6 +341,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
             }
         }
         fetch()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEIP1559Compatible])
 
     // Balance check
@@ -383,17 +359,20 @@ const ApprovePage: FunctionComponent<{}> = () => {
     // Form submit
     const saveAllowance = handleSubmit(async (values: CustomAllowanceForm) => {
         if (!isCustomSelected) {
-            setAssetAllowance(UNLIMITED_ALLOWANCE)
-            setIsCustomAllowanceSaved(false)
+            setPersistedData((prev: ApprovePageState) => ({
+                ...prev,
+                assetAllowance: UNLIMITED_ALLOWANCE,
+                isCustomAllowanceSaved: false,
+            }))
         } else if (values.customAllowance) {
-            setPersistedData({
-                ...persistedData,
+            setPersistedData((prev: ApprovePageState) => ({
+                ...prev,
                 assetAllowance: parseUnits(
-                    values.customAllowance,
+                    values.customAllowance || "",
                     assetDecimals
                 ),
                 isCustomAllowanceSaved: true,
-            })
+            }))
         }
 
         setIsEditAllowanceSection(false)
@@ -409,7 +388,10 @@ const ApprovePage: FunctionComponent<{}> = () => {
             return
         }
 
-        setPersistedData({ ...persistedData, submitted: true })
+        setPersistedData((prev: ApprovePageState) => ({
+            ...prev,
+            submitted: true,
+        }))
 
         // clear history so that the user comes back to the home page if he clicks away
         // Hw accounts needs user interaction before submitting the TX, so that we may want the
@@ -420,43 +402,87 @@ const ApprovePage: FunctionComponent<{}> = () => {
             setPersistedData(INITIAL_VALUE_PERSISTED_DATA)
         }
 
-        blankDepositAllowance(
-            BigNumber.from(assetAllowance),
-            {
-                gasPrice: !isEIP1559Compatible ? selectedGasPrice : undefined,
-                gasLimit: selectedGasLimit,
-                maxFeePerGas: isEIP1559Compatible
-                    ? selectedFees.maxFeePerGas
-                    : undefined,
-                maxPriorityFeePerGas: isEIP1559Compatible
-                    ? selectedFees.maxPriorityFeePerGas
-                    : undefined,
-            },
-            {
-                currency: nextLocationState.selectedCurrency,
-                amount: nextLocationState.amount as any,
-            },
-            customNonce
-        )
+        try {
+            let res: boolean = false
+
+            if (isSwap) {
+                const nextState = nextLocationState as SwapConfirmPageLocalState
+
+                res = await approveExchange(
+                    assetAllowance,
+                    BigNumber.from(nextState.swapQuote.fromTokenAmount),
+                    ExchangeType.SWAP_1INCH,
+                    {
+                        gasPrice: !isEIP1559Compatible
+                            ? selectedGasPrice
+                            : undefined,
+                        gasLimit: selectedGasLimit,
+                        maxFeePerGas: isEIP1559Compatible
+                            ? selectedFees.maxFeePerGas
+                            : undefined,
+                        maxPriorityFeePerGas: isEIP1559Compatible
+                            ? selectedFees.maxPriorityFeePerGas
+                            : undefined,
+                    },
+                    nextState.swapQuote.fromToken.address,
+                    customNonce
+                )
+            } else {
+                const nextState = nextLocationState as DepositConfirmLocalState
+
+                res = await blankDepositAllowance(
+                    assetAllowance,
+                    {
+                        gasPrice: !isEIP1559Compatible
+                            ? selectedGasPrice
+                            : undefined,
+                        gasLimit: selectedGasLimit,
+                        maxFeePerGas: isEIP1559Compatible
+                            ? selectedFees.maxFeePerGas
+                            : undefined,
+                        maxPriorityFeePerGas: isEIP1559Compatible
+                            ? selectedFees.maxPriorityFeePerGas
+                            : undefined,
+                    },
+                    {
+                        currency: nextState.selectedCurrency,
+                        amount: nextState.amount as any,
+                    },
+                    customNonce
+                )
+            }
+
+            if (res) {
+                dispatch({
+                    type: "setStatus",
+                    payload: { status: "success" },
+                })
+            } else {
+                throw new Error("Error submitting the allowance request")
+            }
+        } catch (e) {
+            dispatch({
+                type: "setStatus",
+                payload: { status: "error", texts: { error: e.message } },
+            })
+        }
     }
 
     const onDone = () => {
         if (status === "error") {
             closeDialog()
-            setPersistedData({
-                ...persistedData,
+            setPersistedData((prev: ApprovePageState) => ({
+                ...prev,
                 submitted: false,
-            })
+            }))
             clearTransaction()
             return
         }
 
-        if (!isSwap) {
-            history.push({
-                pathname: "/privacy/deposit/confirm",
-                state: nextLocationState,
-            })
-        }
+        history.push({
+            pathname: isSwap ? "/swap/confirm" : "/",
+            state: nextLocationState,
+        })
     }
 
     const onBack = () => {
@@ -467,21 +493,17 @@ const ApprovePage: FunctionComponent<{}> = () => {
             }
         }
 
-        if (!isSwap) {
+        if (isSwap) {
             return () => {
                 history.push({
-                    pathname: "/privacy/deposit",
+                    pathname: "/swap",
                     state: {
-                        isAssetDetailsPage:
-                            nextLocationState.isAssetDetailsPage,
-                        preSelectedAsset: nextLocationState.selectedToken,
+                        ...nextLocationState,
                         transitionDirection: "right",
                     },
                 })
             }
         }
-
-        return undefined
     }
 
     const mainSection = (
@@ -489,7 +511,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
             <div className="flex flex-col space-y-3 px-6 py-4">
                 <p className="text-sm font-bold">
                     {isSwap
-                        ? `Approve BlockWallet Swaps to swap your ${assetName}`
+                        ? `Approve BlockWallet to swap your ${assetName}`
                         : "Allow the Privacy Pool to:"}
                 </p>
                 <p className="text-sm text-gray-500">
@@ -524,7 +546,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
                             setSelectedGasLimit(gasFees.gasLimit!)
                             setSelectedFees({
                                 maxFeePerGas: gasFees.maxFeePerGas!,
-                                maxPriorityFeePerGas: gasFees.maxPriorityFeePerGas!,
+                                maxPriorityFeePerGas:
+                                    gasFees.maxPriorityFeePerGas!,
                             })
                         }}
                         isParentLoading={isGasUpdating}
@@ -631,8 +654,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 </p>
                 <input
                     type="text"
-                    name="customAllowance"
-                    ref={register}
+                    {...register("customAllowance")}
                     className={classnames(
                         Classes.inputBordered,
                         !isCustomSelected && "text-gray-400",

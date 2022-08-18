@@ -335,8 +335,6 @@ export class TransactionController extends BaseController<
             }
         );
 
-        this.setBackgroundAvailableActiveSubscriptions();
-
         // Show browser notification on transaction status update
         this.subscribeNotifications();
     }
@@ -357,12 +355,6 @@ export class TransactionController extends BaseController<
             ),
             unapprovedTransactions: this.getExternalUnapprovedTransactions(),
         });
-
-        /**
-         * On transaction store update, update whether we should keep updating the
-         * transactions
-         */
-        this.setBackgroundAvailableActiveSubscriptions();
     };
 
     /**
@@ -402,19 +394,6 @@ export class TransactionController extends BaseController<
                     showTransactionNotification(transactionMeta);
                 }
             }
-        );
-    }
-
-    /**
-     * Updates block updates controller subscription
-     * */
-    private setBackgroundAvailableActiveSubscriptions() {
-        this._blockUpdatesController.setBackgroundAvailableActiveSubscriptions(
-            this.UIStore.getState().transactions
-                ? this.UIStore.getState().transactions.some(
-                      ({ verifiedOnBlockchain }) => !verifiedOnBlockchain
-                  )
-                : false
         );
     }
 
@@ -695,15 +674,19 @@ export class TransactionController extends BaseController<
                 (resolve, reject) => {
                     // Create listener functions
                     confirmationListener = (meta: TransactionMeta) => {
-                        if (
-                            meta.status ===
-                            (waitForConfirmation
-                                ? TransactionStatus.CONFIRMED
-                                : TransactionStatus.SUBMITTED)
-                        )
+                        const isSubmmitted =
+                            meta.status === TransactionStatus.SUBMITTED;
+                        const isConfirmed =
+                            meta.status === TransactionStatus.CONFIRMED;
+                        const txResolved = waitForConfirmation
+                            ? isConfirmed
+                            : isSubmmitted;
+
+                        if (txResolved) {
                             return resolve(
                                 meta.transactionParams.hash as string
                             );
+                        }
                     };
                     rejectionListener = (meta: TransactionMeta) => {
                         switch (meta.status) {
@@ -2393,8 +2376,9 @@ export class TransactionController extends BaseController<
         const { transactionCategory, transactionParams } = transactionMeta;
 
         if (
-            transactionCategory ===
-                TransactionCategories.CONTRACT_INTERACTION &&
+            (transactionCategory ===
+                TransactionCategories.CONTRACT_INTERACTION ||
+                transactionCategory === TransactionCategories.EXCHANGE) &&
             transactionParams.data &&
             transactionParams.to
         ) {
@@ -2426,7 +2410,7 @@ export class TransactionController extends BaseController<
         return this._nonceTracker.getHighestContinousNextNonce(address);
     }
 
-    public recalculateTxTimeout(appLockTimeoutInMinutes: number) {
+    public recalculateTxTimeout(appLockTimeoutInMinutes: number): void {
         const timeoutInMillis = appLockTimeoutInMinutes * 60 * 1000;
 
         const txSignTimeout = Math.min(

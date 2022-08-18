@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { addHexPrefix, isHexString, isValidAddress } from 'ethereumjs-util';
 import { BigNumber } from 'ethers';
 import { TransactionParams, TransactionType } from './types';
@@ -61,7 +60,7 @@ export function normalizeTransaction(
     let key: keyof TransactionParams;
     for (key in normalizedTransactionParams) {
         const param = transaction[key];
-        if (typeof param !== 'undefined') {
+        if (typeof param !== 'undefined' && param !== null) {
             const normalizer = normalizers[key] as any;
             if (normalizer) {
                 normalizedTransactionParams[key] = normalizer(param);

@@ -1,5 +1,4 @@
-import React, { FunctionComponent } from "react"
-import { PropsWithChildren } from "react-router/node_modules/@types/react"
+import { FunctionComponent, PropsWithChildren } from "react"
 import infoIcon from "../assets/images/icons/info_circle.svg"
 import { classnames } from "../styles"
 

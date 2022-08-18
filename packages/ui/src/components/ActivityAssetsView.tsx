@@ -1,5 +1,5 @@
+import { FunctionComponent, useState } from "react"
 import { PopupTabs } from "@block-wallet/background/controllers/PreferencesController"
-import React, { FunctionComponent, useState } from "react"
 import { updatePopupTab } from "../context/commActions"
 import ActivityList from "./ActivityList"
 import AssetsList from "./AssetsList"

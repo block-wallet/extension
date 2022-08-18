@@ -1,4 +1,3 @@
-import React from "react"
 import MessageDialog from "./MessageDialog"
 import Spinner from "../spinner/ThinSpinner"
 
@@ -6,7 +5,7 @@ export type loadingDialogProps = {
     open: boolean
     title: React.ReactElement | string
     message: React.ReactElement | string
-    customSpinner: React.ReactNode
+    customSpinner?: React.ReactNode
 }
 
 const LoadingDialog = ({

@@ -1,4 +1,3 @@
-import React from "react"
 import GlobalModal from "./components/GlobalModal"
 import BackgroundState from "./context/background/BackgroundState"
 import { ModalProvider } from "./context/ModalContext"

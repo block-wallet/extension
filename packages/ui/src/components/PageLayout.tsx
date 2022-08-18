@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import { classnames } from "../styles/classes"
 import FullCenterContainer from "./FullCenterContainer"
 import LogoHeader from "./LogoHeader"
@@ -10,6 +10,7 @@ const PageLayout: FunctionComponent<{
     maxWidth?: string
     style?: React.CSSProperties
     sideComponent?: React.ReactNode
+    children?: React.ReactNode
     screen?: boolean
 }> = ({
     children,

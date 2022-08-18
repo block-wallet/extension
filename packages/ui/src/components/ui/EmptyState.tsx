@@ -1,4 +1,4 @@
-import React from "react"
+import { PropsWithChildren } from "react"
 import classnames from "classnames"
 import Icon, { IconName } from "./Icon"
 import Typography, { TypographyType } from "./Typography"
@@ -7,7 +7,7 @@ interface EmptyStateProps {
     className: string
     title: string
 }
-const EmptyState: React.FC<EmptyStateProps> = ({
+const EmptyState: React.FC<PropsWithChildren<EmptyStateProps>> = ({
     iconName,
     title,
     children,

@@ -1,5 +1,3 @@
-import React from "react"
-import { InferType } from "yup"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
@@ -25,7 +23,7 @@ const editAccountSchema = yup.object().shape({
         .required("Please enter an account name")
         .max(40, "Account name is too long"),
 })
-type editAccountFormData = InferType<typeof editAccountSchema>
+type editAccountFormData = { accountName: string }
 const EditAccountPage = () => {
     const { accounts, hiddenAccounts } = useBlankState()!
     const account = useSelectedAccount()
@@ -38,8 +36,9 @@ const EditAccountPage = () => {
     const {
         register,
         handleSubmit,
-        errors,
         setError,
+
+        formState: { errors },
     } = useForm<editAccountFormData>({
         resolver: yupResolver(editAccountSchema),
     })
@@ -47,20 +46,30 @@ const EditAccountPage = () => {
     const onSubmit = handleSubmit(async (data: editAccountFormData) => {
         try {
             if (accountNameExists(accounts, data.accountName || "")) {
-                setError("accountName", {
-                    message:
-                        "Account name is already in use, please use a different one.",
-                    shouldFocus: true,
-                })
+                setError(
+                    "accountName",
+                    {
+                        message:
+                            "Account name is already in use, please use a different one.",
+                    },
+                    {
+                        shouldFocus: true,
+                    }
+                )
                 return Promise.reject()
             }
 
             if (accountNameExists(hiddenAccounts, data.accountName || "")) {
-                setError("accountName", {
-                    message:
-                        "Account name is already in use on a hidden account, please use a different one.",
-                    shouldFocus: true,
-                })
+                setError(
+                    "accountName",
+                    {
+                        message:
+                            "Account name is already in use on a hidden account, please use a different one.",
+                    },
+                    {
+                        shouldFocus: true,
+                    }
+                )
                 return Promise.reject()
             }
 
@@ -73,10 +82,15 @@ const EditAccountPage = () => {
 
             dispatch({ type: "setStatus", payload: { status: "success" } })
         } catch {
-            setError("accountName", {
-                message: "Error renaming the account",
-                shouldFocus: true,
-            })
+            setError(
+                "accountName",
+                {
+                    message: "Error renaming the account",
+                },
+                {
+                    shouldFocus: true,
+                }
+            )
 
             dispatch({ type: "setStatus", payload: { status: "error" } })
 
@@ -146,8 +160,7 @@ const EditAccountPage = () => {
                     <TextInput
                         appearance="outline"
                         label="Account Name"
-                        name="accountName"
-                        register={register}
+                        {...register("accountName")}
                         placeholder={account.name}
                         error={errors.accountName?.message}
                         autoFocus={true}

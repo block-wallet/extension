@@ -1,5 +1,3 @@
-import React from "react"
-
 type CenteredTextCircleProps = {
     text: string
     size?: "sm" | "md" | "lg"

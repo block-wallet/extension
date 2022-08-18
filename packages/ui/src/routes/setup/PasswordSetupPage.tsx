@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 
 import { Classes } from "../../styles/classes"
 
@@ -7,7 +7,6 @@ import Divider from "../../components/Divider"
 import LinkButton from "../../components/button/LinkButton"
 import PasswordInput from "../../components/input/PasswordInput"
 
-import { InferType } from "yup"
 import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
@@ -35,7 +34,11 @@ const schema = yup.object().shape({
         .required("You must accept the Terms of Use.")
         .oneOf([true], "You must accept the Terms of Use."),
 })
-type PasswordSetupFormData = InferType<typeof schema>
+type PasswordSetupFormData = {
+    password: string
+    passwordConfirmation: string
+    acceptTOU: boolean
+}
 
 const PasswordSetupPage = () => {
     const history = useOnMountHistory()
@@ -46,16 +49,22 @@ const PasswordSetupPage = () => {
         register,
         handleSubmit,
         setError,
-        errors,
+
+        formState: { errors },
     } = useForm<PasswordSetupFormData>({
         resolver: yupResolver(schema),
     })
     const onSubmit = handleSubmit(async (data: PasswordSetupFormData) => {
         if (passwordScore < 3) {
-            return setError("password", {
-                message: "Password is not strong enough",
-                shouldFocus: true,
-            })
+            return setError(
+                "password",
+                {
+                    message: "Password is not strong enough",
+                },
+                {
+                    shouldFocus: true,
+                }
+            )
         }
 
         setIsCreating(true)
@@ -93,7 +102,7 @@ const PasswordSetupPage = () => {
                         <PasswordInput
                             label="New Password"
                             placeholder="Enter New Password"
-                            register={register}
+                            {...register("password")}
                             error={errors.password?.message}
                             autoFocus={true}
                             strengthBar={true}
@@ -104,8 +113,7 @@ const PasswordSetupPage = () => {
                         <PasswordInput
                             label="Confirm password"
                             placeholder="Confirm New Password"
-                            name="passwordConfirmation"
-                            register={register}
+                            {...register("passwordConfirmation")}
                             error={errors.passwordConfirmation?.message}
                         />
                     </div>
@@ -114,9 +122,8 @@ const PasswordSetupPage = () => {
                             <input
                                 type="checkbox"
                                 className={Classes.checkbox}
-                                name="acceptTOU"
                                 id="acceptTOU"
-                                ref={register}
+                                {...register("acceptTOU")}
                             />
                             <label htmlFor="acceptTOU" className="text-xs">
                                 I have read and agree to the{" "}

@@ -1,5 +1,3 @@
-import React from 'react'
-
 const BurgerIcon = () => (
     <svg
         width="16"

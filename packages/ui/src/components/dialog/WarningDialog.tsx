@@ -1,5 +1,5 @@
 import classnames from "classnames"
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import { AiOutlineWarning } from "react-icons/ai"
 import { Classes } from "../../styles"
 import Divider from "../Divider"

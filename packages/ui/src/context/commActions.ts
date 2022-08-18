@@ -16,8 +16,10 @@ import {
     StateSubscription,
     SubscriptionMessageTypes,
     ResponseBlankCurrencyDepositsCount,
+    RequestAddNetwork,
+    RequestEditNetwork,
 } from "@block-wallet/background/utils/types/communication"
-import { Devices, Messages } from "./commTypes"
+import { Devices, ExchangeType, Messages } from "./commTypes"
 import {
     ITokens,
     Token,
@@ -37,10 +39,22 @@ import {
     PopupTabs,
     UserSettings,
 } from "@block-wallet/background/controllers/PreferencesController"
-import { DappRequestConfirmOptions } from "@block-wallet/background/utils/types/ethereum"
+import {
+    DappReq,
+    DappRequestConfirmOptions,
+} from "@block-wallet/background/utils/types/ethereum"
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
 import { handlers, port } from "./setup"
 import { Currency } from "@block-wallet/background/utils/currency"
+import {
+    SwapParameters,
+    SwapQuote,
+    SwapTransaction,
+} from "@block-wallet/background/controllers/ExchangeController"
+import {
+    OneInchSwapQuoteParams,
+    OneInchSwapRequestParams,
+} from "@block-wallet/background/utils/types/1inch"
 
 let requestId = 0
 
@@ -874,10 +888,10 @@ export const confirmPermission = (id: string, accounts: string[] | null) => {
  * Confirms or rejects the specified dapp request
  *
  */
-export const confirmDappRequest = (
+export const confirmDappRequest = <RequestType extends DappReq>(
     id: string,
     isConfirmed: boolean,
-    confirmOptions?: DappRequestConfirmOptions
+    confirmOptions?: DappRequestConfirmOptions[RequestType]
 ): Promise<void> => {
     return sendMessage(Messages.DAPP.CONFIRM_REQUEST, {
         id,
@@ -996,6 +1010,51 @@ export const setShowTestNetworks = async (
     return sendMessage(Messages.NETWORK.SET_SHOW_TEST_NETWORKS, {
         showTestNetworks,
     })
+}
+
+/**
+ * Remove a network from the list of available networks
+ *
+ * @param chainId The chainId of the network to remove
+ */
+export const removeNetwork = async (chainId: number) => {
+    return sendMessage(Messages.NETWORK.REMOVE_NETWORK, { chainId })
+}
+
+/**
+ * Obtains the details(name, rpc list, icon, etc) of the specified chain
+ *
+ * @param chainId The chainId of the network to fetch the details from
+ */
+export const getSpecificChainDetails = async (chainId: number) => {
+    return sendMessage(Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS, { chainId })
+}
+
+/**
+ * Adds a new network.
+ *
+ * @param networkInput The network information to be added.
+ */
+export const addNetwork = async (networkInput: RequestAddNetwork) => {
+    return sendMessage(Messages.NETWORK.ADD_NETWORK, networkInput)
+}
+
+/**
+ * Edit an existing network. You can only change the rpcUrl and the blockExplorerUrl fields.
+ *
+ * @param networkInput The network information to be edited.
+ */
+export const editNetwork = async (editNetworkInput: RequestEditNetwork) => {
+    return sendMessage(Messages.NETWORK.EDIT_NETWORK, editNetworkInput)
+}
+
+/**
+ * Fetches the chainId from the specified rpc url
+ *
+ * @param rpcUrl The url of the chain rpc
+ */
+export const getRpcChainId = async (rpcUrl: string) => {
+    return sendMessage(Messages.NETWORK.GET_RPC_CHAIN_ID, { rpcUrl })
 }
 
 /**
@@ -1386,6 +1445,12 @@ export const getAnonimitySet = async (pair: CurrencyAmountPair) => {
     })
 }
 
+export const searchChainsByTerm = async (term: string) => {
+    return sendMessage(Messages.NETWORK.SEARCH_CHAINS, {
+        term,
+    })
+}
+
 /**
  * Generates on demand release notes for the release-notes route.
  * @param version The version of the release notes
@@ -1433,4 +1498,102 @@ export const removeHardwareWallet = async (
     device: Devices
 ): Promise<boolean> => {
     return sendMessage(Messages.WALLET.HARDWARE_REMOVE, { device })
+}
+
+/**
+ * Checks if the given account has enough allowance to make the exchange
+ *
+ * @param account User account
+ * @param amount Amount to be spended
+ * @param exchangeType Exchange type
+ * @param tokenAddress Asset to be spended address
+ */
+export const checkExchangeAllowance = async (
+    account: string,
+    amount: BigNumber,
+    exchangeType: ExchangeType,
+    tokenAddress: string
+): Promise<boolean> => {
+    return sendMessage(Messages.EXCHANGE.CHECK_ALLOWANCE, {
+        account,
+        amount,
+        exchangeType,
+        tokenAddress,
+    })
+}
+
+/**
+ * Submits an approval transaction to setup asset allowance
+ *
+ * @param allowance User selected allowance
+ * @param amount Exchange amount
+ * @param exchangeType The exchange type
+ * @param feeData Transaction gas fee data
+ * @param tokenAddress Spended asset token address
+ * @param customNonce Custom transaction nonce
+ */
+export const approveExchange = async (
+    allowance: BigNumber,
+    amount: BigNumber,
+    exchangeType: ExchangeType,
+    feeData: TransactionFeeData,
+    tokenAddress: string,
+    customNonce?: number
+): Promise<boolean> => {
+    return sendMessage(Messages.EXCHANGE.APPROVE, {
+        allowance,
+        amount,
+        exchangeType,
+        feeData,
+        tokenAddress,
+        customNonce,
+    })
+}
+
+/**
+ * Gets a quote for the specified exchange type and parameters
+ *
+ * @param exchangeType Exchange type
+ * @param quoteParams Quote parameters
+ */
+export const getExchangeQuote = async (
+    exchangeType: ExchangeType,
+    quoteParams: OneInchSwapQuoteParams
+): Promise<SwapQuote> => {
+    return sendMessage(Messages.EXCHANGE.GET_QUOTE, {
+        exchangeType,
+        quoteParams,
+    })
+}
+
+/**
+ * Fetch the transaction parameters to make the exchange
+ *
+ * @param exchangeType Exchange type
+ * @param exchangeParams Exchange parameters
+ */
+export const getExchangeParameters = async (
+    exchangeType: ExchangeType,
+    exchangeParams: OneInchSwapRequestParams
+): Promise<SwapParameters> => {
+    return sendMessage(Messages.EXCHANGE.GET_EXCHANGE, {
+        exchangeType,
+        exchangeParams,
+    })
+}
+
+/**
+ * Executes the exchange
+ *
+ * @param exchangeType Exchange type
+ * @param exchangeParams Exchange parameters
+ */
+export const executeExchange = async (
+    exchangeType: ExchangeType,
+    exchangeParams: SwapTransaction
+): Promise<string> => {
+    return sendMessage(Messages.EXCHANGE.EXECUTE, {
+        exchangeType,
+        exchangeParams,
+    })
 }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Mutex } from 'async-mutex';
 import { BigNumber, Contract, ethers, Event, utils } from 'ethers';
@@ -42,6 +41,7 @@ import {
     KnownCurrencies,
     ERC20KnownCurrencies,
     DEFAULT_TORNADO_CONFIRMATION,
+    DEFAULT_TX_RECEIPT_TIMEOUT,
 } from '../types';
 import { IBlankDeposit } from '../BlankDeposit';
 import { PreferencesController } from '../../PreferencesController';
@@ -80,6 +80,7 @@ import { Deposit, Withdrawal } from './stores/ITornadoEventsDB';
 import { TransactionFeeData } from '../../erc-20/transactions/SignedTransaction';
 import { BlankDepositVault } from '../BlankDepositVault';
 import { NextDepositResult } from '../notes/INotesService';
+import { ContractSignatureParser } from '../../transactions/ContractSignatureParser';
 
 const tornadoDeployments = tornadoConfig.deployments as any;
 
@@ -215,9 +216,7 @@ export class TornadoService
                 const { isInitialized } =
                     vault.deposits[name as AvailableNetworks];
 
-                if (isImported && !isInitialized) {
-                    this.importNotes();
-                } else {
+                if (isImported && isInitialized) {
                     // On network change update the status of
                     // pending Deposits & Withdrawals if any
                     this.checkCurrentNetworkPending();
@@ -232,7 +231,9 @@ export class TornadoService
             });
     }
 
-    public updateDepositTree = async (pair: CurrencyAmountPair) => {
+    public updateDepositTree = async (
+        pair: CurrencyAmountPair
+    ): Promise<void> => {
         const key = currencyAmountPairToMapKey(pair);
         const contract = this.tornadoContracts.get(key);
         if (!contract) {
@@ -303,7 +304,7 @@ export class TornadoService
      */
     public async checkIfReconstructionFailed(
         chainId: number = this._networkController.network.chainId
-    ) {
+    ): Promise<void> {
         const { isImported, isLoading } = await this.getImportingStatus(
             chainId
         );
@@ -462,8 +463,12 @@ export class TornadoService
             this._networkController.network.tornadoIntervals
                 ?.depositConfirmations || DEFAULT_TORNADO_CONFIRMATION;
 
-        // Store provider in case of network change
+        // Store provider and signature parser in case of network change
         const provider = this._networkController.getProvider();
+
+        const contractSignatureParser = new ContractSignatureParser(
+            this._networkController
+        );
 
         // If pending withdrawal status is not PENDING return
         if (pending.status !== PendingWithdrawalStatus.PENDING) {
@@ -488,18 +493,46 @@ export class TornadoService
                 chainId: pending.chainId,
             });
 
-            // Await transaction receipt
-            const transactionReceipt = await this.waitForTransactionReceipt(
-                transactionHash,
-                provider,
-                depositConfirmations
-            );
+            try {
+                const {
+                    data,
+                    value,
+                    nonce,
+                    gasPrice,
+                    gasLimit,
+                    maxFeePerGas,
+                    maxPriorityFeePerGas,
+                } = await provider.getTransaction(transactionHash);
 
-            // Add transaction receipt to pending withdrawal
-            await this.updatePendingWithdrawal(pending.pendingId, {
-                transactionReceipt,
-                chainId: pending.chainId,
-            });
+                const methodSignature =
+                    await contractSignatureParser.getMethodSignature(
+                        data,
+                        pending.toAddress
+                    );
+
+                // Await transaction receipt
+                const transactionReceipt = await provider.waitForTransaction(
+                    transactionHash,
+                    depositConfirmations,
+                    DEFAULT_TX_RECEIPT_TIMEOUT
+                );
+
+                // Add transaction receipt to pending withdrawal
+                await this.updatePendingWithdrawal(pending.pendingId, {
+                    transactionReceipt,
+                    chainId: pending.chainId,
+                    data,
+                    methodSignature,
+                    value,
+                    nonce,
+                    gasPrice,
+                    gasLimit,
+                    maxFeePerGas,
+                    maxPriorityFeePerGas,
+                });
+            } catch (error) {
+                log.error('Failed to update withdrawal transaction data.');
+            }
 
             // Set deposit to spent only if the vault is still unlocked
             // & the network is still the same
@@ -1177,34 +1210,6 @@ export class TornadoService
         mnemonic?: string
     ): Promise<void> {
         return this._notesService.importNotes(unlockPhrase, mnemonic);
-    }
-
-    /**
-     * It awaits for the Transaction completion or throws if times out
-     *
-     * @param txHash The transaction hash
-     * @param confirmation The number of confirmations before considering it
-     * @param timeout Timeout before throwing
-     */
-    private async waitForTransactionReceipt(
-        transactionHash: string,
-        provider = this._networkController.getProvider(),
-        confirmations = DEFAULT_TORNADO_CONFIRMATION,
-        timeout = 60000
-    ) {
-        try {
-            return provider.waitForTransaction(
-                transactionHash,
-                confirmations,
-                timeout
-            );
-        } catch (error) {
-            // eslint-disable-next-line
-            throw {
-                status: PendingWithdrawalStatus.FAILED,
-                message: 'Transaction was not mined',
-            };
-        }
     }
 
     /**

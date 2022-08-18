@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import { INetworkTokens, IToken } from './Token';
-import tl from '../../../token-list.json';
-import { isValidAddress, toChecksumAddress } from 'ethereumjs-util';
-import isTokenExcluded from 'banned-assets';
+import { TOKENS_LIST } from '@block-wallet/chains-assets';
 
 export const GOBLANK_TOKEN_DATA: {
     addresses: { [chainId in number]: string };
@@ -39,11 +37,6 @@ export const getBlankTokenDataByChainId = (
         logo,
     };
 };
-
-const tokenList: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key in string]: { [key in string]: { [key in string]: any } };
-} = tl;
 
 const NETWORK_TOKENS_LIST: INetworkTokens = {
     42161: {}, // arbitrum
@@ -158,16 +151,12 @@ const NETWORKS_NAMES: { [key in number]: string } = {
 
 export const NETWORK_TOKENS_LIST_ARRAY: { [chainId in number]: string[] } = {};
 
-for (const chainId in tokenList) {
+for (const chainId in TOKENS_LIST) {
     if (!(parseInt(chainId) in NETWORK_TOKENS_LIST)) {
         NETWORK_TOKENS_LIST[parseInt(chainId)] = {};
     }
-    for (const address in tokenList[chainId]) {
-        if (isTokenExcluded(parseInt(chainId), address)) {
-            continue;
-        }
-
-        const token = tokenList[chainId][address];
+    for (const address in TOKENS_LIST[chainId]) {
+        const token = TOKENS_LIST[chainId][address];
 
         let logo = '';
         if ('l' in token) {
@@ -213,16 +202,8 @@ for (const chainId in tokenList) {
             }
         }
 
-        let normalizedAddress = '';
-
-        if (isValidAddress(address)) {
-            normalizedAddress = toChecksumAddress(address);
-        } else {
-            normalizedAddress = address;
-        }
-
         const iToken = {
-            address: normalizedAddress,
+            address: address,
             logo,
             type,
             name: token['n'],
@@ -237,7 +218,7 @@ for (const chainId in tokenList) {
             };
         }
 
-        NETWORK_TOKENS_LIST[parseInt(chainId)][normalizedAddress] = iToken;
+        NETWORK_TOKENS_LIST[parseInt(chainId)][address] = iToken;
     }
 
     // Adding/updating BlockWallet

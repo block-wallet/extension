@@ -1,4 +1,4 @@
-import React, { ReactNode, useReducer } from "react"
+import { useReducer, ReactNode } from "react"
 
 // Components
 import LoadingDialog from "./LoadingDialog"
@@ -11,7 +11,7 @@ type texts = {
     error: React.ReactElement | string
 }
 type gifs = { loading: ReactNode | undefined }
-export type status = "loading" | "success" | "error"
+export type status = "idle" | "loading" | "success" | "error"
 export type loadingDialogProps = {
     open: boolean
     status: status
@@ -187,6 +187,8 @@ const WaitingDialog = ({
                     hideButton={hideButton}
                 />
             )
+        case "idle":
+            return null
     }
 }
 

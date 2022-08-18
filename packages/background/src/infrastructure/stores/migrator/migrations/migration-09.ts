@@ -40,6 +40,7 @@ export default {
             blockExplorerUrls: ['https://snowtrace.io/'],
             etherscanApiUrl: 'https://api.snowtrace.io/',
             actionsTimeIntervals: ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+            nativelySupported: true,
         };
 
         updatedNetworks.GOERLI = {

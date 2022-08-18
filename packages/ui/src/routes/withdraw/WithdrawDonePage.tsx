@@ -1,5 +1,3 @@
-import React from "react"
-
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupLayout from "../../components/popup/PopupLayout"
 

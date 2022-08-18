@@ -1,4 +1,4 @@
-import React, { FC } from "react"
+import { FC } from "react"
 
 interface IconProps {
     profile?: "normal" | "outlined" | "info"

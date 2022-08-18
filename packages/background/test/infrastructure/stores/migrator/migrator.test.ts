@@ -148,12 +148,6 @@ describe('State Migrator', () => {
                 },
             },
         },
-        IncomingTransactionController: {
-            incomingTransactions: {
-                '0x72fd102eb412de8415ca9a89c0c2a5bd2ecfbdfb': {} as any,
-                '0xd7d4e99b3e796a528590f5f6b84c2b2f967e7ccb': {} as any,
-            },
-        },
         KeyringController: {
             isUnlocked: false,
             keyringTypes: {},

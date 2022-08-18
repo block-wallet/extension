@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useRef, useState } from "react"
+import { FunctionComponent, useRef, useState } from "react"
 import { RiArrowDownSLine, RiArrowUpSLine } from "react-icons/ri"
 import { BsCheck } from "react-icons/bs"
 import { useBlankState } from "../../context/background/backgroundHooks"
@@ -8,10 +8,7 @@ import { changeNetwork, setShowTestNetworks } from "../../context/commActions"
 import LoadingOverlay from "../loading/LoadingOverlay"
 import { Network } from "@block-wallet/background/utils/constants/networks"
 import classNames from "classnames"
-
-const sortFunc = (a: Network, b: Network) => {
-    return a.order - b.order
-}
+import { sortNetworksByOrder } from "../../util/networkUtils"
 
 const NetworkOption: FunctionComponent<{
     option: Network
@@ -20,6 +17,7 @@ const NetworkOption: FunctionComponent<{
     disabled?: boolean
 }> = ({ option, selectedNetwork, handleNetworkChange, disabled = false }) => (
     <li
+        title={option.desc}
         className={classnames(
             "cursor-pointer flex flex-row justify-between pl-2 pr-2 pt-1 pb-1 items-center hover:bg-gray-100",
             !option.enable && "bg-gray-200 pointer-events-none",
@@ -30,7 +28,7 @@ const NetworkOption: FunctionComponent<{
     >
         <span
             className={classnames(
-                "leading-loose",
+                "leading-loose text-ellipsis overflow-hidden whitespace-nowrap",
                 selectedNetwork === option.name && "font-bold"
             )}
         >
@@ -94,7 +92,10 @@ const NetworkSelect: FunctionComponent<{
                     networkList && "border-primary-300"
                 )}
             >
-                <span data-testid="selected-network" className="select-none">
+                <span
+                    data-testid="selected-network"
+                    className="select-none w-36 text-ellipsis overflow-hidden whitespace-nowrap"
+                >
                     {getNetworkDesc()}
                 </span>
                 {networkList ? (
@@ -111,7 +112,7 @@ const NetworkSelect: FunctionComponent<{
                 <ul className="text-xs">
                     {Object.values(availableNetworks)
                         .filter((n) => n.enable && !n.test)
-                        .sort(sortFunc)
+                        .sort(sortNetworksByOrder)
                         .map((option) => (
                             <NetworkOption
                                 key={option.chainId}
@@ -143,7 +144,7 @@ const NetworkSelect: FunctionComponent<{
                     {showTestNetworks &&
                         Object.values(availableNetworks)
                             .filter((n) => n.enable && n.test)
-                            .sort(sortFunc)
+                            .sort(sortNetworksByOrder)
                             .map((option) => (
                                 <NetworkOption
                                     key={option.chainId}

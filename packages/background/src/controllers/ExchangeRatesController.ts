@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PreferencesController } from './PreferencesController';
 import { BaseController } from '../infrastructure/BaseController';
 import { Token } from './erc-20/Token';
@@ -9,15 +8,16 @@ import {
     Network,
 } from '../utils/constants/networks';
 
-import ratesList from '../../rates-ids-list.json';
-import assetPlatfomsList from '../../asset-platforms-ids-list.json';
+import {
+    RATES_IDS_LIST,
+    ASSET_PLATFORMS_IDS_LIST,
+} from '@block-wallet/chains-assets';
 
 import axios from 'axios';
 import { ActionIntervalController } from './block-updates/ActionIntervalController';
 import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
-import { currentTimestamp } from '../utils/constants/time';
 
 export interface ExchangeRatesControllerState {
     exchangeRates: Rates;
@@ -100,17 +100,19 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
 
     private updateNetworkNativeCurrencyId = ({
         chainId,
-        nativeCurrency: { symbol },
+        nativeCurrency,
     }: Network) => {
         let coingeckoPlatformId = DEFAULT_NETWORK_CURRENCY_ID;
+        const symbol = nativeCurrency.symbol.toUpperCase();
 
-        if (chainId in assetPlatfomsList) {
+        if (chainId in ASSET_PLATFORMS_IDS_LIST) {
             coingeckoPlatformId =
-                assetPlatfomsList[
-                    String(chainId) as keyof typeof assetPlatfomsList
+                ASSET_PLATFORMS_IDS_LIST[
+                    String(chainId) as keyof typeof ASSET_PLATFORMS_IDS_LIST
                 ];
-        } else if (symbol in ratesList) {
-            coingeckoPlatformId = ratesList[symbol as keyof typeof ratesList];
+        } else if (symbol in RATES_IDS_LIST) {
+            coingeckoPlatformId =
+                RATES_IDS_LIST[symbol as keyof typeof RATES_IDS_LIST];
         }
 
         this.store.updateState({
@@ -134,8 +136,8 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         // Rates format: {[tokenTicker]: [price: number]}
         const rates = this.store.getState().exchangeRates;
         const currencyApiId =
-            ratesList[
-                this.networkNativeCurrency.symbol as keyof typeof ratesList
+            RATES_IDS_LIST[
+                this.networkNativeCurrency.symbol as keyof typeof RATES_IDS_LIST
             ];
 
         // Get network native currency rate
@@ -209,8 +211,8 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
     }> => {
         const query = `${this.baseApiEndpoint}price`;
         const currencyApiId =
-            ratesList[
-                this.networkNativeCurrency.symbol as keyof typeof ratesList
+            RATES_IDS_LIST[
+                this.networkNativeCurrency.symbol.toUpperCase() as keyof typeof RATES_IDS_LIST
             ];
 
         const response = await axios.get(query, {

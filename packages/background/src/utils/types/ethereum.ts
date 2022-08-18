@@ -37,18 +37,25 @@ export enum DappReq {
     ASSET = 'ASSET',
     SIGNING = 'SIGNING',
     SWITCH_NETWORK = 'SWITCH_NETWORK',
+    ADD_ETHEREUM_CHAIN = 'ADD_ETHEREUM_CHAIN',
 }
 
 export interface DappRequestParams {
     [DappReq.ASSET]: WatchAssetReq;
     [DappReq.SIGNING]: DappSignatureReq<SignatureMethods>;
     [DappReq.SWITCH_NETWORK]: NormalizedSwitchEthereumChainParameters;
+    [DappReq.ADD_ETHEREUM_CHAIN]: NormalizedAddEthereumChainParameter;
 }
 
 export type DappRequestType = keyof DappRequestParams;
 
 // Dapp request handle optional confirmation parameters
-export type DappRequestConfirmOptions = WatchAssetConfirmParams;
+export interface DappRequestConfirmOptions {
+    [DappReq.ASSET]: WatchAssetConfirmParams;
+    [DappReq.ADD_ETHEREUM_CHAIN]: AddEthereumChainConfirmParams;
+    [DappReq.SIGNING]: undefined;
+    [DappReq.SWITCH_NETWORK]: undefined;
+}
 
 // Dapp request optional status type
 
@@ -108,6 +115,42 @@ export interface AddEthereumChainParameter {
         decimals: number;
     };
     rpcUrls?: string[];
+}
+
+export interface NormalizedAddEthereumChainParameter {
+    chainId: number;
+    chainName: string;
+    nativeCurrency: {
+        name: string;
+        symbol: string;
+        decimals: number;
+    };
+    iconUrl?: string;
+    rpcUrl: string;
+    blockExplorerUrl?: string;
+    isTestnet: boolean;
+
+    validations: {
+        /**
+         * Indicates if the provided Chain ID is known to the wallet
+         */
+        knownChainId: boolean;
+
+        /**
+         * Indicates if the block explorer is known to the specified chain
+         */
+        knownBlockExplorer: boolean;
+
+        /**
+         * Indicates if the rpcUrl is known to the specified chain
+         */
+        knownRpcUrl: boolean;
+
+        /**
+         * Indicates if icon data is custom or validated against our chain list
+         */
+        knownIcon: boolean;
+    };
 }
 
 // EIP-3326
@@ -214,6 +257,10 @@ export interface WatchAssetConfirmParams {
     symbol: string;
     decimals: number;
     image: string;
+}
+
+export interface AddEthereumChainConfirmParams {
+    saveImage: boolean;
 }
 
 // EIP-712

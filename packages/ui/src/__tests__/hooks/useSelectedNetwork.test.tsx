@@ -1,5 +1,4 @@
-import React from 'react';
-import { screen } from "@testing-library/react" 
+import { screen } from "@testing-library/react"
 import { useSelectedNetwork } from '../../context/hooks/useSelectedNetwork';
 import { renderWithBackgroundProvider } from '../testUtils';
 import { initBackgroundState } from '../../mock/MockBackgroundState';

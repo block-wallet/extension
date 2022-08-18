@@ -18,7 +18,7 @@ export const useSelectedNetwork = () => {
         isEIP1559Compatible: isEIP1559Compatible[network.chainId] || false,
         isSendEnabled:
             isFeatureEnabled(network, "sends") && isUserNetworkOnline,
-        isTornadoEnabled:
-            isFeatureEnabled(network, "tornado")
+        isTornadoEnabled: isFeatureEnabled(network, "tornado"),
+        isSwapEnabled: isFeatureEnabled(network, "swaps"),
     }
 }

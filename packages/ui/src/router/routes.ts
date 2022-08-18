@@ -3,15 +3,11 @@ import SignPage from "../routes/dApp/SignPage"
 import ConnectPage from "../routes/connect/ConnectPage"
 import ConnectedSitesPage from "../routes/settings/ConnectedSitesPage"
 import ConnectedSiteAccountsPage from "../routes/settings/ConnectedSiteAccountsPage"
-import PrivacyPage from "../routes/PrivacyPage"
 import TransactionConfirmPage from "../routes/dApp/TransactionConfirmPage"
 import AccountsPage from "../routes/account/AccountsPage"
-import DepositConfirmPage from "../routes/deposit/DepositConfirmPage"
-import DepositPage from "../routes/deposit/DepositPage"
 import PopupPage from "../routes/PopupPage"
 import ReceivePage from "../routes/ReceivePage"
 import SendConfirmPage from "../routes/send/SendConfirmPage"
-import SendDonePage from "../routes/send/SendDonePage"
 import SendPage from "../routes/send/SendPage"
 import CreateAccountPage from "../routes/account/CreateAccountPage"
 import AddTokensPage from "../routes/settings/AddTokensPage"
@@ -20,11 +16,6 @@ import ExportAccountPage from "../routes/settings/ExportAccountPage"
 import ExportDonePage from "../routes/settings/ExportDonePage"
 import SettingsPage from "../routes/settings/SettingsPage"
 import AboutPage from "../routes/settings/AboutPage"
-import WithdrawAmountPage from "../routes/withdraw/WithdrawAmountPage"
-import WithdrawDonePage from "../routes/withdraw/WithdrawDonePage"
-import WithdrawHistory from "../routes/withdraw/WithdrawHistory"
-import WithdrawExternalAccountPage from "../routes/withdraw/WithdrawExternalAccountPage"
-import WithdrawTypeSelectPage from "../routes/withdraw/WithdrawTypeSelectPage"
 import ReminderPage from "../routes/ReminderPage"
 import BackupConfirmPage from "../routes/setup/BackupConfirmPage"
 import BackupDonePage from "../routes/BackupDonePage"
@@ -32,10 +23,8 @@ import ErrorFallbackPage from "../components/error/ErrorFallbackPage"
 import AddressBookPage from "../routes/settings/AddressBookPage"
 import AddContactPage from "../routes/settings/AddContactPage"
 import SwitchEthereumChain from "../routes/dApp/SwitchEthereumChain"
+import AddEthereumChain from "../routes/dApp/AddEthereumChain"
 import LockTimeout from "../routes/settings/LockTimeout"
-import WithdrawBlankSelectAccount from "../routes/withdraw/WithdrawBlankSelectAccount"
-import WithdrawBlankCreateAccount from "../routes/withdraw/WithdrawBlankCreateAccount"
-import WithdrawBlankConfirm from "../routes/withdraw/WithdrawBlankConfirm"
 import AccountMenu from "../components/account/AccountMenu"
 import EditAccountPage from "../routes/account/EditAccountPage"
 import WatchAssetPage from "../routes/dApp/WatchAsset"
@@ -56,11 +45,25 @@ import ApprovePage from "../routes/transaction/ApprovePage"
 import AddAccountPage from "../routes/account/AddAccountPage"
 import ImportAccountPage from "../routes/account/ImportAccountPage"
 import ApproveNFTPage from "../routes/dApp/ApproveNFT"
+//import SwapPage from "../routes/swap/SwapPage"
+//import SwapPageConfirm from "../routes/swap/SwapConfirmPage"
+//import SwapAfterAddTokenPage from "../routes/swap/SwapAfterAddTokenPage"
+//import NetworksPage from "../routes/networks/NetworksPage"
+//import NetworkDetailsPage from "../routes/networks/NetworkDetailsPage"
+//import SearchNetworkPage from "../routes/networks/SearchNetworkPage"
+//import SuggestedAddNetwork from "../routes/networks/SuggestedAddNetwork"
+//import ManuallyAddNetwork from "../routes/networks/ManuallyAddNetwork"
+import PrivacySettingsPage from "../routes/settings/PrivacySettingsPage"
+import DepositAndWithdrawHistory from "../routes/deposit/DepositAndWithdrawHistory"
 
 export const ROUTES_DEFINITION = [
     /* Root */
     { path: "/home", exact: true, component: PopupPage },
-    { path: "/release-notes/:version", exact: true, component: OnDemandReleaseNotesPage },
+    {
+        path: "/release-notes/:version",
+        exact: true,
+        component: OnDemandReleaseNotesPage,
+    },
     /* Transactions */
     { path: "/transaction/cancel", exact: true, component: CancelPage },
     { path: "/transaction/speedUp", exact: true, component: SpeedUpPage },
@@ -104,47 +107,19 @@ export const ROUTES_DEFINITION = [
         exact: true,
         component: SendConfirmPage,
     },
-    { path: "/send/done", exact: true, component: SendDonePage },
-    /* Deposit */
-    { path: "/privacy/deposit", exact: true, component: DepositPage },
+    /* Swap */
+    /*
+    //Prevent routing to swaps
+
+    { path: "/swap", exact: true, component: SwapPage },
+    { path: "/swap/confirm", exact: true, component: SwapPageConfirm },
     {
-        path: "/privacy/deposit/confirm",
+        path: "/swap/afterAddToken",
         exact: true,
-        component: DepositConfirmPage,
-    },
-    /* Withdraw */
-    { path: "/privacy/withdraw", exact: true, component: WithdrawAmountPage },
-    {
-        path: "/privacy/withdraw/select",
-        exact: true,
-        component: WithdrawTypeSelectPage,
-    },
-    {
-        path: "/privacy/withdraw/block/accounts",
-        exact: true,
-        component: WithdrawBlankSelectAccount,
-    },
-    {
-        path: "/privacy/withdraw/block/accounts/create",
-        exact: true,
-        component: WithdrawBlankCreateAccount,
-    },
-    {
-        path: "/privacy/withdraw/block/accounts/step/confirm",
-        exact: true,
-        component: WithdrawBlankConfirm,
+        component: SwapAfterAddTokenPage,
     },
 
-    {
-        path: "/privacy/withdraw/external",
-        exact: true,
-        component: WithdrawExternalAccountPage,
-    },
-    {
-        path: "/privacy/withdraw/done",
-        exact: true,
-        component: WithdrawDonePage,
-    },
+    */
 
     /* Settings */
     { path: "/settings", exact: true, component: SettingsPage },
@@ -186,6 +161,13 @@ export const ROUTES_DEFINITION = [
     },
 
     { path: "/settings/tokens/add", exact: true, component: AddTokensPage },
+    { path: "/settings/privacy", exact: true, component: PrivacySettingsPage },
+    {
+        path: "/settings/privacy/depositWithdrawalsHistory",
+        exact: true,
+        component: DepositAndWithdrawHistory,
+    },
+
     {
         path: "/settings/tokens/add/confirm",
         exact: true,
@@ -202,18 +184,6 @@ export const ROUTES_DEFINITION = [
         component: ExportDonePage,
         blockListedForRecovery: true,
     },
-
-    {
-        path: "/privacy",
-        exact: true,
-        component: PrivacyPage,
-    },
-    {
-        path: "/privacy/withdrawals",
-        exact: true,
-        component: WithdrawHistory,
-    },
-
     /* Address Book */
     {
         path: "/settings/addressBook",
@@ -227,6 +197,8 @@ export const ROUTES_DEFINITION = [
     },
     /** Switch Ethereum Chain */
     { path: "/chain/switch", exact: true, component: SwitchEthereumChain },
+    /** Add Ethereum Chain */
+    { path: "/chain/add", exact: true, component: AddEthereumChain },
     /* Sign */
     { path: "/sign", exact: true, component: SignPage },
     /* Watch Asset */
@@ -246,6 +218,29 @@ export const ROUTES_DEFINITION = [
         component: TransactionConfirmPage,
         blockListedForRecovery: true,
     },
+    /* Networks config */
+    /* Prevent access to Networks management*/
+    /*  { path: "/settings/networks", exact: true, component: NetworksPage },
+    {
+        path: "/settings/networks/details",
+        exact: true,
+        component: NetworkDetailsPage,
+    },
+    {
+        path: "/settings/networks/search",
+        exact: true,
+        component: SearchNetworkPage,
+    },
+    {
+        path: "/settings/networks/add/suggested",
+        exact: true,
+        component: SuggestedAddNetwork,
+    },
+    {
+        path: "/settings/networks/add/manual",
+        exact: true,
+        component: ManuallyAddNetwork,
+    }, */
     /* Reminder to backup seed phrase */
     { path: "/reminder", exact: true, component: ReminderPage },
     { path: "/reminder/backup", exact: true, component: BackupConfirmPage },

@@ -1,4 +1,5 @@
-import React from "react"
+import { useEffect, useRef } from "react"
+
 /**
  * useDOMElementObserver
  * This hook observes the given html node reference and invokes the callback function when it is intersected.
@@ -7,14 +8,13 @@ import React from "react"
  * @param deps Dpendency list to re-run the observer
  * @returns
  */
-
 const useDOMElementObserver = (
     domRef: React.RefObject<HTMLElement>,
     fn: () => void,
     deps?: React.DependencyList
 ) => {
-    const observerRef = React.useRef<IntersectionObserver | null>(null)
-    React.useEffect(() => {
+    const observerRef = useRef<IntersectionObserver | null>(null)
+    useEffect(() => {
         if (!domRef.current) return
         if (observerRef.current) observerRef.current.disconnect()
         observerRef.current = new IntersectionObserver(

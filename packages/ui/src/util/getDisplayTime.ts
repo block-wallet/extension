@@ -3,13 +3,6 @@ export const getDisplayTime = (time?: Date) => {
 
     const checkTime: Date = time
 
-    const options: Intl.DateTimeFormatOptions = {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-    }
-
     const checkTimeHours: string = checkTime.toLocaleTimeString(undefined, {
         timeStyle: "short",
     })
@@ -27,6 +20,17 @@ export const getDisplayTime = (time?: Date) => {
         checkTime.getDate() === yesterday.getDate() &&
         checkTime.getMonth() === yesterday.getMonth() &&
         checkTime.getFullYear() === yesterday.getFullYear()
+
+    const options: Intl.DateTimeFormatOptions = {
+        year:
+            checkTime.getFullYear() !== today.getFullYear()
+                ? "2-digit"
+                : undefined,
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+    }
 
     return isToday
         ? `Today, ${checkTimeHours}`

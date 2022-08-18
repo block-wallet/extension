@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
@@ -7,7 +7,6 @@ import PopupFooter from "../../components/popup/PopupFooter"
 import TextInput from "../../components/input/TextInput"
 
 import * as yup from "yup"
-import { InferType } from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
@@ -37,17 +36,18 @@ const contactSchema = yup.object().shape({
             return utils.isAddress(address || "")
         }),
 })
-type contactFormData = InferType<typeof contactSchema>
+type contactFormData = { contactName: string; contactAddress: string }
 
-const AddContactPage = (props: any) => {
+const AddContactPage = () => {
     const history = useOnMountHistory()
     const addressBook = useAddressBook()
     const recentAddresses = useAddressBookRecentAddresses()
     const {
         register,
         handleSubmit,
-        errors,
         setError,
+
+        formState: { errors },
     } = useForm<contactFormData>({
         resolver: yupResolver(contactSchema),
     })
@@ -74,10 +74,15 @@ const AddContactPage = (props: any) => {
     const onSubmit = handleSubmit(async (data: contactFormData) => {
         try {
             if (contactNameExists(data.contactName || "")) {
-                setError("contactName", {
-                    message: "Contact Name already in use",
-                    shouldFocus: true,
-                })
+                setError(
+                    "contactName",
+                    {
+                        message: "Contact Name already in use",
+                    },
+                    {
+                        shouldFocus: true,
+                    }
+                )
 
                 return Promise.reject()
             }
@@ -91,10 +96,15 @@ const AddContactPage = (props: any) => {
 
             dispatch({ type: "setStatus", payload: { status: "success" } })
         } catch {
-            setError("contactName", {
-                message: "Error saving the new contact.",
-                shouldFocus: true,
-            })
+            setError(
+                "contactName",
+                {
+                    message: "Error saving the new contact.",
+                },
+                {
+                    shouldFocus: true,
+                }
+            )
             dispatch({ type: "setStatus", payload: { status: "error" } })
 
             return Promise.reject()
@@ -112,7 +122,6 @@ const AddContactPage = (props: any) => {
                 <PopupFooter>
                     <ButtonWithLoading
                         label={buttonTitle}
-                        type="submit"
                         onClick={onSubmit}
                         disabled={!canUpdate}
                     />
@@ -126,8 +135,11 @@ const AddContactPage = (props: any) => {
                         <TextInput
                             appearance="outline"
                             label="Contact Name"
-                            name="contactName"
-                            register={register}
+                            {...register("contactName", {
+                                onChange: () => {
+                                    setCanUpdate(true)
+                                },
+                            })}
                             placeholder={placeholderСontactName}
                             error={errors.contactName?.message}
                             autoFocus={true}
@@ -135,20 +147,21 @@ const AddContactPage = (props: any) => {
                             defaultValue={
                                 contact?.name || placeholderСontactName
                             }
-                            onChange={() => setCanUpdate(true)}
                         />
                     </div>
                     <div className="flex flex-col space-y-1">
                         <TextInput
                             appearance="outline"
                             label="Contact Address"
-                            name="contactAddress"
-                            register={register}
                             placeholder="Address"
                             error={errors.contactAddress?.message}
                             autoFocus={false}
                             defaultValue={contact?.address}
-                            onChange={() => setCanUpdate(true)}
+                            {...register("contactAddress", {
+                                onChange: () => {
+                                    setCanUpdate(true)
+                                },
+                            })}
                         />
                     </div>
                 </div>

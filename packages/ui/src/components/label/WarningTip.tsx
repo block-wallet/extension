@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { FunctionComponent } from "react"
 import classnames from "classnames"
 import ExclamationCircleIconFull from "../icons/ExclamationCircleIconFull"
@@ -22,7 +22,7 @@ const WarningTip: FunctionComponent<{
     className?: string
     fontSize?: string
     justify?: string
-    text: string
+    text: string | JSX.Element
     withCloseIcon?: boolean
 }> = ({ className, fontSize, justify, text, withCloseIcon = false }) => {
     const [isClosed, setIsClosed] = useState(false)

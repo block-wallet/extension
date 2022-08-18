@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from "react"
+import { FunctionComponent, useState } from "react"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import PopupFooter from "../../components/popup/PopupFooter"

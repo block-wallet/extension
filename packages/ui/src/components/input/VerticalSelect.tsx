@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import { classnames } from "../../styles"
 import Tooltip from "../label/Tooltip"
 
@@ -37,7 +37,10 @@ const VerticalSelect: FunctionComponent<{
         style={containerStyle}
     >
         {options.map((option, i) => (
-            <div className={classnames("group relative")}>
+            <div
+                key={`${i}-${option.label}`}
+                className={classnames("group relative")}
+            >
                 <button
                     type="button"
                     disabled={isDisabled(option, i)}

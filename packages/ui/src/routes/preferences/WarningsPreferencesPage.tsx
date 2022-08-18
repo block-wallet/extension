@@ -1,4 +1,4 @@
-import React, { useReducer, useRef } from "react"
+import { useReducer, useRef } from "react"
 import { useHistory } from "react-router-dom"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import ToggleButton from "../../components/button/ToggleButton"

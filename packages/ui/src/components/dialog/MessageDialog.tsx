@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import { classnames } from "../../styles"
 import Dialog from "./Dialog"
 import FullScreenDialog from "./FullScreenDialog"

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useHistory } from "react-router-dom"
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
-import { InferType } from "yup"
 
 // Components
 import PopupHeader from "../components/popup/PopupHeader"
@@ -21,7 +20,7 @@ import { verifyPassword, requestSeedPhrase } from "../context/commActions"
 const schema = yup.object().shape({
     password: yup.string().required("Password required."),
 })
-type PasswordFormData = InferType<typeof schema>
+type PasswordFormData = { password: string }
 
 const ReminderPage = () => {
     const history: any = useHistory()
@@ -32,11 +31,8 @@ const ReminderPage = () => {
 
     const hasBack = history.location.state?.hasBack ?? true
 
-    const {
-        permissionRequests,
-        unapprovedTransactions,
-        dappRequests,
-    } = useBlankState()!
+    const { permissionRequests, unapprovedTransactions, dappRequests } =
+        useBlankState()!
 
     const [showRequests, requestRoute] = getRequestRouteAndStatus(
         permissionRequests,
@@ -47,8 +43,9 @@ const ReminderPage = () => {
     const {
         register,
         handleSubmit,
-        errors,
         setError,
+
+        formState: { errors },
     } = useForm<PasswordFormData>({
         resolver: yupResolver(schema),
     })
@@ -57,10 +54,15 @@ const ReminderPage = () => {
         verifyPassword(data.password)
             .then(async (isValid) => {
                 if (!isValid)
-                    return setError("password", {
-                        message: "Incorrect password",
-                        shouldFocus: true,
-                    })
+                    return setError(
+                        "password",
+                        {
+                            message: "Incorrect password",
+                        },
+                        {
+                            shouldFocus: true,
+                        }
+                    )
 
                 const seedPhrase = await requestSeedPhrase(data.password)
 
@@ -73,6 +75,7 @@ const ReminderPage = () => {
     useEffect(() => {
         setSeedPhrase(history.location?.state?.seedPhrase)
         setPassword(history.location?.state?.password)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const shouldEnterPassword = !seedPhrase || !password
@@ -125,7 +128,7 @@ const ReminderPage = () => {
                         <PasswordInput
                             label="Password"
                             placeholder="Enter Password"
-                            register={register}
+                            {...register("password")}
                             onChange={(e) => setInputPassword(e.target.value)}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") {

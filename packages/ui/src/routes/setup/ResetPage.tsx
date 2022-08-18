@@ -1,5 +1,3 @@
-import React from "react"
-
 import PageLayout from "../../components/PageLayout"
 import Divider from "../../components/Divider"
 

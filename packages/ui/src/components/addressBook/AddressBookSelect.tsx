@@ -1,14 +1,16 @@
+import { FunctionComponent, useMemo, useState, useEffect } from "react"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
-import React, { FunctionComponent, useMemo, useState, useEffect } from "react"
 import { useAddressBook } from "../../context/hooks/useAddressBook"
 import AccountDisplay from "../account/AccountDisplay"
 import { filterAccounts } from "../../util/filterAccounts"
+import AccountsList from "../account/AccountsList"
+import { NetworkAddressBook } from "@block-wallet/background/controllers/AddressBookController"
 
 const AddressBookSelect: FunctionComponent<{
     filter: string
     onSelect: (account: any) => void
 }> = ({ filter, onSelect }) => {
-    const addressBook = useAddressBook()
+    const addressBook: NetworkAddressBook = useAddressBook()
     const accounts = useMemo(() => {
         const addresses = Object.values(addressBook)
         const accountArray = addresses
@@ -36,22 +38,21 @@ const AddressBookSelect: FunctionComponent<{
     }, [accounts, filter])
 
     return filteredAccounts.length > 0 ? (
-        <div className="flex flex-col w-full space-y-2 p-6 pb-0">
-            <span className="p-0 text-xs text-gray-500 uppercase ">
-                Address Book Contacts
-            </span>
-            {filteredAccounts.map((account) => (
-                <AccountDisplay
-                    key={account.address}
-                    onClickAccount={(account: any) => {
-                        setSelected(account)
-                        onSelect(account)
-                    }}
-                    account={account}
-                    selected={selected?.address === account.address}
-                    showAddress={true}
-                />
-            ))}
+        <div className="flex flex-col w-full px-6">
+            <AccountsList title="ADDRESS BOOK CONTACTS">
+                {filteredAccounts.map((account) => (
+                    <AccountDisplay
+                        key={account.address}
+                        onClickAccount={(account: any) => {
+                            setSelected(account)
+                            onSelect(account)
+                        }}
+                        account={account}
+                        selected={selected?.address === account.address}
+                        showAddress={true}
+                    />
+                ))}
+            </AccountsList>
         </div>
     ) : null
 }

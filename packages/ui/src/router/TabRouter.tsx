@@ -1,4 +1,3 @@
-import React, { FunctionComponent } from "react"
 import { HashRouter } from "react-router-dom"
 import { useBlankState } from "../context/background/backgroundHooks"
 import IntroductionPage from "../routes/IntroductionPage"
@@ -67,7 +66,11 @@ const introRoutes = makeRoutes([
     },
 ])
 
-const TabRouter: FunctionComponent = ({ children }) => {
+const TabRouter = ({
+    children,
+}: {
+    children?: React.ReactNode | undefined
+}) => {
     const state = useBlankState()!
     const rootComponent = state?.isOnboarded ? SetupDonePage : IntroductionPage
     return (

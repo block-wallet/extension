@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import lockIcon from "../../assets/images/icons/lock.svg"
 
 const ClickToReveal: FunctionComponent<{

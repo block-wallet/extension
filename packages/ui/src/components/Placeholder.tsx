@@ -1,6 +1,6 @@
-import classnames from 'classnames'
-import React, { FunctionComponent } from 'react'
-import { Classes } from '../styles'
+import classnames from "classnames"
+import { FunctionComponent } from "react"
+import { Classes } from "../styles"
 
 const Placeholder: FunctionComponent<{
     className?: string
@@ -11,7 +11,7 @@ const Placeholder: FunctionComponent<{
             className={classnames(
                 Classes.placeholder,
                 className,
-                dark ? 'bg-gray-800' : 'bg-gray-200'
+                dark ? "bg-gray-800" : "bg-gray-200"
             )}
         />
     )

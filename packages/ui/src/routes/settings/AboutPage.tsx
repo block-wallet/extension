@@ -1,5 +1,3 @@
-import React from "react"
-
 import PopupLayout from "../../components/popup/PopupLayout"
 import PopupHeader from "../../components/popup/PopupHeader"
 import AppVersion from "../../components/AppVersion"
@@ -29,7 +27,7 @@ const links = [
     {
         icon: <IoLogoTwitter className="w-5 h-5" />,
         link: "https://twitter.com/GetBlockWallet",
-        text: "blockwallet.io",
+        text: "twitter.com/GetBlockWallet",
     },
 ]
 const AboutPage = () => {

@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BigNumber, Contract } from 'ethers';
 import { bigInt } from 'snarkjs';
 import { v4 as uuid } from 'uuid';

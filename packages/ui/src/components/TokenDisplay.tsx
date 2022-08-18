@@ -1,12 +1,12 @@
-import React, { useState, FunctionComponent } from "react"
+import { useState, FunctionComponent } from "react"
 import classnames from "classnames"
 
 // Assets
-import unknownTokenIcon from "../assets/images/unknown_token.svg"
 import checkmarkMiniIcon from "../assets/images/icons/checkmark_mini.svg"
 
 // Types
 import { TokenResponse } from "../routes/settings/AddTokensPage"
+import TokenLogo from "./TokenLogo"
 
 type TokenDisplayType = {
     data: TokenResponse
@@ -81,22 +81,18 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
             />
             <div className="flex justify-start items-center flex-row py-3">
                 <div className="flex flex-row items-center justify-center w-9 h-9 p-1.5 bg-white border border-gray-200 rounded-full">
-                    <img
-                        src={data.logo === "" ? unknownTokenIcon : data.logo}
-                        onError={(e) => {
-                            ;(e.target as any).onerror = null
-                            ;(e.target as any).src = unknownTokenIcon
-                        }}
-                        alt={data.name}
-                        className="rounded-full"
-                    />
+                    <TokenLogo src={data.logo} alt={data.name} />
                 </div>
-                <div className={`flex justify-start items-center h-full box-border
-                    ${isSmall ? "ml-1" : "ml-4"}`}>
+                <div
+                    className={`flex justify-start items-center h-full box-border
+                    ${isSmall ? "ml-1" : "ml-4"}`}
+                >
                     <span
                         className={classnames(
                             `text-${textSize}`,
-                            isSmall ? "text-xs font-small" : "text-black font-semibold mr-1",
+                            isSmall
+                                ? "text-xs font-small"
+                                : "text-black font-semibold mr-1"
                         )}
                     >
                         {printName(data.name, data.symbol)}
@@ -104,7 +100,9 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
                     <span
                         className={classnames(
                             "text-gray-400",
-                            isSmall ? "text-xs font-small text-overflow" : `text-${textSize}`
+                            isSmall
+                                ? "text-xs font-small text-overflow"
+                                : `text-${textSize}`
                         )}
                     >
                         {printSymbol(data.symbol, data.name)}

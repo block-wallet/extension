@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
@@ -26,7 +26,6 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useAsync } from "../../util/hooks/useAsync"
 import { formatUnits, parseUnits } from "ethers/lib/utils"
 import { formatRounded } from "../../util/formatRounded"
-import { EnsResult } from "../../util/searchEns"
 
 import infoIcon from "../../assets/images/icons/info_circle.svg"
 import FeesTooltip from "../../components/label/FeesTooltip"
@@ -58,14 +57,14 @@ const WithdrawBlankConfirm = () => {
     const {
         pair,
         address: accountAddress,
-        ens,
+        name: accountName,
         external,
         preSelectedAsset,
         isAssetDetailsPage,
     } = history.location.state as {
         pair: CurrencyAmountPair
         address: string
-        ens: EnsResult | undefined
+        name: string
         external: boolean | undefined
         preSelectedAsset: TokenWithBalance
         isAssetDetailsPage: boolean
@@ -355,7 +354,7 @@ const WithdrawBlankConfirm = () => {
                             />
                             <span className="w-20 whitespace-nowrap">
                                 {formatName(
-                                    account ? account.name : "External"
+                                    account?.name ?? accountName ?? "External"
                                 )}
                             </span>
                         </div>
@@ -390,16 +389,25 @@ const WithdrawBlankConfirm = () => {
                                 fill={getAccountColor(account?.address || "1")}
                             />
                             <div className="flex flex-col">
-                                <span>
+                                <span
+                                    title={
+                                        account?.name ??
+                                        accountName ??
+                                        "External"
+                                    }
+                                >
                                     {formatName(
-                                        account ? account.name : "External",
+                                        account?.name ??
+                                            accountName ??
+                                            "External",
                                         10
                                     )}
                                 </span>
-                                <span className="text-xs font-normal text-gray-500">
-                                    {ens
-                                        ? ens.name
-                                        : formatHash(accountAddress)}
+                                <span
+                                    className="text-xs font-normal text-gray-500"
+                                    title={accountAddress}
+                                >
+                                    {formatHash(accountAddress)}
                                 </span>
                             </div>
                         </div>

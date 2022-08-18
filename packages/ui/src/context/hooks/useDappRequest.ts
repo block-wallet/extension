@@ -5,6 +5,7 @@ export enum DappReq {
     ASSET = "ASSET",
     SIGNING = "SIGNING",
     SWITCH_NETWORK = "SWITCH_NETWORK",
+    ADD_ETHEREUM_CHAIN = "ADD_ETHEREUM_CHAIN",
 }
 
 // Dapp request optional status type

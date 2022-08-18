@@ -1,5 +1,3 @@
-import React from "react"
-
 type CheckmarkCircleProps = {
     color?: string
     animate?: boolean

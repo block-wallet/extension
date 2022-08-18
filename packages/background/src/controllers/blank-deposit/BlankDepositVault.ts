@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { GenericVault } from './infrastructure/GenericVault';
 import {
@@ -147,7 +146,7 @@ export class BlankDepositVault {
     public async failReconstruction(
         chainId: number = this._networkController.network.chainId,
         error = 'Error reconstructing deposits'
-    ) {
+    ): Promise<void> {
         return this.setDepositsVault(
             {
                 isLoading: false,

@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { useHistory } from "react-router-dom"
 
 import PopupFooter from "../components/popup/PopupFooter"
@@ -13,8 +13,6 @@ import AntiPhishing from "../components/phishing/AntiPhishing"
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
-import { InferType } from "yup"
-
 import logo from "../assets/images/logo.svg"
 
 import { unlockApp, requestSeedPhrase } from "../context/commActions"
@@ -28,13 +26,15 @@ import { LINKS } from "../util/constants"
 const schema = yup.object().shape({
     password: yup.string().required("Password required."),
 })
-type PasswordFormData = InferType<typeof schema>
+type PasswordFormData = { password: string }
 
 const UnlockPage = () => {
     const {
         register,
         handleSubmit,
-        errors,
+        formState: {
+            errors,
+        },
         setError,
     } = useForm<PasswordFormData>({
         resolver: yupResolver(schema),
@@ -81,100 +81,107 @@ const UnlockPage = () => {
                     })
                 }
             } else {
-                setError("password", {
-                    message: "Incorrect password",
-                    shouldFocus: true,
-                })
+                setError(
+                    "password",
+                    {
+                        message: "Incorrect password",
+                    },
+                    { shouldFocus: true }
+                )
             }
             setIsLoading(false)
         } catch (e: any) {
-            setError("password", {
-                message: "Error unlocking the extension",
-                shouldFocus: true,
-            })
+            setError(
+                "password",
+                {
+                    message: "Error unlocking the extension",
+                },
+                {
+                    shouldFocus: true,
+                }
+            )
         }
     })
 
     return (
-        <form className="w-full h-full" onSubmit={onSubmit}>
-            <PopupLayout
-                header={
-                    <PopupHeader
-                        title="Unlock App"
-                        close={false}
-                        backButton={false}
-                    >
-                        {lockedByTimeout && (
-                            <div className="group relative">
-                                <a
-                                    href={LINKS.ARTICLES.LOCK_TIMEOUT}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >
-                                    <AiFillInfoCircle
-                                        size={26}
-                                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
-                                    />
-                                    <Tooltip
-                                        className="!w-52 !break-word !whitespace-normal border boder-gray-300"
-                                        content="Locked too soon? Click to learn how to increase the lock timeout."
-                                    />
-                                </a>
-                            </div>
-                        )}
-                    </PopupHeader>
-                }
-                footer={
-                    <PopupFooter>
-                        <ButtonWithLoading
-                            label="Confirm"
-                            isLoading={isLoading}
-                        />
-                    </PopupFooter>
-                }
-            >
-                <ConfirmDialog
-                    title="Confirmation"
-                    message="Are you sure you want to reset your wallet? This action can not be undone."
-                    open={hasDialog}
-                    onClose={() => setHasDialog(false)}
-                    onConfirm={() => openReset()}
-                />
-                <div className="p-6 pb-0 flex flex-col space-y-8">
-                    <div className="flex flex-col space-y-2">
-                        <img
-                            src={logo}
-                            alt="logo"
-                            className="w-12 h-12 mx-auto"
-                        />
-                        <span className="text-center text-base font-bold font-title">
-                            Enter your password to continue.
-                        </span>
-                    </div>
-                    <div className="flex flex-col space-y-2">
-                        <PasswordInput
-                            label="Password"
-                            placeholder="Enter Password"
-                            register={register}
-                            error={errors.password?.message}
-                            autoFocus={isUserNetworkOnline}
-                        />
-                        <div>
-                            or&nbsp;
-                            <ClickableText onClick={() => setHasDialog(true)}>
-                                reset wallet using seed phrase
-                            </ClickableText>
+        <PopupLayout
+            header={
+                <PopupHeader
+                    title="Unlock App"
+                    close={false}
+                    backButton={false}
+                >
+                    {lockedByTimeout && (
+                        <div className="group relative">
+                            <a
+                                href={LINKS.ARTICLES.LOCK_TIMEOUT}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                <AiFillInfoCircle
+                                    size={26}
+                                    className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                />
+                                <Tooltip
+                                    className="!w-52 !break-word !whitespace-normal border boder-gray-300"
+                                    content="Locked too soon? Click to learn how to increase the lock timeout."
+                                />
+                            </a>
                         </div>
-
-                        {settings.useAntiPhishingProtection && (
-                            <div className="pt-3">
-                                <AntiPhishing image={antiPhishingImage} />
-                            </div>
-                        )}
-                    </div>
+                    )}
+                </PopupHeader>
+            }
+            footer={
+                <PopupFooter>
+                    <ButtonWithLoading
+                        label="Confirm"
+                        isLoading={isLoading}
+                        onClick={onSubmit}
+                    />
+                </PopupFooter>
+            }
+            submitOnEnter={{
+                onSubmit,
+                isFormValid: Object.keys(errors).length === 0,
+            }}
+        >
+            <ConfirmDialog
+                title="Confirmation"
+                message="Are you sure you want to reset your wallet? This action can not be undone."
+                open={hasDialog}
+                onClose={() => setHasDialog(false)}
+                onConfirm={() => openReset()}
+            />
+            <div className="p-6 pb-0 flex flex-col space-y-8">
+                <div className="flex flex-col space-y-2">
+                    <img src={logo} alt="logo" className="w-12 h-12 mx-auto" />
+                    <span className="text-center text-base font-bold font-title">
+                        Enter your password to continue.
+                    </span>
                 </div>
-            </PopupLayout>
-        </form>
+                <div className="flex flex-col space-y-2">
+                    <PasswordInput
+                        label="Password"
+                        placeholder="Enter Password"
+                        {...register("password")}
+                        error={errors.password?.message}
+                        autoFocus={isUserNetworkOnline}
+                    />
+                    <div>
+                        or&nbsp;
+                        <ClickableText onClick={() => setHasDialog(true)}>
+                            reset wallet using seed phrase
+                        </ClickableText>
+                    </div>
+
+                    {settings.useAntiPhishingProtection && (
+                        <div className="pt-3">
+                            <AntiPhishing image={antiPhishingImage} />
+                        </div>
+                    )}
+                </div>
+            </div>
+        </PopupLayout>
     )
 }
 

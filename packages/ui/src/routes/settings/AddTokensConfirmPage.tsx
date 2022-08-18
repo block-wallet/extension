@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 
 // External components
 import PopupFooter from "../../components/popup/PopupFooter"
@@ -19,6 +19,12 @@ const AddTokensConfirmPage = (props: any) => {
     const history: any = useOnMountHistory()
     const [addingTokens, setAddingTokens] = useState(false)
     const tokenList: any = history.location.state.tokens
+
+    const state = {
+        ...(history.location.state?.addTokenState || {}),
+        token: tokenList[0],
+    }
+
     const { clear: clearLocationRecovery } = useLocationRecovery()
 
     // Handlers
@@ -27,7 +33,12 @@ const AddTokensConfirmPage = (props: any) => {
             setAddingTokens(true)
             clearLocationRecovery()
             addCustomTokens(tokenList)
-            history.push("/")
+            state.redirectTo
+                ? history.push({
+                      pathname: state.redirectTo,
+                      state,
+                  })
+                : history.push("/")
         } finally {
             setAddingTokens(false)
         }

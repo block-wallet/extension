@@ -69,7 +69,10 @@ import {
 import { validateWatchAssetReq } from '../utils/token';
 import { TokenController } from './erc-20/TokenController';
 import { Token } from './erc-20/Token';
-import { validateChainId } from '../utils/ethereumChain';
+import {
+    validateAddEthereumChainParameters,
+    validateChainId,
+} from '../utils/ethereumChain';
 import log from 'loglevel';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 import { randomBytes } from '../utils/randomBytes';
@@ -378,11 +381,12 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 );
             case JSONRPCMethod.eth_unsubscribe:
                 return this._handleUnsubscribe(params as string[]);
-            case JSONRPCMethod.wallet_addEthereumChain:
+            //Prevent adding custom eth chains
+            /*   case JSONRPCMethod.wallet_addEthereumChain:
                 return this._handleAddEthereumChain(
                     params as [AddEthereumChainParameter],
                     portId
-                );
+            ); */
             case JSONRPCMethod.wallet_getPermissions:
                 return this._handleGetPermissions(portId);
             case JSONRPCMethod.wallet_requestPermissions:
@@ -737,11 +741,21 @@ export default class BlankProviderController extends BaseController<BlankProvide
         const data = params[0];
         if (!data) return;
 
-        // Validate and normalize switchEthereumChain params
+        // Throw if there's already a request to switch networks from that origin
+        const currentRequests = { ...this.store.getState().dappRequests };
+        Object.values(currentRequests).forEach((req) => {
+            if (
+                req.type === DappReq.ADD_ETHEREUM_CHAIN &&
+                req.origin === origin
+            ) {
+                throw new Error(ProviderError.RESOURCE_UNAVAILABLE);
+            }
+        });
+
+        // Validate and normalize chainId
         const { chainId } = data;
         const normalizedChainId = validateChainId(chainId);
 
-        // TODO: Replace networks object to store them by chainId instead of by name
         const network =
             this._networkController.getNetworkFromChainId(normalizedChainId);
 
@@ -750,8 +764,66 @@ export default class BlankProviderController extends BaseController<BlankProvide
             // If known, call handleSwitchEthereumChain
             await this._handleSwitchEthereumChain([{ chainId }], portId);
         } else {
-            // TODO: Implement add network logic
-            throw new Error(ProviderError.UNSUPPORTED_METHOD);
+            // Validate the wallet_addEthereumChain parameters
+            const parsedAndValidatedData =
+                await validateAddEthereumChainParameters(
+                    data,
+                    normalizedChainId
+                );
+
+            // Submit request.
+            // We prefer using data from our lists over data received from the provider
+            const { isAccepted, reqId, callback, confirmOptions } =
+                await this._submitDappRequest(
+                    DappReq.ADD_ETHEREUM_CHAIN,
+                    parsedAndValidatedData,
+                    portId
+                );
+
+            try {
+                if (isAccepted) {
+                    // If it is a custom icon, check whether the user want the image to be loaded or not
+                    let iconUrl = parsedAndValidatedData.iconUrl;
+                    if (!parsedAndValidatedData.validations.knownIcon) {
+                        if (!confirmOptions) {
+                            throw new Error(
+                                'Missing custom icon confirmation parameters'
+                            );
+                        } else {
+                            iconUrl = confirmOptions.saveImage
+                                ? iconUrl
+                                : undefined; // Will default to ETH logo
+                        }
+                    }
+
+                    // Add the network
+                    await this._networkController.addNetwork({
+                        chainId: normalizedChainId,
+                        blockExplorerUrls:
+                            parsedAndValidatedData.blockExplorerUrl
+                                ? [parsedAndValidatedData.blockExplorerUrl]
+                                : [],
+                        chainName: parsedAndValidatedData.chainName,
+                        iconUrls: iconUrl ? [iconUrl] : [],
+                        nativeCurrency: parsedAndValidatedData.nativeCurrency,
+                        rpcUrls: parsedAndValidatedData.rpcUrl
+                            ? [parsedAndValidatedData.rpcUrl]
+                            : [],
+                        test: parsedAndValidatedData.isTestnet,
+                    });
+
+                    // By EIP-3085, the method MUST return null if the request was successful
+                    return null;
+                } else {
+                    throw new Error(ProviderError.USER_REJECTED_REQUEST);
+                }
+            } finally {
+                // Resolve the handleDapRequest callback
+                callback.resolve();
+
+                // Remove current request from list
+                this.removeDappRequest(reqId);
+            }
         }
     };
 
@@ -841,7 +913,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
      *
      * @param reqId Request id
      */
-    public attemptRejection = (reqId: string) => {
+    public attemptRejection = (reqId: string): void => {
         const request = this.store.getState().dappRequests[reqId];
         if (!request) {
             return;
@@ -1122,7 +1194,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
     ): Promise<{
         isAccepted: boolean;
         reqId: string;
-        confirmOptions?: DappRequestConfirmOptions;
+        confirmOptions?: DappRequestConfirmOptions[RequestType];
         callback: {
             resolve: (value: void | PromiseLike<void>) => void;
             reject: (reason?: unknown) => void;
@@ -1161,10 +1233,10 @@ export default class BlankProviderController extends BaseController<BlankProvide
      * Dapp request handle
      *
      */
-    public handleDappRequest = (
+    public handleDappRequest = <RequestType extends DappReq>(
         id: string,
         isConfirmed: boolean,
-        confirmOptions?: DappRequestConfirmOptions
+        confirmOptions?: DappRequestConfirmOptions[RequestType]
     ): Promise<void> => {
         const handler = this._requestHandlers[id];
 

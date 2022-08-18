@@ -1,5 +1,3 @@
-import React from "react"
-
 const MiniCheckmark = (props: { fill: string }) => (
     <svg
         width="16"

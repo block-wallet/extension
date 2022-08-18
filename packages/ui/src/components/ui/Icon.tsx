@@ -1,4 +1,3 @@
-import React from "react"
 import classnames from "classnames"
 import ThreeDotsIcon from "../icons/ThreeDotsIcon"
 import GroupIcon from "../icons/GroupIcon"
@@ -14,7 +13,7 @@ import WalletIcon from "../icons/WalletIcon"
 import UsbIcon from "../icons/UsbIcon"
 import { RightChevronIcon } from "../icons/RightChevronIcon"
 import ImportIcon from "../icons/ImportIcon"
-
+import ClockIcon from "../icons/ClockIcon"
 export enum IconName {
     PENCIL = "PENCIL",
     GROUP = "GROUP",
@@ -30,6 +29,7 @@ export enum IconName {
     USB = "USB",
     RIGHT_CHEVRON = "RIGHT_CHEVRON",
     IMPORT = "IMPORT",
+    CLOCK = "CLOCK",
 }
 
 type ProfileType = "default" | "selected" | "danger" | "disabled"
@@ -56,6 +56,7 @@ const ICONS = {
     [IconName.USB]: UsbIcon,
     [IconName.IMPORT]: ImportIcon,
     [IconName.RIGHT_CHEVRON]: RightChevronIcon,
+    [IconName.CLOCK]: ClockIcon,
 }
 
 const STROKED_ICONS = [IconName.RIGHT_CHEVRON]

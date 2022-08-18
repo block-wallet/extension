@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CurrencyAmountPair } from '../types';
 import { IBlankDeposit } from '../BlankDeposit';
 import { INotesService, NextDepositResult } from './INotesService';

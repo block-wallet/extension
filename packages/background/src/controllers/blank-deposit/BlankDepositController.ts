@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BigNumber, ethers } from 'ethers';
 import { TransactionReceipt } from '@ethersproject/providers';
 import { BaseController } from '../../infrastructure/BaseController';
@@ -37,6 +36,7 @@ import { IObservableStore } from '@block-wallet/background/infrastructure/stores
 import { showBlankContractNotification } from '../../utils/notifications';
 import { TransactionFeeData } from '../erc-20/transactions/SignedTransaction';
 import { NextDepositResult } from './notes/INotesService';
+import { ContractMethodSignature } from '../transactions/ContractSignatureParser';
 
 export enum PendingWithdrawalStatus {
     UNSUBMITTED = 'UNSUBMITTED',
@@ -63,6 +63,14 @@ export type PendingWithdrawal = {
     status?: PendingWithdrawalStatus;
     statusMessage?: string;
     chainId: number;
+    data?: string;
+    methodSignature?: ContractMethodSignature;
+    value?: BigNumber;
+    nonce?: number;
+    gasLimit?: BigNumber;
+    gasPrice?: BigNumber;
+    maxFeePerGas?: BigNumber;
+    maxPriorityFeePerGas?: BigNumber;
 };
 
 export type PendingWithdrawalsStore = {
@@ -431,8 +439,8 @@ export class BlankDepositController extends BaseController<
         pendingDeposits: BlankDepositControllerUIStoreState['pendingDeposits'];
         areDepositsPending: boolean;
     }> {
-        const { name } =
-            this._networkController.getNetworkFromChainId(chainId)!;
+        const network = this._networkController.getNetworkFromChainId(chainId);
+        const name = network?.name;
 
         const deposits = (await this._blankDepositService.getDeposits()).filter(
             (d) => d.status === DepositStatus.PENDING

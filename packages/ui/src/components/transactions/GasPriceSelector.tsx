@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ImCheckmark } from "react-icons/im"
 import { BigNumber } from "ethers"
 import classnames from "classnames"
@@ -106,9 +106,10 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
     const {
         register,
         handleSubmit,
-        errors,
         setValue,
         getValues,
+
+        formState: { errors },
     } = useForm<GasAdvancedForm>({
         defaultValues: {
             gasLimit: formatUnits(
@@ -194,8 +195,7 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                         </label>
                         <EndLabel label="GWEI">
                             <input
-                                name="gasPrice"
-                                ref={register}
+                                {...register("gasPrice")}
                                 autoComplete="off"
                                 className={classnames(
                                     Classes.inputBordered,
@@ -255,9 +255,8 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                         </label>
                         <EndLabel label="WEI">
                             <input
-                                name="gasLimit"
                                 autoComplete="off"
-                                ref={register}
+                                {...register("gasLimit")}
                                 className={classnames(
                                     Classes.inputBordered,
                                     "w-full",
@@ -445,12 +444,8 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
     )
 
     // State variables
-    const {
-        nativeCurrency,
-        localeInfo,
-        exchangeRates,
-        networkNativeCurrency,
-    } = useBlankState()!
+    const { nativeCurrency, localeInfo, exchangeRates, networkNativeCurrency } =
+        useBlankState()!
 
     const { gasPricesLevels } = useGasPriceData()
 
@@ -460,10 +455,8 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
         nativeCurrency: { decimals: nativeCurrencyDecimals },
     } = useSelectedNetwork()
 
-    const [
-        transactionSpeeds,
-        setTransactionSpeeds,
-    ] = useState<TransactionSpeed>(getTransactionSpeeds(gasPricesLevels))
+    const [transactionSpeeds, setTransactionSpeeds] =
+        useState<TransactionSpeed>(getTransactionSpeeds(gasPricesLevels))
 
     const [speeds, setTransactionSpeedOptions] = useState<
         TransactionSpeedOption[]
@@ -497,10 +490,8 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
         }
     }
 
-    const [
-        selectedGasPrice,
-        setSelectedGasPrice,
-    ] = useState<TransactionSpeedOption>()
+    const [selectedGasPrice, setSelectedGasPrice] =
+        useState<TransactionSpeedOption>()
 
     const [userChanged, setUserChanged] = useState<boolean>(false)
 

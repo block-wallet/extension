@@ -2,8 +2,6 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { ethers } from 'ethers';
 import {
-    Interface,
-    ParamType,
     parseEther,
     parseUnits,
     TransactionDescription,
@@ -39,7 +37,6 @@ import {
     TransactionFeeData,
 } from './SignedTransaction';
 import { TokenOperationsController } from './Transaction';
-import { TransactionArgument } from '../../transactions/ContractSignatureParser';
 
 /**
  * The fallback (if we can't estimate it) gas limit for a deposit transaction.

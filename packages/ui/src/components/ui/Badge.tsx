@@ -1,4 +1,4 @@
-import React from "react"
+import { PropsWithChildren } from "react"
 
 type Position = "top-right" | "top-left" | "bottom-right" | "bottom-left"
 
@@ -9,7 +9,7 @@ const offsets = {
     "bottom-left": "-bottom-2 -left-2",
 }
 
-const Badge: React.FC<{ position?: Position }> = (
+const Badge: React.FC<PropsWithChildren<{ position?: Position }>> = (
     { children, position } = { position: "top-right" }
 ) => {
     const offset = offsets[position || "top-right"]

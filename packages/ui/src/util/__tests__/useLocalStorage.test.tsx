@@ -1,4 +1,4 @@
-import React, { FC } from "react"
+import { FC } from "react"
 import { act, render, screen } from "@testing-library/react"
 import LocalStorageMock from "../../mock/LocalStorageMock"
 import useLocalStorageState from "../hooks/useLocalStorageState"
@@ -21,13 +21,17 @@ const LocalStorageTest: FC<any> = (opt: any) => {
         <div>
             <label id="count">Count:</label>
             <span aria-labelledby="count">{count}</span>
-            <button onClick={() => setCount((prev: number) => prev + 1)}>
+            <button
+                onClick={() => act(() => setCount((prev: number) => prev + 1))}
+            >
                 Increment
             </button>
-            <button onClick={() => setCount((prev: number) => prev - 1)}>
+            <button
+                onClick={() => act(() => setCount((prev: number) => prev - 1))}
+            >
                 Decrement
             </button>
-            <button onClick={() => setCount(null)}>Remove</button>
+            <button onClick={() => act(() => setCount(null))}>Remove</button>
         </div>
     )
 }
@@ -104,7 +108,7 @@ describe("useLocalStorage test", () => {
             history,
         })
         expect(retrieveLocalStorageItem(KEY)).toStrictEqual(3)
-        history.push("/mockroute")
+        act(() => history.push("/mockroute"))
         expect(retrieveLocalStorageItem(KEY)).toStrictEqual(3)
     })
     test("Should initialize a volatile localStorage", () => {

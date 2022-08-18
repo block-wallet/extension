@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DepositsEventsDbKey } from './stores/ITornadoEventsDB';
 import { CircuitInput } from './types';
 

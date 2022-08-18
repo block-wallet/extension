@@ -1,11 +1,16 @@
-import React, {
+import {
     FC,
     FunctionComponent,
     useRef,
     useState,
     ReactNode,
     ReactElement,
+    Children,
+    cloneElement,
+    memo,
+    useMemo,
 } from "react"
+
 import { useOnClickOutside } from "../../util/useOnClickOutside"
 import classnames from "classnames"
 import { RiArrowDownSLine, RiArrowUpSLine } from "react-icons/ri"
@@ -68,6 +73,7 @@ interface SelectProps {
     error?: string
     id?: string
     type?: "select" | "text"
+    children: React.ReactNode
     disabled?: boolean
 }
 
@@ -90,10 +96,10 @@ const Select: FC<SelectProps> & CompoundProps = ({
         onChange(value)
     }
 
-    const selectLabel = React.useMemo(() => {
+    const selectLabel = useMemo(() => {
         if (currentValue !== null && currentValue !== undefined) {
             let label = ""
-            React.Children.forEach(
+            Children.forEach(
                 children as ReactElement[],
                 (child: ReactElement) => {
                     if (currentValue === child?.props.value) {
@@ -151,7 +157,7 @@ const Select: FC<SelectProps> & CompoundProps = ({
                     role="menu"
                 >
                     <ul>
-                        {React.Children.map(
+                        {Children.map(
                             children as ReactElement[],
                             (child: ReactElement) => {
                                 const { props, type } = child
@@ -163,7 +169,7 @@ const Select: FC<SelectProps> & CompoundProps = ({
                                         "Only Select.Option children are allowed"
                                     )
                                 }
-                                return React.cloneElement(child, {
+                                return cloneElement(child, {
                                     ...props,
                                     onClick: handleItemChange,
                                     disabled,
@@ -216,7 +222,7 @@ const SelectOption: FC<ItemProps> & CompoundMember = ({
     )
 }
 
-Select.Option = React.memo(SelectOption)
+Select.Option = memo(SelectOption)
 
 Select.Option.compoundName = "SelectOption"
 

@@ -1,5 +1,4 @@
 import classnames from "classnames"
-import React from "react"
 import { FunctionComponent } from "react"
 
 /**
@@ -25,6 +24,7 @@ const GenericTooltip: FunctionComponent<{
     centerY?: boolean
     className?: string
     divFull?: boolean
+    children?: React.ReactNode
 }> = ({
     children,
     content,

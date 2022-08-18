@@ -1,10 +1,25 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import Common from '@ethereumjs/common';
 import { BaseController } from '../infrastructure/BaseController';
-import { Network, Networks, HARDFORKS } from '../utils/constants/networks';
-import { ethers } from 'ethers';
+import {
+    Network,
+    Networks,
+    HARDFORKS,
+    AddNetworkType,
+    FAST_TIME_INTERVALS_DEFAULT_VALUES,
+    EditNetworkUpdatesType,
+} from '../utils/constants/networks';
+import { constants, ethers } from 'ethers';
 import { poll } from '@ethersproject/web';
 import { ErrorCode } from '@ethersproject/logger';
 import { checkIfRateLimitError } from '../utils/ethersError';
+import { getChainListItem } from '../utils/chainlist';
+import { FEATURES } from '../utils/constants/features';
+import {
+    formatAndValidateRpcURL,
+    getUrlWithoutTrailingSlash,
+    validateNetworkChainId,
+} from '../utils/ethereumChain';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -44,7 +59,13 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         // Set the error handler for the provider to check for network status
         this.provider.on('error', this._updateProviderNetworkStatus);
-        this._updateProviderNetworkStatus();
+
+        // Periodical checks when provider is down
+        setInterval(() => {
+            if (!this.getState().isProviderNetworkOnline) {
+                this._updateProviderNetworkStatus();
+            }
+        }, 3000);
 
         this.setMaxListeners(30); // currently, we need 16
     }
@@ -134,19 +155,245 @@ export default class NetworkController extends BaseController<NetworkControllerS
     }
 
     /**
+     * getNonNativeNetworkKey
+     *
+     * @param chainId The chain id of the network
+     * @returns The networks object key for the given chain id
+     */
+    private getNonNativeNetworkKey(chainId: number): string {
+        return `CHAIN-${chainId}`;
+    }
+
+    /**
+     * removeNetwork
+     *
+     * Removes a network from the list of available networks
+     *
+     * @param chainId The chain id of the network to remove
+     */
+    public removeNetwork(chainId: number): void {
+        if (!chainId) {
+            throw new Error('ChainId is required');
+        }
+
+        // Check if network already exists
+        const network = this.getNetworkFromChainId(chainId);
+
+        // If network does not exist, throw error
+        if (!network) {
+            throw new Error(`Network with chainId ${chainId} does not exist`);
+        }
+
+        // Check if network is currently selected
+        if (this.network.chainId === network.chainId) {
+            throw new Error(
+                `Can't remove network with chainId ${chainId} because it is the currently selected network.
+                Please change the selected network first.`
+            );
+        }
+
+        // Remove network from list only if it is not natively supported
+        if (network.nativelySupported) {
+            if (network.chainId === 1) {
+                throw new Error(`Mainnet cannot be removed`);
+            }
+            const newNetworks = { ...this.networks };
+
+            // If network is natively supported, the key is its uppercased name
+            const key = this._getNetworkKey(network);
+            newNetworks[key].enable = false;
+            this.networks = newNetworks;
+        } else {
+            // Get non-native key
+            const key = this.getNonNativeNetworkKey(chainId);
+
+            // Remove network from list
+            const newNetworks = { ...this.networks };
+            delete newNetworks[key];
+            this.networks = newNetworks;
+        }
+
+        //TODO: Review if we should remove related information from the store
+    }
+
+    private _getNetworkKey = (network: Network): string => {
+        return network.name.toUpperCase();
+    };
+
+    public async editNetwork(
+        chainId: number,
+        updates: EditNetworkUpdatesType
+    ): Promise<void> {
+        if (!chainId || Number.isNaN(chainId)) {
+            throw new Error('ChainId is required and must be numeric.');
+        }
+
+        // Check if network already exists
+        const existingNetwork = this.getNetworkFromChainId(chainId);
+
+        if (!existingNetwork) {
+            throw new Error(
+                'The network you are trying to edit does not exist.'
+            );
+        }
+
+        if (!updates.name) {
+            throw new Error('Name cannot be empty.');
+        }
+
+        //throws an error in case the rcpUrl is not valid.
+        const rpcUrl = formatAndValidateRpcURL(
+            updates.rpcUrls && updates.rpcUrls.length ? updates.rpcUrls[0] : ''
+        );
+
+        // Check that chainId matches with network's. If it doesnt match, throws an error.
+        await validateNetworkChainId(chainId, rpcUrl);
+
+        // Check block explorer url
+        const explorerUrl =
+            getUrlWithoutTrailingSlash(updates.blockExplorerUrls) || '';
+
+        if (explorerUrl && explorerUrl.indexOf('https://') === -1) {
+            throw new Error('Block explorer endpoint must be https');
+        }
+
+        const networkKey = this._getNetworkKey(existingNetwork);
+
+        const newNetworks = { ...this.networks };
+        newNetworks[networkKey].desc = updates.name;
+        newNetworks[networkKey].rpcUrls = [rpcUrl];
+        newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
+        this.networks = newNetworks;
+        return;
+    }
+
+    /**
      * Add a new network manually to the list.
      */
-    public addNetwork(network: Network): void {
-        // Uppercase the network name
-        const key = network.name.toUpperCase();
+    public async addNetwork(network: AddNetworkType): Promise<void> {
+        if (!network.chainId || Number.isNaN(network.chainId)) {
+            throw new Error('ChainId is required and must be numeric.');
+        }
+
+        // Check if network already exists
+        const existingNetwork = this.getNetworkFromChainId(network.chainId);
 
         // If network has already been added, return
-        if (key in this.networks) {
+        if (
+            typeof existingNetwork !== 'undefined' &&
+            (!existingNetwork.nativelySupported || existingNetwork.enable)
+        ) {
             return;
         }
 
-        // Add network
-        this.networks[key] = network;
+        // Obtain the chain data from the chainlist json
+        const chainDataFromList = getChainListItem(network.chainId);
+
+        // Validate data
+        if (!chainDataFromList) {
+            if (!network.rpcUrls?.[0]) {
+                throw new Error('No RPC endpoint provided');
+            }
+            if (!network.chainName) {
+                throw new Error('No chain name provided');
+            }
+            if (!network.nativeCurrency?.symbol) {
+                throw new Error('No native currency provided');
+            }
+        }
+
+        const rpcUrl = formatAndValidateRpcURL(
+            network.rpcUrls?.[0] || chainDataFromList!.rpc[0]
+        );
+
+        // Check block explorer url
+        const explorerUrl =
+            getUrlWithoutTrailingSlash(network.blockExplorerUrls) ||
+            getUrlWithoutTrailingSlash(
+                chainDataFromList?.explorers?.map(({ url }) => url)
+            ) ||
+            '';
+        if (explorerUrl && explorerUrl.indexOf('https://') === -1) {
+            throw new Error('Block explorer endpoint must be https');
+        }
+
+        // Check if we have the explorer name
+        const blockExplorerName = chainDataFromList?.explorers
+            ?.map((t) => ({
+                ...t,
+                url: t.url.endsWith('/') ? t.url.slice(0, -1) : t.url,
+            }))
+            .find((e) => e.url.includes(explorerUrl))?.name;
+
+        const nativeCurrencySymbol =
+            network.nativeCurrency?.symbol ||
+            chainDataFromList!.nativeCurrency.symbol;
+
+        // Check that chainId matches with network's. If it doesnt match, throws an error.
+        await validateNetworkChainId(network.chainId, rpcUrl);
+
+        if (typeof existingNetwork !== 'undefined') {
+            // Here we handle the nativelySupported networks which are disabled
+            const key = this._getNetworkKey(existingNetwork);
+            const newNetworks = { ...this.networks };
+            newNetworks[key].enable = true;
+            newNetworks[key].rpcUrls = [rpcUrl];
+            newNetworks[key].blockExplorerName =
+                blockExplorerName ||
+                newNetworks[key].blockExplorerName ||
+                'Explorer';
+            newNetworks[key].blockExplorerUrls = [explorerUrl];
+            newNetworks[key].test = network.test;
+            if (
+                !newNetworks[key].etherscanApiUrl &&
+                chainDataFromList?.scanApi
+            ) {
+                newNetworks[key].etherscanApiUrl = chainDataFromList?.scanApi;
+            }
+            this.networks = newNetworks;
+        } else {
+            // Set the network key
+            const key = `CHAIN-${network.chainId}`;
+
+            const nativeCurrencyIcon =
+                chainDataFromList?.nativeCurrencyIcon ||
+                chainDataFromList?.logo ||
+                network.iconUrls?.[0];
+
+            // Add the network
+            this.networks[key] = {
+                chainId: network.chainId,
+                name: `chain-${network.chainId}`,
+                desc: network.chainName || chainDataFromList!.name,
+                ens: false,
+                enable: true,
+                features: [FEATURES.SENDS],
+                nativeCurrency: {
+                    name:
+                        chainDataFromList?.nativeCurrency.name ||
+                        nativeCurrencySymbol,
+                    symbol: nativeCurrencySymbol,
+                    decimals: chainDataFromList?.nativeCurrency.decimals || 18,
+                },
+                networkVersion: (
+                    chainDataFromList?.networkId || network.chainId
+                ).toString(),
+                rpcUrls: [rpcUrl],
+                showGasLevels: true,
+                blockExplorerUrls: [explorerUrl],
+                blockExplorerName: blockExplorerName || 'Explorer',
+                actionsTimeIntervals: FAST_TIME_INTERVALS_DEFAULT_VALUES,
+                test: !!network.test,
+                order:
+                    Object.values(this.networks)
+                        .map((c) => c.order)
+                        .sort((a, b) => b - a)[0] + 1,
+                iconUrls: nativeCurrencyIcon ? [nativeCurrencyIcon] : undefined,
+                nativelySupported: false,
+                isCustomNetwork: true,
+                etherscanApiUrl: chainDataFromList?.scanApi,
+            };
+        }
     }
 
     /**
@@ -196,12 +443,19 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
     /**
      * Gets a provider for a given network
+     * @returns {ethers.providers.StaticJsonRpcProvider}
      */
     public getProviderFromName = (
         networkName: string
     ): ethers.providers.StaticJsonRpcProvider => {
         const network = this.searchNetworkByName(networkName);
-        return new ethers.providers.StaticJsonRpcProvider(network.rpcUrls[0]);
+        return this._overloadProviderMethods(
+            network,
+            new ethers.providers.StaticJsonRpcProvider({
+                url: network.rpcUrls[0],
+                allowGzip: network.rpcUrls[0].endsWith('.blockwallet.io'),
+            })
+        );
     };
 
     /**
@@ -338,7 +592,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             this.provider = newNetworkProvider;
 
             // Check if provider is ready and update network status
-            this._updateProviderNetworkStatus()
+            this._updateProviderNetworkStatus();
 
             // Update selected network
             this.store.updateState({
@@ -403,7 +657,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
     private _handleUserNetworkChange() {
         const newValue = navigator.onLine;
-        if (this.getState().isUserNetworkOnline == newValue) return;
+        if (this.getState().isUserNetworkOnline == newValue) {
+            return;
+        }
 
         this.store.updateState({ isUserNetworkOnline: newValue });
         this.emit(NetworkEvents.USER_NETWORK_CHANGE, newValue);
@@ -423,8 +679,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
                     return Promise.resolve(false);
                 })
                 .then((newStatus) => {
-                    if (this.getState().isProviderNetworkOnline === newStatus)
+                    if (this.getState().isProviderNetworkOnline === newStatus) {
                         return;
+                    }
 
                     this.store.updateState({
                         isProviderNetworkOnline: newStatus,
@@ -459,4 +716,35 @@ export default class NetworkController extends BaseController<NetworkControllerS
             { timeout: 10000, retryLimit: 5 }
         );
     }
+
+    /**
+     * Overload provider methods for some chains that present an special case.
+     * @returns {ethers.providers.StaticJsonRpcProvider}
+     */
+    private _overloadProviderMethods = (
+        network: Network,
+        provider: ethers.providers.StaticJsonRpcProvider
+    ): ethers.providers.StaticJsonRpcProvider => {
+        switch (network.chainId) {
+            // celo
+            case 42220: {
+                const originalBlockFormatter: (
+                    value: any,
+                    format: any
+                ) => ethers.providers.Block = provider.formatter._block;
+                provider.formatter._block = (value: any, format: any) => {
+                    return originalBlockFormatter(
+                        {
+                            gasLimit: constants.Zero,
+                            ...value,
+                        },
+                        format
+                    );
+                };
+                break;
+            }
+        }
+
+        return provider;
+    };
 }

@@ -1,5 +1,4 @@
 import classnames from "classnames"
-import React from "react"
 
 interface AppIconProps {
     size: number

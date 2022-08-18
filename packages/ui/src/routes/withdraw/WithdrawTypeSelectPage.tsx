@@ -1,5 +1,3 @@
-import React from "react"
-
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 
@@ -10,16 +8,14 @@ import blankBlueIcon from "../../assets/images/icons/blank_blue.svg"
 import infoIcon from "../../assets/images/icons/info_circle.svg"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { updateDepositsTree } from "../../context/commActions"
+import { useEffect } from "react"
 
 const WithdrawTypeSelectPage = () => {
     const history: any = useOnMountHistory()
-    const {
-        pair,
-        preSelectedAsset,
-        isAssetDetailsPage,
-    } = history.location.state
+    const { pair, preSelectedAsset, isAssetDetailsPage } =
+        history.location.state
 
-    React.useEffect(() => {
+    useEffect(() => {
         updateDepositsTree(pair)
     }, [pair])
 

@@ -4,6 +4,8 @@ import { BigNumber, ethers } from 'ethers';
 import { getNetworkControllerInstance } from '../mocks/mock-network-instance';
 import sinon from 'sinon';
 import { Block } from '@ethersproject/abstract-provider';
+import { AddNetworkType } from '@block-wallet/background/utils/constants/networks';
+import * as ethereumChain from '@block-wallet/background/utils/ethereumChain';
 
 describe('Network controller', function () {
     let networkController: NetworkController;
@@ -232,4 +234,32 @@ describe('Network controller', function () {
             expect(shouldNotBeCompatibleWithEIP155).equal(false);
         });
     });
+
+    it('should add a new network that does not exist in our list', async () => {
+        sinon.stub(ethereumChain, 'getCustomRpcChainId').resolves(19999);
+        sinon.stub(networkController.getProvider(), 'getNetwork').resolves({
+            chainId: 19999,
+            name: 'test',
+        });
+        const network: AddNetworkType = {
+            chainName: 'test',
+            chainId: 19999,
+            rpcUrls: ['https://test-network.io:8545'],
+            blockExplorerUrls: ['https://test-network.io'],
+            iconUrls: [''],
+            test: true,
+            nativeCurrency: {
+                symbol: 'TEST',
+                decimals: 18,
+                name: 'Test Token',
+            },
+        };
+        await networkController.addNetwork(network);
+        expect(Object.keys(networkController.networks)).to.includes(
+            'CHAIN-19999'
+        );
+        console.log(networkController.networks['CHAIN-19999']);
+    });
+
+    // TODO: Add more tests for addNetwork flow
 });

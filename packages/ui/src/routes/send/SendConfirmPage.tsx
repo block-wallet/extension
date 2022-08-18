@@ -1,10 +1,14 @@
-import React, { FunctionComponent, useEffect, useState } from "react"
+import { FunctionComponent, useCallback, useEffect, useState } from "react"
+
 import { useForm } from "react-hook-form"
 
 // Components
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
-import { AssetSelection } from "../../components/assets/tokens/AssetSelection"
+import {
+    AssetListType,
+    AssetSelection,
+} from "../../components/assets/AssetSelection"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import ErrorMessage from "../../components/error/ErrorMessage"
 
@@ -16,7 +20,7 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import { InferType } from "yup"
 import { utils, BigNumber, constants } from "ethers"
-import { formatHash } from "../../util/formatAccount"
+import { formatHash, formatName } from "../../util/formatAccount"
 import { formatUnits } from "ethers/lib/utils"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { DEFAULT_DECIMALS, SEND_GAS_COST } from "../../util/constants"
@@ -39,7 +43,6 @@ import {
 import GasPriceComponent from "../../components/transactions/GasPriceComponent"
 
 // Types
-import { EnsResult } from "../../util/searchEns"
 import PopupLayout from "../../components/popup/PopupLayout"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
@@ -57,7 +60,6 @@ import { useAddressBook } from "../../context/hooks/useAddressBook"
 import CheckmarkCircle from "../../components/icons/CheckmarkCircle"
 import { useLocationRecovery } from "../../util/hooks/useLocationRecovery"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
-import { UDResult } from "../../util/searchUD"
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import { isHardwareWallet } from "../../util/account"
@@ -180,8 +182,7 @@ const AddressDisplay: FunctionComponent<{
 }> = ({ showingTheWholeAddress, setShowingTheWholeAddress }) => {
     const history = useOnMountHistory()
     const receivingAddress = history.location.state.address
-    const ensSelected: EnsResult = history.location.state.ens
-    const udSelected: UDResult = history.location.state.ud
+    const selectedAccountName = history.location.state.name
 
     const { accounts } = useBlankState()!
     const addressBook = useAddressBook()
@@ -206,14 +207,12 @@ const AddressDisplay: FunctionComponent<{
                 }
             >
                 <CheckmarkCircle classes="w-4 h-4" />
-                {ensSelected || udSelected || account?.name ? (
+                {selectedAccountName || account?.name ? (
                     <div>
                         <span className="font-bold text-green-500 mr-2">
-                            {ensSelected
-                                ? ensSelected.name
-                                : udSelected
-                                ? udSelected.name
-                                : account?.name}
+                            {selectedAccountName
+                                ? formatName(selectedAccountName, 20)
+                                : formatName(account?.name, 20)}
                         </span>
                         <span className="text-gray truncate">
                             {formatHash(receivingAddress)}
@@ -283,9 +282,16 @@ const HasBalance = (selectedToken: TokenWithBalance): boolean => {
     return selectedToken && !BigNumber.from(selectedToken.balance).isZero()
 }
 
+interface SendConfirmPersistedState {
+    amount: string
+    submitted: boolean
+    asset: TokenWithBalance | null
+}
+
 const INITIAL_VALUE_PERSISTED_DATA = {
     asset: null,
     amount: "",
+    submitted: false,
 }
 
 // Page
@@ -299,21 +305,17 @@ const SendConfirmPage = () => {
     const { address, accountType } = useSelectedAccount()
 
     // Get data from window.localStorage
-    const [persistedData, setPersistedData] = useLocalStorageState(
-        "send.form",
-        {
+    const [persistedData, setPersistedData] =
+        useLocalStorageState<SendConfirmPersistedState>("send.form", {
             initialValue: {
                 ...INITIAL_VALUE_PERSISTED_DATA,
                 submitted: false,
             },
             volatile: true,
-        }
-    )
+        })
 
-    const {
-        transaction: currentTransaction,
-        clearTransaction,
-    } = useInProgressInternalTransaction()
+    const { transaction: currentTransaction, clearTransaction } =
+        useInProgressInternalTransaction()
 
     useEffect(() => {
         // Tx was either rejected or submitted when the pop-up was closed.
@@ -334,8 +336,7 @@ const SendConfirmPage = () => {
         : (history.location.state.asset as TokenWithBalance)
 
     // Tokens
-    const { currentNetworkTokens, nativeToken } = useTokensList()
-    const tokensList = [nativeToken].concat(currentNetworkTokens)
+    const { nativeToken } = useTokensList()
 
     // State
     const [error, setError] = useState("")
@@ -350,7 +351,7 @@ const SendConfirmPage = () => {
     const [nativeCurrencyAmt, setNativeCurrency] = useState(0)
 
     const [selectedToken, setSelectedToken] = useState<TokenWithBalance>(
-        preSelectedAsset ? preSelectedAsset : tokensList[0]
+        preSelectedAsset ? preSelectedAsset : nativeToken
     )
 
     const { gasPricesLevels } = useGasPriceData()
@@ -371,38 +372,29 @@ const SendConfirmPage = () => {
 
     const [gasEstimationFailed, setGasEstimationFailed] = useState(false)
 
-    const [
-        transactionAdvancedData,
-        setTransactionAdvancedData,
-    ] = useState<TransactionAdvancedData>({})
+    const [transactionAdvancedData, setTransactionAdvancedData] =
+        useState<TransactionAdvancedData>({})
 
-    const {
-        status,
-        isOpen,
-        dispatch,
-        texts,
-        titles,
-        closeDialog,
-        gifs,
-    } = useTransactionWaitingDialog(
-        currentTransaction
-            ? {
-                  id: currentTransaction?.id,
-                  status: currentTransaction?.status,
-                  error: currentTransaction?.error as Error,
-                  epochTime: currentTransaction?.approveTime,
-              }
-            : undefined,
-        HardwareWalletOpTypes.SIGN_TRANSACTION,
-        accountType,
-        {
-            reject: React.useCallback(() => {
-                if (currentTransaction?.id) {
-                    rejectTransaction(currentTransaction?.id)
-                }
-            }, [currentTransaction?.id]),
-        }
-    )
+    const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
+        useTransactionWaitingDialog(
+            currentTransaction
+                ? {
+                      id: currentTransaction?.id,
+                      status: currentTransaction?.status,
+                      error: currentTransaction?.error as Error,
+                      epochTime: currentTransaction?.approveTime,
+                  }
+                : undefined,
+            HardwareWalletOpTypes.SIGN_TRANSACTION,
+            accountType,
+            {
+                reject: useCallback(() => {
+                    if (currentTransaction?.id) {
+                        rejectTransaction(currentTransaction?.id)
+                    }
+                }, [currentTransaction?.id]),
+            }
+        )
 
     const isLoading = status === "loading" && isOpen
 
@@ -440,19 +432,18 @@ const SendConfirmPage = () => {
     const {
         register,
         handleSubmit,
-        errors,
         clearErrors,
         setValue,
         getValues,
         trigger,
+
+        formState: { errors },
     } = useForm<AmountFormData>({
         resolver: yupResolver(schema),
+        defaultValues: { asset: selectedToken.token.address },
     })
-    const {
-        checkDeviceIsLinked,
-        isDeviceUnlinked,
-        resetDeviceLinkStatus,
-    } = useCheckAccountDeviceLinked()
+    const { checkDeviceIsLinked, isDeviceUnlinked, resetDeviceLinkStatus } =
+        useCheckAccountDeviceLinked()
 
     const onSubmit = handleSubmit(async (data: AmountFormData) => {
         if (!selectedToken) return setError("Select a token first.")
@@ -541,7 +532,10 @@ const SendConfirmPage = () => {
                 )
             }
 
-            setPersistedData({ ...persistedData, submitted: true })
+            setPersistedData((prev: SendConfirmPersistedState) => ({
+                ...prev,
+                submitted: true,
+            }))
 
             // clear history so that the user comes back to the home page if he clicks away
             // Hw accounts needs user interaction before submitting the TX, so that we may want the
@@ -616,7 +610,7 @@ const SendConfirmPage = () => {
         }
 
         if (value === "") {
-            setValue("amount", null)
+            setValue("amount", "")
             clearErrors("amount")
         } else {
             setValue("amount", value, {
@@ -626,10 +620,10 @@ const SendConfirmPage = () => {
 
         calcNativeCurrency()
 
-        setPersistedData({
-            ...persistedData,
+        setPersistedData((prev: SendConfirmPersistedState) => ({
+            ...prev,
             amount: value,
-        })
+        }))
     }
 
     const handleChangeAsset = (asset: TokenWithBalance, cleanAmount = true) => {
@@ -637,11 +631,14 @@ const SendConfirmPage = () => {
         if (cleanAmount) {
             handleChangeAmount("")
         }
-        setSelectedToken(asset)
-        setPersistedData({
-            ...persistedData,
-            asset,
+        setValue("asset", asset.token.address, {
+            shouldValidate: true,
         })
+        setSelectedToken(asset)
+        setPersistedData((prev: SendConfirmPersistedState) => ({
+            ...prev,
+            asset,
+        }))
     }
 
     useEffect(() => {
@@ -668,14 +665,12 @@ const SendConfirmPage = () => {
                     ? constants.One
                     : constants.Zero
 
-                let {
-                    gasLimit,
-                    estimationSucceeded,
-                } = await getSendTransactionGasLimit(
-                    selectedToken.token.address,
-                    receivingAddress,
-                    estimateValue
-                )
+                let { gasLimit, estimationSucceeded } =
+                    await getSendTransactionGasLimit(
+                        selectedToken.token.address,
+                        receivingAddress,
+                        estimateValue
+                    )
 
                 // In case the estimation failed but user has no balance on the selected token, we won't display the estimation error.
                 if (!hasTokenBalance && !estimationSucceeded) {
@@ -768,10 +763,10 @@ const SendConfirmPage = () => {
                 onDone={() => {
                     if (status === "error") {
                         closeDialog()
-                        setPersistedData({
-                            ...persistedData,
+                        setPersistedData((prev: SendConfirmPersistedState) => ({
+                            ...prev,
                             submitted: false,
-                        })
+                        }))
                         clearTransaction()
                         return
                     }
@@ -805,16 +800,31 @@ const SendConfirmPage = () => {
                         style={{ maxWidth: "100vw" }}
                     >
                         {/* Asset */}
-                        <AssetSelection
-                            register={register}
-                            error={errors.asset?.message}
-                            setValue={setValue}
-                            assets={tokensList}
-                            defaultAsset={selectedToken}
-                            onAssetChange={handleChangeAsset}
-                            topMargin={76}
-                            bottomMargin={88}
-                        />
+                        <div
+                            className={classnames(
+                                !errors.asset?.message && "mb-3"
+                            )}
+                        >
+                            <p className="ml-1 mb-2 text-sm text-gray-600">
+                                Asset
+                            </p>
+                            <AssetSelection
+                                register={register}
+                                selectedAssetList={AssetListType.DEFAULT}
+                                selectedAsset={selectedToken}
+                                onAssetChange={handleChangeAsset}
+                                error={errors.asset?.message}
+                                topMargin={100}
+                                bottomMargin={45}
+                            />
+                            {errors.asset?.message && (
+                                <div className="pl-1 my-2">
+                                    <ErrorMessage
+                                        error={errors.asset?.message}
+                                    />
+                                </div>
+                            )}
+                        </div>
 
                         {/* Amount */}
                         <div
@@ -844,9 +854,8 @@ const SendConfirmPage = () => {
                                 <div className="flex flex-col items-start">
                                     <input
                                         id="amount"
-                                        name="amount"
                                         type="text"
-                                        ref={register}
+                                        {...register("amount")}
                                         className={classnames(
                                             Classes.blueSectionInput
                                         )}

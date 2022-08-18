@@ -1,4 +1,5 @@
 import { utils } from "ethers"
+import { AccountResult } from "../components/account/AccountSearchResults"
 import { resolveUDName } from "../context/commActions"
 
 export const supportedSuffixes = [
@@ -13,24 +14,18 @@ export const supportedSuffixes = [
     "zil",
 ]
 
-export type UDResult = {
-    name: string
-    address: any
-}
 
 export const searchUD = async (
     search: string,
-    setUDSearch: React.Dispatch<React.SetStateAction<string>>,
-    setUDResult: React.Dispatch<React.SetStateAction<UDResult | undefined>>
-) => {
-    if (search === "") return setUDResult(undefined)
+): Promise<AccountResult | undefined> => {
 
-    setUDSearch(search)
+    if (search === "") return undefined
+
     const isAddress = utils.isAddress(`${search}`)
 
     // Search from address
     if (isAddress) {
-        return setUDResult(undefined)
+        return undefined
     }
 
     let suffix
@@ -40,10 +35,9 @@ export const searchUD = async (
         : (suffix = undefined)
 
     if (!suffix || !supportedSuffixes.includes(suffix))
-        return setUDResult(undefined)
+        return undefined
 
     // Check result
     const result = await resolveUDName(search)
-    if (result) return setUDResult({ name: search, address: result })
-    else setUDResult(undefined)
+    return result ? { name: search, address: result } : undefined
 }

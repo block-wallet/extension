@@ -1,4 +1,3 @@
-import React from "react"
 import classnames from "classnames"
 const CheckmarkIcon: React.FC<{ className?: string }> = (
     { className } = { className: "w-4 h-4" }

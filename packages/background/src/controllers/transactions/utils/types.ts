@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { BigNumber, Transaction } from 'ethers';
 import { CurrencyAmountPair } from '../../blank-deposit/types';
+import { ExchangeParams } from '../../ExchangeController';
 import { ContractMethodSignature } from '../ContractSignatureParser';
 
 /**
@@ -64,6 +64,8 @@ export interface TransactionMeta {
         decimals?: number;
         // Token ID for ERC-721 approval
         tokenId?: BigNumber;
+        // Withdraw fee
+        withdrawFee?: BigNumber;
     };
 
     confirmationTime?: number;
@@ -85,6 +87,7 @@ export interface TransactionMeta {
         stack?: string;
     };
     originId?: string;
+    exchangeParams?: ExchangeParams;
 }
 
 export interface uiTransactionParams extends TransactionParams {
@@ -137,7 +140,7 @@ export enum TransactionCategories {
     TOKEN_METHOD_TRANSFER = 'transfer',
     TOKEN_METHOD_INCOMING_TRANSFER = 'incoming_transfer',
     TOKEN_METHOD_TRANSFER_FROM = 'transferfrom',
-    BLANK_SWAP = 'blankSwap',
+    EXCHANGE = 'exchange',
 }
 
 /**

@@ -1,10 +1,9 @@
-import React, { CSSProperties, useState } from "react"
+import { CSSProperties, useRef, useState } from "react"
 import { FaExchangeAlt } from "react-icons/fa"
 import { FiUpload } from "react-icons/fi"
 import { RiCopperCoinFill } from "react-icons/ri"
 import { AiFillInfoCircle } from "react-icons/ai"
 import { ImSpinner } from "react-icons/im"
-import { ContextMenuTrigger, ContextMenu, MenuItem } from "react-contextmenu"
 import { BigNumber } from "ethers"
 import classNames from "classnames"
 
@@ -12,7 +11,7 @@ import classNames from "classnames"
 import { Classes, classnames } from "../../styles"
 
 // Components
-import ComplianceMenu from "../../components/withdraw/ComplianceMenu"
+import ComplianceMenu from "../privacy/ComplianceMenu"
 import { AssetIcon } from "./../AssetsList"
 import Tooltip from "../../components/label/Tooltip"
 
@@ -48,6 +47,7 @@ import {
     RichedTransactionMeta,
 } from "../../util/transactionUtils"
 import Dots from "../loading/LoadingDots"
+import useContextMenu from "../../util/hooks/useContextMenu"
 import { getValueByKey } from "../../util/objectUtils"
 
 const DEFAULT_TORNADO_CONFIRMATION = 4
@@ -63,7 +63,7 @@ const transactionMessages = {
     [TransactionCategories.TOKEN_METHOD_TRANSFER]: "Token Transfer",
     [TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER]: "Received Token",
     [TransactionCategories.TOKEN_METHOD_TRANSFER_FROM]: "Token Transfer From",
-    [TransactionCategories.BLANK_SWAP]: "Blank Swap",
+    [TransactionCategories.EXCHANGE]: "BlockWallet Swap",
 }
 
 const pendingTransactionMessages: { [x: string]: string } = {
@@ -154,7 +154,7 @@ const transactionIcons = {
     [TransactionCategories.TOKEN_METHOD_TRANSFER_FROM]: (
         <RiCopperCoinFill size="1.5rem" />
     ),
-    [TransactionCategories.BLANK_SWAP]: <RiCopperCoinFill size="1.5rem" />,
+    [TransactionCategories.EXCHANGE]: <RiCopperCoinFill size="1.5rem" />,
 }
 
 const failedStatuses = [
@@ -451,7 +451,9 @@ const TransactionItem: React.FC<{
 
     const tokenExchangeRate = getValueByKey(
         state.exchangeRates,
-        transfer.currency.toUpperCase(),
+        transfer.currency
+            ? transfer.currency.toUpperCase()
+            : networkNativeCurrency.symbol.toUpperCase(),
         0
     )
 
@@ -467,6 +469,11 @@ const TransactionItem: React.FC<{
         status,
     })
 
+    const contextMenuRef = useRef(null)
+
+    const { anchorPoint, show: showContextMenu } =
+        useContextMenu(contextMenuRef)
+
     return (
         <>
             <TransactionDetails
@@ -474,166 +481,172 @@ const TransactionItem: React.FC<{
                 open={hasDetails}
                 onClose={() => setHasDetails(false)}
             />
-            <ContextMenuTrigger id={`${index}`}>
-                <div
-                    className={`flex flex-row justify-between items-center px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 ${
-                        !txHash ? "cursor-default" : ""
-                    }`}
-                    style={{ width: "calc(100% + 3rem)" }}
-                    role="button"
-                    data-txid={txHash}
-                    onClick={() => {
-                        setHasDetails(true)
-                    }}
-                >
-                    {/* Type */}
-                    <div className="flex flex-row items-center" style={typeCss}>
-                        <TransactionIcon
-                            transaction={{
-                                transactionCategory,
-                                transactionStatus: status,
-                            }}
-                            transactionIcon={transfer.logo}
-                        />
-                        <div
-                            className="flex flex-col ml-2"
-                            style={{ width: "calc(100% - 1rem)" }}
-                        >
-                            <div className="flex flex-row w-full items-center space-x-1">
-                                <span
-                                    className="text-sm font-bold truncate"
-                                    title={label}
-                                >
-                                    {formattedLabel}
-                                </span>
-                                {flashbots && (
-                                    <AppIcon
-                                        iconURL={flashbotsLogo}
-                                        size={6}
-                                        iconSize={5}
-                                        title="Flashbots"
-                                    />
-                                )}
-                                {status === TransactionStatus.DROPPED &&
-                                    metaType === MetaType.REGULAR && (
-                                        <div className="group relative self-start">
-                                            <a
-                                                href="https://help.blockwallet.io/hc/en-us/articles/4410031249553"
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                <AiFillInfoCircle
-                                                    size={24}
-                                                    className="pl-2 pb-1 text-primary-200 cursor-pointer hover:text-primary-300"
-                                                />
-                                            </a>
-                                            <Tooltip
-                                                content={
-                                                    <div className="flex flex-col font-normal items-start text-xs text-white-500">
-                                                        <div className="flex flex-row items-end space-x-7">
-                                                            <span>
-                                                                This transaction
-                                                                was never mined.
-                                                            </span>{" "}
-                                                        </div>
-                                                        <div className="flex flex-row items-end space-x-4">
-                                                            <span>
-                                                                Click on this
-                                                                icon to learn
-                                                                more.
-                                                            </span>{" "}
-                                                        </div>
-                                                    </div>
-                                                }
-                                            />
-                                        </div>
-                                    )}
-                            </div>
-                            {getTransactionTimeOrStatus(
-                                status,
-                                metaType,
-                                confirmationTime,
-                                submittedTime,
-                                time,
-                                index,
-                                isQueued || false,
-                                forceDrop || false
-                            )}
 
-                            {status === TransactionStatus.SUBMITTED &&
+            <div
+                className={`flex flex-row justify-between items-center px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 ${
+                    !(txHash && transaction.transactionParams.from) &&
+                    "cursor-default"
+                }`}
+                style={{ width: "calc(100% + 3rem)" }}
+                role="button"
+                data-txid={txHash}
+                onClick={() => {
+                    if (txHash && transaction.transactionParams.from) {
+                        setHasDetails(true)
+                    }
+                }}
+                ref={contextMenuRef}
+            >
+                {/* Type */}
+                <div className="flex flex-row items-center w-full">
+                    <TransactionIcon
+                        transaction={{
+                            transactionCategory,
+                            transactionStatus: status,
+                        }}
+                        transactionIcon={transfer.logo}
+                    />
+                    <div
+                        className="flex flex-col ml-2"
+                        style={{ width: "calc(100% - 1rem)" }}
+                    >
+                        <div
+                            className="flex flex-row w-full items-center space-x-1"
+                            style={typeCss}
+                        >
+                            <span
+                                className="text-sm font-bold truncate"
+                                title={label}
+                            >
+                                {formattedLabel}
+                            </span>
+                            {flashbots && (
+                                <AppIcon
+                                    iconURL={flashbotsLogo}
+                                    size={6}
+                                    iconSize={5}
+                                    title="Flashbots"
+                                />
+                            )}
+                            {status === TransactionStatus.DROPPED &&
                                 metaType === MetaType.REGULAR && (
-                                    <div className="mt-2">
-                                        {blankDepositId &&
-                                        depositTransactionInfo.isAwaitingForConfirmation ? (
-                                            <div className="group relative self-start">
-                                                <div className="flex flex-row items-center">
-                                                    <i className="text-gray-500">
-                                                        {`${
-                                                            depositTransactionInfo.confirmations
-                                                        } of ${
-                                                            tornadoIntervals?.depositConfirmations ||
-                                                            DEFAULT_TORNADO_CONFIRMATION
-                                                        } blocks confirmed`}
-                                                        <Dots />
-                                                    </i>
-                                                </div>
-                                                <Tooltip
-                                                    className="translate-x-1.5 !w-52 !break-word !whitespace-normal"
-                                                    content={
+                                    <div className="group relative self-start">
+                                        <a
+                                            href="https://help.blockwallet.io/hc/en-us/articles/4410031249553"
+                                            target="_blank"
+                                            rel="noreferrer"
+                                        >
+                                            <AiFillInfoCircle
+                                                size={24}
+                                                className="pl-2 pb-1 text-primary-200 cursor-pointer hover:text-primary-300"
+                                            />
+                                        </a>
+                                        <Tooltip
+                                            content={
+                                                <div className="flex flex-col font-normal items-start text-xs text-white-500">
+                                                    <div className="flex flex-row items-end space-x-7">
                                                         <span>
-                                                            {`BlockWallet waits ${
-                                                                tornadoIntervals?.depositConfirmations ||
-                                                                DEFAULT_TORNADO_CONFIRMATION
-                                                            } blocks to mark the deposits as confirmed`}
-                                                        </span>
-                                                    }
-                                                />
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    className={classnames(
-                                                        "rounded-md cursor-pointer text-blue-500 border-current border p-1 font-bold hover:bg-blue-500 hover:text-white transition-colors",
-                                                        isQueued
-                                                            ? "opacity-50 pointer-events-none"
-                                                            : ""
-                                                    )}
-                                                    disabled={isQueued}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        history.push({
-                                                            pathname:
-                                                                "/transaction/speedUp",
-                                                            state: {
-                                                                txId: id,
-                                                            },
-                                                        })
-                                                    }}
-                                                >
-                                                    Speed up
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="ml-1.5 border p-1 rounded-md cursor-pointer text-gray-500 border-current font-bold hover:bg-gray-500 hover:text-white transition-colors"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        history.push({
-                                                            pathname:
-                                                                "/transaction/cancel",
-                                                            state: {
-                                                                txId: id,
-                                                            },
-                                                        })
-                                                    }}
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </>
-                                        )}
+                                                            This transaction was
+                                                            never mined.
+                                                        </span>{" "}
+                                                    </div>
+                                                    <div className="flex flex-row items-end space-x-4">
+                                                        <span>
+                                                            Click on this icon
+                                                            to learn more.
+                                                        </span>{" "}
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
                                     </div>
                                 )}
                         </div>
+                        {getTransactionTimeOrStatus(
+                            status,
+                            metaType,
+                            confirmationTime,
+                            submittedTime,
+                            time,
+                            index,
+                            isQueued || false,
+                            forceDrop || false
+                        )}
+
+                        {status === TransactionStatus.SUBMITTED &&
+                            metaType === MetaType.REGULAR &&
+                            !isBlankWithdraw && (
+                                <div className="mt-2">
+                                    {blankDepositId &&
+                                    depositTransactionInfo.isAwaitingForConfirmation ? (
+                                        <div className="group relative self-start">
+                                            <div className="flex flex-row items-center">
+                                                <i className="text-gray-500">
+                                                    {`${
+                                                        depositTransactionInfo.confirmations
+                                                    } of ${
+                                                        tornadoIntervals?.depositConfirmations ||
+                                                        DEFAULT_TORNADO_CONFIRMATION
+                                                    } blocks confirmed`}
+                                                    <Dots />
+                                                </i>
+                                            </div>
+                                            <Tooltip
+                                                className="translate-x-1.5 !w-52 !break-word !whitespace-normal"
+                                                content={
+                                                    <span>
+                                                        {`BlockWallet waits ${
+                                                            tornadoIntervals?.depositConfirmations ||
+                                                            DEFAULT_TORNADO_CONFIRMATION
+                                                        } blocks to mark the deposits as confirmed`}
+                                                    </span>
+                                                }
+                                            />
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <button
+                                                type="button"
+                                                className={classnames(
+                                                    "rounded-md cursor-pointer text-blue-500 border-current border p-1 font-bold hover:bg-blue-500 hover:text-white transition-colors",
+                                                    isQueued
+                                                        ? "opacity-50 pointer-events-none"
+                                                        : ""
+                                                )}
+                                                disabled={isQueued}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    history.push({
+                                                        pathname:
+                                                            "/transaction/speedUp",
+                                                        state: {
+                                                            txId: id,
+                                                        },
+                                                    })
+                                                }}
+                                            >
+                                                Speed up
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="ml-1.5 border p-1 rounded-md cursor-pointer text-gray-500 border-current font-bold hover:bg-gray-500 hover:text-white transition-colors"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    history.push({
+                                                        pathname:
+                                                            "/transaction/cancel",
+                                                        state: {
+                                                            txId: id,
+                                                        },
+                                                    })
+                                                }}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            )}
                     </div>
 
                     {/* Amount */}
@@ -699,25 +712,20 @@ const TransactionItem: React.FC<{
                         </div>
                     )}
                 </div>
-            </ContextMenuTrigger>
-
+            </div>
             {/* Compliance Menu */}
-            {isBlankWithdraw ? (
-                status !== TransactionStatus.SUBMITTED ? (
-                    <ContextMenu
-                        id={`${index}`}
-                        hideOnLeave={true}
-                        preventHideOnContextMenu={true}
-                        className="z-50"
-                    >
-                        <MenuItem className="w-48 ml-4 mr-4">
-                            <ComplianceMenu
-                                withdrawId={blankWithdrawId}
-                                active={true}
-                            />
-                        </MenuItem>
-                    </ContextMenu>
-                ) : null
+            {isBlankWithdraw &&
+            status !== TransactionStatus.SUBMITTED &&
+            showContextMenu ? (
+                <div
+                    className="absolute"
+                    style={{ top: anchorPoint.y, left: anchorPoint.x }}
+                >
+                    <ComplianceMenu
+                        withdrawId={blankWithdrawId}
+                        active={true}
+                    />
+                </div>
             ) : null}
         </>
     )

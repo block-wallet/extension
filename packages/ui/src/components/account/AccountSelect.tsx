@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from "react"
+import { FunctionComponent, useState } from "react"
 import AccountDisplay from "../account/AccountDisplay"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
@@ -71,31 +71,28 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
 
     const currentAccountAddress = useSelectedAccount().address
 
-    const {
-        currentAccount,
-        otherAccounts,
-        hiddenAccounts,
-    } = filteredAccounts.reduce(
-        (acc: AccountsData, account) => {
-            if (account.address === currentAccountAddress) {
+    const { currentAccount, otherAccounts, hiddenAccounts } =
+        filteredAccounts.reduce(
+            (acc: AccountsData, account) => {
+                if (account.address === currentAccountAddress) {
+                    return {
+                        ...acc,
+                        currentAccount: account,
+                    }
+                }
+                if (isHiddenAccount(account)) {
+                    return {
+                        ...acc,
+                        hiddenAccounts: [...acc.hiddenAccounts, account],
+                    }
+                }
                 return {
                     ...acc,
-                    currentAccount: account,
+                    otherAccounts: [...acc.otherAccounts, account],
                 }
-            }
-            if (isHiddenAccount(account)) {
-                return {
-                    ...acc,
-                    hiddenAccounts: [...acc.hiddenAccounts, account],
-                }
-            }
-            return {
-                ...acc,
-                otherAccounts: [...acc.otherAccounts, account],
-            }
-        },
-        { currentAccount: undefined, otherAccounts: [], hiddenAccounts: [] }
-    )
+            },
+            { currentAccount: undefined, otherAccounts: [], hiddenAccounts: [] }
+        )
 
     const history = useHistory()
 
@@ -184,8 +181,12 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
             {search === "" ? (
                 <>
                     {currentAccount && (
-                        <AccountsList title="CURRENT ACCOUNT">
+                        <AccountsList
+                            title="CURRENT ACCOUNT"
+                            key={"current-account"}
+                        >
                             <AccountDisplay
+                                key={`current-account-${currentAccount.index}`}
                                 onClickAccount={() => {
                                     if (
                                         selectedAccount.address !==
@@ -208,12 +209,14 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                                     showActionButtons
                                         ? [
                                             <div
+                                                  key={`current-account-action-button-1`}
                                                   onClick={() => {
                                                       history.push({
                                                           pathname:
                                                               "/accounts/menu",
                                                           state: {
-                                                              fromAccountList: true,
+                                                              fromAccountList:
+                                                                  true,
                                                           },
                                                       })
                                                   }}
@@ -231,7 +234,7 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                         <AccountsList title="OTHER ACCOUNTS">
                             {otherAccounts.map((account) => (
                                 <AccountDisplay
-                                    key={account.address}
+                                    key={`other-${account.address}`}
                                     onClickAccount={onAccountChange}
                                     account={account}
                                     menu={getAccountOptions(account)}
@@ -250,7 +253,7 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                         <AccountsList title="HIDDEN ACCOUNTS">
                             {hiddenAccounts.map((account) => (
                                 <AccountDisplay
-                                    key={account.address}
+                                    key={`hidden-${account.address}`}
                                     account={account}
                                     menu={getAccountOptions(account)}
                                 />
@@ -264,10 +267,10 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                         <AccountsList title="SEARCH RESULTS">
                             {searchedActiveAccounts.map((account) => (
                                 <AccountDisplay
-                                    key={account!.address}
+                                    key={`result-${account.address}`}
                                     onClickAccount={onAccountChange}
-                                    account={account!}
-                                    menu={getAccountOptions(account!)}
+                                    account={account}
+                                    menu={getAccountOptions(account)}
                                     selected={
                                         selectedAccount.address ===
                                         account!.address
@@ -283,7 +286,7 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                         <AccountsList title="SEARCH RESULTS (HIDDEN ACCOUNTS)">
                             {hiddenAccounts.map((account) => (
                                 <AccountDisplay
-                                    key={account.address}
+                                    key={`hidden-result-${account.address}`}
                                     account={account}
                                     menu={getAccountOptions(account)}
                                 />

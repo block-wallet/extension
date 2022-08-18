@@ -1,5 +1,5 @@
+import { useCallback, useEffect, useState } from "react"
 import { Currency } from "@block-wallet/background/utils/currency"
-import React, { useEffect, useState } from "react"
 import { useHistory } from "react-router-dom"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import SuccessDialog from "../../components/dialog/SuccessDialog"
@@ -20,7 +20,7 @@ const LocalePreferencesPage = () => {
     const [showSuccessDialog, setShowSuccessDialog] = useState<boolean>(false)
     const { nativeCurrency } = useBlankState()!
     const [newCurrency, setNewCurrency] = useState(nativeCurrency)
-    const onSave = async () => {
+    const onSave = useCallback(async () => {
         try {
             setIsLoading(true)
             await setNativeCurrency(newCurrency)
@@ -30,7 +30,7 @@ const LocalePreferencesPage = () => {
         } finally {
             setIsLoading(false)
         }
-    }
+    }, [newCurrency])
 
     useEffect(() => {
         getValidCurrencies().then((currencies) => {

@@ -1,15 +1,15 @@
-import React from "react"
 import { Devices } from "../../context/commTypes"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import ConnectDeviceStepsLayout from "./ConnectDeviceStepsLayout"
 import { DEVICE_CONNECTION_STEPS } from "../../util/connectionStepUtils"
 import useHardwareWalletConnect from "../../util/hooks/useHardwareWalletConnect"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
+import { useState } from "react"
 
 const HardwareWalletConnectionPage = () => {
     const history = useOnMountHistory()
     const { connect, isLoading } = useHardwareWalletConnect()
-    const [deviceNotReady, setDeviceNotReady] = React.useState(false)
+    const [deviceNotReady, setDeviceNotReady] = useState(false)
 
     const vendor = history.location.state.vendor as Devices
 

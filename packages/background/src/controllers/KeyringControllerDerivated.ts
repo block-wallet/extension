@@ -298,7 +298,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @param {Devices} device - The device to set the path
      * @param {string} hdPath - The HD path of the keyring
      */
-    public async setHDPath(device: Devices, hdPath: string) {
+    public async setHDPath(device: Devices, hdPath: string): Promise<void> {
         const keyring = await this.getKeyringFromDevice(device);
         if (keyring.setHdPath) {
             const hdPaths = HDPaths[device];
@@ -353,8 +353,10 @@ export default class KeyringControllerDerivated extends KeyringController {
             await keyring.updateTransportMethod('webhid');
         }
 
-        // If the keyring is not unlocked, we unlock it
-        if (!keyring.isUnlocked()) await keyring.unlock();
+        // Unlock the keyring. If it's already unlocked it will resolve.
+        // For Trezor devices, we force the unlock to prevent displaying
+        // old accounts or accounts from a different device
+        await keyring.unlock(device === Devices.TREZOR);
 
         // Return whether we connected and unlocked the keyring successfully
         return keyring.isUnlocked();
@@ -530,6 +532,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @param {Object} opts - Signing options.
      * @returns {Promise<TypedTransaction>} The signed transactio object.
      */
+    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
     public async signTransaction(
         ethTx: TypedTransaction,
         _fromAddress: string,
@@ -570,6 +573,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @param {Object} msgParams - The message parameters to sign.
      * @returns {Promise<string>} The hexed signature.
      */
+    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
     public async signPersonalMessage(
         msgParams: {
             from: string;

@@ -1,5 +1,5 @@
-import React, { FunctionComponent, useState } from "react"
-import { BigNumber, utils } from "ethers"
+import { FunctionComponent, useState } from "react"
+import { BigNumber } from "ethers"
 import { TransactionArgument } from "@block-wallet/background/controllers/transactions/ContractSignatureParser"
 import { TransactionDetailsTabProps } from "./TransactionDetails"
 import ExpandableText from "../ExpandableText"
@@ -10,6 +10,8 @@ import { generateExplorerLink } from "../../util/getExplorer"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import GenericTooltip from "../label/GenericTooltip"
 import { formatName } from "../../util/formatAccount"
+import { isAddress } from "ethers/lib/utils"
+import log from "loglevel"
 
 export interface TransactionDetailsProps {
     transactionArgs: TransactionArgument[]
@@ -25,35 +27,39 @@ const ArgumentValue = ({
     if (!unformattedValue) return null
 
     if (Array.isArray(unformattedValue)) {
-        // Call format argument again
         return (
             <>
                 {unformattedValue.map((value, i) => (
-                    <div key={`${i}-${value}`}>
-                        <Argument value={value} i={i} canCollapse={false} />
+                    <div key={`20${i}`}>
+                        <Argument
+                            value={value}
+                            name={(i + 1).toString()}
+                            canCollapse={false}
+                        />
                     </div>
                 ))}
             </>
         )
     }
 
-    let parsedValue = unformattedValue
+    let parsedValue: string = ""
 
-    // BigNumber
-    // @ts-ignore
-    if (!!unformattedValue.hex) {
-        parsedValue = BigNumber.from(unformattedValue).toString()
+    if (typeof unformattedValue === "string") {
+        parsedValue = unformattedValue
+    } else {
+        try {
+            parsedValue = BigNumber.from(unformattedValue).toString()
+        } catch (error) {
+            log.error("Can't parse transaction detail parameter", parsedValue)
+        }
     }
 
     return (
         <div className="flex">
-            <ExpandableText
-                key={parsedValue.toString()}
-                className="allow-select text-gray-600 pt-1"
-            >
+            <ExpandableText className="allow-select text-gray-600 pt-1">
                 {parsedValue as string}
             </ExpandableText>
-            {utils.isAddress(parsedValue as string) && (
+            {isAddress(parsedValue as string) && (
                 <a
                     href={generateExplorerLink(
                         availableNetworks,
@@ -74,19 +80,17 @@ const ArgumentValue = ({
 
 const Argument = ({
     value,
-    i,
     name,
     canCollapse = true,
 }: {
     value: any
-    i: number
-    name?: string | null
+    name: string
     canCollapse?: boolean
 }) => {
     const [isCollapsed, setIsCollapsed] = useState(true)
 
     return (
-        <div className={!name ? "flex items-start" : ""}>
+        <>
             <div
                 className="flex items-center cursor-pointer"
                 onClick={() => {
@@ -98,7 +102,7 @@ const Argument = ({
                         <ArrowUpDown active={!isCollapsed} />
                     </div>
                 )}
-                <p className="pl-1 pt-1 font-bold">{name ?? `${i + 1}.`}</p>
+                <p className="pl-1 pt-1 font-bold">{name}</p>
             </div>
             <div
                 className={classNames(
@@ -110,7 +114,7 @@ const Argument = ({
                     <ArgumentValue unformattedValue={value} />
                 </div>
             </div>
-        </div>
+        </>
     )
 }
 
@@ -133,7 +137,7 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsTabProps> =
         parsedName = parsedName.charAt(0).toLowerCase() + parsedName.slice(1)
 
         return (
-            <div className="flex flex-col px-3 space-y-1 break-all text-sm">
+            <div className="px-3 break-all text-sm">
                 <div className="overflow-x-auto whitespace-nowrap horizontal-custom-scroll py-1">
                     <pre className="bg-gray-100 w-full p-4 rounded">
                         <code className="allow-select">
@@ -166,8 +170,11 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsTabProps> =
                 </div>
                 <div>
                     {signature.args.map(({ name, value }, index) => (
-                        <div key={`${index}-${name}-${value}`} className="mt-2">
-                            <Argument name={name} value={value} i={index} />
+                        <div key={`1${index}`} className="mt-1">
+                            <Argument
+                                name={name || (index + 1).toString()}
+                                value={value}
+                            />
                         </div>
                     ))}
                 </div>

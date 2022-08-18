@@ -39,6 +39,7 @@ export default {
             blockExplorerUrls: ['https://ftmscan.com'],
             etherscanApiUrl: 'https://api.ftmscan.com',
             actionsTimeIntervals: ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+            nativelySupported: true,
         };
 
         updatedNetworks.GOERLI = {

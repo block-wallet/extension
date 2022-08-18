@@ -1,4 +1,4 @@
-import React from "react"
+import { Fragment, useRef, useState } from "react"
 import useDOMElementObserver from "../../util/hooks/useDOMElementObserver"
 import { RichedTransactionMeta } from "../../util/transactionUtils"
 import dotLoading from "../../assets/images/icons/dot_loading.svg"
@@ -11,11 +11,11 @@ const getInitialCount = (transactions: RichedTransactionMeta[]) =>
 const TransactionsList: React.FC<{
     transactions: RichedTransactionMeta[]
 }> = ({ transactions }) => {
-    const [transactionCount, setTransactionCount] = React.useState(() =>
+    const [transactionCount, setTransactionCount] = useState(() =>
         getInitialCount(transactions)
     )
-    const [isLoading, setIsLoading] = React.useState(false)
-    const loaderRef = React.useRef<HTMLImageElement>(null)
+    const [isLoading, setIsLoading] = useState(false)
+    const loaderRef = useRef<HTMLImageElement>(null)
 
     useDOMElementObserver(
         loaderRef,
@@ -35,10 +35,10 @@ const TransactionsList: React.FC<{
     return (
         <>
             {transactions.slice(0, transactionCount).map((t, i) => (
-                <React.Fragment key={i}>
+                <Fragment key={i}>
                     {i > 0 ? <hr /> : null}
                     <TransactionItem transaction={t} index={i} />
-                </React.Fragment>
+                </Fragment>
             ))}
             <img
                 ref={loaderRef}

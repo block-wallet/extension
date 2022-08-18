@@ -1,4 +1,4 @@
-import React, { useRef } from "react"
+import { useRef } from "react"
 
 // Style
 import { classnames } from "../../styles/classes"
@@ -13,12 +13,15 @@ import { getDepositFormattedNote } from "../../context/commActions"
 // Utils
 import { useOnClickOutside } from "../../util/useOnClickOutside"
 
+type ComplianceMenuOptions = "NOTE" | "REPORT"
+
 // Types
 type ComplianceMenuType = {
     withdrawId: string
     active?: boolean
     setActive?: (value: boolean) => void
     position?: string
+    options?: ComplianceMenuOptions[]
 }
 
 /**
@@ -32,7 +35,10 @@ type ComplianceMenuType = {
  * @param position - String, define display position relative to parent.
  */
 const ComplianceMenu = (props: ComplianceMenuType) => {
-    const { withdrawId, active, setActive, position } = props
+    const { withdrawId, active, setActive, position, options } = props
+
+    const safeOptions =
+        !options || !options.length ? ["NOTE", "REPORT"] : options
 
     const ref = useRef(null)
     useOnClickOutside(ref, () => {
@@ -52,35 +58,39 @@ const ComplianceMenu = (props: ComplianceMenuType) => {
     return (
         <div
             className={classnames(
-                "flex flex-col w-48 mt-2 absolute right-4 z-50 rounded-md bg-white shadow-md",
+                "flex flex-col w-48 right-4 z-50 rounded-md bg-white shadow-md",
                 active ? "" : "hidden select-none pointer-events-none",
                 position ? position : ""
             )}
             ref={ref}
         >
             {/* Copy */}
-            <div
-                className="flex w-full justify-start p-5 pt-4 cursor-pointer text-red-500 p-2 items-center hover:bg-gray-100"
-                onClick={() => handleCopyNote(withdrawId)}
-                ref={ref}
-            >
-                <img src={copy} alt="visit" className="w-5 h-5 mr-3" />
-                <span className="text-sm font-bold text-gray-900 inline-flex">
-                    Copy note
-                </span>
-            </div>
+            {safeOptions.includes("NOTE") && (
+                <div
+                    className="flex w-full justify-start  cursor-pointer text-red-500 px-2 py-4 items-center hover:bg-gray-100 hover:rounded-t-md"
+                    onClick={() => handleCopyNote(withdrawId)}
+                    ref={ref}
+                >
+                    <img src={copy} alt="visit" className="w-5 h-5 mr-3" />
+                    <span className="text-sm font-bold text-gray-900 inline-flex">
+                        Copy note
+                    </span>
+                </div>
+            )}
             {/* Fetch */}
-            <a
-                href="https://blockwallet.io/compliance.html"
-                target="_blank" // 😎
-                className="flex w-full justify-start p-5 pt-4 cursor-pointer text-red-500 p-2 items-center hover:bg-gray-100"
-                rel="noreferrer"
-            >
-                <img src={openIcon} alt="visit" className="w-5 h-5 mr-3" />
-                <span className="text-sm font-bold text-gray-900 inline-flex">
-                    Fetch report
-                </span>
-            </a>
+            {safeOptions.includes("REPORT") && (
+                <a
+                    href="https://blockwallet.io/compliance.html"
+                    target="_blank" // 😎
+                    className="flex w-full justify-startcursor-pointer text-red-500 px-2 py-4 items-center hover:bg-gray-100 hover:rounded-b-md"
+                    rel="noreferrer"
+                >
+                    <img src={openIcon} alt="visit" className="w-5 h-5 mr-3" />
+                    <span className="text-sm font-bold text-gray-900 inline-flex">
+                        Fetch report
+                    </span>
+                </a>
+            )}
         </div>
     )
 }

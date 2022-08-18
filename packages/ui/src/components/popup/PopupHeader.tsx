@@ -1,5 +1,6 @@
 import classnames from "classnames"
-import React, { FunctionComponent, useEffect, useState } from "react"
+import { FunctionComponent, useEffect, useState } from "react"
+
 import {
     useOnMountHistory,
     useOnMountLastLocation,
@@ -11,7 +12,7 @@ import ArrowIcon from "../icons/ArrowIcon"
 import Dropdown from "../ui/Dropdown/Dropdown"
 import { DropdownMenuItem } from "../ui/Dropdown/DropdownMenu"
 
-const PopupHeader: FunctionComponent<{
+export interface PopupHeaderProps {
     title: string
     backButton?: boolean
     keepState?: boolean // if true, keeps the previous state while going back using the back button
@@ -21,7 +22,12 @@ const PopupHeader: FunctionComponent<{
     onClose?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
     onBack?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void // in case we want to replace default back behavior
     actions?: React.ReactNode[]
-}> = ({
+    children?: React.ReactNode | undefined
+    className?: string
+    goBackState?: object
+}
+
+const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     title,
     backButton = true,
     keepState = false,
@@ -32,6 +38,8 @@ const PopupHeader: FunctionComponent<{
     onClose,
     onBack,
     actions,
+    className,
+    goBackState,
 }) => {
     const history = useOnMountHistory()
     const lastLocation = useOnMountLastLocation()
@@ -49,7 +57,10 @@ const PopupHeader: FunctionComponent<{
 
     return (
         <div
-            className="z-10 flex flex-row items-center p-6 bg-white bg-opacity-75 max-w-full"
+            className={classnames(
+                "z-10 flex flex-row items-center p-6 bg-white bg-opacity-75 max-w-full",
+                className
+            )}
             style={{ backdropFilter: "blur(4px)", minHeight: "76px" }}
         >
             {backButton && (
@@ -67,16 +78,26 @@ const PopupHeader: FunctionComponent<{
                             return history.replace("/")
                         }
 
-                        if (keepState)
+                        if (keepState || goBackState) {
+                            let newState = {}
+                            if (keepState) {
+                                newState = lastLocation?.state
+                                    ? (lastLocation?.state as any & {
+                                          keepState: true
+                                      })
+                                    : {}
+                            }
+                            if (goBackState) {
+                                newState = {
+                                    ...newState,
+                                    ...goBackState,
+                                }
+                            }
                             return history.replace({
                                 pathname: lastLocation?.pathname,
-                                state:
-                                    lastLocation?.state &&
-                                    (lastLocation?.state as any & {
-                                        keepState: true
-                                    }),
+                                state: newState,
                             })
-
+                        }
                         fromAction ? history.go(-3) : history.goBack()
                     }}
                     disabled={disabled || !mounted}
@@ -95,10 +116,7 @@ const PopupHeader: FunctionComponent<{
             )}
             <span
                 title={title}
-                className={classnames(
-                    "text-base font-bold truncate ...",
-                    icon && "w-56"
-                )}
+                className={classnames("text-base font-bold", icon && "w-56")}
             >
                 {title}
             </span>

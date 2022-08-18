@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import AccountDisplay from "../../components/account/AccountDisplay"
@@ -33,7 +33,14 @@ const AddressBookPage: FunctionComponent<{
     }
 
     return (
-        <PopupLayout header={<PopupHeader title="Address Book" />}>
+        <PopupLayout
+            header={
+                <PopupHeader
+                    title="Address Book"
+                    onBack={() => history.push("/settings")}
+                />
+            }
+        >
             <div className="flex flex-col p-6 space-y-5 text-sm text-gray-500">
                 <ActionButton
                     icon={accountAdd}
@@ -45,6 +52,7 @@ const AddressBookPage: FunctionComponent<{
                     <AccountsList title="CURRENT CONTACTS">
                         {Object.values(addressBook).map((entry) => (
                             <AccountDisplay
+                                key={entry.address}
                                 account={
                                     {
                                         address: entry.address,
@@ -84,6 +92,7 @@ const AddressBookPage: FunctionComponent<{
                     <AccountsList title="RECENT ADDRESSES">
                         {Object.values(recentAddresses).map((entry) => (
                             <AccountDisplay
+                                key={entry.address}
                                 account={
                                     {
                                         address: entry.address,
@@ -99,7 +108,7 @@ const AddressBookPage: FunctionComponent<{
                                             AccountMenuOptionType.CUSTOM,
                                         component: () => (
                                             <div
-                                                className="flex flex-row justify-start items-center p-2 cursor-pointer text-black hover:bg-gray-100 hover:rounded-t-md w-36"
+                                                className="flex flex-row justify-start items-center p-1 cursor-pointer text-black hover:bg-gray-100 hover:rounded-t-md w-36"
                                                 onClick={() =>
                                                     history.push({
                                                         pathname:

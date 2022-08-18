@@ -1,5 +1,5 @@
 import classnames from "classnames"
-import React from "react"
+import { PropsWithChildren } from "react"
 import Icon, { IconName } from "../Icon"
 import { DropdownCompoundMember } from "./Dropdown"
 import { useDropdownContext } from "./DropdownContext"
@@ -17,7 +17,7 @@ export interface DropdownMenuItemProps {
     selected?: boolean
 }
 
-export const DropdownMenu: React.FC<DropdownMenuProps> &
+export const DropdownMenu: React.FC<PropsWithChildren<DropdownMenuProps>> &
     DropdownCompoundMember = ({
     children,
     id = "dropdownMenu",
@@ -45,14 +45,10 @@ export const DropdownMenu: React.FC<DropdownMenuProps> &
     )
 }
 
-export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
-    onClick,
-    children,
-    className,
-    value,
-    selected,
-}) => {
-    const { onClickItem } = useDropdownContext()
+export const DropdownMenuItem: React.FC<
+    PropsWithChildren<DropdownMenuItemProps>
+> = ({ onClick, children, className, value, selected }) => {
+    const { onClickItem, toggleMenu } = useDropdownContext()
     return (
         <li
             onClick={(e) => {
@@ -63,6 +59,8 @@ export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({
                 if (onClick) {
                     onClick()
                 }
+
+                toggleMenu(e.nativeEvent) // Close the menu after an item is clicked
             }}
             className={classnames(
                 "flex flex-row justify-between items-center w-full p-2 cursor-pointer hover:bg-gray-100",

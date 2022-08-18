@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect } from "react"
+import { FunctionComponent, useEffect } from "react"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
 import Divider from "../Divider"

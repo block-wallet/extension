@@ -1,4 +1,5 @@
-import React, { FunctionComponent, useEffect, useMemo, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useState } from "react"
+
 import { HashRouter, Redirect, Route, useHistory } from "react-router-dom"
 import { useBlankState } from "../context/background/backgroundHooks"
 import PendingSetupPage from "../routes/setup/PendingSetupPage"
@@ -10,16 +11,14 @@ import { LastLocationProvider } from "react-router-last-location"
 import { TransitionRoute } from "./TransitionRoute"
 import { ErrorBoundary } from "react-error-boundary"
 import ErrorFallbackPage from "../components/error/ErrorFallbackPage"
-import MessageDialog from "../components/dialog/MessageDialog"
 import ErrorDialog from "../components/dialog/ErrorDialog"
 import getRequestRouteAndStatus from "../context/util/getRequestRouteAndStatus"
-import { CgDanger } from "react-icons/cg"
-import NetworkSelect from "../components/input/NetworkSelect"
 import IdleComponent from "../components/IdleComponent"
 import WalletNews from "../components/news/WalletNews"
 import LocationHolder from "./LocationHolder"
 import { useLocationRecovery } from "../util/hooks/useLocationRecovery"
 import { timeExceedsTTL } from "../util/time"
+import ProviderDownDialog from "../components/dialog/ProviderDownDialog"
 import useClearStickyStorage from "../context/hooks/useClearStickyStorage"
 import { getNonSubmittedTransactions } from "../util/getNonSubmittedTransactions"
 
@@ -59,7 +58,7 @@ const PopupComponent = () => {
         dappRequests
     )
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (
             showPage ||
             showUnlock ||
@@ -100,7 +99,11 @@ const PopupComponent = () => {
     )
 }
 
-const PopupRouter: FunctionComponent = ({ children }) => {
+const PopupRouter = ({
+    children,
+}: {
+    children?: React.ReactNode | undefined
+}) => {
     // Ensure body has popup class to mantain fixed width/height when opening from extension or window
     document.body.classList.add("popup")
     const state = useBlankState()!
@@ -125,23 +128,7 @@ const PopupRouter: FunctionComponent = ({ children }) => {
                 >
                     {isOnboarded ? (
                         <>
-                            <MessageDialog
-                                header={
-                                    <>
-                                        <NetworkSelect
-                                            className="mb-4 m-auto"
-                                            optionsContainerClassName="overflow-auto max-h-72"
-                                        />
-                                        <CgDanger className="text-red-500 w-20 h-20 mb-2 block m-auto" />
-                                    </>
-                                }
-                                title="Provider down"
-                                message="The current network is down. Please select another network."
-                                open={
-                                    !state.isProviderNetworkOnline &&
-                                    state.isUserNetworkOnline
-                                }
-                            />
+                            <ProviderDownDialog />
                             <ErrorDialog
                                 onClickOutside={() =>
                                     setShouldShowDialog(false)

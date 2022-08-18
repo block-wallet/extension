@@ -1,12 +1,15 @@
-import React, { FunctionComponent, useState } from "react"
+import {
+    FunctionComponent,
+    PropsWithChildren,
+    useCallback,
+    useState,
+} from "react"
 import PopupFooter from "../../components/popup/PopupFooter"
-import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import { Classes } from "../../styles/classes"
 import Divider from "../../components/Divider"
 import { formatHash, formatName } from "../../util/formatAccount"
 import { formatUnits, getAddress } from "ethers/lib/utils"
-import { formatUrl } from "../../util/formatUrl"
 import {
     DappReq,
     DappRequestSigningStatus,
@@ -28,11 +31,6 @@ import {
     V1TypedData,
     DappRequestParams,
 } from "@block-wallet/background/utils/types/ethereum"
-import { AiFillInfoCircle } from "react-icons/ai"
-import Tooltip from "../../components/label/Tooltip"
-import { getNetworkFromChainId } from "../../util/getExplorer"
-import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
-import { capitalize } from "../../util/capitalize"
 import AccountIcon from "../../components/icons/AccountIcon"
 import { getAccountColor } from "../../util/getAccountColor"
 import { formatNumberLength } from "../../util/formatNumberLength"
@@ -50,6 +48,9 @@ import { DAPP_FEEDBACK_WINDOW_TIMEOUT } from "../../util/constants"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { HardwareWalletOpTypes } from "../../context/commTypes"
+import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
+import DAppOrigin from "../../components/dApp/DAppOrigin"
+import { getNetworkNameFromChainId } from "../../util/getExplorer"
 
 const SignPage = () => {
     return (
@@ -62,7 +63,7 @@ const SignPage = () => {
     )
 }
 
-const Sign: FunctionComponent<DappRequestProps> = ({
+const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
     requestCount,
     requestId,
     origin,
@@ -72,7 +73,6 @@ const Sign: FunctionComponent<DappRequestProps> = ({
     approveTime,
     error,
 }) => {
-    const network = useSelectedNetwork()
     const {
         accounts,
         availableNetworks,
@@ -112,11 +112,16 @@ const Sign: FunctionComponent<DappRequestProps> = ({
         closeDialog,
         gifs,
     } = useTransactionWaitingDialog(
-        { id: requestId, status: requestStatus, error, epochTime: approveTime },
+        {
+            id: requestId,
+            status: requestStatus,
+            error,
+            epochTime: approveTime,
+        },
         HardwareWalletOpTypes.SIGN_MESSAGE,
         accountData.accountType,
         {
-            reject: React.useCallback(() => {
+            reject: useCallback(() => {
                 if (requestId) {
                     attemptRejectDappRequest(requestId)
                 }
@@ -200,7 +205,7 @@ const Sign: FunctionComponent<DappRequestProps> = ({
 
         // Add chain id name if it exists
         if (domain.chainId) {
-            const networkName = getNetworkFromChainId(
+            const networkName = getNetworkNameFromChainId(
                 availableNetworks,
                 domain.chainId
             )
@@ -215,7 +220,9 @@ const Sign: FunctionComponent<DappRequestProps> = ({
                         <span className="font-bold pt-1">
                             {formattedDomainKeyNames[displayOrder[i]]}
                         </span>
-                        <span className="text-gray-600">{param}</span>
+                        <span className="text-gray-600 allow-select-all">
+                            {param}
+                        </span>
                     </>
                 )
             } else {
@@ -228,6 +235,7 @@ const Sign: FunctionComponent<DappRequestProps> = ({
         method: SignatureMethods,
         data: NormalizedSignatureData[SignatureMethods]
     ) => {
+        //TODO: TEST THIS
         if (method === "eth_sign") {
             return (
                 <>
@@ -246,16 +254,21 @@ const Sign: FunctionComponent<DappRequestProps> = ({
                         {`Make sure you trust ${origin}. Signing this could grant complete control of your assets`}
                     </div>
                     <span className="font-bold py-2">Message</span>
-                    <span className="text-gray-600">{data}</span>
+                    <span className="text-gray-600 allow-select-all">
+                        <>{data}</>
+                    </span>
                 </>
             )
         }
 
+        //TODO: TEST THIS
         if (method === "personal_sign") {
             return (
                 <>
                     <span className="font-bold py-2">Message</span>
-                    <span className="text-gray-600">{data}</span>
+                    <span className="text-gray-600 allow-select-all">
+                        <>{data}</>
+                    </span>
                 </>
             )
         }
@@ -273,7 +286,7 @@ const Sign: FunctionComponent<DappRequestProps> = ({
                                 <span className="font-bold pt-1">
                                     {param.name}
                                 </span>
-                                <span className="text-gray-600">
+                                <span className="text-gray-600 allow-select-all">
                                     {`${param.value}`}
                                 </span>
                             </>
@@ -289,10 +302,10 @@ const Sign: FunctionComponent<DappRequestProps> = ({
                 {formatTypedDomain(v4Data.domain)}
                 <span className="font-bold py-1">Message</span>
                 <ReactJson
+                    enableClipboard
                     src={v4Data.message}
                     name={null}
                     indentWidth={1}
-                    enableClipboard={false}
                     iconStyle={"triangle"}
                     displayObjectSize={false}
                     displayDataTypes={false}
@@ -305,31 +318,10 @@ const Sign: FunctionComponent<DappRequestProps> = ({
     return (
         <PopupLayout
             header={
-                <PopupHeader
+                <DAppPopupHeader
                     title="Signature Request"
-                    close={false}
-                    backButton={false}
-                >
-                    {requestCount > 1 && (
-                        <div className="group relative">
-                            <AiFillInfoCircle
-                                size={26}
-                                className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
-                            />
-                            <Tooltip
-                                content={`${requestCount - 1} more ${
-                                    requestCount > 2 ? "requests" : "request"
-                                }`}
-                            />
-                        </div>
-                    )}
-                    <div className="flex flex-row items-center ml-auto p-1 px-2 pr-1 text-gray-600 rounded-md border border-primary-200 text-xs bg-green-100">
-                        <span className="inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-green-400 pointer-events-none" />
-                        <span className="mr-1 pointer-events-none text-green-600">
-                            {capitalize(network.name)}
-                        </span>
-                    </div>
-                </PopupHeader>
+                    requestCount={requestCount}
+                />
             }
             footer={
                 <PopupFooter>
@@ -397,14 +389,7 @@ const Sign: FunctionComponent<DappRequestProps> = ({
                 showCheckbox
                 checkboxText="Don't show this warning again"
             />
-            <div className="px-6 py-3 flex flex-row items-center">
-                <div className="flex flex-row items-center justify-center w-10 h-10 rounded-full bg-primary-100">
-                    {websiteIcon ? <img alt="icon" src={websiteIcon} /> : null}
-                </div>
-                <div className="flex flex-col text-sm font-bold ml-4">
-                    {formatUrl(origin)}
-                </div>
-            </div>
+            <DAppOrigin name={origin} iconURL={websiteIcon} />
             <Divider />
             <span className="font-bold px-6 py-3 text-sm text-gray-800">
                 Signing Account

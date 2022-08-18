@@ -1,15 +1,16 @@
-import React, { useRef } from "react"
+import { useRef } from "react"
 
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import PopupFooter from "../../components/popup/PopupFooter"
 import TextInput from "../../components/input/TextInput"
+import infoIcon from "../../assets/images/icons/info_circle.svg"
+
 import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
 
 import * as yup from "yup"
-import { InferType } from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
 
@@ -21,35 +22,35 @@ import useNewAccountHelper from "../account/useNewAccountHelper"
 const createAccountSchema = yup.object().shape({
     accountName: yup.string().max(40, "Account name is too long"),
 })
-type createAccountFormData = InferType<typeof createAccountSchema>
+type createAccountFormData = { accountName: string }
 
 const WithdrawBlankCreateAccount = () => {
     const history: any = useOnMountHistory()
-    const {
-        pair,
-        preSelectedAsset,
-        isAssetDetailsPage,
-    } = history.location.state
+    const { pair, preSelectedAsset, isAssetDetailsPage } =
+        history.location.state
     const {
         register,
         handleSubmit,
-        errors,
         setError,
+
+        formState: { errors },
     } = useForm<createAccountFormData>({
         resolver: yupResolver(createAccountSchema),
     })
-    const {
-        suggestedAccountName,
-        checkAccountNameAvailablility,
-    } = useNewAccountHelper()
+    const { suggestedAccountName, checkAccountNameAvailablility } =
+        useNewAccountHelper()
     const { isOpen, status, dispatch } = useWaitingDialog()
     const createdAccountAddressRef = useRef("")
 
     const onSubmit = handleSubmit(async (data: createAccountFormData) => {
         try {
-            let accountName = data.accountName ?? suggestedAccountName
+            if (!data.accountName || !data.accountName.trim()) {
+                data.accountName = suggestedAccountName
+            }
+
+            data.accountName = data.accountName.trim()
             const { isAvailable, error } = checkAccountNameAvailablility(
-                accountName
+                data.accountName
             )
 
             if (!isAvailable) {
@@ -58,16 +59,21 @@ const WithdrawBlankCreateAccount = () => {
 
             dispatch({ type: "open", payload: { status: "loading" } })
 
-            const newAccount = await createAccount(accountName)
+            const newAccount = await createAccount(data.accountName)
 
             createdAccountAddressRef.current = newAccount.address
 
             dispatch({ type: "setStatus", payload: { status: "success" } })
         } catch (e) {
-            setError("accountName", {
-                message: e.message || "Error creating account.",
-                shouldFocus: true,
-            })
+            setError(
+                "accountName",
+                {
+                    message: e.message || "Error creating account.",
+                },
+                {
+                    shouldFocus: true,
+                }
+            )
             dispatch({ type: "setStatus", payload: { status: "error" } })
         }
     })
@@ -142,19 +148,22 @@ const WithdrawBlankCreateAccount = () => {
                             appearance="outline"
                             label="Account Name"
                             placeholder={suggestedAccountName}
-                            name="accountName"
-                            register={register}
+                            {...register("accountName")}
                             error={errors.accountName?.message}
                         />
                     </div>
-                    <div className="p-6">
-                        <div className="bg-blue-300 opacity-90 rounded-md w-full p-4 flex space-x-2 items-center font-bold justify-center">
-                            <span className="text-xs text-blue-900">
-                                <span className="font-bold">Info: </span>
+                    <div className="px-6">
+                        <div className="bg-primary-100 opacity-90 rounded-md w-full p-4 flex space-x-2 items-center font-bold justify-center">
+                            <span className="text-xs text-blue-900 flex space-x-2">
+                                <img
+                                    src={infoIcon}
+                                    alt="info"
+                                    className="w-3 h-3 mt-1 font-normal text-xs "
+                                />
                                 <span className="font-medium">
-                                    For importing hardware wallet accounts,
-                                    please go to the accounts management
-                                    section.
+                                    For importing <b>hardware wallet</b>{" "}
+                                    accounts, please go to the accounts
+                                    management section.
                                 </span>
                             </span>
                         </div>

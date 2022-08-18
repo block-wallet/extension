@@ -5,11 +5,11 @@ import { expect } from 'chai';
 import { INITIAL_NETWORKS } from '@block-wallet/background/utils/constants/networks';
 import { AddressBook } from '@block-wallet/background/controllers/AddressBookController';
 import { TransactionControllerState } from '@block-wallet/background/controllers/transactions/TransactionController';
-import { ERC20TransactionWatcherControllerState } from '@block-wallet/background/controllers/erc-20/TransactionWatcherController';
+import { TransactionWatcherControllerState } from '@block-wallet/background/controllers/TransactionWatcherController';
 import { SIGN_TRANSACTION_TIMEOUT } from '@block-wallet/background/utils/constants/time';
 
 const persistedState = {
-    ERC20TransactionWatcherControllerState: {},
+    TransactionWatcherControllerState: {},
     BlockFetchController: {
         blockFetchData: {
             1: {
@@ -134,7 +134,7 @@ const initialState: BlankAppState & {
     OnboardingController: { newAddedKeyOnLevel2: boolean };
     PreferencesController: { newAddedKeyOnLevel2: string };
 } = {
-    ERC20TransactionWatcherControllerState: {
+    TransactionWatcherControllerState: {
         transactions: {},
     },
     BlockFetchController: {
@@ -260,9 +260,6 @@ const initialState: BlankAppState & {
             },
         },
     },
-    IncomingTransactionController: {
-        incomingTransactions: {},
-    },
     TokenController: {
         userTokens: {} as any,
         deletedUserTokens: {} as any,
@@ -274,9 +271,9 @@ describe('State reconciler', () => {
     it('Should reconcile two levels of the persisted state with the initial state correctly', () => {
         const newState = reconcileState<any>(persistedState, initialState);
         expect(newState).to.be.deep.equal({
-            ERC20TransactionWatcherControllerState: {
+            TransactionWatcherControllerState: {
                 transactions: {},
-            } as ERC20TransactionWatcherControllerState,
+            } as TransactionWatcherControllerState,
             BlockFetchController: {
                 blockFetchData: {
                     1: {

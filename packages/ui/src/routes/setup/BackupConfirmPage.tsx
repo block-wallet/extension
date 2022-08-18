@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect, useMemo, useState } from "react"
+import { FunctionComponent, useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 
 import PageLayout from "../../components/PageLayout"
@@ -157,10 +157,8 @@ const BackupConfirmPage = () => {
     const backLink = isReminder ? "/reminder" : "/setup/create/notice"
     const doneLink = isReminder ? "/reminder/backup/done" : "/setup/done"
     const [inputWords, setInputWords] = useState<SeedPhraseWord[]>([])
-    const [
-        isVerificationInProgress,
-        setIsVerificationInProgress,
-    ] = useState<boolean>(false)
+    const [isVerificationInProgress, setIsVerificationInProgress] =
+        useState<boolean>(false)
     const [verificationError, setVerificationError] = useState<string>("")
     const seedWords = useMemo(() => {
         let wordsForSeedPhrase: SeedPhraseWord[] = []

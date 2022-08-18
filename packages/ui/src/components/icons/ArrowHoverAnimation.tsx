@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import styled, { keyframes } from "styled-components"
 
 import arrow from "../../assets/images/icons/arrow_margin.svg"
@@ -30,6 +30,7 @@ const ROTATE = {
 }
 interface ArrowHoverAnimationProps {
     direction?: "top" | "right" | "left" | "down"
+    children?: React.ReactNode
 }
 const ArrowHoverAnimation: FunctionComponent<ArrowHoverAnimationProps> = ({
     children,

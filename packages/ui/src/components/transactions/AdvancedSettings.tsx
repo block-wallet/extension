@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect, useRef, useState } from "react"
+import { FunctionComponent, useEffect, useRef, useState } from "react"
 import { Classes, classnames } from "../../styles"
 import { useOnClickOutside } from "../../util/useOnClickOutside"
 import ToggleButton from "../button/ToggleButton"
@@ -42,10 +42,8 @@ export const AdvancedSettings: FunctionComponent<{
         setIsActive(false)
     })
 
-    const [
-        advancedSettingsData,
-        setAdvancedSettingsData,
-    ] = useState<TransactionAdvancedData>(data)
+    const [advancedSettingsData, setAdvancedSettingsData] =
+        useState<TransactionAdvancedData>(data)
 
     const nextNonce = useRef(0)
     useEffect(() => {

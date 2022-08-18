@@ -1,17 +1,12 @@
-import type {
-    DappRequestParams,
-    WatchAssetConfirmParams,
-} from "@block-wallet/background/utils/types/ethereum"
+import type { DappRequestParams } from "@block-wallet/background/utils/types/ethereum"
 import AccountIcon from "../../components/icons/AccountIcon"
 import CopyTooltip from "../../components/label/СopyToClipboardTooltip"
 import Divider from "../../components/Divider"
 import PopupFooter from "../../components/popup/PopupFooter"
-import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
-import React, { useState, useEffect, FunctionComponent } from "react"
-import Tooltip from "../../components/label/Tooltip"
+import { useState, useEffect, FunctionComponent } from "react"
 import blankIcon from "../../assets/images/logo.svg"
-import { AiFillInfoCircle, AiFillQuestionCircle } from "react-icons/ai"
+import { AiFillQuestionCircle } from "react-icons/ai"
 import { Classes } from "../../styles/classes"
 import { DappReq } from "../../context/hooks/useDappRequest"
 import { capitalize } from "../../util/capitalize"
@@ -34,6 +29,8 @@ import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
 import { DAPP_FEEDBACK_WINDOW_TIMEOUT } from "../../util/constants"
+import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
+import DAppOrigin from "../../components/dApp/DAppOrigin"
 
 const UNKNOWN_BALANCE = "UNKNOWN_BALANCE"
 const IS_BASE64_IMAGE = "IS_BASE64_IMAGE"
@@ -53,6 +50,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
     requestCount,
     requestId,
     dappReqData,
+    siteMetadata,
 }) => {
     const network = useSelectedNetwork()
     const { accounts } = useBlankState()!
@@ -87,11 +85,11 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
     const addToken = async () => {
         try {
             dispatch({ type: "open", payload: { status: "loading" } })
-            await confirmDappRequest(requestId, true, {
+            await confirmDappRequest<DappReq.ASSET>(requestId, true, {
                 symbol: token.symbol,
                 decimals: token.decimals,
                 image: assetImageSrc(),
-            } as WatchAssetConfirmParams)
+            })
             dispatch({ type: "setStatus", payload: { status: "success" } })
         } catch (err) {
             dispatch({
@@ -191,8 +189,8 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                         <CopyTooltip copied={copied} />
                     </button>
                 </div>
-                <span className="font-bold px-6 text-sm text-gray-800">
-                    With asset:
+                <span className="font-medium px-6 text-xxs text-gray-500">
+                    WITH ASSET:
                 </span>
             </>
         )
@@ -201,31 +199,10 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
     return (
         <PopupLayout
             header={
-                <PopupHeader
-                    title={(isUpdate ? "Update" : "Add") + " Asset"}
-                    close={false}
-                    backButton={false}
-                >
-                    {requestCount > 1 && (
-                        <div className="group relative">
-                            <AiFillInfoCircle
-                                size={26}
-                                className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
-                            />
-                            <Tooltip
-                                content={`${requestCount - 1} more ${
-                                    requestCount > 2 ? "requests" : "request"
-                                }`}
-                            />
-                        </div>
-                    )}
-                    <div className="flex flex-row items-center ml-auto p-1 px-2 pr-1 text-gray-600 rounded-md border border-primary-200 text-xs bg-green-100">
-                        <span className="inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-green-400 pointer-events-none" />
-                        <span className="mr-1 pointer-events-none text-green-600">
-                            {capitalize(network.name)}
-                        </span>
-                    </div>
-                </PopupHeader>
+                <DAppPopupHeader
+                    title={`${isUpdate ? "Update" : "Add"} Asset`}
+                    requestCount={requestCount}
+                />
             }
             footer={
                 <PopupFooter>
@@ -256,7 +233,9 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                         `You've ${isUpdate ? "updated" : "added"} the asset.`,
                     error:
                         texts?.error ||
-                        "There was an error switching the network.",
+                        `There was an error ${
+                            isUpdate ? "updating" : "adding"
+                        } the asset.`,
                 }}
                 onDone={() => {
                     dispatch({ type: "close" })
@@ -265,8 +244,13 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                 clickOutsideToClose={false}
                 hideButton
             />
+            <DAppOrigin
+                name={siteMetadata.name}
+                iconURL={siteMetadata.iconURL}
+            />
+            <Divider />
             {isUpdate ? UpdateAssetLayout() : null}
-            <div className="flex flex-row items-center px-6 py-3">
+            <div className="flex flex-row items-center px-6 pt-6 pb-3">
                 <div className="flex flex-row items-center justify-center w-10 h-10 rounded-full bg-primary-100">
                     <img alt="icon" src={assetImageSrc()} />
                 </div>
@@ -282,7 +266,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                     <CopyTooltip copied={copied} />
                 </button>
                 <div className="flex flex-col ml-auto h-full">
-                    <span className="text-sm font-bold mb-auto text-center">
+                    <span className="text-sm font-bold mb-auto text-left">
                         Balance
                     </span>
                     {balance === UNKNOWN_BALANCE ? (
@@ -313,10 +297,10 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                     )}
                 </div>
             </div>
-            <span className="font-bold px-6 text-sm text-gray-800">
-                {isUpdate ? "In " : "To "} account:
+            <span className="font-medium px-6 pt-3 text-xxs text-gray-500">
+                {isUpdate ? "IN " : "TO "} ACCOUNT:
             </span>
-            <div className="flex flex-col px-6 py-3">
+            <div className="flex flex-col px-6 pb-6 pt-3">
                 <div className="flex flex-row items-center space-x-4">
                     <AccountIcon
                         className="w-10 h-10"
@@ -342,22 +326,30 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                 </div>
             </div>
             <Divider />
-            <div className="flex flex-col px-6 py-3 space-y-0.5 text-sm text-gray-800 break-words">
-                <span className="font-bold">Decimals</span>
-                <span className="text-gray-600">{token.decimals}</span>
+            <div className="flex flex-col px-6 py-3 space-y-2 text-xs text-gray-800 break-words">
+                <div className="flex flex-col space-y-0.5">
+                    <span className="font-bold">Decimals</span>
+                    <span className="text-gray-600">{token.decimals}</span>
+                </div>
                 {token!.image && !isBase64Image ? (
-                    <>
-                        <span className="font-bold pt-1">Image url</span>
-                        <span className="text-gray-600 pb-1">
+                    <div className="flex flex-col space-y-0.5">
+                        <span className="font-bold pt-1">Image URL</span>
+                        <span className="text-gray-600 pb-2">
                             {token!.image}
                         </span>
                         <WarningTip
                             text={
-                                "Your IP address will be exposed to this domain if you choose to save the image URL"
+                                <span>
+                                    <span className="font-bold">
+                                        Attention!{" "}
+                                    </span>
+                                    Your IP address will be exposed to this
+                                    domain if you choose to save the image URL
+                                </span>
                             }
                             fontSize="text-xs"
                         />
-                        <div className="pt-1 flex flex-row items-center">
+                        <div className="pt-2 flex flex-row items-center">
                             <input
                                 type="checkbox"
                                 checked={isImageSaved}
@@ -368,7 +360,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                             />
                             <span className="text-xs pl-2">Save image URL</span>
                         </div>
-                    </>
+                    </div>
                 ) : null}
                 {isBase64Image && (
                     <div className="text-xs py-2">

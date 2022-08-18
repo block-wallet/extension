@@ -178,6 +178,10 @@ export class ContractSignatureParser {
         address: string
     ): Promise<string | undefined> {
         const etherscanAPI = this._networkController.network.etherscanApiUrl;
+        if (!etherscanAPI) {
+            return undefined;
+        }
+
         const request = await axios.get(`${etherscanAPI}/api`, {
             params: {
                 module: 'contract',

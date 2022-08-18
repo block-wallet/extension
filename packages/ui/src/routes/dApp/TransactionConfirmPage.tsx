@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Redirect } from "react-router-dom"
 import { BsFileEarmarkText } from "react-icons/bs"
 import { AiFillInfoCircle } from "react-icons/ai"
@@ -12,7 +12,6 @@ import { Classes, classnames } from "../../styles"
 
 // Components
 import PopupFooter from "../../components/popup/PopupFooter"
-import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import AccountIcon from "../../components/icons/AccountIcon"
 import CopyTooltip from "../../components/label/СopyToClipboardTooltip"
@@ -77,13 +76,12 @@ import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import TransactionDetails from "../../components/transactions/TransactionDetails"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { canUserSubmitTransaction } from "../../util/transactionUtils"
+import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
 
 const TransactionConfirmPage = () => {
     //Retrieves all the transactions to be processed
-    const {
-        transaction: nextTransaction,
-        transactionCount,
-    } = useNonSubmittedExternalTransaction()
+    const { transaction: nextTransaction, transactionCount } =
+        useNonSubmittedExternalTransaction()
     const route = useNextRequestRoute()
     const [currentTx, setCurrentTx] = useDebouncedState<TransactionMeta>(
         nextTransaction,
@@ -133,11 +131,8 @@ const TransactionConfirm: React.FC<{
         dialogOpen: false,
     })
     const { hideAddressWarning } = useUserSettings()
-    const {
-        isDeviceUnlinked,
-        checkDeviceIsLinked,
-        resetDeviceLinkStatus,
-    } = useCheckAccountDeviceLinked()
+    const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
+        useCheckAccountDeviceLinked()
     const network = useSelectedNetwork()
     const { transaction: txById, params } = useTransactionById(transactionId)
     // At this point transactionId is ensured.
@@ -190,10 +185,8 @@ const TransactionConfirm: React.FC<{
         maxFeePerGas: params.maxFeePerGas,
     })
     // const [error, setError] = useState<string>("")
-    const [
-        transactionAdvancedData,
-        setTransactionAdvancedData,
-    ] = useState<TransactionAdvancedData>({})
+    const [transactionAdvancedData, setTransactionAdvancedData] =
+        useState<TransactionAdvancedData>({})
     const nonceRef = useRef(0)
 
     const description =
@@ -202,32 +195,25 @@ const TransactionConfirm: React.FC<{
     const account = accounts[getAddress(params.from!)]
     const accountName = account ? account.name : "BlockWallet"
 
-    const {
-        status,
-        isOpen,
-        dispatch,
-        texts,
-        titles,
-        closeDialog,
-        gifs,
-    } = useTransactionWaitingDialog(
-        transaction
-            ? {
-                  status: transaction.status,
-                  error: transaction.error as Error,
-                  epochTime: transaction?.approveTime,
-              }
-            : undefined,
-        HardwareWalletOpTypes.SIGN_TRANSACTION,
-        account.accountType,
-        {
-            reject: React.useCallback(() => {
-                if (transactionId) {
-                    rejectTransaction(transactionId)
-                }
-            }, [transactionId]),
-        }
-    )
+    const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
+        useTransactionWaitingDialog(
+            transaction
+                ? {
+                      status: transaction.status,
+                      error: transaction.error as Error,
+                      epochTime: transaction?.approveTime,
+                  }
+                : undefined,
+            HardwareWalletOpTypes.SIGN_TRANSACTION,
+            account.accountType,
+            {
+                reject: useCallback(() => {
+                    if (transactionId) {
+                        rejectTransaction(transactionId)
+                    }
+                }, [transactionId]),
+            }
+        )
 
     const calcTranTotals = () => {
         const gas = calculateTransactionGas(
@@ -273,10 +259,8 @@ const TransactionConfirm: React.FC<{
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [transactionGas, transactionId, transaction.loadingGasValues])
 
-    const {
-        estimatedBaseFee: baseFeePerGas,
-        gasPricesLevels,
-    } = useGasPriceData()!
+    const { estimatedBaseFee: baseFeePerGas, gasPricesLevels } =
+        useGasPriceData()!
 
     useEffect(() => {
         if (
@@ -466,23 +450,10 @@ const TransactionConfirm: React.FC<{
     return (
         <PopupLayout
             header={
-                <PopupHeader title="Confirm" close={false} backButton={false}>
-                    {transactionCount > 1 && (
-                        <div className="group relative">
-                            <AiFillInfoCircle
-                                size={26}
-                                className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
-                            />
-                            <Tooltip
-                                content={`${transactionCount - 1} more ${
-                                    transactionCount > 2
-                                        ? "transactions"
-                                        : "transaction"
-                                }`}
-                            />
-                        </div>
-                    )}
-                </PopupHeader>
+                <DAppPopupHeader
+                    title="Confirm"
+                    requestCount={transactionCount}
+                />
             }
             footer={
                 <PopupFooter>
@@ -696,7 +667,8 @@ const TransactionConfirm: React.FC<{
                                 feeData: {
                                     gasLimit: defaultGas.gasLimit,
                                     maxFeePerGas: defaultGas.maxFeePerGas!,
-                                    maxPriorityFeePerGas: defaultGas.maxPriorityFeePerGas!,
+                                    maxPriorityFeePerGas:
+                                        defaultGas.maxPriorityFeePerGas!,
                                 },
                             }}
                             setGas={(gasFees) => {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 export const toError = (error: any): Error => {
     let parsedError = error;
     if (!(error instanceof Error)) {

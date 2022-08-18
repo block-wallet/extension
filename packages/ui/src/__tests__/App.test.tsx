@@ -1,4 +1,3 @@
-import React from "react"
 import { render, screen } from "@testing-library/react"
 import { MockPopup, MockTab } from "../mock/MockApp"
 import { initBackgroundState } from "../context/background/backgroundContext"
@@ -33,6 +32,6 @@ test("PopUp renders", () => {
         />
     )
 
-    const privacy = screen.queryAllByText(/privacy/i).length !== 0
+    const privacy = screen.queryAllByText(/send/i).length !== 0
     expect(privacy).toBeTruthy()
 })

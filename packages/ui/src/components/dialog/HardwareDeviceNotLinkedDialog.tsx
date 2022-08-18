@@ -1,4 +1,3 @@
-import React from "react"
 import { openHardwareReconnect } from "../../context/commActions"
 import { DEVICE_RECONNECTION_WARNING_STEPS } from "../../util/connectionStepUtils"
 import WarningDialog from "./WarningDialog"

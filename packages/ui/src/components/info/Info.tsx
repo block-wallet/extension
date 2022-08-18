@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react"
+import { FC } from "react"
 import CheckmarkCircle from "../icons/CheckmarkCircle"
 import ExclamationCircleIconFull from "../icons/ExclamationCircleIconFull"
 import classnames from "classnames"
@@ -12,16 +12,18 @@ interface InfoItemProps extends ClassNameProp {
 }
 
 interface InfoComponents {
-    Item: FunctionComponent<InfoItemProps>
-    Title: FunctionComponent
-    List: FunctionComponent<ClassNameProp>
+    Item: FC<InfoItemProps & { children: React.ReactNode }>
+    Title: FC<{ children: React.ReactNode }>
+    List: FC<ClassNameProp & { children: React.ReactNode }>
 }
 
-const Info: FunctionComponent & InfoComponents = ({ children }) => {
+const Info: FC<{ children: React.ReactNode }> & InfoComponents = ({
+    children,
+}) => {
     return <div>{children}</div>
 }
 
-const Title: FunctionComponent = ({ children }) => {
+const Title = ({ children }: { children: React.ReactNode }) => {
     return (
         <span className="text-2xl font-bold leading-10 font-title">
             {children}
@@ -29,7 +31,7 @@ const Title: FunctionComponent = ({ children }) => {
     )
 }
 
-const InfoList: FunctionComponent<ClassNameProp> = ({
+const InfoList: FC<ClassNameProp & { children: React.ReactNode }> = ({
     children,
     className,
 }) => {
@@ -43,7 +45,7 @@ const BulletType = {
     warn: () => <ExclamationCircleIconFull size="24" />,
 }
 
-const Item: FunctionComponent<InfoItemProps> = ({
+const Item: FC<InfoItemProps & { children: React.ReactNode }> = ({
     children,
     type,
     className,

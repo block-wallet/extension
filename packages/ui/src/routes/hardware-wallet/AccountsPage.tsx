@@ -1,4 +1,11 @@
-import React, { useEffect, useMemo, useReducer, useRef, useState } from "react"
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useReducer,
+    useRef,
+    useState,
+} from "react"
 
 import LoadingOverlay from "../../components/loading/LoadingOverlay"
 import {
@@ -79,10 +86,8 @@ const HardwareWalletAccountsPage = () => {
     } = useAsyncInvoke<string>({
         status: Status.PENDING,
     })
-    const {
-        run: runImportAccounts,
-        isLoading: isImportingAccounts,
-    } = useAsyncInvoke()
+    const { run: runImportAccounts, isLoading: isImportingAccounts } =
+        useAsyncInvoke()
     const { accounts: existingAccounts } = useBlankState()!
 
     const existingAddresses = useMemo(() => {
@@ -103,15 +108,15 @@ const HardwareWalletAccountsPage = () => {
         run(getHardwareWalletHDPath(vendor))
     }, [vendor, run])
 
-    const [accountsBalances, setAccountBalances] = useState<
-        { [address in string]: BigNumber }
-    >({})
+    const [accountsBalances, setAccountBalances] = useState<{
+        [address in string]: BigNumber
+    }>({})
     const addAccountBalance = (address: string, balance: BigNumber) => {
         accountsBalances[address] = BigNumber.from(balance)
         setAccountBalances(accountsBalances)
     }
 
-    const getAccounts = React.useCallback(async () => {
+    const getAccounts = useCallback(async () => {
         setState({ gettingAccounts: true })
         try {
             const accounts = await getHardwareWalletAccounts(

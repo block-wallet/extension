@@ -1,5 +1,4 @@
 import { BigNumber } from '@ethersproject/bignumber';
-import isTokenExcluded from 'banned-assets';
 import { parseUnits } from 'ethers/lib/utils';
 import { BaseController } from '../infrastructure/BaseController';
 import { Network } from '../utils/constants/networks';
@@ -8,8 +7,6 @@ import {
     PendingWithdrawal,
     PendingWithdrawalStatus,
 } from './blank-deposit/BlankDepositController';
-import { TransactionWatcherController } from './erc-20/TransactionWatcherController';
-import { IncomingTransactionController } from './IncomingTransactionController';
 import NetworkController from './NetworkController';
 import { PreferencesController } from './PreferencesController';
 import { TransactionController } from './transactions/TransactionController';
@@ -21,6 +18,10 @@ import {
     TransactionStatus,
 } from './transactions/utils/types';
 import { compareAddresses } from './transactions/utils/utils';
+import {
+    TransactionTypeEnum,
+    TransactionWatcherController,
+} from './TransactionWatcherController';
 
 export interface IActivityListState {
     activityList: {
@@ -33,7 +34,6 @@ export class ActivityListController extends BaseController<IActivityListState> {
     constructor(
         private readonly _transactionsController: TransactionController,
         private readonly _blankDepositsController: BlankDepositController,
-        private readonly _incomingTransactionsController: IncomingTransactionController,
         private readonly _preferencesController: PreferencesController,
         private readonly _networkController: NetworkController,
         private readonly _transactionWatcherController: TransactionWatcherController
@@ -43,9 +43,6 @@ export class ActivityListController extends BaseController<IActivityListState> {
         // If any of the following stores were updated trigger the ActivityList update
         this._transactionsController.UIStore.subscribe(this.onStoreUpdate);
         this._blankDepositsController.UIStore.subscribe(this.onStoreUpdate);
-        this._incomingTransactionsController.store.subscribe(
-            this.onStoreUpdate
-        );
         this._preferencesController.store.subscribe(this.onStoreUpdate);
         this._networkController.store.subscribe(this.onStoreUpdate);
         this._transactionWatcherController.store.subscribe(this.onStoreUpdate);
@@ -75,7 +72,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
         const { selectedAddress } =
             this._preferencesController.store.getState();
 
-        const { selectedNetwork, network } = this._networkController;
+        const { network } = this._networkController;
 
         // Get parsed transactions
         const {
@@ -83,35 +80,20 @@ export class ActivityListController extends BaseController<IActivityListState> {
             pending: pendingTransactions,
         } = this.parseTransactions(selectedAddress);
 
-        // Get parsed incoming transactions
-        const incomingTransactions = this.parseIncomingTransactions(
-            selectedAddress,
-            selectedNetwork,
-            [confirmedTransactions]
+        // Get parsed watched transactions
+        const watchedTransactions = this.parseWatchedTransactions(
+            network.chainId,
+            selectedAddress
         );
 
         // Get parsed withdrawals
         const { confirmed: confirmedWithdrawals, pending: pendingWithdrawals } =
             this.parseWithdrawalTransactions(selectedAddress, network);
 
-        const confirmedERC20TransferTransactions =
-            this.parseERC20TransferTransactions(
-                network.chainId,
-                selectedAddress,
-                [
-                    incomingTransactions,
-                    confirmedWithdrawals,
-                    pendingWithdrawals,
-                    confirmedTransactions,
-                    pendingTransactions,
-                ]
-            );
-
         // Concat all and order by time
         const confirmedConcated = confirmedTransactions
             .concat(confirmedWithdrawals)
-            .concat(incomingTransactions)
-            .concat(confirmedERC20TransferTransactions)
+            .concat(watchedTransactions)
             .filter(
                 (t1, index, self) =>
                     index ===
@@ -208,47 +190,40 @@ export class ActivityListController extends BaseController<IActivityListState> {
     }
 
     /**
-     * parseIncomingTransactions
+     * parseWatchedTransactions
      *
-     * @param selectedAddress The user selected address
-     * @param selectedNetwork The user selected network
-     * @returns The user incoming transactions
+     * @returns The watched transactions
      */
-    private parseIncomingTransactions(
-        selectedAddress: string,
-        selectedNetwork: string,
-        transactionsArraysToFilter: TransactionMeta[][]
-    ) {
-        const { incomingTransactions } =
-            this._incomingTransactionsController.store.getState();
+    private parseWatchedTransactions(
+        chainId: number,
+        selectedAddress: string
+    ): TransactionMeta[] {
+        const { transactions } =
+            this._transactionWatcherController.store.getState();
 
-        if (
-            incomingTransactions &&
-            selectedAddress in incomingTransactions &&
-            selectedNetwork in incomingTransactions[selectedAddress]
-        ) {
-            let transactions = Object.values(
-                incomingTransactions[selectedAddress][selectedNetwork].list
-            );
-            transactionsArraysToFilter.forEach(
-                (transactionsToFilter: TransactionMeta[]) => {
-                    transactions = transactions.filter(
-                        (t1: TransactionMeta) => {
-                            return !transactionsToFilter.some(
-                                (t2: TransactionMeta) => {
-                                    const h1 = this.pickHash(t1);
-                                    const h2 = this.pickHash(t2);
-                                    return h1 && h2 && h1 === h2;
-                                }
-                            );
-                        }
-                    );
+        const watchedTransactions: TransactionMeta[] = [];
+
+        if (chainId in transactions) {
+            if (selectedAddress in transactions[chainId]) {
+                const transactionsByAddress =
+                    transactions[chainId][selectedAddress];
+
+                for (const type in transactionsByAddress) {
+                    const transactionType = type as TransactionTypeEnum;
+
+                    const { transactions: transactionsByType } =
+                        transactionsByAddress[transactionType];
+
+                    for (const transactionHash in transactionsByType) {
+                        watchedTransactions.push(
+                            transactionsByType[transactionHash]
+                        );
+                    }
                 }
-            );
-            return transactions;
+            }
         }
 
-        return [];
+        return watchedTransactions;
     }
 
     /**
@@ -285,7 +260,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
 
         const mapFc = (w: PendingWithdrawal): TransactionMeta => {
             const decimals = w.decimals || nativeCurrency.decimals; // Default to ETH
-            const value = parseUnits(w.pair.amount, decimals).sub(
+            const amount = parseUnits(w.pair.amount, decimals).sub(
                 w.fee ? BigNumber.from(w.fee) : BigNumber.from(0)
             );
 
@@ -296,17 +271,22 @@ export class ActivityListController extends BaseController<IActivityListState> {
                 ],
                 time: w.time,
                 confirmationTime: w.time,
-
                 transactionParams: {
                     to: w.toAddress,
-                    value,
+                    from: w.transactionReceipt?.from,
+                    value: w.value,
                     hash: w.transactionHash,
-                    // Set withdrawal fee on gasPrice for the sake of providing it to the UI
-                    gasPrice: w.fee,
+                    gasPrice: w.gasPrice,
+                    nonce: w.nonce,
+                    gasLimit: w.gasLimit,
+                    maxFeePerGas:
+                        w.transactionReceipt?.effectiveGasPrice ||
+                        w.maxFeePerGas,
+                    maxPriorityFeePerGas: w.maxPriorityFeePerGas,
                 },
                 transferType: {
-                    amount: value,
-                    decimals: w.decimals!,
+                    amount,
+                    decimals,
                     currency: w.pair.currency.toUpperCase(),
                 },
                 transactionReceipt: w.transactionReceipt,
@@ -314,6 +294,10 @@ export class ActivityListController extends BaseController<IActivityListState> {
                 loadingGasValues: false,
                 metaType: MetaType.REGULAR,
                 blocksDropCount: 0,
+                methodSignature: w.methodSignature,
+                advancedData: {
+                    withdrawFee: w.fee,
+                },
             };
         };
 
@@ -340,59 +324,6 @@ export class ActivityListController extends BaseController<IActivityListState> {
             .map(mapFc);
 
         return { confirmed, pending };
-    }
-
-    private parseERC20TransferTransactions(
-        chainId: number,
-        selectedAddress: string,
-        transactionsArraysToFilter: TransactionMeta[][]
-    ) {
-        const { incomingTransactions, outgoingTransactions } =
-            this._transactionWatcherController.getState(
-                chainId,
-                selectedAddress
-            );
-
-        let transactions: TransactionMeta[] = [];
-
-        for (const transactionHash in incomingTransactions) {
-            const transaction = incomingTransactions[transactionHash];
-            if (transactions.indexOf(transaction) === -1) {
-                transactions.push(transaction);
-            }
-        }
-        for (const transactionHash in outgoingTransactions) {
-            const transaction = outgoingTransactions[transactionHash];
-            if (transactions.indexOf(transaction) === -1) {
-                transactions.push(transaction);
-            }
-        }
-
-        // filtering transactions of spam tokens
-        // TODO: This has to be configurable for the user.
-        transactions = transactions.filter((transaction: TransactionMeta) => {
-            return (
-                transaction.transactionReceipt &&
-                !isTokenExcluded(
-                    chainId,
-                    transaction.transactionReceipt?.contractAddress
-                )
-            );
-        });
-
-        transactionsArraysToFilter.forEach(
-            (transactionsToFilter: TransactionMeta[]) => {
-                transactions = transactions.filter((t1: TransactionMeta) => {
-                    return !transactionsToFilter.some((t2: TransactionMeta) => {
-                        const h1 = this.pickHash(t1);
-                        const h2 = this.pickHash(t2);
-                        return h1 && h2 && h1 === h2;
-                    });
-                });
-            }
-        );
-
-        return transactions;
     }
 
     /**

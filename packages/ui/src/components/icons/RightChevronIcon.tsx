@@ -1,4 +1,3 @@
-import React from "react"
 import classnames from "classnames"
 
 const RightChevronIcon: React.FC<{ className?: string }> = ({ className }) => {

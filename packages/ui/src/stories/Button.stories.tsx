@@ -1,4 +1,3 @@
-import React from "react"
 import { Meta } from "@storybook/react"
 import classnames from "classnames"
 import icon from "../assets/images/icons/book.svg"

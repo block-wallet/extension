@@ -25,6 +25,16 @@ export const DAPP_FEEDBACK_WINDOW_TIMEOUT = 3000
  */
 export const SIGN_TRANSACTION_TIMEOUT = 180000
 
+/**
+ * Default swap fee for users without fee discount
+ */
+export const BASE_SWAP_FEE = 0.5
+
+/**
+ * Time ellapsed before refreshing the swap quote
+ */
+export const SWAP_QUOTE_REFRESH_TIMEOUT = 1000 * 15
+
 export const LINKS = {
     TELEGRAM: "https://t.me/blockwallet",
     GITHUB: "https://github.com/block-wallet/",
@@ -35,5 +45,7 @@ export const LINKS = {
             "https://help.blockwallet.io/hc/en-us/articles/6670471581841-What-is-an-HD-Path-",
         LOCK_TIMEOUT:
             "https://help.blockwallet.io/hc/en-us/articles/6815376575249",
+        CUSTOM_NETWORK_RISKS:
+            "https://help.blockwallet.io/hc/en-us/articles/7786071253649-How-to-Add-a-Custom-Network-RPC",
     },
 }

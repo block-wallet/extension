@@ -12,24 +12,13 @@
     "parserOptions": {
         "ecmaVersion": 12,
         "sourceType": "module",
-        "project": [
-            "tsconfig.json"
-        ]
+        "project": ["tsconfig.json"]
     },
-    "plugins": [
-        "@typescript-eslint"
-    ],
-    "ignorePatterns": [
-        "**/*.js",
-        "test/"
-    ],
+    "plugins": ["@typescript-eslint"],
+    "ignorePatterns": ["**/*.js", "test/"],
     "rules": {
-        "@typescript-eslint/no-empty-interface": [
-            "warn"
-        ],
-        "@typescript-eslint/await-thenable": [
-            "warn"
-        ],
-        "no-console": 2
+        "@typescript-eslint/no-empty-interface": ["warn"],
+        "@typescript-eslint/await-thenable": ["warn"],
+        "@typescript-eslint/no-explicit-any": "off"
     }
 }

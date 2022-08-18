@@ -1,4 +1,4 @@
-import React, { FC, useState } from "react"
+import { FC, useState } from "react"
 import { BigNumber } from "ethers"
 import classnames from "classnames"
 import { GasPriceLevels } from "@block-wallet/background/controllers/GasPricesController"
@@ -55,9 +55,9 @@ const getDisplayGasPrices = (
     gasLimit: BigNumber
 ): DisplayGasPricesLevels | undefined => {
     if (gasPrices) {
-        return (Object.entries(gasPrices) as Array<
-            [keyof GasPriceLevels, FeeData]
-        >).reduce(
+        return (
+            Object.entries(gasPrices) as Array<[keyof GasPriceLevels, FeeData]>
+        ).reduce(
             (acc: DisplayGasPricesLevels, [level, gasPrice]) => {
                 let data = {}
                 if (isEIP1559Compatible && estimatedBaseFee) {
@@ -98,7 +98,7 @@ const getDisplayGasPrices = (
     return undefined
 }
 
-const GasData: FC = ({ children }) => {
+const GasData = ({ children }: { children: React.ReactNode }) => {
     return (
         <div className="flex flex-col p-3 space-y-1">
             <ul className="list-none">{children}</ul>
@@ -141,19 +141,15 @@ const GasPricesInfo: FC = () => {
     const [calculateGasCost, setCalculateCost] = useState<
         "SEND" | "DEPOSIT" | "WITHDRAW"
     >("SEND")
-    const {
-        exchangeRates,
-        nativeCurrency,
-        localeInfo,
-        networkNativeCurrency,
-    } = useBlankState()!
+    const { exchangeRates, nativeCurrency, localeInfo, networkNativeCurrency } =
+        useBlankState()!
 
     const {
         showGasLevels,
         isEIP1559Compatible,
         nativeCurrency: { decimals: nativeCurrencyDecimals },
-        isTornadoEnabled,
     } = useSelectedNetwork()
+    const isTornadoEnabled = false // No matter network config, we won't show deposit/withdraw options for now
     const { gasPricesLevels, estimatedBaseFee } = useGasPriceData()
 
     const GAS_LIMITS = {
@@ -324,15 +320,18 @@ const GasPricesInfo: FC = () => {
                                                             {
                                                                 exchangeRates,
                                                                 localeInfo: {
-                                                                    currency: nativeCurrency,
-                                                                    language: localeInfo,
+                                                                    currency:
+                                                                        nativeCurrency,
+                                                                    language:
+                                                                        localeInfo,
                                                                 },
                                                                 minValue: 0.01,
-                                                                networkNativeCurrency: {
-                                                                    symbol:
-                                                                        networkNativeCurrency.symbol,
-                                                                    decimals: nativeCurrencyDecimals,
-                                                                },
+                                                                networkNativeCurrency:
+                                                                    {
+                                                                        symbol: networkNativeCurrency.symbol,
+                                                                        decimals:
+                                                                            nativeCurrencyDecimals,
+                                                                    },
                                                             }
                                                         )}
                                                     </span>

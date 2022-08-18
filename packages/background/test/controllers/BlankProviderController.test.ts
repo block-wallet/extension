@@ -37,7 +37,7 @@ import BlockUpdatesController from '@block-wallet/background/controllers/block-u
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { ExternalEventSubscription } from '@block-wallet/background/utils/types/communication';
 import * as random from '@block-wallet/background/utils/randomBytes';
-import { TransactionWatcherController } from '@block-wallet/background/controllers/erc-20/TransactionWatcherController';
+import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
 
 const UNI_ORIGIN = 'https://app.uniswap.org';
 const TX_HASH =
@@ -183,27 +183,6 @@ describe('Blank Provider Controller', function () {
             }
         );
 
-        transactionWatcherController = new TransactionWatcherController(
-            networkController,
-            preferencesController,
-            blockUpdatesController,
-            tokenController,
-            transactionController,
-            {
-                transactions: {},
-            }
-        );
-
-        accountTrackerController = new AccountTrackerController(
-            mockKeyringController,
-            networkController,
-            tokenController,
-            tokenOperationsController,
-            preferencesController,
-            blockUpdatesController,
-            transactionWatcherController
-        );
-
         appStateController = new AppStateController(
             {
                 idleTimeout: defaultIdleTimeout,
@@ -235,6 +214,27 @@ describe('Blank Provider Controller', function () {
                 return Promise.resolve(ethTx.sign(privateKey));
             },
             { txHistoryLimit: 40 }
+        );
+
+        transactionWatcherController = new TransactionWatcherController(
+            networkController,
+            preferencesController,
+            blockUpdatesController,
+            tokenController,
+            transactionController,
+            {
+                transactions: {},
+            }
+        );
+
+        accountTrackerController = new AccountTrackerController(
+            mockKeyringController,
+            networkController,
+            tokenController,
+            tokenOperationsController,
+            preferencesController,
+            blockUpdatesController,
+            transactionWatcherController
         );
 
         blankProviderController = new BlankProviderController(

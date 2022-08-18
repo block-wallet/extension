@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
 import arrowDown from "../../assets/images/icons/arrow_down.svg"
 
 export const ArrowUpDown: FunctionComponent<{ active: boolean }> = ({

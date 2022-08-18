@@ -1,12 +1,14 @@
-import React from "react"
+import { PropsWithChildren } from "react"
 import classnames from "classnames"
 import arrow from "../../../assets/images/icons/arrow_down.svg"
 import PagesList from "./PagesList"
 
-const PageControlButton: React.FC<{
-    onClick: () => void
-    disabled?: boolean
-}> = ({ children, onClick, disabled }) => {
+const PageControlButton: React.FC<
+    PropsWithChildren<{
+        onClick: () => void
+        disabled?: boolean
+    }>
+> = ({ children, onClick, disabled }) => {
     return (
         <button
             className={classnames(

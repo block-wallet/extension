@@ -1,4 +1,5 @@
-import React, { FunctionComponent } from "react"
+import { FunctionComponent } from "react"
+
 import classnames from "classnames"
 const TrashBinIcon: FunctionComponent<{ className?: string }> = ({
     className,

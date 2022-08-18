@@ -1,7 +1,6 @@
 /* Wrapper element that contains this component should have class "group relative" */
 
 import classnames from "classnames"
-import React from "react"
 import { FunctionComponent } from "react"
 
 const Tooltip: FunctionComponent<{

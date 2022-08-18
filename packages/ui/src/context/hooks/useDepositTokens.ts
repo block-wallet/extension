@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { getTokens } from "../commActions"
 import { tokenAddresses } from "../util/getCurrencyAmountList"
 import { useSelectedNetwork } from "./useSelectedNetwork"
@@ -10,16 +10,12 @@ import { useSelectedAccount } from "./useSelectedAccount"
 import { AccountBalanceTokens } from "@block-wallet/background/controllers/AccountTrackerController"
 
 export const useDepositTokens = () => {
-    const [tokenList, setTokenList] = useState<ITokens>()
+    const tokenListRef = useRef<ITokens>()
     const [depositTokens, setDepositTokens] = useState<TokenList>([])
 
     const { balances } = useSelectedAccount()
-    const {
-        name,
-        chainId,
-        nativeCurrency,
-        defaultNetworkLogo,
-    } = useSelectedNetwork()
+    const { name, chainId, nativeCurrency, defaultNetworkLogo } =
+        useSelectedNetwork()
 
     let networkBalances: AccountBalanceTokens = {}
 
@@ -42,8 +38,9 @@ export const useDepositTokens = () => {
         const actualTokens = [networkBalances["0x0"]] as TokenList
 
         const fetch = async () => {
-            if (!tokenList) {
-                setTokenList(await getTokens())
+            let tokenList = tokenListRef.current || (await getTokens())
+            if (!tokenListRef.current) {
+                tokenListRef.current = tokenList
             }
 
             // If the current network supports any ERC20 tokens,
@@ -69,7 +66,7 @@ export const useDepositTokens = () => {
 
         fetch()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [name, balances, tokenList])
+    }, [name, balances])
 
     return depositTokens
 }

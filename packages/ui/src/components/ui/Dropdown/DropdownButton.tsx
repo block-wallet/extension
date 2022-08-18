@@ -1,10 +1,10 @@
-import React from "react"
 import classnames from "classnames"
 import { DropdownCompoundMember } from "./Dropdown"
 import useIsHovering from "../../../util/hooks/useIsHovering"
 import OutlinedButton from "../OutlinedButton"
 import Icon, { IconName } from "../Icon"
 import { useDropdownContext } from "./DropdownContext"
+import { Children, cloneElement, FC, PropsWithChildren } from "react"
 
 //Button
 export interface DropdownButtonBaseProps {
@@ -16,16 +16,15 @@ interface DropdownIconButtonProps extends DropdownButtonBaseProps {
     iconName: IconName
 }
 
-export const DropdownButton: React.FC & DropdownCompoundMember = ({
-    children,
-}) => {
+export const DropdownButton: FC<PropsWithChildren<{}>> &
+    DropdownCompoundMember = ({ children }) => {
     const { isShowingMenu, toggleMenu } = useDropdownContext()
     return (
         <>
-            {React.Children.map(children, (child) => {
+            {Children.map(children, (child) => {
                 if (!child) return null
                 const childNode = child as React.ReactElement<any>
-                return React.cloneElement(child as React.ReactElement<any>, {
+                return cloneElement(child as React.ReactElement<any>, {
                     ...childNode.props,
                     onClick: (e: any) => {
                         if (childNode.props.onClick) {

@@ -1,5 +1,5 @@
+import { useEffect } from "react"
 import { yupResolver } from "@hookform/resolvers/yup"
-import React from "react"
 import { useForm } from "react-hook-form"
 import WaitingDialog, {
     useWaitingDialog,
@@ -9,7 +9,6 @@ import PopupLayout from "../../components/popup/PopupLayout"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
 import * as yup from "yup"
-import { InferType } from "yup"
 import { useHistory } from "react-router-dom"
 import useNewAccountHelper from "./useNewAccountHelper"
 import {
@@ -31,25 +30,28 @@ const importAccountSchema = yup.object({
     importType: yup.string().required("Please select a type of import"),
     accountName: yup.string().max(40, "Account name is too long"),
 })
-type importAccountFormData = InferType<typeof importAccountSchema>
+type importAccountFormData = {
+    privateKey: string
+    importType: string
+    accountName: string
+}
 
 const ImportAccountPage = () => {
     const { run, isError, isSuccess, isLoading, reset } = useAsyncInvoke()
     const { isOpen, status, dispatch } = useWaitingDialog()
     const history = useHistory()
     const state = useBlankState()!
-    const {
-        suggestedAccountName,
-        checkAccountNameAvailablility,
-    } = useNewAccountHelper()
+    const { suggestedAccountName, checkAccountNameAvailablility } =
+        useNewAccountHelper()
 
     const {
         register,
         handleSubmit,
-        errors,
         setError,
         setValue,
         watch,
+
+        formState: { errors },
     } = useForm<importAccountFormData>({
         defaultValues: {
             importType: "key",
@@ -67,16 +69,19 @@ const ImportAccountPage = () => {
         data.accountName = data.accountName.trim()
 
         try {
-            const {
-                isAvailable,
-                error: accountNameErr,
-            } = checkAccountNameAvailablility(data.accountName || "")
+            const { isAvailable, error: accountNameErr } =
+                checkAccountNameAvailablility(data.accountName || "")
 
             if (!isAvailable) {
-                setError("accountName", {
-                    message: accountNameErr,
-                    shouldFocus: true,
-                })
+                setError(
+                    "accountName",
+                    {
+                        message: accountNameErr,
+                    },
+                    {
+                        shouldFocus: true,
+                    }
+                )
                 return
             }
 
@@ -100,20 +105,30 @@ const ImportAccountPage = () => {
                 e.message ===
                 "The account you're are trying to import is a duplicate"
             ) {
-                setError("privateKey", {
-                    message: "Account already exists",
-                    shouldFocus: true,
-                })
+                setError(
+                    "privateKey",
+                    {
+                        message: "Account already exists",
+                    },
+                    {
+                        shouldFocus: true,
+                    }
+                )
             } else {
-                setError("privateKey", {
-                    message: "Error importing the account",
-                    shouldFocus: true,
-                })
+                setError(
+                    "privateKey",
+                    {
+                        message: "Error importing the account",
+                    },
+                    {
+                        shouldFocus: true,
+                    }
+                )
             }
         }
     })
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (isError) {
             dispatch({
                 type: "setStatus",
@@ -175,8 +190,7 @@ const ImportAccountPage = () => {
                             <TextInput
                                 appearance="outline"
                                 label="Account Name"
-                                name="accountName"
-                                register={register}
+                                {...register("accountName")}
                                 placeholder={suggestedAccountName}
                                 error={errors.accountName?.message}
                                 autoFocus={true}
@@ -203,8 +217,7 @@ const ImportAccountPage = () => {
                                 appearance="outline"
                                 label="Private Key String"
                                 placeholder="Paste your private key string here"
-                                name="privateKey"
-                                register={register}
+                                {...register("privateKey")}
                                 error={errors.privateKey?.message}
                                 maxLength={66}
                             />

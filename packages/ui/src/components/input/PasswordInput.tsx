@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { forwardRef, useState } from "react"
 import PasswordStrengthBar from "react-password-strength-bar"
 
 import { BsCapslockFill } from "react-icons/bs"
@@ -17,7 +17,6 @@ type PasswordInputProps = {
     label?: string
     placeholder?: string
     name?: string
-    register?: any
     error?: string
     autoFocus?: boolean
     autoComplete?: string
@@ -47,135 +46,132 @@ type PasswordInputProps = {
  * @param setPasswordScore - Function to execute on password score change (if it has strengthBar).
  * @param onKeyDown - Function to execute on key down.
  */
-const PasswordInput = (props: PasswordInputProps) => {
-    const {
-        label,
-        placeholder,
-        name,
-        register,
-        error = "",
-        autoFocus,
-        autoComplete,
-        strengthBar,
-        value = "",
-        onChange,
-        onPaste,
-        setPasswordScore,
-        onKeyDown,
-    } = props
+const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
+    (props: PasswordInputProps, ref) => {
+        const {
+            label,
+            placeholder,
+            name = "password",
+            error = "",
+            autoFocus,
+            autoComplete,
+            strengthBar,
+            value = "",
+            onChange,
+            onPaste,
+            setPasswordScore,
+            onKeyDown,
+        } = props
 
-    // State
-    const [passwordValue, setPasswordValue] = useState<string>("")
-    const [showPassword, setShowPassword] = useState<boolean>(false)
-    const [showStrengthBar, setShowStrengthBar] = useState<boolean>(false)
+        // State
+        const [passwordValue, setPasswordValue] = useState<string>("")
+        const [showPassword, setShowPassword] = useState<boolean>(false)
+        const [showStrengthBar, setShowStrengthBar] = useState<boolean>(false)
 
-    // Handlers
-    const handlePasswordChange = (e: any) => {
-        setPasswordValue(e.target.value)
-        setShowStrengthBar(e.target.value.length > 0)
-        if (onChange) onChange(e)
-    }
-    const handlePastePasswordChange = (e: any) => {
-        const value = e.clipboardData.getData("text")
-        setPasswordValue(value)
-        setShowStrengthBar(value.length > 0)
-        if (onPaste) onPaste(e)
-    }
+        // Handlers
+        const handlePasswordChange = (e: any) => {
+            setPasswordValue(e.target.value)
+            setShowStrengthBar(e.target.value.length > 0)
+            if (onChange) onChange(e)
+        }
 
-    return (
-        <CapsLockDetector>
-            {({ isCapsLock }) => (
-                <>
-                    {/* LABEL */}
-                    {label ? (
-                        <label
-                            htmlFor="accountName"
-                            className={Classes.inputLabel}
-                        >
-                            {label}
-                        </label>
-                    ) : null}
+        return (
+            <CapsLockDetector>
+                {({ isCapsLock }) => (
+                    <>
+                        {/* LABEL */}
+                        {label ? (
+                            <label
+                                htmlFor="accountName"
+                                className={Classes.inputLabel}
+                            >
+                                {label}
+                            </label>
+                        ) : null}
 
-                    {/* INPUT */}
-                    <div className="flex items-center flex-row relative">
-                        <input
-                            name={name ? name : "password"}
-                            type={showPassword ? "text" : "password"}
-                            ref={register ? register : null}
-                            className={classNames(
-                                Classes.input,
-                                "w-full",
-                                error !== ""
-                                    ? "border-red-400 focus:border-red-400"
-                                    : ""
-                            )}
-                            value={value || passwordValue}
-                            placeholder={placeholder ? placeholder : ""}
-                            autoComplete={autoComplete ? autoComplete : "off"}
-                            autoFocus={autoFocus ? autoFocus : false}
-                            onChange={(e) => handlePasswordChange(e)}
-                            onPaste={(e) => handlePastePasswordChange(e)}
-                            onKeyDown={onKeyDown}
-                        />
-                        <img
-                            className={classNames(
-                                "w-6 h-6 p-1 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-100 rounded-full",
-                                showPassword === false
-                                    ? "opacity-100 z-10"
-                                    : "opacity-0 pointer-event-none z-0"
-                            )}
-                            src={eyeClose}
-                            alt="show password"
-                            onClick={() => setShowPassword(true)}
-                        />
-                        <img
-                            className={classNames(
-                                "w-6 h-6 p-1 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-100 rounded-full",
-                                showPassword === true
-                                    ? "opacity-100 z-10"
-                                    : "opacity-0 pointer-event-none z-0"
-                            )}
-                            src={eyeOpen}
-                            alt="hide password"
-                            onClick={() => setShowPassword(false)}
-                        />
-                        {isCapsLock && (
-                            <BsCapslockFill
-                                className="w-4 h-4 absolute right-6"
-                                color="#8093AB"
-                            />
-                        )}
-                    </div>
-
-                    {/* STRENGTH */}
-                    {strengthBar ? (
-                        <PasswordStrengthBar
-                            password={passwordValue}
-                            className={classNames(
-                                "m-0",
-                                showStrengthBar ? "" : "hidden"
-                            )}
-                            onChangeScore={(s) => {
-                                if (setPasswordScore) {
-                                    setPasswordScore(s)
+                        {/* INPUT */}
+                        <div className="flex items-center flex-row relative">
+                            <input
+                                name={name}
+                                type={showPassword ? "text" : "password"}
+                                ref={ref}
+                                className={classNames(
+                                    Classes.input,
+                                    "w-full",
+                                    error !== ""
+                                        ? "border-red-400 focus:border-red-400"
+                                        : ""
+                                )}
+                                value={value || passwordValue}
+                                placeholder={placeholder ? placeholder : ""}
+                                autoComplete={
+                                    autoComplete ? autoComplete : "off"
                                 }
-                            }}
-                        />
-                    ) : null}
+                                autoFocus={autoFocus ? autoFocus : false}
+                                onChange={(e) => handlePasswordChange(e)}
+                                onPaste={onPaste}
+                                onKeyDown={onKeyDown}
+                            />
+                            <img
+                                className={classNames(
+                                    "w-6 h-6 p-1 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-100 rounded-full",
+                                    showPassword === false
+                                        ? "opacity-100 z-10"
+                                        : "opacity-0 pointer-event-none z-0"
+                                )}
+                                src={eyeClose}
+                                alt="show password"
+                                onClick={() => setShowPassword(true)}
+                            />
+                            <img
+                                className={classNames(
+                                    "w-6 h-6 p-1 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-100 rounded-full",
+                                    showPassword === true
+                                        ? "opacity-100 z-10"
+                                        : "opacity-0 pointer-event-none z-0"
+                                )}
+                                src={eyeOpen}
+                                alt="hide password"
+                                onClick={() => setShowPassword(false)}
+                            />
+                            {isCapsLock && (
+                                <BsCapslockFill
+                                    className="w-4 h-4 absolute right-6"
+                                    color="#8093AB"
+                                />
+                            )}
+                        </div>
 
-                    {/* ERROR */}
-                    <span
-                        className={classNames(
-                            "text-xs text-red-500",
-                            error === "" ? "m-0 h-0" : ""
-                        )}
-                    >
-                        {error || ""}
-                    </span>
-                </>
-            )}
-        </CapsLockDetector>
-    )
-}
+                        {/* STRENGTH */}
+                        {strengthBar ? (
+                            <PasswordStrengthBar
+                                password={passwordValue}
+                                className={classNames(
+                                    "m-0",
+                                    showStrengthBar ? "" : "hidden"
+                                )}
+                                onChangeScore={(s) => {
+                                    if (setPasswordScore) {
+                                        setPasswordScore(s)
+                                    }
+                                }}
+                            />
+                        ) : null}
+
+                        {/* ERROR */}
+                        <span
+                            className={classNames(
+                                "text-xs text-red-500",
+                                error === "" ? "m-0 h-0" : ""
+                            )}
+                        >
+                            {error || ""}
+                        </span>
+                    </>
+                )}
+            </CapsLockDetector>
+        )
+    }
+)
 
 export default PasswordInput

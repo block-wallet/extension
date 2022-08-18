@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
@@ -37,7 +37,7 @@ const ConnectPage = () => {
         pendingPermissionRequest,
         DAPP_FEEDBACK_WINDOW_TIMEOUT
     )
-    React.useEffect(() => {
+    useEffect(() => {
         setNextRequest(pendingPermissionRequest)
     }, [setNextRequest, pendingPermissionRequest])
 

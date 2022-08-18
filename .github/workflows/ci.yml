@@ -208,7 +208,8 @@ jobs:
   e2e:
     needs: [build]
     runs-on: [self-hosted, large]
-
+    if: |
+      !startsWith(github.ref_name, 'dependabot/')
     steps:
       - name: Checkout e2e repository
         uses: actions/checkout@v2

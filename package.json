@@ -3,6 +3,10 @@
     "version": "0.3.1",
     "private": true,
     "scripts": {
-        "build": "make build"
+        "install": "make install/ci",
+        "install-fresh": "make install",
+        "build": "make build",
+        "build-prod": "make build/prod",
+        "test": "make test"
     }
 }

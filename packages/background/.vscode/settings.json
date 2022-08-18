@@ -1,0 +1,19 @@
+{
+    "editor.formatOnSave": true,
+    "files.eol": "\n",
+    "prettier.useEditorConfig": true,
+    "mochaExplorer.files": "test/**/*.test.ts",
+    "mochaExplorer.require": [
+        "ts-node/register",
+        "tsconfig-paths/register",
+        "jsdom-global/register",
+        "isomorphic-fetch",
+        "./test/mocks/sinonChrome.js"
+    ],
+    "mochaExplorer.monkeyPatch": false,
+    "mochaExplorer.timeout": 60000,
+    "mochaExplorer.env": {
+        "TS_NODE_PROJECT": "tsconfig.json",
+        "TS_NODE_COMPILER_OPTIONS": "{\"module\": \"commonjs\" }"
+    }
+}

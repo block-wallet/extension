@@ -1,0 +1,292 @@
+name: CI
+
+on:
+  push:
+
+env:
+  BLOCK_WALLET_URL: url.txt
+  BLOCK_WALLET_FOLDER: blockwallet-build
+  CHROME_VERSION: 97.0.4692.71
+  S3_PATH: s3://releases.blockwallet.io/tmp/
+
+jobs:
+  lint:
+    runs-on: [self-hosted, small]
+    steps:
+      - name: Checkout monorepo
+        uses: actions/checkout@v3
+
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install yarn
+        run: |
+          npm install --global yarn
+
+      - name: Dependency UI cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/ui/node_modules"
+          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
+
+      - name: Dependency Background cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/background/node_modules"
+          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
+
+      - name: Dependency Provider cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/provider/node_modules"
+          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
+
+      - name: Install packages dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+        run: |
+          make install/ci
+
+      - name: Check lint in un
+        run: |
+          cd packages/ui/
+          yarn lint
+
+      - name: Check lint in background
+        run: |
+          cd packages/background/
+          yarn lint
+
+      - name: Check lint in provider
+        run: |
+          cd packages/provider/
+          yarn lint
+
+  test:
+    runs-on: [self-hosted]
+    steps:
+      - name: Checkout monorepo
+        uses: actions/checkout@v2
+
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install yarn
+        run: |
+          npm install --global yarn
+
+      - name: Dependency UI cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/ui/node_modules"
+          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
+
+      - name: Dependency Background cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/background/node_modules"
+          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
+
+      - name: Dependency Provider cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/provider/node_modules"
+          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
+
+      - name: Install packages dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+        run: |
+          make install/ci
+
+      - name: Build tailwind
+        run: |
+          cd packages/ui
+          yarn build:tailwind
+
+      - name: Test ui
+        run: |
+          cd packages/ui
+          make test/ui
+        env:
+          INFURA_PROJECT_ID: ${{ secrets.INFURA_PROJECT_ID }}
+          ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+
+      - name: Test provider
+        run: |
+          cd packages/provider
+          make test/provider
+
+      - name: Test background
+        run: |
+          cd packages/background
+          make test/background
+
+  build:
+    env:
+      ENVIRONMENT: prod
+    runs-on: [self-hosted, large]
+    steps:
+      - name: Checkout monorepo
+        uses: actions/checkout@v2
+
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install yarn
+        run: |
+          npm install --global yarn
+
+      - name: Dependency UI cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/ui/node_modules"
+          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
+
+      - name: Dependency Background cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/background/node_modules"
+          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
+
+      - name: Dependency Provider cache
+        uses: actions/cache@v3
+        with:
+          path: "packages/provider/node_modules"
+          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
+
+      - name: Install packages dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+        run: |
+          make install/ci
+
+      - name: Build extension
+        env:
+          CI: false
+        run: |
+          make build/prod
+
+      - name: Zip build
+        id: zip
+        run: |
+          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
+          apt update
+          apt install -y zip
+          file=block-wallet-${GITHUB_SHA::7}
+          zip -r -D $file dist/
+          echo "::set-output name=file::$file.zip"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_RELEASE_BUCKET }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_RELEASE_BUCKET }}
+          aws-region: us-east-2
+
+      - name: Upload zip to S3
+        run: |
+          zip=${{ steps.zip.outputs.file }} 
+          aws s3 cp $zip $S3_PATH
+          s3_url_https=$(echo "${S3_PATH/s3/https}")
+          echo "$s3_url_https""$zip" > $BLOCK_WALLET_URL
+          cat $BLOCK_WALLET_URL
+
+      - name: Save extension url
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.BLOCK_WALLET_FOLDER }}
+          if-no-files-found: error
+          path: ${{ env.BLOCK_WALLET_URL }}
+
+  e2e:
+    needs: [build]
+    runs-on: [self-hosted, large]
+
+    steps:
+      - name: Checkout e2e repository
+        uses: actions/checkout@v2
+        with:
+          repository: block-wallet/e2e-tests
+          ref: refs/heads/main
+          token: ${{ secrets.PAT }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_RELEASE_BUCKET }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_RELEASE_BUCKET }}
+          aws-region: us-east-2
+
+      - name: Install node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install yarn
+        run: |
+          npm install --global yarn
+
+      - name: Cache e2e dependencies and cypress binary
+        id: cache-cypress
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+            ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install Cypress linux dependencies
+        run: |
+          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
+          apt update
+          apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
+
+      - name: Install e2e dependencies
+        run: |
+          yarn install --prefer-offline --frozen-lockfile
+
+      - name: Cache Chrome
+        uses: actions/cache@v3
+        id: cache-chrome
+        with:
+          path: /usr/src/google-chrome-stable_current_amd64.deb
+          key: ${{ env.CHROME_VERSION }}
+
+      - name: Download Chrome
+        if: steps.cache-chrome.outputs.cache-hit != 'true'
+        run: |
+          wget -O /usr/src/google-chrome-stable_current_amd64.deb "http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_$CHROME_VERSION-1_amd64.deb"
+
+      - name: Install Chrome
+        run: |
+          apt install -y /usr/src/google-chrome-stable_current_amd64.deb
+
+      - name: Download the extension url
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.BLOCK_WALLET_FOLDER }}
+          path: ${{ env.BLOCK_WALLET_FOLDER }}
+
+      - name: Download extension
+        run: |
+          apt install -y unzip
+          url=$(cat $BLOCK_WALLET_FOLDER/$BLOCK_WALLET_URL)
+          wget $url -O blockwallet-extension.zip
+          rm -rf blockwallet-extension
+          unzip blockwallet-extension.zip
+          mv dist blockwallet-extension
+
+      - name: UI Tests - Chrome
+        run: |
+          DBUS_SESSION_BUS_ADDRESS=/dev/null yarn run test:e2e
+        env:
+          ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          TEST_TAGS: puppeteer,extension

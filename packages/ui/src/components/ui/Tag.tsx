@@ -1,0 +1,58 @@
+import { FC, PropsWithChildren } from "react"
+import classnames from "classnames"
+
+interface BadgeProps {
+    profile: "default" | "success" | "error" | "warning" | "info" | "dark"
+    size?: "sm" | "md"
+}
+
+const PROFILE_COLORS = {
+    default: {
+        backgroundColor: "bg-gray-600",
+        textColor: "text-white",
+    },
+    success: {
+        backgroundColor: "bg-green-100",
+        textColor: "text-green-600",
+        borderColor: "border-green-300",
+    },
+    error: {
+        backgroundColor: "bg-red-600",
+        textColor: "text-white",
+    },
+    warning: {
+        backgroundColor: "text-yellow-600",
+        textColor: "bg-yellow-100",
+    },
+    info: {
+        backgroundColor: "bg-blue-500",
+        textColor: "text-white",
+    },
+    dark: {
+        backgroundColor: "bg-black",
+        textColor: "text-white",
+    },
+}
+
+const Tag: FC<PropsWithChildren<BadgeProps>> = ({
+    children,
+    profile,
+    size,
+}) => {
+    const { backgroundColor, textColor } = PROFILE_COLORS[profile]
+    const tagSize = size || "md"
+    return (
+        <span
+            className={classnames(
+                "px-1.5 py-0.5 rounded-sm",
+                tagSize === "sm" ? "text-xxs" : "text-xs",
+                backgroundColor,
+                textColor
+            )}
+        >
+            {children}
+        </span>
+    )
+}
+
+export default Tag

@@ -27,7 +27,7 @@ const links = [
     {
         icon: <IoLogoTwitter className="w-5 h-5" />,
         link: "https://twitter.com/GetBlockWallet",
-        text: "blockwallet.io",
+        text: "twitter.com/GetBlockWallet",
     },
 ]
 const AboutPage = () => {

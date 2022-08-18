@@ -203,7 +203,7 @@ jobs:
 
       - name: Save extension url
         if: startsWith(github.ref_name, 'dependabot/') == 'false'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.BLOCK_WALLET_FOLDER }}
           if-no-files-found: error
@@ -273,7 +273,7 @@ jobs:
           apt install -y /usr/src/google-chrome-stable_current_amd64.deb
 
       - name: Download the extension url
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ env.BLOCK_WALLET_FOLDER }}
           path: ${{ env.BLOCK_WALLET_FOLDER }}

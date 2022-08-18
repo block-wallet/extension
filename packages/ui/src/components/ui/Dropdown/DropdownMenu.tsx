@@ -48,7 +48,7 @@ export const DropdownMenu: React.FC<PropsWithChildren<DropdownMenuProps>> &
 export const DropdownMenuItem: React.FC<
     PropsWithChildren<DropdownMenuItemProps>
 > = ({ onClick, children, className, value, selected }) => {
-    const { onClickItem } = useDropdownContext()
+    const { onClickItem, toggleMenu } = useDropdownContext()
     return (
         <li
             onClick={(e) => {
@@ -59,6 +59,8 @@ export const DropdownMenuItem: React.FC<
                 if (onClick) {
                     onClick()
                 }
+
+                toggleMenu(e.nativeEvent) // Close the menu after an item is clicked
             }}
             className={classnames(
                 "flex flex-row justify-between items-center w-full p-2 cursor-pointer hover:bg-gray-100",

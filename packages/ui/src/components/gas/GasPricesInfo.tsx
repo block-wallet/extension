@@ -148,8 +148,8 @@ const GasPricesInfo: FC = () => {
         showGasLevels,
         isEIP1559Compatible,
         nativeCurrency: { decimals: nativeCurrencyDecimals },
-        isTornadoEnabled,
     } = useSelectedNetwork()
+    const isTornadoEnabled = false // No matter network config, we won't show deposit/withdraw options for now
     const { gasPricesLevels, estimatedBaseFee } = useGasPriceData()
 
     const GAS_LIMITS = {

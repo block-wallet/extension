@@ -31,15 +31,10 @@ const schema = yup.object({
         .string()
         .default("key")
         .required("Please select an export format"),
-    encryptingPassword: yup
-        .string()
-        .nullable()
-        .notRequired()
-        .when("exportType", {
-            is: (value: any) => value === "json",
-            then: (rule) =>
-                rule.required("Please enter an encrypting password"),
-        }),
+    encryptingPassword: yup.string().when("exportType", {
+        is: (value: any) => value === "json",
+        then: (rule) => rule.required("Please enter an encrypting password"),
+    }),
     encryptingPasswordConfirmation: yup
         .string()
         .nullable()
@@ -48,7 +43,7 @@ const schema = yup.object({
             is: (value: any) => !!value,
             then: (rule: any) =>
                 rule
-                    .required("Pleas confirm the encrypting password")
+                    .required("Please confirm the encrypting password")
                     .oneOf(
                         [yup.ref("encryptingPassword"), null],
                         "Encrypting passwords must match."
@@ -259,7 +254,7 @@ const ExportAccountPage = () => {
                         {exportType === "json" && (
                             <WarningTip
                                 text={
-                                    "Encrypting password is optional but strongly recommended"
+                                    "Encrypting password is used to encrypt your export. You will need it when importing the account data later. Please create a strong encrypting password and store it securely."
                                 }
                                 fontSize="text-xs"
                                 justify="justify-start"

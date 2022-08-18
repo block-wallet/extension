@@ -23,6 +23,7 @@ const DAppPopupHeader: React.FC<Props> = ({
             close={false}
             className={classnames(
                 showNetworkIndicator && "justify-between",
+                showNetworkIndicator && requestCount > 1 && "flex space-x-1",
                 "py-2.5 px-6",
                 className
             )}

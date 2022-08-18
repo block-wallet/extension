@@ -30,7 +30,7 @@ const NetworkDisplayBadge = ({
             className={classnames(
                 "flex flex-row items-center justify-center space-x-1 py-1.5 px-1.5 text-gray-600 rounded-md group border border-primary-200 text-xs",
                 fill && "bg-green-100",
-                "w-36",
+                "w-auto",
                 className
             )}
         >
@@ -49,8 +49,8 @@ const NetworkDisplayBadge = ({
             </span>
             <GenericTooltip
                 left
-                className="translate-y-5 translate-x-3 border border-gray-200"
-                content={<p className="w-36 p-1 text-left">{networkName}</p>}
+                className="translate-y-5 translate-x-3 shadow-md min-w-max"
+                content={<p className=" p-1 text-left">{networkName}</p>}
             />
         </div>
     )

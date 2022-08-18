@@ -44,7 +44,7 @@ const Tag: FC<PropsWithChildren<BadgeProps>> = ({
     return (
         <span
             className={classnames(
-                "px-1 py-0.5 rounded-md",
+                "px-1.5 py-0.5 rounded-sm",
                 tagSize === "sm" ? "text-xxs" : "text-xs",
                 backgroundColor,
                 textColor

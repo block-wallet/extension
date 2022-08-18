@@ -80,7 +80,7 @@ const AccountSearchBar: FunctionComponent<{
                     placeholder="Search for Account"
                     onChange={onValueChanged}
                 />
-                <button
+                <div
                     className={classnames(
                         "w-1/12 hover:text-primary-300",
                         "transition-opacity",
@@ -95,7 +95,7 @@ const AccountSearchBar: FunctionComponent<{
                     }}
                 >
                     <CloseIcon size="12" />
-                </button>
+                </div>
             </OutlinedButton>
         </div>
     )

@@ -41,7 +41,7 @@ const ExportDonePage = () => {
             }
         >
             <div className="flex flex-col p-6 space-y-6">
-                {exportType !== "JSON Data" ? (
+                {exportType !== "json" ? (
                     <div className="flex flex-col space-y-4">
                         <ClickToReveal
                             hiddenText={exportData}

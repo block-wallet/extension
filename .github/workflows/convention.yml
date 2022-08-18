@@ -12,7 +12,7 @@ jobs:
   validation:
     if: |
       github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
-      !startsWith(github.ref_name, 'dependabot/')
+      startsWith(github.ref_name, 'dependabot/') == 'false'
     runs-on: [self-hosted, small]
     steps:
       - name: Validate commit messages

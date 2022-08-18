@@ -199,7 +199,7 @@ jobs:
           cat $BLOCK_WALLET_URL
 
       - name: Save extension url
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.BLOCK_WALLET_FOLDER }}
           if-no-files-found: error

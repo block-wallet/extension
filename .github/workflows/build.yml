@@ -148,7 +148,7 @@ jobs:
 
       - name: Install yarn
         run: |
-          npm install yarn --location=global
+          npm install --global yarn
 
       - name: Dependency UI cache
         uses: actions/cache@v3
@@ -205,7 +205,7 @@ jobs:
 
       - name: Install yarn
         run: |
-          npm install yarn --location=global
+          npm install --global yarn
 
       - name: Cache e2e dependencies and cypress binary
         id: cache-cypress

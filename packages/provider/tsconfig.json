@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+        "baseUrl": "./",
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": false,
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "noEmit": false,
+        "noFallthroughCasesInSwitch": true,
+        "paths": {
+            "@block-wallet/background": ["../background/src"],
+            "@block-wallet/background/*": ["../background/src/*"],
+            "@block-wallet/provider": ["./src"],
+            "@block-wallet/provider/*": ["./src/*"]
+        },
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "sourceMap": true,
+        "strict": true,
+        "target": "ES2020",
+        "typeRoots": ["./node_modules/@types", "../background/src/typings"],
+        "experimentalDecorators": true,
+        "useUnknownInCatchVariables": false
+    },
+    "include": ["src", "test", "../background/src"]
+}

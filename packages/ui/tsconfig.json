@@ -1,0 +1,31 @@
+{
+    "compilerOptions": {
+        "paths": {
+            "@block-wallet/background": ["../background/src"],
+            "@block-wallet/background/*": ["../background/src/*"],
+            "@block-wallet/provider": ["../provider/src"],
+            "@block-wallet/provider/*": ["../provider/src/*"]
+        },
+        "target": "es5",
+        "lib": ["dom", "dom.iterable", "esnext"],
+        "allowJs": true,
+        "downlevelIteration": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "useUnknownInCatchVariables": false,
+        "forceConsistentCasingInFileNames": true,
+        "noFallthroughCasesInSwitch": true,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": false,
+        "noEmit": true,
+        "jsx": "react-jsx",
+        "typeRoots": ["./node_modules/@types", "./../background/src/typings"],
+        "experimentalDecorators": true
+    },
+    "include": ["src", "../background/src"],
+    "exclude": ["src/stories"]
+}

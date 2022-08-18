@@ -1,0 +1,1142 @@
+/* eslint-disable @typescript-eslint/no-empty-interface */
+import { Flatten } from './helpers';
+import { BlankAppUIState } from '../constants/initialState';
+import {
+    CurrencyAmountPair,
+    KnownCurrencies,
+} from '../../controllers/blank-deposit/types';
+import { IBlankDeposit } from '../../controllers/blank-deposit/BlankDeposit';
+import { ComplianceInfo } from '../../controllers/blank-deposit/infrastructure/IBlankDepositService';
+import { BigNumber } from '@ethersproject/bignumber';
+import {
+    AccountInfo,
+    DeviceAccountInfo,
+} from '../../controllers/AccountTrackerController';
+import {
+    GasPriceValue,
+    FeeMarketEIP1559Values,
+} from '../../controllers/transactions/TransactionController';
+import { ITokens, Token } from '../../controllers/erc-20/Token';
+import {
+    TransactionAdvancedData,
+    TransactionMeta,
+} from '../../controllers/transactions/utils/types';
+import { ImportStrategy, ImportArguments } from '../account';
+import {
+    SwapParameters,
+    ExchangeType,
+    SwapQuote,
+    SwapTransaction,
+} from '../../controllers/ExchangeController';
+import {
+    ProviderEvents,
+    SiteMetadata,
+    RequestArguments,
+    ProviderSetupData,
+} from '@block-wallet/provider/types';
+
+import {
+    AddressBookEntry,
+    NetworkAddressBook,
+} from '@block-wallet/background/controllers/AddressBookController';
+import { DappReq, DappRequestConfirmOptions } from './ethereum';
+import { TransactionGasEstimation } from '@block-wallet/background/controllers/transactions/TransactionController';
+import {
+    PopupTabs,
+    ReleaseNote,
+    UserSettings,
+} from '@block-wallet/background/controllers/PreferencesController';
+import { TransactionFeeData } from '@block-wallet/background/controllers/erc-20/transactions/SignedTransaction';
+import { Currency } from '../currency';
+import { Devices } from './hardware';
+import { OneInchSwapQuoteParams, OneInchSwapRequestParams } from './1inch';
+import { ChainListItem } from '@block-wallet/chains-assets';
+
+enum ACCOUNT {
+    CREATE = 'CREATE_ACCOUNT',
+    EXPORT_JSON = 'EXPORT_ACCOUNT_JSON',
+    EXPORT_PRIVATE_KEY = 'EXPORT_ACCOUNT_PK',
+    IMPORT_JSON = 'IMPORT_ACCOUNT_JSON',
+    IMPORT_PRIVATE_KEY = 'IMPORT_ACCOUNT_PK',
+    REMOVE = 'REMOVE_ACCOUNT',
+    RENAME = 'RENAME_ACCOUNT',
+    SELECT = 'SELECT_ACCOUNT',
+    GET_BALANCE = 'GET_ACCOUNT_BALANCE',
+    HIDE = 'HIDE_ACCOUNT',
+    UNHIDE = 'UNHIDE_ACCOUNT',
+}
+
+enum APP {
+    LOCK = 'LOCK_APP',
+    UNLOCK = 'UNLOCK_APP',
+    GET_IDLE_TIMEOUT = 'GET_IDLE_TIMEOUT',
+    SET_IDLE_TIMEOUT = 'SET_IDLE_TIMEOUT',
+    SET_LAST_USER_ACTIVE_TIME = 'SET_LAST_USER_ACTIVE_TIME',
+    RETURN_TO_ONBOARDING = 'RETURN_TO_ONBOARDING',
+    OPEN_RESET = 'OPEN_RESET',
+    OPEN_HW_CONNECT = 'OPEN_HW_CONNECT',
+    OPEN_HW_REMOVE = 'OPEN_HW_REMOVE',
+    OPEN_HW_RECONNECT = 'OPEN_HW_RECONNECT',
+    SET_USER_SETTINGS = 'SET_USER_SETTINGS',
+    UPDATE_POPUP_TAB = 'UPDATE_POPUP_TAB',
+    REJECT_UNCONFIRMED_REQUESTS = 'REJECT_UNCONFIRMED_REQUESTS',
+}
+
+enum BACKGROUND {
+    ACTION = 'ACTION',
+}
+
+enum BLANK {
+    DEPOSIT = 'DEPOSIT',
+    DEPOSIT_ALLOWANCE = 'DEPOSIT_ALLOWANCE',
+    CALCULATE_DEPOSIT_TRANSACTION_GAS_LIMIT = 'CALCULATE_DEPOSIT_TRANSACTION_GAS_LIMIT',
+    WITHDRAW = 'WITHDRAW',
+    COMPLIANCE = 'COMPLIANCE',
+    PAIR_DEPOSITS_COUNT = 'PAIR_DEPOSITS_COUNT',
+    CURRENCY_DEPOSITS_COUNT = 'CURRENCY_DEPOSITS_COUNT',
+    GET_UNSPENT_DEPOSITS = 'GET_UNSPENT_DEPOSITS',
+    GET_DEPOSIT_NOTE_STRING = 'GET_DEPOSIT_NOTE_STRING',
+    UPDATE_SPENT_NOTES = 'UPDATE_SPENT_NOTES',
+    UPDATE_DEPOSITS_TREE = 'UPDATE_DEPOSITS_TREE',
+    GET_WITHDRAWAL_FEES = 'GET_WITHDRAWAL_GAS_COST',
+    FORCE_DEPOSITS_IMPORT = 'FORCE_DEPOSITS_IMPORT',
+    HAS_DEPOSITED_FROM_ADDRESS = 'HAS_DEPOSITED_FROM_ADDRESS',
+    GET_INSTANCE_ALLOWANCE = 'GET_INSTANCE_ALLOWANCE',
+    GET_LATEST_DEPOSIT_DATE = 'GET_LATEST_DEPOSIT_DATE',
+    GET_ANONIMITY_SET = 'GET_ANONIMITY_SET',
+    GET_SUBSEQUENT_DEPOSITS_COUNT = 'GET_SUBSEQUENT_DEPOSITS_COUNT',
+}
+
+enum DAPP {
+    CONFIRM_REQUEST = 'CONFIRM_DAPP_REQUEST',
+    ATTEMPT_REJECT_REQUEST = 'ATTEMPT_REJECT_DAPP_REQUEST',
+}
+
+enum EXCHANGE {
+    CHECK_ALLOWANCE = 'CHECK_ALLOWANCE',
+    APPROVE = 'APPROVE_EXCHANGE',
+    GET_QUOTE = 'GET_EXCHANGE_QUOTE',
+    GET_EXCHANGE = 'GET_EXCHANGE',
+    EXECUTE = 'EXECUTE_EXCHANGE',
+}
+
+export enum EXTERNAL {
+    EVENT_SUBSCRIPTION = 'EVENT_SUBSCRIPTION',
+    REQUEST = 'EXTERNAL_REQUEST',
+    SETUP_PROVIDER = 'SETUP_PROVIDER',
+    SET_ICON = 'SET_ICON',
+}
+
+export enum CONTENT {
+    SHOULD_INJECT = 'SHOULD_INJECT',
+}
+
+enum NETWORK {
+    CHANGE = 'NETWORK_CHANGE',
+    SET_SHOW_TEST_NETWORKS = 'SHOW_TEST_NETWORKS',
+    ADD_NETWORK = 'ADD_NETWORK',
+    EDIT_NETWORK = 'EDIT_NETWORK',
+    REMOVE_NETWORK = 'REMOVE_NETWORK',
+    GET_SPECIFIC_CHAIN_DETAILS = 'GET_SPECIFIC_CHAIN_DETAILS',
+    GET_RPC_CHAIN_ID = 'GET_RPC_CHAIN_ID',
+    SEARCH_CHAINS = 'SEARCH_CHAINS',
+}
+
+enum PASSWORD {
+    VERIFY = 'VERIFY_PASSWORD',
+    CHANGE = 'CHANGE_PASSWORD',
+}
+
+enum PERMISSION {
+    ADD_NEW = 'ADD_NEW_SITE_PERMISSIONS',
+    CONFIRM = 'CONFIRM_PERMISSION_REQUEST',
+    GET_ACCOUNT_PERMISSIONS = 'GET_ACCOUNT_PERMISSIONS',
+    REMOVE_ACCOUNT_FROM_SITE = 'REMOVE_ACCOUNT_FROM_SITE',
+    UPDATE_SITE_PERMISSIONS = 'UPDATE_SITE_PERMISSIONS',
+}
+
+enum STATE {
+    GET = 'GET_STATE',
+    SUBSCRIBE = 'STATE_SUBSCRIBE',
+}
+
+enum ENS {
+    LOOKUP_ADDRESS = 'LOOKUP_ADDRESS_ENS',
+    RESOLVE_NAME = 'RESOLVE_ENS_NAME',
+}
+
+enum UD {
+    RESOLVE_NAME = 'RESOLVE_UD_NAME',
+}
+
+enum TRANSACTION {
+    ADD_NEW_SEND_TRANSACTION = 'ADD_NEW_SEND_TRANSACTION',
+    UPDATE_SEND_TRANSACTION_GAS = 'UPDATE_SEND_TRANSACTION_GAS',
+    APPROVE_SEND_TRANSACTION = 'APPROVE_SEND_TRANSACTION',
+    GET_SEND_TRANSACTION_RESULT = 'GET_SEND_TRANSACTION_RESULT',
+    CALCULATE_SEND_TRANSACTION_GAS_LIMIT = 'CALCULATE_SEND_TRANSACTION_GAS_LIMIT',
+    CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT = 'CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT',
+    CONFIRM = 'CONFIRM_TRANSACTION',
+    REJECT = 'REJECT_TRANSACTION',
+    GET_LATEST_GAS_PRICE = 'GET_LATEST_GAS_PRICE',
+    SEND_ETHER = 'SEND_ETHER',
+    CANCEL_TRANSACTION = 'CANCEL_TRANSACTION',
+    SPEED_UP_TRANSACTION = 'SPEED_UP_TRANSACTION',
+    GET_SPEED_UP_GAS_PRICE = 'GET_SPEED_UP_GAS_PRICE',
+    GET_CANCEL_GAS_PRICE = 'GET_CANCEL_GAS_PRICE',
+    GET_NEXT_NONCE = 'GET_NEXT_NONCE',
+    REJECT_REPLACEMENT_TRANSACTION = 'REJECT_REPLACEMENT_TRANSACTION',
+}
+
+enum WALLET {
+    CREATE = 'CREATE_WALLET',
+    IMPORT = 'IMPORT_WALLET',
+    VERIFY_SEED_PHRASE = 'VERIFY_SEED_PHRASE',
+    REQUEST_SEED_PHRASE = 'REQUEST_SEED_PHRASE',
+    SETUP_COMPLETE = 'SETUP_COMPLETE',
+    RESET = 'RESET',
+    DISMISS_WELCOME_MESSAGE = 'DISMISS_WELCOME_MESSAGE',
+    DISMISS_DEFAULT_WALLET_PREFERENCES = 'DISMISS_DEFAULT_WALLET_PREFERENCES',
+    DISMISS_RELEASE_NOTES = 'DISMISS_RELEASE_NOTES',
+    TOGGLE_RELEASE_NOTES_SUBSCRIPTION = 'TOGGLE_RELEASE_NOTES_SUBSCRIPTION',
+    GENERATE_ANTI_PHISHING_IMAGE = 'GENERATE_ANTI_PHISHING_IMAGE',
+    GENERATE_ON_DEMAND_RELEASE_NOTES = 'GENERATE_ON_DEMAND_RELEASE_NOTES',
+    UPDATE_ANTI_PHISHING_IMAGE = 'UPDATE_ANTI_PHISHING_IMAGE',
+    TOGGLE_ANTI_PHISHING_PROTECTION = 'TOGGLE_ANTI_PHISHING_PROTECTION',
+    TOGGLE_DEFAULT_BROWSER_WALLET = 'TOGGLE_DEFAULT_BROWSER_WALLET',
+    SET_NATIVE_CURRENCY = 'SET_NATIVE_CURRENCY',
+    GET_VALID_CURRENCIES = 'GET_VALID_CURRENCIES',
+    HARDWARE_CONNECT = 'HARDWARE_CONNECT',
+    HARDWARE_REMOVE = 'HARDWARE_REMOVE',
+    HARDWARE_GET_ACCOUNTS = 'HARDWARE_GET_ACCOUNTS',
+    HARDWARE_IMPORT_ACCOUNTS = 'HARDWARE_IMPORT_ACCOUNTS',
+    HARDWARE_GET_HD_PATH = 'HARDWARE_GET_HD_PATH',
+    HARDWARE_SET_HD_PATH = 'HARDWARE_SET_HD_PATH',
+    HARDWARE_IS_LINKED = 'HARDWARE_IS_LINKED',
+}
+
+enum TOKEN {
+    GET_BALANCE = 'GET_TOKEN_BALANCE',
+    GET_TOKENS = 'GET_TOKENS',
+    GET_USER_TOKENS = 'GET_USER_TOKENS',
+    GET_TOKEN = 'GET_TOKEN',
+    ADD_CUSTOM_TOKEN = 'ADD_CUSTOM_TOKEN',
+    DELETE_CUSTOM_TOKEN = 'DELETE_CUSTOM_TOKEN',
+    ADD_CUSTOM_TOKENS = 'ADD_CUSTOM_TOKENS',
+    SEND_TOKEN = 'SEND_TOKEN',
+    POPULATE_TOKEN_DATA = 'POPULATE_TOKEN_DATA',
+    SEARCH_TOKEN = 'SEARCH_TOKEN',
+}
+
+enum ADDRESS_BOOK {
+    CLEAR = 'CLEAR',
+    DELETE = 'DELETE',
+    SET = 'SET',
+    GET = 'GET',
+    GET_BY_ADDRESS = 'GET_BY_ADDRESS',
+    GET_RECENT_ADDRESSES = 'GET_RECENT_ADDRESSES',
+}
+
+enum BROWSER {
+    GET_WINDOW_ID = 'GET_WINDOW_ID',
+}
+
+enum FILTERS {
+    SET_ACCOUNT_FILTERS = 'SET_ACCOUNT_FILTERS',
+}
+
+export const Messages = {
+    ACCOUNT,
+    APP,
+    BACKGROUND,
+    BLANK,
+    CONTENT,
+    DAPP,
+    EXCHANGE,
+    EXTERNAL,
+    NETWORK,
+    PASSWORD,
+    PERMISSION,
+    STATE,
+    ENS,
+    UD,
+    TRANSACTION,
+    WALLET,
+    TOKEN,
+    ADDRESS_BOOK,
+    BROWSER,
+    FILTERS,
+};
+
+// [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
+export interface RequestSignatures {
+    [Messages.BROWSER.GET_WINDOW_ID]: [undefined, string];
+    [Messages.ACCOUNT.CREATE]: [RequestAccountCreate, AccountInfo];
+    [Messages.ACCOUNT.EXPORT_JSON]: [RequestAccountExportJson, string];
+    [Messages.ACCOUNT.EXPORT_PRIVATE_KEY]: [RequestAccountExportPK, string];
+    [Messages.ACCOUNT.IMPORT_JSON]: [RequestAccountImportJson, AccountInfo];
+    [Messages.ACCOUNT.IMPORT_PRIVATE_KEY]: [
+        RequestAccountImportPK,
+        AccountInfo
+    ];
+    [Messages.ACCOUNT.REMOVE]: [RequestAccountRemove, boolean];
+    [Messages.ACCOUNT.HIDE]: [RequestAccountHide, boolean];
+    [Messages.ACCOUNT.UNHIDE]: [RequestAccountUnhide, boolean];
+    [Messages.ACCOUNT.RENAME]: [RequestAccountRename, boolean];
+    [Messages.ACCOUNT.SELECT]: [RequestAccountSelect, boolean];
+    [Messages.ACCOUNT.GET_BALANCE]: [string, BigNumber];
+    [Messages.APP.GET_IDLE_TIMEOUT]: [undefined, number];
+    [Messages.APP.SET_IDLE_TIMEOUT]: [RequestSetIdleTimeout, void];
+    [Messages.APP.SET_LAST_USER_ACTIVE_TIME]: [undefined, void];
+    [Messages.APP.LOCK]: [undefined, boolean];
+    [Messages.APP.UNLOCK]: [RequestAppUnlock, boolean];
+    [Messages.APP.RETURN_TO_ONBOARDING]: [undefined, void];
+    [Messages.APP.OPEN_RESET]: [undefined, void];
+    [Messages.APP.OPEN_HW_CONNECT]: [undefined, void];
+    [Messages.APP.OPEN_HW_REMOVE]: [undefined, void];
+    [Messages.APP.OPEN_HW_RECONNECT]: [RequestReconnectDevice, void];
+
+    [Messages.APP.SET_USER_SETTINGS]: [RequestUserSettings, UserSettings];
+    [Messages.APP.UPDATE_POPUP_TAB]: [RequestUpdatePopupTab, void];
+    [Messages.APP.REJECT_UNCONFIRMED_REQUESTS]: [undefined, void];
+    [Messages.BACKGROUND.ACTION]: [];
+    [Messages.BLANK.DEPOSIT]: [RequestBlankDeposit, string];
+    [Messages.BLANK.DEPOSIT_ALLOWANCE]: [RequestDepositAllowance, boolean];
+    [Messages.BLANK.CALCULATE_DEPOSIT_TRANSACTION_GAS_LIMIT]: [
+        RequestCalculateDepositTransactionGasLimit,
+        TransactionGasEstimation
+    ];
+    [Messages.BLANK.WITHDRAW]: [RequestBlankWithdraw, string];
+    [Messages.BLANK.COMPLIANCE]: [RequestBlankCompliance, ComplianceInfo];
+    [Messages.BLANK.PAIR_DEPOSITS_COUNT]: [
+        RequestBlankPairDepositsCount,
+        number
+    ];
+    [Messages.BLANK.CURRENCY_DEPOSITS_COUNT]: [
+        RequestBlankCurrencyDepositsCount,
+        ResponseBlankCurrencyDepositsCount
+    ];
+    [Messages.BLANK.GET_UNSPENT_DEPOSITS]: [undefined, IBlankDeposit[]];
+    [Messages.BLANK.GET_DEPOSIT_NOTE_STRING]: [
+        RequestBlankGetDepositNoteString,
+        string
+    ];
+    [Messages.BLANK.UPDATE_SPENT_NOTES]: [undefined, void];
+    [Messages.BLANK.UPDATE_DEPOSITS_TREE]: [
+        RequestBlankDepositsTreeUpdate,
+        void
+    ];
+    [Messages.BLANK.GET_WITHDRAWAL_FEES]: [
+        RequestBlankWithdrawalFees,
+        ResponseBlankWithdrawalFees
+    ];
+    [Messages.BLANK.FORCE_DEPOSITS_IMPORT]: [undefined, void];
+    [Messages.BLANK.HAS_DEPOSITED_FROM_ADDRESS]: [
+        RequestBlankHasDepositedFromAddress,
+        boolean
+    ];
+    [Messages.BLANK.GET_INSTANCE_ALLOWANCE]: [
+        RequestBlankGetInstanceTokenAllowance,
+        BigNumber
+    ];
+    [Messages.BLANK.GET_LATEST_DEPOSIT_DATE]: [
+        RequestBlankGetLatestDepositDate,
+        Date
+    ];
+    [Messages.BLANK.GET_ANONIMITY_SET]: [RequestGetAnonimitySet, number];
+    [Messages.BLANK.GET_SUBSEQUENT_DEPOSITS_COUNT]: [
+        RequestGetSubsequentDepositsCount,
+        number | undefined
+    ];
+    [Messages.DAPP.CONFIRM_REQUEST]: [RequestConfirmDappRequest, void];
+    [Messages.DAPP.ATTEMPT_REJECT_REQUEST]: [RequestRejectDappRequest, void];
+    [Messages.EXCHANGE.CHECK_ALLOWANCE]: [
+        RequestCheckExchangeAllowance,
+        boolean
+    ];
+    [Messages.EXCHANGE.APPROVE]: [RequestApproveExchange, boolean];
+    [Messages.EXCHANGE.GET_QUOTE]: [RequestGetExchangeQuote, SwapQuote];
+    [Messages.EXCHANGE.GET_EXCHANGE]: [RequestGetExchange, SwapParameters];
+    [Messages.EXCHANGE.EXECUTE]: [RequestExecuteExchange, string];
+    [Messages.EXTERNAL.REQUEST]: [RequestExternalRequest, unknown];
+    [Messages.EXTERNAL.SETUP_PROVIDER]: [undefined, ProviderSetupData];
+    [Messages.EXTERNAL.SET_ICON]: [RequestSetIcon, boolean];
+    [Messages.NETWORK.CHANGE]: [RequestNetworkChange, boolean];
+    [Messages.NETWORK.SET_SHOW_TEST_NETWORKS]: [
+        RequestShowTestNetworks,
+        boolean
+    ];
+    [Messages.NETWORK.ADD_NETWORK]: [RequestAddNetwork, void];
+    [Messages.NETWORK.EDIT_NETWORK]: [RequestEditNetwork, void];
+    [Messages.NETWORK.REMOVE_NETWORK]: [RequestRemoveNetwork, void];
+    [Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS]: [
+        RequestGetChainData,
+        ChainListItem
+    ];
+    [Messages.NETWORK.GET_RPC_CHAIN_ID]: [RequestGetRpcChainId, number];
+    [Messages.NETWORK.SEARCH_CHAINS]: [
+        RequestSearchChains,
+        { name: string; logo: string }
+    ];
+    [Messages.PASSWORD.VERIFY]: [RequestPasswordVerify, boolean];
+    [Messages.PASSWORD.CHANGE]: [RequestPasswordChange, boolean];
+    [Messages.PERMISSION.ADD_NEW]: [RequestAddNewSiteWithPermissions, boolean];
+    [Messages.PERMISSION.CONFIRM]: [RequestConfirmPermission, boolean];
+    [Messages.PERMISSION.GET_ACCOUNT_PERMISSIONS]: [
+        RequestGetAccountPermissions,
+        string[]
+    ];
+    [Messages.PERMISSION.REMOVE_ACCOUNT_FROM_SITE]: [
+        RequestRemoveAccountFromSite,
+        boolean
+    ];
+    [Messages.PERMISSION.UPDATE_SITE_PERMISSIONS]: [
+        RequestUpdateSitePermissions,
+        boolean
+    ];
+    [Messages.STATE.GET]: [undefined, ResponseGetState];
+    [Messages.ENS.RESOLVE_NAME]: [RequestEnsResolve, string | null];
+    [Messages.ENS.LOOKUP_ADDRESS]: [RequestEnsLookup, string | null];
+    [Messages.UD.RESOLVE_NAME]: [RequestUDResolve, string | null];
+    [Messages.TRANSACTION.CONFIRM]: [RequestConfirmTransaction, string];
+    [Messages.TRANSACTION.REJECT]: [RequestRejectTransaction, boolean];
+    [Messages.TRANSACTION.REJECT_REPLACEMENT_TRANSACTION]: [
+        RequestRejectTransaction,
+        boolean
+    ];
+    [Messages.TRANSACTION.GET_LATEST_GAS_PRICE]: [undefined, BigNumber];
+    [Messages.TRANSACTION.SEND_ETHER]: [RequestSendEther, string];
+    [Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION]: [
+        RequestAddAsNewSendTransaction,
+        TransactionMeta
+    ];
+    [Messages.TRANSACTION.UPDATE_SEND_TRANSACTION_GAS]: [
+        RequestUpdateSendTransactionGas,
+        void
+    ];
+    [Messages.TRANSACTION.APPROVE_SEND_TRANSACTION]: [
+        RequestApproveSendTransaction,
+        void
+    ];
+    [Messages.TRANSACTION.GET_SEND_TRANSACTION_RESULT]: [
+        RequestSendTransactionResult,
+        string
+    ];
+    [Messages.TRANSACTION.CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT]: [
+        RequestCalculateApproveTransactionGasLimit,
+        TransactionGasEstimation
+    ];
+    [Messages.TRANSACTION.CALCULATE_SEND_TRANSACTION_GAS_LIMIT]: [
+        RequestCalculateSendTransactionGasLimit,
+        TransactionGasEstimation
+    ];
+    [Messages.TRANSACTION.CANCEL_TRANSACTION]: [RequestCancelTransaction, void];
+    [Messages.TRANSACTION.SPEED_UP_TRANSACTION]: [
+        RequestSpeedUpTransaction,
+        void
+    ];
+    [Messages.TRANSACTION.GET_SPEED_UP_GAS_PRICE]: [
+        RequestGetCancelSpeedUpGasPriceTransaction,
+        GasPriceValue | FeeMarketEIP1559Values
+    ];
+    [Messages.TRANSACTION.GET_CANCEL_GAS_PRICE]: [
+        RequestGetCancelSpeedUpGasPriceTransaction,
+        GasPriceValue | FeeMarketEIP1559Values
+    ];
+    [Messages.TRANSACTION.GET_NEXT_NONCE]: [RequestNextNonce, number];
+    [Messages.WALLET.CREATE]: [RequestWalletCreate, void];
+    [Messages.WALLET.IMPORT]: [RequestWalletImport, boolean];
+    [Messages.WALLET.VERIFY_SEED_PHRASE]: [RequestVerifySeedPhrase, boolean];
+    [Messages.WALLET.REQUEST_SEED_PHRASE]: [RequestSeedPhrase, string];
+    [Messages.WALLET.SETUP_COMPLETE]: [RequestCompleteSetup, void];
+    [Messages.WALLET.RESET]: [RequestWalletReset, boolean];
+    [Messages.STATE.SUBSCRIBE]: [undefined, boolean, StateSubscription];
+    [Messages.TOKEN.GET_BALANCE]: [RequestGetTokenBalance, BigNumber];
+    [Messages.TOKEN.GET_TOKENS]: [RequestGetTokens, ITokens];
+    [Messages.TOKEN.GET_USER_TOKENS]: [RequestGetUserTokens, ITokens];
+    [Messages.TOKEN.GET_TOKEN]: [RequestGetToken, Token];
+    [Messages.TOKEN.ADD_CUSTOM_TOKEN]: [RequestAddCustomToken, void | void[]];
+    [Messages.TOKEN.DELETE_CUSTOM_TOKEN]: [RequestDeleteCustomToken, void];
+    [Messages.TOKEN.ADD_CUSTOM_TOKENS]: [RequestAddCustomTokens, void | void[]];
+    [Messages.TOKEN.SEND_TOKEN]: [RequestSendToken, string];
+    [Messages.TOKEN.POPULATE_TOKEN_DATA]: [RequestPopulateTokenData, Token];
+    [Messages.TOKEN.SEARCH_TOKEN]: [RequestSearchToken, Token[]];
+    [Messages.EXTERNAL.EVENT_SUBSCRIPTION]: [
+        undefined,
+        boolean,
+        ExternalEventSubscription
+    ];
+    [Messages.ADDRESS_BOOK.CLEAR]: [RequestAddressBookClear, boolean];
+    [Messages.ADDRESS_BOOK.DELETE]: [RequestAddressBookDelete, boolean];
+    [Messages.ADDRESS_BOOK.SET]: [RequestAddressBookSet, boolean];
+    [Messages.ADDRESS_BOOK.GET]: [RequestAddressBookGet, NetworkAddressBook];
+    [Messages.ADDRESS_BOOK.GET_BY_ADDRESS]: [
+        RequestAddressBookGetByAddress,
+        AddressBookEntry | undefined
+    ];
+    [Messages.ADDRESS_BOOK.GET_RECENT_ADDRESSES]: [
+        RequestAddressBookGetRecentAddresses,
+        NetworkAddressBook
+    ];
+    [Messages.WALLET.DISMISS_WELCOME_MESSAGE]: [DismissMessage, boolean];
+    [Messages.WALLET.DISMISS_DEFAULT_WALLET_PREFERENCES]: [
+        DismissMessage,
+        boolean
+    ];
+    [Messages.WALLET.DISMISS_RELEASE_NOTES]: [DismissMessage, boolean];
+    [Messages.WALLET.TOGGLE_RELEASE_NOTES_SUBSCRIPTION]: [
+        RequestToggleReleaseNotesSubscription,
+        void
+    ];
+    [Messages.WALLET.TOGGLE_DEFAULT_BROWSER_WALLET]: [
+        RequestToggleDefaultBrowserWallet,
+        void
+    ];
+
+    [Messages.WALLET.GENERATE_ANTI_PHISHING_IMAGE]: [
+        RequestAntiPhishingImage,
+        string
+    ];
+
+    [Messages.WALLET.UPDATE_ANTI_PHISHING_IMAGE]: [
+        RequestUpdateAntiPhishingImage,
+        void
+    ];
+
+    [Messages.WALLET.TOGGLE_ANTI_PHISHING_PROTECTION]: [
+        RequestToggleAntiPhishingProtection,
+        void
+    ];
+
+    [Messages.WALLET.SET_NATIVE_CURRENCY]: [RequestSetNativeCurrency, void];
+    [Messages.WALLET.GET_VALID_CURRENCIES]: [
+        RequestGetValidCurrencies,
+        Currency[]
+    ];
+    [Messages.WALLET.HARDWARE_CONNECT]: [RequestConnectHardwareWallet, boolean];
+    [Messages.WALLET.HARDWARE_REMOVE]: [RequestRemoveHardwareWallet, boolean];
+    [Messages.WALLET.HARDWARE_GET_ACCOUNTS]: [
+        RequestGetHardwareWalletAccounts,
+        AccountInfo[]
+    ];
+    [Messages.WALLET.HARDWARE_IMPORT_ACCOUNTS]: [
+        RequestImportHardwareWalletAccounts,
+        AccountInfo[]
+    ];
+    [Messages.WALLET.HARDWARE_GET_HD_PATH]: [RequestWalletGetHDPath, string];
+    [Messages.WALLET.HARDWARE_SET_HD_PATH]: [RequestWalletSetHDPath, void];
+    [Messages.WALLET.HARDWARE_IS_LINKED]: [RequestIsDeviceConnected, boolean];
+    [Messages.FILTERS.SET_ACCOUNT_FILTERS]: [
+        RequestSetAccountFilters,
+        undefined
+    ];
+    [Messages.WALLET.GENERATE_ON_DEMAND_RELEASE_NOTES]: [
+        RequestGenerateOnDemandReleaseNotes,
+        ReleaseNote[]
+    ];
+}
+
+export type MessageTypes = keyof RequestSignatures;
+
+export type RequestTypes = {
+    [MessageType in keyof RequestSignatures]: RequestSignatures[MessageType][0];
+};
+
+export interface RequestAccountCreate {
+    name: string;
+}
+
+export interface RequestAccountExportJson {
+    address: string;
+    password: string;
+    encryptPassword: string;
+}
+
+export interface RequestAccountExportPK {
+    address: string;
+    password: string;
+}
+
+export interface RequestAccountImportJson {
+    importArgs: ImportArguments[ImportStrategy.JSON_FILE];
+    name: string;
+}
+
+export interface RequestAccountImportPK {
+    importArgs: ImportArguments[ImportStrategy.PRIVATE_KEY];
+    name: string;
+}
+
+export interface RequestAccountRemove {
+    address: string;
+}
+
+export interface RequestAccountHide {
+    address: string;
+}
+
+export interface RequestAccountUnhide {
+    address: string;
+}
+
+export interface RequestAccountRename {
+    address: string;
+    name: string;
+}
+
+export interface RequestAccountSelect {
+    address: string;
+}
+
+export interface RequestAppUnlock {
+    password: string;
+}
+
+export interface RequestSetIdleTimeout {
+    idleTimeout: number;
+}
+
+export interface RequestConfirmDappRequest {
+    id: string;
+    isConfirmed: boolean;
+    confirmOptions?: DappRequestConfirmOptions[DappReq];
+}
+
+export interface RequestRejectDappRequest {
+    id: string;
+}
+
+export interface RequestReconnectDevice {
+    address: string;
+}
+export interface RequestCheckExchangeAllowance {
+    account: string;
+    amount: BigNumber;
+    exchangeType: ExchangeType;
+    tokenAddress: string;
+}
+
+export interface RequestApproveExchange {
+    allowance: BigNumber;
+    amount: BigNumber;
+    exchangeType: ExchangeType;
+    feeData: TransactionFeeData;
+    tokenAddress: string;
+    customNonce?: number;
+}
+
+export interface RequestGetExchangeQuote {
+    exchangeType: ExchangeType;
+    quoteParams: OneInchSwapQuoteParams;
+}
+
+export interface RequestGetExchange {
+    exchangeType: ExchangeType;
+    exchangeParams: OneInchSwapRequestParams;
+}
+
+export interface RequestExecuteExchange {
+    exchangeType: ExchangeType;
+    exchangeParams: SwapTransaction;
+}
+
+export type RequestExternalRequest = RequestArguments;
+
+export interface RequestSetIcon {
+    iconURL: string;
+}
+
+export interface RequestBlankDeposit {
+    pair: CurrencyAmountPair;
+    feeData: TransactionFeeData;
+    customNonce?: number;
+}
+
+export interface RequestDepositAllowance {
+    allowance: BigNumber;
+    customNonce?: number;
+    feeData: TransactionFeeData;
+    pair: CurrencyAmountPair;
+}
+
+export interface RequestCalculateDepositTransactionGasLimit {
+    currencyAmountPair: CurrencyAmountPair;
+}
+
+export interface RequestBlankWithdraw {
+    pair: CurrencyAmountPair;
+    accountAddressOrIndex?: string | number;
+}
+
+export interface RequestBlankGetDepositNoteString {
+    id: string;
+}
+
+export interface RequestBlankCompliance {
+    id: string;
+}
+
+export interface RequestBlankPairDepositsCount {
+    pair: CurrencyAmountPair;
+}
+
+export interface RequestBlankDepositsTreeUpdate {
+    pair: CurrencyAmountPair;
+}
+
+export interface RequestBlankCurrencyDepositsCount {
+    currency: KnownCurrencies;
+}
+
+export type ResponseBlankCurrencyDepositsCount = {
+    pair: CurrencyAmountPair;
+    count: number;
+}[];
+
+export interface RequestBlankWithdrawalFees {
+    pair: CurrencyAmountPair;
+}
+
+export interface RequestBlankGetInstanceTokenAllowance {
+    pair: CurrencyAmountPair;
+}
+
+export interface RequestBlankGetLatestDepositDate {
+    pair: CurrencyAmountPair;
+}
+
+export interface RequestGetSubsequentDepositsCount {
+    pair: CurrencyAmountPair;
+}
+
+export interface RequestGetAnonimitySet {
+    pair: CurrencyAmountPair;
+}
+
+export interface ResponseBlankWithdrawalFees {
+    gasFee: BigNumber;
+    relayerFee: BigNumber;
+    totalFee: BigNumber;
+    total: BigNumber;
+}
+
+export interface RequestBlankHasDepositedFromAddress {
+    pair?: CurrencyAmountPair;
+    withdrawAddress: string;
+}
+
+export interface RequestNetworkChange {
+    networkName: string;
+}
+
+export interface RequestShowTestNetworks {
+    showTestNetworks: boolean;
+}
+export interface RequestAddNetwork {
+    name: string;
+    rpcUrl: string;
+    chainId: string;
+    currencySymbol: string;
+    blockExplorerUrl: string;
+    test: boolean;
+}
+
+export interface RequestEditNetwork {
+    chainId: string;
+    updates: {
+        rpcUrl: string;
+        blockExplorerUrl?: string;
+        name: string;
+    };
+}
+
+export interface RequestRemoveNetwork {
+    chainId: number;
+}
+
+export interface RequestGetChainData {
+    chainId: number;
+}
+
+export interface RequestGetRpcChainId {
+    rpcUrl: string;
+}
+
+export interface RequestSearchChains {
+    term: string;
+}
+
+export interface RequestPasswordVerify {
+    password: string;
+}
+
+export interface RequestPasswordChange {
+    password: string;
+}
+
+export interface RequestEnsResolve {
+    name: string;
+}
+
+export interface RequestEnsLookup {
+    address: string;
+}
+
+export interface RequestUDResolve {
+    name: string;
+}
+
+export interface RequestAddNewSiteWithPermissions {
+    accounts: string[];
+    origin: string;
+    siteMetadata: SiteMetadata;
+}
+
+export interface RequestConfirmPermission {
+    id: string;
+    accounts: string[] | null;
+}
+
+export interface RequestGetAccountPermissions {
+    account: string;
+}
+
+export interface RequestRemoveAccountFromSite {
+    origin: string;
+    account: string;
+}
+
+export interface RequestUpdateSitePermissions {
+    origin: string;
+    accounts: string[] | null;
+}
+
+export interface RequestConfirmTransaction {
+    id: string;
+    feeData: TransactionFeeData;
+    advancedData: TransactionAdvancedData;
+}
+
+export interface RequestSendEther {
+    to: string;
+    value: BigNumber;
+    feeData: TransactionFeeData;
+    advancedData: TransactionAdvancedData;
+}
+
+export interface RequestWalletCreate {
+    password: string;
+}
+
+export interface RequestSeedPhrase {
+    password: string;
+}
+export interface RequestCompleteSetup {}
+
+export interface RequestWalletImport {
+    password: string;
+    seedPhrase: string;
+    reImport?: boolean;
+    defaultNetwork?: string;
+}
+
+export interface RequestWalletReset {
+    password: string;
+    seedPhrase: string;
+}
+
+export interface RequestWalletGetHDPath {
+    device: Devices;
+}
+
+export interface RequestWalletSetHDPath {
+    device: Devices;
+    path: string;
+}
+
+export interface RequestVerifySeedPhrase {
+    password: string;
+    seedPhrase: string;
+}
+
+export interface RequestGetTokenBalance {
+    tokenAddress: string;
+    account: string;
+}
+
+export interface RequestGetTokens {
+    chainId?: number;
+}
+export interface RequestGetUserTokens {
+    accountAddress?: string;
+    chainId?: number;
+}
+
+export interface RequestGetToken {
+    tokenAddress: string;
+    accountAddress?: string;
+    chainId?: number;
+}
+
+export interface RequestAddCustomToken {
+    address: string;
+    name: string;
+    symbol: string;
+    decimals: number;
+    logo: string;
+    type: string;
+}
+export interface RequestDeleteCustomToken {
+    address: string;
+    accountAddress?: string;
+    chainId?: number;
+}
+
+export interface RequestAddCustomTokens {
+    tokens: RequestAddCustomToken[];
+    accountAddress?: string;
+    chainId?: number;
+}
+
+export interface RequestSendToken {
+    tokenAddress: string;
+    to: string;
+    value: BigNumber;
+    feeData: TransactionFeeData;
+    advancedData: TransactionAdvancedData;
+}
+
+export interface RequestAddAsNewSendTransaction {
+    address: string;
+    to: string;
+    value: BigNumber;
+    feeData: TransactionFeeData;
+}
+
+export interface RequestUpdateSendTransactionGas {
+    transactionId: string;
+    feeData: TransactionFeeData;
+}
+
+export interface RequestApproveSendTransaction {
+    transactionId: string;
+}
+
+export interface RequestSendTransactionResult {
+    transactionId: string;
+}
+
+export interface RequestCalculateSendTransactionGasLimit {
+    address: string;
+    to: string;
+    value: BigNumber;
+}
+
+export interface RequestCancelTransaction {
+    transactionId: string;
+    gasValues?: GasPriceValue | FeeMarketEIP1559Values;
+    gasLimit?: BigNumber;
+}
+
+export interface RequestSpeedUpTransaction {
+    transactionId: string;
+    gasValues?: GasPriceValue | FeeMarketEIP1559Values;
+    gasLimit?: BigNumber;
+}
+
+export interface RequestGetCancelSpeedUpGasPriceTransaction {
+    transactionId: string;
+}
+
+export interface RequestCalculateApproveTransactionGasLimit {
+    tokenAddress: string;
+    spender: string;
+    amount: BigNumber | 'UNLIMITED';
+}
+
+export interface RequestPopulateTokenData {
+    tokenAddress: string;
+}
+
+export interface RequestSearchToken {
+    query: string;
+    exact?: boolean;
+    accountAddress?: string;
+    chainId?: number;
+}
+
+export interface RequestAntiPhishingImage {}
+
+export interface RequestUpdateAntiPhishingImage {
+    antiPhishingImage: string;
+}
+
+export interface RequestToggleAntiPhishingProtection {
+    antiPhishingProtectionEnabeld: boolean;
+}
+
+export interface RequestSetNativeCurrency {
+    currencyCode: string;
+}
+
+export interface RequestGetValidCurrencies {}
+
+export interface RequestToggleReleaseNotesSubscription {
+    releaseNotesSubscriptionEnabled: boolean;
+}
+
+export interface RequestToggleDefaultBrowserWallet {
+    defaultBrowserWalletEnabled: boolean;
+}
+
+export interface RequestRejectTransaction {
+    transactionId: string;
+}
+
+export interface RequestAddressBookClear {}
+
+export interface RequestAddressBookDelete {
+    address: string;
+}
+
+export interface RequestAddressBookSet {
+    address: string;
+    name: string;
+    note?: string;
+}
+
+export interface RequestAddressBookGet {}
+export interface RequestAddressBookGetByAddress {
+    address: string;
+}
+export interface RequestAddressBookGetRecentAddresses {
+    limit?: number;
+}
+export interface RequestUserSettings {
+    settings: UserSettings;
+}
+
+export interface RequestUpdatePopupTab {
+    popupTab: PopupTabs;
+}
+
+export interface RequestNextNonce {
+    address: string;
+}
+
+export interface RequestConnectHardwareWallet {
+    device: Devices;
+}
+export interface RequestRemoveHardwareWallet {
+    device: Devices;
+}
+
+export interface RequestGetHardwareWalletAccounts {
+    device: Devices;
+    pageIndex: number;
+    pageSize: number;
+}
+
+export interface RequestImportHardwareWalletAccounts {
+    device: Devices;
+    deviceAccounts: DeviceAccountInfo[];
+}
+
+export interface RequestIsDeviceConnected {
+    address: string;
+}
+
+export interface RequestSetAccountFilters {
+    accountFilters: string[];
+}
+
+export interface RequestGenerateOnDemandReleaseNotes {
+    version: string;
+}
+
+export type ResponseTypes = {
+    [MessageType in keyof RequestSignatures]: RequestSignatures[MessageType][1];
+};
+
+export type ResponseType<TMessageType extends keyof RequestSignatures> =
+    RequestSignatures[TMessageType][1];
+
+export interface ResponseBlankGetWithdrawalGasCost {
+    estimatedGas: BigNumber;
+    fee: BigNumber;
+    total: BigNumber;
+}
+
+export type ResponseGetState = Flatten<BlankAppUIState>;
+
+export type SubscriptionMessageTypes = {
+    [MessageType in keyof RequestSignatures]: RequestSignatures[MessageType][2];
+};
+
+export type StateSubscription = Flatten<BlankAppUIState>;
+
+export interface ExternalEventSubscription {
+    eventName: ProviderEvents;
+    payload: any;
+    portId?: string;
+}
+
+export interface TransportRequestMessage<TMessageType extends MessageTypes> {
+    id: string;
+    message: TMessageType;
+    request: RequestTypes[TMessageType];
+}
+
+export interface WindowTransportRequestMessage
+    extends TransportRequestMessage<EXTERNAL> {
+    origin: Origin;
+}
+
+export interface TransportResponseMessage<TMessageType extends MessageTypes> {
+    error?: string;
+    id: string;
+    response?: ResponseTypes[TMessageType];
+    subscription?: SubscriptionMessageTypes[TMessageType];
+}
+
+export interface WindowTransportResponseMessage
+    extends TransportResponseMessage<EXTERNAL> {
+    origin: Origin;
+}
+
+export interface DismissMessage {}
+
+export enum Origin {
+    BACKGROUND = 'BLANK_BACKGROUND',
+    EXTENSION = 'BLANK_EXTENSION',
+    PROVIDER = 'BLANK_PROVIDER',
+    TREZOR_CONNECT = 'trezor-connect',
+}
+
+export interface ExtensionInstances {
+    [id: string]: { port: chrome.runtime.Port };
+}
+
+export interface ProviderInstances {
+    [id: string]: ProviderInstance;
+}
+
+export interface ProviderInstance {
+    port: chrome.runtime.Port;
+    tabId: number;
+    windowId: number;
+    origin: string;
+    siteMetadata: SiteMetadata;
+}
+
+export interface Handler {
+    resolve: (data: any) => void;
+    reject: (error: Error) => void;
+    subscriber?: (data: any) => void;
+}
+
+export type Handlers = Record<string, Handler>;
+
+export enum BackgroundActions {
+    CLOSE_WINDOW = 'CLOSE_WINDOW',
+}

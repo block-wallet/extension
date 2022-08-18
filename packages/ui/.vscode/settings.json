@@ -1,0 +1,6 @@
+{
+    "editor.formatOnSave": true,
+    "files.eol": "\n",
+    "prettier.useEditorConfig": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+}

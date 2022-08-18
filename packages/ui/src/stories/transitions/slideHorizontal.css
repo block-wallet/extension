@@ -1,0 +1,38 @@
+.slide-horizontal-enter,
+.slide-horizontal-enter-active,
+.slide-horizontal-enter-done .slide-horizontal-exit,
+.slide-horizontal-exit-active,
+.slide-horizontal-exit-done {
+    will-change: transform;
+}
+
+.slide-horizontal-enter {
+    position: relative;
+    opacity: 0;
+    transform: translateX(4rem);
+}
+
+.slide-horizontal-enter-active {
+    opacity: 1;
+    transform: translateX(0);
+    transition: all 0.2s ease-out;
+    transition-delay: 0.1s;
+    z-index: 2;
+}
+
+.slide-horizontal-exit {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.slide-horizontal-exit-active {
+    opacity: 0;
+    z-index: 1;
+    transform: translateX(-1rem);
+    transition: opacity 0.15s ease-in, transform 0.2s ease-in;
+}

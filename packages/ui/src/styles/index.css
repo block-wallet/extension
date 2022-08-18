@@ -1,0 +1,154 @@
+* {
+    user-select: none;
+}
+
+.allow-select {
+    user-select: text !important;
+}
+
+.allow-select-all {
+    user-select: all !important;
+}
+
+html.popup,
+html.popup body,
+html body.popup {
+    width: 357px;
+    min-height: 600px;
+    /*height: 600px;*/
+    /*max-height: 600px;*/
+    overflow-y: scroll;
+}
+.popup-layout {
+    max-width: 357px;
+}
+/* Storybook classes */
+
+body.popup.sb-show-main {
+    width: 100%;
+    min-height: 100%;
+    max-width: 380px;
+    max-height: 640px;
+    overflow-y: scroll;
+}
+
+.storybook-content::-webkit-scrollbar {
+    display: none;
+}
+
+/* End Storybook classes */
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+/* Class to implement in those views where we want to be able to scroll but without showing the scrollbar */
+.hide-scroll::-webkit-scrollbar {
+    display: none;
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
+}
+
+#root {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+}
+
+.main-content::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+}
+
+.main-content {
+    max-width: 357px;
+}
+
+/* Scroll bar */
+
+::-webkit-scrollbar {
+    width: 2px;
+}
+
+::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px transparent;
+    border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+}
+
+.transform {
+    will-change: transform;
+}
+
+/* Disable outlines */
+
+a:focus,
+button:focus,
+input:focus,
+textarea:focus {
+    outline: none;
+    box-shadow: none !important;
+}
+
+/* Loading placeholder */
+
+.placeholder::after {
+    content: " ";
+    box-shadow: 0 0 50px 9px rgba(0, 0, 0, 0.25);
+    position: absolute;
+    top: 0;
+    left: -100%;
+    height: 100%;
+    animation: load 1s infinite alternate-reverse;
+}
+
+@keyframes load {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 150%;
+    }
+}
+
+.select-menu {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    overflow: overlay;
+}
+
+.select-menu::-webkit-scrollbar {
+    width: 1px;
+}
+
+.react-json-view {
+    word-break: break-all;
+}
+
+.dropdown-menu > li:first-child {
+    border-top-right-radius: 6px;
+    border-top-left-radius: 6px;
+}
+.dropdown-menu > li:last-child {
+    border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+::-ms-reveal {
+    display: none;
+}
+
+.fullscreen-x-scrollbar {
+    overflow-x: scroll;
+}
+
+.fullscreen-x-scrollbar::-webkit-scrollbar {
+    height: 1.5px;
+}

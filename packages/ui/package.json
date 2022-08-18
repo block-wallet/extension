@@ -38,7 +38,7 @@
     "devDependencies": {
         "@babel/core": "7.17.12",
         "@babel/plugin-syntax-flow": "^7.16.7",
-        "@babel/plugin-transform-react-jsx": "^7.16.7",
+        "@babel/plugin-transform-react-jsx": "^7.18.10",
         "@pmmmwh/react-refresh-webpack-plugin": "0.4.2",
         "@svgr/webpack": "5.5.0",
         "@testing-library/dom": "^8.16.0",

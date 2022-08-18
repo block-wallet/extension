@@ -127,6 +127,8 @@ jobs:
           make test/background
 
   build:
+    if: |
+      !startsWith(github.ref_name, 'dependabot/')
     env:
       ENVIRONMENT: prod
     runs-on: [self-hosted, large]

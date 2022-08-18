@@ -223,7 +223,7 @@ jobs:
           key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
 
       - name: Download the extension
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: blockwallet-extension
           path: blockwallet-extension
@@ -296,13 +296,13 @@ jobs:
           rm -rf blockwallet-extension
 
       - name: Download the extension built folder
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: blockwallet-extension
           path: blockwallet-extension
 
       - name: Download the extension screenshot (release notes)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: screenshot
           path: screenshot

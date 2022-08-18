@@ -26,7 +26,7 @@ env:
 
 jobs:
   validation:
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, small]
     steps:
       - name: Print user input
         run: |
@@ -87,6 +87,8 @@ jobs:
   build:
     needs: validation
     runs-on: [self-hosted, large]
+    outputs:
+      version_without_preffix: ${{ steps.remove_preffix.outputs.version }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -190,6 +192,10 @@ jobs:
   tests:
     needs: build
     runs-on: [self-hosted, large]
+    env:
+      WIDTH: 357
+      HEIGHT: 610
+      DBUS_SESSION_BUS_ADDRESS: /dev/null
     steps:
       - name: Checkout e2e repository
         uses: actions/checkout@v2
@@ -250,21 +256,56 @@ jobs:
 
       - name: UI Tests - Chrome
         run: |
-          DBUS_SESSION_BUS_ADDRESS=/dev/null yarn run test:e2e
+          yarn run test:e2e
         env:
           ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
           GITHUB_TOKEN: ${{ secrets.PAT }}
           TEST_TAGS: puppeteer,extension
 
+      - name: Take the release notes screenshot
+        run: |
+          yarn run test:e2e
+        env:
+          EXTENSION_VERSION: ${{ needs.build.outputs.version_without_preffix }}
+          TEST_TAGS: release-notes
+          BROWSER_WIDTH: ${{ env.WIDTH }}
+          BROWSER_HEIGHT: ${{ env.HEIGHT }}
+
+      - name: Install ImageMagick (needed for convert)
+        run: |
+          apt install -y imagemagick
+
+      - name: Cut the screenshot
+        run: |
+          convert screenshots/release-notes-${{ needs.build.outputs.version_without_preffix }}.png -crop ${{ env.WIDTH }}x${{ env.HEIGHT }}+0+0 $EXTENSION_NAME.png
+
+      - name: Save screenshot of release notes
+        uses: actions/upload-artifact@v2
+        with:
+          name: screenshot
+          if-no-files-found: error
+          path: ${{ env.EXTENSION_NAME }}.png
+
   package:
     needs: tests
     runs-on: [self-hosted, small]
     steps:
+      - name: Delete artifacts folders
+        run: |
+          rm -rf screenshot
+          rm -rf blockwallet-extension
+
       - name: Download the extension built folder
         uses: actions/download-artifact@v2
         with:
           name: blockwallet-extension
           path: blockwallet-extension
+
+      - name: Download the extension screenshot (release notes)
+        uses: actions/download-artifact@v2
+        with:
+          name: screenshot
+          path: screenshot
 
       - name: Zip extension
         id: zip
@@ -272,7 +313,7 @@ jobs:
           apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
           apt update
           apt install -y zip
-          mkdir $ARTIFACTS_FOLDER
+          mkdir -p $ARTIFACTS_FOLDER
           mv blockwallet-extension dist
           zip -r -D $ARTIFACTS_FOLDER/$EXTENSION_NAME.zip dist/
 
@@ -292,6 +333,7 @@ jobs:
       - name: Upload to S3
         run: |
           aws s3 cp --recursive $ARTIFACTS_FOLDER $S3_PATH
+          aws s3 cp screenshot/$EXTENSION_NAME.png $S3_PATH/$EXTENSION_NAME.png
 
       - name: Upload version and notes to S3
         env:

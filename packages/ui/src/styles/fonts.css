@@ -1,0 +1,51 @@
+@font-face {
+    font-family: "Inter";
+    src: url("../assets/fonts/Inter-Thin.ttf") format("truetype");
+    font-weight: 100;
+}
+@font-face {
+    font-family: "Inter";
+    src: url("../assets/fonts/Inter-Regular.ttf") format("truetype");
+    font-weight: 400;
+}
+@font-face {
+    font-family: "Inter";
+    src: url("../assets/fonts/Inter-Bold.ttf") format("truetype");
+    font-weight: 700;
+}
+
+@font-face {
+    font-family: "Sequel Sans";
+    src: url("../assets/fonts/SequelSansLight.woff2") format("woff2");
+    font-weight: 100;
+}
+@font-face {
+    font-family: "Sequel Sans";
+    src: url("../assets/fonts/SequelSansMedium.woff2") format("woff2");
+    font-weight: 400;
+}
+@font-face {
+    font-family: "Sequel Sans";
+    src: url("../assets/fonts/SequelSansSemi.woff2") format("woff2");
+    font-weight: 600;
+}
+@font-face {
+    font-family: "Sequel Sans";
+    src: url("../assets/fonts/SequelSansBold.woff2") format("woff2");
+    font-weight: 700;
+}
+
+.font-title {
+    font-family: "Sequel Sans", sans-serif;
+}
+
+.font-text,
+html,
+body {
+    font-family: "Inter", sans-serif;
+}
+
+html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}

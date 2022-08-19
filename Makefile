@@ -21,10 +21,18 @@ test/background:
 test/ui:
 	@cd packages/ui && $(MAKE) test/ui
 
+test/provider:
+	@cd packages/provider && $(MAKE) test/provider
+
 test:
 	$(MAKE) test/background
 	$(MAKE) test/ui
+	$(MAKE) test/provider
 
+lint:
+	@cd packages/background && yarn lint
+	@cd packages/ui && yarn lint
+	@cd packages/provider && yarn lint
 
 install:
 	@cd packages/background && rm -rf node_modules

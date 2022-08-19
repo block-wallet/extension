@@ -1,0 +1,33 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "lib": ["esnext", "dom", "DOM.Iterable"],
+        "allowJs": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "useUnknownInCatchVariables": false,
+        "forceConsistentCasingInFileNames": true,
+        "noFallthroughCasesInSwitch": true,
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": false,
+        "noEmit": false,
+        "sourceMap": true,
+        "baseUrl": ".",
+        "typeRoots": ["./node_modules/@types", "./src/typings"],
+        "paths": {
+            "@block-wallet/background": ["./src"],
+            "@block-wallet/background/*": ["./src/*"],
+            "@block-wallet/provider": ["../provider/src"],
+            "@block-wallet/provider/*": ["../provider/src/*"]
+        },
+        "experimentalDecorators": true
+    },
+    "include": ["src", "test"],
+    "ts-node": {
+        "files": true
+    }
+}

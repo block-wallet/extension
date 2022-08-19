@@ -15,7 +15,7 @@ jobs:
       html_url: ${{ steps.create_release.outputs.html_url }}
       s3_url: ${{ steps.get_metadata.outputs.s3_url }}
     if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'automated') && contains(github.event.pull_request.labels.*.name, 'release')
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted, small]
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -36,9 +36,6 @@ jobs:
           aws s3 cp $S3_PATH/version.json .
           aws s3 cp $S3_PATH/notes.md .
           extension=$(cat version.json | jq -r .extension)
-          background=$(cat version.json| jq -r .background)
-          provider=$(cat version.json| jq -r .provider)
-          ui=$(cat version.json| jq -r .ui)
           prerelease=$(cat version.json| jq -r .prerelease)
           notes=$(cat notes.md)
           notes="${notes//'%'/'%25'}"     # hack to share multiline strings as action output
@@ -46,9 +43,6 @@ jobs:
           notes="${notes//$'\r'/'%0D'}"   # hack to share multiline strings as action output
           s3_url=$(echo "${S3_PATH/s3/https}")
           echo "::set-output name=extension::$extension"
-          echo "::set-output name=background::$background"
-          echo "::set-output name=provider::$provider"
-          echo "::set-output name=ui::$ui"
           echo "::set-output name=pre-release::$prerelease"
           echo "::set-output name=notes::$notes"
           echo "::set-output name=s3_url::$s3_url"
@@ -89,21 +83,17 @@ jobs:
           token: ${{ secrets.PAT }}
           generateReleaseNotes: true
           body: |
-            # Extension 
+            # Extension
 
             - [zip](${{ steps.get_metadata.outputs.s3_url }}/block-wallet-${{ steps.get_metadata.outputs.extension }}.zip)
             - [sha256 checksum](${{ steps.get_metadata.outputs.s3_url }}/block-wallet-${{ steps.get_metadata.outputs.extension }}.checksum)
 
             ${{ steps.get_metadata.outputs.notes }}
 
-            # Dependencies
-            - Background: [${{ steps.get_metadata.outputs.background }}](https://github.com/block-wallet/extension-background/releases/tag/${{ steps.get_metadata.outputs.background }})
-            - Provider: [${{ steps.get_metadata.outputs.provider }}](https://github.com/block-wallet/extension-provider/releases/tag/${{ steps.get_metadata.outputs.provider }})
-            - UI: [${{ steps.get_metadata.outputs.ui }}](https://github.com/block-wallet/extension-ui/releases/tag/${{ steps.get_metadata.outputs.ui }})
   notify:
     if: success()
     needs: [release]
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted, small]
     steps:
       - name: Slack notification - Release
         if: success()
@@ -130,7 +120,7 @@ jobs:
   error:
     if: failure()
     needs: [release, notify]
-    runs-on: [self-hosted, release]
+    runs-on: [self-hosted, small]
     steps:
       - name: Slack notification - CI status
         uses: 8398a7/action-slack@v3

@@ -98,8 +98,8 @@ const getDevTools = () => {
  * updates the extension badge
  */
 const updateExtensionBadge = (label: string) => {
-    chrome.browserAction.setBadgeText({ text: label });
-    chrome.browserAction.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
+    chrome.action.setBadgeText({ text: label });
+    chrome.action.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
 };
 
 /**

@@ -35,6 +35,7 @@ module.exports = (entry) => ({
     entry,
     output: {
         filename: '[name].js',
+        globalObject: 'this',
         path: path.resolve(__dirname, '../../../dist'),
     },
     module: {

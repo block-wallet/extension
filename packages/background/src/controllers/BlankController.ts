@@ -2691,7 +2691,6 @@ export default class BlankController extends EventEmitter {
 
         // Force network to be mainnet if it is not provided
         let network: string = AvailableNetworks.MAINNET;
-        let runImportDeposits = true;
 
         if (defaultNetwork) {
             const fullNetwork =
@@ -2699,9 +2698,6 @@ export default class BlankController extends EventEmitter {
             //only allow test networks
             if (fullNetwork && fullNetwork.test) {
                 network = defaultNetwork;
-                runImportDeposits = fullNetwork.features.includes(
-                    FEATURES.TORNADO
-                );
             }
         }
         await this.networkController.setNetwork(network);

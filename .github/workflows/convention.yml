@@ -10,7 +10,7 @@ on:
 
 jobs:
   validation:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
+    if: startsWith(github.head_ref, 'dependabot/') == false && ((github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'))
     runs-on: [self-hosted, small]
     steps:
       - name: Validate commit messages
@@ -27,7 +27,7 @@ jobs:
       - name: Validate branch name
         uses: deepakputhraya/action-branch-name@master
         with:
-          regex: '^(chore|docs|feat|fix|refactor|style|test|release|dependabot){1}([\w \/])+'
+          regex: '^(chore|docs|feat|fix|refactor|style|test|release){1}([\w \/])+'
           ignore: master
           min_length: 5
           max_length: 50

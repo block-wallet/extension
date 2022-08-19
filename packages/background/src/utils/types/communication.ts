@@ -299,7 +299,7 @@ export interface RequestSignatures {
     [Messages.APP.SET_USER_SETTINGS]: [RequestUserSettings, UserSettings];
     [Messages.APP.UPDATE_POPUP_TAB]: [RequestUpdatePopupTab, void];
     [Messages.APP.REJECT_UNCONFIRMED_REQUESTS]: [undefined, void];
-    [Messages.APP.SET_USER_ONLINE]: [boolean, void];
+    [Messages.APP.SET_USER_ONLINE]: [RequestSetUserOnline, void];
     [Messages.BACKGROUND.ACTION]: [];
     [Messages.BLANK.DEPOSIT]: [RequestBlankDeposit, string];
     [Messages.BLANK.DEPOSIT_ALLOWANCE]: [RequestDepositAllowance, boolean];
@@ -537,6 +537,10 @@ export type MessageTypes = keyof RequestSignatures;
 export type RequestTypes = {
     [MessageType in keyof RequestSignatures]: RequestSignatures[MessageType][0];
 };
+
+export interface RequestSetUserOnline {
+    networkStatus: boolean;
+}
 
 export interface RequestAccountCreate {
     name: string;

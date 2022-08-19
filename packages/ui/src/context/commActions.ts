@@ -1607,7 +1607,7 @@ export const executeExchange = async (
 export const setNetworkStatus = async (
     networkStatus: boolean
 ): Promise<void> => {
-    return sendMessage(Messages.APP.SET_USER_ONLINE, networkStatus)
+    return sendMessage(Messages.APP.SET_USER_ONLINE, { networkStatus })
 }
 
 /**

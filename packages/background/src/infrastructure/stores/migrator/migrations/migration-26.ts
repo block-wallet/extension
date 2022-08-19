@@ -1,6 +1,4 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
-import { generatePhishingPrevention } from 'phishing-prevention';
-import { v4 as createUuid } from 'uuid';
 import { IMigration } from '../IMigration';
 
 /**

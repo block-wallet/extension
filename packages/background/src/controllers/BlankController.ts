@@ -114,6 +114,7 @@ import type {
     RequestRemoveHardwareWallet,
     RequestGenerateOnDemandReleaseNotes,
     RequestEditNetwork,
+    RequestSetUserOnline,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -724,7 +725,7 @@ export default class BlankController extends EventEmitter {
             case Messages.APP.REJECT_UNCONFIRMED_REQUESTS:
                 return this.rejectUnconfirmedRequests();
             case Messages.APP.SET_USER_ONLINE:
-                return this.setUserOnline(request as boolean);
+                return this.setUserOnline(request as RequestSetUserOnline);
             case Messages.BLANK.DEPOSIT:
                 return this.blankDeposit(request as RequestBlankDeposit);
             case Messages.BLANK.DEPOSIT_ALLOWANCE:
@@ -1076,8 +1077,10 @@ export default class BlankController extends EventEmitter {
      *
      * @param isUserOnline Whether the user is online or not
      */
-    public async setUserOnline(isUserOnline: boolean): Promise<void> {
-        this.networkController.handleUserNetworkChange(isUserOnline);
+    public async setUserOnline({
+        networkStatus,
+    }: RequestSetUserOnline): Promise<void> {
+        this.networkController.handleUserNetworkChange(networkStatus);
     }
 
     /**

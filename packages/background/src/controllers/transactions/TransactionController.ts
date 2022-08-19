@@ -48,7 +48,6 @@ import { ContractSignatureParser } from './ContractSignatureParser';
 import { BaseController } from '../../infrastructure/BaseController';
 import { showTransactionNotification } from '../../utils/notifications';
 import { reverse } from '../../utils/array';
-import axios from 'axios';
 import { TokenController } from '../erc-20/TokenController';
 import { ApproveTransaction } from '../erc-20/transactions/ApproveTransaction';
 import { SignedTransaction } from '../erc-20/transactions/SignedTransaction';
@@ -64,6 +63,7 @@ import {
     SignTimeoutError,
 } from '../../utils/hardware';
 import { NFTContract } from '../erc-721/NFTContract';
+import httpClient from '../../utils/http';
 
 /**
  * It indicates the amount of blocks to wait after marking
@@ -178,6 +178,24 @@ export interface TransactionGasEstimation {
      */
     estimationSucceeded: boolean;
 }
+
+type FlashbotsStatusResponse = {
+    status: 'PENDING' | 'INCLUDED' | 'FAILED' | 'CANCELLED' | 'UNKNOWN';
+    hash: string;
+    maxBlockNumber: number;
+    transaction: {
+        from: string;
+        to: string;
+        gasLimit: string;
+        maxFeePerGas: string;
+        maxPriorityFeePerGas: string;
+        nonce: string;
+        value: string;
+    };
+    fastMode: boolean;
+    seenInMempool: boolean;
+    simError: string;
+};
 
 /**
  * How many block updates to wait before considering a transaction dropped once the account
@@ -2085,10 +2103,12 @@ export class TransactionController extends BaseController<
     ): Promise<[TransactionMeta, boolean]> {
         const baseUrl = 'https://protect.flashbots.net/tx/';
 
-        const response = await axios.get(baseUrl + meta.transactionParams.hash);
+        const response = await httpClient.get<FlashbotsStatusResponse>(
+            baseUrl + meta.transactionParams.hash
+        );
 
-        if (response.data) {
-            const { status } = response.data;
+        if (response) {
+            const { status } = response;
 
             if (status === 'INCLUDED') {
                 return this.blockchainTransactionStateReconciler(

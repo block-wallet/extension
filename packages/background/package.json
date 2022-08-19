@@ -9,7 +9,6 @@
         "@ethereumjs/tx": "^3.2.1",
         "@unstoppabledomains/resolution": "^7.1.4",
         "async-mutex": "^0.3.2",
-        "axios": "^0.21.1",
         "banned-assets": "https://github.com/block-wallet/banned-assets#v0.0.1",
         "bip39": "^3.0.3",
         "blake3": "^2.1.4",

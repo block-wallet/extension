@@ -6,7 +6,6 @@ import ExchangeController, {
 import NetworkController from '../../src/controllers/NetworkController';
 import PermissionsController from '@block-wallet/background/controllers/PermissionsController';
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
-import axios from 'axios';
 import initialState from '@block-wallet/background/utils/constants/initialState';
 import sinon from 'sinon';
 import { ApproveTransaction } from '@block-wallet/background/controllers/erc-20/transactions/ApproveTransaction';
@@ -24,7 +23,7 @@ import { TypedTransaction } from '@ethereumjs/tx';
 import { expect } from 'chai';
 import { expectThrowsAsync } from 'test/utils/expectThrowsAsync.test';
 import { getNetworkControllerInstance } from '../mocks/mock-network-instance';
-import { mockAxiosResponse } from 'test/mocks/mockApiResponse';
+import { mockHttpClientResponse } from 'test/mocks/mockApiResponse';
 import { mockPreferencesController } from '../mocks/mock-preferences';
 import { mockedPermissionsController } from 'test/mocks/mock-permissions';
 import {
@@ -32,6 +31,7 @@ import {
     TokenControllerProps,
 } from '../../src/controllers/erc-20/TokenController';
 import { BASE_SWAP_FEE } from '../../src/utils/types/1inch';
+import httpClient from './../../src/utils/http';
 
 const BLANK_TOKEN_ADDRESS = '0x41a3dba3d677e573636ba691a70ff2d606c29666';
 
@@ -243,14 +243,14 @@ describe('Exchange Controller', function () {
     describe('1Inch Swap', function () {
         it('Should fail to check asset allowance', async function () {
             sinon.stub(tokenOperationsController, 'allowance').returns(
-                new Promise<BigNumber>((resolve, reject) => {
+                new Promise<BigNumber>((_, reject) => {
                     // 1 BLANK
                     reject('Error');
                 })
             );
 
-            sinon.stub(axios, 'get').returns(
-                mockAxiosResponse({
+            sinon.stub(httpClient, 'get').returns(
+                mockHttpClientResponse({
                     address: '0x1111111254fb6c44bac0bed2854e76f90643097d',
                 })
             );
@@ -276,8 +276,8 @@ describe('Exchange Controller', function () {
                 })
             );
 
-            sinon.stub(axios, 'get').returns(
-                mockAxiosResponse({
+            sinon.stub(httpClient, 'get').returns(
+                mockHttpClientResponse({
                     address: '0x1111111254fb6c44bac0bed2854e76f90643097d',
                 })
             );
@@ -304,8 +304,8 @@ describe('Exchange Controller', function () {
         });
 
         it('Should fail to submit an approve transaction', async function () {
-            sinon.stub(axios, 'get').returns(
-                mockAxiosResponse({
+            sinon.stub(httpClient, 'get').returns(
+                mockHttpClientResponse({
                     address: '0x1111111254fb6c44bac0bed2854e76f90643097d',
                 })
             );
@@ -354,8 +354,8 @@ describe('Exchange Controller', function () {
         });
 
         it('Should submit an approve transaction', async function () {
-            sinon.stub(axios, 'get').returns(
-                mockAxiosResponse({
+            sinon.stub(httpClient, 'get').returns(
+                mockHttpClientResponse({
                     address: '0x1111111254fb6c44bac0bed2854e76f90643097d',
                 })
             );
@@ -380,8 +380,8 @@ describe('Exchange Controller', function () {
         });
 
         it('Should fail to get a swap quote', async function () {
-            sinon.stub(axios, 'get').returns(
-                mockAxiosResponse({
+            sinon.stub(httpClient, 'get').returns(
+                mockHttpClientResponse({
                     statusCode: 400,
                     error: 'Bad Request',
                     description:
@@ -416,8 +416,8 @@ describe('Exchange Controller', function () {
         });
 
         it('Should get a swap quote', async function () {
-            sinon.stub(axios, 'get').returns(
-                mockAxiosResponse({
+            sinon.stub(httpClient, 'get').returns(
+                mockHttpClientResponse({
                     fromToken: {
                         symbol: 'ETH',
                         name: 'Ethereum',
@@ -487,8 +487,8 @@ describe('Exchange Controller', function () {
         });
 
         it('Should fail to get a swap transaction parameters', async function () {
-            sinon.stub(axios, 'get').returns(
-                mockAxiosResponse({
+            sinon.stub(httpClient, 'get').returns(
+                mockHttpClientResponse({
                     statusCode: 400,
                     error: 'Bad Request',
                     description:
@@ -524,8 +524,8 @@ describe('Exchange Controller', function () {
         });
 
         it('Should get a swap transaction parameters', async function () {
-            sinon.stub(axios, 'get').returns(
-                mockAxiosResponse({
+            sinon.stub(httpClient, 'get').returns(
+                mockHttpClientResponse({
                     fromToken: {
                         symbol: 'ETH',
                         name: 'Ethereum',

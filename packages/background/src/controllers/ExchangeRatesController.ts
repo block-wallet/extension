@@ -13,11 +13,11 @@ import {
     ASSET_PLATFORMS_IDS_LIST,
 } from '@block-wallet/chains-assets';
 
-import axios from 'axios';
 import { ActionIntervalController } from './block-updates/ActionIntervalController';
 import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
+import httpClient from '../utils/http';
 
 export interface ExchangeRatesControllerState {
     exchangeRates: Rates;
@@ -179,18 +179,10 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
 
         const query = `${this.baseApiEndpoint}token_price/${this.networkNativeCurrency.coingeckoPlatformId}`;
 
-        const response = await axios.get(query, {
-            params: {
-                contract_addresses: tokenContracts,
-                vs_currencies: this._preferencesController.nativeCurrency,
-            },
+        return httpClient.get(query, {
+            contract_addresses: tokenContracts,
+            vs_currencies: this._preferencesController.nativeCurrency,
         });
-
-        if (response.status != 200) {
-            throw new Error(response.statusText);
-        }
-
-        return response.data;
     };
 
     /**
@@ -215,18 +207,10 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
                 this.networkNativeCurrency.symbol.toUpperCase() as keyof typeof RATES_IDS_LIST
             ];
 
-        const response = await axios.get(query, {
-            params: {
-                ids: currencyApiId,
-                vs_currencies: this._preferencesController.nativeCurrency,
-            },
+        return httpClient.get(query, {
+            ids: currencyApiId,
+            vs_currencies: this._preferencesController.nativeCurrency,
         });
-
-        if (response.status != 200) {
-            throw new Error(response.statusText);
-        }
-
-        return response.data;
     };
 
     /**

@@ -1,11 +1,11 @@
 import { BigNumber, Contract, Event } from 'ethers';
-import axios from 'axios';
 import { addHexPrefix } from 'ethereumjs-util';
 import log from 'loglevel';
 import { CurrencyAmountPair } from '../types';
 import { Deposit, Withdrawal } from './stores/ITornadoEventsDB';
 import BlockUpdatesController from '../../block-updates/BlockUpdatesController';
 import { TornadoEvents } from './config/ITornadoContract';
+import httpClient, { RequestError } from '../../../utils/http';
 
 export interface TornadoEventsServiceProps {
     blockUpdatesController: BlockUpdatesController;
@@ -172,21 +172,39 @@ export class TornadoEventsService {
 
         const url = `${this._endpoint}/${type}`;
 
-        const response = await axios.get(url, {
-            params: {
+        try {
+            const response = await httpClient.get<any>(url, {
                 chain_id,
                 currency,
                 amount,
                 from,
-            },
-        });
+            });
 
-        if (response.status != 200) {
+            if (type in response) {
+                if (response[type].length) {
+                    results.push(...response[type]);
+                }
+            }
+
+            if ('last' in response) {
+                results.push(
+                    ...(await this._getPaginated(
+                        type,
+                        chain_id,
+                        currency,
+                        amount,
+                        parseInt(response['last'])
+                    ))
+                );
+            }
+
+            return results;
+        } catch (error) {
             if (retry < MAX_HTTP_RETRIES) {
                 log.debug(
                     `Communication error, retrying: ${JSON.stringify(
-                        response.data
-                    )} ${JSON.stringify(response.status)}`
+                        (error as RequestError).response
+                    )}`
                 );
 
                 retry = retry + 1;
@@ -203,31 +221,11 @@ export class TornadoEventsService {
             } else {
                 throw new Error(
                     `Error fetching ${url}. ${JSON.stringify(
-                        response.data
-                    )} ${JSON.stringify(response.status)}`
+                        (error as RequestError).response
+                    )}`
                 );
             }
         }
-
-        if (type in response.data) {
-            if (response.data[type].length) {
-                results.push(...response.data[type]);
-            }
-        }
-
-        if ('last' in response.data) {
-            results.push(
-                ...(await this._getPaginated(
-                    type,
-                    chain_id,
-                    currency,
-                    amount,
-                    parseInt(response.data['last'])
-                ))
-            );
-        }
-
-        return results;
     }
 
     private _fetchEventsFromChain = async (

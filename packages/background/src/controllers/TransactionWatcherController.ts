@@ -1,5 +1,4 @@
 import { Mutex } from 'async-mutex';
-import axios from 'axios';
 import { isValidAddress, toChecksumAddress } from 'ethereumjs-util';
 import { BigNumber, ethers, utils } from 'ethers';
 import { hexZeroPad, ParamType } from 'ethers/lib/utils';
@@ -33,6 +32,7 @@ import { TransactionArgument } from './transactions/ContractSignatureParser';
 import { showIncomingTransactionNotification } from '../utils/notifications';
 import { checkIfNotAllowedError } from '../utils/ethersError';
 import TransactionController from './transactions/TransactionController';
+import httpClient from '../utils/http';
 
 export enum TransactionTypeEnum {
     Native = 'txlist',
@@ -1208,22 +1208,25 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
         let retry = 0;
         while (retry < MAX_REQUEST_RETRY) {
-            const result = await axios.get<{
+            const result = await httpClient.get<{
                 status: string;
                 message: string;
                 result: EtherscanTransaction[];
-            }>(`${etherscanApiUrl}/api`, {
-                params: { ...params },
-                timeout: 30000,
-            });
+            }>(
+                `${etherscanApiUrl}/api`,
+                {
+                    ...params,
+                },
+                30000
+            );
 
-            if (result.data.status === '0' && result.data.message === 'NOTOK') {
+            if (result.status === '0' && result.message === 'NOTOK') {
                 await sleep(EXPLORER_API_CALLS_DELAY);
                 retry++;
 
                 continue;
             }
-            return result.data;
+            return result;
         }
 
         return { status: '-999', result: [] };

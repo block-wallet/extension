@@ -80,6 +80,7 @@ enum APP {
     SET_USER_SETTINGS = 'SET_USER_SETTINGS',
     UPDATE_POPUP_TAB = 'UPDATE_POPUP_TAB',
     REJECT_UNCONFIRMED_REQUESTS = 'REJECT_UNCONFIRMED_REQUESTS',
+    SET_USER_ONLINE = 'SET_USER_ONLINE',
 }
 
 enum BACKGROUND {
@@ -298,6 +299,7 @@ export interface RequestSignatures {
     [Messages.APP.SET_USER_SETTINGS]: [RequestUserSettings, UserSettings];
     [Messages.APP.UPDATE_POPUP_TAB]: [RequestUpdatePopupTab, void];
     [Messages.APP.REJECT_UNCONFIRMED_REQUESTS]: [undefined, void];
+    [Messages.APP.SET_USER_ONLINE]: [boolean, void];
     [Messages.BACKGROUND.ACTION]: [];
     [Messages.BLANK.DEPOSIT]: [RequestBlankDeposit, string];
     [Messages.BLANK.DEPOSIT_ALLOWANCE]: [RequestDepositAllowance, boolean];

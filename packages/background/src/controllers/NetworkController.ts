@@ -47,16 +47,6 @@ export default class NetworkController extends BaseController<NetworkControllerS
             initialState.selectedNetwork || 'goerli'
         );
 
-        if (window && window.navigator) {
-            window.addEventListener('online', () =>
-                this._handleUserNetworkChange()
-            );
-            window.addEventListener('offline', () =>
-                this._handleUserNetworkChange()
-            );
-            this._handleUserNetworkChange();
-        }
-
         // Set the error handler for the provider to check for network status
         this.provider.on('error', this._updateProviderNetworkStatus);
 
@@ -655,8 +645,8 @@ export default class NetworkController extends BaseController<NetworkControllerS
         return Common.custom({ name, chainId }, { hardfork });
     }
 
-    private _handleUserNetworkChange() {
-        const newValue = navigator.onLine;
+    public handleUserNetworkChange(isOnline: boolean) {
+        const newValue = isOnline;
         if (this.getState().isUserNetworkOnline == newValue) {
             return;
         }

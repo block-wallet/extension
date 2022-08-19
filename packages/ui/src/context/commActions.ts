@@ -1598,3 +1598,24 @@ export const executeExchange = async (
         exchangeParams,
     })
 }
+
+/**
+ * Sets the user's current network status
+ *
+ * @param networkStatus The current network status
+ */
+export const setNetworkStatus = async (
+    networkStatus: boolean
+): Promise<void> => {
+    return sendMessage(Messages.APP.SET_USER_ONLINE, networkStatus)
+}
+
+/**
+ * Subscribes to navigator network status
+ */
+export const subscribeNetworkStatus = () => {
+    if (window && window.navigator) {
+        window.addEventListener("online", () => setNetworkStatus(true))
+        window.addEventListener("offline", () => setNetworkStatus(false))
+    }
+}

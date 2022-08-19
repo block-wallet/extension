@@ -723,6 +723,8 @@ export default class BlankController extends EventEmitter {
                 return this.updatePopupTab(request as RequestUpdatePopupTab);
             case Messages.APP.REJECT_UNCONFIRMED_REQUESTS:
                 return this.rejectUnconfirmedRequests();
+            case Messages.APP.SET_USER_ONLINE:
+                return this.setUserOnline(request as boolean);
             case Messages.BLANK.DEPOSIT:
                 return this.blankDeposit(request as RequestBlankDeposit);
             case Messages.BLANK.DEPOSIT_ALLOWANCE:
@@ -1065,6 +1067,17 @@ export default class BlankController extends EventEmitter {
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
+    }
+
+    /**
+     * setUserOnline
+     *
+     * Sets the user's current network status
+     *
+     * @param isUserOnline Whether the user is online or not
+     */
+    public async setUserOnline(isUserOnline: boolean): Promise<void> {
+        this.networkController.handleUserNetworkChange(isUserOnline);
     }
 
     /**

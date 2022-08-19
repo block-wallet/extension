@@ -1,4 +1,5 @@
 [![CI](https://github.com/block-wallet/extension/actions/workflows/ci.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/ci.yml) [![Release (manual)](https://github.com/block-wallet/extension/actions/workflows/build.yaml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/build.yaml) [![Release (automated)](https://github.com/block-wallet/extension/actions/workflows/release.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/release.yml)
+[![Convention](https://github.com/block-wallet/extension/actions/workflows/convention.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/convention.yml)
 
 # Block Wallet Extension
 

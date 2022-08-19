@@ -7,12 +7,12 @@
  */
 const getCryptoRandom32 = (maxValue: number): number => {
     let randomInRange;
-    if (typeof window !== 'undefined') {
-        if (!window.crypto) {
+    if (typeof self !== 'undefined') {
+        if (!self.crypto) {
             throw new Error('Browser does not support Crypto lib');
         }
         randomInRange =
-            window.crypto.getRandomValues(new Uint32Array(1))[0] / 0x100000000;
+            self.crypto.getRandomValues(new Uint32Array(1))[0] / 0x100000000;
     } else {
         const { randomBytes } = require('crypto');
         randomInRange = randomBytes(4).readUInt32LE() / 0x100000000;

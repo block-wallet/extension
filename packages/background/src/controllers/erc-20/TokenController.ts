@@ -631,15 +631,20 @@ export class TokenController extends BaseController<TokenControllerState> {
     /**
      * Attemps to add a token to the user's token list.
      */
-    public attemptAddToken = async (token: BasicToken): Promise<void> => {
-        const tokenExists = (await this.getUserTokens())[token.address];
+    public attemptAddToken = async (
+        tokenAddress: string,
+        chainId?: number
+    ): Promise<void> => {
+        const tokenExists = (
+            await this.getUserTokens(this.getSelectedAccountAddress(), chainId)
+        )[tokenAddress];
 
         //If token to doesn't exists, then attempt to add
         if (tokenExists) {
             return;
         }
 
-        const fullToken = await this.search(token.address);
+        const fullToken = await this.search(tokenAddress);
         if (!fullToken || !fullToken.length) {
             return;
         }

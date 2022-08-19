@@ -1,7 +1,9 @@
+import { BridgeImplementation } from '@block-wallet/background/utils/bridgeApi';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { BigNumber, Transaction } from 'ethers';
 import { CurrencyAmountPair } from '../../blank-deposit/types';
-import { ExchangeParams } from '../../ExchangeController';
+import { IToken } from '../../erc-20/Token';
+import { ExchangeParams } from '../../SwapController';
 import { ContractMethodSignature } from '../ContractSignatureParser';
 
 /**
@@ -88,6 +90,18 @@ export interface TransactionMeta {
     };
     originId?: string;
     exchangeParams?: ExchangeParams;
+    bridgeParams?: BridgeTransactionParams;
+}
+
+export interface BridgeTransactionParams {
+    bridgeImplementation: BridgeImplementation;
+    fromToken: IToken;
+    toToken: IToken;
+    fromTokenAmount: string;
+    toTokenAmount: string;
+    blockWalletFee: BigNumber;
+    fromChainId: number;
+    toChainId: number;
 }
 
 export interface uiTransactionParams extends TransactionParams {
@@ -141,6 +155,7 @@ export enum TransactionCategories {
     TOKEN_METHOD_INCOMING_TRANSFER = 'incoming_transfer',
     TOKEN_METHOD_TRANSFER_FROM = 'transferfrom',
     EXCHANGE = 'exchange',
+    BRIDGE = 'bridge',
 }
 
 /**

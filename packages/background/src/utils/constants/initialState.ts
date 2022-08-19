@@ -46,6 +46,7 @@ import {
 } from '../../controllers/block-updates/BlockFetchController';
 import { SIGN_TRANSACTION_TIMEOUT } from './time';
 import { TransactionWatcherControllerState } from '@block-wallet/background/controllers/TransactionWatcherController';
+import { BridgeControllerMemState } from '@block-wallet/background/controllers/BridgeController';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -82,6 +83,7 @@ export type BlankAppUIState = {
     PermissionsController: PermissionsControllerState;
     NetworkController: NetworkControllerState;
     AddressBookController: AddressBookControllerMemState;
+    BridgeController: BridgeControllerMemState;
     BlankProviderController: BlankProviderControllerState;
 };
 

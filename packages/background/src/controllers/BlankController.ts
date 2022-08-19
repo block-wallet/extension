@@ -114,6 +114,10 @@ import type {
     RequestRemoveHardwareWallet,
     RequestGenerateOnDemandReleaseNotes,
     RequestEditNetwork,
+    RequestExecuteBridge,
+    RequestGetBridgeQuote,
+    RequestApproveBridgeAllowance,
+    RequestGetBridgeRoutes,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -157,11 +161,8 @@ import {
     TokenController,
     TokenControllerProps,
 } from './erc-20/TokenController';
-import ExchangeController, {
-    SwapParameters,
-    SwapQuote,
-} from './ExchangeController';
-import { ITokens, Token } from './erc-20/Token';
+import SwapController, { SwapParameters, SwapQuote } from './SwapController';
+import { IToken, ITokens, Token } from './erc-20/Token';
 import { ImportStrategy, getAccountJson } from '../utils/account';
 import { ActivityListController } from './ActivityListController';
 import {
@@ -218,6 +219,12 @@ import { Network } from '../utils/constants/networks';
 
 import { generateOnDemandReleaseNotes } from '../utils/userPreferences';
 import { TransactionWatcherController } from './TransactionWatcherController';
+import BridgeController, {
+    GetBridgeAvailableRoutesResponse,
+    GetBridgeQuoteResponse,
+} from './BridgeController';
+import { IChain } from '../utils/types/chain';
+import { BridgeImplementation } from '../utils/bridgeApi';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -248,7 +255,8 @@ export default class BlankController extends EventEmitter {
     private readonly blankStateStore: BlankStorageStore;
     private readonly tokenOperationsController: TokenOperationsController;
     private readonly tokenController: TokenController;
-    private readonly exchangeController: ExchangeController;
+    private readonly swapController: SwapController;
+    private readonly bridgeController: BridgeController;
     private readonly blankProviderController: BlankProviderController;
     private readonly activityListController: ActivityListController;
     private readonly permissionsController: PermissionsController;
@@ -429,7 +437,15 @@ export default class BlankController extends EventEmitter {
             preferencesController: this.preferencesController,
         });
 
-        this.exchangeController = new ExchangeController(
+        this.swapController = new SwapController(
+            this.networkController,
+            this.preferencesController,
+            this.tokenOperationsController,
+            this.transactionController,
+            this.tokenController
+        );
+
+        this.bridgeController = new BridgeController(
             this.networkController,
             this.preferencesController,
             this.tokenOperationsController,
@@ -474,6 +490,7 @@ export default class BlankController extends EventEmitter {
             AddressBookController: this.addressBookController.store,
             BlankProviderController: this.blankProviderController.store,
             BlockUpdatesController: this.blockUpdatesController.store,
+            BridgeController: this.bridgeController.UIStore,
         });
 
         // Check controllers on app lock/unlock
@@ -808,6 +825,20 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.EXCHANGE.EXECUTE:
                 return this.executeExchange(request as RequestExecuteExchange);
+            case Messages.BRIDGE.GET_BRIDGE_TOKENS:
+                return this.getBridgeTokens();
+            case Messages.BRIDGE.GET_BRIDGE_AVAILABLE_CHAINS:
+                return this.getBridgeAvailableChains();
+            case Messages.BRIDGE.APPROVE_BRIDGE_ALLOWANCE:
+                return this.approveBridgeAllowance(
+                    request as RequestApproveBridgeAllowance
+                );
+            case Messages.BRIDGE.GET_BRIDGE_ROUTES:
+                return this.getBridgeRoutes(request as RequestGetBridgeRoutes);
+            case Messages.BRIDGE.GET_BRIDGE_QUOTE:
+                return this.getBridgeQuote(request as RequestGetBridgeQuote);
+            case Messages.BRIDGE.EXECUTE_BRIDGE:
+                return this.executeBridge(request as RequestExecuteBridge);
             case Messages.EXTERNAL.REQUEST:
                 return this.externalRequestHandle(
                     request as RequestExternalRequest,
@@ -1811,7 +1842,7 @@ export default class BlankController extends EventEmitter {
         exchangeType,
         tokenAddress,
     }: RequestCheckExchangeAllowance): Promise<boolean> {
-        return this.exchangeController.checkExchangeAllowance(
+        return this.swapController.checkSwapAllowance(
             account,
             BigNumber.from(amount),
             exchangeType,
@@ -1837,7 +1868,7 @@ export default class BlankController extends EventEmitter {
         tokenAddress,
         customNonce,
     }: RequestApproveExchange): Promise<boolean> {
-        return this.exchangeController.approveExchange(
+        return this.swapController.approveSwapExchange(
             BigNumber.from(allowance),
             BigNumber.from(amount),
             exchangeType,
@@ -1857,10 +1888,7 @@ export default class BlankController extends EventEmitter {
         exchangeType,
         quoteParams,
     }: RequestGetExchangeQuote): Promise<SwapQuote> {
-        return this.exchangeController.getExchangeQuote(
-            exchangeType,
-            quoteParams
-        );
+        return this.swapController.getExchangeQuote(exchangeType, quoteParams);
     }
 
     /**
@@ -1873,7 +1901,7 @@ export default class BlankController extends EventEmitter {
         exchangeType,
         exchangeParams,
     }: RequestGetExchange): Promise<SwapParameters> {
-        return this.exchangeController.getExchangeParameters(
+        return this.swapController.getExchangeParameters(
             exchangeType,
             exchangeParams
         );
@@ -1889,9 +1917,96 @@ export default class BlankController extends EventEmitter {
         exchangeType,
         exchangeParams,
     }: RequestExecuteExchange): Promise<string> {
-        return this.exchangeController.executeExchange(
+        return this.swapController.executeExchange(
             exchangeType,
             exchangeParams
+        );
+    }
+
+    /**
+     * Submits an approval transaction to setup asset allowance
+     *
+     * @param allowance User selected allowance
+     * @param amount Exchange amount
+     * @param spenderAddress The spender address
+     * @param feeData Transaction gas fee data
+     * @param tokenAddress Spended asset token address
+     * @param customNonce Custom transaction nonce
+     */
+    private async approveBridgeAllowance({
+        allowance,
+        amount,
+        spenderAddress,
+        feeData,
+        tokenAddress,
+        customNonce,
+    }: RequestApproveBridgeAllowance): Promise<boolean> {
+        return this.bridgeController.approveExchange(
+            BigNumber.from(allowance),
+            BigNumber.from(amount),
+            spenderAddress,
+            feeData,
+            tokenAddress,
+            customNonce
+        );
+    }
+
+    /**
+     * Gets all the available tokens to bridge in the current network
+     */
+    private async getBridgeTokens(): Promise<IToken[]> {
+        return this.bridgeController.getTokens();
+    }
+
+    /**
+     * Gets all the available chains to execute a bridge
+     */
+    private async getBridgeAvailableChains(): Promise<IChain[]> {
+        return this.bridgeController.getAvailableChains();
+    }
+
+    /**
+     * Gets all the available routes for executing a bridging
+     *
+     * @param routesRequest Parameters that the routes should match
+     */
+    private async getBridgeRoutes({
+        routesRequest,
+    }: RequestGetBridgeRoutes): Promise<GetBridgeAvailableRoutesResponse> {
+        return this.bridgeController.getAvailableRoutes(
+            BridgeImplementation.LIFI_BRIDGE,
+            routesRequest
+        );
+    }
+
+    /**
+     * Gets a quote for the specified bridge parameters
+     *
+     * @param checkAllowance Whether check or not the approval address allowance of the final user
+     * @param quoteRequest Quote request parameters.
+     */
+    private async getBridgeQuote({
+        checkAllowance,
+        quoteRequest,
+    }: RequestGetBridgeQuote): Promise<GetBridgeQuoteResponse> {
+        return this.bridgeController.getQuote(
+            BridgeImplementation.LIFI_BRIDGE,
+            quoteRequest,
+            checkAllowance
+        );
+    }
+
+    /**
+     * Executes the bridge transaction based on the given parameters.
+     *
+     * @param bridgeTransaction Bridging transaction data
+     */
+    private async executeBridge({
+        bridgeTransaction,
+    }: RequestExecuteBridge): Promise<string> {
+        return this.bridgeController.executeBridge(
+            BridgeImplementation.LIFI_BRIDGE,
+            bridgeTransaction
         );
     }
 
@@ -2576,6 +2691,7 @@ export default class BlankController extends EventEmitter {
 
         // Force network to be mainnet if it is not provided
         let network: string = AvailableNetworks.MAINNET;
+        let runImportDeposits = true;
 
         if (defaultNetwork) {
             const fullNetwork =
@@ -2583,11 +2699,19 @@ export default class BlankController extends EventEmitter {
             //only allow test networks
             if (fullNetwork && fullNetwork.test) {
                 network = defaultNetwork;
+                runImportDeposits = fullNetwork.features.includes(
+                    FEATURES.TORNADO
+                );
             }
         }
         await this.networkController.setNetwork(network);
 
         await this.blankDepositController.initialize();
+
+        if (runImportDeposits) {
+            // Asynchronously import the deposits
+            this.blankDepositController.importDeposits(password, seedPhrase);
+        }
 
         // reconstruct past erc20 transfers
         this.transactionWatcherController.fetchTransactions();

@@ -16,7 +16,7 @@ import {
     GasPriceValue,
     FeeMarketEIP1559Values,
 } from '../../controllers/transactions/TransactionController';
-import { ITokens, Token } from '../../controllers/erc-20/Token';
+import { IToken, ITokens, Token } from '../../controllers/erc-20/Token';
 import {
     TransactionAdvancedData,
     TransactionMeta,
@@ -27,7 +27,7 @@ import {
     ExchangeType,
     SwapQuote,
     SwapTransaction,
-} from '../../controllers/ExchangeController';
+} from '../../controllers/SwapController';
 import {
     ProviderEvents,
     SiteMetadata,
@@ -51,6 +51,14 @@ import { Currency } from '../currency';
 import { Devices } from './hardware';
 import { OneInchSwapQuoteParams, OneInchSwapRequestParams } from './1inch';
 import { ChainListItem } from '@block-wallet/chains-assets';
+import { IChain } from './chain';
+import {
+    BridgeQuoteRequest,
+    BridgeRoutesRequest,
+    BridgeTransaction,
+    GetBridgeAvailableRoutesResponse,
+    GetBridgeQuoteResponse,
+} from '@block-wallet/background/controllers/BridgeController';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -118,6 +126,15 @@ enum EXCHANGE {
     GET_QUOTE = 'GET_EXCHANGE_QUOTE',
     GET_EXCHANGE = 'GET_EXCHANGE',
     EXECUTE = 'EXECUTE_EXCHANGE',
+}
+
+enum BRIDGE {
+    APPROVE_BRIDGE_ALLOWANCE = 'APPROVE_BRIDGE_ALLOWANCE',
+    GET_BRIDGE_AVAILABLE_CHAINS = 'GET_BRIDGE_AVAILABLE_CHAINS',
+    GET_BRIDGE_TOKENS = 'GET_BRIDGE_TOKENS',
+    GET_BRIDGE_QUOTE = 'GET_BRIDGE_QUOTE',
+    GET_BRIDGE_ROUTES = 'GET_BRIDGE_ROUTES',
+    EXECUTE_BRIDGE = 'EXECUTE_BRIDGE',
 }
 
 export enum EXTERNAL {
@@ -266,6 +283,7 @@ export const Messages = {
     ADDRESS_BOOK,
     BROWSER,
     FILTERS,
+    BRIDGE,
 };
 
 // [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
@@ -361,6 +379,26 @@ export interface RequestSignatures {
     [Messages.EXTERNAL.REQUEST]: [RequestExternalRequest, unknown];
     [Messages.EXTERNAL.SETUP_PROVIDER]: [undefined, ProviderSetupData];
     [Messages.EXTERNAL.SET_ICON]: [RequestSetIcon, boolean];
+    [Messages.BRIDGE.GET_BRIDGE_TOKENS]: [RequestGetBridgeTokens, IToken[]];
+
+    [Messages.BRIDGE.APPROVE_BRIDGE_ALLOWANCE]: [
+        RequestApproveBridgeAllowance,
+        boolean
+    ];
+    [Messages.BRIDGE.GET_BRIDGE_AVAILABLE_CHAINS]: [
+        RequestGetBridgeAvailableChains,
+        IChain[]
+    ];
+    [Messages.BRIDGE.GET_BRIDGE_QUOTE]: [
+        RequestGetBridgeQuote,
+        GetBridgeQuoteResponse
+    ];
+    [Messages.BRIDGE.GET_BRIDGE_ROUTES]: [
+        RequestGetBridgeRoutes,
+        GetBridgeAvailableRoutesResponse
+    ];
+    [Messages.BRIDGE.EXECUTE_BRIDGE]: [RequestExecuteBridge, string];
+
     [Messages.NETWORK.CHANGE]: [RequestNetworkChange, boolean];
     [Messages.NETWORK.SET_SHOW_TEST_NETWORKS]: [
         RequestShowTestNetworks,
@@ -638,6 +676,29 @@ export interface RequestGetExchange {
 export interface RequestExecuteExchange {
     exchangeType: ExchangeType;
     exchangeParams: SwapTransaction;
+}
+
+export interface RequestApproveBridgeAllowance {
+    allowance: BigNumber;
+    amount: BigNumber;
+    spenderAddress: string;
+    feeData: TransactionFeeData;
+    tokenAddress: string;
+    customNonce?: number;
+}
+
+export interface RequestGetBridgeTokens {}
+export interface RequestGetBridgeAvailableChains {}
+export interface RequestGetBridgeQuote {
+    checkAllowance: boolean;
+    quoteRequest: BridgeQuoteRequest;
+}
+
+export interface RequestGetBridgeRoutes {
+    routesRequest: BridgeRoutesRequest;
+}
+export interface RequestExecuteBridge {
+    bridgeTransaction: BridgeTransaction;
 }
 
 export type RequestExternalRequest = RequestArguments;

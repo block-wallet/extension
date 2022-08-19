@@ -45,16 +45,19 @@ import ApprovePage from "../routes/transaction/ApprovePage"
 import AddAccountPage from "../routes/account/AddAccountPage"
 import ImportAccountPage from "../routes/account/ImportAccountPage"
 import ApproveNFTPage from "../routes/dApp/ApproveNFT"
-//import SwapPage from "../routes/swap/SwapPage"
-//import SwapPageConfirm from "../routes/swap/SwapConfirmPage"
-//import SwapAfterAddTokenPage from "../routes/swap/SwapAfterAddTokenPage"
-//import NetworksPage from "../routes/networks/NetworksPage"
-//import NetworkDetailsPage from "../routes/networks/NetworkDetailsPage"
-//import SearchNetworkPage from "../routes/networks/SearchNetworkPage"
-//import SuggestedAddNetwork from "../routes/networks/SuggestedAddNetwork"
-//import ManuallyAddNetwork from "../routes/networks/ManuallyAddNetwork"
+// import SwapPage from "../routes/swap/SwapPage"
+// import SwapPageConfirm from "../routes/swap/SwapConfirmPage"
+// import SwapAfterAddTokenPage from "../routes/swap/SwapAfterAddTokenPage"
+// import NetworksPage from "../routes/networks/NetworksPage"
+// import NetworkDetailsPage from "../routes/networks/NetworkDetailsPage"
+// import SearchNetworkPage from "../routes/networks/SearchNetworkPage"
+// import SuggestedAddNetwork from "../routes/networks/SuggestedAddNetwork"
+// import ManuallyAddNetwork from "../routes/networks/ManuallyAddNetwork"
 import PrivacySettingsPage from "../routes/settings/PrivacySettingsPage"
 import DepositAndWithdrawHistory from "../routes/deposit/DepositAndWithdrawHistory"
+import SetupBridgePage from "../routes/bridge/BridgeSetupPage"
+import BridgeConfirmPage from "../routes/bridge/BridgeConfirmPage"
+import BridgeAfterAddTokenPage from "../routes/bridge/BridgeAfterAddTokenPage"
 
 export const ROUTES_DEFINITION = [
     /* Root */
@@ -108,19 +111,21 @@ export const ROUTES_DEFINITION = [
         component: SendConfirmPage,
     },
     /* Swap */
-    /*
-    //Prevent routing to swaps
-
-    { path: "/swap", exact: true, component: SwapPage },
-    { path: "/swap/confirm", exact: true, component: SwapPageConfirm },
+    // { path: "/swap", exact: true, component: SwapPage },
+    // { path: "/swap/confirm", exact: true, component: SwapPageConfirm },
+    // {
+    //     path: "/swap/afterAddToken",
+    //     exact: true,
+    //     component: SwapAfterAddTokenPage,
+    // },
+    /* Bridge */
+    { path: "/bridge", exact: true, component: SetupBridgePage },
+    { path: "/bridge/confirm", exact: true, component: BridgeConfirmPage },
     {
-        path: "/swap/afterAddToken",
+        path: "/bridge/afterAddToken",
         exact: true,
-        component: SwapAfterAddTokenPage,
+        component: BridgeAfterAddTokenPage,
     },
-
-    */
-
     /* Settings */
     { path: "/settings", exact: true, component: SettingsPage },
     { path: "/settings/about", exact: true, component: AboutPage },

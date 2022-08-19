@@ -64,6 +64,7 @@ const transactionMessages = {
     [TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER]: "Received Token",
     [TransactionCategories.TOKEN_METHOD_TRANSFER_FROM]: "Token Transfer From",
     [TransactionCategories.EXCHANGE]: "BlockWallet Swap",
+    [TransactionCategories.BRIDGE]: "BlockWallet Bridge",
 }
 
 const pendingTransactionMessages: { [x: string]: string } = {
@@ -155,6 +156,7 @@ const transactionIcons = {
         <RiCopperCoinFill size="1.5rem" />
     ),
     [TransactionCategories.EXCHANGE]: <RiCopperCoinFill size="1.5rem" />,
+    [TransactionCategories.BRIDGE]: <RiCopperCoinFill size="1.5rem" />,
 }
 
 const failedStatuses = [

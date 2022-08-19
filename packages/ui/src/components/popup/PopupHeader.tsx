@@ -120,6 +120,22 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
             >
                 {title}
             </span>
+            {actions && (
+                <div className="ml-auto">
+                    <Dropdown>
+                        <Dropdown.Menu id="popup-actions">
+                            {actions.map((action, idx) => {
+                                return (
+                                    <DropdownMenuItem key={idx}>
+                                        {action}
+                                    </DropdownMenuItem>
+                                )
+                            })}
+                        </Dropdown.Menu>
+                    </Dropdown>
+                </div>
+            )}
+            {children}
             {close && (
                 <button
                     onClick={(e) => {
@@ -138,22 +154,6 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                     <CloseIcon />
                 </button>
             )}
-            {actions && (
-                <div className="ml-auto">
-                    <Dropdown>
-                        <Dropdown.Menu id="popup-actions">
-                            {actions.map((action, idx) => {
-                                return (
-                                    <DropdownMenuItem key={idx}>
-                                        {action}
-                                    </DropdownMenuItem>
-                                )
-                            })}
-                        </Dropdown.Menu>
-                    </Dropdown>
-                </div>
-            )}
-            {children}
         </div>
     )
 }

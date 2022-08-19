@@ -1,105 +1,70 @@
 import AssetAmountDisplay from "../../components/assets/AssetAmountDisplay"
+import ClickableText from "../../components/button/ClickableText"
+import Divider from "../../components/Divider"
 import GasPriceComponent from "../../components/transactions/GasPriceComponent"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
+import LoadingDialog from "../../components/dialog/LoadingDialog"
+import NetworkDisplay from "../../components/network/NetworkDisplay"
+import NetworkDisplayBadge from "../../components/chain/NetworkDisplayBadge"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
-import RateUpdateDialog from "../../components/swaps/RateUpdateDialog"
-import React, {
-    useState,
-    useEffect,
-    useMemo,
-    useRef,
-    FC,
-    useCallback,
-} from "react"
-import TransactionDetails from "../../components/transactions/TransactionDetails"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
 import arrowDown from "../../assets/images/icons/arrow_down_long.svg"
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
-import {
-    getExchangeParameters,
-    executeExchange,
-    getLatestGasPrice,
-    rejectTransaction,
-} from "../../context/commActions"
-import {
-    SwapQuote,
-    SwapParameters,
-    SwapTransaction,
-} from "@block-wallet/background/controllers/SwapController"
-import {
-    ExchangeType,
-    HardwareWalletOpTypes,
-    TransactionCategories,
-} from "../../context/commTypes"
-import {
-    calcExchangeRate,
-    isSwapNativeTokenAddress,
-    populateExchangeTransaction,
-} from "../../util/exchangeUtils"
 import { BigNumber } from "ethers"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
-import { OneInchSwapRequestParams } from "@block-wallet/background/utils/types/1inch"
+import { Network } from "@block-wallet/background/utils/constants/networks"
 import {
-    defaultSwapSettings,
-    SwapSettings,
-    SwapSettingsData,
-} from "../../components/swaps/SwapSettings"
+    HardwareWalletOpTypes,
+    TransactionCategories,
+} from "../../context/commTypes"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { classnames, Classes } from "../../styles"
-import { formatRounded } from "../../util/formatRounded"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
+import { getLatestGasPrice, rejectTransaction } from "../../context/commActions"
+import { isBridgeNativeTokenAddress } from "../../util/bridgeUtils"
+import { isHardwareWallet } from "../../util/account"
+import { useBlankState } from "../../context/background/backgroundHooks"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import { useHasSufficientBalance } from "../../context/hooks/useHasSufficientBalance"
+import { useInProgressAllowanceTransaction } from "../../context/hooks/useInProgressAllowanceTransaction"
 import { useInProgressInternalTransaction } from "../../context/hooks/useInProgressInternalTransaction"
 import { useLocationRecovery } from "../../util/hooks/useLocationRecovery"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
-import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
+import {
+    useState,
+    useEffect,
+    useMemo,
+    useRef,
+    useCallback,
+    FunctionComponent,
+} from "react"
 import { useTokensList } from "../../context/hooks/useTokensList"
-import { isHardwareWallet } from "../../util/account"
-import useCountdown from "../../util/hooks/useCountdown"
-import { formatNumberLength } from "../../util/formatNumberLength"
-import OutlinedButton from "../../components/ui/OutlinedButton"
-import Icon, { IconName } from "../../components/ui/Icon"
-import RefreshLabel from "../../components/swaps/RefreshLabel"
-import { capitalize } from "../../util/capitalize"
-import { useInProgressAllowanceTransaction } from "../../context/hooks/useInProgressAllowanceTransaction"
-import LoadingDialog from "../../components/dialog/LoadingDialog"
-import ClickableText from "../../components/button/ClickableText"
-import Divider from "../../components/Divider"
+import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
+import { IBridgeRoute } from "@block-wallet/background/utils/bridgeApi"
+import { IChain } from "@block-wallet/background/utils/types/chain"
 
-export interface SwapConfirmPageLocalState {
-    fromToken: Token
-    swapQuote: SwapQuote
-    toToken: Token
+export interface BridgeConfirmPageLocalState {
+    token: Token
+    network: IChain
+    bridgeRoute: IBridgeRoute
     amount?: string
 }
 
-// 15s
-const QUOTE_REFRESH_TIMEOUT = 1000 * 15
-
-const SwapPageConfirm: FC<{}> = () => {
+const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const history = useOnMountHistory()
-    const { fromToken, swapQuote, toToken } = useMemo(
-        () => history.location.state as SwapConfirmPageLocalState,
+    const { token, network, bridgeRoute } = useMemo(
+        () => history.location.state as BridgeConfirmPageLocalState,
         [history.location.state]
     )
 
-    const [timeoutStart, setTimeoutStart] = useState<number | undefined>(
-        undefined
-    )
-    const { value: remainingSeconds } = useCountdown(
-        timeoutStart,
-        QUOTE_REFRESH_TIMEOUT
-    )
-
     const [persistedData, setPersistedData] = useLocalStorageState(
-        "swaps.confirm",
+        "bridge.confirm",
         {
             initialValue: {
                 submitted: false,
@@ -113,9 +78,8 @@ const SwapPageConfirm: FC<{}> = () => {
         useInProgressInternalTransaction({
             categories: [TransactionCategories.EXCHANGE],
         })
-
     const inProgressAllowanceTransaction = useInProgressAllowanceTransaction(
-        fromToken.address
+        token.address
     )
 
     useEffect(() => {
@@ -126,13 +90,13 @@ const SwapPageConfirm: FC<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
+    const { availableNetworks, selectedNetwork } = useBlankState()!
     const { gasPricesLevels } = useGasPriceData()
     const { isEIP1559Compatible } = useSelectedNetwork()
     const selectedAccount = useSelectedAccount()
     const { nativeToken } = useTokensList()
     const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
         useCheckAccountDeviceLinked()
-
     const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
         useTransactionWaitingDialog(
             inProgressTransaction
@@ -146,7 +110,7 @@ const SwapPageConfirm: FC<{}> = () => {
             HardwareWalletOpTypes.SIGN_TRANSACTION,
             selectedAccount.accountType,
             {
-                reject: React.useCallback(() => {
+                reject: useCallback(() => {
                     if (inProgressTransaction?.id) {
                         rejectTransaction(inProgressTransaction?.id)
                     }
@@ -154,15 +118,11 @@ const SwapPageConfirm: FC<{}> = () => {
             }
         )
 
-    const [isFetchingSwaps, setIsFetchingSwaps] = useState<boolean>(false)
     const [isGasLoading, setIsGasLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | undefined>(undefined)
-    const [swapParameters, setSwapParameters] = useState<
-        SwapParameters | undefined
-    >(undefined)
     const [showDetails, setShowDetails] = useState<boolean>(false)
-    const [selectedSwapSettings, setSelectedSwapSettings] =
-        useState<SwapSettingsData>(defaultSwapSettings)
+
+    const networkLabel = availableNetworks[selectedNetwork.toUpperCase()]
 
     // Gas
     const [defaultGas, setDefaultGas] = useState<{
@@ -185,8 +145,7 @@ const SwapPageConfirm: FC<{}> = () => {
     )
     const [selectedGasLimit, setSelectedGasLimit] = useState(BigNumber.from(0))
 
-    const isSwapping = status === "loading" && isOpen
-    const shouldFetchSwapParams = status !== "loading" && status !== "success"
+    const isBridging = status === "loading" && isOpen
     const isGasInitialized = useRef<boolean>(false)
 
     // Balance check
@@ -195,44 +154,26 @@ const SwapPageConfirm: FC<{}> = () => {
         : selectedGasPrice
 
     const fee = selectedGasLimit.mul(feePerGas)
-    const isSwappingNativeToken = isSwapNativeTokenAddress(
-        swapParameters?.fromToken.address || swapQuote.fromToken.address
-    )
-    const total = isSwappingNativeToken
-        ? BigNumber.from(
-              swapParameters?.fromTokenAmount || swapQuote.fromTokenAmount
-          ).add(fee)
+    const isBridgingNativeToken = isBridgeNativeTokenAddress(token.address)
+    const total = isBridgingNativeToken
+        ? BigNumber.from(token.address).add(fee)
         : fee
 
     const hasNativeAssetBalance = useHasSufficientBalance(
         total,
         nativeToken.token
     )
-
     const hasFromTokenBalance = useHasSufficientBalance(
-        BigNumber.from(
-            swapParameters?.fromTokenAmount || swapQuote.fromTokenAmount
-        ),
-        fromToken
+        BigNumber.from(0),
+        token
     )
 
-    const hasBalance = isSwappingNativeToken
+    const hasBalance = isBridgingNativeToken
         ? hasNativeAssetBalance
         : hasNativeAssetBalance && hasFromTokenBalance
 
-    const exchangeRate = calcExchangeRate(
-        BigNumber.from(
-            swapParameters?.fromTokenAmount || swapQuote.fromTokenAmount
-        ),
-        fromToken.decimals,
-        BigNumber.from(
-            swapParameters?.toTokenAmount || swapQuote.toTokenAmount
-        ),
-        toToken.decimals
-    )
-
     const onSubmit = async () => {
-        if (error || !swapParameters || !hasBalance) return
+        if (error || !hasBalance) return
 
         dispatch({ type: "open", payload: { status: "loading" } })
         const isLinked = await checkDeviceIsLinked()
@@ -245,71 +186,16 @@ const SwapPageConfirm: FC<{}> = () => {
                 submitted: true,
             })
 
-            const swapTransactionParams: SwapTransaction = {
-                ...swapParameters,
-                customNonce: selectedSwapSettings.customNonce,
-                flashbots: selectedSwapSettings.flashbots,
-                gasPrice: isEIP1559Compatible
-                    ? undefined
-                    : selectedGasPrice || swapParameters.tx.gasPrice,
-                maxPriorityFeePerGas: isEIP1559Compatible
-                    ? selectedFees.maxPriorityFeePerGas
-                    : undefined,
-                maxFeePerGas: isEIP1559Compatible
-                    ? selectedFees.maxFeePerGas
-                    : undefined,
-                tx: {
-                    ...swapParameters.tx,
-                    gas: selectedGasLimit.toNumber() || swapParameters.tx.gas,
-                },
-            }
-            await executeExchange(
-                ExchangeType.SWAP_1INCH,
-                swapTransactionParams
-            )
+            // TODO: Execute bridge
         } else {
             closeDialog()
         }
     }
 
-    const updateSwapParameters = useCallback(async () => {
-        setError(undefined)
-        const params: OneInchSwapRequestParams = {
-            fromAddress: selectedAccount.address,
-            fromTokenAddress: swapQuote.fromToken.address,
-            toTokenAddress: swapQuote.toToken.address,
-            amount: swapQuote.fromTokenAmount,
-            slippage: selectedSwapSettings.slippage,
-        }
-
-        setIsFetchingSwaps(true)
-        try {
-            const swapParams = await getExchangeParameters(
-                ExchangeType.SWAP_1INCH,
-                params
-            )
-            setSwapParameters(swapParams)
-            setTimeoutStart(new Date().getTime())
-        } catch (error) {
-            setError(capitalize(error.message || "Error fetching swap"))
-        } finally {
-            setIsFetchingSwaps(false)
-        }
-    }, [
-        selectedAccount.address,
-        selectedSwapSettings.slippage,
-        swapQuote.fromToken.address,
-        swapQuote.fromTokenAmount,
-        swapQuote.toToken.address,
-    ])
-
     // Initialize gas
     useEffect(() => {
         const setGas = async () => {
-            if (!swapParameters && error) {
-                setIsGasLoading(false)
-            }
-            if (swapParameters && isGasInitialized.current === false) {
+            if (isGasInitialized.current === false) {
                 setIsGasLoading(true)
 
                 try {
@@ -321,7 +207,7 @@ const SwapPageConfirm: FC<{}> = () => {
 
                     setDefaultGas({
                         gasPrice: BigNumber.from(gasPrice),
-                        gasLimit: BigNumber.from(swapParameters.tx.gas),
+                        gasLimit: BigNumber.from(50000), // TODO: Set actual Gas Limit
                     })
 
                     isGasInitialized.current = true
@@ -336,53 +222,29 @@ const SwapPageConfirm: FC<{}> = () => {
         setGas()
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [swapParameters, error])
-
-    useEffect(() => {
-        if (!shouldFetchSwapParams || inProgressAllowanceTransaction?.id) {
-            setTimeoutStart(undefined)
-            return
-        }
-        //first render, run function manually
-        updateSwapParameters()
-        let intervalRef = setInterval(
-            updateSwapParameters,
-            QUOTE_REFRESH_TIMEOUT
-        )
-        // Cleanup timer
-        return () => {
-            intervalRef && clearInterval(intervalRef)
-        }
-    }, [
-        updateSwapParameters,
-        shouldFetchSwapParams,
-        inProgressAllowanceTransaction?.id,
-    ])
-
-    const remainingSuffix = Math.ceil(remainingSeconds!)
-        ? `${Math.floor(remainingSeconds!)}s`
-        : ""
-
-    const rate = useMemo(() => {
-        return BigNumber.from(
-            swapParameters?.toTokenAmount || swapQuote.toTokenAmount
-        )
-    }, [swapParameters?.toTokenAmount, swapQuote.toTokenAmount])
+    }, [bridgeRoute, error])
 
     return (
         <PopupLayout
             header={
                 <PopupHeader
-                    title="Confirm Swap"
+                    title="Bridge"
+                    close="/"
                     onBack={() => {
-                        //avoid returning to the "approve page".
+                        //avoid returning to the approve page.
                         history.push({
-                            pathname: "/swap",
+                            pathname: "/bridge",
                             state: history.location.state,
                         })
                     }}
-                    disabled={isSwapping}
-                />
+                    disabled={isBridging}
+                >
+                    <NetworkDisplayBadge
+                        network={networkLabel}
+                        className="ml-[3.9rem]"
+                        truncate
+                    />
+                </PopupHeader>
             }
             footer={
                 <PopupFooter>
@@ -391,18 +253,15 @@ const SwapPageConfirm: FC<{}> = () => {
                             error
                                 ? error
                                 : hasBalance
-                                ? `Swap`
-                                : isSwappingNativeToken
-                                ? "You don't have enough funds to cover the swap and the gas costs."
+                                ? "Bridge"
+                                : isBridgingNativeToken
+                                ? "You don't have enough funds to cover the bridge and the gas costs."
                                 : "Insufficient funds"
                         }
                         isLoading={
                             error || !!inProgressAllowanceTransaction
                                 ? false
-                                : !swapParameters ||
-                                  isGasLoading ||
-                                  isFetchingSwaps ||
-                                  isSwapping
+                                : !bridgeRoute || isGasLoading || isBridging
                         }
                         onClick={onSubmit}
                         disabled={!!error || !hasBalance}
@@ -421,8 +280,8 @@ const SwapPageConfirm: FC<{}> = () => {
                 message={
                     <div className="flex flex-col space-y-2 items-center">
                         <span>
-                            You will not be able to initiate the swap until the
-                            allowance transaction is mined.
+                            You will not be able to initiate the bridge until
+                            the allowance transaction is mined.
                         </span>
                         <Divider />
                         <span className="text-xs">
@@ -444,20 +303,20 @@ const SwapPageConfirm: FC<{}> = () => {
                 open={isOpen}
                 status={status}
                 titles={{
-                    loading: titles?.loading || "Making swap...",
+                    loading: titles?.loading || "Bridging...",
                     success: titles?.success || "Success",
                     error: titles?.error || "Error",
                 }}
                 texts={{
-                    loading: texts?.loading || "Initiating the swap...",
-                    success: titles?.success || "You've initiated the swap",
-                    error: texts?.error || "Error making the swap",
+                    loading: texts?.loading || "Initiating the bridging...",
+                    success: titles?.success || "You've initiated the bridging",
+                    error: texts?.error || "Error bridging",
                 }}
                 clickOutsideToClose={false}
                 txHash={inProgressTransaction?.transactionParams.hash}
                 timeout={2900}
                 gifs={gifs}
-                onDone={React.useCallback(() => {
+                onDone={useCallback(() => {
                     if (status === "error") {
                         closeDialog()
                         setPersistedData({
@@ -476,35 +335,21 @@ const SwapPageConfirm: FC<{}> = () => {
                     clearTransaction,
                 ])}
             />
-            {swapParameters && (
-                <TransactionDetails
-                    transaction={populateExchangeTransaction(swapParameters)}
-                    open={showDetails}
-                    onClose={() => setShowDetails(false)}
-                    nonce={selectedSwapSettings.customNonce}
-                />
-            )}
+            {/* <TransactionDetails
+                transaction={populateExchangeTransaction(swapParameters)}
+                open={showDetails}
+                onClose={() => setShowDetails(false)}
+                nonce={selectedSwapSettings.customNonce}
+            /> */}
             <HardwareDeviceNotLinkedDialog
                 onDone={resetDeviceLinkStatus}
                 isOpen={isDeviceUnlinked}
                 vendor={getDeviceFromAccountType(selectedAccount.accountType)}
                 address={selectedAccount.address}
             />
-            <RateUpdateDialog
-                assetName={swapQuote.toToken.symbol}
-                assetDecimals={toToken.decimals}
-                rate={rate}
-                threshold={selectedSwapSettings.slippage}
-            />
             <div className="flex flex-col px-6 py-3">
                 {/* From Token */}
-                <AssetAmountDisplay
-                    asset={fromToken}
-                    amount={BigNumber.from(
-                        swapParameters?.fromTokenAmount ||
-                            swapQuote.fromTokenAmount
-                    )}
-                />
+                <AssetAmountDisplay asset={token} amount={BigNumber.from(0)} />
 
                 {/* Divider */}
                 <div className="pt-8">
@@ -519,20 +364,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 </div>
 
                 {/* To Token */}
-                <AssetAmountDisplay
-                    asset={toToken}
-                    amount={BigNumber.from(
-                        swapParameters?.toTokenAmount || swapQuote.toTokenAmount
-                    )}
-                />
-
-                {/* Rates */}
-                <p className="text-sm py-2 leading-loose text-gray-500 uppercase text-center w-full">
-                    {`1 ${fromToken.symbol} = ${formatNumberLength(
-                        formatRounded(exchangeRate.toFixed(10), 8),
-                        10
-                    )} ${toToken.symbol}`}
-                </p>
+                <NetworkDisplay network={network} />
 
                 {/* Gas */}
                 <p className="text-sm text-gray-600 pb-2 pt-1">Gas Price</p>
@@ -568,36 +400,9 @@ const SwapPageConfirm: FC<{}> = () => {
                         disabled={isGasLoading}
                     />
                 )}
-
-                <div className="flex flex-row space-x-2 items-center py-3">
-                    {/* Swap Settings */}
-                    <SwapSettings
-                        address={selectedAccount.address}
-                        swapSettings={selectedSwapSettings}
-                        setSwapSettings={setSelectedSwapSettings}
-                    />
-                    {/* Swap Details */}
-                    <OutlinedButton
-                        onClick={() => {
-                            swapParameters && setShowDetails(true)
-                        }}
-                        className={classnames(
-                            "w-full",
-                            !swapParameters &&
-                                "cursor-not-allowed hover:border-default"
-                        )}
-                    >
-                        <span className="font-bold text-sm">Details</span>
-                        <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
-                    </OutlinedButton>
-                </div>
-
-                {remainingSuffix && (
-                    <RefreshLabel value={remainingSuffix} className="mt-3" />
-                )}
             </div>
         </PopupLayout>
     )
 }
 
-export default SwapPageConfirm
+export default BridgeConfirmPage

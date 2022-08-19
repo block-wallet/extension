@@ -66,6 +66,15 @@ enum EXCHANGE {
     EXECUTE = "EXECUTE_EXCHANGE",
 }
 
+enum BRIDGE {
+    APPROVE_BRIDGE_ALLOWANCE = "APPROVE_BRIDGE_ALLOWANCE",
+    GET_BRIDGE_AVAILABLE_CHAINS = "GET_BRIDGE_AVAILABLE_CHAINS",
+    GET_BRIDGE_TOKENS = "GET_BRIDGE_TOKENS",
+    GET_BRIDGE_QUOTE = "GET_BRIDGE_QUOTE",
+    GET_BRIDGE_ROUTES = "GET_BRIDGE_ROUTES",
+    EXECUTE_BRIDGE = "EXECUTE_BRIDGE",
+}
+
 enum EXTERNAL {
     SET_SITE_DATA = "SET_SITE_DATA",
     REQUEST = "EXTERNAL_REQUEST",
@@ -206,6 +215,7 @@ export const Messages = {
     ADDRESS_BOOK,
     BROWSER,
     FILTERS,
+    BRIDGE,
 }
 
 export enum TransactionStatus {
@@ -232,6 +242,7 @@ export enum TransactionCategories {
     TOKEN_METHOD_INCOMING_TRANSFER = "incoming_transfer",
     TOKEN_METHOD_TRANSFER_FROM = "transferfrom",
     EXCHANGE = "exchange",
+    BRIDGE = "bridge",
 }
 
 export enum PendingWithdrawalStatus {

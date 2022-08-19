@@ -2,7 +2,7 @@ import DropDownSelector from "../input/DropDownSelector"
 import SearchInput from "../input/SearchInput"
 import TokenDisplay from "../TokenDisplay"
 import plusIcon from "../../assets/images/icons/plus.svg"
-import React, {
+import {
     ChangeEvent,
     Dispatch,
     FC,

@@ -662,6 +662,7 @@ export const initBackgroundState: BackgroundStateType = {
             //    },
             //},
         },
+        availableBridgeChains: [],
     },
 }
 

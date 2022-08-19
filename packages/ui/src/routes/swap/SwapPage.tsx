@@ -1,4 +1,3 @@
-import * as yup from "yup"
 import ErrorMessage from "../../components/error/ErrorMessage"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
@@ -16,15 +15,11 @@ import {
 } from "../../components/assets/AssetSelection"
 import { BigNumber } from "ethers"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
-import {
-    BASE_SWAP_FEE,
-    DEFAULT_DECIMALS,
-    SWAP_QUOTE_REFRESH_TIMEOUT,
-} from "../../util/constants"
+import { BASE_SWAP_FEE, SWAP_QUOTE_REFRESH_TIMEOUT } from "../../util/constants"
 import { ExchangeType } from "../../context/commTypes"
 import { InferType } from "yup"
 import { SwapConfirmPageLocalState } from "./SwapConfirmPage"
-import { SwapQuote } from "@block-wallet/background/controllers/ExchangeController"
+import { SwapQuote } from "@block-wallet/background/controllers/SwapController"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { classnames, Classes } from "../../styles"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
@@ -42,65 +37,8 @@ import RefreshLabel from "../../components/swaps/RefreshLabel"
 import { capitalize } from "../../util/capitalize"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 import { useCallback } from "react"
-
-const useTokenBalance = (token: Token | string | undefined): BigNumber => {
-    const { currentNetworkTokens, nativeToken } = useTokensList()
-    const defaultAssetList = currentNetworkTokens.concat(nativeToken)
-
-    if (!token) {
-        return BigNumber.from(0)
-    }
-
-    const addr = typeof token === "string" ? token : token.address
-
-    return BigNumber.from(
-        defaultAssetList.find((element) => element.token.address === addr)
-            ?.balance || 0
-    )
-}
-
-const GetAmountYupSchema = (
-    fromToken: Token | undefined,
-    fromTokenBalance: BigNumber
-) => {
-    return yup.object({
-        amount: yup
-            .string()
-            .required("Enter an amount")
-            .test("decimals", "Too many decimals", (value?: string) => {
-                if (typeof value !== "string") return false
-                if (!value.includes(".")) return true
-
-                const decimals = fromToken?.decimals || DEFAULT_DECIMALS
-                const valueDecimals = value.split(".")[1].length
-
-                return valueDecimals <= decimals
-            })
-            .test("bad-input", "Invalid amount", (value?: string) => {
-                if (typeof value !== "string") return false
-
-                try {
-                    parseUnits(value, fromToken?.decimals)
-
-                    return true
-                } catch (error) {
-                    return false
-                }
-            })
-            .test("no-balance", "Insufficient balance", (value?: string) => {
-                if (!fromToken) return true
-                if (typeof value !== "string") return false
-
-                try {
-                    const parsed = parseUnits(value, fromToken.decimals)
-
-                    return parsed.lte(fromTokenBalance)
-                } catch (error) {
-                    return false
-                }
-            }),
-    })
-}
+import { useTokenBalance } from "../../context/hooks/useTokenBalance"
+import { GetAmountYupSchema } from "../../util/yup/GetAmountSchema"
 
 interface SwapPageLocalState {
     fromToken?: Token
@@ -213,7 +151,6 @@ const SwapPage = () => {
     const isUsingNetworkNativeCurrency =
         tokenFrom?.address === nativeToken.token.address
     const maxAmount = tokenFromBalance
-    console.log(maxAmount)
     const isMaxAmountEnabled =
         maxAmount && !(bigNumberAmount && maxAmount.eq(bigNumberAmount))
 

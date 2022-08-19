@@ -1,4 +1,4 @@
-import React, { FC } from "react"
+import { FC } from "react"
 import unknownTokenIcon from "../../assets/images/unknown_token.svg"
 import { BigNumber } from "ethers"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"

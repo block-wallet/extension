@@ -2703,12 +2703,6 @@ export default class BlankController extends EventEmitter {
         await this.networkController.setNetwork(network);
 
         await this.blankDepositController.initialize();
-
-        if (runImportDeposits) {
-            // Asynchronously import the deposits
-            this.blankDepositController.importDeposits(password, seedPhrase);
-        }
-
         // reconstruct past erc20 transfers
         this.transactionWatcherController.fetchTransactions();
 

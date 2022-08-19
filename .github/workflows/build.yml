@@ -183,7 +183,7 @@ jobs:
           make build/prod
 
       - name: Save extension folder
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: blockwallet-extension
           if-no-files-found: error
@@ -223,7 +223,7 @@ jobs:
           key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
 
       - name: Download the extension
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: blockwallet-extension
           path: blockwallet-extension
@@ -280,7 +280,7 @@ jobs:
           convert screenshots/release-notes-${{ needs.build.outputs.version_without_preffix }}.png -crop ${{ env.WIDTH }}x${{ env.HEIGHT }}+0+0 $EXTENSION_NAME.png
 
       - name: Save screenshot of release notes
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: screenshot
           if-no-files-found: error
@@ -296,13 +296,13 @@ jobs:
           rm -rf blockwallet-extension
 
       - name: Download the extension built folder
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: blockwallet-extension
           path: blockwallet-extension
 
       - name: Download the extension screenshot (release notes)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: screenshot
           path: screenshot

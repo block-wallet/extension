@@ -20,10 +20,11 @@ export default {
                         persistedState.PreferencesController.settings
                             .useAntiPhishingProtection ?? false,
                 },
-                antiPhishingImage: await generatePhishingPrevention(
-                    createUuid(),
-                    175
-                ),
+                antiPhishingImage: '', // REMOVED ON MV3 MIGRATION
+                // await generatePhishingPrevention(
+                //     createUuid(),
+                //     175
+                // ),
             },
         };
     },

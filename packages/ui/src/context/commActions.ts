@@ -55,6 +55,7 @@ import {
     OneInchSwapQuoteParams,
     OneInchSwapRequestParams,
 } from "@block-wallet/background/utils/types/1inch"
+import { generatePhishingPreventionBase64 } from "../util/phishingPrevention"
 
 let requestId = 0
 
@@ -640,7 +641,8 @@ export const populateTokenData = async (
  * @returns vault seed phrase
  */
 export const createWallet = async (password: string): Promise<void> => {
-    return sendMessage(Messages.WALLET.CREATE, { password })
+    const antiPhishingImage = await generatePhishingPreventionBase64()
+    return sendMessage(Messages.WALLET.CREATE, { password, antiPhishingImage })
 }
 
 /**
@@ -654,10 +656,12 @@ export const importWallet = async (
     seedPhrase: string,
     defaultNetwork?: string
 ): Promise<boolean> => {
+    const antiPhishingImage = await generatePhishingPreventionBase64()
     return sendMessage(Messages.WALLET.IMPORT, {
         password,
         seedPhrase,
         defaultNetwork,
+        antiPhishingImage,
     })
 }
 
@@ -671,7 +675,12 @@ export const resetWallet = async (
     password: string,
     seedPhrase: string
 ): Promise<boolean> => {
-    return sendMessage(Messages.WALLET.RESET, { password, seedPhrase })
+    const antiPhishingImage = await generatePhishingPreventionBase64()
+    return sendMessage(Messages.WALLET.RESET, {
+        password,
+        seedPhrase,
+        antiPhishingImage,
+    })
 }
 
 /**
@@ -1271,14 +1280,6 @@ export const toggleDefaultBrowserWallet = async (
     return sendMessage(Messages.WALLET.TOGGLE_DEFAULT_BROWSER_WALLET, {
         defaultBrowserWalletEnabled: enabled,
     })
-}
-
-/**
- * Generates a new base64 image that can be use for the phishing protection
- * @returns a base64 image used for phishing protection
- */
-export const generateNewAntiPhishingImage = async (): Promise<string> => {
-    return sendMessage(Messages.WALLET.GENERATE_ANTI_PHISHING_IMAGE, {})
 }
 
 /**

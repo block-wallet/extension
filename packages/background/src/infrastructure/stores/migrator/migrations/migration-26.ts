@@ -17,10 +17,11 @@ export default {
                     // enable for launch of this feature
                     useAntiPhishingProtection: true,
                 },
-                antiPhishingImage: await generatePhishingPrevention(
-                    createUuid(),
-                    175
-                ),
+                antiPhishingImage: '', // REMOVED ON MV3 migration
+                // await generatePhishingPrevention(
+                //     createUuid(),
+                //     175
+                // ),
             },
         };
     },

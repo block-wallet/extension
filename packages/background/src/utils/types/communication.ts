@@ -199,7 +199,6 @@ enum WALLET {
     DISMISS_DEFAULT_WALLET_PREFERENCES = 'DISMISS_DEFAULT_WALLET_PREFERENCES',
     DISMISS_RELEASE_NOTES = 'DISMISS_RELEASE_NOTES',
     TOGGLE_RELEASE_NOTES_SUBSCRIPTION = 'TOGGLE_RELEASE_NOTES_SUBSCRIPTION',
-    GENERATE_ANTI_PHISHING_IMAGE = 'GENERATE_ANTI_PHISHING_IMAGE',
     GENERATE_ON_DEMAND_RELEASE_NOTES = 'GENERATE_ON_DEMAND_RELEASE_NOTES',
     UPDATE_ANTI_PHISHING_IMAGE = 'UPDATE_ANTI_PHISHING_IMAGE',
     TOGGLE_ANTI_PHISHING_PROTECTION = 'TOGGLE_ANTI_PHISHING_PROTECTION',
@@ -491,11 +490,6 @@ export interface RequestSignatures {
     [Messages.WALLET.TOGGLE_DEFAULT_BROWSER_WALLET]: [
         RequestToggleDefaultBrowserWallet,
         void
-    ];
-
-    [Messages.WALLET.GENERATE_ANTI_PHISHING_IMAGE]: [
-        RequestAntiPhishingImage,
-        string
     ];
 
     [Messages.WALLET.UPDATE_ANTI_PHISHING_IMAGE]: [
@@ -826,6 +820,7 @@ export interface RequestSendEther {
 
 export interface RequestWalletCreate {
     password: string;
+    antiPhishingImage: string;
 }
 
 export interface RequestSeedPhrase {
@@ -836,6 +831,7 @@ export interface RequestCompleteSetup {}
 export interface RequestWalletImport {
     password: string;
     seedPhrase: string;
+    antiPhishingImage: string;
     reImport?: boolean;
     defaultNetwork?: string;
 }
@@ -843,6 +839,7 @@ export interface RequestWalletImport {
 export interface RequestWalletReset {
     password: string;
     seedPhrase: string;
+    antiPhishingImage: string;
 }
 
 export interface RequestWalletGetHDPath {
@@ -965,7 +962,9 @@ export interface RequestSearchToken {
     chainId?: number;
 }
 
-export interface RequestAntiPhishingImage {}
+export interface RequestAntiPhishingImage {
+    antiPhishingImage: string;
+}
 
 export interface RequestUpdateAntiPhishingImage {
     antiPhishingImage: string;

@@ -199,7 +199,6 @@ import { TornadoEventsService } from './blank-deposit/tornado/TornadoEventsServi
 import tornadoConfig from './blank-deposit/tornado/config/config';
 import ComposedStore from '../infrastructure/stores/ComposedStore';
 import BlockFetchController from './block-updates/BlockFetchController';
-import { generatePhishingPreventionBase64 } from '../utils/phishingPrevention';
 import {
     Currency,
     getCurrencies,
@@ -1007,8 +1006,6 @@ export default class BlankController extends EventEmitter {
                 return this.toggleDefaultBrowserWallet(
                     request as RequestToggleDefaultBrowserWallet
                 );
-            case Messages.WALLET.GENERATE_ANTI_PHISHING_IMAGE:
-                return generatePhishingPreventionBase64();
             case Messages.WALLET.UPDATE_ANTI_PHISHING_IMAGE:
                 return this.updateAntiPhishingImage(
                     request as RequestUpdateAntiPhishingImage
@@ -2467,6 +2464,7 @@ export default class BlankController extends EventEmitter {
      */
     private async walletCreate({
         password,
+        antiPhishingImage,
     }: RequestWalletCreate): Promise<void> {
         // Create keyring
         await this.keyringController.createNewVaultAndKeychain(password);
@@ -2494,9 +2492,8 @@ export default class BlankController extends EventEmitter {
         this.accountTrackerController.addPrimaryAccount(account);
 
         // Create and assign to the Wallet an anti phishing image
-        const base64Image = await generatePhishingPreventionBase64();
         this.preferencesController.assignNewPhishingPreventionImage(
-            base64Image
+            antiPhishingImage
         );
 
         // Unlock when account is created so vault will be ready after onboarding
@@ -2512,6 +2509,7 @@ export default class BlankController extends EventEmitter {
     private async walletImport({
         password,
         seedPhrase,
+        antiPhishingImage,
         reImport,
         defaultNetwork,
     }: RequestWalletImport): Promise<boolean> {
@@ -2593,9 +2591,8 @@ export default class BlankController extends EventEmitter {
         this.transactionWatcherController.fetchTransactions();
 
         // Create and assign to the Wallet an anti phishing image
-        const base64Image = await generatePhishingPreventionBase64();
         this.preferencesController.assignNewPhishingPreventionImage(
-            base64Image
+            antiPhishingImage
         );
 
         return true;
@@ -2610,8 +2607,14 @@ export default class BlankController extends EventEmitter {
     private async walletReset({
         password,
         seedPhrase,
+        antiPhishingImage,
     }: RequestWalletReset): Promise<boolean> {
-        return this.walletImport({ password, seedPhrase, reImport: true });
+        return this.walletImport({
+            password,
+            seedPhrase,
+            reImport: true,
+            antiPhishingImage,
+        });
     }
 
     /**

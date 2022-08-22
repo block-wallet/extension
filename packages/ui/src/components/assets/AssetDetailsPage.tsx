@@ -37,7 +37,7 @@ const AssetDetailsPage = () => {
 
     const account = useSelectedAccount()
     const currencyFormatter = useCurrencyFromatter()
-    const { isSendEnabled } = useSelectedNetwork()
+    const { isSendEnabled, isBridgeEnabled } = useSelectedNetwork()
     const asset = useGetAssetByTokenAddress(address)
     const isNative = isNativeTokenAddress(address)
     const tokenTransactions = useTokenTransactions(asset?.token?.symbol)
@@ -238,6 +238,27 @@ const AssetDetailsPage = () => {
                                 </span>
                             </Link>
                         )} */}
+                        {isBridgeEnabled && (
+                            <Link
+                                to={{
+                                    pathname: "/bridge",
+                                    state: {
+                                        transitionDirection: "left",
+                                    },
+                                }}
+                                draggable={false}
+                                className={
+                                    "flex flex-col items-center space-y-2 group"
+                                }
+                            >
+                                <RoundedIconButton
+                                    Icon={ArrowHoverAnimation}
+                                    disabled={!isBridgeEnabled}
+                                >
+                                    Bridge
+                                </RoundedIconButton>
+                            </Link>
+                        )}
                     </TokenSummary.Actions>
                 </TokenSummary>
                 <div className="flex flex-col flex-1 w-full space-y-0 border-t border-gray-200">

@@ -16,7 +16,6 @@ import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 import { BigNumber } from "ethers"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
-import { Network } from "@block-wallet/background/utils/constants/networks"
 import {
     HardwareWalletOpTypes,
     TransactionCategories,
@@ -239,11 +238,9 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     }}
                     disabled={isBridging}
                 >
-                    <NetworkDisplayBadge
-                        network={networkLabel}
-                        className="ml-[3.9rem]"
-                        truncate
-                    />
+                    <div className="flex grow justify-end pr-0.5">
+                        <NetworkDisplayBadge network={networkLabel} truncate />
+                    </div>
                 </PopupHeader>
             }
             footer={

@@ -289,11 +289,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             : history.push("/home")
                     }
                 >
-                    <NetworkDisplayBadge
-                        network={networkLabel}
-                        className="ml-[3.9rem]"
-                        truncate
-                    />
+                    <div className="flex grow justify-end pr-0.5">
+                        <NetworkDisplayBadge network={networkLabel} truncate />
+                    </div>
                 </PopupHeader>
             }
             footer={
@@ -441,6 +439,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 {/* Network selector */}
                 <p className="text-sm text-gray-600 pb-3">To Network</p>
                 <NetworkSelector
+                    topMargin={50}
+                    bottomMargin={200}
                     networkList={availableBridgeChains}
                     selectedNetwork={selectedToNetwork}
                     onNetworkChange={(network) => {

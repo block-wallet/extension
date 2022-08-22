@@ -1,27 +1,40 @@
-import { FC } from "react"
-import unknownTokenIcon from "../../assets/images/unknown_token.svg"
+import NetworkLogo from "./NetworkLogo"
+import classnames from "classnames"
+import { FunctionComponent } from "react"
 import { IChain } from "@block-wallet/background/utils/types/chain"
 
 interface NetworkDisplayProps {
     network: IChain
+    padding?: boolean
+    transparent?: boolean
+    bigLogo?: boolean
 }
 
-const NetworkDisplay: FC<NetworkDisplayProps> = ({ network }) => {
+const NetworkDisplay: FunctionComponent<NetworkDisplayProps> = ({
+    network,
+    padding = true,
+    transparent = false,
+    bigLogo,
+}) => {
     return (
-        <div className="flex flex-row items-center space-x-1 w-full p-4 rounded-md bg-primary-100">
-            <span className="flex items-center justify-center !w-6 !h-6 rounded-full">
-                <img
-                    src={network.logoURI || unknownTokenIcon}
-                    alt={network.name}
-                    className="rounded-full"
-                />
-            </span>
-            <span
-                className="text-base truncate font-semibold"
+        <div
+            className={classnames(
+                "flex flex-row items-center w-full rounded-md",
+                padding && "p-4",
+                !transparent && "bg-primary-100"
+            )}
+        >
+            <NetworkLogo
+                logoURI={network.logoURI}
+                name={network.name}
+                bigLogo={bigLogo}
+            />
+            <div
+                className="text-base truncate font-semibold ml-2"
                 title={network.name}
             >
                 {network.name}
-            </span>
+            </div>
         </div>
     )
 }

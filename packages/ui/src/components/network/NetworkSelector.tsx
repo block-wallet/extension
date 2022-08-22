@@ -1,7 +1,7 @@
 import DropDownSelector from "../input/DropDownSelector"
-import NetworkDisplay from "./DropdownNetworkDisplay"
-import { Dispatch, FC, SetStateAction } from "react"
-import NetworkLogo from "./NetworkLogo"
+import DropdownNetworkDisplay from "./DropdownNetworkDisplay"
+import NetworkDisplay from "./NetworkDisplay"
+import { Dispatch, FunctionComponent, SetStateAction } from "react"
 import { IChain } from "@block-wallet/background/utils/types/chain"
 
 interface NetworkSelectorProps {
@@ -14,14 +14,14 @@ interface NetworkSelectorProps {
     popupMargin?: number
 }
 
-export const NetworkSelector: FC<NetworkSelectorProps> = ({
+export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
     networkList,
     onNetworkChange,
     selectedNetwork,
     error,
-    topMargin,
-    bottomMargin,
-    popupMargin,
+    topMargin = 0,
+    bottomMargin = 0,
+    popupMargin = 16,
 }) => {
     const onAssetClick = async (
         network: IChain,
@@ -38,7 +38,7 @@ export const NetworkSelector: FC<NetworkSelectorProps> = ({
         setActive?: Dispatch<SetStateAction<boolean>>
     }) => {
         return (
-            <div className="pb-6">
+            <>
                 <input
                     readOnly
                     name="network"
@@ -47,38 +47,25 @@ export const NetworkSelector: FC<NetworkSelectorProps> = ({
                 />
                 {Object.values(networkList).map((network, index) => {
                     return (
-                        <div
-                            className="cursor-pointer"
+                        <DropdownNetworkDisplay
                             key={index.toString()}
+                            network={network}
+                            active={selectedNetwork?.id === network.id}
                             onClick={() => onAssetClick(network, setActive)}
-                        >
-                            <NetworkDisplay
-                                network={network}
-                                active={selectedNetwork?.id === network.id}
-                            />
-                        </div>
+                        />
                     )
                 })}
-            </div>
+            </>
         )
     }
 
     const dropdownDisplay = selectedNetwork ? (
-        <div className="flex flex-row flex-grow justify-between items-center">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full mr-2">
-                <NetworkLogo
-                    iconUrl={selectedNetwork.logoURI}
-                    name={selectedNetwork.name}
-                />
-            </div>
-            <div className="flex flex-grow justify-between space-x-1">
-                <div className="flex flex-col justify-center">
-                    <span className="text-base font-semibold">
-                        {selectedNetwork.name}
-                    </span>
-                </div>
-            </div>
-        </div>
+        <NetworkDisplay
+            network={selectedNetwork}
+            padding={false}
+            transparent={true}
+            bigLogo={true}
+        />
     ) : (
         <div className="flex flex-col justify-center w-full">
             <div className="text-base font-semibold">Select...</div>
@@ -89,9 +76,9 @@ export const NetworkSelector: FC<NetworkSelectorProps> = ({
         <DropDownSelector
             display={dropdownDisplay}
             error={error}
-            topMargin={topMargin || 0}
-            bottomMargin={bottomMargin || 0}
-            popupMargin={popupMargin || 16}
+            topMargin={topMargin}
+            bottomMargin={bottomMargin}
+            popupMargin={popupMargin}
         >
             <AssetList />
         </DropDownSelector>

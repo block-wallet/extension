@@ -35,6 +35,7 @@ import { useTokensList } from "../context/hooks/useTokensList"
 // Assets
 import TokenSummary from "../components/TokenSummary"
 import GasPricesInfo from "../components/gas/GasPricesInfo"
+import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
 
 const AccountDisplay = () => {
     const blankState = useBlankState()!
@@ -144,8 +145,8 @@ const PopupPage = () => {
     const account = useSelectedAccount()
     const { nativeToken } = useTokensList()
     const network = useSelectedNetwork()
-    //const sendsEnabled = network.isSendEnabled
-    //const swapsEnabled = network.isSwapEnabled
+    const sendsEnabled = network.isSendEnabled
+    const swapsEnabled = network.isSwapEnabled
 
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
 
@@ -291,8 +292,7 @@ const PopupPage = () => {
                                     Send
                                 </span>
                             </Link>
-                            {/* Prevent access to swaps feature*/}
-                            {/*  {swapsEnabled && (
+                            {swapsEnabled && (
                                 <Link
                                     to="/swap"
                                     draggable={false}
@@ -319,7 +319,7 @@ const PopupPage = () => {
                                         Swap
                                     </span>
                                 </Link>
-                            )} */}
+                            )}
                         </TokenSummary.Actions>
                     </TokenSummary>
                     <ActivityAssetsView initialTab={state.popupTab} />

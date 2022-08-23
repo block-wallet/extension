@@ -405,7 +405,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                             const result = await this._getTransactionsFromAPI(
                                 chainId,
                                 address,
-                                etherscanApiUrl!,
+                                etherscanApiUrl || '',
                                 transactionType,
                                 currentTransactionsWatched,
                                 currentBlock

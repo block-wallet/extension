@@ -20,12 +20,7 @@ import {
 } from "../../util/gasPrice"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { FeeData } from "@ethersproject/abstract-provider"
-import {
-    DEPOSIT_GAS_COST,
-    SEND_GAS_COST,
-    WITHDRAW_GAS_COST,
-} from "../../util/constants"
-import Select from "../input/Select"
+import { SEND_GAS_COST } from "../../util/constants"
 import car from "../../assets/images/icons/car.svg"
 import scooter from "../../assets/images/icons/scooter.svg"
 import plane from "../../assets/images/icons/plane.svg"
@@ -138,9 +133,7 @@ const INFO_BY_LEVEL = {
 
 const GasPricesInfo: FC = () => {
     const [active, setActive] = useState(false)
-    const [calculateGasCost, setCalculateCost] = useState<
-        "SEND" | "DEPOSIT" | "WITHDRAW"
-    >("SEND")
+    const [calculateGasCost] = useState<"SEND">("SEND")
     const { exchangeRates, nativeCurrency, localeInfo, networkNativeCurrency } =
         useBlankState()!
 
@@ -149,13 +142,10 @@ const GasPricesInfo: FC = () => {
         isEIP1559Compatible,
         nativeCurrency: { decimals: nativeCurrencyDecimals },
     } = useSelectedNetwork()
-    const isTornadoEnabled = false // No matter network config, we won't show deposit/withdraw options for now
     const { gasPricesLevels, estimatedBaseFee } = useGasPriceData()
 
     const GAS_LIMITS = {
         SEND: SEND_GAS_COST,
-        DEPOSIT: DEPOSIT_GAS_COST,
-        WITHDRAW: WITHDRAW_GAS_COST,
     }
     const displayGasPrices = getDisplayGasPrices(
         !!isEIP1559Compatible,
@@ -233,51 +223,6 @@ const GasPricesInfo: FC = () => {
                             </div>
                         </div>
                         <div>
-                            {/**Show the dropdown when tornado is enabled for the netowrk */}
-                            {/**If we add other options like swap/bridge, we will have to rethink this logic and maybe hide options instad of the whole dropdown */}
-                            {isTornadoEnabled && (
-                                <div className="pb-4 pl-4 flex flex-row items-center font-semibold">
-                                    Estimate costs for a
-                                    <Select
-                                        currentValue={calculateGasCost}
-                                        type="text"
-                                        onChange={setCalculateCost}
-                                    >
-                                        <Select.Option value="SEND">
-                                            send
-                                        </Select.Option>
-                                        <Select.Option value="DEPOSIT">
-                                            deposit
-                                        </Select.Option>
-                                        <Select.Option value="WITHDRAW">
-                                            withdraw
-                                        </Select.Option>
-                                    </Select>
-                                    {calculateGasCost === "WITHDRAW" && (
-                                        <div className="group relative">
-                                            <div className="mb-0.5">
-                                                <AiFillInfoCircle
-                                                    size={18}
-                                                    className="text-primary-200 cursor-pointer hover:text-primary-300"
-                                                />
-                                            </div>
-                                            <Tooltip
-                                                className="!w-40 !break-word !whitespace-normal !translate-y-16 !-translate-x-24"
-                                                content={
-                                                    <div>
-                                                        <span className="font-normal">
-                                                            Low and Medium
-                                                            levels are not
-                                                            available for
-                                                            Withdrawals.
-                                                        </span>
-                                                    </div>
-                                                }
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                             <div className="flex flex-col px-4 space-y-4">
                                 {Object.entries(displayGasPrices).map(
                                     ([level, gasPriceData]) => {

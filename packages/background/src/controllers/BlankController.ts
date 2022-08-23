@@ -207,8 +207,6 @@ import {
 } from '../utils/currency';
 import { AvailableNetworks } from './blank-deposit/types';
 
-import { FEATURES } from '../utils/constants/features';
-
 import { toError } from '../utils/toError';
 
 import { getCustomRpcChainId } from '../utils/ethereumChain';

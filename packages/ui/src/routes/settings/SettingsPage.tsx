@@ -18,7 +18,7 @@ import eyeBlue from "../../assets/images/icons/eye_blue.svg"
 import logoutIcon from "../../assets/images/icons/logout.svg"
 import account from "../../assets/images/icons/account.svg"
 import about from "../../assets/images/icons/about.svg"
-//import networkCloud from "../../assets/images/icons/network_cloud.svg"
+import networkCloud from "../../assets/images/icons/network_cloud.svg"
 import usb from "../../assets/images/icons/usb.svg"
 
 // Context
@@ -43,12 +43,11 @@ const SettingsPage = () => {
             label: "Account",
             to: "/accounts/menu",
         },
-        //Prevent access to Networks.
-        /* {
+        {
             icon: networkCloud,
             label: "Networks",
             to: "/settings/networks",
-        }, */
+        },
         {
             icon: book,
             label: "Address Book",

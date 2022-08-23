@@ -42,7 +42,6 @@ export enum AccountStatus {
 
 import checksummedAddress from '../utils/checksummedAddress';
 import {
-    TransactionByHash,
     TransactionTypeEnum,
     TransactionWatcherController,
     TransactionWatcherControllerEvents,

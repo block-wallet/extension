@@ -28,8 +28,10 @@ import { isNativeTokenAddress } from "../../util/tokenUtils"
 import SuccessDialog from "../dialog/SuccessDialog"
 import { formatName } from "../../util/formatAccount"
 import Icon, { IconName } from "../ui/Icon"
+import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
 
 const AssetDetailsPage = () => {
+    const state = useBlankState()!
     const history: any = useOnMountHistory()
     const address = history.location.state.address
 
@@ -37,7 +39,7 @@ const AssetDetailsPage = () => {
 
     const account = useSelectedAccount()
     const currencyFormatter = useCurrencyFromatter()
-    const { isSendEnabled } = useSelectedNetwork()
+    const { isSendEnabled, isSwapEnabled } = useSelectedNetwork()
     const asset = useGetAssetByTokenAddress(address)
     const isNative = isNativeTokenAddress(address)
     const tokenTransactions = useTokenTransactions(asset?.token?.symbol)
@@ -201,8 +203,7 @@ const AssetDetailsPage = () => {
                                 Send
                             </RoundedIconButton>
                         </Link>
-                        {/* Prevent access to swaps/}
-                        {/* {isSwapEnabled && (
+                        {isSwapEnabled && (
                             <Link
                                 to={{
                                     pathname: "/swap",
@@ -237,7 +238,7 @@ const AssetDetailsPage = () => {
                                     Swap
                                 </span>
                             </Link>
-                        )} */}
+                        )}
                     </TokenSummary.Actions>
                 </TokenSummary>
                 <div className="flex flex-col flex-1 w-full space-y-0 border-t border-gray-200">

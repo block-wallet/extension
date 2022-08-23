@@ -112,12 +112,18 @@ export class GasPricesController extends BaseController<GasPricesControllerState
             this._networkController
         );
 
-        // Set for expiration policy
-        this.expiration = new Date().getTime();
+        // Set for expiration policy (already expired)
+        this.expiration = new Date().getTime() - expirationTime;
+
+        // Update gas prices on network change
         this._networkController.on(
             NetworkEvents.NETWORK_CHANGE,
             async (network: Network) => {
-                this.updateGasPrices(network.chainId);
+                const currentBlockNumber =
+                    this._blockUpdatesController.getBlockNumber(
+                        network.chainId
+                    );
+                this.updateGasPrices(currentBlockNumber, network.chainId);
             }
         );
 
@@ -139,6 +145,9 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                 );
             }
         );
+
+        // try to get initial gas prices
+        this.updateGasPrices();
     }
 
     /**
@@ -178,10 +187,18 @@ export class GasPricesController extends BaseController<GasPricesControllerState
      * a 5% variation and expiration policy
      */
     public updateGasPrices = async (
-        currentBlockNumber: number,
+        currentBlockNumber?: number,
         chainId: number = this._networkController.network.chainId
     ): Promise<void> => {
         try {
+            if (!currentBlockNumber) {
+                currentBlockNumber =
+                    this._blockUpdatesController.getBlockNumber(chainId);
+            }
+            if (!currentBlockNumber || currentBlockNumber == 0) {
+                return;
+            }
+
             const oldGasPriceLevels = this.getGasPricesLevels(chainId);
             const isEIP1559Compatible =
                 await this._networkController.getEIP1559Compatibility(chainId);

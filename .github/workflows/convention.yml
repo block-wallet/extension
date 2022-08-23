@@ -16,7 +16,7 @@ jobs:
       - name: Validate commit messages
         uses: gsactions/commit-message-checker@v1
         with:
-          pattern: '^(chore|docs|feat|fix|refactor|style|test){1}(\([\w\-\.]+\))?(!)?: ([\w ])+([\s\S]*)'
+          pattern: '^(chore|docs|feat|fix|refactor|style|test|Merge){1}(\([\w\-\.]+\))?(!)?:? ([\w ])+([\s\S]*)'
           flags: "gm"
           excludeDescription: "true"
           excludeTitle: "true"

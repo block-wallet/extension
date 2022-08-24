@@ -302,7 +302,7 @@ export default class BridgeController extends ExchangeController<
                 const knownChain = getChainListItem(chain.id);
                 return {
                     ...chain,
-                    logoURI: knownChain ? knownChain.logo : chain.logo,
+                    logo: knownChain?.logo ? knownChain.logo : chain.logo,
                 };
             });
             this.UIStore.updateState({ availableBridgeChains });

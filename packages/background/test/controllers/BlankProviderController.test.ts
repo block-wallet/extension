@@ -3,7 +3,7 @@ import BlankProviderController, {
     BlankProviderEvents,
 } from '@block-wallet/background/controllers/BlankProviderController';
 import KeyringControllerDerivated from '@block-wallet/background/controllers/KeyringControllerDerivated';
-import MockDepositController from '../mocks/mock-deposit-controller';
+import { MockPrivacyController } from '../mocks/mock-deposit-controller';
 import NetworkController from '../../src/controllers/NetworkController';
 import PermissionsController from '@block-wallet/background/controllers/PermissionsController';
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
@@ -38,6 +38,7 @@ import BlockFetchController from '@block-wallet/background/controllers/block-upd
 import { ExternalEventSubscription } from '@block-wallet/background/utils/types/communication';
 import * as random from '@block-wallet/background/utils/randomBytes';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
+import { PrivacyAsyncController } from '@block-wallet/background/controllers/blank-deposit/PrivacyAsyncController';
 
 const UNI_ORIGIN = 'https://app.uniswap.org';
 const TX_HASH =
@@ -150,7 +151,7 @@ describe('Blank Provider Controller', function () {
     let transactionWatcherController: TransactionWatcherController;
 
     beforeEach(function () {
-        const depositController = MockDepositController();
+        const privacyController = MockPrivacyController();
 
         // Instantiate objects
         networkController = getNetworkControllerInstance();
@@ -188,8 +189,8 @@ describe('Blank Provider Controller', function () {
                 idleTimeout: defaultIdleTimeout,
             },
             mockKeyringController,
-            depositController,
-            transactionController
+            transactionController,
+            privacyController as unknown as PrivacyAsyncController
         );
 
         gasPricesController = new GasPricesController(

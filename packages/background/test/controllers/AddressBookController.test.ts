@@ -28,6 +28,8 @@ import { TornadoEventsService } from '@block-wallet/background/controllers/blank
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
+import { PrivacyAsyncController } from '@block-wallet/background/controllers/blank-deposit/PrivacyAsyncController';
+import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
 
 describe('Address book controller implementation', function () {
     const accounts = {
@@ -49,7 +51,7 @@ describe('Address book controller implementation', function () {
     let preferencesController: PreferencesController;
     let permissionsController: PermissionsController;
     let activityListController: ActivityListController;
-    let blankDepositController: BlankDepositController;
+    let privacyDepositController: PrivacyAsyncController;
     let tokenOperationsController: TokenOperationsController;
     let tokenController: TokenController;
     let blockFetchController: BlockFetchController;
@@ -118,18 +120,19 @@ describe('Address book controller implementation', function () {
             blockUpdatesController,
         });
 
-        blankDepositController = new BlankDepositController({
+        privacyDepositController = new PrivacyAsyncController({
             networkController: networkController,
             preferencesController: preferencesController,
             transactionController: transactionController,
             tokenOperationsController: tokenOperationsController,
             tokenController: tokenController,
             gasPricesController: gasPricesController,
-            initialState: {
+            state: {
                 pendingWithdrawals: {} as PendingWithdrawalsStore,
                 vaultState: { vault: '' },
             },
-            tornadoEventsService,
+            blockUpdatesController,
+            keyringController: mockKeyringController,
         });
         transactionWatcherController = new TransactionWatcherController(
             networkController,
@@ -143,7 +146,7 @@ describe('Address book controller implementation', function () {
         );
         activityListController = new ActivityListController(
             transactionController,
-            blankDepositController,
+            privacyDepositController,
             preferencesController,
             networkController,
             transactionWatcherController

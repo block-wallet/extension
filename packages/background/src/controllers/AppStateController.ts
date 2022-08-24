@@ -1,5 +1,5 @@
 import { BaseController } from '../infrastructure/BaseController';
-import { BlankDepositController } from './blank-deposit/BlankDepositController';
+import { PrivacyAsyncController } from './blank-deposit/PrivacyAsyncController';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 import TransactionController from './transactions/TransactionController';
 
@@ -18,13 +18,12 @@ export default class AppStateController extends BaseController<
     AppStateControllerMemState
 > {
     private _timer: ReturnType<typeof setTimeout> | null;
-    private isLoadingDeposits = false;
 
     constructor(
         initState: AppStateControllerState,
         private readonly _keyringController: KeyringControllerDerivated,
-        private readonly _blankDepositController: BlankDepositController,
-        private readonly _transactionController: TransactionController
+        private readonly _transactionController: TransactionController,
+        private readonly _privacyAsyncController: PrivacyAsyncController
     ) {
         super(initState, {
             isAppUnlocked: false,
@@ -33,18 +32,6 @@ export default class AppStateController extends BaseController<
         });
 
         this._timer = null;
-
-        this._blankDepositController.UIStore.subscribe(
-            ({ isImportingDeposits }) => {
-                if (this.isLoadingDeposits && !isImportingDeposits) {
-                    this._resetTimer();
-                }
-                this.isLoadingDeposits = isImportingDeposits;
-            }
-        );
-
-        this.isLoadingDeposits =
-            this._blankDepositController.UIStore.getState().isImportingDeposits;
 
         this._resetTimer();
     }
@@ -92,17 +79,12 @@ export default class AppStateController extends BaseController<
      * Locks the vault and the app
      */
     public lock = async (lockedByTimeout = false): Promise<void> => {
-        // Do not lock the app if we're loading the deposits
-        if (this.isLoadingDeposits) {
-            return;
-        }
-
         try {
             // Lock vault
             await this._keyringController.setLocked();
 
             // Lock deposits
-            await this._blankDepositController.lock();
+            await this._privacyAsyncController.lock();
 
             // Update controller state
             this.UIStore.updateState({ isAppUnlocked: false, lockedByTimeout });
@@ -123,14 +105,6 @@ export default class AppStateController extends BaseController<
 
             // Set Ledger transport method to WebHID
             await this._keyringController.setLedgerWebHIDTransportType();
-
-            // Get seed phrase to unlock the blank deposit controller
-            const seedPhrase = await this._keyringController.verifySeedPhrase(
-                password
-            );
-
-            // Unlock blank deposits vault
-            await this._blankDepositController.unlock(password, seedPhrase);
 
             // Update controller state
             this.UIStore.updateState({

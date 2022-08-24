@@ -1,5 +1,3 @@
-import TornadoConfig from './tornado/config/config';
-
 /**
  * List of known supported networks
  */
@@ -188,25 +186,6 @@ export const CurrenciesByChain: {
         KnownCurrencies.USDT,
         KnownCurrencies.WBTC,
     ],
-};
-
-/**
- * getTokenDecimals
- *
- * Obtains the decimal numbers of a pair token
- *
- * @param chainId The note chainId
- * @param pair The note pair
- * @returns The pair token decimals
- */
-export const getTornadoTokenDecimals = (
-    chainId: number,
-    pair: CurrencyAmountPair
-): number => {
-    const currencies = TornadoConfig.deployments[
-        `netId${chainId}` as keyof typeof TornadoConfig.deployments
-    ].currencies as unknown as { [c in KnownCurrencies]: { decimals: number } };
-    return currencies[pair.currency.toLowerCase() as KnownCurrencies].decimals;
 };
 
 /**

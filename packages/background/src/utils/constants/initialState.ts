@@ -12,7 +12,7 @@ import {
 } from '../../controllers/AppStateController';
 import { OnboardingControllerState } from '../../controllers/OnboardingController';
 import { PreferencesControllerState } from '../../controllers/PreferencesController';
-import {
+import type {
     BlankDepositControllerStoreState,
     BlankDepositControllerUIStoreState,
 } from '../../controllers/blank-deposit/BlankDepositController';

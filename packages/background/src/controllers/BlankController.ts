@@ -151,7 +151,6 @@ import {
     AccountType,
     DeviceAccountInfo,
 } from './AccountTrackerController';
-import { BlankDepositController } from './blank-deposit/BlankDepositController';
 
 import { GasPricesController } from './GasPricesController';
 import {
@@ -195,9 +194,7 @@ import {
 } from '../utils/window';
 import log from 'loglevel';
 import BlockUpdatesController from './block-updates/BlockUpdatesController';
-import { TornadoEventsService } from './blank-deposit/tornado/TornadoEventsService';
 
-import tornadoConfig from './blank-deposit/tornado/config/config';
 import ComposedStore from '../infrastructure/stores/ComposedStore';
 import BlockFetchController from './block-updates/BlockFetchController';
 import {
@@ -216,6 +213,7 @@ import { Network } from '../utils/constants/networks';
 
 import { generateOnDemandReleaseNotes } from '../utils/userPreferences';
 import { TransactionWatcherController } from './TransactionWatcherController';
+import { PrivacyAsyncController } from './blank-deposit/PrivacyAsyncController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -239,8 +237,7 @@ export default class BlankController extends EventEmitter {
     private readonly accountTrackerController: AccountTrackerController;
     private readonly preferencesController: PreferencesController;
     private readonly transactionController: TransactionController;
-    private readonly tornadoEventsService: TornadoEventsService;
-    private readonly blankDepositController: BlankDepositController;
+    private readonly privacyController: PrivacyAsyncController;
     private readonly exchangeRatesController: ExchangeRatesController;
     private readonly gasPricesController: GasPricesController;
     private readonly blankStateStore: BlankStorageStore;
@@ -359,27 +356,23 @@ export default class BlankController extends EventEmitter {
             this.keyringController.signTransaction.bind(this.keyringController)
         );
 
-        this.tornadoEventsService = new TornadoEventsService({
-            ...tornadoConfig.tornadoEventsService,
-            blockUpdatesController: this.blockUpdatesController,
-        });
-
-        this.blankDepositController = new BlankDepositController({
+        this.privacyController = new PrivacyAsyncController({
             networkController: this.networkController,
             preferencesController: this.preferencesController,
             transactionController: this.transactionController,
             tokenOperationsController: this.tokenOperationsController,
             tokenController: this.tokenController,
             gasPricesController: this.gasPricesController,
-            tornadoEventsService: this.tornadoEventsService,
-            initialState: initState.BlankDepositController,
+            blockUpdatesController: this.blockUpdatesController,
+            keyringController: this.keyringController,
+            state: initState.BlankDepositController,
         });
 
         this.appStateController = new AppStateController(
             initState.AppStateController,
             this.keyringController,
-            this.blankDepositController,
-            this.transactionController
+            this.transactionController,
+            this.privacyController
         );
 
         this.transactionWatcherController = new TransactionWatcherController(
@@ -404,7 +397,7 @@ export default class BlankController extends EventEmitter {
 
         this.activityListController = new ActivityListController(
             this.transactionController,
-            this.blankDepositController,
+            this.privacyController,
             this.preferencesController,
             this.networkController,
             this.transactionWatcherController
@@ -445,7 +438,7 @@ export default class BlankController extends EventEmitter {
             TransactionController: this.transactionController.store,
             ExchangeRatesController: this.exchangeRatesController.store,
             GasPricesController: this.gasPricesController.store,
-            BlankDepositController: this.blankDepositController.store,
+            BlankDepositController: this.privacyController.store,
             TokenController: this.tokenController.store,
             PermissionsController: this.permissionsController.store,
             AddressBookController: this.addressBookController.store,
@@ -465,7 +458,7 @@ export default class BlankController extends EventEmitter {
             TransactionController: this.transactionController.UIStore,
             ExchangeRatesController: this.exchangeRatesController.store,
             GasPricesController: this.gasPricesController.store,
-            BlankDepositController: this.blankDepositController.UIStore,
+            BlankDepositController: this.privacyController.UIStore,
             TokenController: this.tokenController.store,
             ActivityListController: this.activityListController.store,
             PermissionsController: this.permissionsController.store,
@@ -517,11 +510,6 @@ export default class BlankController extends EventEmitter {
         // Check if app is unlocked
         const isAppUnlocked =
             this.appStateController.UIStore.getState().isAppUnlocked;
-
-        // Start/stop controllers
-        if (activeSubscriptions > 0 && isAppUnlocked) {
-            this.blankDepositController.initialize();
-        }
 
         this.blockUpdatesController.setActiveSubscriptions(
             isAppUnlocked,
@@ -1127,7 +1115,9 @@ export default class BlankController extends EventEmitter {
     public async updateDepositsTree({
         pair,
     }: RequestBlankDepositsTreeUpdate): Promise<void> {
-        return this.blankDepositController.updateDepositsTree(pair);
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        return blankDepositController.updateDepositsTree(pair);
     }
 
     /**
@@ -1139,7 +1129,9 @@ export default class BlankController extends EventEmitter {
     public async getSubsequentDepositsCount({
         pair,
     }: RequestGetSubsequentDepositsCount): Promise<number | undefined> {
-        return this.blankDepositController.getPairSubsequentDepositsCount(pair);
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        return blankDepositController.getPairSubsequentDepositsCount(pair);
     }
 
     /**
@@ -1151,7 +1143,9 @@ export default class BlankController extends EventEmitter {
     public async getAnonimitySet({
         pair,
     }: RequestGetAnonimitySet): Promise<number> {
-        return this.blankDepositController.getPairAnonimitySet(pair);
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        return blankDepositController.getPairAnonimitySet(pair);
     }
 
     /**
@@ -1163,7 +1157,9 @@ export default class BlankController extends EventEmitter {
     public async getLatestDepositDate({
         pair,
     }: RequestBlankGetLatestDepositDate): Promise<Date> {
-        return this.blankDepositController.getLatestDepositDate(pair);
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        return blankDepositController.getLatestDepositDate(pair);
     }
 
     /**
@@ -1478,21 +1474,27 @@ export default class BlankController extends EventEmitter {
      * It forces an asynchronous deposits reconstruction
      * The vault must be initialized in order to do so
      */
-    private forceDepositsImport() {
-        this.blankDepositController.importDeposits();
+    private async forceDepositsImport() {
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        blankDepositController.importDeposits();
     }
 
     /**
      * It returns the withdrawal operation gas cost
      */
     private async getWithdrawalFees({ pair }: RequestBlankWithdrawalFees) {
-        return this.blankDepositController.getWithdrawalFees(pair);
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        return blankDepositController.getWithdrawalFees(pair);
     }
     /**
      * It checks for possible spent notes and updates their internal state
      */
     private async updateNotesSpentState() {
-        return this.blankDepositController.updateNotesSpentState();
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        return blankDepositController.updateNotesSpentState();
     }
 
     /**
@@ -1501,7 +1503,9 @@ export default class BlankController extends EventEmitter {
     private async getDepositNoteString(
         request: RequestBlankGetDepositNoteString
     ) {
-        return this.blankDepositController.getDepositNoteString(request.id);
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        return blankDepositController.getDepositNoteString(request.id);
     }
 
     /**
@@ -1509,7 +1513,9 @@ export default class BlankController extends EventEmitter {
      * with their notes string removed
      */
     private async getUnspentDeposits() {
-        return this.blankDepositController.getDeposits();
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        return blankDepositController.getDeposits();
     }
 
     /**
@@ -1518,7 +1524,9 @@ export default class BlankController extends EventEmitter {
     private async getCurrencyDepositsCount(
         request: RequestBlankCurrencyDepositsCount
     ) {
-        return this.blankDepositController.getCurrencyDepositsCount(
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        return blankDepositController.getCurrencyDepositsCount(
             request.currency
         );
     }
@@ -1527,15 +1535,17 @@ export default class BlankController extends EventEmitter {
      * It returns the currency/amount pair unspent deposits count
      */
     private async getPairDepositsCount(request: RequestBlankPairDepositsCount) {
-        return this.blankDepositController.getUnspentDepositsCount(
-            request.pair
-        );
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        return blankDepositController.getUnspentDepositsCount(request.pair);
     }
 
     private async getTornadoInstanceAllowance({
         pair,
     }: RequestBlankGetInstanceTokenAllowance): Promise<BigNumber> {
-        return this.blankDepositController.getInstanceTokenAllowance(pair);
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        return blankDepositController.getInstanceTokenAllowance(pair);
     }
 
     /**
@@ -1612,10 +1622,10 @@ export default class BlankController extends EventEmitter {
      * It returns information of a deposit for compliance purposes
      */
     private async getComplianceInformation(request: RequestBlankCompliance) {
-        const deposit = await this.blankDepositController.getDeposit(
-            request.id
-        );
-        return this.blankDepositController.getComplianceInformation(deposit);
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+        const deposit = await blankDepositController.getDeposit(request.id);
+        return blankDepositController.getComplianceInformation(deposit);
     }
 
     /**
@@ -1627,8 +1637,10 @@ export default class BlankController extends EventEmitter {
         pair,
         withdrawAddress,
     }: RequestBlankHasDepositedFromAddress) {
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
         let depositsMadeFromWithdrawalAddress = (
-            await this.blankDepositController.getDeposits(false)
+            await blankDepositController.getDeposits(false)
         ).filter((d) => d.depositAddress === withdrawAddress);
 
         // If pair was provided filter for that as well
@@ -1654,10 +1666,10 @@ export default class BlankController extends EventEmitter {
         pair,
         accountAddressOrIndex,
     }: RequestBlankWithdraw) {
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
         // Pick a deposit randomly
-        const deposit = await this.blankDepositController.getDepositToWithdraw(
-            pair
-        );
+        const deposit = await blankDepositController.getDepositToWithdraw(pair);
 
         let address = undefined;
         if (typeof accountAddressOrIndex === 'string') {
@@ -1677,7 +1689,7 @@ export default class BlankController extends EventEmitter {
 
         // Trigger withdraw
         try {
-            const hash = await this.blankDepositController.withdraw(
+            const hash = await blankDepositController.withdraw(
                 deposit,
                 address
             );
@@ -1707,7 +1719,9 @@ export default class BlankController extends EventEmitter {
         customNonce,
     }: RequestBlankDeposit) {
         try {
-            const hash = await this.blankDepositController.deposit(
+            const blankDepositController =
+                await this.privacyController.getBlankDepositController();
+            const hash = await blankDepositController.deposit(
                 pair,
                 feeData,
                 customNonce
@@ -1730,14 +1744,16 @@ export default class BlankController extends EventEmitter {
     /**
      * Submits an approval transaction to setup asset allowance
      */
-    private blankDepositAllowance({
+    private async blankDepositAllowance({
         allowance,
         customNonce,
         feeData,
         pair,
     }: RequestDepositAllowance) {
         try {
-            return this.blankDepositController.depositAllowance(
+            const blankDepositController =
+                await this.privacyController.getBlankDepositController();
+            return blankDepositController.depositAllowance(
                 BigNumber.from(allowance),
                 feeData,
                 pair,
@@ -1761,7 +1777,9 @@ export default class BlankController extends EventEmitter {
         currencyAmountPair,
     }: RequestCalculateDepositTransactionGasLimit): Promise<TransactionGasEstimation> {
         try {
-            return this.blankDepositController.calculateDepositTransactionGasLimit(
+            const blankDepositController =
+                await this.privacyController.getBlankDepositController();
+            return blankDepositController.calculateDepositTransactionGasLimit(
                 currencyAmountPair
             );
         } catch (e: any) {
@@ -2321,6 +2339,9 @@ export default class BlankController extends EventEmitter {
         spender,
         amount,
     }: RequestCalculateApproveTransactionGasLimit): Promise<TransactionGasEstimation> {
+        const blankDepositController =
+            await this.privacyController.getBlankDepositController();
+
         const approveTransaction = new ApproveTransaction({
             transactionController: this.transactionController,
             preferencesController: this.preferencesController,
@@ -2329,7 +2350,7 @@ export default class BlankController extends EventEmitter {
 
         spender =
             spender === 'deposit'
-                ? this.blankDepositController.proxyContractAddress
+                ? blankDepositController.proxyContractAddress
                 : spender;
 
         return approveTransaction.calculateTransactionGasLimit({
@@ -2483,8 +2504,8 @@ export default class BlankController extends EventEmitter {
         // Create keyring
         await this.keyringController.createNewVaultAndKeychain(password);
 
-        // Initialize vault
-        await this.blankDepositController.initializeVault(password);
+        // Initialize vault -- Commented due to feature deprecation
+        // await this.blankDepositController.initializeVault(password);
 
         // Get account
         const account = (await this.keyringController.getAccounts())[0];
@@ -2549,17 +2570,19 @@ export default class BlankController extends EventEmitter {
         );
 
         if (!reImport) {
-            // Initialize deposit vault
-            await this.blankDepositController.initializeVault(password);
+            // Initialize deposit vault -- Commented due to feature deprecation
+            // await this.blankDepositController.initializeVault(password);
 
             // Show the welcome to the wallet message
             this.preferencesController.setShowWelcomeMessage(true);
 
             // Show the default wallet preferences
             this.preferencesController.setShowDefaultWalletPreferences(true);
-        } else {
-            await this.blankDepositController.reinitializeVault(password);
         }
+        // Commented due to feature deprecation
+        // else {
+        //     await this.blankDepositController.reinitializeVault(password);
+        // }
 
         // Set Seed Phrase Backed up
         this.onboardingController.isSeedPhraseBackedUp = true;
@@ -2599,7 +2622,8 @@ export default class BlankController extends EventEmitter {
         }
         await this.networkController.setNetwork(network);
 
-        await this.blankDepositController.initialize();
+        // Commented due to feature deprecation
+        // await this.blankDepositController.initialize();
 
         // reconstruct past erc20 transfers
         this.transactionWatcherController.fetchTransactions();

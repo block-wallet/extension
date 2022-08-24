@@ -1,3 +1,4 @@
+import { PrivacyAsyncController } from '../../src/controllers/blank-deposit/PrivacyAsyncController';
 import sinon from 'sinon';
 import { BlankDepositController } from '../../src/controllers/blank-deposit/BlankDepositController';
 
@@ -22,6 +23,16 @@ const MockDepositController = () => {
     }));
 
     return mockedDepositController as unknown as StubbedClass<BlankDepositController>;
+};
+
+export const MockPrivacyController = () => {
+    const mockedPrivacyController = sinon.stub(
+        PrivacyAsyncController.prototype
+    );
+    mockedPrivacyController.getBlankDepositController.callsFake(() =>
+        Promise.resolve(MockDepositController())
+    );
+    return mockedPrivacyController;
 };
 
 export default MockDepositController;

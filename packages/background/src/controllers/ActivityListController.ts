@@ -2,11 +2,8 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { parseUnits } from 'ethers/lib/utils';
 import { BaseController } from '../infrastructure/BaseController';
 import { Network } from '../utils/constants/networks';
-import {
-    BlankDepositController,
-    PendingWithdrawal,
-    PendingWithdrawalStatus,
-} from './blank-deposit/BlankDepositController';
+import type { PendingWithdrawal } from './blank-deposit/BlankDepositController';
+import { PrivacyAsyncController } from './blank-deposit/PrivacyAsyncController';
 import NetworkController from './NetworkController';
 import { PreferencesController } from './PreferencesController';
 import { TransactionController } from './transactions/TransactionController';
@@ -30,10 +27,21 @@ export interface IActivityListState {
     };
 }
 
+// Copy of blank-deposit/BlankDepositController
+// PendingWithdrawalStatus for chunking purposes.
+enum PendingWithdrawalStatus {
+    UNSUBMITTED = 'UNSUBMITTED',
+    PENDING = 'PENDING',
+    CONFIRMED = 'CONFIRMED',
+    FAILED = 'FAILED',
+    REJECTED = 'REJECTED',
+    MINED = 'MINED',
+}
+
 export class ActivityListController extends BaseController<IActivityListState> {
     constructor(
         private readonly _transactionsController: TransactionController,
-        private readonly _blankDepositsController: BlankDepositController,
+        private readonly _blankDepositsController: PrivacyAsyncController,
         private readonly _preferencesController: PreferencesController,
         private readonly _networkController: NetworkController,
         private readonly _transactionWatcherController: TransactionWatcherController

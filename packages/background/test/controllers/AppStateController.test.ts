@@ -1,7 +1,7 @@
 import AppStateController from '../../src/controllers/AppStateController';
 import { mockKeyringController } from '../mocks/mock-keyring-controller';
 import { expect } from 'chai';
-import MockDepositController from '../mocks/mock-deposit-controller';
+import { MockPrivacyController } from '../mocks/mock-deposit-controller';
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
 import { TypedTransaction } from '@ethereumjs/tx';
 import { getNetworkControllerInstance } from 'test/mocks/mock-network-instance';
@@ -16,6 +16,7 @@ import {
     TokenControllerProps,
 } from '@block-wallet/background/controllers/erc-20/TokenController';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { PrivacyAsyncController } from '@block-wallet/background/controllers/blank-deposit/PrivacyAsyncController';
 
 describe('AppState Controller', function () {
     let appStateController: AppStateController;
@@ -24,7 +25,7 @@ describe('AppState Controller', function () {
     const initialLastActiveTime = new Date().getTime();
 
     this.beforeAll(function () {
-        const depositController = MockDepositController();
+        const privacyController = MockPrivacyController();
         const networkController = getNetworkControllerInstance();
         const preferencesController = mockPreferencesController;
         const permissionsController = mockedPermissionsController;
@@ -67,7 +68,6 @@ describe('AppState Controller', function () {
                 idleTimeout: defaultIdleTimeout,
             },
             mockKeyringController,
-            depositController,
             new TransactionController(
                 networkController,
                 preferencesController,
@@ -91,7 +91,8 @@ describe('AppState Controller', function () {
                     return Promise.resolve(ethTx.sign(privateKey));
                 },
                 { txHistoryLimit: 40 }
-            )
+            ),
+            privacyController as unknown as PrivacyAsyncController
         );
     });
 

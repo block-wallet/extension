@@ -21,6 +21,7 @@ import {
 import { TornadoNotesService } from './TornadoNotesService';
 import {
     currencyAmountPairToMapKey,
+    getTornadoTokenDecimals,
     isNativeCurrency,
     parseRelayerError,
 } from './utils';
@@ -37,7 +38,6 @@ import {
     CurrencyAmountArray,
     CurrencyAmountPair,
     DepositStatus,
-    getTornadoTokenDecimals,
     KnownCurrencies,
     ERC20KnownCurrencies,
     DEFAULT_TORNADO_CONFIRMATION,

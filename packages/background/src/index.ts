@@ -149,6 +149,8 @@ const initBlockWallet = async () => {
             sendResponse({ isBlankInitialized: true });
         } else if (request.message === CONTENT.SHOULD_INJECT) {
             sendResponse({ shouldInject: blankController.shouldInject() });
+        } else if (request.message === CONTENT.SW_KEEP_ALIVE) {
+            sendResponse();
         }
     });
 

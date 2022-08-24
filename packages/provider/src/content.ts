@@ -1,11 +1,23 @@
 import {
     CONTENT,
-    EXTERNAL,
     Origin,
     WindowTransportRequestMessage,
 } from '@block-wallet/background/utils/types/communication';
 import log from 'loglevel';
 import { checkScriptLoad } from './utils/site';
+
+const SW_KEEP_ALIVE_INTERVAL = 10;
+setInterval(() => {
+    chrome.runtime.sendMessage({ message: CONTENT.SW_KEEP_ALIVE }, () => {
+        const err = chrome.runtime.lastError;
+        if (err) {
+            log.info('Error keeping alive:', err.message || err);
+        }
+    });
+}, SW_KEEP_ALIVE_INTERVAL);
+
+// Setup port connection
+const port = chrome.runtime.connect({ name: Origin.PROVIDER });
 
 // Check background settings for script load
 chrome.runtime.sendMessage(
@@ -32,9 +44,6 @@ chrome.runtime.sendMessage(
         }
     }
 );
-
-// Setup port connection
-const port = chrome.runtime.connect({ name: Origin.PROVIDER });
 
 // Send any messages from the extension back to the page
 port.onMessage.addListener((message): void => {

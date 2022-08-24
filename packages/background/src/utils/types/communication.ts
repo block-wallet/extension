@@ -130,6 +130,7 @@ export enum EXTERNAL {
 
 export enum CONTENT {
     SHOULD_INJECT = 'SHOULD_INJECT',
+    SW_KEEP_ALIVE = 'SW_KEEP_ALIVE',
 }
 
 enum NETWORK {

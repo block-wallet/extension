@@ -25,7 +25,7 @@ const NetworkDisplay: FunctionComponent<NetworkDisplayProps> = ({
             )}
         >
             <NetworkLogo
-                logoURI={network.logoURI}
+                logo={network.logo}
                 name={network.name}
                 bigLogo={bigLogo}
             />

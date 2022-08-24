@@ -96,7 +96,10 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         })
     const selectedTokenBalance = useTokenBalance(bridgeDataState.token)
 
-    const networkLabel = availableNetworks[selectedNetwork.toUpperCase()]
+    const currentNetwork = availableNetworks[selectedNetwork.toUpperCase()]
+    const filteredAvailableNetworks = availableBridgeChains.filter(
+        (chain) => chain.id !== currentNetwork.chainId
+    )
     const {
         token: selectedToken,
         network: selectedToNetwork,
@@ -224,9 +227,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         selectedToken!.address
                     ),
                     toChainId: selectedToNetwork!.id,
-                    toTokenAddress: checkForBridgeNativeAsset(
-                        selectedToken!.address
-                    ),
                 })
 
                 setCurrentBridgeRoute(availableRoutes.routes[0])
@@ -290,7 +290,10 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     }
                 >
                     <div className="flex grow justify-end pr-0.5">
-                        <NetworkDisplayBadge network={networkLabel} truncate />
+                        <NetworkDisplayBadge
+                            network={currentNetwork}
+                            truncate
+                        />
                     </div>
                 </PopupHeader>
             }
@@ -319,8 +322,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     )}
                 >
                     {/* Asset */}
-                    <div className="flex flex-col space w-1/2 pr-1.5">
-                        <p className="mb-2 text-sm text-gray-600">
+                    <div className="flex flex-col w-1/2 pr-1.5">
+                        <p className="text-sm text-gray-600 pb-2">
                             Bridge Asset
                         </p>
                         <AssetSelection
@@ -437,11 +440,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Network selector */}
-                <p className="text-sm text-gray-600 pb-3">To Network</p>
+                <p className="text-sm text-gray-600 pb-2">To Network</p>
                 <NetworkSelector
-                    topMargin={50}
+                    topMargin={60}
                     bottomMargin={200}
-                    networkList={availableBridgeChains}
+                    networkList={filteredAvailableNetworks}
                     selectedNetwork={selectedToNetwork}
                     onNetworkChange={(network) => {
                         setCurrentBridgeRoute(undefined)

@@ -4,12 +4,12 @@ import { classnames } from "../../styles"
 
 interface NetworkLogoProps {
     name: string
-    logoURI?: string
+    logo?: string
     bigLogo?: boolean
 }
 
 const NetworkLogo: FunctionComponent<NetworkLogoProps> = ({
-    logoURI = unknownTokenIcon,
+    logo = unknownTokenIcon,
     name,
     bigLogo = false,
 }) => {
@@ -22,7 +22,7 @@ const NetworkLogo: FunctionComponent<NetworkLogoProps> = ({
         >
             <img
                 className="rounded-full"
-                src={logoURI}
+                src={logo}
                 alt={name}
                 onError={(e) => {
                     ;(e.target as any).onerror = null

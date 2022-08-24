@@ -30,7 +30,7 @@ const DropdownNetworkDisplay: FunctionComponent<
             onClick={onClick}
         >
             <NetworkLogo
-                logoURI={network.logoURI}
+                logo={network.logo}
                 name={network.name}
                 bigLogo={true}
             />

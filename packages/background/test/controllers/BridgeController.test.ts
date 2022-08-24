@@ -32,6 +32,7 @@ import { IToken } from '@block-wallet/background/controllers/erc-20/Token';
 import { ContractSignatureParser } from '@block-wallet/background/controllers/transactions/ContractSignatureParser';
 import { expectThrowsAsync } from 'test/utils/expectThrowsAsync.test';
 import { BigNumber } from 'ethers';
+import { getChainListItem } from '@block-wallet/background/utils/chainlist';
 
 const TOKEN_A_GOERLI: IToken = {
     address: 'token_a_g',
@@ -54,7 +55,7 @@ const TOKEN_A_MAINNET = {
 const SUPPORTED_CHAINS: IChain[] = Object.values(INITIAL_NETWORKS).map(
     (net) => ({
         id: net.chainId,
-        logo: '',
+        logo: getChainListItem(net.chainId)?.logo || '',
         name: net.name,
         test: net.test,
     })
@@ -306,25 +307,13 @@ describe.only('Bridge Controller', () => {
                 expect(routes[0].toTokens[0].address).to.be.equal('token_a_m');
             });
         });
-        describe.only('Quotes and Allowance', () => {
-            before(() => {
-                //mock errored query
-                sandbox
-                    .stub(BridgeAPI.LIFI_BRIDGE, 'getQuote')
-                    .withArgs({
-                        fromChainId: GOERLI_CHAIN_ID,
-                        toChainId: 1,
-                        fromTokenAddress: 'token_a_g',
-                        toTokenAddress: 'random_token',
-                        slippage: 0.01,
-                        fromAddress:
-                            '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
-                        fromAmount: '10000',
-                    })
-                    .throwsException(new QuoteNotFoundError('Quote not found'));
+        describe('Quotes and Allowance', () => {
+            const quoteSandbox = sinon.createSandbox();
 
+            beforeEach(() => {
+                quoteSandbox.restore();
                 //mock query ok
-                sandbox
+                quoteSandbox
                     .stub(BridgeAPI.LIFI_BRIDGE, 'getQuote')
                     .withArgs({
                         fromChainId: GOERLI_CHAIN_ID,
@@ -375,7 +364,7 @@ describe.only('Bridge Controller', () => {
                         })
                     );
 
-                sandbox
+                quoteSandbox
                     .stub(
                         ContractSignatureParser.prototype,
                         'getMethodSignature'
@@ -422,6 +411,23 @@ describe.only('Bridge Controller', () => {
             });
             describe('Quotes without allowance check', () => {
                 it('Should return QuoteNotFound error if there is no quote', async () => {
+                    quoteSandbox.restore();
+                    //mock errored query
+                    quoteSandbox
+                        .stub(BridgeAPI.LIFI_BRIDGE, 'getQuote')
+                        .withArgs({
+                            fromChainId: GOERLI_CHAIN_ID,
+                            toChainId: 1,
+                            fromTokenAddress: 'token_a_g',
+                            toTokenAddress: 'random_token',
+                            slippage: 0.01,
+                            fromAddress:
+                                '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                            fromAmount: '10000',
+                        })
+                        .throwsException(
+                            new QuoteNotFoundError('Quote not found')
+                        );
                     const err = await expectThrowsAsync(async () => {
                         await bridgeController.getQuote(
                             BridgeImplementation.LIFI_BRIDGE,
@@ -440,6 +446,7 @@ describe.only('Bridge Controller', () => {
                     expect(err).to.equal('Quote not found');
                 });
                 it('Should return a valid quote without checking allowance', async () => {
+                    sandbox.restore();
                     const quoteResponse = await bridgeController.getQuote(
                         BridgeImplementation.LIFI_BRIDGE,
                         {
@@ -474,12 +481,15 @@ describe.only('Bridge Controller', () => {
             });
             describe('Check Allowance', () => {
                 it('Should fail to check asset allowance', async () => {
-                    sinon.stub(tokenOperationsController, 'allowance').returns(
-                        new Promise<BigNumber>((resolve, reject) => {
-                            // 1 BLANK
-                            reject('Error');
-                        })
-                    );
+                    sandbox.restore();
+                    sandbox
+                        .stub(tokenOperationsController, 'allowance')
+                        .returns(
+                            new Promise<BigNumber>((resolve, reject) => {
+                                // 1 BLANK
+                                reject('Error');
+                            })
+                        );
                     const err = await expectThrowsAsync(async () => {
                         await bridgeController.getQuote(
                             BridgeImplementation.LIFI_BRIDGE,
@@ -501,13 +511,15 @@ describe.only('Bridge Controller', () => {
                     expect(err).to.equal('Error checking asset allowance.');
                 });
                 it('Should return a insufficient allowance', async () => {
-                    sinon.restore();
-                    sinon.stub(tokenOperationsController, 'allowance').returns(
-                        new Promise<BigNumber>((resolve, reject) => {
-                            // 1 BLANK
-                            resolve(BigNumber.from('20'));
-                        })
-                    );
+                    sandbox.restore();
+                    sandbox
+                        .stub(tokenOperationsController, 'allowance')
+                        .returns(
+                            new Promise<BigNumber>((resolve, reject) => {
+                                // 1 BLANK
+                                resolve(BigNumber.from('20'));
+                            })
+                        );
                     const quoteResponse = await bridgeController.getQuote(
                         BridgeImplementation.LIFI_BRIDGE,
                         {
@@ -541,13 +553,15 @@ describe.only('Bridge Controller', () => {
                         .undefined;
                 });
                 it('Should return enough allowance', async () => {
-                    sinon.restore();
-                    sinon.stub(tokenOperationsController, 'allowance').returns(
-                        new Promise<BigNumber>((resolve, reject) => {
-                            // 1 BLANK
-                            resolve(BigNumber.from('10000000000000001'));
-                        })
-                    );
+                    sandbox.restore();
+                    sandbox
+                        .stub(tokenOperationsController, 'allowance')
+                        .returns(
+                            new Promise<BigNumber>((resolve, reject) => {
+                                // 1 BLANK
+                                resolve(BigNumber.from('10000000000000001'));
+                            })
+                        );
                     const quoteResponse = await bridgeController.getQuote(
                         BridgeImplementation.LIFI_BRIDGE,
                         {

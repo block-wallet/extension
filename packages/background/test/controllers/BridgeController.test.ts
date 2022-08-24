@@ -1,6 +1,8 @@
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
-import BridgeController from '@block-wallet/background/controllers/BridgeController';
+import BridgeController, {
+    BridgeAllowanceCheck,
+} from '@block-wallet/background/controllers/BridgeController';
 import {
     TokenController,
     TokenControllerProps,
@@ -20,12 +22,16 @@ import sinon, { SinonStub } from 'sinon';
 import BridgeAPI, {
     BridgeImplementation,
     IBridgeRoute,
+    QuoteNotFoundError,
 } from '@block-wallet/background/utils/bridgeApi';
 import { IChain } from '@block-wallet/background/utils/types/chain';
 import { expect } from 'chai';
 import { INITIAL_NETWORKS } from '@block-wallet/background/utils/constants/networks';
 import NETWORK_TOKENS_LIST from '@block-wallet/background/controllers/erc-20/TokenList';
 import { IToken } from '@block-wallet/background/controllers/erc-20/Token';
+import { ContractSignatureParser } from '@block-wallet/background/controllers/transactions/ContractSignatureParser';
+import { expectThrowsAsync } from 'test/utils/expectThrowsAsync.test';
+import { BigNumber } from 'ethers';
 
 const TOKEN_A_GOERLI: IToken = {
     address: 'token_a_g',
@@ -48,7 +54,7 @@ const TOKEN_A_MAINNET = {
 const SUPPORTED_CHAINS: IChain[] = Object.values(INITIAL_NETWORKS).map(
     (net) => ({
         id: net.chainId,
-        logoURI: '',
+        logo: '',
         name: net.name,
         test: net.test,
     })
@@ -65,7 +71,6 @@ const mockPromiseResponse = <T>(r: T): Promise<T> =>
 
 describe.only('Bridge Controller', () => {
     const sandbox = sinon.createSandbox();
-    let getChainsStub: SinonStub | null = null;
     const accounts = {
         goerli: [
             {
@@ -91,7 +96,7 @@ describe.only('Bridge Controller', () => {
 
     before(() => {
         //mock supported chains
-        getChainsStub = sandbox
+        sandbox
             .stub(BridgeAPI.LIFI_BRIDGE, 'getSupportedChains')
             .returns(mockPromiseResponse(SUPPORTED_CHAINS));
 
@@ -175,7 +180,7 @@ describe.only('Bridge Controller', () => {
                 const newChains = [
                     {
                         id: 2000,
-                        logoURI: '',
+                        logo: '',
                         name: 'chain_2000',
                         test: false,
                     },
@@ -247,7 +252,7 @@ describe.only('Bridge Controller', () => {
                 expect(supportedTokens).to.be.empty;
             });
         });
-        describe.only('Avaialable Routes', () => {
+        describe('Avaialable Routes', () => {
             afterEach(() => {
                 sandbox.restore();
             });
@@ -257,7 +262,6 @@ describe.only('Bridge Controller', () => {
                     .withArgs({
                         fromChainId: GOERLI_CHAIN_ID,
                         fromTokenAddress: 'token_a',
-                        allowedExchanges: [],
                     })
                     .returns(mockPromiseResponse([]));
                 const { routes } = await bridgeController.getAvailableRoutes(
@@ -274,7 +278,6 @@ describe.only('Bridge Controller', () => {
                     .withArgs({
                         fromChainId: GOERLI_CHAIN_ID,
                         fromTokenAddress: TOKEN_A_GOERLI.address,
-                        allowedExchanges: [],
                     })
                     .returns(
                         mockPromiseResponse<IBridgeRoute[]>([
@@ -303,5 +306,282 @@ describe.only('Bridge Controller', () => {
                 expect(routes[0].toTokens[0].address).to.be.equal('token_a_m');
             });
         });
+        describe.only('Quotes and Allowance', () => {
+            before(() => {
+                //mock errored query
+                sandbox
+                    .stub(BridgeAPI.LIFI_BRIDGE, 'getQuote')
+                    .withArgs({
+                        fromChainId: GOERLI_CHAIN_ID,
+                        toChainId: 1,
+                        fromTokenAddress: 'token_a_g',
+                        toTokenAddress: 'random_token',
+                        slippage: 0.01,
+                        fromAddress:
+                            '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                        fromAmount: '10000',
+                    })
+                    .throwsException(new QuoteNotFoundError('Quote not found'));
+
+                //mock query ok
+                sandbox
+                    .stub(BridgeAPI.LIFI_BRIDGE, 'getQuote')
+                    .withArgs({
+                        fromChainId: GOERLI_CHAIN_ID,
+                        toChainId: 1,
+                        fromTokenAddress:
+                            '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                        toTokenAddress:
+                            '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1',
+                        slippage: 0.01,
+                        fromAddress:
+                            '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                        fromAmount: '10000000000000000',
+                    })
+                    .returns(
+                        mockPromiseResponse({
+                            fromAmount: '10000000000000000',
+                            fromChainId: GOERLI_CHAIN_ID,
+                            toChainId: 1,
+                            fromToken: {
+                                address:
+                                    '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                                decimals: 18,
+                                logo: 'logo1',
+                                name: 'eth',
+                                symbol: 'GETH',
+                                type: '',
+                            },
+                            toAmount: '10000000000000000',
+                            spender: 'spender_1_2_3',
+                            toToken: {
+                                address:
+                                    '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1',
+                                decimals: 18,
+                                logo: 'logo2',
+                                name: 'eth',
+                                symbol: 'ETH',
+                                type: '',
+                            },
+                            transactionRequest: {
+                                chainId: GOERLI_CHAIN_ID,
+                                data: '123',
+                                from: '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                                to: '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                                gasLimit: '200',
+                                gasPrice: '200',
+                                value: '1',
+                            },
+                        })
+                    );
+
+                sandbox
+                    .stub(
+                        ContractSignatureParser.prototype,
+                        'getMethodSignature'
+                    )
+                    .returns(
+                        Promise.resolve({
+                            name: 'Bridge',
+                            args: [
+                                {
+                                    name: 'caller',
+                                    type: 'address',
+                                    value: '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                                },
+                                {
+                                    name: 'desc',
+                                    type: 'tuple',
+                                    value: [
+                                        '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                                        '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                                        '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1',
+                                        {
+                                            type: 'BigNumber',
+                                            hex: '0x2386f26fc10000',
+                                        },
+                                        {
+                                            type: 'BigNumber',
+                                            hex: '0x0b9b43e8fe7b3b9fa9',
+                                        },
+                                        {
+                                            type: 'BigNumber',
+                                            hex: '0x00',
+                                        },
+                                        '0x',
+                                    ],
+                                },
+                                {
+                                    name: 'data',
+                                    type: 'bytes',
+                                    value: '0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000180000000000000000000000000000000000000000000000000000000000000022000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000064d1660f99000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000000000000000000000003110a855333bfb922aecb1b3542ba2fde28d204f00000000000000000000000000000000000000000000000000002d79883d200000000000000000000000000000000000000000000000000000000000000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200000000000000000000000000000000000000000000000000235978e783e00000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000004d0e30db000000000000000000000000000000000000000000000000000000000000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000044a9059cbb000000000000000000000000d8a07e9fe071106bf29536b93e8c9a26527af78700000000000000000000000000000000000000000000000000235978e783e0000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a4b757fed6000000000000000000000000d8a07e9fe071106bf29536b93e8c9a26527af787000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200000000000000000000000041a3dba3d677e573636ba691a70ff2d606c296660000000000000000002dc6c01111111254fb6c44bac0bed2854e76f90643097d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+                                },
+                            ],
+                        })
+                    );
+            });
+            describe('Quotes without allowance check', () => {
+                it('Should return QuoteNotFound error if there is no quote', async () => {
+                    const err = await expectThrowsAsync(async () => {
+                        await bridgeController.getQuote(
+                            BridgeImplementation.LIFI_BRIDGE,
+                            {
+                                toChainId: 1,
+                                fromTokenAddress: 'token_a_g',
+                                toTokenAddress: 'random_token',
+                                slippage: 0.01,
+                                fromAddress:
+                                    '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                                fromAmount: '10000',
+                            }
+                        );
+                    });
+                    expect(err).not.to.be.undefined;
+                    expect(err).to.equal('Quote not found');
+                });
+                it('Should return a valid quote without checking allowance', async () => {
+                    const quoteResponse = await bridgeController.getQuote(
+                        BridgeImplementation.LIFI_BRIDGE,
+                        {
+                            toChainId: 1,
+                            fromTokenAddress:
+                                '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                            toTokenAddress:
+                                '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1',
+                            slippage: 0.01,
+                            fromAddress:
+                                '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                            fromAmount: '10000000000000000',
+                        }
+                    );
+                    expect(quoteResponse.allowance).to.equal(
+                        BridgeAllowanceCheck.NOT_CHECKED
+                    );
+                    const { quote } = quoteResponse.bridgeParams;
+                    expect(quote).not.to.be.undefined;
+                    expect(quote.blockWalletFee.toNumber()).to.be.equal(0);
+                    expect(quote.fromAmount).to.be.equal('10000000000000000');
+                    expect(quote.toAmount).to.be.equal('10000000000000000');
+                    expect(quote.transactionRequest.from).to.be.equal(
+                        '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4'
+                    );
+                    expect(quote.transactionRequest.to).to.be.equal(
+                        '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4'
+                    );
+                    expect(quoteResponse.bridgeParams.methodSignature).not.to.be
+                        .undefined;
+                });
+            });
+            describe('Check Allowance', () => {
+                it('Should fail to check asset allowance', async () => {
+                    sinon.stub(tokenOperationsController, 'allowance').returns(
+                        new Promise<BigNumber>((resolve, reject) => {
+                            // 1 BLANK
+                            reject('Error');
+                        })
+                    );
+                    const err = await expectThrowsAsync(async () => {
+                        await bridgeController.getQuote(
+                            BridgeImplementation.LIFI_BRIDGE,
+                            {
+                                toChainId: 1,
+                                fromTokenAddress:
+                                    '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                                toTokenAddress:
+                                    '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1',
+                                slippage: 0.01,
+                                fromAddress:
+                                    '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                                fromAmount: '10000000000000000',
+                            },
+                            true
+                        );
+                    });
+                    expect(err).not.to.be.undefined;
+                    expect(err).to.equal('Error checking asset allowance.');
+                });
+                it('Should return a insufficient allowance', async () => {
+                    sinon.restore();
+                    sinon.stub(tokenOperationsController, 'allowance').returns(
+                        new Promise<BigNumber>((resolve, reject) => {
+                            // 1 BLANK
+                            resolve(BigNumber.from('20'));
+                        })
+                    );
+                    const quoteResponse = await bridgeController.getQuote(
+                        BridgeImplementation.LIFI_BRIDGE,
+                        {
+                            toChainId: 1,
+                            fromTokenAddress:
+                                '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                            toTokenAddress:
+                                '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1',
+                            slippage: 0.01,
+                            fromAddress:
+                                '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                            fromAmount: '10000000000000000',
+                        },
+                        true
+                    );
+                    expect(quoteResponse.allowance).to.equal(
+                        BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE
+                    );
+                    const { quote } = quoteResponse.bridgeParams;
+                    expect(quote).not.to.be.undefined;
+                    expect(quote.blockWalletFee.toNumber()).to.be.equal(0);
+                    expect(quote.fromAmount).to.be.equal('10000000000000000');
+                    expect(quote.toAmount).to.be.equal('10000000000000000');
+                    expect(quote.transactionRequest.from).to.be.equal(
+                        '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4'
+                    );
+                    expect(quote.transactionRequest.to).to.be.equal(
+                        '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4'
+                    );
+                    expect(quoteResponse.bridgeParams.methodSignature).not.to.be
+                        .undefined;
+                });
+                it('Should return enough allowance', async () => {
+                    sinon.restore();
+                    sinon.stub(tokenOperationsController, 'allowance').returns(
+                        new Promise<BigNumber>((resolve, reject) => {
+                            // 1 BLANK
+                            resolve(BigNumber.from('10000000000000001'));
+                        })
+                    );
+                    const quoteResponse = await bridgeController.getQuote(
+                        BridgeImplementation.LIFI_BRIDGE,
+                        {
+                            toChainId: 1,
+                            fromTokenAddress:
+                                '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                            toTokenAddress:
+                                '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1',
+                            slippage: 0.01,
+                            fromAddress:
+                                '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                            fromAmount: '10000000000000000',
+                        },
+                        true
+                    );
+                    expect(quoteResponse.allowance).to.equal(
+                        BridgeAllowanceCheck.ENOUGH_ALLOWANCE
+                    );
+                    const { quote } = quoteResponse.bridgeParams;
+                    expect(quote).not.to.be.undefined;
+                    expect(quote.blockWalletFee.toNumber()).to.be.equal(0);
+                    expect(quote.fromAmount).to.be.equal('10000000000000000');
+                    expect(quote.toAmount).to.be.equal('10000000000000000');
+                    expect(quote.transactionRequest.from).to.be.equal(
+                        '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4'
+                    );
+                    expect(quote.transactionRequest.to).to.be.equal(
+                        '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4'
+                    );
+                    expect(quoteResponse.bridgeParams.methodSignature).not.to.be
+                        .undefined;
+                });
+            });
+        });
+        describe('Execute bridge', () => {});
     });
 });

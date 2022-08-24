@@ -20,7 +20,7 @@ const getMessageFromLiFiError = (errCode: string) => {
     }
 };
 
-class QuoteNotFoundError extends Error {
+export class QuoteNotFoundError extends Error {
     constructor(message: string | undefined) {
         super();
         this.message =
@@ -38,7 +38,6 @@ export interface getBridgeRoutesRequest {
     fromTokenAddress: string;
     toChainId?: number;
     toTokenAddress?: string;
-    allowedExchanges?: string[]; //by default will be [] to support only bridges
 }
 
 export interface getBridgeQuoteRequest {
@@ -116,7 +115,7 @@ const LiFiBridge: IBridge = {
             `${LIFI_BRIDGE_ENDPOINT}/connections`,
             {
                 params: {
-                    allowedExchanges: request.allowedExchanges || [],
+                    allowExchanges: '[]',
                     fromChain: request.fromChainId,
                     toChain: request.toChainId,
                     fromToken: request.fromTokenAddress,

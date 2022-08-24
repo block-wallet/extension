@@ -61,10 +61,7 @@ export interface GetBridgeAvailableRoutesResponse {
 }
 
 export interface BridgeRoutesRequest
-    extends Omit<
-        Omit<getBridgeRoutesRequest, 'fromChainId'>,
-        'allowedExchanges'
-    > {}
+    extends Omit<getBridgeRoutesRequest, 'fromChainId'> {}
 
 export interface BridgeQuoteRequest
     extends Omit<getBridgeQuoteRequest, 'fromChainId'> {}
@@ -127,7 +124,7 @@ export default class BridgeController extends ExchangeController<
             quoteRequest
         );
 
-        if (checkAllowance) {
+        if (checkAllowance && quote) {
             allowanceCheck = (await this.checkExchangeAllowance(
                 quoteRequest.fromAddress,
                 BigNumber.from(quoteRequest.fromAmount),
@@ -312,7 +309,6 @@ export default class BridgeController extends ExchangeController<
         const routes = await apiImplementation.getRoutes({
             ...routesRequest,
             fromChainId: network.chainId,
-            allowedExchanges: [],
         });
         return { routes };
     }

@@ -103,7 +103,7 @@ const LiFiBridge: IBridge = {
         const chains = response.data.chains || [];
         return chains.map((chain) => ({
             id: chain.id,
-            logoURI: chain.logoURI,
+            logo: chain.logoURI,
             name: chain.name,
             test: !chain.mainnet,
         }));

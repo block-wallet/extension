@@ -22,6 +22,7 @@ import { BASE_BRIDGE_FEE } from '../utils/types/lifi';
 import { IToken } from './erc-20/Token';
 import { ExchangeController } from './ExchangeController';
 import { IChain } from '../utils/types/chain';
+import { getChainListItem } from '../utils/chainlist';
 
 export interface BridgeControllerMemState {
     availableBridgeChains: IChain[];
@@ -125,14 +126,18 @@ export default class BridgeController extends ExchangeController<
         );
 
         if (checkAllowance && quote) {
-            allowanceCheck = (await this.checkExchangeAllowance(
-                quoteRequest.fromAddress,
-                BigNumber.from(quoteRequest.fromAmount),
-                quote.spender,
-                quoteRequest.fromTokenAddress
-            ))
-                ? BridgeAllowanceCheck.ENOUGH_ALLOWANCE
-                : BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE;
+            try {
+                allowanceCheck = (await this.checkExchangeAllowance(
+                    quoteRequest.fromAddress,
+                    BigNumber.from(quoteRequest.fromAmount),
+                    quote.spender,
+                    quoteRequest.fromTokenAddress
+                ))
+                    ? BridgeAllowanceCheck.ENOUGH_ALLOWANCE
+                    : BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE;
+            } catch (e) {
+                throw new Error('Error checking asset allowance.');
+            }
         }
 
         const methodSignature =
@@ -291,8 +296,15 @@ export default class BridgeController extends ExchangeController<
     ): Promise<IChain[]> {
         const implementor = this._getAPIImplementation(aggregator);
         try {
-            const availableBridgeChains =
-                await implementor.getSupportedChains();
+            const availableBridgeChains: IChain[] = (
+                await implementor.getSupportedChains()
+            ).map((chain) => {
+                const knownChain = getChainListItem(chain.id);
+                return {
+                    ...chain,
+                    logoURI: knownChain ? knownChain.logo : chain.logo,
+                };
+            });
             this.UIStore.updateState({ availableBridgeChains });
             return availableBridgeChains;
         } catch (e) {

@@ -1,6 +1,6 @@
 export interface IChain {
     name: string;
     id: number;
-    logoURI: string;
+    logo: string;
     test: boolean;
 }

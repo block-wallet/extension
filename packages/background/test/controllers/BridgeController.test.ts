@@ -33,6 +33,12 @@ import { ContractSignatureParser } from '@block-wallet/background/controllers/tr
 import { expectThrowsAsync } from 'test/utils/expectThrowsAsync.test';
 import { BigNumber } from 'ethers';
 import { getChainListItem } from '@block-wallet/background/utils/chainlist';
+import { BRIDGE_REFERRER_ADDRESS } from '@block-wallet/background/utils/types/lifi';
+import {
+    MetaType,
+    TransactionCategories,
+    TransactionStatus,
+} from '@block-wallet/background/controllers/transactions/utils/types';
 
 const TOKEN_A_GOERLI: IToken = {
     address: 'token_a_g',
@@ -103,7 +109,6 @@ describe.only('Bridge Controller', () => {
 
         // Instantiate objects
         networkController = getNetworkControllerInstance();
-
         blockUpdatesController = new BlockUpdatesController(
             networkController,
             new BlockFetchController(networkController, {
@@ -317,6 +322,7 @@ describe.only('Bridge Controller', () => {
                     .stub(BridgeAPI.LIFI_BRIDGE, 'getQuote')
                     .withArgs({
                         fromChainId: GOERLI_CHAIN_ID,
+                        referer: BRIDGE_REFERRER_ADDRESS,
                         toChainId: 1,
                         fromTokenAddress:
                             '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
@@ -361,6 +367,7 @@ describe.only('Bridge Controller', () => {
                                 gasPrice: '200',
                                 value: '1',
                             },
+                            tool: 'custom_tool',
                         })
                     );
 
@@ -424,6 +431,7 @@ describe.only('Bridge Controller', () => {
                             fromAddress:
                                 '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
                             fromAmount: '10000',
+                            referer: BRIDGE_REFERRER_ADDRESS,
                         })
                         .throwsException(
                             new QuoteNotFoundError('Quote not found')
@@ -464,7 +472,7 @@ describe.only('Bridge Controller', () => {
                     expect(quoteResponse.allowance).to.equal(
                         BridgeAllowanceCheck.NOT_CHECKED
                     );
-                    const { quote } = quoteResponse.bridgeParams;
+                    const { params: quote } = quoteResponse.bridgeParams;
                     expect(quote).not.to.be.undefined;
                     expect(quote.blockWalletFee.toNumber()).to.be.equal(0);
                     expect(quote.fromAmount).to.be.equal('10000000000000000');
@@ -538,11 +546,12 @@ describe.only('Bridge Controller', () => {
                     expect(quoteResponse.allowance).to.equal(
                         BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE
                     );
-                    const { quote } = quoteResponse.bridgeParams;
+                    const { params: quote } = quoteResponse.bridgeParams;
                     expect(quote).not.to.be.undefined;
                     expect(quote.blockWalletFee.toNumber()).to.be.equal(0);
                     expect(quote.fromAmount).to.be.equal('10000000000000000');
                     expect(quote.toAmount).to.be.equal('10000000000000000');
+                    expect(quote.tool).to.be.equal('custom_tool');
                     expect(quote.transactionRequest.from).to.be.equal(
                         '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4'
                     );
@@ -580,11 +589,12 @@ describe.only('Bridge Controller', () => {
                     expect(quoteResponse.allowance).to.equal(
                         BridgeAllowanceCheck.ENOUGH_ALLOWANCE
                     );
-                    const { quote } = quoteResponse.bridgeParams;
+                    const { params: quote } = quoteResponse.bridgeParams;
                     expect(quote).not.to.be.undefined;
                     expect(quote.blockWalletFee.toNumber()).to.be.equal(0);
                     expect(quote.fromAmount).to.be.equal('10000000000000000');
                     expect(quote.toAmount).to.be.equal('10000000000000000');
+                    expect(quote.tool).to.be.equal('custom_tool');
                     expect(quote.transactionRequest.from).to.be.equal(
                         '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4'
                     );
@@ -596,6 +606,218 @@ describe.only('Bridge Controller', () => {
                 });
             });
         });
-        describe('Execute bridge', () => {});
+        describe('Execute bridge', () => {
+            before(() => {
+                networkController.setNetwork('polygon');
+            });
+            after(() => {
+                networkController = getNetworkControllerInstance();
+            });
+            it('Should submit a bridge transaction', async () => {
+                const tokenControllerStub = sinon.spy(
+                    tokenController,
+                    'attemptAddToken'
+                );
+                sinon.stub(transactionController, 'addTransaction').returns(
+                    new Promise((resolve) => {
+                        resolve({
+                            result: new Promise((resolve) => {
+                                resolve(
+                                    '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92'
+                                );
+                            }),
+                            transactionMeta: {
+                                approveTime: 1656527770143,
+                                blocksDropCount: 0,
+                                chainId: 137,
+                                gasEstimationFailed: false,
+                                id: '3ee2ce72-84d0-40be-9ae8-37d638894e7b',
+                                loadingGasValues: false,
+                                metaType: MetaType.REGULAR,
+                                methodSignature: {
+                                    args: [
+                                        {
+                                            name: 'caller',
+                                            type: 'address',
+                                            value: '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                                        },
+                                        {
+                                            name: 'desc',
+                                            type: 'tuple',
+                                            value: [
+                                                '0x0000000000000000000000000000000000000000',
+                                                '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                                                '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1',
+                                                {
+                                                    type: 'BigNumber',
+                                                    hex: '0x2386f26fc10000',
+                                                },
+                                                {
+                                                    type: 'BigNumber',
+                                                    hex: '0x0b9b43e8fe7b3b9fa9',
+                                                },
+                                                {
+                                                    type: 'BigNumber',
+                                                    hex: '0x00',
+                                                },
+                                                '0x',
+                                            ],
+                                        },
+                                        {
+                                            name: 'data',
+                                            type: 'bytes',
+                                            value: '0x327a564d00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000160f1111791883d510a6e182e0100606eee7e4e4de3ae9c5232e72a26c3686c024f0000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007d1afa7b718fb893db30a3abc0cfc608aacfebb00000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000001672895d74129699c00000000000000000000000000000000000000000000020d11e176448b25fc41000000000000000000000000000000000000000000000000000000006308dbd30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000054d41544943000000000000000000000000000000000000000000000000000000',
+                                        },
+                                    ],
+                                    name: 'Bridge',
+                                },
+                                origin: 'blank',
+                                rawTransaction:
+                                    '0x327a564d00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000160f1111791883d510a6e182e0100606eee7e4e4de3ae9c5232e72a26c3686c024f0000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007d1afa7b718fb893db30a3abc0cfc608aacfebb00000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000001672895d74129699c00000000000000000000000000000000000000000000020d11e176448b25fc41000000000000000000000000000000000000000000000000000000006308dbd30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000054d41544943000000000000000000000000000000000000000000000000000000',
+                                status: TransactionStatus.CONFIRMED,
+                                submittedTime: 1656527771238,
+                                bridgeParams: {
+                                    bridgeImplementation:
+                                        BridgeImplementation.LIFI_BRIDGE,
+                                    blockWalletFee: BigNumber.from('0'),
+                                    fromToken: {
+                                        address:
+                                            '0x0000000000000000000000000000000000000000',
+                                        decimals: 18,
+                                        logo: 'https://tokens.1inch.io/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png',
+                                        name: 'MATIC',
+                                        symbol: 'MATIC',
+                                        type: '',
+                                    },
+                                    fromTokenAmount: '10000000000000000000000',
+                                    toToken: {
+                                        address:
+                                            '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0',
+                                        decimals: 18,
+                                        logo: 'https://tokens.1inch.io/0xd533a949740bb3306d119cc777fa900ba034cd52.png',
+                                        name: 'MATIC',
+                                        symbol: 'MATIC',
+                                        type: '',
+                                    },
+                                    toTokenAmount: '9985390803817199636125',
+                                    tool: 'hop',
+                                    fromChainId: 137,
+                                    toChainId: 1,
+                                },
+                                time: 1656527769648,
+                                transactionCategory:
+                                    TransactionCategories.BRIDGE,
+                                transactionParams: {
+                                    chainId: 137,
+                                    data: '0x327a564d00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000160f1111791883d510a6e182e0100606eee7e4e4de3ae9c5232e72a26c3686c024f0000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007d1afa7b718fb893db30a3abc0cfc608aacfebb00000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000001672895d74129699c00000000000000000000000000000000000000000000020d11e176448b25fc41000000000000000000000000000000000000000000000000000000006308dbd30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000054d41544943000000000000000000000000000000000000000000000000000000',
+                                    from: '0x4A3CD1E36091a66cf6dea0A77dAd564fFC8547a1',
+                                    gasLimit: BigNumber.from('0x149970'),
+                                    hash: '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92',
+                                    maxFeePerGas:
+                                        BigNumber.from('0x3902438500'),
+                                    maxPriorityFeePerGas:
+                                        BigNumber.from('0x20895d1cd1'),
+                                    nonce: 5,
+                                    r: '0x2bd56f6609b4597a75b656f0e1a007b5d7e435d4ef55aa8897b3fc08507c31e4',
+                                    s: '0x33be7bb56f38e57ea4ebdecb3eacccd29daae2d6a0b89ff9f1ac146d870f6301',
+                                    to: '0x1111111254fb6c44bac0bed2854e76f90643097d',
+                                    type: 2,
+                                    v: 0,
+                                    value: BigNumber.from(
+                                        '0x021e19e0c9bab2400000'
+                                    ),
+                                },
+                                transactionReceipt: {
+                                    blockHash:
+                                        '0x88fc8eec1688b14fdb02d7ee88f8f4f0d3c304fdbc7aced63b31bbc2691645b2',
+                                    blockNumber: 30146188,
+                                    byzantium: true,
+                                    confirmations: 5,
+                                    contractAddress:
+                                        '0x1111111254fb6c44bac0bed2854e76f90643097d',
+                                    cumulativeGasUsed:
+                                        BigNumber.from('0x75033c'),
+                                    effectiveGasPrice:
+                                        BigNumber.from('0x387bb41d82'),
+                                    from: '0x4A3CD1E36091a66cf6dea0A77dAd564fFC8547a1',
+                                    gasUsed: BigNumber.from('0x03212a'),
+                                    logs: [],
+                                    logsBloom:
+                                        '0x00200000000000000000000080000000000000000000000000000000200000001000000000008000000000100000000000008000000000000000000000000000000080000000401000000028000000a000000400000000000001000080000a0000400000000000000080200000000020000000000000000080000012000000000000010000001000000000000000001000000001002000080080004000280000200000000000000000000000000000004040000000000020000000000000004001000002000000000801000008801000000000000000801000108000000000000000100020008000000000000000000000000000010000400000000000100800',
+                                    status: 1,
+                                    to: '0x4A3CD1E36091a66cf6dea0A77dAd564fFC8547a1',
+                                    transactionHash:
+                                        '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92',
+                                    transactionIndex: 43,
+                                    type: 2,
+                                },
+                                verifiedOnBlockchain: true,
+                            },
+                        });
+                    })
+                );
+                sinon
+                    .stub(transactionController, 'updateTransaction')
+                    .returns();
+                sinon.stub(transactionController, 'approveTransaction').returns(
+                    new Promise((resolve) => {
+                        resolve();
+                    })
+                );
+
+                const result = await bridgeController.executeBridge(
+                    BridgeImplementation.LIFI_BRIDGE,
+                    {
+                        params: {
+                            fromToken: {
+                                address:
+                                    '0x0000000000000000000000000000000000000000',
+                                decimals: 18,
+                                logo: 'https://tokens.1inch.io/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png',
+                                name: 'MATIC',
+                                symbol: 'MATIC',
+                                type: '',
+                            },
+                            toToken: {
+                                address:
+                                    '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0',
+                                decimals: 18,
+                                logo: 'https://tokens.1inch.io/0xd533a949740bb3306d119cc777fa900ba034cd52.png',
+                                name: 'MATIC',
+                                symbol: 'MATIC',
+                                type: '',
+                            },
+                            tool: 'hop',
+                            blockWalletFee: BigNumber.from(0),
+                            fromAmount: '10000000000000000000000',
+                            toAmount: '9985390803817199636125',
+                            fromChainId: 137,
+                            toChainId: 1,
+                            spender:
+                                '0x362fA9D0bCa5D19f743Db50738345ce2b40eC99f',
+                            transactionRequest: {
+                                chainId: 137,
+                                data: '0x327a564d00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000160f1111791883d510a6e182e0100606eee7e4e4de3ae9c5232e72a26c3686c024f0000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007d1afa7b718fb893db30a3abc0cfc608aacfebb00000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000001672895d74129699c00000000000000000000000000000000000000000000020d11e176448b25fc41000000000000000000000000000000000000000000000000000000006308dbd30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000054d41544943000000000000000000000000000000000000000000000000000000',
+                                from: '0x4A3CD1E36091a66cf6dea0A77dAd564fFC8547a1',
+                                gasLimit: '0x149970',
+                                gasPrice: '0x0861c46816',
+                                to: '0x362fA9D0bCa5D19f743Db50738345ce2b40eC99f',
+                                value: '0x021e19e0c9bab2400000',
+                            },
+                        },
+                        customNonce: 5,
+                        gasPrice: BigNumber.from('0'),
+                        maxFeePerGas: BigNumber.from('0x3902438500'),
+                        maxPriorityFeePerGas: BigNumber.from('0x20895d1cd1'),
+                    }
+                );
+
+                expect(result).not.to.be.undefined;
+                expect(tokenControllerStub.callCount).to.be.equal(2);
+                expect(result).to.be.equal(
+                    '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92'
+                );
+            });
+        });
     });
 });

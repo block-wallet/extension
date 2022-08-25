@@ -102,6 +102,7 @@ export interface BridgeTransactionParams {
     blockWalletFee: BigNumber;
     fromChainId: number;
     toChainId: number;
+    tool: string; //tool used to perform the bridging.
 }
 
 export interface uiTransactionParams extends TransactionParams {

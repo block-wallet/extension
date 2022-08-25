@@ -70,6 +70,7 @@ export interface IBridgeQuote {
     toToken: IToken;
     fromChainId: number;
     toChainId: number;
+    tool: string;
 }
 
 export interface IBridgeRoute {
@@ -167,6 +168,7 @@ const LiFiBridge: IBridge = {
             toChainId: responseData.action.fromChainId,
             fromToken: lifiTokenToIToken(responseData.action.fromToken),
             toToken: lifiTokenToIToken(responseData.action.toToken),
+            tool: responseData.tool.key,
         };
     },
 };

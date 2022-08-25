@@ -18,7 +18,7 @@ import BridgeAPI, {
     getBridgeQuoteRequest,
     IBridgeRoute,
 } from '../utils/bridgeApi';
-import { BASE_BRIDGE_FEE } from '../utils/types/lifi';
+import { BASE_BRIDGE_FEE, BRIDGE_REFERRER_ADDRESS } from '../utils/types/lifi';
 import { IToken } from './erc-20/Token';
 import { ExchangeController } from './ExchangeController';
 import { IChain } from '../utils/types/chain';
@@ -40,7 +40,7 @@ export interface BridgeQuote extends IBridgeQuote {
 }
 
 interface BridgeParameters {
-    quote: BridgeQuote;
+    params: BridgeQuote;
     methodSignature?: ContractMethodSignature;
 }
 
@@ -147,7 +147,7 @@ export default class BridgeController extends ExchangeController<
             );
         return {
             bridgeParams: {
-                quote,
+                params: quote,
                 methodSignature,
             },
             allowance: allowanceCheck,
@@ -168,8 +168,11 @@ export default class BridgeController extends ExchangeController<
             bridgeTx
         );
         this._tokenController.attemptAddToken(
-            bridgeTx.quote.toToken.address,
-            bridgeTx.quote.toChainId
+            bridgeTx.params.fromToken.address
+        );
+        this._tokenController.attemptAddToken(
+            bridgeTx.params.toToken.address,
+            bridgeTx.params.toChainId
         );
         return bridgePromise;
     };
@@ -184,23 +187,20 @@ export default class BridgeController extends ExchangeController<
         request: BridgeQuoteRequest
     ): Promise<BridgeQuote> => {
         const { network } = this._networkController;
-        try {
-            const res = await retryHandling<IBridgeQuote>(() =>
-                this._getAPIImplementation(agg).getQuote({
-                    ...request,
-                    fromChainId: network.chainId,
-                })
-            );
+        const res = await retryHandling<IBridgeQuote>(() =>
+            this._getAPIImplementation(agg).getQuote({
+                ...request,
+                fromChainId: network.chainId,
+                referer: BRIDGE_REFERRER_ADDRESS,
+            })
+        );
 
-            return {
-                ...res,
-                blockWalletFee: BigNumber.from(res.fromAmount)
-                    .mul(BASE_BRIDGE_FEE * 10)
-                    .div(1000),
-            };
-        } catch (error) {
-            throw new Error(error.message);
-        }
+        return {
+            ...res,
+            blockWalletFee: BigNumber.from(res.fromAmount)
+                .mul(BASE_BRIDGE_FEE * 10)
+                .div(1000),
+        };
     };
 
     /**
@@ -217,7 +217,7 @@ export default class BridgeController extends ExchangeController<
             gasPrice,
             maxFeePerGas,
             maxPriorityFeePerGas,
-            quote: {
+            params: {
                 transactionRequest,
                 fromToken,
                 toToken,
@@ -226,6 +226,7 @@ export default class BridgeController extends ExchangeController<
                 blockWalletFee,
                 fromChainId,
                 toChainId,
+                tool,
             },
         }: BridgeTransaction
     ): Promise<string> => {
@@ -264,6 +265,7 @@ export default class BridgeController extends ExchangeController<
                 blockWalletFee,
                 fromChainId,
                 toChainId,
+                tool, //store the tool used for executing the bridge.
             };
 
             this._transactionController.updateTransaction(transactionMeta);

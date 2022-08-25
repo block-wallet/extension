@@ -4,7 +4,8 @@ import { IToken } from '@block-wallet/background/controllers/erc-20/Token';
  * Fees Config
  */
 export const BASE_BRIDGE_FEE = 0;
-export const REFERRER_ADDRESS = '0x3110a855333bfb922aeCB1B3542ba2fdE28d204F';
+export const BRIDGE_REFERRER_ADDRESS =
+    '0x3110a855333bfb922aeCB1B3542ba2fdE28d204F';
 
 // Base endpoint
 export const LIFI_BRIDGE_ENDPOINT = 'https://li.quest/v1';
@@ -44,7 +45,9 @@ export interface GetLifiConnectionsResponse {
 export interface GetLiFiQuoteResponse {
     id: string;
     type: string;
-    tool: string;
+    tool: {
+        key: string;
+    };
     action: QuoteAction;
     estimate: Estimate;
     transactionRequest: LiFiTransactionRequest;

@@ -26,9 +26,9 @@ describe('ProverWorker', () => {
         (window as any) = undefined;
         const ProverWorker = (
             await import(
-                '../../../../src/controllers/blank-deposit/tornado/ProverWorker'
+                '../../../../src/controllers/blank-deposit/tornado/CircuitProver'
             )
-        ).ProverWorker;
+        ).CircuitProver;
         let proverWorker = new ProverWorker();
 
         await proverWorker.init(

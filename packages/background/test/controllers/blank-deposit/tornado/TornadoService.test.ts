@@ -200,16 +200,6 @@ describe('TornadoService', () => {
         });
         await (tornadoService as any).initDepositsIndexedDb();
 
-        tornadoService['_notesService']['workerRunner'] = {
-            run: async ({ name, data }: { name: string; data: string }) => {
-                if (name === 'pedersenHash') {
-                    return babyJub.unpackPoint(
-                        pedersenHash.hash(Buffer.from(data, 'hex'))
-                    )[0];
-                }
-            },
-        } as any;
-
         await tornadoService.initializeVault(testPass);
     });
 

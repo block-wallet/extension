@@ -1,5 +1,6 @@
 import {
     CONTENT,
+    EXTERNAL,
     Origin,
     WindowTransportRequestMessage,
 } from '@block-wallet/background/utils/types/communication';

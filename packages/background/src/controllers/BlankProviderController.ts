@@ -381,12 +381,11 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 );
             case JSONRPCMethod.eth_unsubscribe:
                 return this._handleUnsubscribe(params as string[]);
-            //Prevent adding custom eth chains
-            /*   case JSONRPCMethod.wallet_addEthereumChain:
+            case JSONRPCMethod.wallet_addEthereumChain:
                 return this._handleAddEthereumChain(
                     params as [AddEthereumChainParameter],
                     portId
-            ); */
+                );
             case JSONRPCMethod.wallet_getPermissions:
                 return this._handleGetPermissions(portId);
             case JSONRPCMethod.wallet_requestPermissions:

@@ -22,10 +22,10 @@ import {
 } from './utils';
 import { TornadoEventsDB } from './stores/TornadoEventsDB';
 import NetworkController from '../../NetworkController';
-import { WorkerRunner } from '../../../infrastructure/workers/WorkerRunner';
+import type { CircuitProver } from './CircuitProver';
 import { CircuitInput } from './types';
-import { IProverWorker } from './IProverWorker';
 import log from 'loglevel';
+import type Blake3 from 'blake3/esm/browser';
 import { NextDepositResult } from '../notes/INotesService';
 import { BlankDepositVault } from '../BlankDepositVault';
 
@@ -38,10 +38,9 @@ type ContractsType = Map<
 
 export class TornadoNotesService extends NotesService {
     private contracts: ContractsType;
-
     // Prover Worker
-    private workerRunner!: WorkerRunner<IProverWorker>;
-
+    private circuitProver?: CircuitProver;
+    private blake3?: typeof Blake3;
     constructor(
         private readonly _networkController: NetworkController,
         private readonly _tornadoEventsDb: TornadoEventsDB,
@@ -105,17 +104,30 @@ export class TornadoNotesService extends NotesService {
         return checkDeposits();
     }
 
-    protected async getBlake3Hash(data: Buffer): Promise<Buffer> {
-        // Convert to hex string
-        const stringifiedData = data.toString('hex');
+    /**
+     * It returns a 64-byte blake3 hash of the provided data
+     * @param data The data to hash
+     */
+    public async getBlake3Hash(data: Buffer): Promise<Buffer> {
+        if (!this.blake3) {
+            try {
+                this.blake3 = await import(
+                    /* webpackChunkName: "blake3" */ 'blake3/browser'
+                );
+            } catch (error) {
+                console.error(JSON.stringify(error));
+                throw error;
+            }
+        }
+        // Throw if blake3 hasn't been initialized
+        return Buffer.from(
+            this.blake3.createHash().update(data).digest({ length: 64 })
+        );
+    }
 
-        // Hash data using blake3
-        const hash = (await this.workerRunner.run({
-            name: 'blake3',
-            data: stringifiedData as Parameters<IProverWorker['blake3']>[0],
-        })) as ReturnType<IProverWorker['blake3']>;
-
-        return Buffer.from(hash);
+    public getPedersenHash(data: Buffer) {
+        const hashedData = this.pedersenHash(data);
+        return bigInt(hashedData);
     }
 
     public async getNoteString(
@@ -138,23 +150,23 @@ export class TornadoNotesService extends NotesService {
     }
 
     public async initialize(): Promise<void> {
-        const ProverWorker = (await import('worker-loader!./ProverWorker'))
-            .default;
-        this.workerRunner = new WorkerRunner(new ProverWorker());
+        // Name chunk as prover to add banner for `window = self`
+        const { CircuitProver } = await import(
+            /* webpackChunkName: "circuit.prover" */ './CircuitProver'
+        );
+        this.circuitProver = new CircuitProver();
 
+        // This file was removed due to to feature deprecation
         const provingKeyUrl = chrome.runtime.getURL(
             'snarks/tornado/tornadoProvingKey.bin'
         );
+
+        // This file was removed due to to feature deprecation
         const withdrawCircuitUrl = chrome.runtime.getURL(
             'snarks/tornado/tornado.json'
         );
 
-        await this.workerRunner.run({
-            name: 'init',
-            data: { provingKeyUrl, withdrawCircuitUrl } as Parameters<
-                IProverWorker['init']
-            >[0],
-        });
+        await this.circuitProver.init(provingKeyUrl, withdrawCircuitUrl);
     }
 
     /**
@@ -170,7 +182,7 @@ export class TornadoNotesService extends NotesService {
             nullifier: Buffer;
             secret: Buffer;
         }
-    ): Promise<ReturnType<IProverWorker['generateMerkleProof']>> {
+    ): Promise<ReturnType<CircuitProver['generateMerkleProof']>> {
         // Get network
         const { name: network } = this._networkController.network;
 
@@ -194,12 +206,7 @@ export class TornadoNotesService extends NotesService {
                 throw new Error('The note is already spent');
             }
 
-            const lastLeafIndex = (await this.workerRunner.run({
-                name: 'getLastLeafIndex',
-                data: { key } as Parameters<
-                    IProverWorker['getLastLeafIndex']
-                >[0],
-            })) as ReturnType<IProverWorker['getLastLeafIndex']>;
+            const lastLeafIndex = this.circuitProver?.getLastLeafIndex(key);
 
             // Update deposit events
             await this.getDepositEvents(
@@ -220,12 +227,12 @@ export class TornadoNotesService extends NotesService {
             const leaves = events.map((e) =>
                 BigNumber.from(e.commitment).toString()
             );
-            return this.workerRunner.run({
-                name: 'updateMerkleTree',
-                data: { key, leaves, forceUpdate } as Parameters<
-                    IProverWorker['updateMerkleTree']
-                >[0],
-            });
+
+            return this.circuitProver?.updateMerkleTree(
+                key,
+                leaves,
+                forceUpdate
+            );
         };
 
         // Validate that our data is correct
@@ -256,12 +263,7 @@ export class TornadoNotesService extends NotesService {
 
         // Compute merkle proof of our commitment
         const { leafIndex } = depEv;
-        return this.workerRunner.run({
-            name: 'generateMerkleProof',
-            data: { key, depositLeafIndex: leafIndex } as Parameters<
-                IProverWorker['generateMerkleProof']
-            >[0],
-        }) as Promise<ReturnType<IProverWorker['generateMerkleProof']>>;
+        return this.circuitProver!.generateMerkleProof(key, leafIndex);
     }
 
     /**
@@ -356,10 +358,7 @@ export class TornadoNotesService extends NotesService {
         };
 
         // Run prover worker
-        const proof = await this.workerRunner.run({
-            name: 'getProofData',
-            data: { input } as Parameters<IProverWorker['getProofData']>[0],
-        });
+        const proof = await this.circuitProver?.getProofData(input);
 
         const args = [
             toHex(input.root),
@@ -414,24 +413,10 @@ export class TornadoNotesService extends NotesService {
             secret.leInt2Buff(31),
         ]);
 
-        const commitment = bigInt(
-            await this.workerRunner.run({
-                name: 'pedersenHash',
-                data: preImage.toString('hex') as Parameters<
-                    IProverWorker['pedersenHash']
-                >[0],
-            })
-        ); //this.pedersenHash(preImage);
+        const commitment = this.getPedersenHash(preImage);
         const commitmentHex = toHex(commitment);
 
-        const nullifierHash = bigInt(
-            await this.workerRunner.run({
-                name: 'pedersenHash',
-                data: nullifier.leInt2Buff(31).toString('hex') as Parameters<
-                    IProverWorker['pedersenHash']
-                >[0],
-            })
-        ); // this.pedersenHash(nullifier.leInt2Buff(31));
+        const nullifierHash = this.getPedersenHash(nullifier.leInt2Buff(31));
 
         const nullifierHex = toHex(nullifierHash);
 
@@ -464,23 +449,9 @@ export class TornadoNotesService extends NotesService {
         const { preImage, nullifier } = this.getPreimageAndNullifier(hashedKey);
 
         // Calculate commitment
-        const commitment = bigInt(
-            await this.workerRunner.run({
-                name: 'pedersenHash',
-                data: preImage.toString('hex') as Parameters<
-                    IProverWorker['pedersenHash']
-                >[0],
-            })
-        ); // const commitment = this.pedersenHash(preImage);
+        const commitment = this.getPedersenHash(preImage);
 
-        const nullifierHash = bigInt(
-            await this.workerRunner.run({
-                name: 'pedersenHash',
-                data: nullifier.toString('hex') as Parameters<
-                    IProverWorker['pedersenHash']
-                >[0],
-            })
-        ); // const nullifierHash = this.pedersenHash(nullifier);
+        const nullifierHash = this.getPedersenHash(nullifier);
 
         return {
             preImage,

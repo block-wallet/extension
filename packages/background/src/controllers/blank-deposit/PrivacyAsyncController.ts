@@ -16,6 +16,9 @@ import type { Network } from '../../utils/constants/networks';
 import { NetworkEvents } from '../NetworkController';
 import { BaseController } from '../../infrastructure/BaseController';
 
+import { BlankDepositController as PrivacyController } from './BlankDepositController';
+import { TornadoEventsService as PrivacyEventsService } from './tornado/TornadoEventsService';
+import tornadoConfig from './tornado/config/config';
 export class PrivacyAsyncController extends BaseController<
     BlankDepositControllerStoreState,
     BlankDepositControllerUIStoreState
@@ -93,15 +96,15 @@ export class PrivacyAsyncController extends BaseController<
 
     public async getBlankDepositController() {
         if (!this._blankDepositController) {
-            const { BlankDepositController: PrivacyController } = await import(
-                './BlankDepositController'
-            );
+            // const { BlankDepositController: PrivacyController } = await import(
+            //     './BlankDepositController'
+            // );
 
-            const { TornadoEventsService: PrivacyEventsService } = await import(
-                './tornado/TornadoEventsService'
-            );
-            const tornadoConfig = (await import('./tornado/config/config'))
-                .default;
+            // const { TornadoEventsService: PrivacyEventsService } = await import(
+            //     './tornado/TornadoEventsService'
+            // );
+            // const tornadoConfig = (await import('./tornado/config/config'))
+            //     .default;
 
             const tornadoEventsService = new PrivacyEventsService({
                 ...tornadoConfig.tornadoEventsService,
@@ -154,7 +157,10 @@ export class PrivacyAsyncController extends BaseController<
 
         // Get seed phrase to unlock the blank deposit controller
         const seedPhrase =
-            await this.controllers.keyringController.verifySeedPhrase(password);
+            await this.controllers.keyringController.verifySeedPhrase(
+                '',
+                password
+            );
 
         try {
             await this._blankDepositController.initializeVault(password);

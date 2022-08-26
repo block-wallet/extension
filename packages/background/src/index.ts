@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import BlankController, {
     BlankControllerEvents,
 } from './controllers/BlankController';
@@ -176,4 +177,9 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === 'install') {
         openExtensionInBrowser();
     }
+});
+
+self.addEventListener('install', () => {
+    //@ts-ignore
+    importScripts('blake3.js');
 });

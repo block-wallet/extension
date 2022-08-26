@@ -16,11 +16,23 @@ export let session: { origin: string; data: SiteMetadata } | null = null
 export let isAutomaticClose: boolean = false
 
 /**
+ * Overrided postMessage with retry handling
+ */
+// const postMessageWithRetry = (
+//     f: (message: any) => void
+// ): ((message: any) => void) => {
+
+// }
+
+/**
  * Connect ports
  */
 const initPort = () => {
     // Open port
     port = chrome.runtime.connect({ name: Origin.EXTENSION })
+
+    // Override postMessage function
+    // port.postMessage = postMessageWithRetry(port.postMessage)
 
     // Check for error
     port.onDisconnect.addListener(() => {

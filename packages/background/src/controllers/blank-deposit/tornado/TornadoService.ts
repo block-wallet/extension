@@ -749,7 +749,7 @@ export class TornadoService
         this.checkCurrentNetworkPendingWithdrawals();
 
         // Init Prover worker
-        await this._notesService.initialize();
+        // await this._notesService.initialize();
     }
 
     /**

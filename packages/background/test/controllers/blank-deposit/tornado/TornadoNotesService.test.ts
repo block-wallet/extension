@@ -1,6 +1,5 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
-import { babyJub, pedersenHash } from 'circomlib';
 
 import HDKey from 'ethereumjs-wallet/dist/hdkey';
 
@@ -21,7 +20,6 @@ import { TornadoEventsDB } from '../../../../src/controllers/blank-deposit/torna
 import { TornadoEvents } from '../../../../src/controllers/blank-deposit/tornado/config/ITornadoContract';
 import mockIndexedDB from './mocks/mockIndexedDB';
 import NetworkController from '../../../../src/controllers/NetworkController';
-import { createHash } from 'blake3';
 import { getNetworkControllerInstance } from 'test/mocks/mock-network-instance';
 import { NextDepositResult } from '@block-wallet/background/controllers/blank-deposit/notes/INotesService';
 import { BlankDepositVault } from '@block-wallet/background/controllers/blank-deposit/BlankDepositVault';
@@ -119,19 +117,11 @@ describe('TornadoNotesService', () => {
             });
         }
 
-        tornadoNotesService['workerRunner'] = {
-            run: async ({ name, data }: { name: string; data: string }) => {
-                if (name === 'pedersenHash') {
-                    return babyJub.unpackPoint(
-                        pedersenHash.hash(Buffer.from(data, 'hex'))
-                    )[0];
-                } else if (name === 'blake3') {
-                    return createHash()
-                        .update(Buffer.from(data, 'hex'))
-                        .digest({ length: 64 });
-                }
-            },
-        } as any;
+        sinon
+            .stub(TornadoNotesService.prototype, 'getBlake3Hash')
+            .callsFake(async (data) => {
+                return Buffer.from(''); // createHash().update(data).digest({ length: 64 });
+            });
 
         (tornadoNotesService as any).contracts = contracts;
 

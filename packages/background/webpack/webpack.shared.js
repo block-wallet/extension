@@ -12,13 +12,13 @@ const plugins = [
     new Dotenv({
         path: './.env',
     }),
-    new webpack.IgnorePlugin(/^worker_threads$/),
-    new webpack.IgnorePlugin(/^fs$/),
+    new webpack.IgnorePlugin({ resourceRegExp: /^worker_threads$/ }),
+    new webpack.IgnorePlugin({ resourceRegExp: /^fs$/ }),
     new webpack.BannerPlugin({
         banner: 'var window = self;',
         raw: true,
-        entryOnly: true,
-        test: /\.worker.js?$/,
+        entryOnly: false,
+        test: 'vendors~circuit.prover.js',
     }),
     new ESLintWebpackPlugin({
         extensions: ['ts'],
@@ -28,14 +28,19 @@ const plugins = [
         analyzerMode: 'static',
         reportFilename: '../packages/background/bundle_size_report.html',
     }),
+    new webpack.ProvidePlugin({
+        Buffer: ['buffer', 'Buffer'],
+    }),
 ];
 
 module.exports = (entry) => ({
     mode: 'production',
     entry,
+    target: ['webworker', 'es6'],
     output: {
         filename: '[name].js',
         globalObject: 'this',
+        // chunkLoading: 'import',
         path: path.resolve(__dirname, '../../../dist'),
     },
     module: {
@@ -60,6 +65,15 @@ module.exports = (entry) => ({
             ),
         },
         extensions: ['.tsx', '.ts', '.js'],
+        fallback: {
+            crypto: require.resolve('crypto-browserify'),
+            stream: require.resolve('stream-browserify'),
+            buffer: require.resolve('buffer/'),
+        },
+    },
+    experiments: {
+        asyncWebAssembly: true,
+        syncWebAssembly: true,
     },
     plugins,
 });

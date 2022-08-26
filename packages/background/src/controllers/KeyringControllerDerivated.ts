@@ -147,8 +147,11 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @returns {Promise<string>} Seed phrase.
      */
     @Hasheable
-    public async verifySeedPhrase(@Hash password: string): Promise<string> {
-        await super.verifyPassword(password);
+    public async verifySeedPhrase(
+        @Hash password: string,
+        alreadyHashed?: string
+    ): Promise<string> {
+        await super.verifyPassword(alreadyHashed || password);
         await this.verifyAccounts();
 
         const primaryKeyring = super.getKeyringsByType(

@@ -188,10 +188,11 @@ export enum TransactionType {
 }
 
 /**
- * Transaction params that can be setted by the user using the Advance Settings popup.
+ * Transaction params that can be set by the user
  */
 export interface TransactionAdvancedData {
     customAllowance?: string;
     customNonce?: number;
     flashbots?: boolean;
+    slippage?: number;
 }

@@ -23,7 +23,11 @@ import {
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { classnames, Classes } from "../../styles"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
-import { getLatestGasPrice, rejectTransaction } from "../../context/commActions"
+import {
+    getBridgeQuote,
+    getLatestGasPrice,
+    rejectTransaction,
+} from "../../context/commActions"
 import { isBridgeNativeTokenAddress } from "../../util/bridgeUtils"
 import { isHardwareWallet } from "../../util/account"
 import { useBlankState } from "../../context/background/backgroundHooks"
@@ -47,19 +51,46 @@ import { useTokensList } from "../../context/hooks/useTokensList"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { IBridgeRoute } from "@block-wallet/background/utils/bridgeApi"
 import { IChain } from "@block-wallet/background/utils/types/chain"
+import useCountdown from "../../util/hooks/useCountdown"
+import OutlinedButton from "../../components/ui/OutlinedButton"
+import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
+import {
+    AdvancedSettings,
+    defaultAdvancedSettings,
+} from "../../components/transactions/AdvancedSettings"
+import Icon, { IconName } from "../../components/ui/Icon"
+import RefreshLabel from "../../components/swaps/RefreshLabel"
+import {
+    BridgeQuoteRequest,
+    GetBridgeQuoteResponse,
+} from "@block-wallet/background/controllers/BridgeController"
+import { capitalize } from "../../util/capitalize"
+import { parseUnits } from "ethers/lib/utils"
 
 export interface BridgeConfirmPageLocalState {
     token: Token
     network: IChain
     bridgeRoute: IBridgeRoute
-    amount?: string
+    amount: string
+    fromAssetPage?: boolean
 }
+
+// 15s
+const QUOTE_REFRESH_TIMEOUT = 1000 * 15
 
 const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const history = useOnMountHistory()
-    const { token, network, bridgeRoute } = useMemo(
+    const { token, network, bridgeRoute, amount } = useMemo(
         () => history.location.state as BridgeConfirmPageLocalState,
         [history.location.state]
+    )
+
+    const [timeoutStart, setTimeoutStart] = useState<number | undefined>(
+        undefined
+    )
+    const { value: remainingSeconds } = useCountdown(
+        timeoutStart,
+        QUOTE_REFRESH_TIMEOUT
     )
 
     const [persistedData, setPersistedData] = useLocalStorageState(
@@ -117,11 +148,21 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
             }
         )
 
+    const [isFetchingParams, setIsFetchingParams] = useState<boolean>(false)
     const [isGasLoading, setIsGasLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | undefined>(undefined)
     const [showDetails, setShowDetails] = useState<boolean>(false)
+    const [advancedSettings, setAdvancedSettings] =
+        useState<TransactionAdvancedData>(defaultAdvancedSettings)
+    const [bridgeParams, setBridgeParams] = useState<
+        GetBridgeQuoteResponse | undefined
+    >()
 
     const networkLabel = availableNetworks[selectedNetwork.toUpperCase()]
+    const bnAmount = parseUnits(
+        amount || "0",
+        bridgeRoute.fromTokens[0].decimals
+    )
 
     // Gas
     const [defaultGas, setDefaultGas] = useState<{
@@ -145,7 +186,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const [selectedGasLimit, setSelectedGasLimit] = useState(BigNumber.from(0))
 
     const isBridging = status === "loading" && isOpen
+    const shouldFetchBridgeParams = status !== "loading" && status !== "success"
     const isGasInitialized = useRef<boolean>(false)
+    const remainingSuffix = Math.ceil(remainingSeconds!)
+        ? `${Math.floor(remainingSeconds!)}s`
+        : ""
 
     // Balance check
     const feePerGas = isEIP1559Compatible
@@ -191,6 +236,33 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         }
     }
 
+    console.log(bridgeParams)
+
+    const updateBridgeParameters = useCallback(async () => {
+        setError(undefined)
+        const params: BridgeQuoteRequest = {
+            toChainId: bridgeRoute.toChainId,
+            fromTokenAddress: bridgeRoute.fromTokens[0].address,
+            toTokenAddress: bridgeRoute.toTokens[0].address,
+            fromAmount: bnAmount.toString(),
+            fromAddress: selectedAccount.address,
+            slippage: advancedSettings.slippage || 0.5,
+        }
+
+        setIsFetchingParams(true)
+
+        try {
+            const quote = await getBridgeQuote(params)
+
+            setBridgeParams(quote)
+            setTimeoutStart(new Date().getTime())
+        } catch (error) {
+            setError(capitalize(error.message || "Error fetching quote"))
+        } finally {
+            setIsFetchingParams(false)
+        }
+    }, [selectedAccount.address, advancedSettings.slippage, bridgeRoute])
+
     // Initialize gas
     useEffect(() => {
         const setGas = async () => {
@@ -223,6 +295,29 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bridgeRoute, error])
 
+    useEffect(() => {
+        if (!shouldFetchBridgeParams || inProgressAllowanceTransaction?.id) {
+            setTimeoutStart(undefined)
+            return
+        }
+
+        //first render, run function manually
+        updateBridgeParameters()
+        let intervalRef = setInterval(
+            updateBridgeParameters,
+            QUOTE_REFRESH_TIMEOUT
+        )
+
+        // Cleanup timer
+        return () => {
+            intervalRef && clearInterval(intervalRef)
+        }
+    }, [
+        updateBridgeParameters,
+        shouldFetchBridgeParams,
+        inProgressAllowanceTransaction?.id,
+    ])
+
     return (
         <PopupLayout
             header={
@@ -230,7 +325,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     title="Bridge"
                     close="/"
                     onBack={() => {
-                        //avoid returning to the approve page.
+                        // Avoid returning to the approve page.
                         history.push({
                             pathname: "/bridge",
                             state: history.location.state,
@@ -346,10 +441,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
             />
             <div className="flex flex-col px-6 py-3">
                 {/* From Token */}
-                <AssetAmountDisplay asset={token} amount={BigNumber.from(0)} />
+                <AssetAmountDisplay asset={token} amount={bnAmount} />
 
                 {/* Divider */}
-                <div className="pt-8">
+                <div className="pt-6">
                     <hr className="-mx-5" />
                     <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-grey-200 bg-white z-10">
                         <img
@@ -360,11 +455,22 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     </div>
                 </div>
 
-                {/* To Token */}
-                <NetworkDisplay network={network} />
+                {/* To */}
+                <div className="-mt-2">
+                    <AssetAmountDisplay
+                        asset={bridgeRoute.toTokens[0]}
+                        amount={BigNumber.from(
+                            bridgeParams?.bridgeParams.params.toAmount || 0
+                        )}
+                    />
+                </div>
+
+                <div className="py-2">
+                    <NetworkDisplay network={network} />
+                </div>
 
                 {/* Gas */}
-                <p className="text-sm text-gray-600 pb-2 pt-1">Gas Price</p>
+                <p className="text-sm text-gray-600 py-2">Gas Price</p>
                 {isEIP1559Compatible ? (
                     <GasPriceComponent
                         defaultGas={{
@@ -396,6 +502,42 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                         isParentLoading={isGasLoading}
                         disabled={isGasLoading}
                     />
+                )}
+
+                <div className="flex flex-row space-x-2 items-center py-3">
+                    {/* Settings */}
+                    <AdvancedSettings
+                        address={selectedAccount.address}
+                        advancedSettings={advancedSettings}
+                        display={{
+                            nonce: true,
+                            flashbots: true,
+                            slippage: true,
+                        }}
+                        setAdvancedSettings={(
+                            newSettings: TransactionAdvancedData
+                        ) => {
+                            setAdvancedSettings(newSettings)
+                        }}
+                    />
+                    {/* Details */}
+                    <OutlinedButton
+                        onClick={() => {
+                            bridgeParams && setShowDetails(true)
+                        }}
+                        className={classnames(
+                            "w-full",
+                            !bridgeParams &&
+                                "cursor-not-allowed hover:border-default"
+                        )}
+                    >
+                        <span className="font-bold text-sm">Details</span>
+                        <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
+                    </OutlinedButton>
+                </div>
+
+                {remainingSuffix && (
+                    <RefreshLabel value={remainingSuffix} className="mt-3" />
                 )}
             </div>
         </PopupLayout>

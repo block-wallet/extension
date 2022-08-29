@@ -1,114 +1,422 @@
-import { FunctionComponent, useEffect, useRef, useState } from "react"
-import { Classes, classnames } from "../../styles"
-import { useOnClickOutside } from "../../util/useOnClickOutside"
-import ToggleButton from "../button/ToggleButton"
-import Dialog from "../dialog/Dialog"
-import { ArrowUpDown } from "../icons/ArrowUpDown"
-import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
-import Divider from "../Divider"
+import * as yup from "yup"
 import CloseIcon from "../icons/CloseIcon"
-import { getNextNonce } from "../../context/commActions"
-import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
+import Dialog from "../dialog/Dialog"
+import Divider from "../Divider"
+import Icon, { IconName } from "../ui/Icon"
+import OutlinedButton from "../ui/OutlinedButton"
+import ToggleButton from "../button/ToggleButton"
 import Tooltip from "../label/Tooltip"
 import { AiFillInfoCircle } from "react-icons/ai"
-import { BigNumber } from "ethers"
+import { BigNumber } from "ethers/lib/ethers"
+import { ButtonWithLoading } from "../button/ButtonWithLoading"
+import { Classes, classnames } from "../../styles"
+import { FunctionComponent, useEffect, useRef, useState } from "react"
+import { InferType } from "yup"
+import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
+import { getNextNonce } from "../../context/commActions"
+import { useForm } from "react-hook-form"
+import { useOnClickOutside } from "../../util/useOnClickOutside"
+import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
+import { yupResolver } from "@hookform/resolvers/yup"
 
-export interface AdvancedSettingsConfig {
-    address: string
-    showCustomNonce: boolean
-    showFlashbots: boolean
-    gasLimit?: BigNumber
+export interface AdvancedSettingsDisplay {
+    nonce: boolean
+    flashbots: boolean
+    slippage: boolean
 }
 
-/**
- * AdvancedSettings:
- * Opens a Dialog where the user can customize some transaction advanced settings.
- * The settings that the modal will display depend on the config parameter and the default values
- * come from the data parameter.
- * @param config - Object containing properties that will be shown.
- * @param data - Object containing defautl values for each property.
- * @param setData - Triggered when any value gets changed. Implemented from parent components to modify state or tx values.
- */
-export const AdvancedSettings: FunctionComponent<{
-    config: AdvancedSettingsConfig
-    data: TransactionAdvancedData
-    setData: (data: TransactionAdvancedData) => void
-}> = ({ config, data, setData }) => {
-    const [isActive, setIsActive] = useState(false)
-    const [userChanged, setUserChanged] = useState(false)
+export interface AdvancedSettingsProps {
+    address: string
+    advancedSettings: TransactionAdvancedData
+    setAdvancedSettings: (x: TransactionAdvancedData) => void
+    defaultSettings?: Required<TransactionAdvancedData>
+    display?: AdvancedSettingsDisplay
+    transactionGasLimit?: BigNumber
+}
 
-    const ref = useRef<any>(null)
-    useOnClickOutside(ref, () => {
-        setIsActive(false)
+export const defaultAdvancedSettings: Required<TransactionAdvancedData> = {
+    customAllowance: "0",
+    customNonce: 0,
+    flashbots: false,
+    slippage: 0.5,
+}
+
+export const defaultSettingsDisplay: AdvancedSettingsDisplay = {
+    nonce: true,
+    flashbots: true,
+    slippage: false,
+}
+
+export const FLASHBOTS_MIN_GAS_LIMIT = BigNumber.from(42000)
+
+const GetAdvancedSettingsSchema = (display: AdvancedSettingsDisplay) => {
+    return yup.object({
+        nonce: yup.string().when([], {
+            is: () => display.nonce,
+            then: yup
+                .string()
+                .required("A nonce is required")
+                .test("is-number", "Please enter a number", (value) => {
+                    if (typeof value != "string") return false
+                    return !isNaN(parseFloat(value))
+                })
+                .test("is-integer", "Nonce should be an integer", (value) => {
+                    if (typeof value != "string") return false
+                    return !value.includes(".")
+                }),
+        }),
+        slippage: yup.string().when([], {
+            is: () => display.slippage,
+            then: yup
+                .string()
+                .required("A slippage setting is required")
+                .test("is-number", "Please enter a number", (value) => {
+                    if (typeof value != "string") return false
+                    return !isNaN(parseFloat(value))
+                })
+                .test(
+                    "too-large",
+                    "Slippage can't be more than 100%",
+                    (value) => {
+                        if (typeof value != "string") return false
+                        return parseFloat(value) < 100
+                    }
+                ),
+        }),
+    })
+}
+
+type AdvancedSettingsFormData = InferType<
+    ReturnType<typeof GetAdvancedSettingsSchema>
+>
+
+/**
+ * Advanced Settings
+ * Opens a Dialog where the user can customize advanced transaction settings.
+ *
+ * @param address Transaction signing address
+ * @param advancedSettings Current parent advanced settings state
+ * @param setAdvancedSettings Parent set state callback
+ * @param defaultSettings Default advanced settings
+ * @param display Custom display options
+ */
+export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
+    address,
+    advancedSettings,
+    setAdvancedSettings,
+    defaultSettings = defaultAdvancedSettings,
+    display = defaultSettingsDisplay,
+    transactionGasLimit = BigNumber.from(21000),
+}) => {
+    const { chainId } = useSelectedNetwork()
+    const isFlashbotsAvailable = chainId === 1
+
+    const [isOpen, setIsOpen] = useState<boolean>(false)
+    const [isFlashbotsEnabled, setIsFlashbotsEnabled] = useState<boolean>(
+        isFlashbotsAvailable ? !!advancedSettings.flashbots : false
+    )
+    const [slippageWarning, setSlippageWarning] = useState<string | null>(null)
+
+    const nextNonce = useRef<number>(defaultSettings.customNonce)
+    const clickOutsideRef = useRef<HTMLDivElement | null>(null)
+    useOnClickOutside(clickOutsideRef, () => {
+        setIsOpen(false)
     })
 
-    const [advancedSettingsData, setAdvancedSettingsData] =
-        useState<TransactionAdvancedData>(data)
+    // Validation
+    const schema = GetAdvancedSettingsSchema(display)
 
-    const nextNonce = useRef(0)
+    const {
+        clearErrors,
+        getValues,
+        handleSubmit,
+        register,
+        setValue,
+        formState: { errors },
+    } = useForm<InferType<typeof schema>>({
+        resolver: yupResolver(schema),
+    })
+
+    const canSubmit = !(errors.nonce || errors.slippage)
+    const isModified = () => {
+        const { nonce, slippage } = getValues()
+
+        if (
+            nonce &&
+            display.nonce &&
+            advancedSettings.customNonce !== parseInt(nonce)
+        ) {
+            return true
+        }
+
+        if (
+            display.flashbots &&
+            advancedSettings.flashbots !== isFlashbotsEnabled
+        ) {
+            return true
+        }
+
+        if (
+            slippage &&
+            display.slippage &&
+            advancedSettings.slippage !== parseFloat(slippage)
+        ) {
+            return true
+        }
+    }
+
+    const validateSlippage = (v: string) => {
+        if (!v) {
+            setSlippageWarning(null)
+            return
+        }
+
+        const parsedSlippage = parseFloat(v)
+
+        if (!isFlashbotsEnabled && parsedSlippage > 2) {
+            setSlippageWarning("The transaction may be frontrun")
+            return
+        }
+
+        if (parsedSlippage < 0.05) {
+            setSlippageWarning("The transaction may fail")
+            return
+        }
+
+        setSlippageWarning(null)
+    }
+
+    const onNonceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const inputLimit = 7
+        let value = event.target.value
+
+        value = value.slice(0, inputLimit)
+
+        value = value.replace(/[^0-9]/g, "")
+
+        if (value === "") {
+            setValue("nonce", "", {
+                shouldValidate: true,
+            })
+        } else {
+            setValue("nonce", value, {
+                shouldValidate: true,
+            })
+        }
+    }
+
+    const onSlippageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const inputLimit = 5
+        let value = event.target.value
+
+        value = value.slice(0, inputLimit)
+
+        value = value
+            .replace(/[^0-9.,]/g, "")
+            .replace(",", ".")
+            .replace(/(\..*?)\..*/g, "$1")
+
+        if (value === ".") {
+            value = ""
+        }
+
+        if (value === "") {
+            setValue("slippage", "", {
+                shouldValidate: true,
+            })
+        } else {
+            setValue("slippage", value, {
+                shouldValidate: true,
+            })
+        }
+
+        validateSlippage(value)
+    }
+
+    // Reset settings to default
+    const resetSettings = () => {
+        clearErrors()
+
+        setValue("nonce", nextNonce.current.toString(), {
+            shouldValidate: true,
+        })
+        setValue("slippage", defaultSettings.slippage.toString(), {
+            shouldValidate: true,
+        })
+
+        validateSlippage(defaultSettings.slippage.toString())
+
+        setIsFlashbotsEnabled(
+            isFlashbotsAvailable
+                ? advancedSettings.flashbots || defaultSettings.flashbots
+                : false
+        )
+    }
+
+    const onSubmit = handleSubmit(
+        ({ slippage, nonce }: AdvancedSettingsFormData) => {
+            setAdvancedSettings({
+                customNonce: nonce ? parseInt(nonce) : undefined,
+                flashbots: isFlashbotsEnabled,
+                slippage: slippage ? parseFloat(slippage) : undefined,
+            })
+
+            setIsOpen(false)
+        }
+    )
+
     useEffect(() => {
         const fetch = async () => {
-            nextNonce.current = await getNextNonce(config.address)
+            nextNonce.current = await getNextNonce(address)
+
+            setValue("slippage", defaultSettings.slippage.toString(), {
+                shouldValidate: true,
+            })
+            setValue("nonce", nextNonce.current.toString(), {
+                shouldValidate: true,
+            })
+
+            validateSlippage(defaultSettings.slippage.toString())
+
+            setAdvancedSettings({
+                customNonce: nextNonce.current,
+                flashbots: isFlashbotsEnabled,
+                slippage: defaultSettings.slippage,
+            })
         }
+
         fetch()
-    }, [config.address])
+
+        // eslint-disable-next-line
+    }, [])
+
+    useEffect(() => {
+        if (isOpen) {
+            clearErrors()
+
+            setValue(
+                "nonce",
+                advancedSettings.customNonce?.toString() ||
+                    nextNonce.current.toString(),
+                {
+                    shouldValidate: true,
+                }
+            )
+            setValue(
+                "slippage",
+                (
+                    advancedSettings.slippage || defaultSettings.slippage
+                ).toString(),
+                {
+                    shouldValidate: true,
+                }
+            )
+
+            validateSlippage(
+                (
+                    advancedSettings.slippage || defaultSettings.slippage
+                ).toString()
+            )
+
+            setIsFlashbotsEnabled(
+                isFlashbotsAvailable
+                    ? advancedSettings.flashbots || defaultSettings.flashbots
+                    : false
+            )
+        }
+
+        // eslint-disable-next-line
+    }, [isOpen, nextNonce.current])
 
     return (
         <>
-            <div
-                onClick={() => setIsActive(true)}
-                className="w-full p-4 bg-white border border-gray-200 hover:border-black rounded-md cursor-pointer flex items-center justify-between"
+            <OutlinedButton
+                onClick={() => setIsOpen(true)}
+                className="w-full py-3"
             >
-                <span className="font-bold text-xs">Advanced Settings</span>
-                <div>
-                    <ArrowUpDown active={isActive} />
-                </div>
-            </div>
-
-            <Dialog open={isActive}>
-                <span className="absolute top-0 right-0 p-4 z-50">
+                <span className="font-bold text-sm">Advanced Settings</span>
+                <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
+            </OutlinedButton>
+            <Dialog open={isOpen}>
+                <div className="absolute top-0 right-0 p-4 z-40">
                     <div
-                        onClick={() => setIsActive(false)}
-                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                        onClick={() => {
+                            setIsOpen(false)
+                        }}
+                        className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
                     >
                         <CloseIcon size="10" />
                     </div>
-                </span>
-                <div className="flex flex-col w-full space-y-4 p-2" ref={ref}>
+                </div>
+                <div
+                    className="flex flex-col w-full space-y-2 p-2"
+                    ref={clickOutsideRef}
+                >
                     <span className="p-0 text-base font-bold">
                         Advanced Settings
                     </span>
 
-                    {/*Custom Nonce*/}
-                    {config.showCustomNonce && (
-                        <div className="flex flex-col space-y-1">
-                            <span className="text-xs font-medium">
-                                Custom Nonce
-                            </span>
+                    {display.slippage && (
+                        <div className="flex flex-col">
+                            <p className="text-xs font-medium pb-1">
+                                Slippage percentage (%)
+                            </p>
                             <input
-                                name="customNonce"
-                                type="number"
-                                className={classnames(Classes.inputBordered)}
-                                min={0}
+                                {...register("slippage")}
+                                id="slippage"
+                                name="slippage"
+                                type="text"
                                 autoComplete="off"
-                                defaultValue={
-                                    advancedSettingsData.customNonce ??
-                                    nextNonce.current
-                                }
                                 onChange={(e) => {
-                                    setUserChanged(true)
-
-                                    setAdvancedSettingsData({
-                                        ...advancedSettingsData,
-                                        customNonce: +e.target.value,
-                                    })
+                                    onSlippageChange(e)
                                 }}
+                                className={classnames(
+                                    Classes.inputBordered,
+                                    errors.slippage
+                                        ? "border-red-400 focus:border-red-400"
+                                        : slippageWarning &&
+                                              "border-yellow-400 focus:border-yellow-600"
+                                )}
                             />
+                            {errors.slippage?.message ? (
+                                <p className="text-xs text-red-500 pt-1">
+                                    {errors.slippage?.message}
+                                </p>
+                            ) : (
+                                <p className="text-xs text-yellow-500 pt-1">
+                                    {slippageWarning} &nbsp;
+                                </p>
+                            )}
                         </div>
                     )}
 
-                    {/*Flashbots*/}
-                    {config.showFlashbots && (
+                    {display.nonce && (
+                        <div className="flex flex-col">
+                            <p className="text-xs font-medium pb-1">
+                                Custom Nonce
+                            </p>
+                            <input
+                                {...register("nonce")}
+                                id="nonce"
+                                name="nonce"
+                                type="text"
+                                autoComplete="off"
+                                onChange={(e) => {
+                                    onNonceChange(e)
+                                }}
+                                className={classnames(
+                                    Classes.inputBordered,
+                                    errors.nonce &&
+                                        "border-red-400 focus:border-red-400"
+                                )}
+                            />
+                            <p className="text-xs text-red-500 pt-1">
+                                {errors.nonce?.message}&nbsp;
+                            </p>
+                        </div>
+                    )}
+
+                    {display.flashbots && isFlashbotsAvailable && (
                         <div className="flex flex-col space-y-1">
                             <div className="flex space-x-1 items-center">
                                 <span className="text-xs font-medium ">
@@ -138,39 +446,39 @@ export const AdvancedSettings: FunctionComponent<{
                             </div>
                             <ToggleButton
                                 defaultChecked={
-                                    advancedSettingsData.flashbots ?? false
+                                    advancedSettings.flashbots ?? false
                                 }
-                                inputName="flashbots"
-                                //Flashbots disabled when Gas Limit is under 42k
-                                disabled={config.gasLimit!.lt(
-                                    BigNumber.from(42000)
+                                disabled={transactionGasLimit.lt(
+                                    FLASHBOTS_MIN_GAS_LIMIT
                                 )}
+                                inputName="flashbots"
                                 onToggle={(checked) => {
-                                    setUserChanged(true)
-
-                                    setAdvancedSettingsData({
-                                        ...advancedSettingsData,
-                                        flashbots: checked,
-                                    })
+                                    setIsFlashbotsEnabled(checked)
                                 }}
                             />
                         </div>
                     )}
-                    <>
-                        <div className="-mx-6">
-                            <Divider />
-                        </div>
 
-                        <ButtonWithLoading
-                            label="Save"
-                            disabled={!userChanged}
-                            buttonClass={Classes.button}
-                            onClick={() => {
-                                setData(advancedSettingsData)
-                                setIsActive(false)
-                            }}
-                        />
-                    </>
+                    <p
+                        onClick={() => resetSettings()}
+                        className="text-xs text-blue-500 hover:text-blue-800 cursor-pointer w-min pb-1"
+                    >
+                        Reset
+                    </p>
+
+                    <div className="-mx-5 pb-2">
+                        <Divider />
+                    </div>
+
+                    <ButtonWithLoading
+                        type="submit"
+                        label="Save"
+                        disabled={!(canSubmit && isModified())}
+                        buttonClass={Classes.button}
+                        onClick={() => {
+                            onSubmit()
+                        }}
+                    />
                 </div>
             </Dialog>
         </>

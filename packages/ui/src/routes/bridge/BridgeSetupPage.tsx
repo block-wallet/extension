@@ -38,8 +38,8 @@ interface SetupBridgePageLocalState {
     token?: Token
     network?: IChain
     bridgeRoute?: IBridgeRoute
-    fromAssetPage?: boolean
     amount?: string
+    fromAssetPage?: boolean
 }
 
 interface BridgeState {

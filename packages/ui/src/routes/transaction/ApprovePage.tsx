@@ -53,6 +53,7 @@ import { rejectTransaction } from "../../context/commActions"
 import { DepositConfirmLocalState } from "../deposit/DepositConfirmPage"
 import { SwapConfirmPageLocalState } from "../swap/SwapConfirmPage"
 import { ExchangeType } from "../../context/commTypes"
+import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 
 const UNLIMITED_ALLOWANCE = ethers.constants.MaxUint256
 
@@ -556,16 +557,17 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     />
                 )}
                 <AdvancedSettings
-                    config={{
-                        showCustomNonce: true,
-                        showFlashbots: false,
-                        address: selectedAccount.address,
-                    }}
-                    data={{
+                    address={selectedAccount.address}
+                    advancedSettings={{ customNonce }}
+                    display={{
+                        nonce: true,
                         flashbots: false,
+                        slippage: false,
                     }}
-                    setData={(data) => {
-                        setCustomNonce(data.customNonce)
+                    setAdvancedSettings={(
+                        newSettings: TransactionAdvancedData
+                    ) => {
+                        setCustomNonce(newSettings.customNonce)
                     }}
                 />
                 <div

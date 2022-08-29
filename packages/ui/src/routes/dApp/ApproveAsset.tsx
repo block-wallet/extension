@@ -460,18 +460,14 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     />
                 )}
                 <AdvancedSettings
-                    config={{
-                        showCustomNonce: true,
-                        showFlashbots: false,
-                        address: checksumFromAddress,
-                    }}
-                    data={{
-                        flashbots: false,
-                    }}
-                    setData={(data) => {
+                    address={checksumFromAddress}
+                    advancedSettings={transactionAdvancedData}
+                    setAdvancedSettings={(
+                        newSettings: TransactionAdvancedData
+                    ) => {
                         setTransactionAdvancedData({
-                            customNonce: data.customNonce,
-                            flashbots: data.flashbots,
+                            customNonce: newSettings.customNonce,
+                            flashbots: newSettings.flashbots,
                         })
                     }}
                 />

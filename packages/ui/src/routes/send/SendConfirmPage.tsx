@@ -965,17 +965,18 @@ const SendConfirmPage = () => {
 
                         <div className="mt-3">
                             <AdvancedSettings
-                                config={{
-                                    showCustomNonce: true,
-                                    showFlashbots: false,
-                                    address,
+                                address={address}
+                                advancedSettings={transactionAdvancedData}
+                                display={{
+                                    nonce: true,
+                                    flashbots: false,
+                                    slippage: false,
                                 }}
-                                data={{}}
-                                setData={function (
-                                    data: TransactionAdvancedData
-                                ): void {
+                                setAdvancedSettings={(
+                                    newSettings: TransactionAdvancedData
+                                ) => {
                                     setTransactionAdvancedData({
-                                        customNonce: data.customNonce,
+                                        customNonce: newSettings.customNonce,
                                     })
                                 }}
                             />

@@ -6,7 +6,7 @@ import { IChain } from "@block-wallet/background/utils/types/chain"
 
 interface NetworkSelectorProps {
     networkList: IChain[]
-    onNetworkChange: (network: IChain) => void
+    onNetworkChange: (network: IChain | undefined) => void
     selectedNetwork?: IChain
     error?: string
     topMargin?: number
@@ -29,6 +29,16 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
     ) => {
         onNetworkChange(network)
         setActive && setActive(false)
+    }
+
+    if (selectedNetwork) {
+        const isAvailable = networkList.filter(
+            (network) => network.id === selectedNetwork.id
+        )
+
+        if (!isAvailable.length) {
+            onNetworkChange(undefined)
+        }
     }
 
     // List
@@ -66,9 +76,13 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
             transparent={true}
             bigLogo={true}
         />
-    ) : (
+    ) : networkList.length ? (
         <div className="flex flex-col justify-center w-full">
             <div className="text-base font-semibold">Select...</div>
+        </div>
+    ) : (
+        <div className="flex flex-col justify-center w-full">
+            <div className="text-base font-semibold">No available networks</div>
         </div>
     )
 
@@ -79,6 +93,7 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
             topMargin={topMargin}
             bottomMargin={bottomMargin}
             popupMargin={popupMargin}
+            disabled={!networkList.length}
         >
             <AssetList />
         </DropDownSelector>

@@ -8,14 +8,18 @@ import { formatNumberLength } from "../../util/formatNumberLength"
 
 interface AssetAmountComponentProps {
     asset: Token
-    amount: BigNumber
+    amount?: BigNumber
 }
 
 const AssetAmountDisplay: FC<AssetAmountComponentProps> = ({
     asset,
     amount,
 }) => {
-    const amountString = formatRounded(formatUnits(amount, asset.decimals), 11)
+    const amountString = formatRounded(
+        formatUnits(amount || 0, asset.decimals),
+        11
+    )
+
     return (
         <div className="flex flex-row items-center space-x-1 w-full p-4 rounded-md bg-primary-100">
             <span className="flex items-center justify-center !w-6 !h-6 rounded-full">
@@ -31,12 +35,14 @@ const AssetAmountDisplay: FC<AssetAmountComponentProps> = ({
             >
                 {asset.symbol}
             </span>
-            <div
-                className="text-base truncate font-semibold !ml-auto"
-                title={amountString}
-            >
-                {formatNumberLength(amountString, 12)}
-            </div>
+            {amount && (
+                <div
+                    className="text-base truncate font-semibold !ml-auto"
+                    title={amountString}
+                >
+                    {formatNumberLength(amountString, 12)}
+                </div>
+            )}
         </div>
     )
 }

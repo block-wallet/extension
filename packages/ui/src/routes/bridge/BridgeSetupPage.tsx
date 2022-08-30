@@ -32,7 +32,10 @@ import { capitalize } from "../../util/capitalize"
 import { BridgeConfirmPageLocalState } from "./BridgeConfirmPage"
 import { IBridgeRoute } from "@block-wallet/background/utils/bridgeApi"
 import { IChain } from "@block-wallet/background/utils/types/chain"
-import { checkForBridgeNativeAsset } from "../../util/bridgeUtils"
+import {
+    checkForBridgeNativeAsset,
+    getRouteForNetwork,
+} from "../../util/bridgeUtils"
 
 interface SetupBridgePageLocalState {
     token?: Token
@@ -74,6 +77,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const [inputFocus, setInputFocus] = useState(false)
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [hasAllowance, setHasAllowance] = useState<boolean>(true)
+    const [availableRoutes, setAvailableRoutes] = useState<IBridgeRoute[]>([])
     const [currentBridgeRoute, setCurrentBridgeRoute] = useState<
         IBridgeRoute | undefined
     >(bridgeRoute)
@@ -97,9 +101,18 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const selectedTokenBalance = useTokenBalance(bridgeDataState.token)
 
     const currentNetwork = availableNetworks[selectedNetwork.toUpperCase()]
-    const filteredAvailableNetworks = availableBridgeChains.filter(
-        (chain) => chain.id !== currentNetwork.chainId
-    )
+    const filteredAvailableNetworks = availableBridgeChains.filter((chain) => {
+        for (let i = 0; i < availableRoutes.length; i++) {
+            if (
+                chain.id === availableRoutes[i].toChainId &&
+                chain.id !== currentNetwork.chainId
+            ) {
+                return true
+            }
+        }
+        return false
+    })
+
     const {
         token: selectedToken,
         network: selectedToNetwork,
@@ -213,6 +226,32 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
             .replace(/(\..*?)\..*/g, "$1")
         setValue("amount", parsedAmount)
     }
+
+    useEffect(() => {
+        const fetchRoutes = async () => {
+            setIsLoading(true)
+
+            try {
+                const availableRoutes = await getBridgeAvailableRoutes({
+                    fromTokenAddress: checkForBridgeNativeAsset(
+                        selectedToken!.address
+                    ),
+                })
+
+                setAvailableRoutes(availableRoutes.routes)
+            } catch (error) {
+                setError(capitalize(error.message || "Error fetching routes."))
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        if (!selectedToken) {
+            setAvailableRoutes([])
+        } else {
+            fetchRoutes()
+        }
+    }, [selectedToken])
 
     useEffect(() => {
         setError(undefined)
@@ -456,13 +495,14 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 />
 
                 {/* Asset in destination */}
-                {currentBridgeRoute && (
+                {availableRoutes && selectedToNetwork && (
                     <div className="pt-3">
                         <AssetAmountDisplay
-                            asset={currentBridgeRoute.toTokens[0]}
-                            amount={
-                                bridgeDataState.bigNumberAmount ||
-                                BigNumber.from(0)
+                            asset={
+                                getRouteForNetwork(
+                                    availableRoutes,
+                                    selectedToNetwork
+                                ).toTokens[0]
                             }
                         />
                     </div>

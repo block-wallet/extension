@@ -1,4 +1,5 @@
-import { RichedTransactionMeta } from "./transactionUtils"
+import { IBridgeRoute } from "@block-wallet/background/utils/bridgeApi"
+import { IChain } from "@block-wallet/background/utils/types/chain"
 
 const LIFI_NATIVE_ADDRESS = "0x0000000000000000000000000000000000000000"
 
@@ -12,6 +13,13 @@ export const checkForBridgeNativeAsset = (address: string): string => {
     }
 
     return address
+}
+
+export const getRouteForNetwork = (
+    availableRoutes: IBridgeRoute[],
+    network: IChain
+): IBridgeRoute => {
+    return availableRoutes.filter((route) => route.toChainId === network.id)[0]
 }
 
 /**

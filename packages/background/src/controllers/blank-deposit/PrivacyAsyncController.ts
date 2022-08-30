@@ -16,8 +16,6 @@ import type { Network } from '../../utils/constants/networks';
 import { NetworkEvents } from '../NetworkController';
 import { BaseController } from '../../infrastructure/BaseController';
 
-import { BlankDepositController as PrivacyController } from './BlankDepositController';
-import { TornadoEventsService as PrivacyEventsService } from './tornado/TornadoEventsService';
 import tornadoConfig from './tornado/config/config';
 export class PrivacyAsyncController extends BaseController<
     BlankDepositControllerStoreState,
@@ -96,13 +94,16 @@ export class PrivacyAsyncController extends BaseController<
 
     public async getBlankDepositController() {
         if (!this._blankDepositController) {
-            // const { BlankDepositController: PrivacyController } = await import(
-            //     './BlankDepositController'
-            // );
+            const { BlankDepositController: PrivacyController } = await import(
+                /* webpackChunkName: "deposit.controller" */
+                './BlankDepositController'
+            );
 
-            // const { TornadoEventsService: PrivacyEventsService } = await import(
-            //     './tornado/TornadoEventsService'
-            // );
+            const { TornadoEventsService: PrivacyEventsService } = await import(
+                /* webpackChunkName: "tornado.events.service" */
+                './tornado/TornadoEventsService'
+            );
+
             // const tornadoConfig = (await import('./tornado/config/config'))
             //     .default;
 

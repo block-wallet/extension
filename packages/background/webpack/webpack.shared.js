@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const Dotenv = require('dotenv-webpack');
+const WebExtension = require('webpack-target-webextension');
 const ESLintWebpackPlugin = require('eslint-webpack-plugin');
 const BundleAnalyzerPlugin =
     require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -9,6 +10,13 @@ process.env.BABEL_ENV = 'production';
 process.env.NODE_ENV = 'production';
 
 const plugins = [
+    new WebExtension({
+        background: {
+            entry: 'background',
+            // !! Add this to support manifest v3
+            manifest: 3,
+        },
+    }),
     new Dotenv({
         path: './.env',
     }),
@@ -36,7 +44,7 @@ const plugins = [
 module.exports = (entry) => ({
     mode: 'production',
     entry,
-    target: ['webworker', 'es6'],
+    // target: ['webworker','es6'],
     output: {
         filename: '[name].js',
         globalObject: 'this',

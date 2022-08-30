@@ -25,7 +25,8 @@ import NetworkController from '../../NetworkController';
 import type { CircuitProver } from './CircuitProver';
 import { CircuitInput } from './types';
 import log from 'loglevel';
-import type Blake3 from 'blake3/esm/browser';
+// import type Blake3 from 'blake3/esm/browser';
+
 import { NextDepositResult } from '../notes/INotesService';
 import { BlankDepositVault } from '../BlankDepositVault';
 
@@ -40,7 +41,7 @@ export class TornadoNotesService extends NotesService {
     private contracts: ContractsType;
     // Prover Worker
     private circuitProver?: CircuitProver;
-    private blake3?: typeof Blake3;
+    // private blake3?: typeof Blake3;
     constructor(
         private readonly _networkController: NetworkController,
         private readonly _tornadoEventsDb: TornadoEventsDB,
@@ -109,20 +110,21 @@ export class TornadoNotesService extends NotesService {
      * @param data The data to hash
      */
     public async getBlake3Hash(data: Buffer): Promise<Buffer> {
-        if (!this.blake3) {
-            try {
-                this.blake3 = await import(
-                    /* webpackChunkName: "blake3" */ 'blake3/browser'
-                );
-            } catch (error) {
-                console.error(JSON.stringify(error));
-                throw error;
-            }
-        }
-        // Throw if blake3 hasn't been initialized
-        return Buffer.from(
-            this.blake3.createHash().update(data).digest({ length: 64 })
-        );
+        // if (!this.blake3) {
+        //     try {
+        //         this.blake3 = await import(
+        //             /* webpackChunkName: "blake3" */ 'blake3/browser'
+        //         );
+        //     } catch (error) {
+        //         // Throw if blake3 hasn't been initialized
+        //         console.error(JSON.stringify(error));
+        //         throw error;
+        //     }
+        // }
+
+        // return Buffer.from(this.blake3.createHash().update(data).digest({ length: 64 }));
+
+        return Buffer.from(''); // FIXME: WASM IMPL BROKEN IN MV3
     }
 
     public getPedersenHash(data: Buffer) {

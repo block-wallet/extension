@@ -178,8 +178,3 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
         openExtensionInBrowser();
     }
 });
-
-self.addEventListener('install', () => {
-    //@ts-ignore
-    importScripts('blake3.js');
-});

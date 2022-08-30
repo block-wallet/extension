@@ -137,6 +137,9 @@ const initialState: BlankAppState & {
     TransactionWatcherControllerState: {
         transactions: {},
     },
+    BridgeController: {
+        bridgeTransactions: {},
+    },
     BlockFetchController: {
         blockFetchData: {
             1: {

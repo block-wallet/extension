@@ -1,12 +1,18 @@
+import log from 'loglevel';
 import NetworkController from './NetworkController';
 import {
     ContractMethodSignature,
     ContractSignatureParser,
 } from './transactions/ContractSignatureParser';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { PreferencesController } from './PreferencesController';
 import { TokenOperationsController } from './erc-20/transactions/Transaction';
-import { TransactionCategories } from './transactions/utils/types';
+import {
+    MetaType,
+    TransactionCategories,
+    TransactionMeta,
+    TransactionStatus,
+} from './transactions/utils/types';
 import { TransactionController } from './transactions/TransactionController';
 import { retryHandling } from '../utils/retryHandling';
 import { TokenController } from './erc-20/TokenController';
@@ -19,13 +25,28 @@ import BridgeAPI, {
     IBridgeRoute,
 } from '../utils/bridgeApi';
 import { BASE_BRIDGE_FEE, BRIDGE_REFERRER_ADDRESS } from '../utils/types/lifi';
-import { IToken } from './erc-20/Token';
+import { IToken, Token } from './erc-20/Token';
 import { ExchangeController } from './ExchangeController';
 import { IChain } from '../utils/types/chain';
 import { getChainListItem } from '../utils/chainlist';
+import { TransactionByHash } from './TransactionWatcherController';
+import { sleep } from '../utils/sleep';
+import { MILISECOND, MINUTE, SECOND } from '../utils/constants/time';
+import { TransactionReceipt } from '@ethersproject/providers';
+import { toChecksumAddress } from 'ethereumjs-util';
+const STATUS_API_CALLS_DELAY = 2 * SECOND;
+const GET_TX_RECEIPT_DELAY = 2 * SECOND;
 
 export interface BridgeControllerMemState {
     availableBridgeChains: IChain[];
+}
+
+export interface BridgeControllerState {
+    bridgeTransactions: {
+        [chainId: number]: {
+            [address: string]: TransactionByHash;
+        };
+    };
 }
 
 export enum BridgeAllowanceCheck {
@@ -76,7 +97,7 @@ export interface BridgeQuoteRequest
  * depending on the exchange type, and execute the transactions.
  */
 export default class BridgeController extends ExchangeController<
-    undefined,
+    BridgeControllerState,
     BridgeControllerMemState
 > {
     constructor(
@@ -84,14 +105,15 @@ export default class BridgeController extends ExchangeController<
         protected readonly _preferencesController: PreferencesController,
         protected readonly _tokenOperationsController: TokenOperationsController,
         protected readonly _transactionController: TransactionController,
-        private readonly _tokenController: TokenController
+        private readonly _tokenController: TokenController,
+        initialState?: BridgeControllerState
     ) {
         super(
             _networkController,
             _preferencesController,
             _tokenOperationsController,
             _transactionController,
-            undefined,
+            initialState,
             {
                 availableBridgeChains: [],
             }
@@ -270,13 +292,266 @@ export default class BridgeController extends ExchangeController<
 
             this._transactionController.updateTransaction(transactionMeta);
 
-            this._transactionController.approveTransaction(transactionMeta.id);
+            await this._transactionController.approveTransaction(
+                transactionMeta.id
+            );
+
+            this._waitForReceivingTx({
+                accountAddress: transactionRequest.from,
+                hash: transactionMeta.transactionParams.hash!,
+                fromChainId,
+                toChainId,
+                tool,
+                toToken,
+            });
 
             return result;
         } catch (error) {
             throw new Error('Error submitting bridge transaction.');
         }
     };
+
+    private _updateStateTransaction(
+        chainId: number,
+        address: string,
+        txHash: string,
+        updates: Partial<TransactionMeta>
+    ) {
+        const stateTransactions = {
+            ...(this.store.getState().bridgeTransactions || {}),
+        };
+        const chainTx = stateTransactions[chainId] || {};
+        const addrTransactions = chainTx[address] || {};
+        const newTransaction = {
+            ...(addrTransactions[txHash] || {}),
+            ...updates,
+        };
+        this.store.setState({
+            bridgeTransactions: {
+                ...stateTransactions,
+                [chainId]: {
+                    ...chainTx,
+                    [address]: {
+                        ...addrTransactions,
+                        [txHash]: newTransaction,
+                    },
+                },
+            },
+        });
+    }
+
+    /**
+     * Waits for the receving transaction in a Bridge operation (the transaction in the target chain).
+     *
+     * This function executes an API call to get the receiving transaction hash and based on that gets the proper data to store in the state.
+     * @param accountAddress the account address from which the bridge was executed
+     * @param hash the sending transaction hash in a Bridge operation (the transaction in the current chain).
+     * @param tool the bridge used
+     * @param fromChainId the chain id of the sending transaction's network
+     * @param fromChainId the chain id of the receiving transaction's network
+     * @param toToken the token obtained in the receiving chain after executing the bridge.
+     */
+    private async _waitForReceivingTx({
+        accountAddress,
+        hash,
+        tool,
+        fromChainId,
+        toChainId,
+        toToken,
+    }: {
+        accountAddress: string;
+        hash: string;
+        tool: string;
+        fromChainId: number;
+        toChainId: number;
+        toToken: IToken;
+    }) {
+        let receivingTxHash: string | null = null;
+        let notFoundCalls = 0;
+        const provider = this._networkController.getProvider();
+
+        while (receivingTxHash === null || notFoundCalls < 5) {
+            try {
+                const bridgeStatus = await this._getAPIImplementation(
+                    BridgeImplementation.LIFI_BRIDGE
+                ).getStatus({
+                    sendTxHash: hash,
+                    tool,
+                    fromChainId,
+                    toChainId,
+                });
+
+                if (!bridgeStatus || bridgeStatus.status === 'NOT_FOUND') {
+                    notFoundCalls++;
+                    await sleep(STATUS_API_CALLS_DELAY * (notFoundCalls + 1));
+                    continue;
+                }
+                //transaction faield
+                if (['INVALID', 'FAILED'].includes(bridgeStatus.status)) {
+                    break;
+                }
+
+                if (bridgeStatus.receiveTransaction?.txHash) {
+                    receivingTxHash = bridgeStatus.receiveTransaction.txHash;
+                }
+
+                await sleep(STATUS_API_CALLS_DELAY);
+            } catch (e) {
+                log.warn('_waitForReceivingTx', 'getStatus', e);
+                notFoundCalls++;
+            }
+        }
+
+        //bridge failed
+        if (!receivingTxHash) {
+            log.debug(
+                '_waitForReceivingTx',
+                'Receiving transaction hash not found.'
+            );
+            return;
+        }
+
+        let transactionByHash: ethers.providers.TransactionResponse;
+        try {
+            transactionByHash =
+                await retryHandling<ethers.providers.TransactionResponse>(
+                    () => provider.getTransaction(receivingTxHash!),
+                    MILISECOND * 500,
+                    3
+                );
+        } catch (e) {
+            log.error('_waitForReceivingTx', 'getTransaction', e);
+            return;
+        }
+
+        const transactionMeta =
+            this._transactionByHashToTransactionMeta(transactionByHash);
+
+        this._updateStateTransaction(
+            toChainId,
+            accountAddress,
+            receivingTxHash,
+            transactionMeta
+        );
+
+        let txReceipt: TransactionReceipt | null = null;
+        let isSuccess: boolean | undefined = false;
+        let txReceiptRetries = 0;
+
+        while (txReceipt === null) {
+            [txReceipt, isSuccess] =
+                await this._transactionController.checkTransactionReceiptStatus(
+                    receivingTxHash,
+                    provider
+                );
+
+            if (!txReceipt) {
+                txReceiptRetries++;
+                //Max sleep for 1 minute.
+                await sleep(
+                    Math.min(
+                        GET_TX_RECEIPT_DELAY * txReceiptRetries,
+                        1 * MINUTE
+                    )
+                );
+
+                //TODO: Set Max retry count?
+                continue;
+            }
+        }
+
+        const contractSignatureParser = new ContractSignatureParser(
+            this._networkController
+        );
+
+        const methodSignature =
+            await contractSignatureParser.getMethodSignature(
+                transactionByHash.data,
+                txReceipt.contractAddress
+            );
+
+        const transactionToken = await this._fetchToken(
+            toToken,
+            accountAddress,
+            toChainId
+        );
+
+        this._updateStateTransaction(
+            toChainId,
+            accountAddress,
+            receivingTxHash,
+            {
+                methodSignature,
+                transactionReceipt: txReceipt,
+                transferType: transactionToken
+                    ? {
+                          logo: transactionToken.logo,
+                          decimals: transactionToken.decimals,
+                          currency: transactionToken.symbol!,
+                          to: transactionByHash.to,
+                          amount: BigNumber.from(transactionByHash.value),
+                      }
+                    : undefined,
+                status: isSuccess
+                    ? TransactionStatus.CONFIRMED
+                    : TransactionStatus.FAILED,
+            }
+        );
+    }
+
+    private async _fetchToken(
+        transactionToken: IToken,
+        accountAddress: string,
+        chainId: number
+    ): Promise<Token | IToken | undefined> {
+        if (!transactionToken || !transactionToken.address) {
+            return;
+        }
+
+        const contractAddress = toChecksumAddress(transactionToken.address);
+
+        const tokens = await this._tokenController.search(
+            contractAddress,
+            true,
+            accountAddress,
+            chainId
+        );
+
+        //try to fetch the token from our list, if it is not present, use the transaction token data.
+        return tokens.length ? tokens[0] : transactionToken;
+    }
+
+    private _transactionByHashToTransactionMeta(
+        transaction: ethers.providers.TransactionResponse
+    ): Partial<TransactionMeta> {
+        return {
+            rawTransaction: transaction.data,
+            time: transaction.timestamp,
+            approveTime: transaction.timestamp,
+            chainId: transaction.chainId,
+            origin: 'blank',
+
+            transactionCategory: TransactionCategories.INCOMING_BRIDGE,
+            metaType: MetaType.REGULAR,
+            status: transaction.blockNumber
+                ? TransactionStatus.CONFIRMED
+                : TransactionStatus.SUBMITTED,
+            transactionParams: {
+                hash: transaction.hash,
+                to: transaction.to,
+                from: transaction.from,
+                nonce: transaction.nonce,
+                gasLimit: transaction.gasLimit,
+                gasPrice: transaction.gasPrice,
+                data: transaction.data,
+                value: transaction.value,
+                chainId: transaction.chainId,
+                type: transaction.type,
+                maxPriorityFeePerGas: transaction.maxPriorityFeePerGas,
+                maxFeePerGas: transaction.maxFeePerGas,
+            },
+        };
+    }
 
     public async getTokens(
         aggregator: BridgeImplementation = BridgeImplementation.LIFI_BRIDGE

@@ -53,6 +53,22 @@ export interface GetLiFiQuoteResponse {
     transactionRequest: LiFiTransactionRequest;
 }
 
+interface LifiTransactionData {
+    txHash: string;
+    txLink: string;
+    amount: string;
+    token: LiFiToken;
+    chainId: number;
+}
+
+export interface GetLiFiStatusResponse {
+    sending: LifiTransactionData;
+    receiving: LifiTransactionData;
+    status: 'NOT_FOUND' | 'INVALID' | 'PENDING' | 'DONE' | 'FAILED';
+    substatus: string;
+    tool: string;
+}
+
 interface QuoteAction {
     fromChainId: number;
     toChainId: number;

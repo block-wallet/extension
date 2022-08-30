@@ -450,7 +450,8 @@ export default class BlankController extends EventEmitter {
             this.preferencesController,
             this.tokenOperationsController,
             this.transactionController,
-            this.tokenController
+            this.tokenController,
+            initState.BridgeController
         );
 
         this.store = new ComposedStore<BlankAppState>({
@@ -471,6 +472,7 @@ export default class BlankController extends EventEmitter {
             BlockFetchController: this.blockFetchController.store,
             TransactionWatcherControllerState:
                 this.transactionWatcherController.store,
+            BridgeController: this.bridgeController.store,
         });
 
         this.UIStore = new ComposedStore<BlankAppUIState>({

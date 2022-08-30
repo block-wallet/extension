@@ -157,6 +157,7 @@ export enum TransactionCategories {
     TOKEN_METHOD_TRANSFER_FROM = 'transferfrom',
     EXCHANGE = 'exchange',
     BRIDGE = 'bridge',
+    INCOMING_BRIDGE = 'incoming_bridge',
 }
 
 /**

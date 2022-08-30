@@ -2125,7 +2125,7 @@ export class TransactionController extends BaseController<
      * @param txHash - The transaction hash.
      * @returns A tuple with the receipt and an indicator of transaction success.
      */
-    private async checkTransactionReceiptStatus(
+    public async checkTransactionReceiptStatus(
         txHash: string | undefined,
         provider: StaticJsonRpcProvider
     ): Promise<[TransactionReceipt | null, boolean | undefined]> {

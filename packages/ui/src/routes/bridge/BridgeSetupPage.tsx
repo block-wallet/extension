@@ -27,7 +27,10 @@ import { useState, useEffect, FunctionComponent } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { yupResolver } from "@hookform/resolvers/yup"
-import { getBridgeAvailableRoutes } from "../../context/commActions"
+import {
+    getBridgeAvailableRoutes,
+    getBridgeQuote,
+} from "../../context/commActions"
 import { capitalize } from "../../util/capitalize"
 import { BridgeConfirmPageLocalState } from "./BridgeConfirmPage"
 import { IBridgeRoute } from "@block-wallet/background/utils/bridgeApi"
@@ -36,13 +39,19 @@ import {
     checkForBridgeNativeAsset,
     getRouteForNetwork,
 } from "../../util/bridgeUtils"
+import {
+    BridgeQuoteRequest,
+    GetBridgeQuoteResponse,
+} from "@block-wallet/background/controllers/BridgeController"
+import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 
 interface SetupBridgePageLocalState {
-    token?: Token
-    network?: IChain
-    bridgeRoute?: IBridgeRoute
     amount?: string
+    bridgeQuote?: GetBridgeQuoteResponse
     fromAssetPage?: boolean
+    network?: IChain
+    routes?: IBridgeRoute[]
+    token?: Token
 }
 
 interface BridgeState {
@@ -56,7 +65,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const {
         token,
         network,
-        bridgeRoute,
+        bridgeQuote,
+        routes,
         amount: defaultAmount,
         fromAssetPage,
     } = (history.location.state || {}) as SetupBridgePageLocalState
@@ -71,16 +81,18 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         availableBridgeChains,
     } = useBlankState()!
     const { nativeToken } = useTokensList()
+    const selectedAccount = useSelectedAccount()
 
     // State
     const [error, setError] = useState<string | undefined>(undefined)
     const [inputFocus, setInputFocus] = useState(false)
     const [isLoading, setIsLoading] = useState<boolean>(false)
-    const [hasAllowance, setHasAllowance] = useState<boolean>(true)
-    const [availableRoutes, setAvailableRoutes] = useState<IBridgeRoute[]>([])
-    const [currentBridgeRoute, setCurrentBridgeRoute] = useState<
-        IBridgeRoute | undefined
-    >(bridgeRoute)
+    const [availableRoutes, setAvailableRoutes] = useState<IBridgeRoute[]>(
+        routes || []
+    )
+    const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
+        bridgeQuote
+    )
 
     const [bridgeDataState, setBridgeDataState] =
         useLocalStorageState<BridgeState>("bridge.form", {
@@ -126,7 +138,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         setValue,
         trigger: triggerAmountValidation,
         watch,
-        clearErrors,
         formState: { errors },
     } = useForm<InferType<typeof schema>>({
         resolver: yupResolver(schema),
@@ -195,18 +206,22 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     ])
 
     const onSubmit = () => {
-        if (!currentBridgeRoute || !selectedToken || !bigNumberAmount) {
+        if (!selectedToken || !bigNumberAmount || !quote) {
             return
         }
 
-        if (hasAllowance) {
+        // Temp for testing
+        // if (quote.allowance) {
+        if (true) {
             history.push({
                 pathname: "/bridge/confirm",
                 state: {
-                    bridgeRoute: currentBridgeRoute,
-                    token: selectedToken,
-                    network: selectedToNetwork,
                     amount: watchedAmount,
+                    bridgeQuote: quote,
+                    network: selectedToNetwork,
+                    routes: availableRoutes,
+                    token: selectedToken,
+                    fromAssetPage,
                 } as BridgeConfirmPageLocalState,
             })
         } else {
@@ -218,8 +233,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     }
 
     const onUpdateAmount = (value: string) => {
-        // Clear the route first
-        setCurrentBridgeRoute(undefined)
+        // Clear the quote first
+        setQuote(undefined)
         const parsedAmount = value
             .replace(/[^0-9.,]/g, "")
             .replace(",", ".")
@@ -254,21 +269,32 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     }, [selectedToken])
 
     useEffect(() => {
+        let isValidFetch = true
         setError(undefined)
 
-        const fetchRoutes = async () => {
-            setHasAllowance(true)
+        const fetchQuote = async () => {
             setIsLoading(true)
 
             try {
-                const availableRoutes = await getBridgeAvailableRoutes({
-                    fromTokenAddress: checkForBridgeNativeAsset(
-                        selectedToken!.address
-                    ),
-                    toChainId: selectedToNetwork!.id,
-                })
+                const selectedRoute = getRouteForNetwork(
+                    availableRoutes,
+                    selectedToNetwork!
+                )
 
-                setCurrentBridgeRoute(availableRoutes.routes[0])
+                const params: BridgeQuoteRequest = {
+                    toChainId: selectedRoute.toChainId,
+                    fromTokenAddress: selectedRoute.fromTokens[0].address,
+                    toTokenAddress: selectedRoute.toTokens[0].address,
+                    fromAmount: bigNumberAmount!.toString(),
+                    fromAddress: selectedAccount.address,
+                    slippage: 0.5,
+                }
+
+                const fetchedQuote = await getBridgeQuote(params)
+
+                if (isValidFetch) {
+                    setQuote(fetchedQuote)
+                }
             } catch (error) {
                 setError(capitalize(error.message || "Error fetching quoute."))
             } finally {
@@ -286,20 +312,16 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
             ) {
                 return false
             }
-            // if (
-            //     // Check token from
-            // ) {
-            //     setError("Can't bridge this asset")
-            //     return false
-            // }
-
             return true
         }
 
         const isReadyToFetch = validateBeforeFetch()
-
         if (isReadyToFetch) {
-            fetchRoutes()
+            fetchQuote()
+        }
+
+        return () => {
+            isValidFetch = false
         }
     }, [
         bigNumberAmount,
@@ -340,9 +362,14 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 <PopupFooter>
                     <ButtonWithLoading
                         label={
-                            error ? error : hasAllowance ? "Review" : "Approve"
+                            error
+                                ? error
+                                : true
+                                ? // : quote?.allowance -- temp for testing
+                                  "Review"
+                                : "Approve"
                         }
-                        disabled={!!(error || !currentBridgeRoute)}
+                        disabled={!!(error || !quote)}
                         isLoading={isLoading}
                         onClick={onSubmit}
                         buttonClass={classnames(
@@ -376,7 +403,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                     : undefined
                             }
                             onAssetChange={(asset) => {
-                                setCurrentBridgeRoute(undefined)
+                                setQuote(undefined)
                                 setBridgeDataState((prev: BridgeState) => ({
                                     ...prev,
                                     token: asset.token,
@@ -486,7 +513,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     networkList={filteredAvailableNetworks}
                     selectedNetwork={selectedToNetwork}
                     onNetworkChange={(network) => {
-                        setCurrentBridgeRoute(undefined)
+                        setQuote(undefined)
                         setBridgeDataState((prev: BridgeState) => ({
                             ...prev,
                             network: network,
@@ -503,6 +530,12 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                     availableRoutes,
                                     selectedToNetwork
                                 ).toTokens[0]
+                            }
+                            amount={
+                                quote &&
+                                BigNumber.from(
+                                    quote.bridgeParams.params.toAmount
+                                )
                             }
                         />
                     </div>

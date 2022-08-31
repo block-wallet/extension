@@ -68,10 +68,11 @@ import { capitalize } from "../../util/capitalize"
 import { parseUnits } from "ethers/lib/utils"
 
 export interface BridgeConfirmPageLocalState {
-    token: Token
-    network: IChain
-    bridgeRoute: IBridgeRoute
     amount: string
+    bridgeQuote: GetBridgeQuoteResponse
+    network: IChain
+    routes: IBridgeRoute[]
+    token: Token
     fromAssetPage?: boolean
 }
 
@@ -80,7 +81,7 @@ const QUOTE_REFRESH_TIMEOUT = 1000 * 15
 
 const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const history = useOnMountHistory()
-    const { token, network, bridgeRoute, amount } = useMemo(
+    const { amount, bridgeQuote, network, routes, token } = useMemo(
         () => history.location.state as BridgeConfirmPageLocalState,
         [history.location.state]
     )
@@ -154,14 +155,14 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const [showDetails, setShowDetails] = useState<boolean>(false)
     const [advancedSettings, setAdvancedSettings] =
         useState<TransactionAdvancedData>(defaultAdvancedSettings)
-    const [bridgeParams, setBridgeParams] = useState<
-        GetBridgeQuoteResponse | undefined
-    >()
+    const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
+        bridgeQuote
+    )
 
     const networkLabel = availableNetworks[selectedNetwork.toUpperCase()]
     const bnAmount = parseUnits(
         amount || "0",
-        bridgeRoute.fromTokens[0].decimals
+        bridgeQuote.bridgeParams.params.fromToken.decimals
     )
 
     // Gas
@@ -236,14 +237,12 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         }
     }
 
-    console.log(bridgeParams)
-
     const updateBridgeParameters = useCallback(async () => {
         setError(undefined)
         const params: BridgeQuoteRequest = {
-            toChainId: bridgeRoute.toChainId,
-            fromTokenAddress: bridgeRoute.fromTokens[0].address,
-            toTokenAddress: bridgeRoute.toTokens[0].address,
+            toChainId: bridgeQuote.bridgeParams.params.toChainId,
+            fromTokenAddress: bridgeQuote.bridgeParams.params.fromToken.address,
+            toTokenAddress: bridgeQuote.bridgeParams.params.toToken.address,
             fromAmount: bnAmount.toString(),
             fromAddress: selectedAccount.address,
             slippage: advancedSettings.slippage || 0.5,
@@ -254,14 +253,14 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         try {
             const quote = await getBridgeQuote(params)
 
-            setBridgeParams(quote)
+            setQuote(quote)
             setTimeoutStart(new Date().getTime())
         } catch (error) {
             setError(capitalize(error.message || "Error fetching quote"))
         } finally {
             setIsFetchingParams(false)
         }
-    }, [selectedAccount.address, advancedSettings.slippage, bridgeRoute])
+    }, [selectedAccount.address, advancedSettings.slippage, quote])
 
     // Initialize gas
     useEffect(() => {
@@ -293,7 +292,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         setGas()
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [bridgeRoute, error])
+    }, [quote, error])
 
     useEffect(() => {
         if (!shouldFetchBridgeParams || inProgressAllowanceTransaction?.id) {
@@ -353,7 +352,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                         isLoading={
                             error || !!inProgressAllowanceTransaction
                                 ? false
-                                : !bridgeRoute || isGasLoading || isBridging
+                                : !quote || isGasLoading || isBridging
                         }
                         onClick={onSubmit}
                         disabled={!!error || !hasBalance}
@@ -458,10 +457,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 {/* To */}
                 <div className="-mt-2">
                     <AssetAmountDisplay
-                        asset={bridgeRoute.toTokens[0]}
-                        amount={BigNumber.from(
-                            bridgeParams?.bridgeParams.params.toAmount || 0
-                        )}
+                        asset={bridgeQuote.bridgeParams.params.toToken}
+                        amount={
+                            quote &&
+                            BigNumber.from(quote.bridgeParams.params.toAmount)
+                        }
                     />
                 </div>
 
@@ -523,12 +523,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     {/* Details */}
                     <OutlinedButton
                         onClick={() => {
-                            bridgeParams && setShowDetails(true)
+                            quote && setShowDetails(true)
                         }}
                         className={classnames(
                             "w-full",
-                            !bridgeParams &&
-                                "cursor-not-allowed hover:border-default"
+                            !quote && "cursor-not-allowed hover:border-default"
                         )}
                     >
                         <span className="font-bold text-sm">Details</span>

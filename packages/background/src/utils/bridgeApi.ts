@@ -49,7 +49,7 @@ export interface getBridgeQuoteRequest {
     fromAmount: string;
     fromAddress: string;
     referer?: string;
-    slippage?: number; //TODO: definir 0.5
+    slippage?: number;
 }
 
 export interface BridgeTransactionRequest {

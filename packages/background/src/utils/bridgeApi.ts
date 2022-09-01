@@ -197,7 +197,7 @@ const LiFiBridge: IBridge = {
             fromAmount: responseData.estimate.fromAmount,
             toAmount: responseData.estimate.toAmount,
             fromChainId: responseData.action.fromChainId,
-            toChainId: responseData.action.fromChainId,
+            toChainId: responseData.action.toChainId,
             fromToken: lifiTokenToIToken(responseData.action.fromToken),
             toToken: lifiTokenToIToken(responseData.action.toToken),
             tool: responseData.tool.key,

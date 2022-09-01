@@ -140,12 +140,24 @@ export default class BridgeController extends ExchangeController<
         this.getAvailableChains();
 
         this._networkController.store.subscribe(
-            (state: NetworkControllerState) => {
-                const chainIds = Object.values(state.availableNetworks).map(
+            (
+                state: NetworkControllerState,
+                prevState?: NetworkControllerState
+            ) => {
+                let chainIds = Object.values(state.availableNetworks).map(
                     ({ chainId }) => chainId
                 );
 
-                //3
+                if (prevState) {
+                    const oldChainIds = Object.values(
+                        prevState.availableNetworks
+                    ).map(({ chainId }) => chainId);
+
+                    //process only the new chains
+                    chainIds = chainIds.filter(
+                        (id) => !oldChainIds.includes(id)
+                    );
+                }
 
                 chainIds.forEach(async (id) => {
                     await this._processPendingBridgeReceivingTransactionForChainId(

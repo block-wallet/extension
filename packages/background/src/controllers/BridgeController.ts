@@ -349,7 +349,7 @@ export default class BridgeController extends ExchangeController<
         }: BridgeTransaction
     ): Promise<string> => {
         try {
-            const { result, transactionMeta } =
+            let { result, transactionMeta } =
                 await this._transactionController.addTransaction({
                     transaction: {
                         from: transactionRequest.from,
@@ -374,6 +374,14 @@ export default class BridgeController extends ExchangeController<
 
             transactionMeta.flashbots = flashbots;
 
+            await this._transactionController.approveTransaction(
+                transactionMeta.id
+            );
+
+            transactionMeta = this._transactionController.getTransaction(
+                transactionMeta.id
+            )!;
+
             transactionMeta.bridgeParams = {
                 bridgeImplementation: aggregator,
                 fromToken,
@@ -389,11 +397,6 @@ export default class BridgeController extends ExchangeController<
             };
 
             this._transactionController.updateTransaction(transactionMeta);
-
-            await this._transactionController.approveTransaction(
-                transactionMeta.id
-            );
-
             this._waitForReceivingTx({
                 accountAddress: transactionRequest.from,
                 sendingTransaction: transactionMeta,

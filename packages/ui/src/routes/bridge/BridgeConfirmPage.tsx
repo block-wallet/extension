@@ -24,6 +24,7 @@ import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { classnames, Classes } from "../../styles"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import {
+    executeBridge,
     getBridgeQuote,
     getLatestGasPrice,
     rejectTransaction,
@@ -62,6 +63,7 @@ import Icon, { IconName } from "../../components/ui/Icon"
 import RefreshLabel from "../../components/swaps/RefreshLabel"
 import {
     BridgeQuoteRequest,
+    BridgeTransaction,
     GetBridgeQuoteResponse,
 } from "@block-wallet/background/controllers/BridgeController"
 import { capitalize } from "../../util/capitalize"
@@ -217,8 +219,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         ? hasNativeAssetBalance
         : hasNativeAssetBalance && hasFromTokenBalance
 
+    console.log(quote)
+
     const onSubmit = async () => {
-        if (error || !hasBalance) return
+        if (error || !hasBalance || !quote) return
 
         dispatch({ type: "open", payload: { status: "loading" } })
         const isLinked = await checkDeviceIsLinked()
@@ -231,7 +235,20 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 submitted: true,
             })
 
-            // TODO: Execute bridge
+            const txParams: BridgeTransaction = {
+                ...quote.bridgeParams,
+                customNonce: advancedSettings.customNonce,
+                flashbots: advancedSettings.flashbots,
+                gasPrice: isEIP1559Compatible ? undefined : selectedGasPrice, // || swapParameters.tx.gasPrice,
+                maxPriorityFeePerGas: isEIP1559Compatible
+                    ? selectedFees.maxPriorityFeePerGas
+                    : undefined,
+                maxFeePerGas: isEIP1559Compatible
+                    ? selectedFees.maxFeePerGas
+                    : undefined,
+            }
+
+            await executeBridge(txParams)
         } else {
             closeDialog()
         }

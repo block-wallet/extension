@@ -149,6 +149,70 @@ export const TransactionDetails: FunctionComponent<
             return details
         }
 
+        // Bridge details
+        if (
+            (transaction.transactionCategory === TransactionCategories.BRIDGE ||
+                transaction.transactionCategory ===
+                    TransactionCategories.INCOMING_BRIDGE) &&
+            transaction.bridgeParams !== undefined
+        ) {
+            if (transaction.transactionParams.hash !== undefined) {
+                if (!isNil(nonce)) {
+                    details.push({
+                        label: "Nonce",
+                        value: nonce!.toString(),
+                        noSpace: false,
+                    })
+                }
+
+                if (gasLimit.gt(0)) {
+                    let txFee = BigNumber.from(0)
+
+                    if (maxPriorityFeePerGas.gt(0) && maxFeePerGas.gt(0)) {
+                        txFee = maxFeePerGas.mul(gasLimit)
+                    } else if (gasPrice.gt(0)) {
+                        txFee = gasPrice.mul(gasLimit)
+                    }
+
+                    if (txFee.gt(0)) {
+                        details.push({
+                            label: "Transaction fee",
+                            value: formatUnits(txFee, nativeCurrency.decimals),
+                            decimals: 10,
+                            unitName: nativeCurrency.symbol,
+                        })
+                    }
+                }
+            }
+
+            details.push({
+                label: "Destination network ID",
+                value: transaction.bridgeParams.toChainId.toString(),
+            })
+
+            details.push({
+                label: isConfirmed ? "Sent" : "Sending",
+                value: formatUnits(
+                    bnOr0(transaction.bridgeParams.fromTokenAmount),
+                    transaction.bridgeParams.fromToken.decimals
+                ),
+                decimals: 10,
+                unitName: transaction.bridgeParams.fromToken.symbol,
+            })
+
+            details.push({
+                label: isConfirmed ? "Received" : "Receiving",
+                value: formatUnits(
+                    bnOr0(transaction.bridgeParams.toTokenAmount),
+                    transaction.bridgeParams.toToken.decimals
+                ),
+                decimals: 10,
+                unitName: transaction.bridgeParams.toToken.symbol,
+            })
+
+            return details
+        }
+
         if (nonce) {
             details.push({
                 label: "Nonce",

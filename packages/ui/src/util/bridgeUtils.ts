@@ -1,5 +1,13 @@
+import { GetBridgeQuoteResponse } from "@block-wallet/background/controllers/BridgeController"
 import { IBridgeRoute } from "@block-wallet/background/utils/bridgeApi"
 import { IChain } from "@block-wallet/background/utils/types/chain"
+import {
+    BridgeImplementation,
+    MetaType,
+    TransactionCategories,
+    TransactionStatus,
+} from "../context/commTypes"
+import { RichedTransactionMeta } from "./transactionUtils"
 
 const LIFI_NATIVE_ADDRESS = "0x0000000000000000000000000000000000000000"
 
@@ -25,29 +33,33 @@ export const getRouteForNetwork = (
 /**
  * Simulates a complete transaction object to display details
  */
-// export const populateBridgeTransaction = (
-//     swapParameters: SwapParameters
-// ): RichedTransactionMeta => {
-//     return {
-//         id: "",
-//         status: TransactionStatus.UNAPPROVED,
-//         time: 1,
-//         blocksDropCount: 1,
-//         metaType: MetaType.REGULAR,
-//         loadingGasValues: false,
-//         transactionParams: {
-//             from: swapParameters.tx.from,
-//             to: swapParameters.tx.to,
-//         },
-//         transactionCategory: TransactionCategories.EXCHANGE,
-//         methodSignature: swapParameters.methodSignature,
-//         exchangeParams: {
-//             exchangeType: ExchangeType.SWAP_1INCH,
-//             fromToken: swapParameters.fromToken,
-//             toToken: swapParameters.toToken,
-//             fromTokenAmount: swapParameters.fromTokenAmount,
-//             toTokenAmount: swapParameters.toTokenAmount,
-//             blockWalletFee: swapParameters.blockWalletFee,
-//         },
-//     }
-// }
+export const populateBridgeTransaction = (
+    bridgeQuote: GetBridgeQuoteResponse
+): RichedTransactionMeta => {
+    return {
+        id: "",
+        status: TransactionStatus.UNAPPROVED,
+        time: 1,
+        blocksDropCount: 1,
+        metaType: MetaType.REGULAR,
+        loadingGasValues: false,
+        transactionParams: {
+            from: bridgeQuote.bridgeParams.params.transactionRequest.from,
+            to: bridgeQuote.bridgeParams.params.transactionRequest.to,
+        },
+        transactionCategory: TransactionCategories.BRIDGE,
+        methodSignature: bridgeQuote.bridgeParams.methodSignature,
+        bridgeParams: {
+            bridgeImplementation: BridgeImplementation.LIFI_BRIDGE,
+            fromToken: bridgeQuote.bridgeParams.params.fromToken,
+            toToken: bridgeQuote.bridgeParams.params.toToken,
+            fromTokenAmount: bridgeQuote.bridgeParams.params.fromAmount,
+            toTokenAmount: bridgeQuote.bridgeParams.params.toAmount,
+            blockWalletFee: bridgeQuote.bridgeParams.params.blockWalletFee,
+            fromChainId: bridgeQuote.bridgeParams.params.fromChainId,
+            toChainId: bridgeQuote.bridgeParams.params.toChainId,
+            tool: bridgeQuote.bridgeParams.params.tool,
+            role: "SENDING",
+        },
+    }
+}

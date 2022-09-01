@@ -29,7 +29,10 @@ import {
     getLatestGasPrice,
     rejectTransaction,
 } from "../../context/commActions"
-import { isBridgeNativeTokenAddress } from "../../util/bridgeUtils"
+import {
+    isBridgeNativeTokenAddress,
+    populateBridgeTransaction,
+} from "../../util/bridgeUtils"
 import { isHardwareWallet } from "../../util/account"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
@@ -68,6 +71,7 @@ import {
 } from "@block-wallet/background/controllers/BridgeController"
 import { capitalize } from "../../util/capitalize"
 import { parseUnits } from "ethers/lib/utils"
+import TransactionDetails from "../../components/transactions/TransactionDetails"
 
 export interface BridgeConfirmPageLocalState {
     amount: string
@@ -161,12 +165,6 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         bridgeQuote
     )
 
-    const networkLabel = availableNetworks[selectedNetwork.toUpperCase()]
-    const bnAmount = parseUnits(
-        amount || "0",
-        bridgeQuote.bridgeParams.params.fromToken.decimals
-    )
-
     // Gas
     const [defaultGas, setDefaultGas] = useState<{
         gasPrice: BigNumber
@@ -194,6 +192,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const remainingSuffix = Math.ceil(remainingSeconds!)
         ? `${Math.floor(remainingSeconds!)}s`
         : ""
+    const networkLabel = availableNetworks[selectedNetwork.toUpperCase()]
+    const bnAmount = parseUnits(
+        amount || "0",
+        bridgeQuote.bridgeParams.params.fromToken.decimals
+    )
 
     // Balance check
     const feePerGas = isEIP1559Compatible
@@ -219,8 +222,6 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         ? hasNativeAssetBalance
         : hasNativeAssetBalance && hasFromTokenBalance
 
-    console.log(quote)
-
     const onSubmit = async () => {
         if (error || !hasBalance || !quote) return
 
@@ -239,7 +240,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 ...quote.bridgeParams,
                 customNonce: advancedSettings.customNonce,
                 flashbots: advancedSettings.flashbots,
-                gasPrice: isEIP1559Compatible ? undefined : selectedGasPrice, // || swapParameters.tx.gasPrice,
+                gasPrice: isEIP1559Compatible ? undefined : selectedGasPrice, // TODO: Include || quote gas limit
                 maxPriorityFeePerGas: isEIP1559Compatible
                     ? selectedFees.maxPriorityFeePerGas
                     : undefined,
@@ -262,7 +263,8 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
             toTokenAddress: bridgeQuote.bridgeParams.params.toToken.address,
             fromAmount: bnAmount.toString(),
             fromAddress: selectedAccount.address,
-            slippage: advancedSettings.slippage || 0.5,
+            slippage:
+                advancedSettings.slippage || defaultAdvancedSettings.slippage,
         }
 
         setIsFetchingParams(true)
@@ -277,7 +279,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         } finally {
             setIsFetchingParams(false)
         }
-    }, [selectedAccount.address, advancedSettings.slippage, quote])
+    }, [selectedAccount.address, advancedSettings.slippage])
 
     // Initialize gas
     useEffect(() => {
@@ -369,7 +371,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                         isLoading={
                             error || !!inProgressAllowanceTransaction
                                 ? false
-                                : !quote || isGasLoading || isBridging
+                                : !quote ||
+                                  isGasLoading ||
+                                  isFetchingParams ||
+                                  isBridging
                         }
                         onClick={onSubmit}
                         disabled={!!error || !hasBalance}
@@ -443,12 +448,14 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     clearTransaction,
                 ])}
             />
-            {/* <TransactionDetails
-                transaction={populateExchangeTransaction(swapParameters)}
-                open={showDetails}
-                onClose={() => setShowDetails(false)}
-                nonce={selectedSwapSettings.customNonce}
-            /> */}
+            {quote && (
+                <TransactionDetails
+                    transaction={populateBridgeTransaction(quote)}
+                    open={showDetails}
+                    onClose={() => setShowDetails(false)}
+                    nonce={advancedSettings.customNonce}
+                />
+            )}
             <HardwareDeviceNotLinkedDialog
                 onDone={resetDeviceLinkStatus}
                 isOpen={isDeviceUnlinked}
@@ -482,12 +489,12 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     />
                 </div>
 
-                <div className="py-2">
+                <div className="py-1">
                     <NetworkDisplay network={network} />
                 </div>
 
                 {/* Gas */}
-                <p className="text-sm text-gray-600 py-2">Gas Price</p>
+                <p className="text-sm text-gray-600 pt-1 pb-2">Gas Price</p>
                 {isEIP1559Compatible ? (
                     <GasPriceComponent
                         defaultGas={{
@@ -551,9 +558,8 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                         <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
                     </OutlinedButton>
                 </div>
-
                 {remainingSuffix && (
-                    <RefreshLabel value={remainingSuffix} className="mt-3" />
+                    <RefreshLabel value={remainingSuffix} className="pt-1" />
                 )}
             </div>
         </PopupLayout>

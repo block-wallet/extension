@@ -310,6 +310,13 @@ export enum ExchangeType {
 }
 
 /**
+ * Bridge implementation
+ */
+export enum BridgeImplementation {
+    LIFI_BRIDGE = "LIFI_BRIDGE",
+}
+
+/**
  * Hardware Wallet Devices Vendors
  */
 export enum Devices {

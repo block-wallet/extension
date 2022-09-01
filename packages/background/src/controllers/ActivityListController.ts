@@ -248,7 +248,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
         const { bridgeReceivingTransactions } =
             this._bridgeController.store.getState();
 
-        if (chainId in bridgeReceivingTransactions) {
+        if (chainId in (bridgeReceivingTransactions || {})) {
             if (selectedAddress in bridgeReceivingTransactions[chainId]) {
                 return (
                     Object.values(

@@ -49,7 +49,7 @@ export interface getBridgeQuoteRequest {
     fromAmount: string;
     fromAddress: string;
     referer?: string;
-    slippage: number;
+    slippage?: number; //TODO: definir 0.5
 }
 
 export interface BridgeTransactionRequest {
@@ -176,7 +176,7 @@ const LiFiBridge: IBridge = {
                 fromAmount: r.fromAmount,
                 fromAddress: r.fromAddress,
                 referer: r.referer,
-                slippage: r.slippage,
+                slippage: r.slippage || 0.5,
             },
         });
         if (response.status === 404) {

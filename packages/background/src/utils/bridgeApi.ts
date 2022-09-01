@@ -200,7 +200,7 @@ const LiFiBridge: IBridge = {
             toChainId: responseData.action.toChainId,
             fromToken: lifiTokenToIToken(responseData.action.fromToken),
             toToken: lifiTokenToIToken(responseData.action.toToken),
-            tool: responseData.tool.key,
+            tool: responseData.tool,
         };
     },
     getStatus: async function (r: getStatusRequest): Promise<IBridgeStatus> {

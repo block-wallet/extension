@@ -45,9 +45,7 @@ export interface GetLifiConnectionsResponse {
 export interface GetLiFiQuoteResponse {
     id: string;
     type: string;
-    tool: {
-        key: string;
-    };
+    tool: string;
     action: QuoteAction;
     estimate: Estimate;
     transactionRequest: LiFiTransactionRequest;

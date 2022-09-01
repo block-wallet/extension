@@ -1,5 +1,5 @@
 import log from 'loglevel';
-import NetworkController from './NetworkController';
+import NetworkController, { NetworkControllerState } from './NetworkController';
 import {
     ContractMethodSignature,
     ContractSignatureParser,
@@ -41,10 +41,24 @@ export interface BridgeControllerMemState {
     availableBridgeChains: IChain[];
 }
 
+interface PendingBridgeReceivingTransaction {
+    hash: string;
+    toToken: IToken;
+    sendingTransactionId: string;
+}
+
 export interface BridgeControllerState {
-    bridgeTransactions: {
+    //stores all the receiving transactions for the user's networks.
+    bridgeReceivingTransactions: {
         [chainId: number]: {
             [address: string]: TransactionByHash;
+        };
+    };
+
+    //stores all the hashes of the receiving transactions for the chains the user hasn't already added to the wallet.
+    perndingBridgeReceivingTransactions: {
+        [chainId: number]: {
+            [address: string]: PendingBridgeReceivingTransaction[];
         };
     };
 }
@@ -91,10 +105,14 @@ export interface BridgeQuoteRequest
 /**
  * Bridge Controller
  *
- * This class handles BlockWallet native exchange actions.
+ * This class handles BlockWallet Bridges.
  *
- * Provides functionality to approve an asset transfer, fetch quotes for exchanges
- * depending on the exchange type, and execute the transactions.
+ * Provides functionality to fetch chains, tokens and routes to potentially execute bridges transactions,
+ * fetch quotes for exchanges, and execute the transactions.
+ *
+ * Also, this controller stores the receiving transactions in the target chain of an executed bridge.
+ * If the target network hasn't been added to the user's network yet,
+ * this controller stores references to recunstruct the transaction once the network is added.
  */
 export default class BridgeController extends ExchangeController<
     BridgeControllerState,
@@ -118,13 +136,79 @@ export default class BridgeController extends ExchangeController<
                 availableBridgeChains: [],
             }
         );
+
         this.getAvailableChains();
+
+        this._networkController.store.subscribe(
+            (state: NetworkControllerState) => {
+                const chainIds = Object.values(state.availableNetworks).map(
+                    ({ chainId }) => chainId
+                );
+
+                //3
+
+                chainIds.forEach(async (id) => {
+                    await this._processPendingBridgeReceivingTransactionForChainId(
+                        id
+                    );
+                });
+            }
+        );
     }
 
     private _getAPIImplementation(
         implementation: BridgeImplementation
     ): IBridge {
         return BridgeAPI[implementation];
+    }
+
+    public async getTokens(
+        aggregator: BridgeImplementation = BridgeImplementation.LIFI_BRIDGE
+    ): Promise<IToken[]> {
+        const implementor = this._getAPIImplementation(aggregator);
+        const { chainId } = this._networkController.network;
+        try {
+            const allTokens = await implementor.getSupportedTokensForChain(
+                chainId
+            );
+            return allTokens;
+        } catch (e) {
+            throw new Error('Unable to fetch tokens.');
+        }
+    }
+
+    public async getAvailableChains(
+        aggregator: BridgeImplementation = BridgeImplementation.LIFI_BRIDGE
+    ): Promise<IChain[]> {
+        const implementor = this._getAPIImplementation(aggregator);
+        try {
+            const availableBridgeChains: IChain[] = (
+                await implementor.getSupportedChains()
+            ).map((chain) => {
+                const knownChain = getChainListItem(chain.id);
+                return {
+                    ...chain,
+                    logo: knownChain?.logo ? knownChain.logo : chain.logo,
+                };
+            });
+            this.UIStore.updateState({ availableBridgeChains });
+            return availableBridgeChains;
+        } catch (e) {
+            throw new Error('Unable to fetch chains.');
+        }
+    }
+
+    public async getAvailableRoutes(
+        aggregator: BridgeImplementation,
+        routesRequest: BridgeRoutesRequest
+    ): Promise<GetBridgeAvailableRoutesResponse> {
+        const apiImplementation = this._getAPIImplementation(aggregator);
+        const { network } = this._networkController;
+        const routes = await apiImplementation.getRoutes({
+            ...routesRequest,
+            fromChainId: network.chainId,
+        });
+        return { routes };
     }
 
     /**
@@ -288,6 +372,8 @@ export default class BridgeController extends ExchangeController<
                 fromChainId,
                 toChainId,
                 tool, //store the tool used for executing the bridge.
+                role: 'SENDING',
+                sendingTxHash: transactionMeta.transactionParams.hash!,
             };
 
             this._transactionController.updateTransaction(transactionMeta);
@@ -298,7 +384,7 @@ export default class BridgeController extends ExchangeController<
 
             this._waitForReceivingTx({
                 accountAddress: transactionRequest.from,
-                hash: transactionMeta.transactionParams.hash!,
+                sendingTransaction: transactionMeta,
                 fromChainId,
                 toChainId,
                 tool,
@@ -318,7 +404,7 @@ export default class BridgeController extends ExchangeController<
         updates: Partial<TransactionMeta>
     ) {
         const stateTransactions = {
-            ...(this.store.getState().bridgeTransactions || {}),
+            ...(this.store.getState().bridgeReceivingTransactions || {}),
         };
         const chainTx = stateTransactions[chainId] || {};
         const addrTransactions = chainTx[address] || {};
@@ -326,8 +412,8 @@ export default class BridgeController extends ExchangeController<
             ...(addrTransactions[txHash] || {}),
             ...updates,
         };
-        this.store.setState({
-            bridgeTransactions: {
+        this.store.updateState({
+            bridgeReceivingTransactions: {
                 ...stateTransactions,
                 [chainId]: {
                     ...chainTx,
@@ -353,29 +439,30 @@ export default class BridgeController extends ExchangeController<
      */
     private async _waitForReceivingTx({
         accountAddress,
-        hash,
+        sendingTransaction,
         tool,
         fromChainId,
         toChainId,
         toToken,
     }: {
+        sendingTransaction: TransactionMeta;
         accountAddress: string;
-        hash: string;
         tool: string;
         fromChainId: number;
         toChainId: number;
         toToken: IToken;
     }) {
+        const sendingTxHash = sendingTransaction.transactionParams.hash!;
+        const sendingTxId = sendingTransaction.id;
         let receivingTxHash: string | null = null;
         let notFoundCalls = 0;
-        const provider = this._networkController.getProvider();
 
         while (receivingTxHash === null || notFoundCalls < 5) {
             try {
                 const bridgeStatus = await this._getAPIImplementation(
                     BridgeImplementation.LIFI_BRIDGE
                 ).getStatus({
-                    sendTxHash: hash,
+                    sendTxHash: sendingTxHash,
                     tool,
                     fromChainId,
                     toChainId,
@@ -386,6 +473,7 @@ export default class BridgeController extends ExchangeController<
                     await sleep(STATUS_API_CALLS_DELAY * (notFoundCalls + 1));
                     continue;
                 }
+
                 //transaction faield
                 if (['INVALID', 'FAILED'].includes(bridgeStatus.status)) {
                     break;
@@ -393,6 +481,7 @@ export default class BridgeController extends ExchangeController<
 
                 if (bridgeStatus.receiveTransaction?.txHash) {
                     receivingTxHash = bridgeStatus.receiveTransaction.txHash;
+                    continue;
                 }
 
                 await sleep(STATUS_API_CALLS_DELAY);
@@ -411,21 +500,129 @@ export default class BridgeController extends ExchangeController<
             return;
         }
 
+        //Add recevingTx hash reference to sending transaction.
+        try {
+            const sendingTransactionMeta =
+                this._transactionController.getTransaction(sendingTxId);
+            this._transactionController.updateTransactionPartially(
+                sendingTxId,
+                {
+                    bridgeParams: {
+                        ...sendingTransactionMeta!.bridgeParams!,
+                        receivingTxHash,
+                    },
+                }
+            );
+        } catch (e) {
+            log.warn(
+                'Error updating bridge sending transaction with ID: ',
+                sendingTxId
+            );
+        }
+
+        this._fetchBridgeReceivingTransaction({
+            accountAddress,
+            receivingTxHash,
+            sendingTransaction,
+            toChainId,
+            toToken,
+        });
+    }
+
+    private _storePendingTransaction({
+        toChainId,
+        accountAddress,
+        receivingTxHash,
+        sendingTransactionId,
+        toToken,
+    }: {
+        toChainId: number;
+        accountAddress: string;
+        receivingTxHash: string;
+        sendingTransactionId: string;
+        toToken: IToken;
+    }) {
+        const pendingReceivingTx = {
+            ...(this.store.getState().perndingBridgeReceivingTransactions ||
+                {}),
+        };
+        const pendingChainTx = pendingReceivingTx[toChainId] || {};
+        const pendingAddressTx = [...(pendingChainTx[accountAddress] || [])];
+
+        //If pending tx doesn't exists, then persist it.
+        if (!pendingAddressTx.some((tx) => tx.hash === receivingTxHash)) {
+            this.store.updateState({
+                perndingBridgeReceivingTransactions: {
+                    ...pendingReceivingTx,
+                    [toChainId]: {
+                        ...pendingChainTx,
+                        [accountAddress]: [
+                            ...pendingAddressTx,
+                            {
+                                hash: receivingTxHash,
+                                sendingTransactionId,
+                                toToken,
+                            },
+                        ],
+                    },
+                },
+            });
+        }
+    }
+
+    private async _fetchBridgeReceivingTransaction({
+        toToken,
+        toChainId,
+        accountAddress,
+        receivingTxHash,
+        sendingTransaction,
+    }: {
+        toChainId: number;
+        toToken: IToken;
+        accountAddress: string;
+        receivingTxHash: string;
+        sendingTransaction: TransactionMeta;
+    }): Promise<boolean> {
+        //use user networks only
+        const receivingChainIdProvider =
+            this._networkController.getProviderForChainId(toChainId, true);
+
+        //The receving chain Id hasn't been added as a user network yet
+        if (!receivingChainIdProvider) {
+            this._storePendingTransaction({
+                accountAddress,
+                receivingTxHash,
+                toChainId,
+                sendingTransactionId: sendingTransaction.id,
+                toToken,
+            });
+            return false;
+        }
+
         let transactionByHash: ethers.providers.TransactionResponse;
         try {
             transactionByHash =
                 await retryHandling<ethers.providers.TransactionResponse>(
-                    () => provider.getTransaction(receivingTxHash!),
+                    () =>
+                        receivingChainIdProvider.getTransaction(
+                            receivingTxHash!
+                        ),
                     MILISECOND * 500,
                     3
                 );
         } catch (e) {
             log.error('_waitForReceivingTx', 'getTransaction', e);
-            return;
+            return false;
         }
 
         const transactionMeta =
             this._transactionByHashToTransactionMeta(transactionByHash);
+
+        //Set bridge parameters
+        transactionMeta.bridgeParams = {
+            ...sendingTransaction.bridgeParams!,
+            role: 'RECEIVING',
+        };
 
         this._updateStateTransaction(
             toChainId,
@@ -442,7 +639,7 @@ export default class BridgeController extends ExchangeController<
             [txReceipt, isSuccess] =
                 await this._transactionController.checkTransactionReceiptStatus(
                     receivingTxHash,
-                    provider
+                    receivingChainIdProvider
                 );
 
             if (!txReceipt) {
@@ -461,7 +658,8 @@ export default class BridgeController extends ExchangeController<
         }
 
         const contractSignatureParser = new ContractSignatureParser(
-            this._networkController
+            this._networkController,
+            toChainId
         );
 
         const methodSignature =
@@ -497,6 +695,61 @@ export default class BridgeController extends ExchangeController<
                     : TransactionStatus.FAILED,
             }
         );
+
+        return true;
+    }
+
+    private async _processPendingBridgeReceivingTransactionForChainId(
+        chainId: number
+    ) {
+        const pendingTxState = {
+            ...(this.store.getState().perndingBridgeReceivingTransactions ||
+                {}),
+        };
+
+        const pendingTransactions = pendingTxState[chainId];
+
+        if (!pendingTransactions) {
+            return;
+        }
+
+        for (const address in Object.keys(pendingTransactions)) {
+            const pendingAddrTransactions = pendingTransactions[address];
+            for (const pendingTx of pendingAddrTransactions) {
+                const sendingTransaction =
+                    this._transactionController.getTransaction(
+                        pendingTx.sendingTransactionId
+                    );
+
+                //If sending transaction doesn't exist, then avoid persisting this transaction as well.
+                if (sendingTransaction) {
+                    try {
+                        const processedOk =
+                            await this._fetchBridgeReceivingTransaction({
+                                accountAddress: address,
+                                receivingTxHash: pendingTx.hash,
+                                toChainId: chainId,
+                                toToken: pendingTx.toToken,
+                                sendingTransaction,
+                            });
+                        return processedOk !== true; // if it was not processed ok, then don't filter it.
+                    } catch (e) {
+                        log.warn(
+                            '_processChainPendingReceivingTransactionForChainId',
+                            '_fetchBridgeReceivingTransaction',
+                            e
+                        );
+                    }
+                }
+            }
+        }
+
+        //delete chainId pending transactions
+        delete pendingTxState[chainId];
+
+        this.store.updateState({
+            perndingBridgeReceivingTransactions: pendingTxState,
+        });
     }
 
     private async _fetchToken(
@@ -510,15 +763,19 @@ export default class BridgeController extends ExchangeController<
 
         const contractAddress = toChecksumAddress(transactionToken.address);
 
-        const tokens = await this._tokenController.search(
-            contractAddress,
-            true,
-            accountAddress,
-            chainId
-        );
-
-        //try to fetch the token from our list, if it is not present, use the transaction token data.
-        return tokens.length ? tokens[0] : transactionToken;
+        try {
+            const tokens = await this._tokenController.search(
+                contractAddress,
+                true,
+                accountAddress,
+                chainId
+            );
+            //try to fetch the token from our list, if it is not present, use the transaction token data.
+            return tokens.length ? tokens[0] : transactionToken;
+        } catch (e) {
+            log.warn('_fetchToken', 'tokenController.search', e);
+            return transactionToken;
+        }
     }
 
     private _transactionByHashToTransactionMeta(
@@ -530,7 +787,6 @@ export default class BridgeController extends ExchangeController<
             approveTime: transaction.timestamp,
             chainId: transaction.chainId,
             origin: 'blank',
-
             transactionCategory: TransactionCategories.INCOMING_BRIDGE,
             metaType: MetaType.REGULAR,
             status: transaction.blockNumber
@@ -551,54 +807,5 @@ export default class BridgeController extends ExchangeController<
                 maxFeePerGas: transaction.maxFeePerGas,
             },
         };
-    }
-
-    public async getTokens(
-        aggregator: BridgeImplementation = BridgeImplementation.LIFI_BRIDGE
-    ): Promise<IToken[]> {
-        const implementor = this._getAPIImplementation(aggregator);
-        const { chainId } = this._networkController.network;
-        try {
-            const allTokens = await implementor.getSupportedTokensForChain(
-                chainId
-            );
-            return allTokens;
-        } catch (e) {
-            throw new Error('Unable to fetch tokens.');
-        }
-    }
-
-    public async getAvailableChains(
-        aggregator: BridgeImplementation = BridgeImplementation.LIFI_BRIDGE
-    ): Promise<IChain[]> {
-        const implementor = this._getAPIImplementation(aggregator);
-        try {
-            const availableBridgeChains: IChain[] = (
-                await implementor.getSupportedChains()
-            ).map((chain) => {
-                const knownChain = getChainListItem(chain.id);
-                return {
-                    ...chain,
-                    logo: knownChain?.logo ? knownChain.logo : chain.logo,
-                };
-            });
-            this.UIStore.updateState({ availableBridgeChains });
-            return availableBridgeChains;
-        } catch (e) {
-            throw new Error('Unable to fetch chains.');
-        }
-    }
-
-    public async getAvailableRoutes(
-        aggregator: BridgeImplementation,
-        routesRequest: BridgeRoutesRequest
-    ): Promise<GetBridgeAvailableRoutesResponse> {
-        const apiImplementation = this._getAPIImplementation(aggregator);
-        const { network } = this._networkController;
-        const routes = await apiImplementation.getRoutes({
-            ...routesRequest,
-            fromChainId: network.chainId,
-        });
-        return { routes };
     }
 }

@@ -107,11 +107,14 @@ type FourByteResponse = {
 export class ContractSignatureParser {
     private signatureRegistry: Contract;
 
-    constructor(private readonly _networkController: NetworkController) {
+    constructor(
+        private readonly _networkController: NetworkController,
+        private readonly customChainId?: number
+    ) {
         this.signatureRegistry = new Contract(
             SIGNATURE_REGISTRY_CONTRACT.address,
             SIGNATURE_REGISTRY_CONTRACT.abi,
-            _networkController.getProviderFromName('mainnet')
+            this._networkController.getProviderFromName('mainnet')
         );
     }
 
@@ -167,6 +170,16 @@ export class ContractSignatureParser {
         }
     }
 
+    private _getEtherscanApiUrl(): string | undefined {
+        const defaultNetwork = this._networkController.network;
+        const network = this.customChainId
+            ? this._networkController.getNetworkFromChainId(
+                  this.customChainId
+              ) || defaultNetwork
+            : defaultNetwork;
+        return network.etherscanApiUrl;
+    }
+
     /**
      * Fetches smart contract ABI from Etherescan implementing their API. This will return a valid answer
      * if the address exists and if the contract's source code is verified.
@@ -177,7 +190,7 @@ export class ContractSignatureParser {
     public async fetchABIFromEtherscan(
         address: string
     ): Promise<string | undefined> {
-        const etherscanAPI = this._networkController.network.etherscanApiUrl;
+        const etherscanAPI = this._getEtherscanApiUrl();
         if (!etherscanAPI) {
             return undefined;
         }

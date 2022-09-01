@@ -7,6 +7,7 @@ import {
     PendingWithdrawal,
     PendingWithdrawalStatus,
 } from './blank-deposit/BlankDepositController';
+import BridgeController from './BridgeController';
 import NetworkController from './NetworkController';
 import { PreferencesController } from './PreferencesController';
 import { TransactionController } from './transactions/TransactionController';
@@ -36,7 +37,8 @@ export class ActivityListController extends BaseController<IActivityListState> {
         private readonly _blankDepositsController: BlankDepositController,
         private readonly _preferencesController: PreferencesController,
         private readonly _networkController: NetworkController,
-        private readonly _transactionWatcherController: TransactionWatcherController
+        private readonly _transactionWatcherController: TransactionWatcherController,
+        private readonly _bridgeController: BridgeController
     ) {
         super();
 
@@ -46,6 +48,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
         this._preferencesController.store.subscribe(this.onStoreUpdate);
         this._networkController.store.subscribe(this.onStoreUpdate);
         this._transactionWatcherController.store.subscribe(this.onStoreUpdate);
+        this._bridgeController.store.subscribe(this.onStoreUpdate);
         this.onStoreUpdate();
     }
 
@@ -86,6 +89,12 @@ export class ActivityListController extends BaseController<IActivityListState> {
             selectedAddress
         );
 
+        const incomingBridgeTransactions =
+            this.parseBridgeReceivingTransactions(
+                network.chainId,
+                selectedAddress
+            );
+
         // Get parsed withdrawals
         const { confirmed: confirmedWithdrawals, pending: pendingWithdrawals } =
             this.parseWithdrawalTransactions(selectedAddress, network);
@@ -93,6 +102,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
         // Concat all and order by time
         const confirmedConcated = confirmedTransactions
             .concat(confirmedWithdrawals)
+            .concat(incomingBridgeTransactions)
             .concat(watchedTransactions)
             .filter(
                 (t1, index, self) =>
@@ -224,6 +234,31 @@ export class ActivityListController extends BaseController<IActivityListState> {
         }
 
         return watchedTransactions;
+    }
+
+    /**
+     * parseBridgeReceivingTransactions
+     *
+     * @returns The incoming bridge transactions
+     */
+    private parseBridgeReceivingTransactions(
+        chainId: number,
+        selectedAddress: string
+    ): TransactionMeta[] {
+        const { bridgeReceivingTransactions } =
+            this._bridgeController.store.getState();
+
+        if (chainId in bridgeReceivingTransactions) {
+            if (selectedAddress in bridgeReceivingTransactions[chainId]) {
+                return (
+                    Object.values(
+                        bridgeReceivingTransactions[chainId][selectedAddress]
+                    ) || []
+                );
+            }
+        }
+
+        return [];
     }
 
     /**

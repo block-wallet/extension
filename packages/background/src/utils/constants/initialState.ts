@@ -223,7 +223,8 @@ const initialState: BlankAppState = {
         permissionRequests: {},
     },
     BridgeController: {
-        bridgeTransactions: {},
+        bridgeReceivingTransactions: {},
+        perndingBridgeReceivingTransactions: {},
     },
 };
 

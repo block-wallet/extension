@@ -2341,7 +2341,7 @@ export class TransactionController extends BaseController<
      * @param txId The transaction id
      * @param updates The updates to be applied
      */
-    private updateTransactionPartially = (
+    public updateTransactionPartially = (
         txId: string,
         updates: Partial<TransactionMeta>
     ): void => {

@@ -103,6 +103,9 @@ export interface BridgeTransactionParams {
     fromChainId: number;
     toChainId: number;
     tool: string; //tool used to perform the bridging.
+    receivingTxHash?: string;
+    sendingTxHash?: string;
+    role: 'SENDING' | 'RECEIVING';
 }
 
 export interface uiTransactionParams extends TransactionParams {

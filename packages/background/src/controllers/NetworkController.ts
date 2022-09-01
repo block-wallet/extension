@@ -459,6 +459,48 @@ export default class NetworkController extends BaseController<NetworkControllerS
     };
 
     /**
+     * Gets a provider for a given chainId.
+     *
+     * @param chainId the network's chainId
+     * @param userNetworksOnly whether return the generated provider if the chainId exists on the user's network list.
+     * @returns {ethers.providers.StaticJsonRpcProvider}
+     */
+    public getProviderForChainId = (
+        chainId: number,
+        userNetworksOnly = true
+    ): ethers.providers.StaticJsonRpcProvider | undefined => {
+        const userNetwork = Object.values(
+            this.store.getState().availableNetworks
+        ).find((network) => Number(network.chainId) === chainId);
+
+        if (userNetwork) {
+            return this._overloadProviderMethods(
+                userNetwork,
+                new ethers.providers.StaticJsonRpcProvider({
+                    url: userNetwork.rpcUrls[0],
+                    allowGzip:
+                        userNetwork.rpcUrls[0].endsWith('.blockwallet.io'),
+                })
+            );
+        }
+
+        if (userNetworksOnly) {
+            return;
+        }
+
+        const chain = getChainListItem(chainId);
+        if (chain) {
+            return this._overloadProviderMethods(
+                chain,
+                new ethers.providers.StaticJsonRpcProvider({
+                    url: chain.rpc[0],
+                    allowGzip: chain.rpc[0].endsWith('.blockwallet.io'),
+                })
+            );
+        }
+    };
+
+    /**
      * It returns the latest block from the network
      */
     public async getLatestBlock(): Promise<ethers.providers.Block> {
@@ -722,10 +764,10 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * @returns {ethers.providers.StaticJsonRpcProvider}
      */
     private _overloadProviderMethods = (
-        network: Network,
+        { chainId }: { chainId: number },
         provider: ethers.providers.StaticJsonRpcProvider
     ): ethers.providers.StaticJsonRpcProvider => {
-        switch (network.chainId) {
+        switch (chainId) {
             // celo
             case 42220: {
                 const originalBlockFormatter: (

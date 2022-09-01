@@ -412,14 +412,6 @@ export default class BlankController extends EventEmitter {
             initState.AccountTrackerController
         );
 
-        this.activityListController = new ActivityListController(
-            this.transactionController,
-            this.blankDepositController,
-            this.preferencesController,
-            this.networkController,
-            this.transactionWatcherController
-        );
-
         this.blankProviderController = new BlankProviderController(
             this.networkController,
             this.transactionController,
@@ -429,13 +421,6 @@ export default class BlankController extends EventEmitter {
             this.tokenController,
             this.blockUpdatesController
         );
-
-        this.addressBookController = new AddressBookController({
-            initialState: initState.AddressBookController,
-            networkController: this.networkController,
-            activityListController: this.activityListController,
-            preferencesController: this.preferencesController,
-        });
 
         this.swapController = new SwapController(
             this.networkController,
@@ -453,6 +438,22 @@ export default class BlankController extends EventEmitter {
             this.tokenController,
             initState.BridgeController
         );
+
+        this.activityListController = new ActivityListController(
+            this.transactionController,
+            this.blankDepositController,
+            this.preferencesController,
+            this.networkController,
+            this.transactionWatcherController,
+            this.bridgeController
+        );
+
+        this.addressBookController = new AddressBookController({
+            initialState: initState.AddressBookController,
+            networkController: this.networkController,
+            activityListController: this.activityListController,
+            preferencesController: this.preferencesController,
+        });
 
         this.store = new ComposedStore<BlankAppState>({
             NetworkController: this.networkController.store,

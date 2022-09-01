@@ -703,6 +703,7 @@ describe.only('Bridge Controller', () => {
                                     tool: 'hop',
                                     fromChainId: 137,
                                     toChainId: 1,
+                                    role: 'SENDING',
                                 },
                                 time: 1656527769648,
                                 transactionCategory:

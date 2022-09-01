@@ -138,7 +138,8 @@ const initialState: BlankAppState & {
         transactions: {},
     },
     BridgeController: {
-        bridgeTransactions: {},
+        bridgeReceivingTransactions: {},
+        perndingBridgeReceivingTransactions: {},
     },
     BlockFetchController: {
         blockFetchData: {

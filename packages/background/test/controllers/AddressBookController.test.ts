@@ -28,6 +28,7 @@ import { TornadoEventsService } from '@block-wallet/background/controllers/blank
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
+import BridgeController from '@block-wallet/background/controllers/BridgeController';
 
 describe('Address book controller implementation', function () {
     const accounts = {
@@ -50,6 +51,7 @@ describe('Address book controller implementation', function () {
     let permissionsController: PermissionsController;
     let activityListController: ActivityListController;
     let blankDepositController: BlankDepositController;
+    let bridgeController: BridgeController;
     let tokenOperationsController: TokenOperationsController;
     let tokenController: TokenController;
     let blockFetchController: BlockFetchController;
@@ -141,12 +143,25 @@ describe('Address book controller implementation', function () {
                 transactions: {},
             }
         );
+
+        bridgeController = new BridgeController(
+            networkController,
+            preferencesController,
+            tokenOperationsController,
+            transactionController,
+            tokenController,
+            {
+                bridgeReceivingTransactions: {},
+                perndingBridgeReceivingTransactions: {},
+            }
+        );
         activityListController = new ActivityListController(
             transactionController,
             blankDepositController,
             preferencesController,
             networkController,
-            transactionWatcherController
+            transactionWatcherController,
+            bridgeController
         );
     });
     beforeEach(() => {

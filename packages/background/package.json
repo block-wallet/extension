@@ -14,7 +14,7 @@
         "bip39": "^3.0.3",
         "blake3": "^2.1.4",
         "browser-passworder": "^2.0.3",
-        "circomlib": "https://github.com/block-wallet/circomlib#v0.0.1",
+        "@block-wallet/circomlib": "^0.0.21",
         "compare-versions": "^3.6.0",
         "eth-ens-namehash": "^2.0.8",
         "eth-keyring-controller": "^6.2.0",
@@ -29,9 +29,9 @@
         "loglevel": "^1.7.1",
         "phishing-prevention": "git+https://github.com/block-wallet/phishing-prevention#4708461673825816104b8a6cf5260ecb29b75c61",
         "schema-validator": "git+https://github.com/block-wallet/schema-validator.git",
-        "snarkjs": "https://github.com/block-wallet/snarkjs.git#v0.1.21",
+        "@block-wallet/snarkjs": "^0.1.20",
         "uuid": "^8.3.2",
-        "websnark": "https://github.com/block-wallet/websnark#v0.0.1"
+        "@block-wallet/websnark": "^0.0.5"
     },
     "devDependencies": {
         "@types/bn.js": "^5.1.0",
@@ -79,9 +79,6 @@
         "worker-loader": "^3.0.8"
     },
     "resolutions": {
-        "**/websnark": "https://github.com/block-wallet/websnark#v0.0.1",
-        "**/snarkjs": "https://github.com/block-wallet/snarkjs.git#v0.1.21",
-        "**/circomlib": "https://github.com/block-wallet/circomlib#v0.0.1",
         "webpack/**/glob-parent": "^5.1.2",
         "webpack/**/set-value": "^4.0.1",
         "circomlib/**/yargs-parser": "^18.1.2",

@@ -8,7 +8,7 @@ env:
   BLOCK_WALLET_FOLDER: blockwallet-build
   CHROME_VERSION: 97.0.4692.71
   S3_PATH: s3://releases.blockwallet.io/tmp/
-
+  
 jobs:
   lint:
     runs-on: [self-hosted, small]
@@ -176,6 +176,7 @@ jobs:
       - name: Build extension
         env:
           CI: false
+          NODE_OPTIONS: "--max_old_space_size=4096"
         run: |
           make build/prod
 

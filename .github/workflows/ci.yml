@@ -20,6 +20,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
+          registry-url: https://npm.pkg.github.com
 
       - name: Install yarn
         run: |
@@ -44,10 +45,11 @@ jobs:
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           make install/ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
       - name: Check lint in un
         run: |
@@ -74,6 +76,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
+          registry-url: https://npm.pkg.github.com
 
       - name: Install yarn
         run: |
@@ -98,10 +101,11 @@ jobs:
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           make install/ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
       - name: Build tailwind
         run: |
@@ -138,6 +142,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
+          registry-url: https://npm.pkg.github.com
 
       - name: Install yarn
         run: |
@@ -162,10 +167,11 @@ jobs:
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           make install/ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
       - name: Build extension
         env:

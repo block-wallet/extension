@@ -79,9 +79,9 @@
         "worker-loader": "^3.0.8"
     },
     "resolutions": {
-        "**/websnark": "https://npm.pkg.github.com/download/@block-wallet/websnark/0.0.5/586e5887aed996958da118336e5ef67e395fdf0c",
-        "**/snarkjs": "https://npm.pkg.github.com/download/@block-wallet/snarkjs/0.1.20/fd901edd95d332f96f6c410d90f7c18629fc5c7c",
-        "**/circomlib": "https://npm.pkg.github.com/download/@block-wallet/circomlib/0.0.21/a5ca855c3bfab5c94422bea309d5124679f3ab32",
+        "**/websnark": "link:./@block-wallet/websnark",
+        "**/snarkjs": "link:./@block-wallet/snarkjs",
+        "**/circomlib": "link:./@block-wallet/circomlib",
         "webpack/**/glob-parent": "^5.1.2",
         "webpack/**/set-value": "^4.0.1",
         "@block-wallet/circomlib/**/yargs-parser": "^18.1.2",

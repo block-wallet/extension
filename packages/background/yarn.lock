@@ -207,7 +207,7 @@
   version "0.0.13"
   resolved "https://github.com/block-wallet/chains-assets#b062d08ead2c181f357db83802e7abcfd4e185b0"
 
-"@block-wallet/circomlib@^0.0.21", "circomlib@git+https://github.com/tornadocash/circomlib.git#5beb6aee94923052faeecea40135d45b6ce6172c", "circomlib@https://npm.pkg.github.com/download/@block-wallet/circomlib/0.0.21/a5ca855c3bfab5c94422bea309d5124679f3ab32":
+"@block-wallet/circomlib@^0.0.21":
   version "0.0.21"
   resolved "https://npm.pkg.github.com/download/@block-wallet/circomlib/0.0.21/a5ca855c3bfab5c94422bea309d5124679f3ab32#a5ca855c3bfab5c94422bea309d5124679f3ab32"
   integrity sha512-l032+IF8AMiZwjPdT5DHmTcB6bwZlrZ6+IpBi8NJhoJiitFlYrD71i5Km3eiBCVxZJQ0b47rVcv6g+sdLI5+pQ==
@@ -231,7 +231,7 @@
   version "2.2.2"
   resolved "https://github.com/block-wallet/explorer-link#06beadc0eed8b3aed7c3b3813288ac85b5e99a19"
 
-"@block-wallet/snarkjs@^0.1.20", "snarkjs@git+https://github.com/tornadocash/snarkjs.git#869181cfaf7526fe8972073d31655493a04326d5", "snarkjs@https://npm.pkg.github.com/download/@block-wallet/snarkjs/0.1.20/fd901edd95d332f96f6c410d90f7c18629fc5c7c":
+"@block-wallet/snarkjs@^0.1.20":
   version "0.1.20"
   resolved "https://npm.pkg.github.com/download/@block-wallet/snarkjs/0.1.20/fd901edd95d332f96f6c410d90f7c18629fc5c7c#fd901edd95d332f96f6c410d90f7c18629fc5c7c"
   integrity sha512-MorQTUMLErJ6mi7nn7gTSY16ilhZULNQqPvLV9NvWtDQDTSbItnaTE3OHz3HovRsDn3Mt4/aoAT81vFxiNy5Vg==
@@ -243,7 +243,7 @@
     keccak "^2.0.0"
     yargs "^12.0.5"
 
-"@block-wallet/websnark@^0.0.5", "websnark@https://npm.pkg.github.com/download/@block-wallet/websnark/0.0.5/586e5887aed996958da118336e5ef67e395fdf0c":
+"@block-wallet/websnark@^0.0.5":
   version "0.0.5"
   resolved "https://npm.pkg.github.com/download/@block-wallet/websnark/0.0.5/586e5887aed996958da118336e5ef67e395fdf0c#586e5887aed996958da118336e5ef67e395fdf0c"
   integrity sha512-hg0eyAyJM9M4r88Ipd4OnVSOaPcAX0Ja7h/6mIS0S0h7ad+w9/pW/9uel3BuxVaoy026HQus2BYM4+ZSvZwFEw==
@@ -2435,6 +2435,14 @@ cipher-base@^1.0.0, cipher-base@^1.0.1, cipher-base@^1.0.3:
   dependencies:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
+
+"circomlib@git+https://github.com/tornadocash/circomlib.git#5beb6aee94923052faeecea40135d45b6ce6172c":
+  version "0.0.0"
+  uid ""
+
+"circomlib@link:./@block-wallet/circomlib":
+  version "0.0.0"
+  uid ""
 
 class-is@^1.1.0:
   version "1.1.0"
@@ -7647,6 +7655,14 @@ snapdragon@^0.8.1:
     source-map-resolve "^0.5.0"
     use "^3.1.0"
 
+"snarkjs@git+https://github.com/tornadocash/snarkjs.git#869181cfaf7526fe8972073d31655493a04326d5":
+  version "0.0.0"
+  uid ""
+
+"snarkjs@link:./@block-wallet/snarkjs":
+  version "0.0.0"
+  uid ""
+
 source-list-map@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/source-list-map/-/source-list-map-2.0.1.tgz#3993bd873bfc48479cca9ea3a547835c7c154b34"
@@ -8430,11 +8446,6 @@ typeson@^6.0.0, typeson@^6.1.0:
   resolved "https://registry.yarnpkg.com/typeson/-/typeson-6.1.0.tgz#5b2a53705a5f58ff4d6f82f965917cabd0d7448b"
   integrity sha512-6FTtyGr8ldU0pfbvW/eOZrEtEkczHRUtduBnA90Jh9kMPCiFNnXIon3vF41N0S4tV1HHQt4Hk1j4srpESziCaA==
 
-ultron@~1.1.0:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/ultron/-/ultron-1.1.1.tgz#9fe1536a10a664a65266a1e3ccf85fd36302bc9c"
-  integrity sha512-UIEXBNeYmKptWH6z8ZnqTeS8fV74zG0/eRU9VGkpzz+LIJNs8W/zM/L+7ctCkRrgbNnnR0xxw4bKOr0cW0N0Og==
-
 unbox-primitive@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/unbox-primitive/-/unbox-primitive-1.0.2.tgz#29032021057d5e6cdbd08c5129c226dff8ed6f9e"
@@ -9042,6 +9053,10 @@ webpack@4.44.2:
     watchpack "^1.7.4"
     webpack-sources "^1.4.1"
 
+"websnark@link:./@block-wallet/websnark":
+  version "0.0.0"
+  uid ""
+
 websocket@^1.0.32:
   version "1.0.34"
   resolved "https://registry.yarnpkg.com/websocket/-/websocket-1.0.34.tgz#2bdc2602c08bf2c82253b730655c0ef7dcab3111"
@@ -9243,16 +9258,7 @@ ws@7.4.6:
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.4.6.tgz#5654ca8ecdeee47c33a9a4bf6d28e2be2980377c"
   integrity sha512-YmhHDO4MzaDLB+M9ym/mDA5z0naX8j7SIlT8f8z+I0VtzsRbekxEutHSme7NPS2qE8StCYQNUnfWdXta/Yu85A==
 
-ws@^3.0.0:
-  version "3.3.3"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-3.3.3.tgz#f1cf84fe2d5e901ebce94efaece785f187a228f2"
-  integrity sha512-nnWLa/NwZSt4KQJu51MYlCcSQ5g7INpOrOMt4XV8j4dqTXdmlUmSHQ8/oLC069ckre0fRsgfvsKwbTdtKLCDkA==
-  dependencies:
-    async-limiter "~1.0.0"
-    safe-buffer "~5.1.0"
-    ultron "~1.1.0"
-
-ws@^5.2.3:
+ws@^3.0.0, ws@^5.2.3:
   version "5.2.3"
   resolved "https://registry.yarnpkg.com/ws/-/ws-5.2.3.tgz#05541053414921bc29c63bee14b8b0dd50b07b3d"
   integrity sha512-jZArVERrMsKUatIdnLzqvcfydI85dvd/Fp1u/VOpfdDWQ4c9qWXe+VIeAbQ5FrDwciAkr+lzofXLz3Kuf26AOA==
@@ -9344,15 +9350,7 @@ yargs-parser@20.2.4:
   resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-20.2.4.tgz#b42890f14566796f85ae8e3a25290d205f154a54"
   integrity sha512-WOkpgNhPTlE73h4VFAFsOnomJVaovO8VqLDzy5saChRBFQFBoMYirowyW+Q9HB4HFF4Z7VZTiG3iSzJJA29yRA==
 
-yargs-parser@^11.1.1:
-  version "11.1.1"
-  resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-11.1.1.tgz#879a0865973bca9f6bab5cbdf3b1c67ec7d3bcf4"
-  integrity sha512-C6kB/WJDiaxONLJQnF8ccx9SEeoTTLek8RVbaOIsrAUS8VrBEXfmeSnCZxygc+XC2sNMBIwOOnfcxiynjHsVSQ==
-  dependencies:
-    camelcase "^5.0.0"
-    decamelize "^1.2.0"
-
-yargs-parser@^18.1.2:
+yargs-parser@^11.1.1, yargs-parser@^18.1.2:
   version "18.1.3"
   resolved "https://registry.yarnpkg.com/yargs-parser/-/yargs-parser-18.1.3.tgz#be68c4975c6b2abf469236b0c870362fab09a7b0"
   integrity sha512-o50j0JeToy/4K6OZcaQmW6lyXXKhq7csREXcDwk2omFPJEwUNOVtJKvmDr9EI1fAJZUyZcRF7kxGBWmRXudrCQ==

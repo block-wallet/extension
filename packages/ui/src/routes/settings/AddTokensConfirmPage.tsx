@@ -4,7 +4,7 @@ import { useState } from "react"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
-import TokenDisplay from "../../components/TokenDisplay"
+import TokenDisplay from "../../components/token/TokenDisplay"
 
 // Utils
 import { addCustomTokens } from "../../context/commActions"
@@ -46,7 +46,22 @@ const AddTokensConfirmPage = (props: any) => {
 
     return (
         <PopupLayout
-            header={<PopupHeader title="Add Tokens" close="/" keepState />}
+            header={
+                <PopupHeader
+                    title="Add Tokens"
+                    onBack={() => {
+                        history.push({
+                            pathname: "/settings/tokens/add",
+                            state: {
+                                searchValue:
+                                    tokenList.length > 1
+                                        ? history.location.state?.searchedValue
+                                        : state.token.address,
+                            },
+                        })
+                    }}
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading

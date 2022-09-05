@@ -1,7 +1,7 @@
 import { CurrencyAmountPair } from '../types';
 import { IBlankDeposit } from '../BlankDeposit';
 import { INotesService, NextDepositResult } from './INotesService';
-import { babyJub, pedersenHash } from 'circomlib';
+import { babyJub, pedersenHash } from '@block-wallet/circomlib';
 import HDKey from 'ethereumjs-wallet/dist/hdkey';
 import { mnemonicToSeed } from 'bip39';
 import { INoteDeposit } from './INoteDeposit';

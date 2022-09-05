@@ -1,6 +1,6 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
-import { babyJub, pedersenHash } from 'circomlib';
+import { babyJub, pedersenHash } from '@block-wallet/circomlib';
 
 import HDKey from 'ethereumjs-wallet/dist/hdkey';
 
@@ -63,23 +63,23 @@ describe('TornadoNotesService', () => {
                 const events =
                     type === TornadoEvents.DEPOSIT
                         ? {
-                              type,
-                              events: DepositEventsMock.events.map((e) => ({
-                                  blockNumber: e.blockNumber,
-                                  transactionHash: e.transactionHash,
-                                  ...e.args,
-                              })),
-                          }
+                            type,
+                            events: DepositEventsMock.events.map((e) => ({
+                                blockNumber: e.blockNumber,
+                                transactionHash: e.transactionHash,
+                                ...e.args,
+                            })),
+                        }
                         : {
-                              type,
-                              events: WithdrawalEventsMock.events.map((e) => ({
-                                  blockNumber: e.blockNumber,
-                                  transactionHash: e.transactionHash,
-                                  nullifierHex: e.args.nullifierHash,
-                                  fee: e.args.fee as unknown as BigNumber,
-                                  to: e.args.to,
-                              })),
-                          };
+                            type,
+                            events: WithdrawalEventsMock.events.map((e) => ({
+                                blockNumber: e.blockNumber,
+                                transactionHash: e.transactionHash,
+                                nullifierHex: e.args.nullifierHash,
+                                fee: e.args.fee as unknown as BigNumber,
+                                to: e.args.to,
+                            })),
+                        };
 
                 await tornadoEventsDb.updateEvents(
                     AvailableNetworks.GOERLI,

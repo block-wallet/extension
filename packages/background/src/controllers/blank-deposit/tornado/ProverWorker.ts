@@ -3,7 +3,7 @@ import type * as blake3 from 'blake3/esm/browser';
 import * as WebsnarkUtils from '@block-wallet/websnark/src/utils';
 import buildGroth16 from '@block-wallet/websnark/src/groth16';
 import MerkleTree from 'fixed-merkle-tree';
-import { babyJub, pedersenHash } from 'circomlib';
+import { babyJub, pedersenHash } from '@block-wallet/circomlib';
 
 import { CircuitInput } from './types';
 import { IProverWorker } from './IProverWorker';

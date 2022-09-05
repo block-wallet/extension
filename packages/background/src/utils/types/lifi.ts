@@ -8,6 +8,8 @@ export const BASE_BRIDGE_FEE = 0;
 export const BRIDGE_REFERRER_ADDRESS =
     '0x3110a855333bfb922aeCB1B3542ba2fdE28d204F';
 
+export const LIFI_NATIVE_ADDRESS = '0x0000000000000000000000000000000000000000';
+
 // Base endpoint
 export const LIFI_BRIDGE_ENDPOINT = 'https://li.quest/v1';
 

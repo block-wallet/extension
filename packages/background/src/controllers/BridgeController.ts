@@ -26,7 +26,11 @@ import BridgeAPI, {
     IBridgeRoute,
     BridgeStatus,
 } from '../utils/bridgeApi';
-import { BASE_BRIDGE_FEE, BRIDGE_REFERRER_ADDRESS } from '../utils/types/lifi';
+import {
+    BASE_BRIDGE_FEE,
+    BRIDGE_REFERRER_ADDRESS,
+    LIFI_NATIVE_ADDRESS,
+} from '../utils/types/lifi';
 import { IToken, Token } from './erc-20/Token';
 import { ExchangeController } from './ExchangeController';
 import { IChain } from '../utils/types/chain';
@@ -248,7 +252,9 @@ export default class BridgeController extends ExchangeController<
             quoteRequest
         );
 
-        if (checkAllowance && quote) {
+        if (quoteRequest.fromTokenAddress === LIFI_NATIVE_ADDRESS) {
+            allowanceCheck = BridgeAllowanceCheck.ENOUGH_ALLOWANCE;
+        } else if (checkAllowance && quote) {
             try {
                 allowanceCheck = (await this.checkExchangeAllowance(
                     quoteRequest.fromAddress,

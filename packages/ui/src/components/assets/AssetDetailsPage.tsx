@@ -28,8 +28,10 @@ import { isNativeTokenAddress } from "../../util/tokenUtils"
 import SuccessDialog from "../dialog/SuccessDialog"
 import { formatName } from "../../util/formatAccount"
 import Icon, { IconName } from "../ui/Icon"
+import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
 
 const AssetDetailsPage = () => {
+    const state = useBlankState()!
     const history: any = useOnMountHistory()
     const address = history.location.state.address
 
@@ -37,7 +39,8 @@ const AssetDetailsPage = () => {
 
     const account = useSelectedAccount()
     const currencyFormatter = useCurrencyFromatter()
-    const { isSendEnabled, isBridgeEnabled } = useSelectedNetwork()
+    const { isSendEnabled, isSwapEnabled, isBridgeEnabled } =
+        useSelectedNetwork()
     const asset = useGetAssetByTokenAddress(address)
     const isNative = isNativeTokenAddress(address)
     const tokenTransactions = useTokenTransactions(asset?.token?.symbol)
@@ -86,7 +89,7 @@ const AssetDetailsPage = () => {
                     actions={
                         !isNative
                             ? [
-                                <a
+                                  <a
                                       href={generateExplorerLink(
                                           availableNetworks,
                                           selectedNetwork,
@@ -97,24 +100,24 @@ const AssetDetailsPage = () => {
                                       rel="noopener noreferrer"
                                       key={1}
                                   >
-                                    <div
+                                      <div
                                           className={classnames(
                                               "text-grey-900 cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-t-md",
                                               optionsWidth
                                           )}
                                       >
-                                        <div className="pl-1 pr-1 w-8">
-                                            <img
+                                          <div className="pl-1 pr-1 w-8">
+                                              <img
                                                   width={"16"}
                                                   height={"16"}
                                                   src={openExternal}
                                                   alt={`View on ${explorerName}`}
                                               />
-                                        </div>
-                                        <span>View on {explorerName}</span>
-                                    </div>
-                                </a>,
-                                <div
+                                          </div>
+                                          <span>View on {explorerName}</span>
+                                      </div>
+                                  </a>,
+                                  <div
                                       key={2}
                                       onClick={() => {
                                           setConfirmOpen(true)
@@ -124,14 +127,14 @@ const AssetDetailsPage = () => {
                                           optionsWidth
                                       )}
                                   >
-                                    <div className="pl-1 pr-1 w-8">
-                                        <Icon
+                                      <div className="pl-1 pr-1 w-8">
+                                          <Icon
                                               name={IconName.TRASH_BIN}
                                               profile="danger"
                                           />
-                                    </div>
-                                    <span>Remove Token</span>
-                                </div>,
+                                      </div>
+                                      <span>Remove Token</span>
+                                  </div>,
                               ]
                             : undefined
                     }
@@ -201,8 +204,7 @@ const AssetDetailsPage = () => {
                                 Send
                             </RoundedIconButton>
                         </Link>
-                        {/* Prevent access to swaps/}
-                        {/* {isSwapEnabled && (
+                        {isSwapEnabled && (
                             <Link
                                 to={{
                                     pathname: "/swap",
@@ -237,7 +239,7 @@ const AssetDetailsPage = () => {
                                     Swap
                                 </span>
                             </Link>
-                        )} */}
+                        )}
                         {isBridgeEnabled && (
                             <Link
                                 to={{

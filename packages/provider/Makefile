@@ -11,3 +11,12 @@ build/provider:
 
 test/provider:
 	yarn nyc -a --reporter=html --reporter=text mocha './test' --require esm --require isomorphic-fetch --require jsdom-global/register --require ts-node/register  --require tsconfig-paths/register 'test/**/*.test.ts' --timeout 10000 --exit
+
+version/patch:
+	@yarn version --patch
+
+version/minor:
+	@yarn version --minor
+
+version/major:
+	@yarn version --major

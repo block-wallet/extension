@@ -1,7 +1,13 @@
 
 <br /> 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/11839151/188500975-8cd95d07-c419-48aa-bb85-4200a6526f68.svg" width="300" />
+  <a href="https://blockwallet.io">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/11839151/188500975-8cd95d07-c419-48aa-bb85-4200a6526f68.svg" />
+      <source media="(prefers-color-scheme: light)" srcset="https://blockwallet.io/static/images/logo-blockwallet-black.svg" />
+      <img src="[https://blockwallet.io/static/images/logo-medium.svg](https://user-images.githubusercontent.com/11839151/188500975-8cd95d07-c419-48aa-bb85-4200a6526f68.svg)" width="300" />
+    </picture>
+  </a>
 </p>
 
 
@@ -104,9 +110,15 @@ See the [Acknowledgments](docs/acknowledgments.md) file for details
 <hr />
 <br />
 <div align="center">
-  <a href="https://blockwallet.io/"><img src="https://user-images.githubusercontent.com/11839151/188502875-41a57a7d-6dc2-4b99-9d9e-2b847826d3ed.png" width="32" /></a>  
+  <a href="https://blockwallet.io/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="ttps://user-images.githubusercontent.com/11839151/188502875-41a57a7d-6dc2-4b99-9d9e-2b847826d3ed.png" />
+      <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/11839151/188502875-41a57a7d-6dc2-4b99-9d9e-2b847826d3ed.png" />
+      <img src="https://user-images.githubusercontent.com/11839151/188502875-41a57a7d-6dc2-4b99-9d9e-2b847826d3ed.png" width="32" />
+    </picture>
+  </a>  
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="http://blockwallet.medium.com">
+  <a href="https://blockwallet.medium.com">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://blockwallet.io/static/images/logo-medium.svg" />
       <source media="(prefers-color-scheme: light)" srcset="https://blockwallet.io/static/images/logo-medium-d.svg" />
@@ -114,15 +126,45 @@ See the [Acknowledgments](docs/acknowledgments.md) file for details
     </picture>
   </a>
 &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://github.com/block-wallet"><img src="https://blockwallet.io/static/images/logo-github.svg" width="32" /></a>
+  <a href="https://github.com/block-wallet">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://blockwallet.io/static/images/logo-github.svg" />
+      <source media="(prefers-color-scheme: light)" srcset="https://blockwallet.io/static/images/logo-github-d.svg" />
+      <img src="https://blockwallet.io/static/images/logo-github.svg" width="32" />
+    </picture>
+  </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://twitter.com/GetBlockWallet"><img src="https://blockwallet.io/static/images/logo-twitter.svg" width="32" /></a>
+  <a href="https://twitter.com/GetBlockWallet">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://blockwallet.io/static/images/logo-twitter.svg" />
+      <source media="(prefers-color-scheme: light)" srcset="https://blockwallet.io/static/images/logo-twitter-d.svg" />
+      <img src="https://blockwallet.io/static/images/logo-twitter.svg" width="32" />
+    </picture>
+  </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://t.me/blockwallet"><img src="https://blockwallet.io/static/images/logo-telegram.svg" width="32" /></a>
+  <a href="https://t.me/blockwallet">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://blockwallet.io/static/images/logo-telegram.svg" />
+      <source media="(prefers-color-scheme: light)" srcset="https://blockwallet.io/static/images/logo-telegram-d.svg" />
+      <img src="https://blockwallet.io/static/images/logo-telegram.svg" width="32" />
+    </picture>
+  </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://www.linkedin.com/company/block-wallet/"><img src="https://blockwallet.io/static/images/logo-linkedin.svg" width="32" /></a>
+  <a href="https://www.linkedin.com/company/block-wallet/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://blockwallet.io/static/images/logo-linkedin.svg" />
+      <source media="(prefers-color-scheme: light)" srcset="https://blockwallet.io/static/images/logo-linkedin-d.svg" />
+      <img src="https://blockwallet.io/static/images/logo-linkedin-d.svg" width="32" />
+    </picture>
+  </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://blockwallet.io/static/images/logo-discord.svg"><img src="https://blockwallet.io/static/images/logo-discord.svg" width="32" /></a>
+  <a href="https://blockwallet.io/static/images/logo-discord.svg">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://blockwallet.io/static/images/logo-discord.svg" />
+      <source media="(prefers-color-scheme: light)" srcset="https://blockwallet.io/static/images/logo-discord-d.svg" />
+      <img src="https://blockwallet.io/static/images/logo-discord.svg" width="32" />
+    </picture>
+  </a>
 </div>
 
 

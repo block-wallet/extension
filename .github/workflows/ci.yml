@@ -183,9 +183,6 @@ jobs:
         if: startsWith(github.ref_name, 'dependabot/') == false
         id: zip
         run: |
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
-          apt update
-          apt install -y zip
           file=block-wallet-${GITHUB_SHA::7}
           zip -r -D $file dist/
           echo "::set-output name=file::$file.zip"
@@ -254,9 +251,7 @@ jobs:
 
       - name: Install Cypress linux dependencies
         run: |
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
-          apt update
-          apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
+          sudo apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
 
       - name: Install e2e dependencies
         run: |
@@ -276,7 +271,7 @@ jobs:
 
       - name: Install Chrome
         run: |
-          apt install -y /usr/src/google-chrome-stable_current_amd64.deb
+          sudo apt install -y /usr/src/google-chrome-stable_current_amd64.deb
 
       - name: Download the extension url
         uses: actions/download-artifact@v3
@@ -286,7 +281,6 @@ jobs:
 
       - name: Download extension
         run: |
-          apt install -y unzip
           url=$(cat $BLOCK_WALLET_FOLDER/$BLOCK_WALLET_URL)
           wget $url -O blockwallet-extension.zip
           rm -rf blockwallet-extension

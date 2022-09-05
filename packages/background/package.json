@@ -23,7 +23,7 @@
         "ethereumjs-util": "^7.0.7",
         "ethereumjs-wallet": "^1.0.1",
         "ethers": "^5.4.0",
-        "fixed-merkle-tree": "^0.6.0",
+        "@block-wallet/fixed-merkle-tree": "^0.6.1",
         "idb": "^6.0.0",
         "lodash": "^4.17.21",
         "loglevel": "^1.7.1",
@@ -79,18 +79,15 @@
         "worker-loader": "^3.0.8"
     },
     "resolutions": {
-        "**/websnark": "link:./@block-wallet/websnark",
-        "**/snarkjs": "link:./@block-wallet/snarkjs",
-        "**/circomlib": "link:./@block-wallet/circomlib",
         "webpack/**/glob-parent": "^5.1.2",
         "webpack/**/set-value": "^4.0.1",
         "@block-wallet/circomlib/**/yargs-parser": "^18.1.2",
         "@block-wallet/circomlib/**/ws": "^5.2.3",
         "@block-wallet/circomlib/**/jsprim": "^1.4.2",
         "@block-wallet/snarkjs/**/yargs-parser": "^18.1.2",
-        "fixed-merkle-tree/**/yargs-parser": "^18.1.2",
-        "fixed-merkle-tree/**/ws": "^5.2.3",
-        "fixed-merkle-tree/**/jsprim": "^1.4.2"
+        "@block-wallet/fixed-merkle-tree/**/yargs-parser": "^18.1.2",
+        "@block-wallet/fixed-merkle-tree/**/ws": "^5.2.3",
+        "@block-wallet/fixed-merkle-tree/**/jsprim": "^1.4.2"
     },
     "scripts": {
         "test": "make test/background",

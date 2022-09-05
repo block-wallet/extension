@@ -11,7 +11,7 @@ env:
 
 jobs:
   lint:
-    runs-on: [self-hosted, small]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v3
@@ -67,7 +67,7 @@ jobs:
           yarn lint
 
   test:
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2
@@ -177,7 +177,6 @@ jobs:
         env:
           CI: false
         run: |
-          set NODE_OPTIONS=--max_old_space_size=4096
           make build/prod
 
       - name: Zip build
@@ -218,7 +217,7 @@ jobs:
 
   e2e:
     needs: [build]
-    runs-on: [self-hosted, large]
+    runs-on: ubuntu-latest
     if: startsWith(github.ref_name, 'dependabot/') == false
     steps:
       - name: Checkout e2e repository

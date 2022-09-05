@@ -86,7 +86,7 @@ jobs:
 
   build:
     needs: validation
-    runs-on: [self-hosted, large]
+    runs-on: ubuntu-latest
     outputs:
       version_without_preffix: ${{ steps.remove_preffix.outputs.version }}
     steps:

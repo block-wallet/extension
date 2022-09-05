@@ -133,7 +133,7 @@ jobs:
   build:
     env:
       ENVIRONMENT: prod
-    runs-on: [self-hosted, large]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2

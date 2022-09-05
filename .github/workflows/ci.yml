@@ -214,6 +214,7 @@ jobs:
 
   e2e:
     needs: [build]
+    container: cypress/browsers:node16.13.2-chrome97-ff96
     runs-on: ubuntu-latest
     if: startsWith(github.ref_name, 'dependabot/') == false
     steps:
@@ -240,38 +241,9 @@ jobs:
         run: |
           npm install --global yarn
 
-      - name: Cache e2e dependencies and cypress binary
-        id: cache-cypress
-        uses: actions/cache@v3
-        with:
-          path: |
-            **/node_modules
-            ~/.cache/Cypress
-          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
-
-      - name: Install Cypress linux dependencies
-        run: |
-          sudo apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
-
       - name: Install e2e dependencies
         run: |
           yarn install --prefer-offline --frozen-lockfile
-
-      - name: Cache Chrome
-        uses: actions/cache@v3
-        id: cache-chrome
-        with:
-          path: /usr/src/google-chrome-stable_current_amd64.deb
-          key: ${{ env.CHROME_VERSION }}
-
-      - name: Download Chrome
-        if: steps.cache-chrome.outputs.cache-hit != 'true'
-        run: |
-          wget -O /usr/src/google-chrome-stable_current_amd64.deb "http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_$CHROME_VERSION-1_amd64.deb"
-
-      - name: Install Chrome
-        run: |
-          sudo apt install -y /usr/src/google-chrome-stable_current_amd64.deb
 
       - name: Download the extension url
         uses: actions/download-artifact@v3

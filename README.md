@@ -1,7 +1,20 @@
-[![CI](https://github.com/block-wallet/extension/actions/workflows/ci.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/ci.yml) [![Release (manual)](https://github.com/block-wallet/extension/actions/workflows/build.yaml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/build.yaml) [![Release (automated)](https://github.com/block-wallet/extension/actions/workflows/release.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/release.yml)
+
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/11839151/188500975-8cd95d07-c419-48aa-bb85-4200a6526f68.svg" width="300" />
+</p>
+
+
+<div align="center" style="text-align:center">
+
+[![CI](https://github.com/block-wallet/extension/actions/workflows/ci.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/ci.yml) [![Release (manual)](https://github.com/block-wallet/extension/actions/workflows/build.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/build.yml) [![Release (automated)](https://github.com/block-wallet/extension/actions/workflows/release.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/release.yml)
 [![Convention](https://github.com/block-wallet/extension/actions/workflows/convention.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/convention.yml)
 
-# Block Wallet Extension
+</div>
+
+<hr />
+
+# BlockWallet - Extension
 
 The most private, non-custodial cryptocurrency wallet
 The first crypto wallet protecting you on Web3 without any compromises. Stay safe with BlockWallet.
@@ -66,6 +79,7 @@ The release process uses a combination of two GitHub workflows called [build](.g
 * [Node.js](https://nodejs.org/)
 * [Typescript](https://www.typescriptlang.org/)
 * [React.js](https://reactjs.org/)
+* [tailwindcss](https://tailwindcss.com/)
 
 ## Contributing
 
@@ -87,18 +101,21 @@ See the [LICENSE](LICENSE) file for details
 
 See the [Acknowledgments](docs/acknowledgments.md) file for details
 
-# Socials
+<hr />
+<br />
+<div align="center">
+  <a href="https://blockwallet.io/"><img src="https://user-images.githubusercontent.com/11839151/188502875-41a57a7d-6dc2-4b99-9d9e-2b847826d3ed.png" width="32" /></a>  
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="http://blockwallet.medium.com"><img src="https://blockwallet.io/static/images/logo-medium.svg" width="32" /></a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://github.com/block-wallet"><img src="https://blockwallet.io/static/images/logo-github.svg" width="32" /></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://twitter.com/GetBlockWallet"><img src="https://blockwallet.io/static/images/logo-twitter.svg" width="32" /></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://t.me/blockwallet"><img src="https://blockwallet.io/static/images/logo-telegram.svg" width="32" /></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.linkedin.com/company/block-wallet/"><img src="https://blockwallet.io/static/images/logo-linkedin.svg" width="32" /></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://blockwallet.io/static/images/logo-discord.svg"><img src="https://blockwallet.io/static/images/logo-discord.svg" width="32" /></a>
+</div>
 
-[Web](https://blockwallet.io/)
-
-[Medium](http://blockwallet.medium.com/)
-
-[Github](https://github.com/block-wallet)
-
-[Twitter](https://twitter.com/GetBlockWallet)
-
-[Telegram](https://t.me/blockwallet)
-
-[LinkedIn](https://www.linkedin.com/company/block-wallet/)
-
-[Mail](mailto:hello@blockwallet.io)

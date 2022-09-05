@@ -1,5 +1,5 @@
 
-
+<br /> 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/11839151/188500975-8cd95d07-c419-48aa-bb85-4200a6526f68.svg" width="300" />
 </p>
@@ -106,7 +106,13 @@ See the [Acknowledgments](docs/acknowledgments.md) file for details
 <div align="center">
   <a href="https://blockwallet.io/"><img src="https://user-images.githubusercontent.com/11839151/188502875-41a57a7d-6dc2-4b99-9d9e-2b847826d3ed.png" width="32" /></a>  
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="http://blockwallet.medium.com"><img src="https://blockwallet.io/static/images/logo-medium.svg" width="32" /></a>
+  <a href="http://blockwallet.medium.com">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://blockwallet.io/static/images/logo-medium.svg" />
+      <source media="(prefers-color-scheme: light)" srcset="https://blockwallet.io/static/images/logo-medium-d.svg" />
+      <img src="https://blockwallet.io/static/images/logo-medium.svg" width="32" />
+    </picture>
+  </a>
 &nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://github.com/block-wallet"><img src="https://blockwallet.io/static/images/logo-github.svg" width="32" /></a>
   &nbsp;&nbsp;&nbsp;&nbsp;
@@ -118,4 +124,6 @@ See the [Acknowledgments](docs/acknowledgments.md) file for details
   &nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://blockwallet.io/static/images/logo-discord.svg"><img src="https://blockwallet.io/static/images/logo-discord.svg" width="32" /></a>
 </div>
+
+
 

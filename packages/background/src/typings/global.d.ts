@@ -1,5 +1,5 @@
 declare module 'single-call-balance-checker-abi';
-declare module 'circomlib';
+declare module '@block-wallet/circomlib';
 declare module '@block-wallet/snarkjs';
 declare module '@block-wallet/websnark/src/utils';
 declare module '@block-wallet/websnark/src/groth16';

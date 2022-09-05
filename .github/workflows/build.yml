@@ -232,9 +232,7 @@ jobs:
 
       - name: Install Cypress linux dependencies
         run: |
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
-          apt update
-          apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
+          sudo apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
 
       - name: Install e2e dependencies
         run: |
@@ -254,7 +252,7 @@ jobs:
 
       - name: Install Chrome
         run: |
-          apt install -y /usr/src/google-chrome-stable_current_amd64.deb
+          sudo apt install -y /usr/src/google-chrome-stable_current_amd64.deb
 
       - name: UI Tests - Chrome
         run: |
@@ -275,7 +273,7 @@ jobs:
 
       - name: Install ImageMagick (needed for convert)
         run: |
-          apt install -y imagemagick
+          sudo apt install -y imagemagick
 
       - name: Cut the screenshot
         run: |
@@ -312,9 +310,6 @@ jobs:
       - name: Zip extension
         id: zip
         run: |
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
-          apt update
-          apt install -y zip
           mkdir -p $ARTIFACTS_FOLDER
           mv blockwallet-extension dist
           zip -r -D $ARTIFACTS_FOLDER/$EXTENSION_NAME.zip dist/
@@ -369,14 +364,6 @@ jobs:
           git config --global user.name release_process
           git config --global user.email release_process@blockwallet.io
           git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
-
-      - name: Install GitHub cli
-        run: |
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
-          apt update
-          apt install gh
 
       - name: Create Pull Request
         id: create_pull_request

@@ -1,4 +1,8 @@
-import { BridgeImplementation } from '@block-wallet/background/utils/bridgeApi';
+import {
+    BridgeImplementation,
+    BridgeStatus,
+    BridgeSubstatus,
+} from '@block-wallet/background/utils/bridgeApi';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { BigNumber, Transaction } from 'ethers';
 import { CurrencyAmountPair } from '../../blank-deposit/types';
@@ -106,6 +110,8 @@ export interface BridgeTransactionParams {
     receivingTxHash?: string;
     sendingTxHash?: string;
     role: 'SENDING' | 'RECEIVING';
+    substatus?: BridgeSubstatus;
+    status?: BridgeStatus;
 }
 
 export interface uiTransactionParams extends TransactionParams {

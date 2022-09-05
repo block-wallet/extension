@@ -65,7 +65,7 @@ const transactionMessages = {
     [TransactionCategories.TOKEN_METHOD_TRANSFER_FROM]: "Token Transfer From",
     [TransactionCategories.EXCHANGE]: "BlockWallet Swap",
     [TransactionCategories.BRIDGE]: "BlockWallet Bridge",
-    [TransactionCategories.INCOMING_BRIDGE]: "BlockWallet Bridge",
+    [TransactionCategories.INCOMING_BRIDGE]: "Incoming BlockWallet Bridge",
 }
 
 const pendingTransactionMessages: { [x: string]: string } = {

@@ -7,6 +7,8 @@ import {
     GetLiFiQuoteResponse,
     GetLiFiStatusResponse,
     GetLifiTokensResponse,
+    lifiBridgeStatusToBridgeStatus,
+    lifiBridgeSubstatusToBridgeSubstatus,
     LiFiErrorResponse,
     lifiTokenToIToken,
     LIFI_BRIDGE_ENDPOINT,
@@ -32,6 +34,32 @@ export class QuoteNotFoundError extends Error {
 
 export enum BridgeImplementation {
     LIFI_BRIDGE = 'LIFI_BRIDGE',
+}
+
+//So far this statuses has been done using Li.Fi convention.
+//To learn how do they work, please refer to their documentation: https://docs.li.fi/products/more-integration-options/li.fi-api/checking-the-status-of-a-transaction
+export enum BridgeStatus {
+    NOT_FOUND = 'NOT_FOUND',
+    INVALID = 'INVALID',
+    PENDING = 'PENDING',
+    DONE = 'DONE',
+    FAILED = 'FAILED',
+}
+
+export enum BridgeSubstatus {
+    //Substatus of Pending state
+    WAIT_SOURCE_CONFIRMATIONS = 'WAIT_SOURCE_CONFIRMATIONS',
+    WAIT_DESTINATION_TRANSACTION = 'WAIT_DESTINATION_TRANSACTION',
+    BRIDGE_NOT_AVAILABLE = 'BRIDGE_NOT_AVAILABLE',
+    CHAIN_NOT_AVAILABLE = 'CHAIN_NOT_AVAILABLE',
+    NOT_PROCESSABLE_REFUND_NEEDED = 'NOT_PROCESSABLE_REFUND_NEEDED',
+    REFUND_IN_PROGRESS = 'REFUND_IN_PROGRESS',
+    UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+
+    //Substatus of Done state
+    COMPLETED = 'COMPLETED',
+    PARTIAL = 'PARTIAL',
+    REFUNDED = 'REFUNDED',
 }
 
 export interface getBridgeRoutesRequest {
@@ -93,14 +121,15 @@ interface BridgeTransactionData {
     txHash: string;
     txLink: string;
     amount: string;
-    token: IToken;
+    token?: IToken;
     chainId: number;
 }
 
 export interface IBridgeStatus {
     sendTransaction: BridgeTransactionData;
-    receiveTransaction: BridgeTransactionData;
-    status: 'NOT_FOUND' | 'INVALID' | 'PENDING' | 'DONE' | 'FAILED';
+    receiveTransaction?: BridgeTransactionData;
+    status: BridgeStatus;
+    substatus?: BridgeSubstatus;
     tool: string;
 }
 
@@ -220,21 +249,28 @@ const LiFiBridge: IBridge = {
         const responseData = response.data as GetLiFiStatusResponse;
 
         return {
-            status: responseData.status,
+            status: lifiBridgeStatusToBridgeStatus(responseData.status),
+            substatus: responseData.substatus
+                ? lifiBridgeSubstatusToBridgeSubstatus(responseData.substatus)
+                : undefined,
             sendTransaction: {
                 amount: responseData.sending.amount,
                 chainId: responseData.sending.chainId,
-                token: lifiTokenToIToken(responseData.sending.token),
+                token: responseData.sending.token
+                    ? lifiTokenToIToken(responseData.sending.token)
+                    : undefined,
                 txHash: responseData.sending.txHash,
                 txLink: responseData.sending.txLink,
             },
-            receiveTransaction: {
-                amount: responseData.receiving.amount,
-                chainId: responseData.receiving.chainId,
-                token: lifiTokenToIToken(responseData.receiving.token),
-                txHash: responseData.receiving.txHash,
-                txLink: responseData.receiving.txLink,
-            },
+            receiveTransaction: responseData.receiving?.txHash
+                ? {
+                      amount: responseData.receiving.amount,
+                      chainId: responseData.receiving.chainId,
+                      token: lifiTokenToIToken(responseData.receiving.token),
+                      txHash: responseData.receiving.txHash,
+                      txLink: responseData.receiving.txLink,
+                  }
+                : undefined,
             tool: responseData.tool,
         };
     },

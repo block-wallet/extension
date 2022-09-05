@@ -1,4 +1,5 @@
 import { IToken } from '@block-wallet/background/controllers/erc-20/Token';
+import { BridgeStatus, BridgeSubstatus } from '../bridgeApi';
 
 /**
  * Fees Config
@@ -9,6 +10,30 @@ export const BRIDGE_REFERRER_ADDRESS =
 
 // Base endpoint
 export const LIFI_BRIDGE_ENDPOINT = 'https://li.quest/v1';
+
+export enum LiFiBridgeStatus {
+    NOT_FOUND = 'NOT_FOUND',
+    INVALID = 'INVALID',
+    PENDING = 'PENDING',
+    DONE = 'DONE',
+    FAILED = 'FAILED',
+}
+
+export enum LiFiBridgeSubstatus {
+    //Substatus of Pending state
+    WAIT_SOURCE_CONFIRMATIONS = 'WAIT_SOURCE_CONFIRMATIONS',
+    WAIT_DESTINATION_TRANSACTION = 'WAIT_DESTINATION_TRANSACTION',
+    BRIDGE_NOT_AVAILABLE = 'BRIDGE_NOT_AVAILABLE',
+    CHAIN_NOT_AVAILABLE = 'CHAIN_NOT_AVAILABLE',
+    NOT_PROCESSABLE_REFUND_NEEDED = 'NOT_PROCESSABLE_REFUND_NEEDED',
+    REFUND_IN_PROGRESS = 'REFUND_IN_PROGRESS',
+    UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+
+    //Substatus of Done state
+    COMPLETED = 'COMPLETED',
+    PARTIAL = 'PARTIAL',
+    REFUNDED = 'REFUNDED',
+}
 
 export interface LiFiToken {
     address: string;
@@ -62,8 +87,8 @@ interface LifiTransactionData {
 export interface GetLiFiStatusResponse {
     sending: LifiTransactionData;
     receiving: LifiTransactionData;
-    status: 'NOT_FOUND' | 'INVALID' | 'PENDING' | 'DONE' | 'FAILED';
-    substatus: string;
+    status: LiFiBridgeStatus;
+    substatus: LiFiBridgeSubstatus;
     tool: string;
 }
 
@@ -118,4 +143,16 @@ export const lifiTokenToIToken = (token: LiFiToken): IToken => {
         symbol: token.symbol,
         type: '',
     };
+};
+
+export const lifiBridgeStatusToBridgeStatus = (
+    lifiStatus: LiFiBridgeStatus
+): BridgeStatus => {
+    return BridgeStatus[lifiStatus];
+};
+
+export const lifiBridgeSubstatusToBridgeSubstatus = (
+    lifiSubstatus: LiFiBridgeSubstatus
+): BridgeSubstatus => {
+    return BridgeSubstatus[lifiSubstatus];
 };

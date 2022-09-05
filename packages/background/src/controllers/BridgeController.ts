@@ -8,6 +8,7 @@ import { BigNumber, ethers } from 'ethers';
 import { PreferencesController } from './PreferencesController';
 import { TokenOperationsController } from './erc-20/transactions/Transaction';
 import {
+    BridgeTransactionParams,
     MetaType,
     TransactionCategories,
     TransactionMeta,
@@ -23,6 +24,7 @@ import BridgeAPI, {
     getBridgeRoutesRequest,
     getBridgeQuoteRequest,
     IBridgeRoute,
+    BridgeStatus,
 } from '../utils/bridgeApi';
 import { BASE_BRIDGE_FEE, BRIDGE_REFERRER_ADDRESS } from '../utils/types/lifi';
 import { IToken, Token } from './erc-20/Token';
@@ -31,10 +33,13 @@ import { IChain } from '../utils/types/chain';
 import { getChainListItem } from '../utils/chainlist';
 import { TransactionByHash } from './TransactionWatcherController';
 import { sleep } from '../utils/sleep';
-import { MILISECOND, MINUTE, SECOND } from '../utils/constants/time';
+import { HOUR, MILISECOND, MINUTE, SECOND } from '../utils/constants/time';
 import { TransactionReceipt } from '@ethersproject/providers';
 import { toChecksumAddress } from 'ethereumjs-util';
-const STATUS_API_CALLS_DELAY = 2 * SECOND;
+import { Transaction } from '@ethereumjs/tx';
+import { parseUnits } from 'ethers/lib/utils';
+const TIMEOUT_FETCH_RECEIVING_TX = 2 * HOUR;
+const STATUS_API_CALLS_DELAY = 30 * SECOND;
 const GET_TX_RECEIPT_DELAY = 2 * SECOND;
 
 export interface BridgeControllerMemState {
@@ -286,7 +291,8 @@ export default class BridgeController extends ExchangeController<
             bridgeTx
         );
         this._tokenController.attemptAddToken(
-            bridgeTx.params.fromToken.address
+            bridgeTx.params.fromToken.address,
+            bridgeTx.params.fromChainId
         );
         this._tokenController.attemptAddToken(
             bridgeTx.params.toToken.address,
@@ -349,7 +355,7 @@ export default class BridgeController extends ExchangeController<
         }: BridgeTransaction
     ): Promise<string> => {
         try {
-            let { result, transactionMeta } =
+            const { result, transactionMeta } =
                 await this._transactionController.addTransaction({
                     transaction: {
                         from: transactionRequest.from,
@@ -378,11 +384,10 @@ export default class BridgeController extends ExchangeController<
                 transactionMeta.id
             );
 
-            transactionMeta = this._transactionController.getTransaction(
-                transactionMeta.id
-            )!;
+            const newTransactionMeta =
+                this._transactionController.getTransaction(transactionMeta.id)!;
 
-            transactionMeta.bridgeParams = {
+            newTransactionMeta.bridgeParams = {
                 bridgeImplementation: aggregator,
                 fromToken,
                 toToken,
@@ -393,13 +398,14 @@ export default class BridgeController extends ExchangeController<
                 toChainId,
                 tool, //store the tool used for executing the bridge.
                 role: 'SENDING',
-                sendingTxHash: transactionMeta.transactionParams.hash!,
+                sendingTxHash: newTransactionMeta.transactionParams.hash!,
             };
 
-            this._transactionController.updateTransaction(transactionMeta);
-            this._waitForReceivingTx({
+            this._transactionController.updateTransaction(newTransactionMeta);
+
+            this._waitForBridgeFinalState({
                 accountAddress: transactionRequest.from,
-                sendingTransaction: transactionMeta,
+                sendingTransactionId: newTransactionMeta.id,
                 fromChainId,
                 toChainId,
                 tool,
@@ -442,106 +448,115 @@ export default class BridgeController extends ExchangeController<
     }
 
     /**
-     * Waits for the receving transaction in a Bridge operation (the transaction in the target chain).
+     * _waitForBridgeFinalState
      *
-     * This function executes an API call to get the receiving transaction hash and based on that gets the proper data to store in the state.
+     * Waits for the bridge to end with an either successful or failed state.
+     * When a receivingTx hash (transaction in the bridge's destination chain) it fires a flow to fetch the transaction data.
+     *
      * @param accountAddress the account address from which the bridge was executed
-     * @param hash the sending transaction hash in a Bridge operation (the transaction in the current chain).
+     * @param sendingTransactionId the sending (outgoing) transaction reference to our store.
      * @param tool the bridge used
      * @param fromChainId the chain id of the sending transaction's network
-     * @param fromChainId the chain id of the receiving transaction's network
+     * @param toChainId the chain id of the receiving transaction's network
      * @param toToken the token obtained in the receiving chain after executing the bridge.
      */
-    private async _waitForReceivingTx({
+    private async _waitForBridgeFinalState({
         accountAddress,
-        sendingTransaction,
+        sendingTransactionId,
         tool,
         fromChainId,
         toChainId,
         toToken,
     }: {
-        sendingTransaction: TransactionMeta;
+        sendingTransactionId: string;
         accountAddress: string;
         tool: string;
         fromChainId: number;
         toChainId: number;
         toToken: IToken;
-    }) {
-        const sendingTxHash = sendingTransaction.transactionParams.hash!;
-        const sendingTxId = sendingTransaction.id;
-        let receivingTxHash: string | null = null;
-        let notFoundCalls = 0;
+    }): Promise<void> {
+        const startTime = new Date().getTime();
+        let receivingTxFetched = false;
+        let receivingTxHash: string | undefined;
+        let sendingTx =
+            this._transactionController.getTransaction(sendingTransactionId)!;
 
-        while (receivingTxHash === null || notFoundCalls < 5) {
-            try {
-                const bridgeStatus = await this._getAPIImplementation(
-                    BridgeImplementation.LIFI_BRIDGE
-                ).getStatus({
-                    sendTxHash: sendingTxHash,
-                    tool,
-                    fromChainId,
-                    toChainId,
-                });
-
-                if (!bridgeStatus || bridgeStatus.status === 'NOT_FOUND') {
-                    notFoundCalls++;
-                    await sleep(STATUS_API_CALLS_DELAY * (notFoundCalls + 1));
-                    continue;
-                }
-
-                //transaction faield
-                if (['INVALID', 'FAILED'].includes(bridgeStatus.status)) {
-                    break;
-                }
-
-                if (bridgeStatus.receiveTransaction?.txHash) {
-                    receivingTxHash = bridgeStatus.receiveTransaction.txHash;
-                    continue;
-                }
-
-                await sleep(STATUS_API_CALLS_DELAY);
-            } catch (e) {
-                log.warn('_waitForReceivingTx', 'getStatus', e);
-                notFoundCalls++;
-            }
-        }
-
-        //bridge failed
-        if (!receivingTxHash) {
-            log.debug(
-                '_waitForReceivingTx',
-                'Receiving transaction hash not found.'
-            );
+        if (!sendingTx?.bridgeParams) {
             return;
         }
 
-        //Add recevingTx hash reference to sending transaction.
-        try {
-            const sendingTransactionMeta =
-                this._transactionController.getTransaction(sendingTxId);
-            this._transactionController.updateTransactionPartially(
-                sendingTxId,
-                {
-                    bridgeParams: {
-                        ...sendingTransactionMeta!.bridgeParams!,
-                        receivingTxHash,
-                    },
-                }
+        //Bridge is still pending and orignal transaction hasn't failed.
+        const shouldCheckBridgeStatus = (
+            sendingTx: TransactionMeta
+        ): boolean => {
+            //If there is no status yet, then execute.
+            if (!sendingTx.bridgeParams!.status) {
+                return true;
+            }
+            return (
+                [BridgeStatus.PENDING, BridgeStatus.NOT_FOUND].includes(
+                    sendingTx.bridgeParams!.status
+                ) &&
+                ![
+                    TransactionStatus.FAILED,
+                    TransactionStatus.DROPPED,
+                    TransactionStatus.CANCELLED,
+                ].includes(sendingTx?.status)
             );
-        } catch (e) {
-            log.warn(
-                'Error updating bridge sending transaction with ID: ',
-                sendingTxId
-            );
-        }
+        };
 
-        this._fetchBridgeReceivingTransaction({
-            accountAddress,
-            receivingTxHash,
-            sendingTransaction,
-            toChainId,
-            toToken,
-        });
+        let isBridgePending = shouldCheckBridgeStatus(sendingTx);
+
+        while (
+            isBridgePending &&
+            //Set a timeout to avoid looping without an stop condition.
+            new Date().getTime() - startTime < TIMEOUT_FETCH_RECEIVING_TX
+        ) {
+            try {
+                //fetch status from bridge API
+                const bridgeStatus = await this._getAPIImplementation(
+                    BridgeImplementation.LIFI_BRIDGE
+                ).getStatus({
+                    sendTxHash: sendingTx.transactionParams.hash!,
+                    tool: tool,
+                    fromChainId: fromChainId,
+                    toChainId: toChainId,
+                });
+
+                receivingTxHash = bridgeStatus.receiveTransaction?.txHash;
+
+                //update bridge status, substatus and recevingTxHash in the state.
+                sendingTx = this._updateTransactionBridgeParams(
+                    sendingTransactionId,
+                    {
+                        substatus: bridgeStatus.substatus,
+                        status: bridgeStatus.status,
+                        receivingTxHash,
+                    }
+                );
+
+                //If receving transaction hash flow hasn't been fired yet, then do it.
+                if (!receivingTxFetched && receivingTxHash) {
+                    receivingTxFetched = true;
+                    this._fetchBridgeReceivingTransaction({
+                        accountAddress,
+                        receivingTxHash: receivingTxHash!,
+                        sendingTransaction: sendingTx,
+                        toChainId,
+                        toToken,
+                    });
+                }
+
+                isBridgePending = shouldCheckBridgeStatus(sendingTx);
+            } catch (e) {
+                log.warn('_waitForBridgeFinalState', 'getStatus', e);
+            } finally {
+                //Only sleep if we're going to continue with the status check.
+                if (isBridgePending) {
+                    await sleep(STATUS_API_CALLS_DELAY);
+                }
+            }
+        }
     }
 
     private _storePendingTransaction({
@@ -636,6 +651,8 @@ export default class BridgeController extends ExchangeController<
         //Set bridge parameters
         transactionMeta.bridgeParams = {
             ...sendingTransaction.bridgeParams!,
+            status: undefined,
+            substatus: undefined,
             role: 'RECEIVING',
         };
 
@@ -667,7 +684,6 @@ export default class BridgeController extends ExchangeController<
                     )
                 );
 
-                //TODO: Set Max retry count?
                 continue;
             }
         }
@@ -680,7 +696,7 @@ export default class BridgeController extends ExchangeController<
         const methodSignature =
             await contractSignatureParser.getMethodSignature(
                 transactionByHash.data,
-                txReceipt.contractAddress
+                txReceipt.contractAddress || txReceipt.to
             );
 
         const transactionToken = await this._fetchToken(
@@ -688,6 +704,8 @@ export default class BridgeController extends ExchangeController<
             accountAddress,
             toChainId
         );
+
+        const toAmount = sendingTransaction.bridgeParams?.toTokenAmount;
 
         this._updateStateTransaction(
             toChainId,
@@ -702,7 +720,9 @@ export default class BridgeController extends ExchangeController<
                           decimals: transactionToken.decimals,
                           currency: transactionToken.symbol!,
                           to: transactionByHash.to,
-                          amount: BigNumber.from(transactionByHash.value),
+                          amount: toAmount
+                              ? parseUnits(toAmount, transactionToken.decimals)
+                              : BigNumber.from(transactionByHash.value),
                       }
                     : undefined,
                 status: isSuccess
@@ -776,17 +796,24 @@ export default class BridgeController extends ExchangeController<
             return;
         }
 
-        const contractAddress = toChecksumAddress(transactionToken.address);
-
         try {
-            const tokens = await this._tokenController.search(
-                contractAddress,
-                true,
+            const token = await this._tokenController.getToken(
+                transactionToken.address,
                 accountAddress,
                 chainId
             );
+
+            const realToken = token || transactionToken;
+
             //try to fetch the token from our list, if it is not present, use the transaction token data.
-            return tokens.length ? tokens[0] : transactionToken;
+            return {
+                address: realToken.address || transactionToken.address,
+                decimals: realToken.decimals || transactionToken.decimals,
+                logo: realToken.logo || transactionToken.logo,
+                name: realToken.name || transactionToken.name,
+                symbol: realToken.symbol || transactionToken.symbol,
+                type: realToken.type,
+            };
         } catch (e) {
             log.warn('_fetchToken', 'tokenController.search', e);
             return transactionToken;
@@ -822,5 +849,19 @@ export default class BridgeController extends ExchangeController<
                 maxFeePerGas: transaction.maxFeePerGas,
             },
         };
+    }
+
+    private _updateTransactionBridgeParams(
+        txId: string,
+        brideParams: Partial<BridgeTransactionParams>
+    ): TransactionMeta {
+        const tx = this._transactionController.getTransaction(txId);
+        this._transactionController.updateTransactionPartially(txId, {
+            bridgeParams: {
+                ...tx!.bridgeParams!,
+                ...brideParams,
+            },
+        });
+        return this._transactionController.getTransaction(txId)!;
     }
 }

@@ -44,6 +44,8 @@ import {
     GetBridgeQuoteResponse,
 } from "@block-wallet/background/controllers/BridgeController"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
+import { ApproveOperation } from "../transaction/ApprovePage"
+import { BridgeAllowanceCheck } from "../../context/commTypes"
 
 interface SetupBridgePageLocalState {
     amount?: string
@@ -206,28 +208,38 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     ])
 
     const onSubmit = () => {
-        if (!selectedToken || !bigNumberAmount || !quote) {
+        if (
+            !selectedToken ||
+            !bigNumberAmount ||
+            !quote ||
+            !selectedToNetwork
+        ) {
             return
         }
 
-        // Temp for testing
-        // if (quote.allowance) {
-        if (true) {
+        const nextViewState: BridgeConfirmPageLocalState = {
+            amount: watchedAmount,
+            bridgeQuote: quote,
+            network: selectedToNetwork,
+            routes: availableRoutes,
+            token: selectedToken,
+            fromAssetPage,
+        }
+
+        if (quote.allowance === BridgeAllowanceCheck.ENOUGH_ALLOWANCE) {
             history.push({
                 pathname: "/bridge/confirm",
-                state: {
-                    amount: watchedAmount,
-                    bridgeQuote: quote,
-                    network: selectedToNetwork,
-                    routes: availableRoutes,
-                    token: selectedToken,
-                    fromAssetPage,
-                } as BridgeConfirmPageLocalState,
+                state: nextViewState,
             })
         } else {
             history.push({
                 pathname: "/transaction/approve",
-                state: {},
+                state: {
+                    assetAddress: selectedToken.address,
+                    minAllowance: bigNumberAmount,
+                    approveOperation: ApproveOperation.BRIDGE,
+                    nextLocationState: nextViewState,
+                },
             })
         }
     }
@@ -290,7 +302,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     slippage: 0.5,
                 }
 
-                const fetchedQuote = await getBridgeQuote(params)
+                const fetchedQuote = await getBridgeQuote(params, true)
 
                 if (isValidFetch) {
                     setQuote(fetchedQuote)
@@ -364,9 +376,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         label={
                             error
                                 ? error
-                                : true
-                                ? // : quote?.allowance -- temp for testing
-                                  "Review"
+                                : quote?.allowance ===
+                                  BridgeAllowanceCheck.ENOUGH_ALLOWANCE
+                                ? "Review"
                                 : "Approve"
                         }
                         disabled={!!(error || !quote)}
@@ -522,24 +534,26 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 />
 
                 {/* Asset in destination */}
-                {availableRoutes && selectedToNetwork && (
+                {availableRoutes.length
+                    ? selectedToNetwork && (
                     <div className="pt-3">
                         <AssetAmountDisplay
-                            asset={
-                                getRouteForNetwork(
-                                    availableRoutes,
-                                    selectedToNetwork
-                                ).toTokens[0]
-                            }
-                            amount={
-                                quote &&
-                                BigNumber.from(
-                                    quote.bridgeParams.params.toAmount
-                                )
-                            }
-                        />
+                                  asset={
+                                      getRouteForNetwork(
+                                          availableRoutes,
+                                          selectedToNetwork
+                                      ).toTokens[0]
+                                  }
+                                  amount={
+                                      quote &&
+                                      BigNumber.from(
+                                          quote.bridgeParams.params.toAmount
+                                      )
+                                  }
+                              />
                     </div>
-                )}
+                      )
+                    : null}
             </div>
         </PopupLayout>
     )

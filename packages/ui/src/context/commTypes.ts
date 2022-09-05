@@ -317,6 +317,15 @@ export enum BridgeImplementation {
 }
 
 /**
+ * Allowance status for the bridged asset
+ */
+export enum BridgeAllowanceCheck {
+    NOT_CHECKED = "NOT_CHECKED",
+    ENOUGH_ALLOWANCE = "ENOUGH_ALLOWANCE",
+    INSUFFICIENT_ALLOWANCE = "INSUFFICIENT_ALLOWANCE",
+}
+
+/**
  * Hardware Wallet Devices Vendors
  */
 export enum Devices {

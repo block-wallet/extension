@@ -39,6 +39,7 @@ import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 import { useCallback } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
 import { GetAmountYupSchema } from "../../util/yup/GetAmountSchema"
+import { ApproveOperation } from "../transaction/ApprovePage"
 
 interface SwapPageLocalState {
     fromToken?: Token
@@ -199,7 +200,7 @@ const SwapPage = () => {
                 state: {
                     assetAddress: tokenFrom.address,
                     minAllowance: bigNumberAmount,
-                    isSwap: true,
+                    approveOperation: ApproveOperation.SWAP,
                     nextLocationState: {
                         fromToken: tokenFrom,
                         fromTokenBalance: tokenFromBalance,

@@ -241,6 +241,13 @@ jobs:
         run: |
           npm install --global yarn
 
+      - name: Cache e2e dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
+
       - name: Install e2e dependencies
         run: |
           yarn install --prefer-offline --frozen-lockfile

@@ -72,6 +72,7 @@ import {
 import { capitalize } from "../../util/capitalize"
 import { parseUnits } from "ethers/lib/utils"
 import TransactionDetails from "../../components/transactions/TransactionDetails"
+import { WithRequired } from "@block-wallet/background/utils/types/helpers"
 
 export interface BridgeConfirmPageLocalState {
     amount: string
@@ -87,7 +88,7 @@ const QUOTE_REFRESH_TIMEOUT = 1000 * 15
 
 const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const history = useOnMountHistory()
-    const { amount, bridgeQuote, network, routes, token } = useMemo(
+    const { amount, bridgeQuote, network, token } = useMemo(
         () => history.location.state as BridgeConfirmPageLocalState,
         [history.location.state]
     )
@@ -113,7 +114,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const { clear: clearLocationRecovery } = useLocationRecovery()
     const { transaction: inProgressTransaction, clearTransaction } =
         useInProgressInternalTransaction({
-            categories: [TransactionCategories.EXCHANGE],
+            categories: [TransactionCategories.BRIDGE],
         })
     const inProgressAllowanceTransaction = useInProgressAllowanceTransaction(
         token.address
@@ -159,8 +160,9 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const [isGasLoading, setIsGasLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | undefined>(undefined)
     const [showDetails, setShowDetails] = useState<boolean>(false)
-    const [advancedSettings, setAdvancedSettings] =
-        useState<TransactionAdvancedData>(defaultAdvancedSettings)
+    const [advancedSettings, setAdvancedSettings] = useState<
+        WithRequired<TransactionAdvancedData, "slippage">
+    >(defaultAdvancedSettings)
     const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
         bridgeQuote
     )
@@ -240,7 +242,12 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 ...quote.bridgeParams,
                 customNonce: advancedSettings.customNonce,
                 flashbots: advancedSettings.flashbots,
-                gasPrice: isEIP1559Compatible ? undefined : selectedGasPrice, // TODO: Include || quote gas limit
+                gasPrice: isEIP1559Compatible
+                    ? undefined
+                    : selectedGasPrice ||
+                      BigNumber.from(
+                          quote.bridgeParams.params.transactionRequest.gasLimit
+                      ),
                 maxPriorityFeePerGas: isEIP1559Compatible
                     ? selectedFees.maxPriorityFeePerGas
                     : undefined,
@@ -263,8 +270,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
             toTokenAddress: bridgeQuote.bridgeParams.params.toToken.address,
             fromAmount: bnAmount.toString(),
             fromAddress: selectedAccount.address,
-            slippage:
-                advancedSettings.slippage || defaultAdvancedSettings.slippage,
+            slippage: advancedSettings.slippage,
         }
 
         setIsFetchingParams(true)
@@ -279,12 +285,18 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         } finally {
             setIsFetchingParams(false)
         }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedAccount.address, advancedSettings.slippage])
 
     // Initialize gas
     useEffect(() => {
         const setGas = async () => {
-            if (isGasInitialized.current === false) {
+            if (!quote && error) {
+                setIsGasLoading(false)
+            }
+
+            if (quote && isGasInitialized.current === false) {
                 setIsGasLoading(true)
 
                 try {
@@ -296,7 +308,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
 
                     setDefaultGas({
                         gasPrice: BigNumber.from(gasPrice),
-                        gasLimit: BigNumber.from(50000), // TODO: Set actual Gas Limit
+                        gasLimit: BigNumber.from(
+                            quote.bridgeParams.params.transactionRequest
+                                .gasLimit
+                        ),
                     })
 
                     isGasInitialized.current = true
@@ -541,8 +556,14 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                         setAdvancedSettings={(
                             newSettings: TransactionAdvancedData
                         ) => {
-                            setAdvancedSettings(newSettings)
+                            setAdvancedSettings({
+                                ...newSettings,
+                                slippage:
+                                    newSettings.slippage ||
+                                    defaultAdvancedSettings.slippage,
+                            })
                         }}
+                        label={"Settings"}
                     />
                     {/* Details */}
                     <OutlinedButton

@@ -335,6 +335,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         return () => {
             isValidFetch = false
         }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         bigNumberAmount,
         errors.amount,
@@ -377,9 +379,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             error
                                 ? error
                                 : quote?.allowance ===
-                                  BridgeAllowanceCheck.ENOUGH_ALLOWANCE
-                                ? "Review"
-                                : "Approve"
+                                  BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE
+                                ? "Approve"
+                                : "Review"
                         }
                         disabled={!!(error || !quote)}
                         isLoading={isLoading}

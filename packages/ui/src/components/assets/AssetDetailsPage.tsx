@@ -245,20 +245,36 @@ const AssetDetailsPage = () => {
                                 to={{
                                     pathname: "/bridge",
                                     state: {
+                                        token: asset.token,
+                                        fromAssetPage: true,
                                         transitionDirection: "left",
                                     },
                                 }}
                                 draggable={false}
-                                className={
-                                    "flex flex-col items-center space-y-2 group"
-                                }
+                                className={classnames(
+                                    "flex flex-col items-center space-y-2 group",
+                                    (!isSendEnabled ||
+                                        !state.isUserNetworkOnline) &&
+                                        "pointer-events-none"
+                                )}
                             >
-                                <RoundedIconButton
-                                    Icon={ArrowHoverAnimation}
-                                    disabled={!isBridgeEnabled}
+                                <div
+                                    className={classnames(
+                                        "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                        !isSendEnabled ||
+                                            !state.isUserNetworkOnline
+                                            ? "bg-gray-300"
+                                            : "bg-primary-300"
+                                    )}
+                                    style={{ transform: "scaleY(-1)" }}
                                 >
+                                    <DoubleArrowHoverAnimation
+                                        vertical={true}
+                                    />
+                                </div>
+                                <span className="text-xs font-medium">
                                     Bridge
-                                </RoundedIconButton>
+                                </span>
                             </Link>
                         )}
                     </TokenSummary.Actions>

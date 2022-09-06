@@ -3,6 +3,7 @@ import { FaExchangeAlt } from "react-icons/fa"
 import { FiUpload } from "react-icons/fi"
 import { RiCopperCoinFill } from "react-icons/ri"
 import { AiFillInfoCircle } from "react-icons/ai"
+import { GiSuspensionBridge } from "react-icons/gi"
 import { ImSpinner } from "react-icons/im"
 import { BigNumber } from "ethers"
 import classNames from "classnames"
@@ -65,7 +66,7 @@ const transactionMessages = {
     [TransactionCategories.TOKEN_METHOD_TRANSFER_FROM]: "Token Transfer From",
     [TransactionCategories.EXCHANGE]: "BlockWallet Swap",
     [TransactionCategories.BRIDGE]: "BlockWallet Bridge",
-    [TransactionCategories.INCOMING_BRIDGE]: "Incoming BlockWallet Bridge",
+    [TransactionCategories.INCOMING_BRIDGE]: "Incoming Bridge",
 }
 
 const pendingTransactionMessages: { [x: string]: string } = {
@@ -157,8 +158,10 @@ const transactionIcons = {
         <RiCopperCoinFill size="1.5rem" />
     ),
     [TransactionCategories.EXCHANGE]: <RiCopperCoinFill size="1.5rem" />,
-    [TransactionCategories.BRIDGE]: <RiCopperCoinFill size="1.5rem" />,
-    [TransactionCategories.INCOMING_BRIDGE]: <RiCopperCoinFill size="1.5rem" />,
+    [TransactionCategories.BRIDGE]: <GiSuspensionBridge size="1.5rem" />,
+    [TransactionCategories.INCOMING_BRIDGE]: (
+        <GiSuspensionBridge size="1.5rem" />
+    ),
 }
 
 const failedStatuses = [
@@ -442,6 +445,7 @@ const TransactionItem: React.FC<{
             case TransactionCategories.INCOMING:
             case TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER:
             case TransactionCategories.BLANK_WITHDRAWAL:
+            case TransactionCategories.INCOMING_BRIDGE:
                 return "+"
 
             default:

@@ -10,15 +10,20 @@ import { checkScriptLoad } from './utils/site';
 const SW_KEEP_ALIVE_INTERVAL = 10;
 setInterval(() => {
     chrome.runtime.sendMessage({ message: CONTENT.SW_KEEP_ALIVE }, () => {
-        const err = chrome.runtime.lastError;
-        if (err) {
-            log.info('Error keeping alive:', err.message || err);
+        if (chrome.runtime.lastError) {
+            log.info(
+                'Error keeping alive:',
+                chrome.runtime.lastError.message || chrome.runtime.lastError
+            );
         }
     });
 }, SW_KEEP_ALIVE_INTERVAL);
 
-// Setup port connection
-const port = chrome.runtime.connect({ name: Origin.PROVIDER });
+function sleep(ms: number): Promise<unknown> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+let port: chrome.runtime.Port | undefined = undefined;
 
 // Check background settings for script load
 chrome.runtime.sendMessage(
@@ -27,9 +32,12 @@ chrome.runtime.sendMessage(
         const error = chrome.runtime.lastError;
         const shouldLoad = checkScriptLoad();
 
-        if (response.shouldInject !== true || shouldLoad !== true || error) {
+        if (
+            port &&
+            (response.shouldInject !== true || shouldLoad !== true || error)
+        ) {
             port.disconnect();
-            window.removeEventListener('message', windowListenter);
+            window.removeEventListener('message', windowListener);
             log.warn('BlockWallet: Provider not injected due to user setting.');
         } else {
             const container = document.head || document.documentElement;
@@ -46,19 +54,11 @@ chrome.runtime.sendMessage(
     }
 );
 
-// Send any messages from the extension back to the page
-port.onMessage.addListener((message): void => {
-    window.postMessage(
-        { ...message, origin: Origin.BACKGROUND },
-        window.location.href
-    );
-});
-
 // Setup window listener
-const windowListenter = ({
+const windowListener = async ({
     data,
     source,
-}: MessageEvent<WindowTransportRequestMessage>): void => {
+}: MessageEvent<WindowTransportRequestMessage>): Promise<void> => {
     // Only allow messages from our window, by the inject
     if (
         source !== window ||
@@ -68,7 +68,46 @@ const windowListenter = ({
         return;
     }
 
-    port.postMessage(data);
+    // Wrapper to retry failed messages
+    const postMessage = async (
+        data: WindowTransportRequestMessage
+    ): Promise<void> => {
+        try {
+            if (!port) {
+                // Port was reinitialized, force retry
+                throw new Error();
+            }
+            port.postMessage(data);
+        } catch (error) {
+            // If this fails due to SW being inactive, retry
+            await sleep(30);
+            log.debug('port was reinitialized');
+            return postMessage(data);
+        }
+    };
+
+    return postMessage(data);
+};
+window.addEventListener('message', (message) => {
+    windowListener(message);
+});
+
+// Init function
+const init = () => {
+    // Setup port connection
+    port = chrome.runtime.connect({ name: Origin.PROVIDER });
+
+    // Set callback to send any messages from the extension back to the page
+    port.onMessage.addListener((message): void => {
+        window.postMessage(
+            { ...message, origin: Origin.BACKGROUND },
+            window.location.href
+        );
+    });
+    port.onDisconnect.addListener(() => {
+        log.info('SW went inactive, reinitializing...');
+        init();
+    });
 };
 
-window.addEventListener('message', windowListenter);
+init();

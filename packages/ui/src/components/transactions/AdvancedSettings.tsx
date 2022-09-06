@@ -31,6 +31,7 @@ export interface AdvancedSettingsProps {
     setAdvancedSettings: (x: TransactionAdvancedData) => void
     defaultSettings?: Required<TransactionAdvancedData>
     display?: AdvancedSettingsDisplay
+    label?: string
     transactionGasLimit?: BigNumber
 }
 
@@ -106,6 +107,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
     setAdvancedSettings,
     defaultSettings = defaultAdvancedSettings,
     display = defaultSettingsDisplay,
+    label = "Advanced Settings",
     transactionGasLimit = BigNumber.from(21000),
 }) => {
     const { chainId } = useSelectedNetwork()
@@ -334,7 +336,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                 onClick={() => setIsOpen(true)}
                 className="w-full py-3"
             >
-                <span className="font-bold text-sm">Advanced Settings</span>
+                <span className="font-bold text-sm">{label}</span>
                 <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
             </OutlinedButton>
             <Dialog open={isOpen}>
@@ -352,9 +354,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                     className="flex flex-col w-full space-y-2 p-2"
                     ref={clickOutsideRef}
                 >
-                    <span className="p-0 text-base font-bold">
-                        Advanced Settings
-                    </span>
+                    <span className="p-0 text-base font-bold">{label}</span>
 
                     {display.slippage && (
                         <div className="flex flex-col">

@@ -1,7 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
 const Dotenv = require('dotenv-webpack');
-const WebExtension = require('webpack-target-webextension');
 const ESLintWebpackPlugin = require('eslint-webpack-plugin');
 const BundleAnalyzerPlugin =
     require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -10,6 +9,8 @@ process.env.BABEL_ENV = 'production';
 process.env.NODE_ENV = 'production';
 
 const plugins = [
+    /*
+    TODO: If you need to import async components, uncomment this and run: 'yarn add webpack-target-webextension'
     new WebExtension({
         background: {
             entry: 'background',
@@ -17,6 +18,7 @@ const plugins = [
             manifest: 3,
         },
     }),
+    */
     new Dotenv({
         path: './.env',
     }),

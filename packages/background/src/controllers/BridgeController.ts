@@ -192,7 +192,9 @@ export default class BridgeController extends ExchangeController<
             const allTokens = await implementor.getSupportedTokensForChain(
                 chainId
             );
-            return allTokens;
+            return Promise.all(
+                allTokens.map((token) => this._normalizeTokenData(token))
+            );
         } catch (e) {
             throw new Error('Unable to fetch tokens.');
         }
@@ -229,7 +231,81 @@ export default class BridgeController extends ExchangeController<
             ...routesRequest,
             fromChainId: network.chainId,
         });
-        return { routes };
+        const normalizedRoutes: IBridgeRoute[] = [];
+        for (const route of routes) {
+            const fromTokensAsync = Promise.all(
+                route.fromTokens.map(
+                    async (token) =>
+                        await this._normalizeTokenData(token, route.fromChainId)
+                )
+            );
+            const toTokensAsync = Promise.all(
+                route.toTokens.map(
+                    async (token) =>
+                        await this._normalizeTokenData(token, route.toChainId)
+                )
+            );
+            normalizedRoutes.push({
+                ...route,
+                fromTokens: await fromTokensAsync,
+                toTokens: await toTokensAsync,
+            });
+        }
+
+        return { routes: normalizedRoutes };
+    }
+
+    /**
+     * _normalizeTokenData
+     *
+     * Normalize token data so that we have the same logo, symbol and name in the frontend.
+     * @param token token to normalize
+     * @param chainId chain owner of the token
+     */
+    private async _normalizeTokenData(
+        token: IToken,
+        chainId?: number
+    ): Promise<IToken> {
+        if (this._tokenController.isNativeToken(token.address)) {
+            const targetNetwork = this._networkController.getNetworkFromChainId(
+                chainId!
+            );
+
+            if (!targetNetwork) {
+                const chainListItem = getChainListItem(chainId!);
+                if (!chainListItem) {
+                    return token;
+                }
+
+                return {
+                    ...chainListItem.nativeCurrency,
+                    address: token.address,
+                    logo: chainListItem.nativeCurrencyIcon || token.logo,
+                    type: '',
+                };
+            }
+
+            const logoUrl = targetNetwork.iconUrls
+                ? targetNetwork.iconUrls[0]
+                : token.logo;
+
+            return {
+                ...targetNetwork.nativeCurrency,
+                address: token.address,
+                logo: logoUrl || token.logo,
+                type: '',
+            };
+        }
+        const allTokens = await this._tokenController.getTokens(chainId);
+        const fetchedToken = allTokens[token.address];
+        return {
+            address: fetchedToken?.address || token.address,
+            name: fetchedToken?.name || token.name,
+            logo: fetchedToken?.logo || token.logo,
+            type: fetchedToken?.type || token.type,
+            symbol: fetchedToken?.symbol || token.symbol,
+            decimals: fetchedToken?.decimals || token.decimals,
+        };
     }
 
     /**
@@ -274,9 +350,23 @@ export default class BridgeController extends ExchangeController<
                 quote.transactionRequest.data,
                 quote.transactionRequest.to
             );
+
+        const normalizedQuote: BridgeQuote = quote
+            ? {
+                  ...quote,
+                  fromToken: await this._normalizeTokenData(
+                      quote.fromToken,
+                      quote.fromChainId
+                  ),
+                  toToken: await this._normalizeTokenData(
+                      quote.toToken,
+                      quote.toChainId
+                  ),
+              }
+            : quote;
         return {
             bridgeParams: {
-                params: quote,
+                params: normalizedQuote,
                 methodSignature,
             },
             allowance: allowanceCheck,
@@ -538,6 +628,9 @@ export default class BridgeController extends ExchangeController<
                         substatus: bridgeStatus.substatus,
                         status: bridgeStatus.status,
                         receivingTxHash,
+                        sendingTxLink: bridgeStatus?.sendTransaction?.txLink,
+                        receivingTxLink:
+                            bridgeStatus?.receiveTransaction?.txLink,
                     }
                 );
 
@@ -727,7 +820,7 @@ export default class BridgeController extends ExchangeController<
                           currency: transactionToken.symbol!,
                           to: transactionByHash.to,
                           amount: toAmount
-                              ? parseUnits(toAmount, transactionToken.decimals)
+                              ? BigNumber.from(toAmount)
                               : BigNumber.from(transactionByHash.value),
                       }
                     : undefined,

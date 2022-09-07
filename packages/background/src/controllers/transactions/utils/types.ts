@@ -107,8 +107,10 @@ export interface BridgeTransactionParams {
     fromChainId: number;
     toChainId: number;
     tool: string; //tool used to perform the bridging.
+    receivingTxLink?: string;
     receivingTxHash?: string;
     sendingTxHash?: string;
+    sendingTxLink?: string;
     role: 'SENDING' | 'RECEIVING';
     substatus?: BridgeSubstatus;
     status?: BridgeStatus;

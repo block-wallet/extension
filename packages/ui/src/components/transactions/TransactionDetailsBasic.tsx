@@ -24,6 +24,8 @@ import {
 } from "../../context/commTypes"
 import { calcExchangeRate } from "../../util/exchangeUtils"
 import isNil from "../../util/isNil"
+import useGetBridgeDetails from "../../util/hooks/useGetBridgeDetails"
+import { getAdditionalBridgeExplorer } from "../../util/bridgeTransactionUtils"
 
 const bnOr0 = (value: any = 0) => BigNumber.from(value)
 
@@ -34,6 +36,8 @@ export const TransactionDetails: FunctionComponent<
     const { nativeCurrency } = useSelectedNetwork()
     const accounts = useSortedAccounts()
     const addressBook = useAddressBook()
+    //bridge data
+    const bridgeDetails = useGetBridgeDetails(transaction)
 
     const details = useMemo(() => {
         const isConfirmed = transaction.status === TransactionStatus.CONFIRMED
@@ -185,10 +189,23 @@ export const TransactionDetails: FunctionComponent<
                 }
             }
 
-            details.push({
-                label: "Destination network ID",
-                value: transaction.bridgeParams.toChainId.toString(),
-            })
+            if (
+                transaction.transactionCategory === TransactionCategories.BRIDGE
+            ) {
+                details.push({
+                    label: "Destination network",
+                    value:
+                        bridgeDetails?.receivingTransaction?.networkName ||
+                        transaction.bridgeParams.toChainId.toString(),
+                })
+            } else {
+                details.push({
+                    label: "Origin network",
+                    value:
+                        bridgeDetails?.sendingTransaction?.networkName ||
+                        transaction.bridgeParams.fromChainId.toString(),
+                })
+            }
 
             details.push({
                 label: isConfirmed ? "Sent" : "Sending",
@@ -325,7 +342,7 @@ export const TransactionDetails: FunctionComponent<
         return details
 
         // eslint-disable-next-line
-    }, [transaction, _nonce])
+    }, [transaction, _nonce, bridgeDetails])
 
     const [copied, setCopied] = useState(-1)
 
@@ -369,6 +386,11 @@ export const TransactionDetails: FunctionComponent<
     const explorerName = getExplorerTitle(
         state.availableNetworks,
         state.selectedNetwork
+    )
+
+    const additionalExplorer = getAdditionalBridgeExplorer(
+        transaction,
+        bridgeDetails
     )
 
     return (
@@ -506,25 +528,44 @@ export const TransactionDetails: FunctionComponent<
                 )}
             </main>
             {!!transaction.transactionParams.hash && (
-                <div className="flex w-full items-center justify-start mt-3">
-                    <a
-                        href={generateExplorerLink(
-                            state.availableNetworks,
-                            state.selectedNetwork,
-                            transaction.transactionParams.hash,
-                            "tx"
-                        )}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex flex-row items-center space-x-2 text-sm font-bold text-primary-300"
-                    >
-                        <span>View on {explorerName}</span>
-                        <img
-                            src={openIcon}
-                            alt="Open icon"
-                            className="w-3 h-3"
-                        />
-                    </a>
+                <div className="flex flex-col">
+                    <div className="flex w-full items-center justify-start mt-3">
+                        <a
+                            href={generateExplorerLink(
+                                state.availableNetworks,
+                                state.selectedNetwork,
+                                transaction.transactionParams.hash,
+                                "tx"
+                            )}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex flex-row items-center space-x-2 text-sm font-bold text-primary-300"
+                        >
+                            <span>View on {explorerName}</span>
+                            <img
+                                src={openIcon}
+                                alt="Open icon"
+                                className="w-3 h-3"
+                            />
+                        </a>
+                    </div>
+                    {additionalExplorer ? (
+                        <div className="flex w-full items-center justify-start mt-3">
+                            <a
+                                href={additionalExplorer.explorerLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex flex-row items-center space-x-2 text-sm font-bold text-primary-300"
+                            >
+                                <span>{additionalExplorer.viewOnText}</span>
+                                <img
+                                    src={openIcon}
+                                    alt="Open icon"
+                                    className="w-3 h-3"
+                                />
+                            </a>
+                        </div>
+                    ) : null}
                 </div>
             )}
         </div>

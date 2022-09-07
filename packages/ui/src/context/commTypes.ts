@@ -376,3 +376,29 @@ export enum AccountStatus {
     ACTIVE = "ACTIVE",
     HIDDEN = "HIDDEN",
 }
+
+//So far this statuses has been done using Li.Fi convention.
+//To learn how do they work, please refer to their documentation: https://docs.li.fi/products/more-integration-options/li.fi-api/checking-the-status-of-a-transaction
+export enum BridgeStatus {
+    NOT_FOUND = "NOT_FOUND",
+    INVALID = "INVALID",
+    PENDING = "PENDING",
+    DONE = "DONE",
+    FAILED = "FAILED",
+}
+
+export enum BridgeSubstatus {
+    //Substatus of Pending state
+    WAIT_SOURCE_CONFIRMATIONS = "WAIT_SOURCE_CONFIRMATIONS",
+    WAIT_DESTINATION_TRANSACTION = "WAIT_DESTINATION_TRANSACTION",
+    BRIDGE_NOT_AVAILABLE = "BRIDGE_NOT_AVAILABLE",
+    CHAIN_NOT_AVAILABLE = "CHAIN_NOT_AVAILABLE",
+    NOT_PROCESSABLE_REFUND_NEEDED = "NOT_PROCESSABLE_REFUND_NEEDED",
+    REFUND_IN_PROGRESS = "REFUND_IN_PROGRESS",
+    UNKNOWN_ERROR = "UNKNOWN_ERROR",
+
+    //Substatus of Done state
+    COMPLETED = "COMPLETED",
+    PARTIAL = "PARTIAL",
+    REFUNDED = "REFUNDED",
+}

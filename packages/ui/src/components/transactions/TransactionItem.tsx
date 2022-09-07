@@ -24,12 +24,15 @@ import flashbotsLogo from "../../assets/images/flashbots.png"
 // Context
 import { useBlankState } from "../../context/background/backgroundHooks"
 import {
+    BridgeStatus,
+    BridgeSubstatus,
     MetaType,
     TransactionCategories,
     TransactionStatus,
 } from "../../context/commTypes"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import {
+    BridgeTransactionParams,
     TransactionMeta,
     TransferType,
 } from "@block-wallet/background/controllers/transactions/utils/types"
@@ -50,6 +53,7 @@ import {
 import Dots from "../loading/LoadingDots"
 import useContextMenu from "../../util/hooks/useContextMenu"
 import { getValueByKey } from "../../util/objectUtils"
+import { getBridgePendingMessage } from "../../util/bridgeTransactionUtils"
 
 const DEFAULT_TORNADO_CONFIRMATION = 4
 
@@ -357,7 +361,8 @@ const getTransactionTimeOrStatus = (
     time: number,
     index: number,
     isQueued: boolean,
-    forceDrop: boolean
+    forceDrop: boolean,
+    bridgeParams?: BridgeTransactionParams
 ) => {
     if (forceDrop)
         return (
@@ -376,6 +381,13 @@ const getTransactionTimeOrStatus = (
             </span>
         )
     } else {
+        if (bridgeParams?.substatus === BridgeSubstatus.REFUNDED) {
+            return (
+                <span className="text-xs text-red-600">
+                    Failed Bridge. Transaction Refunded.
+                </span>
+            )
+        }
         return getTransactionTime(
             status,
             metaType,
@@ -406,6 +418,7 @@ const TransactionItem: React.FC<{
         flashbots,
         isQueued,
         forceDrop,
+        bridgeParams,
     } = transaction
 
     const state = useBlankState()!
@@ -578,7 +591,8 @@ const TransactionItem: React.FC<{
                             time,
                             index,
                             isQueued || false,
-                            forceDrop || false
+                            forceDrop || false,
+                            bridgeParams
                         )}
 
                         {status === TransactionStatus.SUBMITTED &&
@@ -655,6 +669,22 @@ const TransactionItem: React.FC<{
                                     )}
                                 </div>
                             )}
+                        {status === TransactionStatus.CONFIRMED &&
+                        bridgeParams?.status === BridgeStatus.PENDING &&
+                        transactionCategory === TransactionCategories.BRIDGE ? (
+                            <div className="mt-2">
+                                <div className="group relative self-start">
+                                    <div className="flex flex-row items-center">
+                                        <i className="text-gray-500">
+                                            {getBridgePendingMessage(
+                                                bridgeParams!
+                                            )}
+                                            <Dots />
+                                        </i>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : null}
                     </div>
 
                     {/* Amount */}

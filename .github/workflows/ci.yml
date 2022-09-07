@@ -65,7 +65,7 @@ jobs:
           yarn lint
 
   test:
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, large]
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2

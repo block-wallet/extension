@@ -366,7 +366,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     }}
                     disabled={isBridging}
                 >
-                    <div className="flex grow justify-end pr-0.5">
+                    <div className="flex grow justify-end pr-1">
                         <NetworkDisplayBadge network={networkLabel} truncate />
                     </div>
                 </PopupHeader>

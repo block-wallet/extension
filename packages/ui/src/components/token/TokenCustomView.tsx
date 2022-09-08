@@ -29,7 +29,7 @@ import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
 export interface tokenCustomViewProps {
     customTokenAddress?: string
     submitForm?: boolean
-    setSubmitEnabled?: (value: any) => Promise<any> | void
+    setSubmitEnabled?: (value: any) => Promise<any>
 }
 
 const CustomTokenView = ({

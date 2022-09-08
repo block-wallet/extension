@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import { useForm } from "react-hook-form"
 
 // Components
 import PopupHeader from "../../components/popup/PopupHeader"
@@ -7,10 +6,6 @@ import PopupLayout from "../../components/popup/PopupLayout"
 import SearchInput from "../../components/input/SearchInput"
 import CustomTokenView from "../../components/token/TokenCustomView"
 import SearchedTokenView from "../../components/token/TokenSearchView"
-
-// Utils
-import * as yup from "yup"
-import { yupResolver } from "@hookform/resolvers/yup"
 
 // Comm
 import { searchTokenInAssetsList } from "../../context/commActions"
@@ -34,55 +29,7 @@ export type TokenResponse = {
 // Main component
 const AddTokensPage = () => {
     const history = useOnMountHistory()
-    return (
-        <PopupLayout
-            header={
-                <PopupHeader
-                    title="Add Tokens"
-                    onClose={(e) => {
-                        e.preventDefault()
-                        history.push("/")
-                    }}
-                    onBack={(e) => {
-                        e.preventDefault()
-                        const state =
-                            history.location.state?.addTokenState || {}
-                        if (state.redirectTo) {
-                            history.replace({
-                                pathname: state.redirectTo,
-                                state,
-                            })
-                        } else {
-                            history.replace("/")
-                        }
-                    }}
-                />
-            }
-        >
-            <div className="flex flex-col flex-1 w-full">
-                <SearchToken />
-            </div>
-        </PopupLayout>
-    )
-}
 
-// Schema
-const searchTokenSchema = yup.object().shape({
-    tokenName: yup
-        .string()
-        .test("is-empty", "Token name is empty", (s) => {
-            return !!s && s.trim().length > 0
-        })
-        .required("Please enter a token name"),
-})
-type searchTokenFormData = { tokenName: string }
-
-// Sub components
-const SearchToken = () => {
-    const history = useOnMountHistory()
-    const { register } = useForm<searchTokenFormData>({
-        resolver: yupResolver(searchTokenSchema),
-    })
     // State
     const [results, setResults] = useState<TokenResponse[]>([])
     const [isCustomTokenView, setIsCustomTokenView] = useState<boolean>(false)
@@ -137,59 +84,90 @@ const SearchToken = () => {
     }
 
     useEffect(() => {
-        // console.log(history.location.state?.searchValue)
         if (history.location.state?.searchValue) {
             onChange(history.location.state?.searchValue)
         }
     }, [history.location.state?.searchValue])
 
-    return (
-        <>
-            <div className="h-full max-h-screen overflow-auto hide-scroll">
-                {/* INPUT */}
-                <div className="w-full p-6 pb-2 bg-white fixed z-20">
-                    <SearchInput
-                        {...register("tokenName")}
-                        name="tokenName"
-                        placeholder="Search Tokens by name or fill in Address"
-                        disabled={false}
-                        onChange={(e: any) => onChange(e.target.value)}
-                        autoFocus={true}
-                        debounced
-                        minSearchChar={3}
-                        defaultValue={history.location.state?.searchValue}
-                    />
-                </div>
+    const onSubmit = async () => {
+        setSubmitForm(submitEnabled)
+    }
 
-                {!isCustomTokenView ? (
-                    <SearchedTokenView
-                        isSearchEmpty={isSearchEmpty}
-                        results={results}
-                        searchedValue={searchedValue}
-                        setSubmitEnabled={setSubmitEnabled}
-                        submitForm={submitForm}
-                    />
-                ) : (
-                    <CustomTokenView
-                        customTokenAddress={tokenAddress}
-                        submitForm={submitForm}
-                        setSubmitEnabled={setSubmitEnabled}
-                    />
-                )}
-            </div>
-            <hr className="border-0.5 border-gray-200 w-full" />
-            {/* FOOTER */}
-            <PopupFooter>
-                <ButtonWithLoading
-                    label="Next"
-                    formId="search-form"
-                    disabled={!submitEnabled}
-                    onClick={() => {
-                        setSubmitForm(!submitForm)
+    const handleSubmitEnabled = async (value: boolean) => {
+        setSubmitEnabled(value)
+    }
+
+    return (
+        <PopupLayout
+            header={
+                <PopupHeader
+                    title="Add Tokens"
+                    onClose={(e) => {
+                        e.preventDefault()
+                        history.push("/")
+                    }}
+                    onBack={(e) => {
+                        e.preventDefault()
+                        const state =
+                            history.location.state?.addTokenState || {}
+                        if (state.redirectTo) {
+                            history.replace({
+                                pathname: state.redirectTo,
+                                state,
+                            })
+                        } else {
+                            history.replace("/")
+                        }
                     }}
                 />
-            </PopupFooter>
-        </>
+            }
+            submitOnEnter={{ onSubmit, isEnabled: submitEnabled }}
+        >
+            <div className="flex flex-col flex-1 w-full">
+                <div className="h-full max-h-screen overflow-auto hide-scroll">
+                    {/* INPUT */}
+                    <div className="w-full p-6 pb-2 bg-white fixed z-20">
+                        <SearchInput
+                            // {...register("tokenName")}
+                            name="tokenName"
+                            placeholder="Search Tokens by name or fill in Address"
+                            disabled={false}
+                            onChange={(e: any) => onChange(e.target.value)}
+                            autoFocus={true}
+                            debounced
+                            minSearchChar={3}
+                            defaultValue={history.location.state?.searchValue}
+                            // error={errors.tokenName?.message}
+                        />
+                    </div>
+
+                    {!isCustomTokenView ? (
+                        <SearchedTokenView
+                            isSearchEmpty={isSearchEmpty}
+                            results={results}
+                            searchedValue={searchedValue}
+                            setSubmitEnabled={handleSubmitEnabled}
+                            submitForm={submitForm}
+                        />
+                    ) : (
+                        <CustomTokenView
+                            customTokenAddress={tokenAddress}
+                            submitForm={submitForm}
+                            setSubmitEnabled={handleSubmitEnabled}
+                        />
+                    )}
+                </div>
+                <hr className="border-0.5 border-gray-200 w-full" />
+                {/* FOOTER */}
+                <PopupFooter>
+                    <ButtonWithLoading
+                        label="Next"
+                        disabled={!submitEnabled}
+                        onClick={onSubmit}
+                    />
+                </PopupFooter>
+            </div>
+        </PopupLayout>
     )
 }
 

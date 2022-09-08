@@ -54,7 +54,8 @@ const AddTokensConfirmPage = (props: any) => {
                             pathname: "/settings/tokens/add",
                             state: {
                                 searchValue:
-                                    tokenList.length > 1
+                                    tokenList.length > 1 ||
+                                    history.location.state?.searchedValue
                                         ? history.location.state?.searchedValue
                                         : state.token.address,
                             },
@@ -62,6 +63,7 @@ const AddTokensConfirmPage = (props: any) => {
                     }}
                 />
             }
+            submitOnEnter={{ onSubmit }}
             footer={
                 <PopupFooter>
                     <ButtonWithLoading

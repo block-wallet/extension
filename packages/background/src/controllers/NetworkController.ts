@@ -20,6 +20,7 @@ import {
     getUrlWithoutTrailingSlash,
     validateNetworkChainId,
 } from '../utils/ethereumChain';
+import { cloneDeep } from 'lodash';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -335,7 +336,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         if (typeof existingNetwork !== 'undefined') {
             // Here we handle the nativelySupported networks which are disabled
             const key = this._getNetworkKey(existingNetwork);
-            const newNetworks = { ...this.networks };
+            const newNetworks = cloneDeep(this.networks);
             newNetworks[key].enable = true;
             newNetworks[key].rpcUrls = [rpcUrl];
             newNetworks[key].blockExplorerName =
@@ -471,7 +472,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
     ): ethers.providers.StaticJsonRpcProvider | undefined => {
         const userNetwork = Object.values(
             this.store.getState().availableNetworks
-        ).find((network) => Number(network.chainId) === chainId);
+        ).find(
+            (network) => Number(network.chainId) === chainId && network.enable
+        );
 
         if (userNetwork) {
             return this._overloadProviderMethods(

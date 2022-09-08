@@ -1,3 +1,5 @@
+import { clone, cloneDeep } from 'lodash';
+
 /**
  * ObservableStore generic interface
  */
@@ -46,7 +48,10 @@ export default class ObservableStore<T> implements IObservableStore<T> {
      * @param newState The state to replace with
      */
     public setState(newState: T, action?: string): void {
-        const oldState = this._state;
+        const oldState =
+            typeof this._state === 'object'
+                ? cloneDeep(this._state)
+                : this._state;
         this._state = newState;
         this.notify(oldState, action);
     }

@@ -312,7 +312,7 @@ export class AddressBookController extends BaseController<AddressBookControllerM
             let entry: AddressBookEntry = {
                 address,
                 isEns: false,
-                name: '',
+                name: `Account (...${address.slice(address.length - 4)})`,
                 note: '',
             };
 

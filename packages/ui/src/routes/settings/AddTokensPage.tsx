@@ -18,6 +18,8 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
 // Assets
 import { utils } from "ethers/lib/ethers"
+import PopupFooter from "../../components/popup/PopupFooter"
+import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 
 // Types
 export type TokenResponse = {
@@ -86,6 +88,8 @@ const SearchToken = () => {
     const [isCustomTokenView, setIsCustomTokenView] = useState<boolean>(false)
     const [tokenAddress, setTokenAddress] = useState<string>("")
     const [isSearchEmpty, setIsSearchEmpty] = useState<boolean>(true)
+    const [submitEnabled, setSubmitEnabled] = useState<boolean>(false)
+    const [searchedValue, setSearchedValue] = useState<string>("")
 
     useEffect(() => {
         if (results) {
@@ -95,11 +99,12 @@ const SearchToken = () => {
         }
         setTokenAddress("")
     }, [results])
+    const [submitForm, setSubmitForm] = useState<boolean>(false)
 
-    let searchedValue = ""
     const onChange = (value: string) => {
         // Update input value & check if empty
         value === "" ? setIsSearchEmpty(true) : setIsSearchEmpty(false)
+        setSearchedValue(value)
 
         // If user puts address - show custom token view
         if (value) {
@@ -108,7 +113,6 @@ const SearchToken = () => {
                 setTokenAddress(value)
                 // setSelected([])
             } else if (/^[a-zA-Z0-9_.-]{3,}$/.test(value)) {
-                searchedValue = value
                 // Accept only number, letters and - . _
                 searchTokenInAssetsList(value.toUpperCase())
                     .then((res) => {
@@ -133,6 +137,7 @@ const SearchToken = () => {
     }
 
     useEffect(() => {
+        // console.log(history.location.state?.searchValue)
         if (history.location.state?.searchValue) {
             onChange(history.location.state?.searchValue)
         }
@@ -140,61 +145,50 @@ const SearchToken = () => {
 
     return (
         <>
-            <div
-                id="search-form"
-                className={`flex flex-col justify-between w-full ${
-                    !isCustomTokenView ? " h-full" : ""
-                } `}
-            >
-                <div className="flex-1 flex flex-col w-full h-0 max-h-screen overflow-auto hide-scroll">
-                    <div className="flex flex-col flex-1 w-full">
-                        <div
-                            className={` ${
-                                !isCustomTokenView ? "h-full" : "mb-6"
-                            } `}
-                        >
-                            {/* INPUT */}
-                            <div className="w-full p-6 pb-2 bg-white fixed z-20">
-                                <SearchInput
-                                    {...register("tokenName")}
-                                    name="tokenName"
-                                    placeholder="Search Tokens by name or fill in Address"
-                                    disabled={false}
-                                    onChange={(e: any) =>
-                                        onChange(e.target.value)
-                                    }
-                                    autoFocus={true}
-                                    debounced
-                                    minSearchChar={3}
-                                    defaultValue={
-                                        history.location.state?.searchValue
-                                    }
-                                />
-                            </div>
-
-                            {/* {!isCustomTokenView ? (
-                                
-                            ) : (
-                                <></>
-                            )} */}
-                        </div>
-                    </div>
+            <div className="h-full max-h-screen overflow-auto hide-scroll">
+                {/* INPUT */}
+                <div className="w-full p-6 pb-2 bg-white fixed z-20">
+                    <SearchInput
+                        {...register("tokenName")}
+                        name="tokenName"
+                        placeholder="Search Tokens by name or fill in Address"
+                        disabled={false}
+                        onChange={(e: any) => onChange(e.target.value)}
+                        autoFocus={true}
+                        debounced
+                        minSearchChar={3}
+                        defaultValue={history.location.state?.searchValue}
+                    />
                 </div>
+
                 {!isCustomTokenView ? (
                     <SearchedTokenView
                         isSearchEmpty={isSearchEmpty}
                         results={results}
                         searchedValue={searchedValue}
+                        setSubmitEnabled={setSubmitEnabled}
+                        submitForm={submitForm}
                     />
                 ) : (
-                    <></>
+                    <CustomTokenView
+                        customTokenAddress={tokenAddress}
+                        submitForm={submitForm}
+                        setSubmitEnabled={setSubmitEnabled}
+                    />
                 )}
             </div>
-            {isCustomTokenView ? (
-                <CustomTokenView customTokenAddress={tokenAddress} />
-            ) : (
-                <></>
-            )}
+            <hr className="border-0.5 border-gray-200 w-full" />
+            {/* FOOTER */}
+            <PopupFooter>
+                <ButtonWithLoading
+                    label="Next"
+                    formId="search-form"
+                    disabled={!submitEnabled}
+                    onClick={() => {
+                        setSubmitForm(!submitForm)
+                    }}
+                />
+            </PopupFooter>
         </>
     )
 }

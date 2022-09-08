@@ -24,11 +24,20 @@ import { searchTokenInAssetsList } from "../../context/commActions"
 // Assets
 import { utils } from "ethers/lib/ethers"
 import { TokenResponse } from "../../routes/settings/AddTokensPage"
-import PopupFooter from "../popup/PopupFooter"
-import { ButtonWithLoading } from "../button/ButtonWithLoading"
+import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
 
-const CustomTokenView = (props: any) => {
-    const { customTokenAddress } = props
+export interface tokenCustomViewProps {
+    customTokenAddress?: string
+    submitForm?: boolean
+    setSubmitEnabled?: (value: any) => Promise<any> | void
+}
+
+const CustomTokenView = ({
+    customTokenAddress = "",
+    submitForm = false,
+    setSubmitEnabled = undefined,
+}: tokenCustomViewProps) => {
+    const { run } = useAsyncInvoke()
 
     const customTokenSchema = yup.object({
         tokenAddress: yup
@@ -178,6 +187,9 @@ const CustomTokenView = (props: any) => {
         } else if (tokenSymbols.includes(token.symbol.toLowerCase())) {
             return "You already added a token with this symbol"
         } else {
+            if (setSubmitEnabled) {
+                setSubmitEnabled(true)
+            }
             return ""
         }
     }
@@ -249,10 +261,17 @@ const CustomTokenView = (props: any) => {
         setIsFirstIteration(false)
     }
 
+    useEffect(() => {
+        if (submitForm) {
+            run(onSubmit())
+        }
+    }, [submitForm])
+
     return (
         <>
             {/* Custom token form */}
             <form
+                id="customTokenForm"
                 className="flex flex-col justify-between h-full"
                 onSubmit={onSubmit}
             >
@@ -311,6 +330,7 @@ const CustomTokenView = (props: any) => {
                                             : "18"
                                     }
                                     defaultValue={result.decimals || ""}
+                                    readOnly={!!result.decimals}
                                     error={errors.tokenDecimals?.message}
                                     {...register("tokenDecimals", {
                                         onChange: (e) => {
@@ -331,16 +351,6 @@ const CustomTokenView = (props: any) => {
                         </>
                     )}
                 </div>
-                <hr className="border-0.5 border-gray-200 w-full" />
-                {/* FOOTER */}
-                <PopupFooter>
-                    <ButtonWithLoading
-                        label="Next"
-                        formId="search-form"
-                        disabled={!result}
-                        onClick={onSubmit}
-                    />
-                </PopupFooter>
             </form>
         </>
     )

@@ -45,14 +45,14 @@ import ApprovePage from "../routes/transaction/ApprovePage"
 import AddAccountPage from "../routes/account/AddAccountPage"
 import ImportAccountPage from "../routes/account/ImportAccountPage"
 import ApproveNFTPage from "../routes/dApp/ApproveNFT"
-//import SwapPage from "../routes/swap/SwapPage"
-//import SwapPageConfirm from "../routes/swap/SwapConfirmPage"
-//import SwapAfterAddTokenPage from "../routes/swap/SwapAfterAddTokenPage"
-//import NetworksPage from "../routes/networks/NetworksPage"
-//import NetworkDetailsPage from "../routes/networks/NetworkDetailsPage"
-//import SearchNetworkPage from "../routes/networks/SearchNetworkPage"
-//import SuggestedAddNetwork from "../routes/networks/SuggestedAddNetwork"
-//import ManuallyAddNetwork from "../routes/networks/ManuallyAddNetwork"
+import SwapPage from "../routes/swap/SwapPage"
+import SwapPageConfirm from "../routes/swap/SwapConfirmPage"
+import SwapAfterAddTokenPage from "../routes/swap/SwapAfterAddTokenPage"
+import NetworksPage from "../routes/networks/NetworksPage"
+import NetworkDetailsPage from "../routes/networks/NetworkDetailsPage"
+import SearchNetworkPage from "../routes/networks/SearchNetworkPage"
+import SuggestedAddNetwork from "../routes/networks/SuggestedAddNetwork"
+import ManuallyAddNetwork from "../routes/networks/ManuallyAddNetwork"
 import PrivacySettingsPage from "../routes/settings/PrivacySettingsPage"
 import DepositAndWithdrawHistory from "../routes/deposit/DepositAndWithdrawHistory"
 
@@ -108,9 +108,6 @@ export const ROUTES_DEFINITION = [
         component: SendConfirmPage,
     },
     /* Swap */
-    /*
-    //Prevent routing to swaps
-
     { path: "/swap", exact: true, component: SwapPage },
     { path: "/swap/confirm", exact: true, component: SwapPageConfirm },
     {
@@ -118,8 +115,6 @@ export const ROUTES_DEFINITION = [
         exact: true,
         component: SwapAfterAddTokenPage,
     },
-
-    */
 
     /* Settings */
     { path: "/settings", exact: true, component: SettingsPage },
@@ -219,8 +214,7 @@ export const ROUTES_DEFINITION = [
         blockListedForRecovery: true,
     },
     /* Networks config */
-    /* Prevent access to Networks management*/
-    /*  { path: "/settings/networks", exact: true, component: NetworksPage },
+    { path: "/settings/networks", exact: true, component: NetworksPage },
     {
         path: "/settings/networks/details",
         exact: true,
@@ -240,7 +234,7 @@ export const ROUTES_DEFINITION = [
         path: "/settings/networks/add/manual",
         exact: true,
         component: ManuallyAddNetwork,
-    }, */
+    },
     /* Reminder to backup seed phrase */
     { path: "/reminder", exact: true, component: ReminderPage },
     { path: "/reminder/backup", exact: true, component: BackupConfirmPage },

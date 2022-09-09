@@ -464,6 +464,10 @@ export default class NetworkController extends BaseController<NetworkControllerS
         chainId: number,
         userNetworksOnly = true
     ): ethers.providers.StaticJsonRpcProvider | undefined => {
+        if (this.network.chainId === chainId) {
+            return this.provider;
+        }
+
         const userNetwork = Object.values(
             this.store.getState().availableNetworks
         ).find(

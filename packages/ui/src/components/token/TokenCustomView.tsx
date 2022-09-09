@@ -272,7 +272,7 @@ const CustomTokenView = ({
             {/* Custom token form */}
             <form
                 id="customTokenForm"
-                className="flex flex-col justify-between h-full"
+                className="flex flex-col justify-between h-full mt-20"
                 onSubmit={onSubmit}
             >
                 <div className="text-base font-bold text-black w-full text-center px-6">

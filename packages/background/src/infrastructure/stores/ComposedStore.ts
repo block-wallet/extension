@@ -48,7 +48,7 @@ export default class ComposedStore<T> extends ObservableStore<T> {
             flatState = {
                 ...flatState,
                 ...this._subStores[subStore].getState(),
-            } as {};
+            } as Flatten<T>;
         }
         return flatState as Flatten<T>;
     }

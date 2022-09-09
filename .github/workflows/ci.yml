@@ -46,7 +46,6 @@ jobs:
 
       - name: Install packages dependencies
         run: |
-          rm ~/.cache/yarn 
           make install/ci
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
@@ -103,7 +102,6 @@ jobs:
 
       - name: Install packages dependencies
         run: |
-          rm ~/.cache/yarn 
           make install/ci
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
@@ -170,7 +168,6 @@ jobs:
 
       - name: Install packages dependencies
         run: |
-          rm ~/.cache/yarn 
           make install/ci
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}

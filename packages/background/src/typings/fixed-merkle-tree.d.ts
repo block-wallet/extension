@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-declare module 'fixed-merkle-tree' {
+declare module '@block-wallet/fixed-merkle-tree' {
     export = MerkleTree;
     /**
      * @callback hashFunction

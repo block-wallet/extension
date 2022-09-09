@@ -15,7 +15,7 @@ jobs:
       html_url: ${{ steps.create_release.outputs.html_url }}
       s3_url: ${{ steps.get_metadata.outputs.s3_url }}
     if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'automated') && contains(github.event.pull_request.labels.*.name, 'release')
-    runs-on: [self-hosted, small]
+    runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -23,12 +23,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_RELEASE_BUCKET }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_RELEASE_BUCKET }}
           aws-region: eu-central-1
-
-      - name: Install AWS cli
-        run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip -o awscliv2.zip
-          ./aws/install --update
 
       - name: Get release version and notes
         id: get_metadata
@@ -93,7 +87,7 @@ jobs:
   notify:
     if: success()
     needs: [release]
-    runs-on: [self-hosted, small]
+    runs-on: ubuntu-latest
     steps:
       - name: Slack notification - Release
         if: success()
@@ -120,7 +114,7 @@ jobs:
   error:
     if: failure()
     needs: [release, notify]
-    runs-on: [self-hosted, small]
+    runs-on: ubuntu-latest
     steps:
       - name: Slack notification - CI status
         uses: 8398a7/action-slack@v3

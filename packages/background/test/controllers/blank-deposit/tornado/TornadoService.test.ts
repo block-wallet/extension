@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { BigNumber, ethers, providers, utils } from 'ethers';
 import sinon from 'sinon';
-import { babyJub, pedersenHash } from 'circomlib';
+import { babyJub, pedersenHash } from '@block-wallet/circomlib';
 
 import { TornadoEvents } from '../../../../src/controllers/blank-deposit/tornado/config/ITornadoContract';
 import { TornadoNotesService } from '../../../../src/controllers/blank-deposit/tornado/TornadoNotesService';
@@ -984,7 +984,7 @@ describe('TornadoService', () => {
 
         let pendingWithdrawals =
             tornadoService['_pendingWithdrawalsStore'].store.getState()[
-                AvailableNetworks.GOERLI
+            AvailableNetworks.GOERLI
             ];
 
         expect(pendingWithdrawals.pending[0].depositId).to.be.equal('12345678');
@@ -1007,7 +1007,7 @@ describe('TornadoService', () => {
 
         pendingWithdrawals =
             tornadoService['_pendingWithdrawalsStore'].store.getState()[
-                AvailableNetworks.GOERLI
+            AvailableNetworks.GOERLI
             ];
 
         expect(pendingWithdrawals.pending[0].depositId).to.be.equal('12345678');
@@ -1099,7 +1099,7 @@ describe('TornadoService', () => {
 
         let pendingWithdrawals =
             tornadoService['_pendingWithdrawalsStore'].store.getState()[
-                AvailableNetworks.GOERLI
+            AvailableNetworks.GOERLI
             ];
 
         pending = pendingWithdrawals.pending[0];
@@ -1135,26 +1135,26 @@ describe('TornadoService', () => {
                     const events =
                         type === TornadoEvents.DEPOSIT
                             ? {
-                                  type,
-                                  events: DepositEventsMock.events.map((e) => ({
-                                      blockNumber: e.blockNumber,
-                                      transactionHash: e.transactionHash,
-                                      ...e.args,
-                                  })),
-                              }
+                                type,
+                                events: DepositEventsMock.events.map((e) => ({
+                                    blockNumber: e.blockNumber,
+                                    transactionHash: e.transactionHash,
+                                    ...e.args,
+                                })),
+                            }
                             : {
-                                  type,
-                                  events: WithdrawalEventsMock.events.map(
-                                      (e) => ({
-                                          blockNumber: e.blockNumber,
-                                          transactionHash: e.transactionHash,
-                                          nullifierHex: e.args.nullifierHash,
-                                          fee: e.args
-                                              .fee as unknown as BigNumber,
-                                          to: e.args.to,
-                                      })
-                                  ),
-                              };
+                                type,
+                                events: WithdrawalEventsMock.events.map(
+                                    (e) => ({
+                                        blockNumber: e.blockNumber,
+                                        transactionHash: e.transactionHash,
+                                        nullifierHex: e.args.nullifierHash,
+                                        fee: e.args
+                                            .fee as unknown as BigNumber,
+                                        to: e.args.to,
+                                    })
+                                ),
+                            };
 
                     await tornadoEventsDB.updateEvents(
                         AvailableNetworks.GOERLI,
@@ -1230,50 +1230,50 @@ describe('TornadoService', () => {
                     const events =
                         type === TornadoEvents.DEPOSIT
                             ? {
-                                  type,
-                                  events: [
-                                      {
-                                          args: {
-                                              leafIndex: 1,
-                                              commitment:
-                                                  '0x1810d7e4144666802fa7f2d2b87ba945e0b641f94149f42110294186659b244f',
-                                              timestamp:
-                                                  BigNumber.from(
-                                                      '0x60363746'
-                                                  ).toString(),
-                                          },
-                                          transactionHash: '0x222828182188921',
-                                          blockNumber: 29219,
-                                      },
-                                  ].map((e) => ({
-                                      blockNumber: e.blockNumber,
-                                      transactionHash: e.transactionHash,
-                                      ...e.args,
-                                  })),
-                              }
+                                type,
+                                events: [
+                                    {
+                                        args: {
+                                            leafIndex: 1,
+                                            commitment:
+                                                '0x1810d7e4144666802fa7f2d2b87ba945e0b641f94149f42110294186659b244f',
+                                            timestamp:
+                                                BigNumber.from(
+                                                    '0x60363746'
+                                                ).toString(),
+                                        },
+                                        transactionHash: '0x222828182188921',
+                                        blockNumber: 29219,
+                                    },
+                                ].map((e) => ({
+                                    blockNumber: e.blockNumber,
+                                    transactionHash: e.transactionHash,
+                                    ...e.args,
+                                })),
+                            }
                             : {
-                                  type,
-                                  events: [
-                                      {
-                                          args: {
-                                              nullifierHash:
-                                                  '0x21315e4bfbfe7cff7a31e14546b96abdfacf2281cb938beddce4f89fc132ba60',
-                                              to: '0xf98765337659907',
-                                              fee: utils
-                                                  .parseEther('0.07')
-                                                  .toHexString() as unknown as BigNumber,
-                                          },
-                                          blockNumber: 29219,
-                                          transactionHash: '0x333827262177432',
-                                      },
-                                  ].map((e) => ({
-                                      blockNumber: e.blockNumber,
-                                      transactionHash: e.transactionHash,
-                                      nullifierHex: e.args.nullifierHash,
-                                      to: e.args.to,
-                                      fee: e.args.fee,
-                                  })),
-                              };
+                                type,
+                                events: [
+                                    {
+                                        args: {
+                                            nullifierHash:
+                                                '0x21315e4bfbfe7cff7a31e14546b96abdfacf2281cb938beddce4f89fc132ba60',
+                                            to: '0xf98765337659907',
+                                            fee: utils
+                                                .parseEther('0.07')
+                                                .toHexString() as unknown as BigNumber,
+                                        },
+                                        blockNumber: 29219,
+                                        transactionHash: '0x333827262177432',
+                                    },
+                                ].map((e) => ({
+                                    blockNumber: e.blockNumber,
+                                    transactionHash: e.transactionHash,
+                                    nullifierHex: e.args.nullifierHash,
+                                    to: e.args.to,
+                                    fee: e.args.fee,
+                                })),
+                            };
 
                     await tornadoEventsDB.updateEvents(
                         AvailableNetworks.GOERLI,

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import { bigInt } from 'snarkjs';
+import { bigInt } from '@block-wallet/snarkjs';
 import {
     CurrencyAmountPair,
     KnownCurrencies,

@@ -45,3 +45,5 @@ package-lock.json
 token-list.json
 rates-ids-list.json
 asset-platforms-ids-list.json
+
+.npmrc

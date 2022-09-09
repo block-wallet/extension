@@ -25,6 +25,7 @@ jobs:
       - name: Install yarn
         run: |
           npm install --global yarn
+          yarn set version berry
 
       - name: Dependency UI cache
         uses: actions/cache@v3
@@ -81,6 +82,7 @@ jobs:
       - name: Install yarn
         run: |
           npm install --global yarn
+          yarn set version berry
 
       - name: Dependency UI cache
         uses: actions/cache@v3
@@ -147,6 +149,7 @@ jobs:
       - name: Install yarn
         run: |
           npm install --global yarn
+          yarn set version berry
 
       - name: Dependency UI cache
         uses: actions/cache@v3
@@ -240,10 +243,11 @@ jobs:
       - name: Install yarn
         run: |
           npm install --global yarn
+          yarn set version berry
 
       - name: Install e2e dependencies
         run: |
-          yarn install --prefer-offline
+          yarn install --check-cache
 
       - name: Download the extension url
         uses: actions/download-artifact@v3

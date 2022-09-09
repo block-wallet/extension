@@ -47,3 +47,11 @@ rates-ids-list.json
 asset-platforms-ids-list.json
 
 .npmrc
+
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

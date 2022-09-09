@@ -45,3 +45,11 @@ package-lock.json
 token-list.json
 rates-ids-list.json
 asset-platforms-ids-list.json
+
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

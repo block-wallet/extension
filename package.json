@@ -8,5 +8,9 @@
         "build": "make build",
         "build-prod": "make build/prod",
         "test": "make test"
+    },
+    "packageManager": "yarn@3.2.3",
+    "dependencies": {
+        "@block-wallet/circomlib": "^0.0.21"
     }
 }

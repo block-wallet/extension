@@ -43,9 +43,9 @@ install:
 	@cd packages/provider && yarn install
 
 install/ci:
-	@cd packages/background && yarn install --prefer-offline
-	@cd packages/ui && yarn install --prefer-offline
-	@cd packages/provider && yarn install --prefer-offline
+	@cd packages/background && yarn install --check-cache
+	@cd packages/ui && yarn install --check-cache
+	@cd packages/provider && yarn install --check-cache
 
 cp/snarks:
 	@mkdir -p dist/snarks/tornado

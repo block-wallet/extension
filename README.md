@@ -48,11 +48,11 @@ See the [guideline](docs/guideline.md)
 
 #### Prerequisites
 
-You need a GitHub token with read:packages access to the **block-wallet** GitHub organization in order to download some private libraries. There are two options to do that: 
+You need a GitHub token with read:packages access to the **block-wallet** GitHub organization in order to download some private libraries. The steps are:
 
-* Create this file ~/.npmrc file with this configuration
+1. Create a file ```~/.npmrc``` file with this configuration:
 
-```yaml
+```
 //npm.pkg.github.com/:_authToken=REGISTRY_AUTH_TOKEN
 @block-wallet:registry=https://npm.pkg.github.com/
 @block-wallet:always-auth=true
@@ -61,13 +61,13 @@ You need a GitHub token with read:packages access to the **block-wallet** GitHub
 where **REGISTRY_AUTH_TOKEN** is a token generated here https://github.com/settings/tokens with at least read access to the packages.
 
 
-* Another option is to login to the registry using this command every time you want to download the private libraries:
+2. Use the ```npm login``` command to authenticate:
 
-```jsx
+```
 npm login --scope=@block-wallet --registry=https://npm.pkg.github.com
 ```
 
-That command will ask for you GitHub username, your GitHub token and also your email.
+That command will ask for your GitHub username, password (use the GitHub token generated before) and also the email.
 
 #### Install
 

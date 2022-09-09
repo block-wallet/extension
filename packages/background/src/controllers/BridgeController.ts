@@ -933,11 +933,14 @@ export default class BridgeController extends ExchangeController<
             }
         }
 
-        //delete chainId pending transactions
-        delete pendingTxState[chainId];
+        const perndingBridgeReceivingTransactions = {
+            ...(this.store.getState().perndingBridgeReceivingTransactions ||
+                {}),
+        };
+        delete perndingBridgeReceivingTransactions[chainId];
 
         this.store.updateState({
-            perndingBridgeReceivingTransactions: pendingTxState,
+            perndingBridgeReceivingTransactions,
         });
     }
 

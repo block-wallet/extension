@@ -153,23 +153,23 @@ jobs:
         run: |
           npm install --global yarn
 
-      - name: Dependency UI cache
-        uses: actions/cache@v3
-        with:
-          path: "packages/ui/node_modules"
-          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
+      # - name: Dependency UI cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: "packages/ui/node_modules"
+      #     key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
 
-      - name: Dependency Background cache
-        uses: actions/cache@v3
-        with:
-          path: "packages/background/node_modules"
-          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
+      # - name: Dependency Background cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: "packages/background/node_modules"
+      #     key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
 
-      - name: Dependency Provider cache
-        uses: actions/cache@v3
-        with:
-          path: "packages/provider/node_modules"
-          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
+      # - name: Dependency Provider cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: "packages/provider/node_modules"
+      #     key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
         run: |
@@ -216,13 +216,13 @@ jobs:
         run: |
           npm install --global yarn
 
-      - name: Cache e2e dependencies
-        id: cache-cypress
-        uses: actions/cache@v3
-        with:
-          path: |
-            **/node_modules
-          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
+      # - name: Cache e2e dependencies
+      #   id: cache-cypress
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       **/node_modules
+      #     key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
 
       - name: Download the extension
         uses: actions/download-artifact@v3
@@ -232,7 +232,7 @@ jobs:
 
       - name: Install e2e dependencies
         run: |
-          yarn install --prefer-offline --frozen-lockfile
+          yarn install
 
       - name: UI Tests - Chrome
         run: |

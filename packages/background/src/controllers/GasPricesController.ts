@@ -386,7 +386,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                     if (feeHistory.baseFeePerGas) {
                         estimatedBaseFee = BigNumber.from(
                             feeHistory.baseFeePerGas[
-                                feeHistory.baseFeePerGas.length - 1
+                            feeHistory.baseFeePerGas.length - 1
                             ]
                         );
                     }

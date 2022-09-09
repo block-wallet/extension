@@ -450,13 +450,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         networkName: string
     ): ethers.providers.StaticJsonRpcProvider => {
         const network = this.searchNetworkByName(networkName);
-        return this._overloadProviderMethods(
-            network,
-            new ethers.providers.StaticJsonRpcProvider({
-                url: network.rpcUrls[0],
-                allowGzip: network.rpcUrls[0].endsWith('.blockwallet.io'),
-            })
-        );
+        return this._getProviderForNework(network.chainId, network.rpcUrls[0]);
     };
 
     /**
@@ -477,13 +471,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
         );
 
         if (userNetwork) {
-            return this._overloadProviderMethods(
-                userNetwork,
-                new ethers.providers.StaticJsonRpcProvider({
-                    url: userNetwork.rpcUrls[0],
-                    allowGzip:
-                        userNetwork.rpcUrls[0].endsWith('.blockwallet.io'),
-                })
+            return this._getProviderForNework(
+                userNetwork.chainId,
+                userNetwork.rpcUrls[0]
             );
         }
 
@@ -492,16 +482,20 @@ export default class NetworkController extends BaseController<NetworkControllerS
         }
 
         const chain = getChainListItem(chainId);
-        if (chain) {
-            return this._overloadProviderMethods(
-                chain,
-                new ethers.providers.StaticJsonRpcProvider({
-                    url: chain.rpc[0],
-                    allowGzip: chain.rpc[0].endsWith('.blockwallet.io'),
-                })
-            );
+        if (chain && chain.rpc && chain.rpc[0]) {
+            return this._getProviderForNework(chainId, chain.rpc[0]);
         }
     };
+
+    private _getProviderForNework(chainId: number, rpcUrl: string) {
+        return this._overloadProviderMethods(
+            { chainId },
+            new ethers.providers.StaticJsonRpcProvider({
+                url: rpcUrl,
+                allowGzip: rpcUrl.endsWith('.blockwallet.io'),
+            })
+        );
+    }
 
     /**
      * It returns the latest block from the network

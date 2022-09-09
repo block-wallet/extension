@@ -129,13 +129,17 @@ export class ContractSignatureParser {
         data: string,
         contractAddress: string
     ): Promise<ContractMethodSignature | undefined> {
+        let contractABI: string | undefined;
         try {
             // Try to fetch contract's ABI from Etherscan
-            const contractABI = await this.fetchABIFromEtherscan(
-                contractAddress
-            );
+            contractABI = await this.fetchABIFromEtherscan(contractAddress);
+        } catch (e) {
+            log.warn('getMethodSignature', 'fetchABIFromEtherscan', e);
+        }
 
-            if (contractABI) {
+        //try to parse it using contract ABI
+        if (contractABI) {
+            try {
                 const contractInterface = new Interface(contractABI);
 
                 const parsedTransaction = contractInterface.parseTransaction({
@@ -145,23 +149,27 @@ export class ContractSignatureParser {
                 if (parsedTransaction) {
                     return this.parseTransactionDescription(parsedTransaction);
                 }
-            } else {
-                // If couldn't be fetched from Etherscan, fallback to 4bytes/Signature Registry contract
-                const bytesSignature = data.slice(0, 10);
+            } catch (e) {
+                log.warn('Error parsing transaction from contractABI');
+            }
+        }
 
-                // Lookup on signature registry contract
-                const unparsedSignatures = await this.lookup(bytesSignature);
+        try {
+            // If couldn't be fetched from Etherscan, fallback to 4bytes/Signature Registry contract
+            const bytesSignature = data.slice(0, 10);
 
-                if (unparsedSignatures && unparsedSignatures.length) {
-                    for (let n = 0; n < unparsedSignatures.length; n++) {
-                        const parsed = this.parseFunctionFragment(
-                            data,
-                            unparsedSignatures[n]
-                        );
+            // Lookup on signature registry contract
+            const unparsedSignatures = await this.lookup(bytesSignature);
 
-                        if (parsed) {
-                            return this.parseTransactionDescription(parsed);
-                        }
+            if (unparsedSignatures && unparsedSignatures.length) {
+                for (let n = 0; n < unparsedSignatures.length; n++) {
+                    const parsed = this.parseFunctionFragment(
+                        data,
+                        unparsedSignatures[n]
+                    );
+
+                    if (parsed) {
+                        return this.parseTransactionDescription(parsed);
                     }
                 }
             }

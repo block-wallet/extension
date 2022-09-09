@@ -2376,9 +2376,12 @@ export class TransactionController extends BaseController<
         const { transactionCategory, transactionParams } = transactionMeta;
 
         if (
-            (transactionCategory ===
-                TransactionCategories.CONTRACT_INTERACTION ||
-                transactionCategory === TransactionCategories.EXCHANGE) &&
+            transactionCategory &&
+            [
+                TransactionCategories.CONTRACT_INTERACTION,
+                TransactionCategories.EXCHANGE,
+                TransactionCategories.BRIDGE,
+            ].includes(transactionCategory) &&
             transactionParams.data &&
             transactionParams.to
         ) {
@@ -2425,6 +2428,25 @@ export class TransactionController extends BaseController<
 
     public getTxSignTimeout(): number {
         return this.store.getState().txSignTimeout;
+    }
+
+    public getTransactions(
+        filters: {
+            transactionCategory?: TransactionCategories;
+        } = {}
+    ): TransactionMeta[] {
+        const txs = this.store.getState().transactions || [];
+        return txs.filter((tx) => {
+            let matched = true;
+
+            //prepared for future filters
+            if (filters.transactionCategory) {
+                matched =
+                    matched &&
+                    filters.transactionCategory === tx.transactionCategory;
+            }
+            return matched;
+        });
     }
 }
 

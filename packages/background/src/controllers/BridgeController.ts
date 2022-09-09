@@ -40,8 +40,8 @@ import { sleep } from '../utils/sleep';
 import { HOUR, MILISECOND, MINUTE, SECOND } from '../utils/constants/time';
 import { TransactionReceipt } from '@ethersproject/providers';
 import { toChecksumAddress } from 'ethereumjs-util';
-import { Transaction } from '@ethereumjs/tx';
-import { parseUnits } from 'ethers/lib/utils';
+import { fetchBlockWithRetries } from '../utils/blockFetch';
+import { isNil } from 'lodash';
 const TIMEOUT_FETCH_RECEIVING_TX = 2 * HOUR;
 const STATUS_API_CALLS_DELAY = 30 * SECOND;
 const GET_TX_RECEIPT_DELAY = 2 * SECOND;
@@ -153,14 +153,16 @@ export default class BridgeController extends ExchangeController<
                 state: NetworkControllerState,
                 prevState?: NetworkControllerState
             ) => {
-                let chainIds = Object.values(state.availableNetworks).map(
-                    ({ chainId }) => chainId
-                );
+                let chainIds = Object.values(state.availableNetworks)
+                    .filter((network) => network.enable)
+                    .map(({ chainId }) => chainId);
 
                 if (prevState) {
                     const oldChainIds = Object.values(
                         prevState.availableNetworks
-                    ).map(({ chainId }) => chainId);
+                    )
+                        .filter((network) => network.enable)
+                        .map(({ chainId }) => chainId);
 
                     //process only the new chains
                     chainIds = chainIds.filter(
@@ -175,12 +177,45 @@ export default class BridgeController extends ExchangeController<
                 });
             }
         );
+
+        this._processPendingBridgesAfterInit();
     }
 
     private _getAPIImplementation(
         implementation: BridgeImplementation
     ): IBridge {
         return BridgeAPI[implementation];
+    }
+
+    /**
+     * _processPendingBridgesAfterInit
+     *
+     * Processes the bridge pending transactions
+     * This method is meant for those that the extension was reloaded and the exection of _waitForBridgeFinalState hadn't finished.
+     */
+    private async _processPendingBridgesAfterInit() {
+        const transactions =
+            this._transactionController.getTransactions({
+                transactionCategory: TransactionCategories.BRIDGE,
+            }) || [];
+        transactions.forEach((tx) => {
+            if (
+                tx.bridgeParams?.status === BridgeStatus.PENDING ||
+                tx.bridgeParams?.status === BridgeStatus.NOT_FOUND
+            ) {
+                this._waitForBridgeFinalState({
+                    //tx params comes in lowercase format and we need the real address not the lowercased one.
+                    accountAddress: toChecksumAddress(
+                        tx.transactionParams.from!
+                    ),
+                    fromChainId: tx.bridgeParams.fromChainId,
+                    sendingTransactionId: tx.id,
+                    toChainId: tx.bridgeParams.toChainId,
+                    tool: tx.bridgeParams.tool,
+                    toToken: tx.bridgeParams.toToken,
+                });
+            }
+        });
     }
 
     public async getTokens(
@@ -482,6 +517,14 @@ export default class BridgeController extends ExchangeController<
 
             const newTransactionMeta =
                 this._transactionController.getTransaction(transactionMeta.id)!;
+
+            newTransactionMeta.transferType = {
+                amount: BigNumber.from(fromAmount),
+                currency: fromToken.symbol,
+                decimals: fromToken.decimals,
+                logo: fromToken.logo,
+                to: transactionRequest.to,
+            };
 
             newTransactionMeta.bridgeParams = {
                 bridgeImplementation: aggregator,
@@ -805,12 +848,26 @@ export default class BridgeController extends ExchangeController<
         );
 
         const toAmount = sendingTransaction.bridgeParams?.toTokenAmount;
+        let txTime: number | undefined;
+
+        //If the transaction was mined and we have its block number, the fetch timestamp
+        if (isSuccess && !isNil(txReceipt.blockNumber)) {
+            const block = await fetchBlockWithRetries(
+                txReceipt.blockNumber,
+                receivingChainIdProvider
+            );
+            if (block) {
+                //transform to miliseconds
+                txTime = block.timestamp * 1000;
+            }
+        }
 
         this._updateStateTransaction(
             toChainId,
             accountAddress,
             receivingTxHash,
             {
+                confirmationTime: txTime,
                 methodSignature,
                 transactionReceipt: txReceipt,
                 transferType: transactionToken
@@ -847,7 +904,7 @@ export default class BridgeController extends ExchangeController<
             return;
         }
 
-        for (const address in Object.keys(pendingTransactions)) {
+        for (const address in pendingTransactions) {
             const pendingAddrTransactions = pendingTransactions[address];
             for (const pendingTx of pendingAddrTransactions) {
                 const sendingTransaction =
@@ -858,15 +915,13 @@ export default class BridgeController extends ExchangeController<
                 //If sending transaction doesn't exist, then avoid persisting this transaction as well.
                 if (sendingTransaction) {
                     try {
-                        const processedOk =
-                            await this._fetchBridgeReceivingTransaction({
-                                accountAddress: address,
-                                receivingTxHash: pendingTx.hash,
-                                toChainId: chainId,
-                                toToken: pendingTx.toToken,
-                                sendingTransaction,
-                            });
-                        return processedOk !== true; // if it was not processed ok, then don't filter it.
+                        await this._fetchBridgeReceivingTransaction({
+                            accountAddress: address,
+                            receivingTxHash: pendingTx.hash,
+                            toChainId: chainId,
+                            toToken: pendingTx.toToken,
+                            sendingTransaction,
+                        });
                     } catch (e) {
                         log.warn(
                             '_processChainPendingReceivingTransactionForChainId',
@@ -926,6 +981,8 @@ export default class BridgeController extends ExchangeController<
             rawTransaction: transaction.data,
             time: transaction.timestamp,
             approveTime: transaction.timestamp,
+            confirmationTime: transaction.timestamp,
+            verifiedOnBlockchain: true,
             chainId: transaction.chainId,
             origin: 'blank',
             transactionCategory: TransactionCategories.INCOMING_BRIDGE,

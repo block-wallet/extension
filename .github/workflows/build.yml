@@ -68,7 +68,8 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           ref: ${{ env.GITHUB_REF_NAME }}
-
+          persist-credentials: false
+    
       - name: Compare release version with the latest tag
         id: tag_comparison
         run: |
@@ -95,6 +96,7 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           ref: ${{ env.TARGET_BRANCH }}
+          persist-credentials: false
 
       - name: Remove preffix from the extension version
         id: remove_preffix
@@ -206,6 +208,7 @@ jobs:
           repository: block-wallet/e2e-tests
           ref: refs/heads/main
           token: ${{ secrets.PAT }}
+          persist-credentials: false
 
       - name: Install node
         uses: actions/setup-node@v3
@@ -338,6 +341,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.PAT }}
+          persist-credentials: false
 
       - name: Initialize mandatory git config
         run: |

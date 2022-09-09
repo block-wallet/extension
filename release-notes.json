@@ -250,6 +250,33 @@
                 }
             ],
             "version": "0.3.1"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Swaps: you can now swap assets directly within BlockWallet."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Custom Network: search, add and connect to custom RPC networks."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Minor improvements and bug fixes"
+                        }
+                    ]
+                }
+            ],
+            "version": "0.4.0"
         }
     ]
 }

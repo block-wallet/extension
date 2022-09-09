@@ -12,7 +12,8 @@ interface BridgeAdditonalExplorer {
 }
 
 export const getBridgePendingMessage = (
-    bridgeParams: BridgeTransactionParams
+    bridgeParams: BridgeTransactionParams,
+    destinationNetworkName?: string
 ) => {
     if (bridgeParams.status === BridgeStatus.PENDING) {
         switch (bridgeParams.substatus) {
@@ -20,7 +21,9 @@ export const getBridgePendingMessage = (
             case BridgeSubstatus.REFUND_IN_PROGRESS:
                 return "Errored bridge. Processing refund"
             case BridgeSubstatus.WAIT_DESTINATION_TRANSACTION: {
-                return "Waiting for destination transaction"
+                return `Waiting for ${
+                    destinationNetworkName || "destination"
+                } transaction`
             }
         }
     }
@@ -43,7 +46,10 @@ export const getAdditionalBridgeExplorer = (
                 )}`,
                 explorerLink: txData.explorerLink!,
             }
-        } else if (bridgeDetails.sendingTransaction?.explorerLink) {
+        } else if (
+            transaction.bridgeParams?.role === "RECEIVING" &&
+            bridgeDetails.sendingTransaction?.explorerLink
+        ) {
             const txData = bridgeDetails.sendingTransaction
             return {
                 viewOnText: `View origin transaction on ${capitalize(

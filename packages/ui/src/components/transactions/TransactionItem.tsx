@@ -38,7 +38,6 @@ import {
 } from "@block-wallet/background/controllers/transactions/utils/types"
 
 // Utils
-import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { capitalize } from "../../util/capitalize"
 import { getDisplayTime } from "../../util/getDisplayTime"
 import formatTransactionValue from "../../util/formatTransactionValue"
@@ -52,8 +51,9 @@ import {
 } from "../../util/transactionUtils"
 import Dots from "../loading/LoadingDots"
 import useContextMenu from "../../util/hooks/useContextMenu"
-import { getValueByKey } from "../../util/objectUtils"
 import { getBridgePendingMessage } from "../../util/bridgeTransactionUtils"
+import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
+import useGetBridgeDetails from "../../util/hooks/useGetBridgeDetails"
 
 const DEFAULT_TORNADO_CONFIRMATION = 4
 
@@ -217,7 +217,6 @@ const getTransactionTime = (
     status: TransactionStatus,
     metaType: MetaType,
     time: number,
-    pendingIndex: number,
     isQueued: boolean
 ) => {
     const [{ color, label }, extraInfo] = (() => {
@@ -420,10 +419,11 @@ const TransactionItem: React.FC<{
         forceDrop,
         bridgeParams,
     } = transaction
-
+    const bridgeDetails = useGetBridgeDetails(transaction)
     const state = useBlankState()!
 
     const history: any = useOnMountHistory()
+    const formatter = useCurrencyFromatter()
 
     const {
         nativeCurrency: networkNativeCurrency,
@@ -440,6 +440,7 @@ const TransactionItem: React.FC<{
         decimals: networkNativeCurrency.decimals,
         logo: defaultNetworkLogo,
     }
+
     const isBlankWithdraw: boolean =
         transactionCategory === "blankWithdrawal" ? true : false
     const blankWithdrawId: string = id
@@ -470,14 +471,6 @@ const TransactionItem: React.FC<{
         ? formatTransactionValue(transfer as TransferType, true, 5)[0]
         : ""
 
-    const tokenExchangeRate = getValueByKey(
-        state.exchangeRates,
-        transfer.currency
-            ? transfer.currency.toUpperCase()
-            : networkNativeCurrency.symbol.toUpperCase(),
-        0
-    )
-
     const valueLabel = `${txValueSign}${txValue}`
 
     const { formattedLabel, typeCss, amountCss } = getTransactionItemStyles(
@@ -495,6 +488,17 @@ const TransactionItem: React.FC<{
     const { anchorPoint, show: showContextMenu } =
         useContextMenu(contextMenuRef)
 
+    const tokenSymbol = transfer.currency
+        ? transfer.currency.toUpperCase()
+        : networkNativeCurrency.symbol.toUpperCase()
+
+    const transferCurrencyAmount = formatter.format(
+        transfer.amount,
+        tokenSymbol,
+        transfer.decimals,
+        transfer.currency === networkNativeCurrency.symbol.toUpperCase()
+    )
+
     return (
         <>
             <TransactionDetails
@@ -504,7 +508,7 @@ const TransactionItem: React.FC<{
             />
 
             <div
-                className={`flex flex-row justify-between items-center px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 ${
+                className={`flex flex-col px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 ${
                     !(txHash && transaction.transactionParams.from) &&
                     "cursor-default"
                 }`}
@@ -519,7 +523,7 @@ const TransactionItem: React.FC<{
                 ref={contextMenuRef}
             >
                 {/* Type */}
-                <div className="flex flex-row items-center w-full">
+                <div className="flex flex-row items-center w-full justify-between">
                     <TransactionIcon
                         transaction={{
                             transactionCategory,
@@ -669,22 +673,6 @@ const TransactionItem: React.FC<{
                                     )}
                                 </div>
                             )}
-                        {status === TransactionStatus.CONFIRMED &&
-                        bridgeParams?.status === BridgeStatus.PENDING &&
-                        transactionCategory === TransactionCategories.BRIDGE ? (
-                            <div className="mt-2">
-                                <div className="group relative self-start">
-                                    <div className="flex flex-row items-center">
-                                        <i className="text-gray-500">
-                                            {getBridgePendingMessage(
-                                                bridgeParams!
-                                            )}
-                                            <Dots />
-                                        </i>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : null}
                     </div>
 
                     {/* Amount */}
@@ -714,34 +702,9 @@ const TransactionItem: React.FC<{
                             <div className="w-full flex justify-end">
                                 <span
                                     className="text-xs text-gray-600 truncate w-5/6 text-right mr-1"
-                                    title={formatCurrency(
-                                        toCurrencyAmount(
-                                            transfer.amount,
-                                            tokenExchangeRate,
-                                            transfer.decimals
-                                        ),
-                                        {
-                                            currency: state.nativeCurrency,
-                                            locale_info: state.localeInfo,
-                                            returnNonBreakingSpace: true,
-                                            showSymbol: true,
-                                        }
-                                    )}
+                                    title={transferCurrencyAmount}
                                 >
-                                    {formatCurrency(
-                                        toCurrencyAmount(
-                                            transfer.amount,
-                                            tokenExchangeRate,
-                                            transfer.decimals
-                                        ),
-                                        {
-                                            currency: state.nativeCurrency,
-                                            locale_info: state.localeInfo,
-                                            returnNonBreakingSpace: true,
-                                            showSymbol: true,
-                                            showCurrency: false,
-                                        }
-                                    )}
+                                    {transferCurrencyAmount}
                                 </span>
                                 <span className="text-xs text-gray-600 text-right">
                                     {state.nativeCurrency.toUpperCase()}
@@ -750,7 +713,27 @@ const TransactionItem: React.FC<{
                         </div>
                     )}
                 </div>
+                {status === TransactionStatus.CONFIRMED &&
+                transactionCategory === TransactionCategories.BRIDGE &&
+                bridgeParams &&
+                [BridgeStatus.PENDING, BridgeStatus.NOT_FOUND].includes(
+                    bridgeParams!.status! || ""
+                ) ? (
+                    <div className="ml-11 mt-2">
+                        <i className="text-gray-500">
+                            {bridgeParams.status === BridgeStatus.NOT_FOUND
+                                ? "Processing bridge"
+                                : getBridgePendingMessage(
+                                      bridgeParams!,
+                                      bridgeDetails?.receivingTransaction
+                                          ?.networkName
+                                  )}
+                            <Dots />
+                        </i>
+                    </div>
+                ) : null}
             </div>
+
             {/* Compliance Menu */}
             {isBlankWithdraw &&
             status !== TransactionStatus.SUBMITTED &&

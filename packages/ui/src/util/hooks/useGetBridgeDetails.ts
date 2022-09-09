@@ -77,19 +77,20 @@ const useGetBridgeDetails = (
         ): BridgeTxDetails {
             return {
                 networkName: chainData.networkName,
-                explorerLink: chainData.blockExplorerUrl
-                    ? createCustomExplorerLink(
-                          txHash,
-                          chainData.blockExplorerUrl
-                      )
-                    : txLink,
+                explorerLink:
+                    chainData.blockExplorerUrl && txHash
+                        ? createCustomExplorerLink(
+                              txHash,
+                              chainData.blockExplorerUrl
+                          )
+                        : txLink,
                 explorerName: chainData.explorerName || "Explorer",
             }
         }
 
         async function fillBridgeDetails() {
             const { bridgeParams } = transaction
-            if (!bridgeParams?.sendingTxHash) {
+            if (!bridgeParams) {
                 return
             }
 
@@ -108,14 +109,13 @@ const useGetBridgeDetails = (
                           bridgeParams?.sendingTxLink!
                       )
                     : undefined,
-                receivingTransaction:
-                    receivingChainData && bridgeParams.receivingTxHash
-                        ? getBridgeDetails(
-                              receivingChainData,
-                              bridgeParams?.receivingTxHash!,
-                              bridgeParams?.receivingTxLink!
-                          )
-                        : undefined,
+                receivingTransaction: receivingChainData
+                    ? getBridgeDetails(
+                          receivingChainData,
+                          bridgeParams?.receivingTxHash!,
+                          bridgeParams?.receivingTxLink!
+                      )
+                    : undefined,
             }
 
             setBridgeDetails(bridgeDetails)

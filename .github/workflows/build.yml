@@ -157,19 +157,19 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "packages/ui/node_modules"
-          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
+          key: ${{ runner.os }}-modules-v2-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Dependency Background cache
         uses: actions/cache@v3
         with:
           path: "packages/background/node_modules"
-          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
+          key: ${{ runner.os }}-modules-v2-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Dependency Provider cache
         uses: actions/cache@v3
         with:
           path: "packages/provider/node_modules"
-          key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
+          key: ${{ runner.os }}-modules-v2-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
         run: |
@@ -222,7 +222,7 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-cypress-v2-${{ hashFiles('**/yarn.lock') }}
 
       - name: Download the extension
         uses: actions/download-artifact@v3

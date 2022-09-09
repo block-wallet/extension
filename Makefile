@@ -43,9 +43,9 @@ install:
 	@cd packages/provider && yarn install
 
 install/ci:
-	@cd packages/background && yarn install 
-	@cd packages/ui && yarn install 
-	@cd packages/provider && yarn install 
+	@cd packages/background && npm install 
+	@cd packages/ui && npm install 
+	@cd packages/provider && npm install 
 
 cp/snarks:
 	@mkdir -p dist/snarks/tornado

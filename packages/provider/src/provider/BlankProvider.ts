@@ -10,6 +10,7 @@ import {
     ChainChangedInfo,
     EthSubscription,
     Web3LegacySubscription,
+    Signals,
 } from '../types';
 import {
     ExternalEventSubscription,
@@ -55,6 +56,14 @@ export default class BlankProvider
     private _state: BlankProviderState;
     private _handlers: Handlers;
     private _requestId: number;
+    private _ethSubscriptions: {
+        [reqId: string]: {
+            params: any;
+            subId: string;
+            newSubId?: string;
+        };
+    };
+
     private _metamask: {
         isEnabled: () => boolean;
         isApproved: () => Promise<boolean>;
@@ -77,6 +86,8 @@ export default class BlankProvider
 
         this._handlers = {};
         this._requestId = 0;
+
+        this._ethSubscriptions = {};
 
         // Metamask compatibility
         this.isMetaMask = !this.isBlockWallet;
@@ -102,6 +113,40 @@ export default class BlankProvider
 
         // Set site icon
         this._setIcon();
+    }
+
+    private async reInitializeSubscriptions() {
+        for (const reqId in this._ethSubscriptions) {
+            const params = this._ethSubscriptions[reqId].params;
+            const request: RequestArguments = {
+                method: JSONRPCMethod.eth_subscribe,
+                params,
+            };
+            const newSubId = (await this._postMessage(
+                Messages.EXTERNAL.REQUEST,
+                request
+            )) as string;
+
+            this._ethSubscriptions[reqId].newSubId = newSubId;
+        }
+    }
+
+    /**
+     * handleSignal
+     *
+     * Handles a signal
+     *
+     * @param signal The signal received
+     */
+    public handleSignal(signal: Signals): void {
+        switch (signal) {
+            case Signals.SW_REINIT:
+                this.reInitializeSubscriptions();
+                break;
+            default:
+                log.debug('Unrecognized signal received');
+                break;
+        }
     }
 
     /**
@@ -172,6 +217,9 @@ export default class BlankProvider
         if (!handler.subscriber) {
             delete this._handlers[data.id];
         }
+
+        // check for subscription id in response
+        this.setEthSubscriptionsSubId(data);
 
         if (data.subscription) {
             (handler.subscriber as (data: any) => void)(data.subscription);
@@ -377,12 +425,20 @@ export default class BlankProvider
 
             this._handlers[id] = { reject, resolve, subscriber };
 
+            // If request is a subscription,
+            // store it for resubscription in case the SW is terminated
+            const updatedReq = this._checkForEthSubscriptions<TMessageType>(
+                message,
+                request,
+                id
+            );
+
             window.postMessage(
                 {
                     id,
                     message,
                     origin: Origin.PROVIDER,
-                    request: request || {},
+                    request: updatedReq ?? (request || {}),
                 } as WindowTransportRequestMessage,
                 window.location.href
             );
@@ -576,6 +632,56 @@ export default class BlankProvider
             ProviderEvents.notification,
             web3LegacyResponse.params.result
         );
+    };
+
+    private _checkForEthSubscriptions<TMessageType extends EXTERNAL>(
+        message: TMessageType,
+        request: RequestTypes[TMessageType] | undefined,
+        id: string
+    ): RequestTypes[EXTERNAL.REQUEST] | undefined {
+        if (message === EXTERNAL.REQUEST && request && 'method' in request) {
+            if (request.method === JSONRPCMethod.eth_subscribe) {
+                // TODO: remove old reqId handlers when replacing and keep new reqId with OLD subscriptionID
+                // Store request params for SW reinit
+                this._ethSubscriptions[id] = {
+                    params: request.params,
+                    subId: '',
+                };
+            } else if (request.method === JSONRPCMethod.eth_unsubscribe) {
+                // If this is an unsubscription, remove from the list so we won't
+                // subscribe again on SW termination
+                const [subscriptionId] = request.params as string[];
+                let newSubId = subscriptionId;
+                for (const reqId in this._ethSubscriptions) {
+                    const sub = this._ethSubscriptions[reqId];
+                    if (sub.subId === subscriptionId) {
+                        if (sub.newSubId) {
+                            newSubId = sub.newSubId;
+                        }
+                        delete this._ethSubscriptions[reqId];
+                        break;
+                    }
+                }
+                return {
+                    method: request.method,
+                    params: [newSubId],
+                };
+            }
+        }
+
+        return undefined;
+    }
+
+    /**
+     * Adds the new subscription id to the ethSubscriptions dictionary.
+     *
+     */
+    private setEthSubscriptionsSubId = <TMessageType extends MessageTypes>(
+        data: TransportResponseMessage<TMessageType>
+    ): void => {
+        if ('id' in data && data.id in this._ethSubscriptions) {
+            this._ethSubscriptions[data.id].subId = data.response as string;
+        }
     };
 
     /**

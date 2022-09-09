@@ -4,10 +4,15 @@ import {
     Origin,
     WindowTransportRequestMessage,
 } from '@block-wallet/background/utils/types/communication';
+import { Mutex } from 'async-mutex';
 import log from 'loglevel';
+import { SignalMessage, Signals } from './types';
 import { checkScriptLoad } from './utils/site';
 
 const SW_KEEP_ALIVE_INTERVAL = 10;
+let SW_ALIVE = false;
+let portReinitialized = false;
+
 setInterval(() => {
     chrome.runtime.sendMessage({ message: CONTENT.SW_KEEP_ALIVE }, () => {
         if (chrome.runtime.lastError) {
@@ -15,6 +20,11 @@ setInterval(() => {
                 'Error keeping alive:',
                 chrome.runtime.lastError.message || chrome.runtime.lastError
             );
+            const err = chrome.runtime.lastError.message || '';
+            SW_ALIVE = !err.includes('Receiving end does not exist');
+            portReinitialized = SW_ALIVE;
+        } else {
+            SW_ALIVE = true;
         }
     });
 }, SW_KEEP_ALIVE_INTERVAL);
@@ -24,6 +34,7 @@ function sleep(ms: number): Promise<unknown> {
 }
 
 let port: chrome.runtime.Port | undefined = undefined;
+const initMutex: Mutex = new Mutex();
 
 // Check background settings for script load
 chrome.runtime.sendMessage(
@@ -73,7 +84,7 @@ const windowListener = async ({
         data: WindowTransportRequestMessage
     ): Promise<void> => {
         try {
-            if (!port) {
+            if (!SW_ALIVE || !port) {
                 // Port was reinitialized, force retry
                 throw new Error();
             }
@@ -81,13 +92,14 @@ const windowListener = async ({
         } catch (error) {
             // If this fails due to SW being inactive, retry
             await sleep(30);
-            log.debug('port was reinitialized');
+            log.debug('waiting for SW to startup...');
             return postMessage(data);
         }
     };
 
     return postMessage(data);
 };
+
 window.addEventListener('message', (message) => {
     windowListener(message);
 });
@@ -105,9 +117,34 @@ const init = () => {
         );
     });
     port.onDisconnect.addListener(() => {
-        log.info('SW went inactive, reinitializing...');
-        init();
+        initMutex.runExclusive(async () => {
+            log.info('port disconnection');
+            SW_ALIVE = false; // If we've reached this point, we can't expect this to be false and wait until this has changed.
+            await sleep(200);
+
+            // Port has been disconnected, reinitialize once
+            while (SW_ALIVE === false) {
+                log.debug('waiting for SW to be restarted...');
+                await sleep(100);
+            }
+
+            if (!portReinitialized) {
+                log.info('reinitializing port...');
+
+                init();
+
+                // Signal SW_REINIT in case there were active subscriptions
+                window.postMessage(
+                    {
+                        signal: Signals.SW_REINIT,
+                        origin: Origin.BACKGROUND,
+                    } as SignalMessage,
+                    window.location.href
+                );
+            }
+        });
     });
+    portReinitialized = true;
 };
 
 init();

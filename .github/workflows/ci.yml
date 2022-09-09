@@ -240,6 +240,7 @@ jobs:
       - name: Install yarn
         run: |
           npm install --global yarn
+          yarn global add yarn
 
       - name: Install e2e dependencies
         run: |

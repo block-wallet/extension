@@ -4,6 +4,7 @@
     "private": true,
     "dependencies": {
         "@metamask/safe-event-emitter": "^2.0.0",
+        "async-mutex": "^0.4.0",
         "eth-rpc-errors": "^4.0.3",
         "loglevel": "^1.8.0"
     },

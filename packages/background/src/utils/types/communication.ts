@@ -125,6 +125,7 @@ export enum EXTERNAL {
     EVENT_SUBSCRIPTION = 'EVENT_SUBSCRIPTION',
     REQUEST = 'EXTERNAL_REQUEST',
     SETUP_PROVIDER = 'SETUP_PROVIDER',
+    SW_REINIT = 'SW_REINIT',
     SET_ICON = 'SET_ICON',
 }
 
@@ -362,6 +363,7 @@ export interface RequestSignatures {
     [Messages.EXCHANGE.EXECUTE]: [RequestExecuteExchange, string];
     [Messages.EXTERNAL.REQUEST]: [RequestExternalRequest, unknown];
     [Messages.EXTERNAL.SETUP_PROVIDER]: [undefined, ProviderSetupData];
+    [Messages.EXTERNAL.SW_REINIT]: [void, void];
     [Messages.EXTERNAL.SET_ICON]: [RequestSetIcon, boolean];
     [Messages.NETWORK.CHANGE]: [RequestNetworkChange, boolean];
     [Messages.NETWORK.SET_SHOW_TEST_NETWORKS]: [

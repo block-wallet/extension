@@ -1,6 +1,6 @@
 import DropDownSelector from "../input/DropDownSelector"
 import SearchInput from "../input/SearchInput"
-import TokenDisplay from "../TokenDisplay"
+import TokenDisplay from "../token/TokenDisplay"
 import plusIcon from "../../assets/images/icons/plus.svg"
 import {
     ChangeEvent,
@@ -24,7 +24,7 @@ import { useCustomCompareEffect } from "use-custom-compare"
 import { useDepositTokens } from "../../context/hooks/useDepositTokens"
 import { useSwappedTokenList } from "../../context/hooks/useSwappedTokenList"
 import classnames from "classnames"
-import TokenLogo from "../TokenLogo"
+import TokenLogo from "../token/TokenLogo"
 
 export enum AssetListType {
     ALL = "ALL",

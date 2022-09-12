@@ -740,9 +740,9 @@ export class TornadoNotesService extends NotesService {
         let depositIndex = isReconstruct
             ? 0
             : await this._blankDepositVault.getDerivedDepositIndex(
-                currencyAmountPair,
-                chainId
-            );
+                  currencyAmountPair,
+                  chainId
+              );
 
         // Disabled rule as needed to iterate through all the deposits
         // eslint-disable-next-line no-constant-condition

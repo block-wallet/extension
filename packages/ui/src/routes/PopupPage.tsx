@@ -33,7 +33,7 @@ import { useConnectedSite } from "../context/hooks/useConnectedSite"
 import { useTokensList } from "../context/hooks/useTokensList"
 
 // Assets
-import TokenSummary from "../components/TokenSummary"
+import TokenSummary from "../components/token/TokenSummary"
 import GasPricesInfo from "../components/gas/GasPricesInfo"
 import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
 

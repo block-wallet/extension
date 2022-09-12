@@ -2,10 +2,10 @@ import { useState, FunctionComponent } from "react"
 import classnames from "classnames"
 
 // Assets
-import checkmarkMiniIcon from "../assets/images/icons/checkmark_mini.svg"
+import checkmarkMiniIcon from "../../assets/images/icons/checkmark_mini.svg"
 
 // Types
-import { TokenResponse } from "../routes/settings/AddTokensPage"
+import { TokenResponse } from "../../routes/settings/AddTokensPage"
 import TokenLogo from "./TokenLogo"
 
 type TokenDisplayType = {

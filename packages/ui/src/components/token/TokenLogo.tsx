@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from "react"
 
 // Assets
-import unknownTokenIcon from "../assets/images/unknown_token.svg"
+import unknownTokenIcon from "../../assets/images/unknown_token.svg"
 import classnames from "classnames"
 
 type TokenLogoType = {

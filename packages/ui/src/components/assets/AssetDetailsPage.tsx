@@ -19,7 +19,7 @@ import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
 import openExternal from "../../assets/images/icons/open_external.svg"
 import PopupHeader from "../popup/PopupHeader"
 import PopupLayout from "../popup/PopupLayout"
-import TokenSummary from "../TokenSummary"
+import TokenSummary from "../token/TokenSummary"
 import TransactionsList from "../transactions/TransactionsList"
 
 import log from "loglevel"

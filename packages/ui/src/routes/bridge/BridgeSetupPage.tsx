@@ -538,8 +538,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 {/* Asset in destination */}
                 {availableRoutes.length
                     ? selectedToNetwork && (
-                          <div className="pt-3">
-                              <AssetAmountDisplay
+                    <div className="pt-3">
+                        <AssetAmountDisplay
                                   asset={
                                       getRouteForNetwork(
                                           availableRoutes,
@@ -553,7 +553,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                       )
                                   }
                               />
-                          </div>
+                    </div>
                       )
                     : null}
             </div>

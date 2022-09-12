@@ -358,7 +358,6 @@ const getTransactionTimeOrStatus = (
     confirmationTime: number | undefined,
     submittedTime: number | undefined,
     time: number,
-    index: number,
     isQueued: boolean,
     forceDrop: boolean,
     bridgeParams?: BridgeTransactionParams
@@ -391,7 +390,6 @@ const getTransactionTimeOrStatus = (
             status,
             metaType,
             confirmationTime || submittedTime || time,
-            index,
             isQueued
         )
     }
@@ -593,7 +591,6 @@ const TransactionItem: React.FC<{
                             confirmationTime,
                             submittedTime,
                             time,
-                            index,
                             isQueued || false,
                             forceDrop || false,
                             bridgeParams

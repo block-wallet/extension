@@ -70,7 +70,6 @@ import {
     GetBridgeQuoteResponse,
 } from "@block-wallet/background/controllers/BridgeController"
 import { capitalize } from "../../util/capitalize"
-import { parseUnits } from "ethers/lib/utils"
 import TransactionDetails from "../../components/transactions/TransactionDetails"
 import { WithRequired } from "@block-wallet/background/utils/types/helpers"
 
@@ -88,7 +87,7 @@ const QUOTE_REFRESH_TIMEOUT = 1000 * 15
 
 const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const history = useOnMountHistory()
-    const { amount, bridgeQuote, network, token } = useMemo(
+    const { bridgeQuote, network, token } = useMemo(
         () => history.location.state as BridgeConfirmPageLocalState,
         [history.location.state]
     )
@@ -186,7 +185,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const [selectedGasPrice, setSelectedGasPrice] = useState(
         BigNumber.from(gasPricesLevels.average.gasPrice ?? "0")
     )
-    const [selectedGasLimit, setSelectedGasLimit] = useState(BigNumber.from(0))
+    const [selectedGasLimit, setSelectedGasLimit] = useState(
+        BigNumber.from(
+            bridgeQuote.bridgeParams.params.transactionRequest.gasLimit || 0
+        )
+    )
 
     const isBridging = status === "loading" && isOpen
     const shouldFetchBridgeParams = status !== "loading" && status !== "success"
@@ -195,10 +198,6 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         ? `${Math.floor(remainingSeconds!)}s`
         : ""
     const networkLabel = availableNetworks[selectedNetwork.toUpperCase()]
-    const bnAmount = parseUnits(
-        amount || "0",
-        bridgeQuote.bridgeParams.params.fromToken.decimals
-    )
 
     // Balance check
     const feePerGas = isEIP1559Compatible
@@ -208,7 +207,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const fee = selectedGasLimit.mul(feePerGas)
     const isBridgingNativeToken = isBridgeNativeTokenAddress(token.address)
     const total = isBridgingNativeToken
-        ? BigNumber.from(token.address).add(fee)
+        ? BigNumber.from(
+              quote?.bridgeParams.params.fromAmount ||
+                  bridgeQuote.bridgeParams.params.fromAmount
+          ).add(fee)
         : fee
 
     const hasNativeAssetBalance = useHasSufficientBalance(
@@ -216,7 +218,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         nativeToken.token
     )
     const hasFromTokenBalance = useHasSufficientBalance(
-        BigNumber.from(0),
+        BigNumber.from(
+            quote?.bridgeParams.params.fromAmount ||
+                bridgeQuote.bridgeParams.params.fromAmount
+        ),
         token
     )
 
@@ -268,18 +273,18 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
             toChainId: bridgeQuote.bridgeParams.params.toChainId,
             fromTokenAddress: bridgeQuote.bridgeParams.params.fromToken.address,
             toTokenAddress: bridgeQuote.bridgeParams.params.toToken.address,
-            fromAmount: bnAmount.toString(),
+            fromAmount: bridgeQuote.bridgeParams.params.fromAmount,
             fromAddress: selectedAccount.address,
             slippage: advancedSettings.slippage,
         }
 
         setIsFetchingParams(true)
+        setTimeoutStart(new Date().getTime())
 
         try {
-            const quote = await getBridgeQuote(params)
+            const fetchedQuote = await getBridgeQuote(params)
 
-            setQuote(quote)
-            setTimeoutStart(new Date().getTime())
+            setQuote(fetchedQuote)
         } catch (error) {
             setError(capitalize(error.message || "Error fetching quote"))
         } finally {
@@ -287,7 +292,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedAccount.address, advancedSettings.slippage])
+    }, [advancedSettings.slippage])
 
     // Initialize gas
     useEffect(() => {
@@ -336,6 +341,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
 
         //first render, run function manually
         updateBridgeParameters()
+
         let intervalRef = setInterval(
             updateBridgeParameters,
             QUOTE_REFRESH_TIMEOUT
@@ -479,7 +485,12 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
             />
             <div className="flex flex-col px-6 py-3">
                 {/* From Token */}
-                <AssetAmountDisplay asset={token} amount={bnAmount} />
+                <AssetAmountDisplay
+                    asset={token}
+                    amount={BigNumber.from(
+                        bridgeQuote.bridgeParams.params.fromAmount
+                    )}
+                />
 
                 {/* Divider */}
                 <div className="pt-6">

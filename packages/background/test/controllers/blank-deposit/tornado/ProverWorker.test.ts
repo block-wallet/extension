@@ -1,6 +1,6 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
-import { bigInt } from 'snarkjs';
+import { bigInt } from '@block-wallet/snarkjs';
 
 describe('ProverWorker', () => {
     beforeEach(async () => {

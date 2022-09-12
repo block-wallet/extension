@@ -38,7 +38,7 @@
         "@types/chai": "^4.2.14",
         "@types/chrome": "^0.0.137",
         "@types/create-hash": "^1.2.2",
-        "@types/lodash": "^4.14.168",
+        "@types/lodash": "^4.14.185",
         "@types/mocha": "^8.2.0",
         "@types/node": "^16.9.1",
         "@types/semver": "^7.3.9",

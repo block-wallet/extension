@@ -46,6 +46,31 @@ See the [guideline](docs/guideline.md)
 
 ### Installing
 
+#### Prerequisites
+
+You need a GitHub token with read:packages access to the **block-wallet** GitHub organization in order to download some private libraries. The steps are:
+
+1. Create a file ```~/.npmrc``` file with this configuration:
+
+```
+//npm.pkg.github.com/:_authToken=REGISTRY_AUTH_TOKEN
+@block-wallet:registry=https://npm.pkg.github.com/
+@block-wallet:always-auth=true
+```
+
+where **REGISTRY_AUTH_TOKEN** is a token generated here https://github.com/settings/tokens with at least read access to the packages.
+
+
+2. Use the ```npm login``` command to authenticate:
+
+```
+npm login --scope=@block-wallet --registry=https://npm.pkg.github.com
+```
+
+That command will ask for your GitHub username, password (use the GitHub token generated before) and also the email.
+
+#### Install
+
 To install all the dependencies run the command
 
 ```

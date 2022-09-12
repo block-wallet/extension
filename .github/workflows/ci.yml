@@ -11,7 +11,7 @@ env:
 
 jobs:
   lint:
-    runs-on: [self-hosted, small]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v3
@@ -20,6 +20,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
+          registry-url: https://npm.pkg.github.com
 
       - name: Install yarn
         run: |
@@ -44,10 +45,11 @@ jobs:
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           make install/ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
       - name: Check lint in un
         run: |
@@ -65,7 +67,7 @@ jobs:
           yarn lint
 
   test:
-    runs-on: [self-hosted, large]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2
@@ -74,6 +76,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
+          registry-url: https://npm.pkg.github.com
 
       - name: Install yarn
         run: |
@@ -98,10 +101,11 @@ jobs:
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           make install/ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
       - name: Build tailwind
         run: |
@@ -129,7 +133,7 @@ jobs:
   build:
     env:
       ENVIRONMENT: prod
-    runs-on: [self-hosted, large]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v2
@@ -138,6 +142,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
+          registry-url: https://npm.pkg.github.com
 
       - name: Install yarn
         run: |
@@ -162,10 +167,11 @@ jobs:
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           make install/ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
       - name: Build extension
         env:
@@ -177,9 +183,6 @@ jobs:
         if: startsWith(github.ref_name, 'dependabot/') == false
         id: zip
         run: |
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
-          apt update
-          apt install -y zip
           file=block-wallet-${GITHUB_SHA::7}
           zip -r -D $file dist/
           echo "::set-output name=file::$file.zip"
@@ -211,7 +214,8 @@ jobs:
 
   e2e:
     needs: [build]
-    runs-on: [self-hosted, large]
+    container: cypress/browsers:node16.13.2-chrome97-ff96
+    runs-on: ubuntu-latest
     if: startsWith(github.ref_name, 'dependabot/') == false
     steps:
       - name: Checkout e2e repository
@@ -237,40 +241,9 @@ jobs:
         run: |
           npm install --global yarn
 
-      - name: Cache e2e dependencies and cypress binary
-        id: cache-cypress
-        uses: actions/cache@v3
-        with:
-          path: |
-            **/node_modules
-            ~/.cache/Cypress
-          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
-
-      - name: Install Cypress linux dependencies
-        run: |
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
-          apt update
-          apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
-
       - name: Install e2e dependencies
         run: |
-          yarn install --prefer-offline --frozen-lockfile
-
-      - name: Cache Chrome
-        uses: actions/cache@v3
-        id: cache-chrome
-        with:
-          path: /usr/src/google-chrome-stable_current_amd64.deb
-          key: ${{ env.CHROME_VERSION }}
-
-      - name: Download Chrome
-        if: steps.cache-chrome.outputs.cache-hit != 'true'
-        run: |
-          wget -O /usr/src/google-chrome-stable_current_amd64.deb "http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_$CHROME_VERSION-1_amd64.deb"
-
-      - name: Install Chrome
-        run: |
-          apt install -y /usr/src/google-chrome-stable_current_amd64.deb
+          yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
 
       - name: Download the extension url
         uses: actions/download-artifact@v3
@@ -280,7 +253,6 @@ jobs:
 
       - name: Download extension
         run: |
-          apt install -y unzip
           url=$(cat $BLOCK_WALLET_FOLDER/$BLOCK_WALLET_URL)
           wget $url -O blockwallet-extension.zip
           rm -rf blockwallet-extension

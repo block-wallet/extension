@@ -200,6 +200,17 @@
   version "0.0.13"
   resolved "https://github.com/block-wallet/chains-assets#b062d08ead2c181f357db83802e7abcfd4e185b0"
 
+"@block-wallet/circomlib@^0.0.21":
+  version "0.0.21"
+  resolved "https://npm.pkg.github.com/download/@block-wallet/circomlib/0.0.21/a5ca855c3bfab5c94422bea309d5124679f3ab32#a5ca855c3bfab5c94422bea309d5124679f3ab32"
+  integrity sha512-l032+IF8AMiZwjPdT5DHmTcB6bwZlrZ6+IpBi8NJhoJiitFlYrD71i5Km3eiBCVxZJQ0b47rVcv6g+sdLI5+pQ==
+  dependencies:
+    "@block-wallet/snarkjs" "^0.1.20"
+    blake-hash "^1.1.0"
+    blake2b "^2.1.3"
+    typedarray-to-buffer "^3.1.5"
+    web3 "^1.2.11"
+
 "@block-wallet/eth-ledger-bridge-keyring@https://github.com/block-wallet/eth-ledger-bridge-keyring":
   version "0.13.0"
   resolved "https://github.com/block-wallet/eth-ledger-bridge-keyring#82264f04ad42616952989298e26d915c0fe07c3c"
@@ -212,6 +223,33 @@
 "@block-wallet/explorer-link@https://github.com/block-wallet/explorer-link#v2.2.2":
   version "2.2.2"
   resolved "https://github.com/block-wallet/explorer-link#06beadc0eed8b3aed7c3b3813288ac85b5e99a19"
+
+"@block-wallet/fixed-merkle-tree@^0.6.1":
+  version "0.6.1"
+  resolved "https://npm.pkg.github.com/download/@block-wallet/fixed-merkle-tree/0.6.1/23e5be3443afedc2977cbdc9a97dc214ecae0bb4#23e5be3443afedc2977cbdc9a97dc214ecae0bb4"
+  integrity sha512-h5qXUmIFbutwuecljLJmAGOfNLZKQx6UrEEKI8HlIKCm8YGGqrmHlDsJSW335T4k4nm1ULUDyvlCaqXS3uf5hg==
+  dependencies:
+    "@block-wallet/circomlib" "^0.0.21"
+    "@block-wallet/snarkjs" "^0.1.20"
+
+"@block-wallet/snarkjs@^0.1.20":
+  version "0.1.20"
+  resolved "https://npm.pkg.github.com/download/@block-wallet/snarkjs/0.1.20/fd901edd95d332f96f6c410d90f7c18629fc5c7c#fd901edd95d332f96f6c410d90f7c18629fc5c7c"
+  integrity sha512-MorQTUMLErJ6mi7nn7gTSY16ilhZULNQqPvLV9NvWtDQDTSbItnaTE3OHz3HovRsDn3Mt4/aoAT81vFxiNy5Vg==
+  dependencies:
+    big-integer "^1.6.43"
+    chai "^4.2.0"
+    escape-string-regexp "^1.0.5"
+    eslint "^5.16.0"
+    keccak "^2.0.0"
+    yargs "^12.0.5"
+
+"@block-wallet/websnark@^0.0.5":
+  version "0.0.5"
+  resolved "https://npm.pkg.github.com/download/@block-wallet/websnark/0.0.5/586e5887aed996958da118336e5ef67e395fdf0c#586e5887aed996958da118336e5ef67e395fdf0c"
+  integrity sha512-hg0eyAyJM9M4r88Ipd4OnVSOaPcAX0Ja7h/6mIS0S0h7ad+w9/pW/9uel3BuxVaoy026HQus2BYM4+ZSvZwFEw==
+  dependencies:
+    big-integer "^1.6.42"
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
@@ -2251,16 +2289,6 @@ cipher-base@^1.0.0, cipher-base@^1.0.1, cipher-base@^1.0.3:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
 
-"circomlib@git+https://github.com/tornadocash/circomlib.git#5beb6aee94923052faeecea40135d45b6ce6172c", "circomlib@https://github.com/block-wallet/circomlib#v0.0.1":
-  version "0.0.20"
-  resolved "https://github.com/block-wallet/circomlib#9368976e2dc2b83ceefabf1c83081d3e9d81f60c"
-  dependencies:
-    blake-hash "^1.1.0"
-    blake2b "^2.1.3"
-    snarkjs "https://github.com/block-wallet/snarkjs#v0.1.21"
-    typedarray-to-buffer "^3.1.5"
-    web3 "^1.2.11"
-
 class-is@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/class-is/-/class-is-1.1.0.tgz#9d3c0fba0440d211d843cec3dedfa48055005825"
@@ -3687,14 +3715,6 @@ find-up@^4.0.0, find-up@^4.1.0:
   dependencies:
     locate-path "^5.0.0"
     path-exists "^4.0.0"
-
-fixed-merkle-tree@^0.6.0:
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/fixed-merkle-tree/-/fixed-merkle-tree-0.6.1.tgz#ff64bf0beb5d862e73d6c643950926b05b440926"
-  integrity sha512-cYwK8ZJRC/qlRwB6f1WDbqDi3SLSraFr9LQp948U3LmHZpF0VnuB0QOsLhMVwOpR1eJ178oiqz0JcwaupRU9kA==
-  dependencies:
-    circomlib "git+https://github.com/tornadocash/circomlib.git#5beb6aee94923052faeecea40135d45b6ce6172c"
-    snarkjs "git+https://github.com/tornadocash/snarkjs.git#869181cfaf7526fe8972073d31655493a04326d5"
 
 flat-cache@^2.0.1:
   version "2.0.1"
@@ -6705,18 +6725,6 @@ slice-ansi@^2.1.0:
     astral-regex "^1.0.0"
     is-fullwidth-code-point "^2.0.0"
 
-"snarkjs@git+https://github.com/tornadocash/snarkjs.git#869181cfaf7526fe8972073d31655493a04326d5", "snarkjs@https://github.com/block-wallet/snarkjs#v0.1.21", "snarkjs@https://github.com/block-wallet/snarkjs.git#v0.1.21":
-  version "0.1.20"
-  uid "4b9003c21f480149c2f21c14156efe6b6cafd8e0"
-  resolved "https://github.com/block-wallet/snarkjs.git#4b9003c21f480149c2f21c14156efe6b6cafd8e0"
-  dependencies:
-    big-integer "^1.6.43"
-    chai "^4.2.0"
-    escape-string-regexp "^1.0.5"
-    eslint "^5.16.0"
-    keccak "^2.0.0"
-    yargs "^12.0.5"
-
 source-map-support@^0.5.6, source-map-support@~0.5.20:
   version "0.5.21"
   resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.5.21.tgz#04fe7c7f9e1ed2d662233c28cb2b35b9f63f6e4f"
@@ -7859,12 +7867,6 @@ webpack@^5.74.0:
     terser-webpack-plugin "^5.1.3"
     watchpack "^2.4.0"
     webpack-sources "^3.2.3"
-
-"websnark@https://github.com/block-wallet/websnark#v0.0.1":
-  version "0.0.4"
-  resolved "https://github.com/block-wallet/websnark#2a63be6114f875331e2c051b378781a52745b160"
-  dependencies:
-    big-integer "^1.6.42"
 
 websocket@^1.0.32:
   version "1.0.34"

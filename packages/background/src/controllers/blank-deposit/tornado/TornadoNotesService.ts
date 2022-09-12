@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber, Contract } from 'ethers';
-import { bigInt } from 'snarkjs';
+import { bigInt } from '@block-wallet/snarkjs';
 import { v4 as uuid } from 'uuid';
 
 import { INoteDeposit } from '../notes/INoteDeposit';

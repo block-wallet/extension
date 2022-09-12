@@ -43,9 +43,9 @@ install:
 	@cd packages/provider && yarn install
 
 install/ci:
-	@cd packages/background && yarn install --prefer-offline --frozen-lockfile
-	@cd packages/ui && yarn install --prefer-offline --frozen-lockfile
-	@cd packages/provider && yarn install --prefer-offline --frozen-lockfile
+	@cd packages/background && yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
+	@cd packages/ui && yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
+	@cd packages/provider && yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
 
 # Commented due to feature deprecation
 # cp/snarks:

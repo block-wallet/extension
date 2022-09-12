@@ -26,7 +26,7 @@ env:
 
 jobs:
   validation:
-    runs-on: [self-hosted, small]
+    runs-on: ubuntu-latest
     steps:
       - name: Print user input
         run: |
@@ -86,7 +86,7 @@ jobs:
 
   build:
     needs: validation
-    runs-on: [self-hosted, large]
+    runs-on: ubuntu-latest
     outputs:
       version_without_preffix: ${{ steps.remove_preffix.outputs.version }}
     steps:
@@ -147,6 +147,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
+          registry-url: https://npm.pkg.github.com
 
       - name: Install yarn
         run: |
@@ -171,10 +172,11 @@ jobs:
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}
         run: |
           make install/ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
       - name: Build extension
         env:
@@ -191,7 +193,8 @@ jobs:
 
   tests:
     needs: build
-    runs-on: [self-hosted, large]
+    container: cypress/browsers:node16.13.2-chrome97-ff96
+    runs-on: ubuntu-latest
     env:
       WIDTH: 357
       HEIGHT: 610
@@ -213,13 +216,12 @@ jobs:
         run: |
           npm install --global yarn
 
-      - name: Cache e2e dependencies and cypress binary
+      - name: Cache e2e dependencies
         id: cache-cypress
         uses: actions/cache@v3
         with:
           path: |
             **/node_modules
-            ~/.cache/Cypress
           key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
 
       - name: Download the extension
@@ -228,31 +230,9 @@ jobs:
           name: blockwallet-extension
           path: blockwallet-extension
 
-      - name: Install Cypress linux dependencies
-        run: |
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
-          apt update
-          apt install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
-
       - name: Install e2e dependencies
         run: |
-          yarn install --prefer-offline --frozen-lockfile
-
-      - name: Cache Chrome
-        uses: actions/cache@v3
-        id: cache-chrome
-        with:
-          path: /usr/src/google-chrome-stable_current_amd64.deb
-          key: ${{ env.CHROME_VERSION }}
-
-      - name: Download Chrome
-        if: steps.cache-chrome.outputs.cache-hit != 'true'
-        run: |
-          wget -O /usr/src/google-chrome-stable_current_amd64.deb "http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_$CHROME_VERSION-1_amd64.deb"
-
-      - name: Install Chrome
-        run: |
-          apt install -y /usr/src/google-chrome-stable_current_amd64.deb
+          yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
 
       - name: UI Tests - Chrome
         run: |
@@ -273,7 +253,7 @@ jobs:
 
       - name: Install ImageMagick (needed for convert)
         run: |
-          apt install -y imagemagick
+          sudo apt install -y imagemagick
 
       - name: Cut the screenshot
         run: |
@@ -288,7 +268,7 @@ jobs:
 
   package:
     needs: tests
-    runs-on: [self-hosted, small]
+    runs-on: ubuntu-latest
     steps:
       - name: Delete artifacts folders
         run: |
@@ -310,9 +290,6 @@ jobs:
       - name: Zip extension
         id: zip
         run: |
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
-          apt update
-          apt install -y zip
           mkdir -p $ARTIFACTS_FOLDER
           mv blockwallet-extension dist
           zip -r -D $ARTIFACTS_FOLDER/$EXTENSION_NAME.zip dist/
@@ -355,7 +332,7 @@ jobs:
     outputs:
       pr_url: ${{ steps.create_pull_request.outputs.pr_url }}
     needs: package
-    runs-on: [self-hosted, small]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -368,14 +345,6 @@ jobs:
           git config --global user.email release_process@blockwallet.io
           git config --global url.https://$GH_ACCESS_TOKEN@github.com/.insteadOf https://github.com/
 
-      - name: Install GitHub cli
-        run: |
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4EB27DB2A3B88B8B
-          apt update
-          apt install gh
-
       - name: Create Pull Request
         id: create_pull_request
         env:
@@ -383,7 +352,7 @@ jobs:
         run: |
           s3_url=$(echo "${S3_PATH/s3/https}")
           pr_title="[Automated] Extension release ${{ github.event.inputs.extension-version }}"
-          pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip]($s3_url/${{ env.EXTENSION_NAME }}.zip)\n - [SHA256 checksum]($s3_url/${{ env.EXTENSION_NAME }}.checksum)\n\n")
+          pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip]($s3_url/${{ env.EXTENSION_NAME }}.zip)\n - [Release notes screenshot]($s3_url/${{ env.EXTENSION_NAME }}.png)\n - [SHA256 checksum]($s3_url/${{ env.EXTENSION_NAME }}.checksum)\n\n")
           pr_reviewer="block-wallet/releasereviewers"
           pr_assignee="leablock"
           pr_label="automated,release"
@@ -410,7 +379,7 @@ jobs:
   notify:
     if: success()
     needs: [validation, build, tests, package, pull_request]
-    runs-on: [self-hosted, small]
+    runs-on: ubuntu-latest
     steps:
       - name: Slack notification - Ready to release
         uses: 8398a7/action-slack@v3
@@ -436,7 +405,7 @@ jobs:
   error:
     if: failure()
     needs: [validation, build, tests, package, pull_request, notify]
-    runs-on: [self-hosted, small]
+    runs-on: ubuntu-latest
     steps:
       - name: Slack notification - CI status
         uses: 8398a7/action-slack@v3

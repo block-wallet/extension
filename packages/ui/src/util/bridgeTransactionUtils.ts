@@ -3,7 +3,6 @@ import {
     TransactionMeta,
 } from "@block-wallet/background/controllers/transactions/utils/types"
 import { BridgeStatus, BridgeSubstatus } from "../context/commTypes"
-import { capitalize } from "./capitalize"
 import useGetBridgeDetails from "./hooks/useGetBridgeDetails"
 
 interface BridgeAdditonalExplorer {
@@ -44,9 +43,7 @@ export const getAdditionalBridgeExplorer = (
         ) {
             const txData = bridgeDetails.receivingTransaction
             return {
-                viewOnText: `View destination transaction on ${capitalize(
-                    txData.explorerName!
-                )}`,
+                viewOnText: `View destination transaction on ${txData.explorerName!}`,
                 explorerLink: txData.explorerLink!,
             }
         } else if (
@@ -55,9 +52,7 @@ export const getAdditionalBridgeExplorer = (
         ) {
             const txData = bridgeDetails.sendingTransaction
             return {
-                viewOnText: `View origin transaction on ${capitalize(
-                    txData.explorerName!
-                )}`,
+                viewOnText: `View origin transaction on ${txData.explorerName!}`,
                 explorerLink: txData.explorerLink!,
             }
         }

@@ -116,11 +116,7 @@ export default class BlankProvider
     }
 
     private async reInitializeSubscriptions() {
-        console.log(
-            'reInitializeSubscriptions',
-            'init',
-            this._ethSubscriptions
-        );
+        log.trace('reInitializeSubscriptions', 'init', this._ethSubscriptions);
         for (const reqId in this._ethSubscriptions) {
             const { params, subId, prevSubId } = this._ethSubscriptions[reqId];
             const request: RequestArguments = {
@@ -128,7 +124,7 @@ export default class BlankProvider
                 params,
             };
 
-            console.log(reqId, 'request', request);
+            log.trace(reqId, 'request', request);
             await this._postMessage(
                 Messages.EXTERNAL.REQUEST,
                 request,
@@ -138,7 +134,7 @@ export default class BlankProvider
             this._ethSubscriptions[reqId].prevSubId =
                 prevSubId && prevSubId !== '' ? prevSubId : subId;
         }
-        console.log('reInitializeSubscriptions', 'end', this._ethSubscriptions);
+        log.trace('reInitializeSubscriptions', 'end', this._ethSubscriptions);
     }
 
     /**
@@ -394,7 +390,6 @@ export default class BlankProvider
     private _eventSubscription = async (
         cb: (state: ExternalEventSubscription) => void
     ): Promise<boolean> => {
-        console.log('_eventSubscription');
         return this._postMessage(
             Messages.EXTERNAL.EVENT_SUBSCRIPTION,
             undefined,
@@ -629,8 +624,6 @@ export default class BlankProvider
      * @param message The received subscription message
      */
     private _emitSubscriptionMessage = (message: EthSubscription) => {
-        console.log('_emitSubscriptionMessage', message);
-
         // re-write subscription id
         for (const reqId in this._ethSubscriptions) {
             const { prevSubId, subId } = this._ethSubscriptions[reqId];
@@ -647,7 +640,7 @@ export default class BlankProvider
                     },
                 };
 
-                console.log(
+                log.trace(
                     '_emitSubscriptionMessage',
                     'message overridden',
                     message
@@ -704,7 +697,7 @@ export default class BlankProvider
                     }
                 }
 
-                console.log(
+                log.trace(
                     'eth_unsubscribe',
                     'subIdToUnsubscribe',
                     subIdToUnsubscribe,
@@ -729,7 +722,7 @@ export default class BlankProvider
         data: TransportResponseMessage<TMessageType>
     ): void => {
         if ('id' in data && data.id in this._ethSubscriptions) {
-            console.log(
+            log.trace(
                 'setEthSubscriptionsSubId',
                 'found',
                 this._ethSubscriptions[data.id],

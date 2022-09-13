@@ -25,8 +25,12 @@ export const checkForBridgeNativeAsset = (address: string): string => {
 
 export const getRouteForNetwork = (
     availableRoutes: IBridgeRoute[],
-    network: IChain
-): IBridgeRoute => {
+    network?: IChain
+): IBridgeRoute | undefined => {
+    if (!network) {
+        return undefined
+    }
+
     return availableRoutes.filter((route) => route.toChainId === network.id)[0]
 }
 

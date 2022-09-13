@@ -43,9 +43,9 @@ import {
     BridgeQuoteRequest,
     GetBridgeQuoteResponse,
 } from "@block-wallet/background/controllers/BridgeController"
-import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { ApproveOperation } from "../transaction/ApprovePage"
 import { BridgeAllowanceCheck } from "../../context/commTypes"
+import { defaultAdvancedSettings } from "../../components/transactions/AdvancedSettings"
 
 interface SetupBridgePageLocalState {
     amount?: string
@@ -83,12 +83,12 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         availableBridgeChains,
     } = useBlankState()!
     const { nativeToken } = useTokensList()
-    const selectedAccount = useSelectedAccount()
 
     // State
     const [error, setError] = useState<string | undefined>(undefined)
     const [inputFocus, setInputFocus] = useState(false)
-    const [isLoading, setIsLoading] = useState<boolean>(false)
+    const [isFetchingRoutes, setIsFetchingRoutes] = useState<boolean>(false)
+    const [isFetchingQuote, setisFetchingQuote] = useState<boolean>(false)
     const [availableRoutes, setAvailableRoutes] = useState<IBridgeRoute[]>(
         routes || []
     )
@@ -112,20 +112,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 }
             }, []),
         })
-    const selectedTokenBalance = useTokenBalance(bridgeDataState.token)
 
-    const currentNetwork = availableNetworks[selectedNetwork.toUpperCase()]
-    const filteredAvailableNetworks = availableBridgeChains.filter((chain) => {
-        for (let i = 0; i < availableRoutes.length; i++) {
-            if (
-                chain.id === availableRoutes[i].toChainId &&
-                chain.id !== currentNetwork.chainId
-            ) {
-                return true
-            }
-        }
-        return false
-    })
+    const selectedTokenBalance = useTokenBalance(bridgeDataState.token)
 
     const {
         token: selectedToken,
@@ -157,6 +145,24 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
     const watchedAmount = watch("amount")
 
+    const currentNetwork = availableNetworks[selectedNetwork.toUpperCase()]
+    const isUsingNetworkNativeCurrency =
+        selectedToken?.address === nativeToken.token.address
+    const maxAmount = selectedTokenBalance
+    const isMaxAmountEnabled =
+        maxAmount && !(bigNumberAmount && maxAmount.eq(bigNumberAmount))
+    const selectedRoute = getRouteForNetwork(availableRoutes, selectedToNetwork)
+    const filteredAvailableNetworks = availableBridgeChains.filter((chain) => {
+        for (let i = 0; i < availableRoutes.length; i++) {
+            if (
+                chain.id === availableRoutes[i].toChainId &&
+                chain.id !== currentNetwork.chainId
+            ) {
+                return true
+            }
+        }
+        return false
+    })
     const formattedAmount =
         selectedToken && bigNumberAmount
             ? formatCurrency(
@@ -173,11 +179,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                   }
               )
             : undefined
-    const isUsingNetworkNativeCurrency =
-        selectedToken?.address === nativeToken.token.address
-    const maxAmount = selectedTokenBalance
-    const isMaxAmountEnabled =
-        maxAmount && !(bigNumberAmount && maxAmount.eq(bigNumberAmount))
 
     //executes when the amount hex changes
     useEffect(() => {
@@ -255,29 +256,40 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     }
 
     useEffect(() => {
+        let isValidFetch = true
+        setError(undefined)
+
         const fetchRoutes = async () => {
-            setIsLoading(true)
+            setIsFetchingRoutes(true)
 
             try {
-                const availableRoutes = await getBridgeAvailableRoutes({
+                const routesReq = await getBridgeAvailableRoutes({
                     fromTokenAddress: checkForBridgeNativeAsset(
                         selectedToken!.address
                     ),
                 })
 
-                setAvailableRoutes(availableRoutes.routes)
+                if (isValidFetch) {
+                    setAvailableRoutes(routesReq.routes)
+                }
             } catch (error) {
                 setError(capitalize(error.message || "Error fetching routes."))
+                setAvailableRoutes([])
             } finally {
-                setIsLoading(false)
+                setIsFetchingRoutes(false)
             }
         }
 
-        if (!selectedToken) {
-            setAvailableRoutes([])
-        } else {
+        if (selectedToken) {
             fetchRoutes()
+        } else {
+            setAvailableRoutes([])
         }
+
+        return () => {
+            isValidFetch = false
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedToken])
 
     useEffect(() => {
@@ -285,21 +297,16 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         setError(undefined)
 
         const fetchQuote = async () => {
-            setIsLoading(true)
+            setisFetchingQuote(true)
 
             try {
-                const selectedRoute = getRouteForNetwork(
-                    availableRoutes,
-                    selectedToNetwork!
-                )
-
                 const params: BridgeQuoteRequest = {
-                    toChainId: selectedRoute.toChainId,
-                    fromTokenAddress: selectedRoute.fromTokens[0].address,
-                    toTokenAddress: selectedRoute.toTokens[0].address,
+                    toChainId: selectedRoute!.toChainId,
+                    fromTokenAddress: selectedRoute!.fromTokens[0].address,
+                    toTokenAddress: selectedRoute!.toTokens[0].address,
                     fromAmount: bigNumberAmount!.toString(),
-                    fromAddress: selectedAccount.address,
-                    slippage: 0.5,
+                    fromAddress: selectedAddress,
+                    slippage: defaultAdvancedSettings.slippage,
                 }
 
                 const fetchedQuote = await getBridgeQuote(params, true)
@@ -308,43 +315,27 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     setQuote(fetchedQuote)
                 }
             } catch (error) {
-                setError(capitalize(error.message || "Error fetching quoute."))
+                setError(capitalize(error.message || "Error fetching quote."))
             } finally {
-                setIsLoading(false)
+                setisFetchingQuote(false)
             }
         }
 
-        const validateBeforeFetch = () => {
-            if (
-                !selectedToken ||
-                !selectedToNetwork ||
-                !bigNumberAmount ||
-                bigNumberAmount.lte(BigNumber.from(0)) ||
-                errors.amount
-            ) {
-                return false
-            }
-            return true
-        }
-
-        const isReadyToFetch = validateBeforeFetch()
-        if (isReadyToFetch) {
+        if (
+            selectedRoute &&
+            selectedAddress &&
+            bigNumberAmount &&
+            bigNumberAmount.gt(BigNumber.from(0)) &&
+            !errors.amount
+        ) {
             fetchQuote()
         }
 
         return () => {
             isValidFetch = false
         }
-
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        bigNumberAmount,
-        errors.amount,
-        nativeToken.token.address,
-        selectedAddress,
-        selectedToken,
-        selectedToNetwork,
-    ])
+    }, [bigNumberAmount, errors.amount, selectedAddress, selectedRoute])
 
     return (
         <PopupLayout
@@ -384,7 +375,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 : "Review"
                         }
                         disabled={!!(error || !quote)}
-                        isLoading={isLoading}
+                        isLoading={isFetchingRoutes || isFetchingQuote}
                         onClick={onSubmit}
                         buttonClass={classnames(
                             error && `${Classes.redButton} opacity-100`
@@ -536,26 +527,19 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 />
 
                 {/* Asset in destination */}
-                {availableRoutes.length
-                    ? selectedToNetwork && (
+                {selectedRoute && (
                     <div className="pt-3">
                         <AssetAmountDisplay
-                                  asset={
-                                      getRouteForNetwork(
-                                          availableRoutes,
-                                          selectedToNetwork
-                                      ).toTokens[0]
-                                  }
-                                  amount={
-                                      quote &&
-                                      BigNumber.from(
-                                          quote.bridgeParams.params.toAmount
-                                      )
-                                  }
-                              />
+                            asset={selectedRoute.toTokens[0]}
+                            amount={
+                                quote &&
+                                BigNumber.from(
+                                    quote.bridgeParams.params.toAmount
+                                )
+                            }
+                        />
                     </div>
-                      )
-                    : null}
+                )}
             </div>
         </PopupLayout>
     )

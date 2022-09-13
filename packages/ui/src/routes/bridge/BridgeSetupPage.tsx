@@ -271,11 +271,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
                 if (isValidFetch) {
                     setAvailableRoutes(routesReq.routes)
+                    setIsFetchingRoutes(false)
                 }
             } catch (error) {
                 setError(capitalize(error.message || "Error fetching routes."))
                 setAvailableRoutes([])
-            } finally {
                 setIsFetchingRoutes(false)
             }
         }
@@ -284,6 +284,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
             fetchRoutes()
         } else {
             setAvailableRoutes([])
+            setIsFetchingRoutes(false)
         }
 
         return () => {
@@ -313,10 +314,10 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
                 if (isValidFetch) {
                     setQuote(fetchedQuote)
+                    setisFetchingQuote(false)
                 }
             } catch (error) {
                 setError(capitalize(error.message || "Error fetching quote."))
-            } finally {
                 setisFetchingQuote(false)
             }
         }
@@ -329,6 +330,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
             !errors.amount
         ) {
             fetchQuote()
+        } else {
+            setisFetchingQuote(false)
         }
 
         return () => {

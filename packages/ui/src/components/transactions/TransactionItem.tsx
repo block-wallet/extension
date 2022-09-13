@@ -21,8 +21,6 @@ import eth from "../../assets/images/icons/ETH.svg"
 import blankLogo from "../../assets/images/logo.svg"
 import flashbotsLogo from "../../assets/images/flashbots.png"
 
-// Context
-import { useBlankState } from "../../context/background/backgroundHooks"
 import {
     BridgeStatus,
     BridgeSubstatus,
@@ -418,7 +416,6 @@ const TransactionItem: React.FC<{
         bridgeParams,
     } = transaction
     const bridgeDetails = useGetBridgeDetails(transaction)
-    const state = useBlankState()!
 
     const history: any = useOnMountHistory()
     const formatter = useCurrencyFromatter()
@@ -702,9 +699,6 @@ const TransactionItem: React.FC<{
                                     title={transferCurrencyAmount}
                                 >
                                     {transferCurrencyAmount}
-                                </span>
-                                <span className="text-xs text-gray-600 text-right">
-                                    {state.nativeCurrency.toUpperCase()}
                                 </span>
                             </div>
                         </div>

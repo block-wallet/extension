@@ -83,7 +83,7 @@ export interface BridgeConfirmPageLocalState {
 }
 
 // 15s
-const QUOTE_REFRESH_TIMEOUT = 1000 * 15
+const QUOTE_REFRESH_TIMEOUT = 1000 * 20
 
 const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const history = useOnMountHistory()

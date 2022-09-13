@@ -60,7 +60,7 @@ export default class BlankProvider
         [reqId: string]: {
             params: any;
             subId: string;
-            newSubId?: string;
+            prevSubId: string;
         };
     };
 
@@ -116,19 +116,29 @@ export default class BlankProvider
     }
 
     private async reInitializeSubscriptions() {
+        console.log(
+            'reInitializeSubscriptions',
+            'init',
+            this._ethSubscriptions
+        );
         for (const reqId in this._ethSubscriptions) {
-            const params = this._ethSubscriptions[reqId].params;
+            const { params, subId, prevSubId } = this._ethSubscriptions[reqId];
             const request: RequestArguments = {
                 method: JSONRPCMethod.eth_subscribe,
                 params,
             };
-            const newSubId = (await this._postMessage(
-                Messages.EXTERNAL.REQUEST,
-                request
-            )) as string;
 
-            this._ethSubscriptions[reqId].newSubId = newSubId;
+            console.log(reqId, 'request', request);
+            await this._postMessage(
+                Messages.EXTERNAL.REQUEST,
+                request,
+                undefined,
+                reqId
+            );
+            this._ethSubscriptions[reqId].prevSubId =
+                prevSubId && prevSubId !== '' ? prevSubId : subId;
         }
+        console.log('reInitializeSubscriptions', 'end', this._ethSubscriptions);
     }
 
     /**
@@ -141,6 +151,7 @@ export default class BlankProvider
     public handleSignal(signal: Signals): void {
         switch (signal) {
             case Signals.SW_REINIT:
+                this._eventSubscription(this._eventHandler);
                 this.reInitializeSubscriptions();
                 break;
             default:
@@ -383,6 +394,7 @@ export default class BlankProvider
     private _eventSubscription = async (
         cb: (state: ExternalEventSubscription) => void
     ): Promise<boolean> => {
+        console.log('_eventSubscription');
         return this._postMessage(
             Messages.EXTERNAL.EVENT_SUBSCRIPTION,
             undefined,
@@ -418,10 +430,11 @@ export default class BlankProvider
     private _postMessage = <TMessageType extends EXTERNAL>(
         message: TMessageType,
         request?: RequestTypes[TMessageType],
-        subscriber?: (data: SubscriptionMessageTypes[TMessageType]) => void
+        subscriber?: (data: SubscriptionMessageTypes[TMessageType]) => void,
+        reqId?: string
     ): Promise<ResponseTypes[TMessageType]> => {
         return new Promise((resolve, reject): void => {
-            const id = `${Date.now()}.${++this._requestId}`;
+            const id = reqId || `${Date.now()}.${++this._requestId}`;
 
             this._handlers[id] = { reject, resolve, subscriber };
 
@@ -616,6 +629,32 @@ export default class BlankProvider
      * @param message The received subscription message
      */
     private _emitSubscriptionMessage = (message: EthSubscription) => {
+        console.log('_emitSubscriptionMessage', message);
+
+        // re-write subscription id
+        for (const reqId in this._ethSubscriptions) {
+            const { prevSubId, subId } = this._ethSubscriptions[reqId];
+            if (
+                message.data.subscription === subId &&
+                prevSubId &&
+                prevSubId !== ''
+            ) {
+                message = {
+                    ...message,
+                    data: {
+                        ...message.data,
+                        subscription: prevSubId,
+                    },
+                };
+
+                console.log(
+                    '_emitSubscriptionMessage',
+                    'message overridden',
+                    message
+                );
+                break;
+            }
+        }
         this.emit(ProviderEvents.message, message);
 
         // Emit events for legacy API
@@ -641,30 +680,40 @@ export default class BlankProvider
     ): RequestTypes[EXTERNAL.REQUEST] | undefined {
         if (message === EXTERNAL.REQUEST && request && 'method' in request) {
             if (request.method === JSONRPCMethod.eth_subscribe) {
-                // TODO: remove old reqId handlers when replacing and keep new reqId with OLD subscriptionID
                 // Store request params for SW reinit
                 this._ethSubscriptions[id] = {
                     params: request.params,
                     subId: '',
+                    prevSubId: '',
                 };
             } else if (request.method === JSONRPCMethod.eth_unsubscribe) {
                 // If this is an unsubscription, remove from the list so we won't
                 // subscribe again on SW termination
                 const [subscriptionId] = request.params as string[];
-                let newSubId = subscriptionId;
+                let subIdToUnsubscribe = subscriptionId;
                 for (const reqId in this._ethSubscriptions) {
-                    const sub = this._ethSubscriptions[reqId];
-                    if (sub.subId === subscriptionId) {
-                        if (sub.newSubId) {
-                            newSubId = sub.newSubId;
-                        }
+                    const { subId, prevSubId } = this._ethSubscriptions[reqId];
+                    if (
+                        subId === subIdToUnsubscribe ||
+                        prevSubId === subIdToUnsubscribe
+                    ) {
+                        subIdToUnsubscribe = subId;
+
                         delete this._ethSubscriptions[reqId];
                         break;
                     }
                 }
+
+                console.log(
+                    'eth_unsubscribe',
+                    'subIdToUnsubscribe',
+                    subIdToUnsubscribe,
+                    this._ethSubscriptions
+                );
+
                 return {
                     method: request.method,
-                    params: [newSubId],
+                    params: [subIdToUnsubscribe],
                 };
             }
         }
@@ -680,6 +729,12 @@ export default class BlankProvider
         data: TransportResponseMessage<TMessageType>
     ): void => {
         if ('id' in data && data.id in this._ethSubscriptions) {
+            console.log(
+                'setEthSubscriptionsSubId',
+                'found',
+                this._ethSubscriptions[data.id],
+                data.response
+            );
             this._ethSubscriptions[data.id].subId = data.response as string;
         }
     };

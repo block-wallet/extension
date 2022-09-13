@@ -19,7 +19,10 @@ export const getBridgePendingMessage = (
         switch (bridgeParams.substatus) {
             case BridgeSubstatus.NOT_PROCESSABLE_REFUND_NEEDED:
             case BridgeSubstatus.REFUND_IN_PROGRESS:
-                return "Errored bridge. Processing refund"
+                return "Failed bridge: Processing refund"
+            case BridgeSubstatus.WAIT_SOURCE_CONFIRMATIONS: {
+                return "Processing bridge"
+            }
             case BridgeSubstatus.WAIT_DESTINATION_TRANSACTION: {
                 return `Waiting for ${
                     destinationNetworkName || "destination"

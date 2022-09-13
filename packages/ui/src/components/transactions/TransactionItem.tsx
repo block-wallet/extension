@@ -382,7 +382,7 @@ const getTransactionTimeOrStatus = (
         if (bridgeParams?.substatus === BridgeSubstatus.REFUNDED) {
             return (
                 <span className="text-xs text-red-600">
-                    Failed Bridge. Transaction Refunded.
+                    Failed bridge: Refunded
                 </span>
             )
         }

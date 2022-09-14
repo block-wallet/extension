@@ -31,16 +31,6 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
         setActive && setActive(false)
     }
 
-    if (selectedNetwork) {
-        const isAvailable = networkList.filter(
-            (network) => network.id === selectedNetwork.id
-        )
-
-        if (!isAvailable.length) {
-            onNetworkChange(undefined)
-        }
-    }
-
     // List
     const AssetList = ({
         setActive,

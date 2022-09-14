@@ -152,17 +152,14 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const isMaxAmountEnabled =
         maxAmount && !(bigNumberAmount && maxAmount.eq(bigNumberAmount))
     const selectedRoute = getRouteForNetwork(availableRoutes, selectedToNetwork)
+    const availbleChainsId = availableRoutes.map((route) => route.toChainId)
     const filteredAvailableNetworks = availableBridgeChains.filter((chain) => {
-        for (let i = 0; i < availableRoutes.length; i++) {
-            if (
-                chain.id === availableRoutes[i].toChainId &&
-                chain.id !== currentNetwork.chainId
-            ) {
-                return true
-            }
+        if (chain.id === currentNetwork.chainId) {
+            return false
         }
-        return false
+        return availbleChainsId.includes(chain.id)
     })
+
     const formattedAmount =
         selectedToken && bigNumberAmount
             ? formatCurrency(
@@ -261,16 +258,30 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
         const fetchRoutes = async () => {
             setIsFetchingRoutes(true)
-
             try {
-                const routesReq = await getBridgeAvailableRoutes({
+                const routesRes = await getBridgeAvailableRoutes({
                     fromTokenAddress: checkForBridgeNativeAsset(
                         selectedToken!.address
                     ),
                 })
 
                 if (isValidFetch) {
-                    setAvailableRoutes(routesReq.routes)
+                    const { routes } = routesRes
+                    setAvailableRoutes(routes)
+
+                    //check if network is still valid.
+                    if (
+                        selectedToNetwork &&
+                        !routes.some(
+                            (route) => route.toChainId === selectedToNetwork?.id
+                        )
+                    ) {
+                        setBridgeDataState((prev: BridgeState) => ({
+                            ...prev,
+                            network: undefined,
+                        }))
+                    }
+
                     setIsFetchingRoutes(false)
                 }
             } catch (error) {
@@ -519,7 +530,12 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     topMargin={60}
                     bottomMargin={200}
                     networkList={filteredAvailableNetworks}
-                    selectedNetwork={selectedToNetwork}
+                    selectedNetwork={
+                        selectedToNetwork &&
+                        availbleChainsId.includes(selectedToNetwork.id)
+                            ? selectedToNetwork
+                            : undefined
+                    }
                     onNetworkChange={(network) => {
                         setQuote(undefined)
                         setBridgeDataState((prev: BridgeState) => ({

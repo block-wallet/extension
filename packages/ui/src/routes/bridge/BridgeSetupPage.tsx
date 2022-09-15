@@ -46,6 +46,10 @@ import {
 import { ApproveOperation } from "../transaction/ApprovePage"
 import { BridgeAllowanceCheck } from "../../context/commTypes"
 import { defaultAdvancedSettings } from "../../components/transactions/AdvancedSettings"
+import { AiFillInfoCircle } from "react-icons/ai"
+import GenericTooltip from "../../components/label/GenericTooltip"
+import { BASE_BRIDGE_FEE } from "../../util/constants"
+import { formatNumberLength } from "../../util/formatNumberLength"
 
 interface SetupBridgePageLocalState {
     amount?: string
@@ -558,6 +562,56 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             }
                         />
                     </div>
+                )}
+
+                {/* Bridge fee */}
+                {quote && (
+                    <>
+                        <div className="flex items-center pt-2">
+                            <p className="text-xs text-gray-600 pt-0.5 mr-1">
+                                Bridge fee: 0{" "}
+                                {quote.bridgeParams.params.fromToken.symbol}
+                            </p>
+                            <GenericTooltip
+                                top
+                                centerX
+                                content={
+                                    <div className="min-w-max p-1 text-center">
+                                        <p className="pb-0.5">
+                                            This bridge is on us!
+                                        </p>
+                                        <p>
+                                            Original fee:{" "}
+                                            {formatNumberLength(
+                                                formatUnits(
+                                                    BigNumber.from(
+                                                        quote.bridgeParams
+                                                            .params.fromAmount
+                                                    )
+                                                        .mul(
+                                                            BASE_BRIDGE_FEE * 10
+                                                        )
+                                                        .div(1000),
+                                                    quote.bridgeParams.params
+                                                        .fromToken.decimals
+                                                ),
+                                                8
+                                            )}{" "}
+                                            {
+                                                quote.bridgeParams.params
+                                                    .fromToken.symbol
+                                            }
+                                        </p>
+                                    </div>
+                                }
+                            >
+                                <AiFillInfoCircle
+                                    size={18}
+                                    className="cursor-pointer text-primary-200 hover:text-primary-300"
+                                />
+                            </GenericTooltip>
+                        </div>
+                    </>
                 )}
             </div>
         </PopupLayout>

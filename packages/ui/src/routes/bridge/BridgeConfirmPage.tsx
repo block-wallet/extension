@@ -267,33 +267,6 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         }
     }
 
-    const updateBridgeParameters = useCallback(async () => {
-        setError(undefined)
-        const params: BridgeQuoteRequest = {
-            toChainId: bridgeQuote.bridgeParams.params.toChainId,
-            fromTokenAddress: bridgeQuote.bridgeParams.params.fromToken.address,
-            toTokenAddress: bridgeQuote.bridgeParams.params.toToken.address,
-            fromAmount: bridgeQuote.bridgeParams.params.fromAmount,
-            fromAddress: selectedAccount.address,
-            slippage: advancedSettings.slippage,
-        }
-
-        setIsFetchingParams(true)
-        setTimeoutStart(new Date().getTime())
-
-        try {
-            const fetchedQuote = await getBridgeQuote(params)
-
-            setQuote(fetchedQuote)
-        } catch (error) {
-            setError(capitalize(error.message || "Error fetching quote"))
-        } finally {
-            setIsFetchingParams(false)
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [advancedSettings.slippage])
-
     // Initialize gas
     useEffect(() => {
         const setGas = async () => {
@@ -334,27 +307,70 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     }, [quote, error])
 
     useEffect(() => {
+        let isValidFetch = true
+        let timeoutRef: NodeJS.Timeout | null = null
         if (!shouldFetchBridgeParams || inProgressAllowanceTransaction?.id) {
             setTimeoutStart(undefined)
             return
         }
 
-        //first render, run function manually
-        updateBridgeParameters()
+        async function fetchQuoteParams() {
+            console.log("slippage", advancedSettings.slippage)
+            setError(undefined)
+            const params: BridgeQuoteRequest = {
+                toChainId: bridgeQuote.bridgeParams.params.toChainId,
+                fromTokenAddress:
+                    bridgeQuote.bridgeParams.params.fromToken.address,
+                toTokenAddress: bridgeQuote.bridgeParams.params.toToken.address,
+                fromAmount: bridgeQuote.bridgeParams.params.fromAmount,
+                fromAddress: selectedAccount.address,
+                slippage: advancedSettings.slippage,
+            }
 
-        let intervalRef = setInterval(
-            updateBridgeParameters,
-            QUOTE_REFRESH_TIMEOUT
-        )
+            setIsFetchingParams(true)
+            let errorMessage: string | "" = ""
+            let fetchedQuote: GetBridgeQuoteResponse | undefined
+            try {
+                fetchedQuote = await getBridgeQuote(params)
+            } catch (error) {
+                errorMessage = capitalize(
+                    error.message || "Error fetching quote"
+                )
+            } finally {
+                //in case the effect was unmounted after invoking the background
+                if (isValidFetch) {
+                    setTimeoutStart(
+                        fetchedQuote ? new Date().getTime() : undefined
+                    )
+                    setQuote(fetchedQuote)
+                    setIsFetchingParams(false)
+                    setError(errorMessage)
+                }
+            }
+        }
+
+        //first render, run function manually
+        async function fetchParams() {
+            await fetchQuoteParams()
+            timeoutRef = setTimeout(fetchParams, QUOTE_REFRESH_TIMEOUT)
+        }
+
+        fetchParams()
 
         // Cleanup timer
         return () => {
-            intervalRef && clearInterval(intervalRef)
+            isValidFetch = false
+            timeoutRef && clearTimeout(timeoutRef)
         }
     }, [
-        updateBridgeParameters,
-        shouldFetchBridgeParams,
+        advancedSettings.slippage,
+        bridgeQuote.bridgeParams.params.fromAmount,
+        bridgeQuote.bridgeParams.params.fromToken.address,
+        bridgeQuote.bridgeParams.params.toChainId,
+        bridgeQuote.bridgeParams.params.toToken.address,
         inProgressAllowanceTransaction?.id,
+        selectedAccount.address,
+        shouldFetchBridgeParams,
     ])
 
     return (
@@ -590,7 +606,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                         <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
                     </OutlinedButton>
                 </div>
-                {remainingSuffix && (
+                {remainingSuffix && !isFetchingParams && (
                     <RefreshLabel value={remainingSuffix} className="pt-1" />
                 )}
             </div>

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react"
-import { useForm } from "react-hook-form"
 
 // Types
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
@@ -11,8 +10,8 @@ import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 
 // Components
-import Spinner from "../../components/spinner/Spinner"
-import TextInput from "../../components/input/TextInput"
+import Spinner from "../spinner/Spinner"
+import TextInput from "../input/TextInput"
 
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
@@ -23,46 +22,62 @@ import { searchTokenInAssetsList } from "../../context/commActions"
 
 // Assets
 import { utils } from "ethers/lib/ethers"
-import { TokenResponse } from "../../routes/settings/AddTokensPage"
-import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
+import { useForm } from "react-hook-form"
 
 export interface tokenCustomViewProps {
-    customTokenAddress?: string
-    submitForm?: boolean
+    manualTokenAddress?: string
     setSubmitEnabled?: (value: any) => Promise<any>
 }
 
 const CustomTokenView = ({
-    customTokenAddress = "",
-    submitForm = false,
+    manualTokenAddress = "",
     setSubmitEnabled = undefined,
 }: tokenCustomViewProps) => {
-    const { run } = useAsyncInvoke()
-
     const customTokenSchema = yup.object({
         tokenAddress: yup
             .string()
-            .test("is-empty", "Token contract address is empty", (s) => {
-                return !!s && s.trim().length > 0
-            })
-            .required("Please enter a contract address"),
+            .required("Please enter a contract address")
+            .test("invalid-contract", "Token contract is not valid", (s) => {
+                return !(!s || s.length !== 42 || s.substring(0, 2) !== "0x")
+            }),
         tokenSymbol: yup
             .string()
-            .test("is-empty", "Token symbol is empty", (s) => {
-                return !!s && s.trim().length > 0
-            })
-            .required("Please enter a token symbol"),
+            .required("Please enter a token symbol")
+            .matches(/^[a-zA-Z0-9_.$-]*$/, "Please enter a valid symbol."),
         tokenDecimals: yup
             .string()
-            .test("is-empty", "Token decimals is empty", (s) => {
-                return !!s && s.trim().length > 0
-            })
-            .required("Please enter token decimals"),
+            .required("Please enter token decimals")
+            .test("not-valid-decimals", "Please enter valid decimals", (s) => {
+                return !(!s || isNaN(parseInt(s)) || s.length > 2)
+            }),
+        tokenLogo: yup.string(),
+        tokenName: yup.string(),
+        tokenType: yup.string(),
     })
     type customTokenFormData = InferType<typeof customTokenSchema>
 
-    const history = useOnMountHistory()
+    const {
+        register,
+        handleSubmit,
+        setError,
+        setValue,
+        watch,
+        reset,
+        formState: { errors },
+    } = useForm<customTokenFormData>({
+        defaultValues: {
+            tokenAddress: "",
+            tokenDecimals: undefined,
+            tokenLogo: "",
+            tokenName: "",
+            tokenSymbol: "",
+            tokenType: "",
+        },
+        resolver: yupResolver(customTokenSchema),
+    })
 
+    const values = watch()
+    const history = useOnMountHistory()
     const { userTokens } = useBlankState()!
     const account = useSelectedAccount()
     const network = useSelectedNetwork()
@@ -80,80 +95,21 @@ const CustomTokenView = ({
         Object.keys(tokens ?? {}).map((key) => tokens[key].symbol.toLowerCase())
     ).current
 
-    const {
-        register,
-        handleSubmit,
-        setError,
-        setValue,
-
-        formState: { errors },
-    } = useForm<customTokenFormData>({
-        resolver: yupResolver(customTokenSchema),
-    })
-
-    const [isFirstIteration, setIsFirstIteration] = useState<boolean>(true)
-    const [isFirstLoading, setIsFirstLoading] = useState<boolean>(true)
-    // const [isCustomTokenEmpty, setIsCustomTokenEmpty] = useState<boolean>(false)
-    const [result, setResult] = useState<TokenResponse>({
-        address: "",
-        decimals: undefined,
-        logo: "",
-        name: "",
-        symbol: "",
-        type: "",
-    })
     const [message, setMessage] = useState("")
-
     const [isLoading, setIsLoading] = useState(false)
-
-    useEffect(() => {
-        setResult((prevState) => ({
-            ...prevState,
-            address: customTokenAddress,
-        }))
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
-
-    useEffect(() => {
-        setValue("tokenAddress", result.address)
-        setValue("tokenDecimals", result.decimals?.toString() ?? "")
-        setValue("tokenSymbol", result.symbol)
-    }, [result.address, result.decimals, result.symbol, setValue])
 
     const onSubmit = handleSubmit(async (data: customTokenFormData) => {
         try {
             // Valid form data
-            if (
-                data.tokenAddress.length !== 42 ||
-                data.tokenAddress.substring(0, 2) !== "0x"
-            ) {
-                return setMessage("Enter a valid address.")
-            }
 
-            if (
-                !/^[a-zA-Z0-9_.$-]*$/.test(data.tokenSymbol) ||
-                data.tokenSymbol === ""
-            ) {
-                return setMessage("Enter valid symbol.")
-            }
-
-            if (
-                !data.tokenDecimals ||
-                isNaN(parseInt(data.tokenDecimals)) ||
-                data.tokenDecimals.length > 2
-            ) {
-                return setMessage("Enter valid decimals.")
-            }
-
-            const newToken = {
+            const tokenToAdd = {
                 address: data.tokenAddress,
                 decimals: data.tokenDecimals,
-                logo: "",
-                name: data.tokenSymbol,
+                logo: values.tokenLogo,
+                name: values.tokenName,
                 symbol: data.tokenSymbol,
-                type: "",
+                type: values.tokenType,
             }
-            const tokenToAdd = result.symbol ? result : newToken
 
             // populate symbol logo for custom token
             searchTokenInAssetsList(tokenToAdd.symbol.toUpperCase()).then(
@@ -197,22 +153,20 @@ const CustomTokenView = ({
     const onAddressChange = (value: string) => {
         if (utils.isAddress(value)) {
             setError("tokenAddress", { message: undefined })
-            // setIsCustomTokenEmpty(false)
             setIsLoading(true)
             searchTokenInAssetsList(value)
                 .then((res) => {
-                    if (isFirstLoading) setIsFirstLoading(false)
-
                     setIsLoading(false)
                     if (res && res.length) {
                         const message = verifiyToken(res[0])
 
                         setMessage(message)
-
-                        setResult((prevState) => ({
-                            ...prevState,
-                            ...res[0],
-                        }))
+                        setValue("tokenAddress", res[0].address)
+                        setValue("tokenDecimals", res[0].decimals.toString())
+                        setValue("tokenLogo", res[0].logo)
+                        setValue("tokenName", res[0].name)
+                        setValue("tokenSymbol", res[0].symbol)
+                        setValue("tokenType", res[0].type)
                     }
                 })
                 .catch((err) => {
@@ -221,17 +175,16 @@ const CustomTokenView = ({
                 })
         } else {
             setError("tokenAddress", { message: "Invalid contract address" })
-            // setIsCustomTokenEmpty(true)
-            setResult({
-                address: value,
-                decimals: undefined,
-                logo: "",
-                name: "",
-                symbol: "",
-                type: "",
-            })
+            reset()
+            setValue("tokenAddress", value)
         }
     }
+
+    useEffect(() => {
+        onAddressChange(manualTokenAddress)
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [manualTokenAddress])
 
     const onSymbolChange = (value: string) => {
         if (tokenSymbols.includes(value.toLowerCase())) {
@@ -239,39 +192,20 @@ const CustomTokenView = ({
         } else {
             setMessage("")
         }
-
-        updateResultField("symbol", value)
-        updateResultField("name", value.toUpperCase())
+        setValue("tokenSymbol", value)
+        setValue("tokenName", value.toUpperCase())
     }
 
     const onDecimalsChange = (value: number) => {
-        updateResultField("decimals", value)
+        setValue("tokenDecimals", value.toString())
         setMessage("")
     }
-
-    const updateResultField = (field: string, value: string | number) => {
-        setResult((prevState) => ({
-            ...prevState,
-            [field]: value,
-        }))
-    }
-
-    if (isFirstIteration && customTokenAddress) {
-        onAddressChange(customTokenAddress)
-        setIsFirstIteration(false)
-    }
-
-    useEffect(() => {
-        if (submitForm) {
-            run(onSubmit())
-        }
-    }, [submitForm])
 
     return (
         <>
             {/* Custom token form */}
             <form
-                id="customTokenForm"
+                id="manualViewForm"
                 className="flex flex-col justify-between h-full mt-20"
                 onSubmit={onSubmit}
             >
@@ -279,7 +213,7 @@ const CustomTokenView = ({
                     Custom Token
                 </div>
                 <div className="h-full">
-                    {isLoading && isFirstLoading ? (
+                    {isLoading ? (
                         <div className="w-full h-full flex justify-center items-center">
                             <Spinner size="24px" />
                         </div>
@@ -290,7 +224,9 @@ const CustomTokenView = ({
                                 <TextInput
                                     appearance="outline"
                                     label="Token Contract Address"
-                                    placeholder={result.address || "Address"}
+                                    placeholder={
+                                        values.tokenAddress || "Address"
+                                    }
                                     {...register("tokenAddress", {
                                         onChange: (e) => {
                                             onAddressChange(e.target.value)
@@ -299,7 +235,7 @@ const CustomTokenView = ({
                                     error={errors.tokenAddress?.message}
                                     autoFocus={true}
                                     maxLength={42}
-                                    defaultValue={result.address}
+                                    defaultValue={values.tokenAddress}
                                 />
                             </div>
 
@@ -308,8 +244,8 @@ const CustomTokenView = ({
                                 <TextInput
                                     appearance="outline"
                                     label="Token Symbol"
-                                    placeholder={result.symbol || "ETH"}
-                                    defaultValue={result.symbol}
+                                    placeholder={values.tokenSymbol || "ETH"}
+                                    defaultValue={values.tokenSymbol}
                                     error={errors.tokenSymbol?.message}
                                     {...register("tokenSymbol", {
                                         onChange: (e) => {
@@ -325,12 +261,12 @@ const CustomTokenView = ({
                                     appearance="outline"
                                     label="Decimals of Precision"
                                     placeholder={
-                                        result.decimals
-                                            ? result.decimals.toString()
+                                        values.tokenDecimals
+                                            ? values.tokenDecimals.toString()
                                             : "18"
                                     }
-                                    defaultValue={result.decimals || ""}
-                                    readOnly={!!result.decimals}
+                                    defaultValue={values.tokenDecimals || ""}
+                                    readOnly={!!values.tokenDecimals}
                                     error={errors.tokenDecimals?.message}
                                     {...register("tokenDecimals", {
                                         onChange: (e) => {

@@ -10,9 +10,11 @@ import AddTokenListView from "../../components/token/AddTokenListView"
 // Comm
 import { searchTokenInAssetsList } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
+import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
 // Assets
 import { utils } from "ethers/lib/ethers"
+import PopupFooter from "../../components/popup/PopupFooter"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"

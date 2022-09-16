@@ -266,7 +266,7 @@ const CustomTokenView = ({
                                             : "18"
                                     }
                                     defaultValue={values.tokenDecimals || ""}
-                                    readOnly={!!values.tokenDecimals}
+                                    readOnly={values.tokenDecimals !== "0"}
                                     error={errors.tokenDecimals?.message}
                                     {...register("tokenDecimals", {
                                         onChange: (e) => {

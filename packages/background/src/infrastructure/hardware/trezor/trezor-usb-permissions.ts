@@ -17,7 +17,7 @@ const switchToPopupTab = (event?: any) => {
                 active: true,
             },
             (current) => {
-                if (current.length < 0) return;
+                if (current.length <= 0) return;
                 const id = current[0].id;
                 chrome.tabs.remove(Number(id));
             }

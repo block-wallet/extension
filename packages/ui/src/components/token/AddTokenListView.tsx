@@ -28,23 +28,18 @@ const SearchedTokenView = ({
 
     // Handlers
     const onSubmit = async (e?: any) => {
-        try {
-            e?.preventDefault()
+        e?.preventDefault()
 
-            // Valid form data
-            if (selected.length > 0) {
-                history.push({
-                    pathname: "/settings/tokens/add/confirm",
-                    state: {
-                        tokens: selected,
-                        searchedValue: searchedValue,
-                        ...(history.location.state || {}),
-                    },
-                })
-            }
-        } catch (event) {
-            // Invalid form data
-            console.log(event)
+        // Valid form data
+        if (selected.length > 0) {
+            history.push({
+                pathname: "/settings/tokens/add/confirm",
+                state: {
+                    tokens: selected,
+                    searchedValue: searchedValue,
+                    ...(history.location.state || {}),
+                },
+            })
         }
     }
 
@@ -55,10 +50,12 @@ const SearchedTokenView = ({
         // Check if the token is already selected
         if (!selected.some((el) => el.address === token.address)) {
             // Add selected token
-            setSelected(selected.concat(token))
+            setSelected((prev) => prev.concat(token))
         } else {
             // Remove selected token
-            setSelected(selected.filter((el) => el.address !== token.address))
+            setSelected((prev) =>
+                prev.filter((el) => el.address !== token.address)
+            )
         }
     }
 

@@ -644,7 +644,12 @@ export class TokenController extends BaseController<TokenControllerState> {
             return;
         }
 
-        const fullToken = await this.search(tokenAddress);
+        const fullToken = await this.search(
+            tokenAddress,
+            false,
+            this.getSelectedAccountAddress(),
+            chainId
+        );
         if (!fullToken || !fullToken.length) {
             return;
         }
@@ -653,6 +658,10 @@ export class TokenController extends BaseController<TokenControllerState> {
         if (!firstToken.symbol) {
             return;
         }
-        return this.addCustomToken(firstToken);
+        return this.addCustomToken(
+            firstToken,
+            this.getSelectedAccountAddress(),
+            chainId
+        );
     };
 }

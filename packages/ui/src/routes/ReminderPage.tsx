@@ -27,7 +27,6 @@ const ReminderPage = () => {
     const [revealed, setRevealed] = useState<boolean>(false)
     const [seedPhrase, setSeedPhrase] = useState<string | undefined>("")
     const [password, setPassword] = useState<string | undefined>("")
-    const [inputPassword, setInputPassword] = useState<string>("")
 
     const hasBack = history.location.state?.hasBack ?? true
 
@@ -44,7 +43,6 @@ const ReminderPage = () => {
         register,
         handleSubmit,
         setError,
-
         formState: { errors },
     } = useForm<PasswordFormData>({
         resolver: yupResolver(schema),
@@ -92,11 +90,7 @@ const ReminderPage = () => {
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
-                        disabled={
-                            shouldEnterPassword
-                                ? inputPassword === ""
-                                : !revealed
-                        }
+                        disabled={!shouldEnterPassword && !revealed}
                         label={shouldEnterPassword ? "Next" : "Backup now"}
                         onClick={() => {
                             if (shouldEnterPassword) {
@@ -116,6 +110,11 @@ const ReminderPage = () => {
                     />
                 </PopupFooter>
             }
+            submitOnEnter={{
+                onSubmit,
+                isEnabled: shouldEnterPassword,
+                isFormValid: Object.keys(errors).length === 0,
+            }}
         >
             {shouldEnterPassword ? (
                 <div className="p-6 flex flex-col space-y-8">
@@ -129,12 +128,6 @@ const ReminderPage = () => {
                             label="Password"
                             placeholder="Enter Password"
                             {...register("password")}
-                            onChange={(e) => setInputPassword(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    onSubmit()
-                                }
-                            }}
                             error={errors.password?.message}
                             autoFocus
                         />

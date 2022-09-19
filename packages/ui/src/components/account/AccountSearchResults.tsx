@@ -98,7 +98,7 @@ const AccountSearchResults = ({
             }
 
             // If Ens enabled, search for it
-            if (ensEnabled) {
+            if (ensEnabled && ensEnabled.current) {
                 newResults.ens = filter ? await searchEns(filter) : undefined
             }
 

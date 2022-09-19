@@ -322,6 +322,10 @@ const SendConfirmPage = () => {
         // If we opened back the pop-up, and there aren't any pending transactions,
         // we should redirect to the home page (this is only checked on component mount)
         if (!currentTransaction?.id && persistedData.submitted) {
+            setPersistedData(() => ({
+                ...INITIAL_VALUE_PERSISTED_DATA,
+                submitted: false,
+            }))
             history.push("/")
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -548,7 +552,13 @@ const SendConfirmPage = () => {
 
             //await for the send promise.
             await sendPromise
-        } catch (error: any) {}
+        } catch (error: any) {
+            setPersistedData((prev: SendConfirmPersistedState) => ({
+                ...prev,
+                submitted: false,
+            }))
+            console.error(error)
+        }
     })
 
     const getMaxTransactionAmount = (): BigNumber => {

@@ -143,18 +143,13 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         );
 
         this._blockUpdatesController.on(
-            BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
-            async (chainId: number, _: number, blockNumber: number) => {
-                const network =
-                    this._networkController.getNetworkFromChainId(chainId);
-                const interval =
-                    network?.actionsTimeIntervals.transactionWatcherUpdate ||
-                    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES.transactionWatcherUpdate;
+            BlockUpdatesEvents.BLOCK_UPDATES_SUBSCRIPTION,
+            this._blockUpdatesCallback
+        );
 
-                this._txWatcherIntervalController.tick(interval, async () => {
-                    await this.fetchTransactions(chainId, blockNumber);
-                });
-            }
+        this._blockUpdatesController.on(
+            BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
+            this._blockUpdatesCallback
         );
 
         this._transactionController.on(
@@ -200,6 +195,26 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
         this._fetchPendingTimestampsFromChain();
     }
+
+    /**
+     * _blockUpdatesCallback
+     *
+     * Triggered when a new block is detected
+     */
+    private _blockUpdatesCallback = async (
+        chainId: number,
+        _: number,
+        blockNumber: number
+    ) => {
+        const network = this._networkController.getNetworkFromChainId(chainId);
+        const interval =
+            network?.actionsTimeIntervals.transactionWatcherUpdate ||
+            ACTIONS_TIME_INTERVALS_DEFAULT_VALUES.transactionWatcherUpdate;
+
+        this._txWatcherIntervalController.tick(interval, async () => {
+            await this.fetchTransactions(chainId, blockNumber);
+        });
+    };
 
     /**
      * return the state by chain, address and type

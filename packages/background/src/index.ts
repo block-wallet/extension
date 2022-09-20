@@ -145,7 +145,7 @@ const initBlockWallet = async () => {
     });
 
     // Set isBlankInitialized response and should inject response
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
         if (request.message === 'isBlankInitialized') {
             sendResponse({ isBlankInitialized: true });
         } else if (request.message === CONTENT.SHOULD_INJECT) {
@@ -177,4 +177,11 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === 'install') {
         openExtensionInBrowser();
     }
+});
+
+// this keeps alive the service worker.
+// when it goes 'inactive' it is restarted.
+chrome.alarms.create({ delayInMinutes: 0.5, periodInMinutes: 0.05 });
+chrome.alarms.onAlarm.addListener(() => {
+    fetch(chrome.runtime.getURL('keep-alive'));
 });

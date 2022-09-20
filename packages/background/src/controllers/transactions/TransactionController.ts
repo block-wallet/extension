@@ -336,26 +336,42 @@ export class TransactionController extends BaseController<
 
         // Subscription to new blocks
         this._blockUpdatesController.on(
-            BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
-            async (chainId: number, _: number, newBlockNumber: number) => {
-                const network =
-                    this._networkController.getNetworkFromChainId(chainId);
-                const interval =
-                    network?.actionsTimeIntervals.transactionsStatusesUpdate ||
-                    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES.transactionsStatusesUpdate;
+            BlockUpdatesEvents.BLOCK_UPDATES_SUBSCRIPTION,
+            this._blockUpdatesCallback
+        );
 
-                this._transactionStatusesUpdateIntervalController.tick(
-                    interval,
-                    async () => {
-                        await this.update(newBlockNumber);
-                    }
-                );
-            }
+        // Subscription to new blocks on background
+        this._blockUpdatesController.on(
+            BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
+            this._blockUpdatesCallback
         );
 
         // Show browser notification on transaction status update
         this.subscribeNotifications();
     }
+
+    /**
+     * _blockUpdatesCallback
+     *
+     * Triggered when a new block is detected
+     */
+    private _blockUpdatesCallback = async (
+        chainId: number,
+        _: number,
+        newBlockNumber: number
+    ) => {
+        const network = this._networkController.getNetworkFromChainId(chainId);
+        const interval =
+            network?.actionsTimeIntervals.transactionsStatusesUpdate ||
+            ACTIONS_TIME_INTERVALS_DEFAULT_VALUES.transactionsStatusesUpdate;
+
+        this._transactionStatusesUpdateIntervalController.tick(
+            interval,
+            async () => {
+                await this.update(newBlockNumber);
+            }
+        );
+    };
 
     /**
      * onStoreUpdate

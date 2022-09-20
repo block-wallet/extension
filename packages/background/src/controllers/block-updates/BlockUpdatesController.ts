@@ -2,8 +2,10 @@ import { BaseController } from '../../infrastructure/BaseController';
 import BlockFetchController from './BlockFetchController';
 import NetworkController, { NetworkEvents } from './../NetworkController';
 import { ActionIntervalController } from './ActionIntervalController';
-import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES } from '../../utils/constants/networks';
-import { MINUTE } from '../../utils/constants/time';
+import {
+    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+    Network,
+} from '../../utils/constants/networks';
 
 export interface BlockUpdatesControllerState {
     blockData: {
@@ -12,7 +14,6 @@ export interface BlockUpdatesControllerState {
 }
 
 export enum BlockUpdatesEvents {
-    CONTROLLER_UPDATE_SUBSCRIPTION = 'CONTROLLER_UPDATE_SUBSCRIPTION',
     BLOCK_UPDATES_SUBSCRIPTION = 'SUBSCRIBE_TO_BLOCK_UPDATES',
     BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION = 'BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION',
 }
@@ -21,7 +22,6 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
     private readonly _blockNumberPullIntervalController: ActionIntervalController;
 
     private activeSubscriptions = false;
-    private backgroundAvailableActiveSubscriptions = true;
 
     constructor(
         private readonly _networkController: NetworkController,
@@ -36,32 +36,22 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
 
         this.initBlockNumber(this._networkController.network.chainId);
 
-        this._networkController.on(NetworkEvents.NETWORK_CHANGE, async () => {
-            this.initBlockNumber(this._networkController.network.chainId);
-            this.emit(BlockUpdatesEvents.CONTROLLER_UPDATE_SUBSCRIPTION);
-        });
+        this._networkController.on(
+            NetworkEvents.NETWORK_CHANGE,
+            async ({ chainId }: Network) => {
+                this.initBlockNumber(chainId);
 
-        /**
-         * Set or remove the block listeners depending on whether the
-         * extension is unlocked and have active subscriptions, or if there
-         * is any transaction pending of confirmation.
-         */
-        this.on(BlockUpdatesEvents.CONTROLLER_UPDATE_SUBSCRIPTION, () => {
-            if (this.activeSubscriptions) {
                 this._blockFetchController.addNewOnBlockListener(
-                    this._networkController.network.chainId,
+                    chainId,
                     this._blockUpdates
                 );
-            } else if (this.backgroundAvailableActiveSubscriptions) {
-                this._blockFetchController.addNewOnBlockListener(
-                    this._networkController.network.chainId,
-                    this._blockUpdates,
-                    MINUTE * 2
-                );
-            } else {
-                this._blockFetchController.removeAllOnBlockListener();
             }
-        });
+        );
+
+        this._blockFetchController.addNewOnBlockListener(
+            this._networkController.network.chainId,
+            this._blockUpdates
+        );
     }
 
     /**
@@ -103,7 +93,6 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
         subscriptions: number
     ): void {
         this.activeSubscriptions = isUnlocked && subscriptions > 0;
-        this.emit(BlockUpdatesEvents.CONTROLLER_UPDATE_SUBSCRIPTION);
     }
 
     /**
@@ -165,23 +154,22 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
                         },
                     });
 
+                    // Emit new block subscription
                     if (this.activeSubscriptions) {
-                        // Emit new block subscription
                         this.emit(
                             BlockUpdatesEvents.BLOCK_UPDATES_SUBSCRIPTION,
                             chainId, // Update chainId
                             currentBlock, // Old block number
                             blockNumber // New block number
                         );
+                    } else {
+                        this.emit(
+                            BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
+                            chainId, // Update chainId
+                            currentBlock, // Old block number
+                            blockNumber // New block number
+                        );
                     }
-
-                    // Emit new block subscription
-                    this.emit(
-                        BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
-                        chainId, // Update chainId
-                        currentBlock, // Old block number
-                        blockNumber // New block number
-                    );
                 }
             });
         }

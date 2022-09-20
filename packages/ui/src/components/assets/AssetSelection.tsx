@@ -277,7 +277,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
         setActive?: Dispatch<SetStateAction<boolean>>
     }) => {
         return (
-            <div className="pb-6">
+            <div>
                 <input
                     readOnly
                     name="asset"
@@ -309,9 +309,9 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
                 {search &&
                     searchResult.length === 0 &&
                     selectedAssetList !== AssetListType.DEPOSIT && (
-                        <div className="px-3">
-                            <p className="text-xs text-black text-center p-4">
-                                The asset couldn’t be found, try adding it
+                        <div className="p-3">
+                            <p className="text-xs text-black text-center pb-3">
+                                The asset couldn&#8217;t be found, try adding it
                                 manually.
                             </p>
                             <ActionButton

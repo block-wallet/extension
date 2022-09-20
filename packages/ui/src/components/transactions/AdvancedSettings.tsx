@@ -340,7 +340,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                 <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
             </OutlinedButton>
             <Dialog open={isOpen}>
-                <div className="absolute top-0 right-0 p-4 z-40">
+                <div className="absolute top-0 right-0 p-3 z-40">
                     <div
                         onClick={() => {
                             setIsOpen(false)
@@ -351,10 +351,10 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                     </div>
                 </div>
                 <div
-                    className="flex flex-col w-full space-y-2 p-2"
+                    className="flex flex-col w-full space-y-1 p-2"
                     ref={clickOutsideRef}
                 >
-                    <span className="p-0 text-base font-bold">{label}</span>
+                    <span className="text-base font-bold">{label}</span>
 
                     {display.slippage && (
                         <div className="flex flex-col">

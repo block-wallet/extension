@@ -534,6 +534,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     topMargin={60}
                     bottomMargin={200}
                     networkList={filteredAvailableNetworks}
+                    isLoading={isFetchingRoutes}
                     selectedNetwork={
                         selectedToNetwork &&
                         availbleChainsId.includes(selectedToNetwork.id)

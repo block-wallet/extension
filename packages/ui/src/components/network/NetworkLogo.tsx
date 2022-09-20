@@ -16,7 +16,7 @@ const NetworkLogo: FunctionComponent<NetworkLogoProps> = ({
     return (
         <div
             className={classnames(
-                "flex items-center justify-center rounded-full",
+                "flex items-center justify-center",
                 bigLogo ? "w-8 h-8" : "w-6 h-6"
             )}
         >

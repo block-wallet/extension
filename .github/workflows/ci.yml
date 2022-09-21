@@ -246,7 +246,7 @@ jobs:
         with:
           path: |
             **/node_modules
-          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-cypress-${{ hashFiles('**/block-wallet/e2e-tests/yarn.lock') }}
 
       - name: Install e2e dependencies
         run: |

@@ -6,7 +6,6 @@ on:
 env:
   BLOCK_WALLET_URL: url.txt
   BLOCK_WALLET_FOLDER: blockwallet-build
-  CHROME_VERSION: 97.0.4692.71
   S3_PATH: s3://releases.blockwallet.io/tmp/
 
 jobs:
@@ -214,7 +213,7 @@ jobs:
 
   e2e:
     needs: [build]
-    container: cypress/browsers:node16.13.2-chrome97-ff96
+    container: cypress/browsers:node16.16.0-chrome105-ff99-edge
     runs-on: ubuntu-latest
     if: startsWith(github.ref_name, 'dependabot/') == false
     steps:

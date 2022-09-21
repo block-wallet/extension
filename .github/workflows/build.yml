@@ -21,7 +21,6 @@ env:
   EXTENSION_NAME: block-wallet-${{ github.event.inputs.extension-version }}
   ARTIFACTS_FOLDER: artifacts
   S3_PATH: s3://releases.blockwallet.io/extension
-  CHROME_VERSION: 97.0.4692.71
   TARGET_BRANCH: master
 
 jobs:
@@ -193,7 +192,7 @@ jobs:
 
   tests:
     needs: build
-    container: cypress/browsers:node16.13.2-chrome97-ff96
+    container: cypress/browsers:node16.16.0-chrome105-ff99-edge
     runs-on: ubuntu-latest
     env:
       WIDTH: 357

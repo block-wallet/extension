@@ -30,7 +30,6 @@ import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes, classnames } from "../../styles/classes"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import { InferType } from "yup"
-import { capitalize } from "../../util/capitalize"
 import { formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
 import { formatUnits, parseUnits } from "ethers/lib/utils"
@@ -56,6 +55,8 @@ import { SwapConfirmPageLocalState } from "../swap/SwapConfirmPage"
 import { ExchangeType } from "../../context/commTypes"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
+import NetworkDisplayBadge from "../../components/chain/NetworkDisplayBadge"
+import { useBlankState } from "../../context/background/backgroundHooks"
 
 const UNLIMITED_ALLOWANCE = ethers.constants.MaxUint256
 
@@ -215,7 +216,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
     }, [])
 
     const selectedAccount = useSelectedAccount()
-    const { chainId, isEIP1559Compatible, name } = useSelectedNetwork()
+    const { chainId, isEIP1559Compatible } = useSelectedNetwork()
+    const { availableNetworks, selectedNetwork } = useBlankState()!
     const { nativeToken } = useTokensList()
     const { gasPricesLevels } = useGasPriceData()
 
@@ -259,7 +261,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const [customNonce, setCustomNonce] = useState<number | undefined>()
 
     // Set data
-    const networkName = capitalize(name)
+    const network = availableNetworks[selectedNetwork.toUpperCase()]
     const isApproving = status === "loading" && isOpen
     const minimumAllowance = BigNumber.from(minAllowance || 0)
     const hasMinAllowance = minimumAllowance.gt(BigNumber.from(0))
@@ -752,15 +754,15 @@ const ApprovePage: FunctionComponent<{}> = () => {
         <PopupLayout
             header={
                 <PopupHeader
-                    title={
-                        isEditAllowanceSection
-                            ? "Custom Allowance"
-                            : "Allowance"
-                    }
+                    title={"Allowance"}
                     disabled={isApproving}
                     onBack={onBack()}
                     keepState
-                />
+                >
+                    <div className="flex grow justify-end pr-1">
+                        <NetworkDisplayBadge network={network} truncate />
+                    </div>
+                </PopupHeader>
             }
             footer={
                 <PopupFooter>
@@ -815,12 +817,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     </span>
                     <span className="text-xs text-gray-600">
                         {formatRounded(
-                            formatUnits(assetBalance || "0", assetDecimals)
-                        )}
-                        {` ${assetName}`}
-                    </span>
-                    <span className="text-xs text-gray-600">
-                        {formatRounded(
                             formatUnits(
                                 nativeToken.balance || "0",
                                 nativeToken.token.decimals
@@ -829,12 +825,12 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         {` ${nativeToken.token.symbol}`}
                     </span>
                 </div>
-                <div className="flex flex-row items-center ml-auto p-1 px-2 pr-1 text-gray-600 rounded-md border border-primary-200 text-xs bg-green-100">
-                    <span className="inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-green-400 pointer-events-none" />
-                    <span className="mr-1 pointer-events-none text-green-600">
-                        {networkName}
-                    </span>
-                </div>
+                <p className="ml-auto text-sm text-gray-600">
+                    {formatRounded(
+                        formatUnits(assetBalance || "0", assetDecimals)
+                    )}
+                    {` ${assetName}`}
+                </p>
             </div>
             <Divider />
             {isEditAllowanceSection ? editAllowanceSection : mainSection}

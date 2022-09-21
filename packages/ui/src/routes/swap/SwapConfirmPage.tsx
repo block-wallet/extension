@@ -571,7 +571,7 @@ const SwapPageConfirm: FC<{}> = () => {
                     />
                 )}
 
-                <div className="flex flex-row space-x-2 items-center py-3">
+                <div className="flex flex-row items-center py-3">
                     {/* Settings */}
                     <AdvancedSettings
                         address={selectedAccount.address}
@@ -599,7 +599,7 @@ const SwapPageConfirm: FC<{}> = () => {
                             swapParameters && setShowDetails(true)
                         }}
                         className={classnames(
-                            "w-full",
+                            "w-full ml-2",
                             !swapParameters &&
                                 "cursor-not-allowed hover:border-default"
                         )}

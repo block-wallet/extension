@@ -340,7 +340,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                 <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
             </OutlinedButton>
             <Dialog open={isOpen}>
-                <div className="absolute top-0 right-0 p-3 z-40">
+                <div className="absolute top-0 right-0 p-5 z-40">
                     <div
                         onClick={() => {
                             setIsOpen(false)
@@ -351,13 +351,13 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                     </div>
                 </div>
                 <div
-                    className="flex flex-col w-full space-y-1 p-2"
+                    className="flex flex-col w-full px-3"
                     ref={clickOutsideRef}
                 >
-                    <span className="text-base font-bold">{label}</span>
+                    <p className="text-base font-bold pb-3">{label}</p>
 
                     {display.slippage && (
-                        <div className="flex flex-col">
+                        <div className="w-full pb-2">
                             <p className="text-xs font-medium pb-1">
                                 Slippage percentage (%)
                             </p>
@@ -371,6 +371,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                     onSlippageChange(e)
                                 }}
                                 className={classnames(
+                                    "w-full",
                                     Classes.inputBordered,
                                     errors.slippage
                                         ? "border-red-400 focus:border-red-400"
@@ -378,20 +379,17 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                               "border-yellow-400 focus:border-yellow-600"
                                 )}
                             />
-                            {errors.slippage?.message ? (
+                            {errors.slippage?.message || slippageWarning ? (
                                 <p className="text-xs text-red-500 pt-1">
-                                    {errors.slippage?.message}
+                                    {errors.slippage?.message ||
+                                        slippageWarning}
                                 </p>
-                            ) : (
-                                <p className="text-xs text-yellow-500 pt-1">
-                                    {slippageWarning} &nbsp;
-                                </p>
-                            )}
+                            ) : null}
                         </div>
                     )}
 
                     {display.nonce && (
-                        <div className="flex flex-col">
+                        <div className="w-full pb-2">
                             <p className="text-xs font-medium pb-1">
                                 Custom Nonce
                             </p>
@@ -405,23 +403,26 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                     onNonceChange(e)
                                 }}
                                 className={classnames(
+                                    "w-full",
                                     Classes.inputBordered,
                                     errors.nonce &&
                                         "border-red-400 focus:border-red-400"
                                 )}
                             />
-                            <p className="text-xs text-red-500 pt-1">
-                                {errors.nonce?.message}&nbsp;
-                            </p>
+                            {errors.nonce?.message ? (
+                                <p className="text-xs text-red-500 pt-1">
+                                    {errors.nonce.message}
+                                </p>
+                            ) : null}
                         </div>
                     )}
 
                     {display.flashbots && isFlashbotsAvailable && (
-                        <div className="flex flex-col space-y-1">
-                            <div className="flex space-x-1 items-center">
-                                <span className="text-xs font-medium ">
+                        <div className="w-full pb-2">
+                            <div className="flex items-center pb-1">
+                                <p className="text-xs font-medium ">
                                     Flashbots
-                                </span>
+                                </p>
                                 <div className="group relative">
                                     <AiFillInfoCircle
                                         size={20}
@@ -429,16 +430,15 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                     />
                                     <Tooltip
                                         content={
-                                            <div className="flex flex-col font-normal items-start text-xs text-white-500">
-                                                <div className="flex flex-row items-end space-x-7">
-                                                    <span>
-                                                        Transactions consuming
-                                                        less than 42,000 gas
-                                                        <br />
-                                                        will be mined normally,
-                                                        without Flashbots.
-                                                    </span>
-                                                </div>
+                                            <div className="p-0.5 font-normal text-center text-xs text-white-500">
+                                                <p>
+                                                    Transactions consuming less
+                                                    than 42,000 gas
+                                                </p>
+                                                <p>
+                                                    will be mined normally,
+                                                    without Flashbots.
+                                                </p>
                                             </div>
                                         }
                                     />
@@ -461,12 +461,12 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
 
                     <p
                         onClick={() => resetSettings()}
-                        className="text-xs text-blue-500 hover:text-blue-800 cursor-pointer w-min pb-1"
+                        className="text-xs text-blue-500 hover:text-blue-800 cursor-pointer w-min"
                     >
                         Reset
                     </p>
 
-                    <div className="-mx-5 pb-2">
+                    <div className="-mx-5 py-2">
                         <Divider />
                     </div>
 

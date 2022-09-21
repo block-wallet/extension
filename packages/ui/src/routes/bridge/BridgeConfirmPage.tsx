@@ -570,7 +570,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     />
                 )}
 
-                <div className="flex flex-row space-x-2 items-center py-3">
+                <div className="flex flex-row items-center py-3">
                     {/* Settings */}
                     <AdvancedSettings
                         address={selectedAccount.address}
@@ -598,7 +598,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                             quote && setShowDetails(true)
                         }}
                         className={classnames(
-                            "w-full",
+                            "w-full ml-2",
                             !quote && "cursor-not-allowed hover:border-default"
                         )}
                     >

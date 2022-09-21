@@ -255,6 +255,7 @@ jobs:
           url=$(cat $BLOCK_WALLET_FOLDER/$BLOCK_WALLET_URL)
           wget $url -O blockwallet-extension.zip
           rm -rf blockwallet-extension
+          sudo apt install -y unzip
           unzip blockwallet-extension.zip
           mv dist blockwallet-extension
 

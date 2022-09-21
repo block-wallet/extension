@@ -91,7 +91,7 @@ export interface ActionsTimeInterval {
 
 // If the interval is < than blockNumberPull the action will happend 'every new block'.
 export const ACTIONS_TIME_INTERVALS_DEFAULT_VALUES = {
-    blockNumberPull: 10 * SECOND,
+    blockNumberPull: 15 * SECOND,
     balanceFetch: 30 * SECOND,
     gasPricesUpdate: 8 * SECOND,
     exchangeRatesFetch: 1 * MINUTE,
@@ -103,7 +103,7 @@ export const ACTIONS_TIME_INTERVALS_DEFAULT_VALUES = {
 export const FAST_TIME_INTERVALS_DEFAULT_VALUES = {
     ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     ...{
-        blockNumberPull: 4 * SECOND,
+        blockNumberPull: 6 * SECOND,
         balanceFetch: 20 * SECOND,
         gasPricesUpdate: 3 * SECOND,
         transactionsStatusesUpdate: 3 * SECOND,
@@ -115,7 +115,7 @@ export const FAST_TIME_INTERVALS_DEFAULT_VALUES = {
 const TESTNET_TIME_INTERVALS_DEFAULT_VALUES = {
     ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     ...{
-        blockNumberPull: 20 * SECOND,
+        blockNumberPull: 30 * SECOND,
         balanceFetch: 1 * MINUTE,
         gasPricesUpdate: 19 * SECOND,
         transactionsStatusesUpdate: 19 * SECOND,

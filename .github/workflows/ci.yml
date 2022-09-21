@@ -240,6 +240,14 @@ jobs:
         run: |
           npm install --global yarn
 
+      - name: Cache e2e dependencies
+        id: cache-cypress
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
+
       - name: Install e2e dependencies
         run: |
           yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
@@ -255,7 +263,7 @@ jobs:
           url=$(cat $BLOCK_WALLET_FOLDER/$BLOCK_WALLET_URL)
           wget $url -O blockwallet-extension.zip
           rm -rf blockwallet-extension
-          sudo apt install -y unzip
+          apt install -y unzip
           unzip blockwallet-extension.zip
           mv dist blockwallet-extension
 

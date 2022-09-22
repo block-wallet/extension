@@ -22,6 +22,7 @@ env:
   ARTIFACTS_FOLDER: artifacts
   S3_PATH: s3://releases.blockwallet.io/extension
   TARGET_BRANCH: master
+  CYPRESS_CACHE_FOLDER: cypress/cache
 
 jobs:
   validation:
@@ -221,7 +222,8 @@ jobs:
         with:
           path: |
             node_modules
-          key: ${{ runner.os }}-cypress-${{ hashFiles('yarn.lock') }}
+            cypress/cache
+          key: ${{ runner.os }}-cypress-v1${{ hashFiles('yarn.lock') }}
 
       - name: Download the extension
         uses: actions/download-artifact@v3

@@ -213,7 +213,7 @@ jobs:
           path: ${{ env.BLOCK_WALLET_URL }}
 
   e2e:
-    #needs: [build]
+    needs: [build]
     container: cypress/browsers:node16.16.0-chrome105-ff99-edge
     runs-on: ubuntu-latest
     if: startsWith(github.ref_name, 'dependabot/') == false

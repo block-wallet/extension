@@ -112,7 +112,7 @@ export const FAST_TIME_INTERVALS_DEFAULT_VALUES = {
     },
 };
 
-const TESTNET_TIME_INTERVALS_DEFAULT_VALUES = {
+export const TESTNET_TIME_INTERVALS_DEFAULT_VALUES = {
     ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     ...{
         blockNumberPull: 20 * SECOND,
@@ -557,11 +557,41 @@ export const INITIAL_NETWORKS: Networks = {
         },
         nativelySupported: true,
     },
+    ZKSYNC_ALPHA_TESTNET: {
+        name: 'zksync_alpha_testnet',
+        desc: 'zkSync Alpha Testnet',
+        chainId: 280,
+        networkVersion: '280',
+        nativeCurrency: {
+            name: 'Ether',
+            symbol: 'ETH',
+            decimals: 18,
+        },
+        iconUrls: [
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zksync/info/logo.png',
+        ],
+        isCustomNetwork: true,
+        enable: true,
+        test: true,
+        order: 15,
+        features: [FEATURES.SENDS],
+        ens: false,
+        showGasLevels: true,
+        rpcUrls: [`https://zksync2-testnet.zksync.dev`],
+        blockExplorerUrls: ['https://zksync2-testnet.zkscan.io'],
+        blockExplorerName: 'zkScan',
+        actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
+        tornadoIntervals: {
+            depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
+            derivationsForward: DERIVATIONS_FORWARD,
+        },
+        nativelySupported: true,
+    },
     LOCALHOST: {
         name: 'localhost',
         desc: 'Localhost 8545',
-        chainId: 1337,
-        networkVersion: '1337',
+        chainId: 31337,
+        networkVersion: '31337',
         nativeCurrency: {
             name: 'Ether',
             symbol: 'ETH',
@@ -570,7 +600,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: true,
         enable: true,
         test: true,
-        order: 15,
+        order: 16,
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,

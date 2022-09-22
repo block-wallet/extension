@@ -21,8 +21,8 @@ env:
   EXTENSION_NAME: block-wallet-${{ github.event.inputs.extension-version }}
   ARTIFACTS_FOLDER: artifacts
   S3_PATH: s3://releases.blockwallet.io/extension
-  CHROME_VERSION: 97.0.4692.71
   TARGET_BRANCH: master
+  CYPRESS_CACHE_FOLDER: cypress/cache
 
 jobs:
   validation:
@@ -193,7 +193,7 @@ jobs:
 
   tests:
     needs: build
-    container: cypress/browsers:node16.13.2-chrome97-ff96
+    container: cypress/browsers:node16.16.0-chrome105-ff99-edge
     runs-on: ubuntu-latest
     env:
       WIDTH: 357
@@ -221,8 +221,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            **/node_modules
-          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
+            node_modules
+            cypress/cache
+          key: ${{ runner.os }}-cypress-v1-${{ hashFiles('yarn.lock') }}
 
       - name: Download the extension
         uses: actions/download-artifact@v3
@@ -253,7 +254,7 @@ jobs:
 
       - name: Install ImageMagick (needed for convert)
         run: |
-          sudo apt install -y imagemagick
+          apt install -y imagemagick
 
       - name: Cut the screenshot
         run: |

@@ -259,7 +259,7 @@ const SeedImport: FunctionComponent<{
                         <label htmlFor="acceptTOU" className="text-xs">
                             I have read and agree to the{" "}
                             <a
-                                href="https://www.blockwallet.io/terms-of-use-of-block-wallet.html"
+                                href="https://blockwallet.io/terms-of-use-of-block-wallet.html"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-primary-300"
@@ -291,13 +291,13 @@ const SeedImport: FunctionComponent<{
                             errors.passwordConfirmation ||
                             errors.acceptTOU ||
                             isLoading) &&
-                            "opacity-50 pointer-events-none"
+                        "opacity-50 pointer-events-none"
                     )}
                     disabled={
                         seedPhraseError.length ||
-                        errors.password ||
-                        errors.passwordConfirmation ||
-                        errors.acceptTOU
+                            errors.password ||
+                            errors.passwordConfirmation ||
+                            errors.acceptTOU
                             ? true
                             : false
                     }

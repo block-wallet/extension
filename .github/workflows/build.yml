@@ -223,7 +223,7 @@ jobs:
           path: |
             node_modules
             cypress/cache
-          key: ${{ runner.os }}-cypress-v1${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-cypress-v1-${{ hashFiles('yarn.lock') }}
 
       - name: Download the extension
         uses: actions/download-artifact@v3

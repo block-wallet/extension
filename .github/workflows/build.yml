@@ -220,8 +220,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: |
-            **/node_modules
-          key: ${{ runner.os }}-cypress-${{ hashFiles('**/yarn.lock') }}
+            node_modules
+          key: ${{ runner.os }}-cypress-${{ hashFiles('yarn.lock') }}
 
       - name: Download the extension
         uses: actions/download-artifact@v3

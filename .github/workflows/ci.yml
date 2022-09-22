@@ -239,14 +239,14 @@ jobs:
       - name: Install yarn
         run: |
           npm install --global yarn
-
+          
       - name: Cache e2e dependencies
         id: cache-cypress
         uses: actions/cache@v3
         with:
           path: |
-            **/node_modules
-          key: ${{ runner.os }}-cypress-${{ hashFiles('**/block-wallet/e2e-tests/yarn.lock') }}
+            node_modules
+          key: ${{ runner.os }}-cypress-${{ hashFiles('yarn.lock') }}
 
       - name: Install e2e dependencies
         run: |

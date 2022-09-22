@@ -7,6 +7,7 @@ env:
   BLOCK_WALLET_URL: url.txt
   BLOCK_WALLET_FOLDER: blockwallet-build
   S3_PATH: s3://releases.blockwallet.io/tmp/
+  CYPRESS_CACHE_FOLDER: cypress/cache
 
 jobs:
   lint:
@@ -246,7 +247,8 @@ jobs:
         with:
           path: |
             node_modules
-          key: ${{ runner.os }}-cypress-${{ hashFiles('yarn.lock') }}
+            cypress/cache
+          key: ${{ runner.os }}-cypress-v1-${{ hashFiles('yarn.lock') }}
 
       - name: Install e2e dependencies
         run: |

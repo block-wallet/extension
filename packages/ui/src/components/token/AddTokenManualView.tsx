@@ -1,13 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 
-// Types
-import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-
 // Context
-import { useBlankState } from "../../context/background/backgroundHooks"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
-import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 
 // Components
 import Spinner from "../spinner/Spinner"
@@ -23,6 +17,7 @@ import { searchTokenInAssetsList } from "../../context/commActions"
 // Assets
 import { utils } from "ethers/lib/ethers"
 import { useForm } from "react-hook-form"
+import { useAccountTokens } from "../../context/hooks/useAccountTokens"
 
 export interface addTokenManualViewProps {
     manualTokenAddress?: string
@@ -78,15 +73,7 @@ const AddTokenManualView = ({
 
     const values = watch()
     const history = useOnMountHistory()
-    const { userTokens } = useBlankState()!
-    const account = useSelectedAccount()
-    const network = useSelectedNetwork()
-    const tokens =
-        userTokens &&
-        userTokens[account.address] &&
-        userTokens[account.address][network.chainId]
-            ? userTokens[account.address][network.chainId]
-            : {}
+    const tokens = useAccountTokens()
 
     const tokenAddresses = useRef(
         Object.keys(tokens ?? {}).map((v) => v.toLowerCase())
@@ -144,6 +131,7 @@ const AddTokenManualView = ({
             msg = "You already added this token"
         }
 
+        setMessage(msg)
         if (setSubmitEnabled && msg !== "") {
             setSubmitEnabled(false)
         }

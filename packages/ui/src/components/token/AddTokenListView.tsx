@@ -11,17 +11,17 @@ import { TokenResponse } from "../../routes/settings/AddTokensPage"
 import { useEffect, useState } from "react"
 import useSubmitOnEnter from "../../util/hooks/useSubmitOnEnter"
 
-export interface tokenSearchView {
+export interface addTokenListView {
     results?: TokenResponse[]
     searchedValue?: string
     setSubmitEnabled?: (value: any) => Promise<any> | void
 }
 
-const SearchedTokenView = ({
+const AddTokenListView = ({
     results = [],
     searchedValue = "",
     setSubmitEnabled = undefined,
-}: tokenSearchView) => {
+}: addTokenListView) => {
     const history = useOnMountHistory()
     // const [message, setMessage] = useState<string>("")
     const [selected, setSelected] = useState<TokenResponse[]>([])
@@ -184,4 +184,4 @@ const SearchedTokenView = ({
     )
 }
 
-export default SearchedTokenView
+export default AddTokenListView

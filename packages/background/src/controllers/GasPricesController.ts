@@ -302,7 +302,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                         await httpClient.get<FeeDataResponse>(
                             `${CHAIN_FEE_DATA_SERVICE_URL}/fee_data`,
                             {
-                                chain_id: chainId,
+                                c: chainId,
                             }
                         );
 

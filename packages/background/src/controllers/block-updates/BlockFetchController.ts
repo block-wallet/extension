@@ -350,9 +350,9 @@ export class OffChainBlockFetchService {
     public async fetchBlockNumber(chainId: number): Promise<number> {
         try {
             const blockDataResponse = await httpClient.get<{
-                blockNumber: string;
-            }>(`${OFF_CHAIN_BLOCK_FETCH_SERVICE_URL}/block_number`, {
-                chain_id: chainId,
+                bn: string;
+            }>(`${OFF_CHAIN_BLOCK_FETCH_SERVICE_URL}/bn`, {
+                c: chainId,
             });
 
             if (!blockDataResponse) {
@@ -360,15 +360,15 @@ export class OffChainBlockFetchService {
             }
 
             if (
-                !blockDataResponse.blockNumber ||
-                isNaN(parseInt(blockDataResponse.blockNumber))
+                !blockDataResponse.bn ||
+                isNaN(parseInt(blockDataResponse.bn))
             ) {
                 throw new Error(
-                    `block number with invalid format: ${blockDataResponse.blockNumber}`
+                    `block number with invalid format: ${blockDataResponse.bn}`
                 );
             }
 
-            return parseInt(blockDataResponse.blockNumber);
+            return parseInt(blockDataResponse.bn);
         } catch (err) {
             log.warn(
                 `Error fetching block number for chain ${chainId}`,

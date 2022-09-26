@@ -8,7 +8,7 @@ ifeq ($(ENVIRONMENT), dev)
 	npx webpack --config ./webpack/webpack.dev.js
 else
 	@echo "Building in production mode"
-	webpack --config ./webpack/webpack.config.js
+	npx webpack --config ./webpack/webpack.config.js
 endif
 
 test/provider:

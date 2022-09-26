@@ -23,6 +23,7 @@ import { formatUnits } from 'ethers/lib/utils';
 
 const CHAINLINK_DATAFEEDS_CONTRACTS = {
     'ETH/USD': {
+        contract: 'ETH/USD',
         address: '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419',
         abi: [
             {
@@ -478,6 +479,7 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         },
     };
     private readonly _exchangeRateFetchIntervalController: ActionIntervalController;
+    private readonly _chainLinkDataFeedContract: Contract;
 
     constructor(
         initState: ExchangeRatesControllerState,
@@ -494,6 +496,27 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
 
         this._exchangeRateFetchIntervalController =
             new ActionIntervalController(this._networkController);
+
+        const dataFeedContract =
+            this.networkNativeCurrency.symbol.toUpperCase() +
+            '/' +
+            this._preferencesController.nativeCurrency.toUpperCase();
+        const dataFeedAddress =
+            Object.values(CHAINLINK_DATAFEEDS_CONTRACTS).find(
+                (k) => k.contract === dataFeedContract
+            )?.address ?? '';
+        const dataFeedABI =
+            Object.values(CHAINLINK_DATAFEEDS_CONTRACTS).find(
+                (k) => k.contract === dataFeedContract
+            )?.abi ?? '';
+
+        this._chainLinkDataFeedContract = new Contract(
+            dataFeedAddress,
+            dataFeedABI,
+            //TODO: check if we want to get the price using the mainnet datafeed even when standing on other networks
+            this._networkController.getProviderFromName('mainnet')
+            // this._networkController.getProvider()
+        );
 
         this._networkController.on(
             NetworkEvents.NETWORK_CHANGE,
@@ -566,35 +589,15 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
             ];
 
         // Get network native currency rate
-        //  - If preferencesController.nativeCurrency is USD --> fetch ETH/USD price from ChainLink data feed
-        //  - For the rest of the assets, keep fetching them from Coingecko for now.
-        const { chainId } = this._networkController.network;
         const nativeCurrency =
             this._preferencesController.nativeCurrency.toLowerCase();
 
-        //chainId === 1 &&
         if (nativeCurrency == 'usd') {
-            const dataFeed = CHAINLINK_DATAFEEDS_CONTRACTS['ETH/USD'];
-            const chainLinkDataFeedContract = new Contract(
-                dataFeed.address,
-                dataFeed.abi,
-                //TODO: check if we want to get the price using the mainnet datafeed even when standing on other networks
-                this._networkController.getProviderFromName('mainnet')
-                // this._networkController.getProvider()
-            );
-
-            const roundData = await chainLinkDataFeedContract.latestRoundData();
-            const price = parseFloat(
-                formatUnits(BigNumber.from(roundData.answer), 8)
-            );
-            console.log('Latest Round Data', price);
-
-            // rates[symbol] = price; // Data Feed price.
-            rates['eth'] = price; // Data Feed price.
+            rates['ETH'] = await this._getChainLinkDataFeedPrice(); // Data Feed price from ChainLink
         }
 
         // If native token is not ETH, we fetch the price from coingecko
-        if (symbol !== 'eth') {
+        if (symbol.toLowerCase() !== 'eth') {
             const nativeCurrencyRates = (
                 await this._getNetworkNativeCurrencyRate()
             )[currencyApiId];
@@ -602,12 +605,6 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
             rates[symbol] =
                 nativeCurrencyRates[this._preferencesController.nativeCurrency];
         }
-
-        // TODO:
-        // - Chequear el symbol en distintas networks y si es ETH asegurarse q se fetchea del feed
-        // - En el fetch del resto de los tokens, NO pisar el valor de ETH calculado anteriorimente (en las networks q eth no es nativecurrency).
-        // - Una vez q funca todo, abstraer logica a un metodo lo mas "generico" posible por si agregamos mas feeds
-        //    - por ej instanciar el contract solo en el constructor
 
         // Get tokens exchange rates
         const tokenRatesQuery = await this._getTokenRates();
@@ -695,5 +692,14 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
      */
     private _setRates = (rates: Rates) => {
         this.store.updateState({ exchangeRates: rates });
+    };
+
+    /**
+     * Get data feed price from ChaiLink
+     */
+    private _getChainLinkDataFeedPrice = async () => {
+        const roundData =
+            await this._chainLinkDataFeedContract.latestRoundData();
+        return parseFloat(formatUnits(BigNumber.from(roundData.answer), 8));
     };
 }

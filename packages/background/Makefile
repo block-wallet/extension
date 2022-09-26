@@ -22,11 +22,11 @@ test/background:
 		--exit
 
 build/background:
-	# @if [ "$(ENVIRONMENT)" == "dev" ]; then \
-	# 	npx webpack --config ./webpack/webpack.dev.js; \
-	# else \
-	npx webpack --config ./webpack/webpack.config.js; \
-	# fi
+	@if [ "$(ENVIRONMENT)" == "dev" ]; then \
+		npx webpack --config ./webpack/webpack.dev.js; \
+	else \
+		npx webpack --config ./webpack/webpack.config.js; \
+	fi
 	@cp ./src/infrastructure/hardware/trezor/trezor-usb-permissions.html ../../dist/trezor-usb-permissions.html
 
 

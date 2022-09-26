@@ -205,6 +205,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     }, [
         watchedAmount,
         selectedToken,
+        selectedToken?.address,
         triggerAmountValidation,
         setBridgeDataState,
     ])

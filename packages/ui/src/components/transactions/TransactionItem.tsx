@@ -695,7 +695,7 @@ const TransactionItem: React.FC<{
                             </div>
                             <div className="w-full flex justify-end">
                                 <span
-                                    className="text-xs text-gray-600 truncate w-5/6 text-right mr-1"
+                                    className="text-xs text-gray-600 truncate"
                                     title={transferCurrencyAmount}
                                 >
                                     {transferCurrencyAmount}

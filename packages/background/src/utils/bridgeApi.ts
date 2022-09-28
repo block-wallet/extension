@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import { IToken } from '../controllers/erc-20/Token';
 import { IChain } from './types/chain';
 import {
@@ -241,6 +241,9 @@ const LiFiBridge: IBridge = {
                 fromChain: r.fromChainId,
                 toChain: r.toChainId,
                 txHash: r.sendTxHash,
+            },
+            headers: {
+                'Cache-Control': 'no-cache',
             },
         });
         if (response.status === 400) {

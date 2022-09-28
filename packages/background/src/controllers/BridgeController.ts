@@ -243,9 +243,24 @@ export default class BridgeController extends ExchangeController<
             const availableBridgeChains: IChain[] = (
                 await implementor.getSupportedChains()
             ).map((chain) => {
+                const userNetwork = Object.values(
+                    this._networkController.networks
+                ).find((network) => network.chainId === chain.id);
+
+                if (userNetwork) {
+                    return {
+                        ...chain,
+                        name: userNetwork?.desc ? userNetwork.desc : chain.name,
+                        logo: userNetwork?.iconUrls?.length
+                            ? userNetwork.iconUrls[0]
+                            : chain.logo,
+                    };
+                }
+
                 const knownChain = getChainListItem(chain.id);
                 return {
                     ...chain,
+                    name: knownChain?.name ? knownChain.name : chain.name,
                     logo: knownChain?.logo ? knownChain.logo : chain.logo,
                 };
             });
@@ -420,10 +435,6 @@ export default class BridgeController extends ExchangeController<
         const bridgePromise = this._executeBridgeTransaction(
             aggregator,
             bridgeTx
-        );
-        this._tokenController.attemptAddToken(
-            bridgeTx.params.fromToken.address,
-            bridgeTx.params.fromChainId
         );
         this._tokenController.attemptAddToken(
             bridgeTx.params.toToken.address,
@@ -915,6 +926,11 @@ export default class BridgeController extends ExchangeController<
                 //If sending transaction doesn't exist, then avoid persisting this transaction as well.
                 if (sendingTransaction) {
                     try {
+                        //attempt adding the toToken again
+                        this._tokenController.attemptAddToken(
+                            pendingTx.toToken.address,
+                            chainId
+                        );
                         await this._fetchBridgeReceivingTransaction({
                             accountAddress: address,
                             receivingTxHash: pendingTx.hash,

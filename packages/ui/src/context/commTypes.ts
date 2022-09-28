@@ -244,6 +244,8 @@ export enum TransactionCategories {
     EXCHANGE = "exchange",
     BRIDGE = "bridge",
     INCOMING_BRIDGE = "incoming_bridge",
+    // Category that temporarely represents receiving transactions in a bridge operation:
+    INCOMING_BRIDGE_PLACEHOLDER = "incoming_bridge_placeholder",
 }
 
 export enum PendingWithdrawalStatus {

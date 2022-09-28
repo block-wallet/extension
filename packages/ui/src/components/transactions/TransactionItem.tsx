@@ -69,6 +69,7 @@ const transactionMessages = {
     [TransactionCategories.EXCHANGE]: "BlockWallet Swap",
     [TransactionCategories.BRIDGE]: "BlockWallet Bridge",
     [TransactionCategories.INCOMING_BRIDGE]: "Incoming Bridge",
+    [TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER]: "Incoming Bridge",
 }
 
 const pendingTransactionMessages: { [x: string]: string } = {
@@ -455,6 +456,7 @@ const TransactionItem: React.FC<{
             case TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER:
             case TransactionCategories.BLANK_WITHDRAWAL:
             case TransactionCategories.INCOMING_BRIDGE:
+            case TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER:
                 return "+"
 
             default:
@@ -595,6 +597,8 @@ const TransactionItem: React.FC<{
 
                         {status === TransactionStatus.SUBMITTED &&
                             metaType === MetaType.REGULAR &&
+                            transactionCategory !==
+                                TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER &&
                             !isBlankWithdraw && (
                                 <div className="mt-2">
                                     {blankDepositId &&

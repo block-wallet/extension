@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers';
-import { BaseController } from '../infrastructure/BaseController';
+import { isNativeTokenAddress } from '../utils/token';
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import { TransactionFeeData } from './erc-20/transactions/SignedTransaction';
 import { TokenOperationsController } from './erc-20/transactions/Transaction';
@@ -7,20 +7,13 @@ import NetworkController from './NetworkController';
 import { PreferencesController } from './PreferencesController';
 import TransactionController from './transactions/TransactionController';
 
-export class ExchangeController<
-    S = unknown,
-    M = unknown
-> extends BaseController<S, M> {
+class TokenAllowanceController {
     constructor(
-        protected readonly _networkController: NetworkController,
-        protected readonly _preferencesController: PreferencesController,
-        protected readonly _tokenOperationsController: TokenOperationsController,
-        protected readonly _transactionController: TransactionController,
-        initialState?: S,
-        initialMemState?: M
-    ) {
-        super(initialState, initialMemState);
-    }
+        private readonly _networkController: NetworkController,
+        private readonly _preferencesController: PreferencesController,
+        private readonly _tokenOperationsController: TokenOperationsController,
+        private readonly _transactionController: TransactionController
+    ) {}
 
     /**
      * Checks if the given account has enough allowance to make the exchange
@@ -30,12 +23,16 @@ export class ExchangeController<
      * @param spenderAddress The address of the sepender to check the allowance
      * @param tokenAddress Asset to be spended address
      */
-    public checkExchangeAllowance = async (
+    public checkTokenAllowance = async (
         account: string,
         amount: BigNumber,
         spenderAddress: string,
         tokenAddress: string
     ): Promise<boolean> => {
+        if (isNativeTokenAddress(tokenAddress)) {
+            return true;
+        }
+
         try {
             const allowance = await this._tokenOperationsController.allowance(
                 tokenAddress,
@@ -59,7 +56,7 @@ export class ExchangeController<
      * @param tokenAddress Spended asset token address
      * @param customNonce Custom transaction nonce
      */
-    public approveExchange = async (
+    public approveAllowance = async (
         allowance: BigNumber,
         amount: BigNumber,
         spender: string,
@@ -96,3 +93,4 @@ export class ExchangeController<
         return true;
     };
 }
+export default TokenAllowanceController;

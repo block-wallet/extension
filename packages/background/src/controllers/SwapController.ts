@@ -18,8 +18,6 @@ import {
     ContractSignatureParser,
 } from './transactions/ContractSignatureParser';
 import { BigNumber } from 'ethers';
-import { PreferencesController } from './PreferencesController';
-import { TokenOperationsController } from './erc-20/transactions/Transaction';
 import { TransactionCategories } from './transactions/utils/types';
 import { TransactionController } from './transactions/TransactionController';
 import { TransactionFeeData } from './erc-20/transactions/SignedTransaction';
@@ -29,7 +27,7 @@ import {
     get1InchErrorMessageFromAxiosResponse,
     map1InchErrorMessage,
 } from '../utils/1inchError';
-import { ExchangeController } from './ExchangeController';
+import TokenAllowanceController from './TokenAllowanceController';
 
 export enum ExchangeType {
     SWAP_1INCH = 'SWAP_1INCH',
@@ -73,21 +71,13 @@ export interface ExchangeParams {
  * Provides functionality to approve an asset transfer, fetch quotes for exchanges
  * depending on the exchange type, and execute the transactions.
  */
-export default class SwapController extends ExchangeController {
+export default class SwapController {
     constructor(
-        protected readonly _networkController: NetworkController,
-        protected readonly _preferencesController: PreferencesController,
-        protected readonly _tokenOperationsController: TokenOperationsController,
-        protected readonly _transactionController: TransactionController,
-        private readonly _tokenController: TokenController
-    ) {
-        super(
-            _networkController,
-            _preferencesController,
-            _tokenOperationsController,
-            _transactionController
-        );
-    }
+        private readonly _networkController: NetworkController,
+        private readonly _transactionController: TransactionController,
+        private readonly _tokenController: TokenController,
+        private readonly _tokenAllowanceController: TokenAllowanceController
+    ) {}
 
     /**
      * Checks if the given account has enough allowance to make the swap
@@ -104,7 +94,7 @@ export default class SwapController extends ExchangeController {
         tokenAddress: string
     ): Promise<boolean> => {
         const spender = await this._getSpender(exchangeType);
-        return this.checkExchangeAllowance(
+        return this._tokenAllowanceController.checkTokenAllowance(
             account,
             amount,
             spender,
@@ -131,7 +121,7 @@ export default class SwapController extends ExchangeController {
         customNonce?: number
     ): Promise<boolean> => {
         const spender = await this._getSpender(exchangeType);
-        return this.approveExchange(
+        return this._tokenAllowanceController.approveAllowance(
             allowance,
             amount,
             spender,

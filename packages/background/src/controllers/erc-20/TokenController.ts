@@ -661,7 +661,8 @@ export class TokenController extends BaseController<TokenControllerState> {
         return this.addCustomToken(
             firstToken,
             this.getSelectedAccountAddress(),
-            chainId
+            chainId,
+            false
         );
     };
 }

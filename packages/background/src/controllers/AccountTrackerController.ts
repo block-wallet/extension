@@ -181,15 +181,20 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             TokenControllerEvents.USER_TOKEN_CHANGE,
             async (accountAddress: string, chainId: number) => {
                 try {
+                    const assetAddresses =
+                        await this._tokenController.getUserTokenContractAddresses(
+                            accountAddress,
+                            chainId
+                        );
+
                     // Update the account balances
-                    await this.updateAccounts({
-                        addresses: [accountAddress],
-                        assetAddresses:
-                            await this._tokenController.getUserTokenContractAddresses(
-                                accountAddress,
-                                chainId
-                            ),
-                    });
+                    await this.updateAccounts(
+                        {
+                            addresses: [accountAddress],
+                            assetAddresses,
+                        },
+                        chainId
+                    );
                 } catch (err) {
                     log.warn(
                         'An error ocurred while updating the accouns',
@@ -643,7 +648,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      * @param {string[]?} addresses
      */
     public async updateAccounts(
-        updateAccountsOptions: UpdateAccountsOptions
+        updateAccountsOptions: UpdateAccountsOptions,
+        chainId: number = this._networkController.network.chainId
     ): Promise<void> {
         const release = !updateAccountsOptions.addresses
             ? await this._mutex.acquire()
@@ -657,15 +663,13 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 updateAccountsOptions.addresses ||
                 Object.keys(this.store.getState().accounts);
 
-            // Get network chainId
-            const { chainId } = this._networkController.network;
-
             // Provider is immutable, so reference won't be lost
-            const provider = this._networkController.getProvider();
+            const provider =
+                this._networkController.getProviderForChainId(chainId);
 
-            for (let i = 0; i < _addresses.length; i++) {
-                // If the chain changed we abort these operations
-                if (chainId == this._networkController.network.chainId) {
+            if (provider) {
+                for (let i = 0; i < _addresses.length; i++) {
+                    // If the chain changed we abort these operations
                     // Set $BLANK as visible on network change if available
                     await this._tokenController.setBlankToken(
                         _addresses[i],
@@ -952,7 +956,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     }
                     return this._tokenOperationsController.balanceOf(
                         tokenAddress,
-                        accountAddress
+                        accountAddress,
+                        provider
                     );
                 })
             );

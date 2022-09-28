@@ -32,6 +32,7 @@ import {
     TokenControllerProps,
 } from '../../src/controllers/erc-20/TokenController';
 import { BASE_SWAP_FEE } from '../../src/utils/types/1inch';
+import TokenAllowanceController from '@block-wallet/background/controllers/TokenAllowanceController';
 
 const BLANK_TOKEN_ADDRESS = '0x41a3dba3d677e573636ba691a70ff2d606c29666';
 
@@ -58,6 +59,7 @@ describe('Swap Controller', function () {
     let permissionsController: PermissionsController;
     let transactionController: TransactionController;
     let swapController: SwapController;
+    let tokenAllowanceController: TokenAllowanceController;
 
     this.beforeAll(() => {
         // Instantiate objects
@@ -116,12 +118,18 @@ describe('Swap Controller', function () {
             { txHistoryLimit: 40 }
         );
 
-        swapController = new SwapController(
+        tokenAllowanceController = new TokenAllowanceController(
             networkController,
             preferencesController,
             tokenOperationsController,
+            transactionController
+        );
+
+        swapController = new SwapController(
+            networkController,
             transactionController,
-            tokenController
+            tokenController,
+            tokenAllowanceController
         );
     });
 

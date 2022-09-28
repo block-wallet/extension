@@ -39,6 +39,7 @@ import {
     TransactionCategories,
     TransactionStatus,
 } from '@block-wallet/background/controllers/transactions/utils/types';
+import TokenAllowanceController from '@block-wallet/background/controllers/TokenAllowanceController';
 
 const TOKEN_A_GOERLI: IToken = {
     address: 'token_a_g',
@@ -61,8 +62,10 @@ const TOKEN_A_MAINNET = {
 const SUPPORTED_CHAINS: IChain[] = Object.values(INITIAL_NETWORKS).map(
     (net) => ({
         id: net.chainId,
-        logo: getChainListItem(net.chainId)?.logo || '',
-        name: net.name,
+        logo: net.iconUrls?.length
+            ? net.iconUrls[0]
+            : getChainListItem(net.chainId)?.logo || '',
+        name: net.desc,
         test: net.test,
     })
 );
@@ -100,6 +103,7 @@ describe.only('Bridge Controller', () => {
     let permissionsController: PermissionsController;
     let transactionController: TransactionController;
     let bridgeController: BridgeController;
+    let tokenAllowanceController: TokenAllowanceController;
 
     before(() => {
         //mock supported chains
@@ -122,6 +126,13 @@ describe.only('Bridge Controller', () => {
         tokenOperationsController = new TokenOperationsController({
             networkController: networkController,
         });
+
+        tokenAllowanceController = new TokenAllowanceController(
+            networkController,
+            preferencesController,
+            tokenOperationsController,
+            transactionController
+        );
 
         tokenController = new TokenController(
             {
@@ -164,10 +175,9 @@ describe.only('Bridge Controller', () => {
 
         bridgeController = new BridgeController(
             networkController,
-            preferencesController,
-            tokenOperationsController,
             transactionController,
-            tokenController
+            tokenController,
+            tokenAllowanceController
         );
     });
 

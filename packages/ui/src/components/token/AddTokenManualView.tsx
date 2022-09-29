@@ -98,25 +98,26 @@ const AddTokenManualView = ({
             }
 
             // populate symbol logo for manual token
-            searchTokenInAssetsList(tokenToAdd.symbol.toUpperCase()).then(
-                (res) => {
-                    const exactMatch = res.filter(
-                        (r) =>
-                            r.symbol.toLowerCase() ===
-                            tokenToAdd.symbol.toLowerCase()
-                    )[0]
-
-                    tokenToAdd.logo = exactMatch ? exactMatch.logo : ""
-
-                    history.push({
-                        pathname: "/settings/tokens/add/confirm",
-                        state: {
-                            tokens: [tokenToAdd],
-                            ...(history.location.state || {}),
-                        },
-                    })
-                }
+            const res = await searchTokenInAssetsList(
+                tokenToAdd.symbol.toUpperCase()
             )
+            if (res) {
+                const exactMatch = res.filter(
+                    (r) =>
+                        r.symbol.toLowerCase() ===
+                        tokenToAdd.symbol.toLowerCase()
+                )[0]
+
+                tokenToAdd.logo = exactMatch ? exactMatch.logo : ""
+
+                history.push({
+                    pathname: "/settings/tokens/add/confirm",
+                    state: {
+                        tokens: [tokenToAdd],
+                        ...(history.location.state || {}),
+                    },
+                })
+            }
         } catch (event) {
             // Invalid form data
             setError("tokenAddress", event.toString())

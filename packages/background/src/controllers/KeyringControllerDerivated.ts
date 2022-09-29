@@ -117,13 +117,23 @@ export default class KeyringControllerDerivated extends KeyringController {
      *
      * @emits KeyringController#unlock
      * @param {string} password - The keyring controller password.
-     * @returns {Promise<Object>} A Promise that resolves to the state.
+     * @returns {Promise<string>} A Promise that resolves to the encryption key.
      */
     @Hasheable
-    public async submitPassword(
-        @Hash password: string
-    ): Promise<KeyringControllerState> {
+    public async submitPassword(@Hash password: string): Promise<string> {
         return super.submitPassword(password);
+    }
+
+    /**
+     * Submit Encrypted Key
+     *
+     * Attempts to decrypt the current vault with a given encryption key
+     * and loads its keyrings into memory
+     *
+     * @param {string} encryptionKey
+     */
+    async submitEncryptionKey(encryptionKey: string) {
+        return super.submitEncryptionKey(encryptionKey);
     }
 
     /**
@@ -135,7 +145,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @param {string} password
      */
     @Hasheable
-    public async verifyPassword(@Hash password: string): Promise<void> {
+    public async hashAndVerifyPassword(@Hash password: string): Promise<void> {
         return super.verifyPassword(password);
     }
 
@@ -151,14 +161,14 @@ export default class KeyringControllerDerivated extends KeyringController {
         @Hash password: string,
         alreadyHashed?: string
     ): Promise<string> {
+        // TODO: Remove the second parameter (alreadyHashed) when the tornado code is removed.
         await super.verifyPassword(alreadyHashed || password);
         await this.verifyAccounts();
 
         const primaryKeyring = super.getKeyringsByType(
             KeyringTypes.HD_KEY_TREE
         )[0];
-        const serialized = await primaryKeyring.serialize();
-        const seedPhrase = serialized.mnemonic;
+        const seedPhrase = await this.getMnemonicFromKeyring(primaryKeyring);
 
         return seedPhrase;
     }
@@ -244,8 +254,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             throw new Error(`No ${KeyringTypes.HD_KEY_TREE} found`);
         }
 
-        const serialized = await primaryKeyring.serialize();
-        const seedPhrase = serialized.mnemonic;
+        const seedPhrase = await this.getMnemonicFromKeyring(primaryKeyring);
 
         // Get current accounts
         const createdAccounts = await primaryKeyring.getAccounts();
@@ -623,5 +632,10 @@ export default class KeyringControllerDerivated extends KeyringController {
                 log.error('setLedgerWebHIDTransportType', e.message);
             });
         }
+    }
+
+    private async getMnemonicFromKeyring(keyring: any): Promise<string> {
+        const serialized = await keyring.serialize();
+        return String.fromCharCode(...serialized.mnemonic);
     }
 }

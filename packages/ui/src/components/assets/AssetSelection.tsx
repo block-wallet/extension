@@ -332,12 +332,11 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
     const dropdownDisplay = selectedAsset ? (
         <div className="flex flex-row flex-grow justify-between items-center">
             {displayIcon && (
-                <div className="flex items-center justify-center w-6 h-6 rounded-full mr-2">
-                    <TokenLogo
-                        src={selectedAsset.token.logo}
-                        alt={selectedAsset.token.name}
-                    />
-                </div>
+                <TokenLogo
+                    logo={selectedAsset.token.logo}
+                    name={selectedAsset.token.name}
+                    className="mr-2"
+                />
             )}
             <div className="flex flex-grow justify-between space-x-1">
                 <div className="flex flex-col justify-center">

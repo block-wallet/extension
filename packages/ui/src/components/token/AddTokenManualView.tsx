@@ -125,10 +125,11 @@ const AddTokenManualView = ({
 
     useEffect(() => {
         let msg = ""
-        if (tokenAddresses.includes(values.tokenAddress.toLowerCase())) {
-            msg = "You already added this token"
-        } else if (tokenSymbols.includes(values.tokenSymbol.toLowerCase())) {
-            msg = "You already added this token"
+        if (
+            tokenAddresses.includes(values.tokenAddress.toLowerCase()) ||
+            tokenSymbols.includes(values.tokenSymbol.toLowerCase())
+        ) {
+            msg = "You've already added this token"
         }
 
         setMessage(msg)
@@ -138,31 +139,29 @@ const AddTokenManualView = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [values.tokenSymbol, values.tokenAddress, setMessage])
 
-    const onAddressChange = (value: string) => {
+    const onAddressChange = async (value: string) => {
         if (!setSubmitEnabled) return
 
         setSubmitEnabled(false)
         if (utils.isAddress(value)) {
             setError("tokenAddress", { message: undefined })
             setIsLoading(true)
-            searchTokenInAssetsList(value)
-                .then((res) => {
-                    setIsLoading(false)
-                    if (res && res.length) {
-                        setValue("tokenAddress", res[0].address)
-                        setValue("tokenDecimals", res[0].decimals.toString())
-                        setValue("tokenLogo", res[0].logo)
-                        setValue("tokenName", res[0].name)
-                        setValue("tokenSymbol", res[0].symbol)
-                        setValue("tokenType", res[0].type)
+            const res = await searchTokenInAssetsList(value)
+            if (res) {
+                setIsLoading(false)
+                if (res && res.length) {
+                    setValue("tokenAddress", res[0].address)
+                    setValue("tokenDecimals", res[0].decimals.toString())
+                    setValue("tokenLogo", res[0].logo)
+                    setValue("tokenName", res[0].name)
+                    setValue("tokenSymbol", res[0].symbol)
+                    setValue("tokenType", res[0].type)
 
-                        setSubmitEnabled(true)
-                    }
-                })
-                .catch((err) => {
-                    setIsLoading(false)
-                    console.log("ERR: ", err)
-                })
+                    setSubmitEnabled(true)
+                }
+            } else {
+                setIsLoading(false)
+            }
         } else {
             reset()
             setError("tokenAddress", { message: "Invalid contract address" })

@@ -229,7 +229,6 @@ export const useTransactionWaitingDialog = (
                                 <AnimatedIcon
                                     className="w-12 h-12 m-auto"
                                     icon={AnimatedIconName.DeviceInteraction}
-                                    loop
                                 />
                             ) : undefined,
                         },

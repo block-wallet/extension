@@ -33,12 +33,8 @@ const HoverAnimation = styled.div`
 
 const DoubleArrowHoverAnimation: FunctionComponent<{
     children?: React.ReactNode
-    vertical?: boolean
-}> = ({ children, vertical = false }) => (
-    <HoverAnimation
-        className="flex flex-col items-center w-full h-full p-2"
-        style={{ transform: vertical ? "rotate(90deg)" : undefined }}
-    >
+}> = ({ children }) => (
+    <HoverAnimation className="flex flex-col items-center w-full h-full p-2">
         <div
             className="w-full h-full right-animation"
             style={{

@@ -624,7 +624,7 @@ describe.only('Bridge Controller', () => {
                 networkController = getNetworkControllerInstance();
             });
             it('Should submit a bridge transaction', async () => {
-                const tokenControllerStub = sinon.spy(
+                const tokenControllerStubAttepmtAddToken = sinon.spy(
                     tokenController,
                     'attemptAddToken'
                 );
@@ -824,7 +824,9 @@ describe.only('Bridge Controller', () => {
                 );
 
                 expect(result).not.to.be.undefined;
-                expect(tokenControllerStub.callCount).to.be.equal(2);
+                expect(
+                    tokenControllerStubAttepmtAddToken.callCount
+                ).to.be.equal(1);
                 expect(result).to.be.equal(
                     '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92'
                 );

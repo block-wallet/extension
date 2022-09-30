@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import SearchInput from "../../components/input/SearchInput"
-import CustomTokenView from "../../components/token/TokenCustomView"
-import SearchedTokenView from "../../components/token/TokenSearchView"
+import AddTokenManualView from "../../components/token/AddTokenManualView"
+import AddTokenListView from "../../components/token/AddTokenListView"
 
 // Comm
 import { searchTokenInAssetsList } from "../../context/commActions"
@@ -15,6 +15,7 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { utils } from "ethers/lib/ethers"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
+import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 
 // Types
 export type TokenResponse = {
@@ -32,44 +33,28 @@ const AddTokensPage = () => {
 
     // State
     const [results, setResults] = useState<TokenResponse[]>([])
-    const [isCustomTokenView, setIsCustomTokenView] = useState<boolean>(false)
-    const [tokenAddress, setTokenAddress] = useState<string>("")
-    const [isSearchEmpty, setIsSearchEmpty] = useState<boolean>(true)
     const [submitEnabled, setSubmitEnabled] = useState<boolean>(false)
-    const [searchedValue, setSearchedValue] = useState<string>("")
+    const [searchedValue, setSearchedValue] = useLocalStorageState<string>(
+        "addTokenSearch",
+        { initialValue: history.location.state?.searchValue ?? "" }
+    )
 
+    const isManualTokenView = utils.isAddress(searchedValue)
     useEffect(() => {
-        if (results) {
-            setIsCustomTokenView(false)
-        } else {
-            setIsCustomTokenView(true)
-        }
-        setTokenAddress("")
-    }, [results])
-    const [submitForm, setSubmitForm] = useState<boolean>(false)
-
-    const onChange = (value: string) => {
-        // Update input value & check if empty
-        value === "" ? setIsSearchEmpty(true) : setIsSearchEmpty(false)
-        setSearchedValue(value)
-
-        // If user puts address - show custom token view
-        if (value) {
-            if (utils.isAddress(value)) {
-                setIsCustomTokenView(true)
-                setTokenAddress(value)
-                // setSelected([])
-            } else if (/^[a-zA-Z0-9_.-]{3,}$/.test(value)) {
+        if (searchedValue) {
+            if (/^[a-zA-Z0-9_.-]{3,}$/.test(searchedValue)) {
                 // Accept only number, letters and - . _
-                searchTokenInAssetsList(value.toUpperCase())
+                searchTokenInAssetsList(searchedValue.toUpperCase())
                     .then((res) => {
                         const exacts = res.filter(
                             (r) =>
-                                r.symbol.toLowerCase() === value.toLowerCase()
+                                r.symbol.toLowerCase() ===
+                                searchedValue.toLowerCase()
                         )
                         const others = res.filter(
                             (r) =>
-                                r.symbol.toLowerCase() !== value.toLowerCase()
+                                r.symbol.toLowerCase() !==
+                                searchedValue.toLowerCase()
                         )
 
                         return setResults([...exacts, ...others])
@@ -81,17 +66,7 @@ const AddTokensPage = () => {
         } else {
             setResults([])
         }
-    }
-
-    useEffect(() => {
-        if (history.location.state?.searchValue) {
-            onChange(history.location.state?.searchValue)
-        }
-    }, [history.location.state?.searchValue])
-
-    const onSubmit = async () => {
-        setSubmitForm(submitEnabled)
-    }
+    }, [searchedValue])
 
     const handleSubmitEnabled = async (value: boolean) => {
         setSubmitEnabled(value)
@@ -121,7 +96,7 @@ const AddTokensPage = () => {
                     }}
                 />
             }
-            submitOnEnter={{ onSubmit, isEnabled: submitEnabled }}
+            // submitOnEnter={{ isEnabled: submitEnabled }}
         >
             <div className="flex flex-col flex-1 w-full">
                 <div className="h-full max-h-screen overflow-auto hide-scroll">
@@ -132,27 +107,25 @@ const AddTokensPage = () => {
                             name="tokenName"
                             placeholder="Search Tokens by name or fill in Address"
                             disabled={false}
-                            onChange={(e: any) => onChange(e.target.value)}
+                            onChange={(e: any) =>
+                                setSearchedValue(e.target.value)
+                            }
                             autoFocus={true}
                             debounced
                             minSearchChar={3}
-                            defaultValue={history.location.state?.searchValue}
-                            // error={errors.tokenName?.message}
+                            defaultValue={searchedValue}
                         />
                     </div>
 
-                    {!isCustomTokenView ? (
-                        <SearchedTokenView
-                            isSearchEmpty={isSearchEmpty}
+                    {!isManualTokenView ? (
+                        <AddTokenListView
                             results={results}
                             searchedValue={searchedValue}
                             setSubmitEnabled={handleSubmitEnabled}
-                            submitForm={submitForm}
                         />
                     ) : (
-                        <CustomTokenView
-                            customTokenAddress={tokenAddress}
-                            submitForm={submitForm}
+                        <AddTokenManualView
+                            manualTokenAddress={searchedValue}
                             setSubmitEnabled={handleSubmitEnabled}
                         />
                     )}
@@ -163,7 +136,12 @@ const AddTokensPage = () => {
                     <ButtonWithLoading
                         label="Next"
                         disabled={!submitEnabled}
-                        onClick={onSubmit}
+                        type="submit"
+                        formId={
+                            isManualTokenView
+                                ? "manualViewForm"
+                                : "listViewForm"
+                        }
                     />
                 </PopupFooter>
             </div>

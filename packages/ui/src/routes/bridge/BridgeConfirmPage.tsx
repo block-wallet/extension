@@ -72,6 +72,9 @@ import {
 import { capitalize } from "../../util/capitalize"
 import TransactionDetails from "../../components/transactions/TransactionDetails"
 import { WithRequired } from "@block-wallet/background/utils/types/helpers"
+import CollapsableWarning from "../../components/CollapsableWarning"
+import ToggleButton from "../../components/button/ToggleButton"
+import { AiOutlineWarning } from "react-icons/ai"
 
 export interface BridgeConfirmPageLocalState {
     amount: string
@@ -91,7 +94,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         () => history.location.state as BridgeConfirmPageLocalState,
         [history.location.state]
     )
-
+    const [acceptedFunding, setAcceptedFunding] = useState<boolean>(false)
     const [timeoutStart, setTimeoutStart] = useState<number | undefined>(
         undefined
     )
@@ -498,6 +501,56 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 isOpen={isDeviceUnlinked}
                 vendor={getDeviceFromAccountType(selectedAccount.accountType)}
                 address={selectedAccount.address}
+            />
+            <CollapsableWarning
+                isCollapsedByDefault={false}
+                collapsedMessage={
+                    acceptedFunding ? (
+                        <div
+                            className={classnames(
+                                "text-center opacity-90 w-full p-2 bg-green-200 hover:bg-green-100 space-x-2 flex tems-center font-bold justify-center"
+                            )}
+                        >
+                            <AiOutlineWarning className="w-4 h-4 green-300" />
+                            <span className="font-bold">
+                                BlockWallet will cover your fees in the
+                                destination network
+                            </span>
+                        </div>
+                    ) : (
+                        <div
+                            className={classnames(
+                                "text-center opacity-90 w-full p-2 bg-yellow-200 hover:bg-yellow-100 space-x-2 flex tems-center font-bold justify-center"
+                            )}
+                        >
+                            <AiOutlineWarning className="w-4 h-4 yellow-300" />
+                            <span className="font-bold">
+                                Warning! Your funds can be stucked!
+                            </span>
+                        </div>
+                    )
+                }
+                dialog={{
+                    title: "Your funds may get stucked!",
+                    message: (
+                        <div>
+                            <span>
+                                We noticed you don't have enough funds in the
+                                destination network to cover minimum gas fees.
+                                But don't worry! BlockWallet can cover them
+                                once.
+                            </span>
+                            <br />
+                            <br />
+                            <ToggleButton
+                                label="Receive funding"
+                                defaultChecked={acceptedFunding}
+                                id="button"
+                                onToggle={setAcceptedFunding}
+                            />
+                        </div>
+                    ),
+                }}
             />
             <div className="flex flex-col px-6 py-3">
                 {/* From Token */}

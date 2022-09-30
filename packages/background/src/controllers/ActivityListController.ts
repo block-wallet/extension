@@ -1,7 +1,9 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { parseUnits } from 'ethers/lib/utils';
 import { BaseController } from '../infrastructure/BaseController';
+import { BridgeStatus } from '../utils/bridgeApi';
 import { Network } from '../utils/constants/networks';
+import { transactionToIncomingBridgeTransactionPlaceholder } from '../utils/incomingBridgePlaceholder';
 import {
     BlankDepositController,
     PendingWithdrawal,
@@ -89,7 +91,11 @@ export class ActivityListController extends BaseController<IActivityListState> {
             selectedAddress
         );
 
-        const incomingBridgeTransactions =
+        //Pending bridges placeholders for the current network
+        const pendingIncomingBridgePlaceholders =
+            this._parsePendingIncomingBridgePlaceholders();
+
+        const confirmedIncomingBridgeTransactions =
             this.parseBridgeReceivingTransactions(
                 network.chainId,
                 selectedAddress
@@ -102,7 +108,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
         // Concat all and order by time
         const confirmedConcated = confirmedTransactions
             .concat(confirmedWithdrawals)
-            .concat(incomingBridgeTransactions)
+            .concat(confirmedIncomingBridgeTransactions)
             .concat(watchedTransactions)
             .filter(
                 (t1, index, self) =>
@@ -155,6 +161,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
         // Pendings ordered by time descending
         const pending = pendingWithdrawals
             .concat(pendingTransactions)
+            .concat(pendingIncomingBridgePlaceholders)
             .sort((a, b) => a.time - b.time)
             .map((c: TransactionMeta) => {
                 return this.transactionSymbolTransformation(c);
@@ -359,6 +366,54 @@ export class ActivityListController extends BaseController<IActivityListState> {
             .map(mapFc);
 
         return { confirmed, pending };
+    }
+
+    /**
+     * _parsePendingIncomingBridgePlaceholders
+     *
+     *  Incoming bridges that may or may not be converted into an incoming transaction for this network and account.
+     *  - If the bridge is completed successfully, then it will appear as a trasnaction gathered by the BridgingController.
+     *  - If the bridge failed, it will be filtered by the  tx.bridgeParams.status === BridgeStatus.PENDING condition
+     *
+     * @returns pending bridges placeholders for the destination network
+     */
+    private _parsePendingIncomingBridgePlaceholders(): TransactionMeta[] {
+        const pendingIncomingBridgePlaceholders =
+            this._transactionsController.store
+                .getState()
+                .transactions.filter((tx) => {
+                    const { bridgeParams, transactionCategory, status } = tx;
+                    if (!bridgeParams || !bridgeParams.status) {
+                        return false;
+                    }
+
+                    return (
+                        // Sending tx category is Bridge
+                        transactionCategory === TransactionCategories.BRIDGE &&
+                        // Destination chain transaction is the selected one
+                        Number(tx.bridgeParams?.toChainId) ===
+                            Number(this._networkController.network.chainId) &&
+                        //There is no receiving hash YET
+                        !bridgeParams.receivingTxHash &&
+                        // Bridge is in PENDING or NOT FOUND (considered PENDING) status.
+                        [BridgeStatus.PENDING, BridgeStatus.NOT_FOUND].includes(
+                            bridgeParams.status
+                        ) &&
+                        // Sending transaction is submitted or confirmed
+                        [
+                            TransactionStatus.SUBMITTED,
+                            TransactionStatus.CONFIRMED,
+                        ].includes(status)
+                    );
+                })
+                .map((tx) =>
+                    transactionToIncomingBridgeTransactionPlaceholder(
+                        tx,
+                        this._networkController.network.chainId
+                    )
+                );
+
+        return pendingIncomingBridgePlaceholders;
     }
 
     /**

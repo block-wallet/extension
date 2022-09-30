@@ -169,6 +169,10 @@ export enum TransactionCategories {
     EXCHANGE = 'exchange',
     BRIDGE = 'bridge',
     INCOMING_BRIDGE = 'incoming_bridge',
+    // Category that temporarely represents receiving transactions in a bridge operation:
+    // - These transactions are placeholders for the real transaction that will replace them.
+    // - These transactions are not persisted in the state, they are only meant to be shown in the Activity list.
+    INCOMING_BRIDGE_PLACEHOLDER = 'incoming_bridge_placeholder',
 }
 
 /**

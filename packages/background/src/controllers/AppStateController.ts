@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+import log from 'loglevel';
 import { BaseController } from '../infrastructure/BaseController';
 import { PrivacyAsyncController } from './blank-deposit/PrivacyAsyncController';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
@@ -86,6 +88,10 @@ export default class AppStateController extends BaseController<
             // Lock deposits
             await this._privacyAsyncController.lock();
 
+            // Removing login token from storage
+            // @ts-ignore
+            chrome.storage.session.clear();
+
             // Update controller state
             this.UIStore.updateState({ isAppUnlocked: false, lockedByTimeout });
         } catch (error) {
@@ -101,20 +107,52 @@ export default class AppStateController extends BaseController<
     public unlock = async (password: string): Promise<void> => {
         try {
             // Unlock vault
-            await this._keyringController.submitPassword(password);
+            const loginToken = await this._keyringController.submitPassword(
+                password
+            );
 
-            // Set Ledger transport method to WebHID
-            await this._keyringController.setLedgerWebHIDTransportType();
-
-            // Update controller state
-            this.UIStore.updateState({
-                isAppUnlocked: true,
+            // @ts-ignore
+            chrome.storage.session.set({ loginToken }).catch((err: any) => {
+                log.error('error setting loginToken', err);
             });
 
-            this._resetTimer();
+            await this._postLoginAction();
         } catch (error) {
             throw new Error(error.message || error);
         }
+    };
+
+    public autoUnlock = async (): Promise<void> => {
+        const { isAppUnlocked } = this.UIStore.getState();
+        if (!isAppUnlocked) {
+            // @ts-ignore
+            chrome.storage.session.get(
+                ['loginToken'],
+                async ({ loginToken }: { [key: string]: string }) => {
+                    if (loginToken) {
+                        await this._keyringController.submitEncryptionKey(
+                            loginToken
+                        );
+                        await this._postLoginAction();
+                    }
+                }
+            );
+        }
+    };
+
+    /**
+     * Sets the app as unlocked
+     */
+    private _postLoginAction = async () => {
+        // Set Ledger transport method to WebHID
+        await this._keyringController.setLedgerWebHIDTransportType();
+
+        // Update controller state
+        this.UIStore.updateState({
+            isAppUnlocked: true,
+        });
+
+        this._resetTimer();
     };
 
     /**

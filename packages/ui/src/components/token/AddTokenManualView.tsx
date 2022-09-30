@@ -147,19 +147,20 @@ const AddTokenManualView = ({
         if (utils.isAddress(value)) {
             setError("tokenAddress", { message: undefined })
             setIsLoading(true)
-            const res = await searchTokenInAssetsList(value)
+            const tokenSearchResponse = await searchTokenInAssetsList(value)
             setIsLoading(false)
-            if (res) {
-                if (res && res.length) {
-                    setValue("tokenAddress", res[0].address)
-                    setValue("tokenDecimals", res[0].decimals.toString())
-                    setValue("tokenLogo", res[0].logo)
-                    setValue("tokenName", res[0].name)
-                    setValue("tokenSymbol", res[0].symbol)
-                    setValue("tokenType", res[0].type)
+            if (tokenSearchResponse && tokenSearchResponse.length) {
+                setValue("tokenAddress", tokenSearchResponse[0].address)
+                setValue(
+                    "tokenDecimals",
+                    tokenSearchResponse[0].decimals.toString()
+                )
+                setValue("tokenLogo", tokenSearchResponse[0].logo)
+                setValue("tokenName", tokenSearchResponse[0].name)
+                setValue("tokenSymbol", tokenSearchResponse[0].symbol)
+                setValue("tokenType", tokenSearchResponse[0].type)
 
-                    setSubmitEnabled(true)
-                }
+                setSubmitEnabled(true)
             }
         } else {
             reset()

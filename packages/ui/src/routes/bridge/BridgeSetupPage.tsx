@@ -26,6 +26,7 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useState, useEffect, FunctionComponent } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
 import { useTokensList } from "../../context/hooks/useTokensList"
+import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { yupResolver } from "@hookform/resolvers/yup"
 import {
     getBridgeAvailableRoutes,
@@ -50,6 +51,10 @@ import { AiFillInfoCircle } from "react-icons/ai"
 import GenericTooltip from "../../components/label/GenericTooltip"
 import { BASE_BRIDGE_FEE } from "../../util/constants"
 import { formatNumberLength } from "../../util/formatNumberLength"
+import { CgLayoutGrid } from "react-icons/cg"
+import { SEND_GAS_COST } from "../../util/constants"
+import { getDisplayGasPrices } from "../../components/gas/GasPricesInfo";
+import Tooltip from "../../components/label/Tooltip"
 
 interface SetupBridgePageLocalState {
     amount?: string
@@ -85,6 +90,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         availableNetworks,
         selectedNetwork,
         availableBridgeChains,
+        gasPriceData,
+        isEIP1559Compatible
     } = useBlankState()!
     const { nativeToken } = useTokensList()
 
@@ -116,8 +123,10 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 }
             }, []),
         })
+    const [showNativeTokenWarning, setShowNativeTokenWarning] = useState<boolean>(false)
 
     const selectedTokenBalance = useTokenBalance(bridgeDataState.token)
+    const selectedAccount = useSelectedAccount()
 
     const {
         token: selectedToken,
@@ -140,9 +149,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 defaultAmount ||
                 (bridgeDataState?.bigNumberAmount
                     ? formatUnits(
-                          bridgeDataState?.bigNumberAmount?.toString(),
-                          bridgeDataState?.token?.decimals
-                      )
+                        bridgeDataState?.bigNumberAmount?.toString(),
+                        bridgeDataState?.token?.decimals
+                    )
                     : undefined),
         },
     })
@@ -167,18 +176,18 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const formattedAmount =
         selectedToken && bigNumberAmount
             ? formatCurrency(
-                  toCurrencyAmount(
-                      bigNumberAmount,
-                      exchangeRates[selectedToken.symbol.toUpperCase()],
-                      selectedToken.decimals
-                  ),
-                  {
-                      currency: nativeCurrency,
-                      locale_info: localeInfo,
-                      returnNonBreakingSpace: false,
-                      showSymbol: true,
-                  }
-              )
+                toCurrencyAmount(
+                    bigNumberAmount,
+                    exchangeRates[selectedToken.symbol.toUpperCase()],
+                    selectedToken.decimals
+                ),
+                {
+                    currency: nativeCurrency,
+                    locale_info: localeInfo,
+                    returnNonBreakingSpace: false,
+                    showSymbol: true,
+                }
+            )
             : undefined
 
     //executes when the amount hex changes
@@ -356,6 +365,41 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bigNumberAmount, errors.amount, selectedAddress, selectedRoute])
 
+    useEffect(() => {
+        console.log("false by default")
+        setShowNativeTokenWarning(false)
+        if (selectedRoute) {
+            if (!selectedAccount.balances[selectedRoute.toChainId]) {
+                console.log("no chain selected")
+                console.log(selectedRoute)
+                setShowNativeTokenWarning(true)
+            } else {
+                const nativeTokenInDestinationNetwork = selectedAccount.balances[selectedRoute.toChainId].nativeTokenBalance
+                if (selectedRoute.toChainId in gasPriceData) {
+                    const { gasPricesLevels, estimatedBaseFee } = gasPriceData[selectedRoute.toChainId]
+                    const EIP1559Compatible = isEIP1559Compatible[selectedRoute.toChainId] || false
+                    const gasPrices = getDisplayGasPrices(
+                        !!EIP1559Compatible,
+                        gasPricesLevels,
+                        estimatedBaseFee!,
+                        SEND_GAS_COST
+                    )
+                    if (gasPrices) {
+                        if (gasPrices.average.totalTransactionCost.gt(nativeTokenInDestinationNetwork)) {
+                            console.log("not enough")
+                            setShowNativeTokenWarning(true)
+                        } else {
+                            console.log("enough")
+                            setShowNativeTokenWarning(false)
+                        }
+                    }
+                }
+            }
+        }
+
+    }, [selectedRoute])
+
+
     return (
         <PopupLayout
             header={
@@ -366,11 +410,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     onBack={() =>
                         fromAssetPage
                             ? history.push({
-                                  pathname: "/asset/details",
-                                  state: {
-                                      address: selectedToken?.address,
-                                  },
-                              })
+                                pathname: "/asset/details",
+                                state: {
+                                    address: selectedToken?.address,
+                                },
+                            })
                             : history.push("/home")
                     }
                 >
@@ -389,9 +433,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             error
                                 ? error
                                 : quote?.allowance ===
-                                  BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE
-                                ? "Approve"
-                                : "Review"
+                                    BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE
+                                    ? "Approve"
+                                    : "Review"
                         }
                         disabled={!!(error || !quote)}
                         isLoading={isFetchingRoutes || isFetchingQuote}
@@ -421,9 +465,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             selectedAsset={
                                 selectedToken && selectedTokenBalance
                                     ? {
-                                          token: selectedToken,
-                                          balance: selectedTokenBalance,
-                                      }
+                                        token: selectedToken,
+                                        balance: selectedTokenBalance,
+                                    }
                                     : undefined
                             }
                             onAssetChange={(asset) => {
@@ -488,9 +532,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 }}
                                 maxLength={80}
                                 className="p-0 text-base bg-transparent border-none font-semibold -mt-0.5"
-                                placeholder={`0.0 ${
-                                    selectedToken ? selectedToken.symbol : ""
-                                }`}
+                                placeholder={`0.0 ${selectedToken ? selectedToken.symbol : ""
+                                    }`}
                                 autoComplete="off"
                                 autoFocus={true}
                                 onFocus={() => setInputFocus(true)}
@@ -530,7 +573,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Network selector */}
-                <p className="text-sm text-gray-600 pb-2">To Network</p>
+                <p className="text-sm text-gray-600 pb-2">To Network
+                </p>
                 <NetworkSelector
                     topMargin={60}
                     bottomMargin={200}
@@ -538,7 +582,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     isLoading={isFetchingRoutes}
                     selectedNetwork={
                         selectedToNetwork &&
-                        availbleChainsId.includes(selectedToNetwork.id)
+                            availbleChainsId.includes(selectedToNetwork.id)
                             ? selectedToNetwork
                             : undefined
                     }

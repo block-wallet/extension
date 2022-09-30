@@ -138,11 +138,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         useTransactionWaitingDialog(
             inProgressTransaction
                 ? {
-                      id: inProgressTransaction.id,
-                      status: inProgressTransaction.status,
-                      error: inProgressTransaction.error as Error,
-                      epochTime: inProgressTransaction?.approveTime,
-                  }
+                    id: inProgressTransaction.id,
+                    status: inProgressTransaction.status,
+                    error: inProgressTransaction.error as Error,
+                    epochTime: inProgressTransaction?.approveTime,
+                }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,
             selectedAccount.accountType,
@@ -208,9 +208,9 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const isBridgingNativeToken = isBridgeNativeTokenAddress(token.address)
     const total = isBridgingNativeToken
         ? BigNumber.from(
-              quote?.bridgeParams.params.fromAmount ||
-                  bridgeQuote.bridgeParams.params.fromAmount
-          ).add(fee)
+            quote?.bridgeParams.params.fromAmount ||
+            bridgeQuote.bridgeParams.params.fromAmount
+        ).add(fee)
         : fee
 
     const hasNativeAssetBalance = useHasSufficientBalance(
@@ -220,7 +220,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const hasFromTokenBalance = useHasSufficientBalance(
         BigNumber.from(
             quote?.bridgeParams.params.fromAmount ||
-                bridgeQuote.bridgeParams.params.fromAmount
+            bridgeQuote.bridgeParams.params.fromAmount
         ),
         token
     )
@@ -228,6 +228,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const hasBalance = isBridgingNativeToken
         ? hasNativeAssetBalance
         : hasNativeAssetBalance && hasFromTokenBalance
+
 
     const onSubmit = async () => {
         if (error || !hasBalance || !quote) return
@@ -250,9 +251,9 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 gasPrice: isEIP1559Compatible
                     ? undefined
                     : selectedGasPrice ||
-                      BigNumber.from(
-                          quote.bridgeParams.params.transactionRequest.gasLimit
-                      ),
+                    BigNumber.from(
+                        quote.bridgeParams.params.transactionRequest.gasLimit
+                    ),
                 maxPriorityFeePerGas: isEIP1559Compatible
                     ? selectedFees.maxPriorityFeePerGas
                     : undefined,
@@ -400,18 +401,18 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                             error
                                 ? error
                                 : hasBalance
-                                ? "Bridge"
-                                : isBridgingNativeToken
-                                ? "You don't have enough funds to cover the bridge and the gas costs."
-                                : "Insufficient funds"
+                                    ? "Bridge"
+                                    : isBridgingNativeToken
+                                        ? "You don't have enough funds to cover the bridge and the gas costs."
+                                        : "Insufficient funds"
                         }
                         isLoading={
                             error || !!inProgressAllowanceTransaction
                                 ? false
                                 : !quote ||
-                                  isGasLoading ||
-                                  isFetchingParams ||
-                                  isBridging
+                                isGasLoading ||
+                                isFetchingParams ||
+                                isBridging
                         }
                         onClick={onSubmit}
                         disabled={!!error || !hasBalance}

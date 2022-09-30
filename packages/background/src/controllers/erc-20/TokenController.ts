@@ -14,7 +14,7 @@ import { PreferencesController } from '../PreferencesController';
 import { Mutex } from 'async-mutex';
 import initialState from '../../utils/constants/initialState';
 import { TokenOperationsController } from './transactions/Transaction';
-import { BasicToken } from '@block-wallet/background/utils/types/1inch';
+import { isNativeTokenAddress } from '../../utils/token';
 
 const tokenAddressParamNotPresentError = new Error('token address is required');
 const tokenParamNotPresentError = new Error('token is required');
@@ -615,9 +615,7 @@ export class TokenController extends BaseController<TokenControllerState> {
         if (!address) {
             throw tokenAddressParamNotPresentError;
         }
-        return ['0x0000000000000000000000000000000000000000', '0x0'].includes(
-            address
-        );
+        return isNativeTokenAddress(address);
     }
 
     /**

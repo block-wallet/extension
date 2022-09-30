@@ -90,3 +90,9 @@ export const isBase64 = (v: string): boolean => {
 
     return base64RegEx.test(v.replace(/^[^,]+,/, ''));
 };
+
+export const isNativeTokenAddress = (address: string): boolean => {
+    return ['0x0000000000000000000000000000000000000000', '0x0'].includes(
+        address
+    );
+};

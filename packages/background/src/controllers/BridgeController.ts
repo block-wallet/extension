@@ -5,8 +5,6 @@ import {
     ContractSignatureParser,
 } from './transactions/ContractSignatureParser';
 import { BigNumber, ethers } from 'ethers';
-import { PreferencesController } from './PreferencesController';
-import { TokenOperationsController } from './erc-20/transactions/Transaction';
 import {
     BridgeTransactionParams,
     MetaType,
@@ -32,7 +30,6 @@ import {
     LIFI_NATIVE_ADDRESS,
 } from '../utils/types/lifi';
 import { IToken, Token } from './erc-20/Token';
-import { ExchangeController } from './ExchangeController';
 import { IChain } from '../utils/types/chain';
 import { getChainListItem } from '../utils/chainlist';
 import { TransactionByHash } from './TransactionWatcherController';
@@ -42,6 +39,8 @@ import { TransactionReceipt } from '@ethersproject/providers';
 import { toChecksumAddress } from 'ethereumjs-util';
 import { fetchBlockWithRetries } from '../utils/blockFetch';
 import { isNil } from 'lodash';
+import { BaseController } from '../infrastructure/BaseController';
+import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
 const TIMEOUT_FETCH_RECEIVING_TX = 2 * HOUR;
 const STATUS_API_CALLS_DELAY = 30 * SECOND;
 const GET_TX_RECEIPT_DELAY = 2 * SECOND;
@@ -105,11 +104,9 @@ export interface GetBridgeAvailableRoutesResponse {
     routes: IBridgeRoute[];
 }
 
-export interface BridgeRoutesRequest
-    extends Omit<getBridgeRoutesRequest, 'fromChainId'> {}
+export type BridgeRoutesRequest = Omit<getBridgeRoutesRequest, 'fromChainId'>;
 
-export interface BridgeQuoteRequest
-    extends Omit<getBridgeQuoteRequest, 'fromChainId'> {}
+export type BridgeQuoteRequest = Omit<getBridgeQuoteRequest, 'fromChainId'>;
 
 /**
  * Bridge Controller
@@ -123,28 +120,18 @@ export interface BridgeQuoteRequest
  * If the target network hasn't been added to the user's network yet,
  * this controller stores references to recunstruct the transaction once the network is added.
  */
-export default class BridgeController extends ExchangeController<
+export default class BridgeController extends BaseController<
     BridgeControllerState,
     BridgeControllerMemState
 > {
     constructor(
-        protected readonly _networkController: NetworkController,
-        protected readonly _preferencesController: PreferencesController,
-        protected readonly _tokenOperationsController: TokenOperationsController,
-        protected readonly _transactionController: TransactionController,
+        private readonly _networkController: NetworkController,
+        private readonly _transactionController: TransactionController,
         private readonly _tokenController: TokenController,
+        private readonly _tokenAllowanceController: TokenAllowanceController,
         initialState?: BridgeControllerState
     ) {
-        super(
-            _networkController,
-            _preferencesController,
-            _tokenOperationsController,
-            _transactionController,
-            initialState,
-            {
-                availableBridgeChains: [],
-            }
-        );
+        super(initialState, { availableBridgeChains: [] });
 
         this.getAvailableChains();
 
@@ -200,13 +187,22 @@ export default class BridgeController extends ExchangeController<
             }) || [];
         transactions.forEach((tx) => {
             if (
-                tx.bridgeParams?.status === BridgeStatus.PENDING ||
-                tx.bridgeParams?.status === BridgeStatus.NOT_FOUND
+                !tx ||
+                !tx.bridgeParams?.status ||
+                !tx.transactionParams?.from
+            ) {
+                return;
+            }
+
+            if (
+                [BridgeStatus.PENDING, BridgeStatus.NOT_FOUND].includes(
+                    tx.bridgeParams.status || ''
+                )
             ) {
                 this._waitForBridgeFinalState({
                     //tx params comes in lowercase format and we need the real address not the lowercased one.
                     accountAddress: toChecksumAddress(
-                        tx.transactionParams.from!
+                        tx.transactionParams.from
                     ),
                     fromChainId: tx.bridgeParams.fromChainId,
                     sendingTransactionId: tx.id,
@@ -250,8 +246,8 @@ export default class BridgeController extends ExchangeController<
                 if (userNetwork) {
                     return {
                         ...chain,
-                        name: userNetwork?.desc ? userNetwork.desc : chain.name,
-                        logo: userNetwork?.iconUrls?.length
+                        name: userNetwork.desc ? userNetwork.desc : chain.name,
+                        logo: userNetwork.iconUrls?.length
                             ? userNetwork.iconUrls[0]
                             : chain.logo,
                     };
@@ -314,15 +310,14 @@ export default class BridgeController extends ExchangeController<
      */
     private async _normalizeTokenData(
         token: IToken,
-        chainId?: number
+        chainId: number = this._networkController.network.chainId
     ): Promise<IToken> {
         if (this._tokenController.isNativeToken(token.address)) {
-            const targetNetwork = this._networkController.getNetworkFromChainId(
-                chainId!
-            );
+            const targetNetwork =
+                this._networkController.getNetworkFromChainId(chainId);
 
             if (!targetNetwork) {
-                const chainListItem = getChainListItem(chainId!);
+                const chainListItem = getChainListItem(chainId);
                 if (!chainListItem) {
                     return token;
                 }
@@ -382,14 +377,15 @@ export default class BridgeController extends ExchangeController<
             allowanceCheck = BridgeAllowanceCheck.ENOUGH_ALLOWANCE;
         } else if (checkAllowance && quote) {
             try {
-                allowanceCheck = (await this.checkExchangeAllowance(
-                    quoteRequest.fromAddress,
-                    BigNumber.from(quoteRequest.fromAmount),
-                    quote.spender,
-                    quoteRequest.fromTokenAddress
-                ))
-                    ? BridgeAllowanceCheck.ENOUGH_ALLOWANCE
-                    : BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE;
+                allowanceCheck =
+                    (await this._tokenAllowanceController.checkTokenAllowance(
+                        quoteRequest.fromAddress,
+                        BigNumber.from(quoteRequest.fromAmount),
+                        quote.spender,
+                        quoteRequest.fromTokenAddress
+                    ))
+                        ? BridgeAllowanceCheck.ENOUGH_ALLOWANCE
+                        : BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE;
             } catch (e) {
                 throw new Error('Error checking asset allowance.');
             }
@@ -527,7 +523,14 @@ export default class BridgeController extends ExchangeController<
             );
 
             const newTransactionMeta =
-                this._transactionController.getTransaction(transactionMeta.id)!;
+                this._transactionController.getTransaction(transactionMeta.id);
+
+            if (
+                !newTransactionMeta ||
+                !newTransactionMeta.transactionParams.hash
+            ) {
+                return result;
+            }
 
             newTransactionMeta.transferType = {
                 amount: BigNumber.from(fromAmount),
@@ -548,7 +551,7 @@ export default class BridgeController extends ExchangeController<
                 toChainId,
                 tool, //store the tool used for executing the bridge.
                 role: 'SENDING',
-                sendingTxHash: newTransactionMeta.transactionParams.hash!,
+                sendingTxHash: newTransactionMeta.transactionParams.hash,
             };
 
             this._transactionController.updateTransaction(newTransactionMeta);
@@ -629,9 +632,13 @@ export default class BridgeController extends ExchangeController<
         let receivingTxFetched = false;
         let receivingTxHash: string | undefined;
         let sendingTx =
-            this._transactionController.getTransaction(sendingTransactionId)!;
+            this._transactionController.getTransaction(sendingTransactionId);
 
-        if (!sendingTx?.bridgeParams) {
+        if (
+            !sendingTx ||
+            !sendingTx.bridgeParams ||
+            !sendingTx.transactionParams.hash
+        ) {
             return;
         }
 
@@ -640,18 +647,18 @@ export default class BridgeController extends ExchangeController<
             sendingTx: TransactionMeta
         ): boolean => {
             //If there is no status yet, then execute.
-            if (!sendingTx.bridgeParams!.status) {
+            if (!sendingTx.bridgeParams || !sendingTx.bridgeParams.status) {
                 return true;
             }
             return (
                 [BridgeStatus.PENDING, BridgeStatus.NOT_FOUND].includes(
-                    sendingTx.bridgeParams!.status
+                    sendingTx.bridgeParams.status
                 ) &&
                 ![
                     TransactionStatus.FAILED,
                     TransactionStatus.DROPPED,
                     TransactionStatus.CANCELLED,
-                ].includes(sendingTx?.status)
+                ].includes(sendingTx.status)
             );
         };
 
@@ -667,7 +674,7 @@ export default class BridgeController extends ExchangeController<
                 const bridgeStatus = await this._getAPIImplementation(
                     BridgeImplementation.LIFI_BRIDGE
                 ).getStatus({
-                    sendTxHash: sendingTx.transactionParams.hash!,
+                    sendTxHash: sendingTx.transactionParams.hash as string,
                     tool: tool,
                     fromChainId: fromChainId,
                     toChainId: toChainId,
@@ -693,7 +700,7 @@ export default class BridgeController extends ExchangeController<
                     receivingTxFetched = true;
                     this._fetchBridgeReceivingTransaction({
                         accountAddress,
-                        receivingTxHash: receivingTxHash!,
+                        receivingTxHash,
                         sendingTransaction: sendingTx,
                         toChainId,
                         toToken,
@@ -788,7 +795,7 @@ export default class BridgeController extends ExchangeController<
                 await retryHandling<ethers.providers.TransactionResponse>(
                     () =>
                         receivingChainIdProvider.getTransaction(
-                            receivingTxHash!
+                            receivingTxHash
                         ),
                     MILISECOND * 500,
                     3
@@ -803,7 +810,8 @@ export default class BridgeController extends ExchangeController<
 
         //Set bridge parameters
         transactionMeta.bridgeParams = {
-            ...sendingTransaction.bridgeParams!,
+            ...(sendingTransaction.bridgeParams ||
+                ({} as BridgeTransactionParams)),
             status: undefined,
             substatus: undefined,
             role: 'RECEIVING',
@@ -885,7 +893,7 @@ export default class BridgeController extends ExchangeController<
                     ? {
                           logo: transactionToken.logo,
                           decimals: transactionToken.decimals,
-                          currency: transactionToken.symbol!,
+                          currency: transactionToken.symbol,
                           to: transactionByHash.to,
                           amount: toAmount
                               ? BigNumber.from(toAmount)
@@ -1030,10 +1038,10 @@ export default class BridgeController extends ExchangeController<
         txId: string,
         brideParams: Partial<BridgeTransactionParams>
     ): TransactionMeta {
-        const tx = this._transactionController.getTransaction(txId);
+        const tx = this._transactionController.getTransaction(txId)!;
         this._transactionController.updateTransactionPartially(txId, {
             bridgeParams: {
-                ...tx!.bridgeParams!,
+                ...(tx.bridgeParams || ({} as BridgeTransactionParams)),
                 ...brideParams,
             },
         });

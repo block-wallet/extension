@@ -1,4 +1,4 @@
-import { clone, cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash';
 
 /**
  * ObservableStore generic interface

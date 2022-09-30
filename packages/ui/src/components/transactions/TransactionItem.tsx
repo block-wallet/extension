@@ -43,17 +43,12 @@ import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import AppIcon from "./../icons/AppIcon"
 import TransactionDetails from "./TransactionDetails"
 import { formatName } from "../../util/formatAccount"
-import {
-    getDepositTransactionInfo,
-    RichedTransactionMeta,
-} from "../../util/transactionUtils"
+import { RichedTransactionMeta } from "../../util/transactionUtils"
 import Dots from "../loading/LoadingDots"
 import useContextMenu from "../../util/hooks/useContextMenu"
 import { getBridgePendingMessage } from "../../util/bridgeTransactionUtils"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetBridgeDetails from "../../util/hooks/useGetBridgeDetails"
-
-const DEFAULT_TORNADO_CONFIRMATION = 4
 
 const transactionMessages = {
     [TransactionCategories.BLANK_DEPOSIT]: "Privacy Pool Deposit",
@@ -69,6 +64,7 @@ const transactionMessages = {
     [TransactionCategories.EXCHANGE]: "BlockWallet Swap",
     [TransactionCategories.BRIDGE]: "BlockWallet Bridge",
     [TransactionCategories.INCOMING_BRIDGE]: "Incoming Bridge",
+    [TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER]: "Incoming Bridge",
 }
 
 const pendingTransactionMessages: { [x: string]: string } = {
@@ -162,6 +158,9 @@ const transactionIcons = {
     [TransactionCategories.EXCHANGE]: <RiCopperCoinFill size="1.5rem" />,
     [TransactionCategories.BRIDGE]: <GiSuspensionBridge size="1.5rem" />,
     [TransactionCategories.INCOMING_BRIDGE]: (
+        <GiSuspensionBridge size="1.5rem" />
+    ),
+    [TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER]: (
         <GiSuspensionBridge size="1.5rem" />
     ),
 }
@@ -398,7 +397,6 @@ const TransactionItem: React.FC<{
     index: number
 }> = ({ index, transaction }) => {
     const {
-        blankDepositId,
         transactionParams: { value, hash },
         transactionCategory,
         methodSignature,
@@ -408,7 +406,6 @@ const TransactionItem: React.FC<{
         submittedTime,
         transferType,
         metaType,
-        transactionReceipt,
         id,
         flashbots,
         isQueued,
@@ -420,11 +417,8 @@ const TransactionItem: React.FC<{
     const history: any = useOnMountHistory()
     const formatter = useCurrencyFromatter()
 
-    const {
-        nativeCurrency: networkNativeCurrency,
-        defaultNetworkLogo,
-        tornadoIntervals,
-    } = useSelectedNetwork()
+    const { nativeCurrency: networkNativeCurrency, defaultNetworkLogo } =
+        useSelectedNetwork()
 
     const [hasDetails, setHasDetails] = useState(false)
 
@@ -455,6 +449,7 @@ const TransactionItem: React.FC<{
             case TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER:
             case TransactionCategories.BLANK_WITHDRAWAL:
             case TransactionCategories.INCOMING_BRIDGE:
+            case TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER:
                 return "+"
 
             default:
@@ -472,11 +467,6 @@ const TransactionItem: React.FC<{
         label,
         valueLabel
     )
-    const depositTransactionInfo = getDepositTransactionInfo({
-        transactionReceipt,
-        blankDepositId,
-        status,
-    })
 
     const contextMenuRef = useRef(null)
 
@@ -493,6 +483,13 @@ const TransactionItem: React.FC<{
         transfer.decimals,
         transfer.currency === networkNativeCurrency.symbol.toUpperCase()
     )
+
+    const canSpeedUpOrCancel =
+        status === TransactionStatus.SUBMITTED &&
+        metaType === MetaType.REGULAR &&
+        transactionCategory !==
+            TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER &&
+        !isBlankWithdraw
 
     return (
         <>
@@ -593,80 +590,46 @@ const TransactionItem: React.FC<{
                             bridgeParams
                         )}
 
-                        {status === TransactionStatus.SUBMITTED &&
-                            metaType === MetaType.REGULAR &&
-                            !isBlankWithdraw && (
-                                <div className="mt-2">
-                                    {blankDepositId &&
-                                    depositTransactionInfo.isAwaitingForConfirmation ? (
-                                        <div className="group relative self-start">
-                                            <div className="flex flex-row items-center">
-                                                <i className="text-gray-500">
-                                                    {`${
-                                                        depositTransactionInfo.confirmations
-                                                    } of ${
-                                                        tornadoIntervals?.depositConfirmations ||
-                                                        DEFAULT_TORNADO_CONFIRMATION
-                                                    } blocks confirmed`}
-                                                    <Dots />
-                                                </i>
-                                            </div>
-                                            <Tooltip
-                                                className="translate-x-1.5 !w-52 !break-word !whitespace-normal"
-                                                content={
-                                                    <span>
-                                                        {`BlockWallet waits ${
-                                                            tornadoIntervals?.depositConfirmations ||
-                                                            DEFAULT_TORNADO_CONFIRMATION
-                                                        } blocks to mark the deposits as confirmed`}
-                                                    </span>
-                                                }
-                                            />
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <button
-                                                type="button"
-                                                className={classnames(
-                                                    "rounded-md cursor-pointer text-blue-500 border-current border p-1 font-bold hover:bg-blue-500 hover:text-white transition-colors",
-                                                    isQueued
-                                                        ? "opacity-50 pointer-events-none"
-                                                        : ""
-                                                )}
-                                                disabled={isQueued}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    history.push({
-                                                        pathname:
-                                                            "/transaction/speedUp",
-                                                        state: {
-                                                            txId: id,
-                                                        },
-                                                    })
-                                                }}
-                                            >
-                                                Speed up
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="ml-1.5 border p-1 rounded-md cursor-pointer text-gray-500 border-current font-bold hover:bg-gray-500 hover:text-white transition-colors"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    history.push({
-                                                        pathname:
-                                                            "/transaction/cancel",
-                                                        state: {
-                                                            txId: id,
-                                                        },
-                                                    })
-                                                }}
-                                            >
-                                                Cancel
-                                            </button>
-                                        </>
+                        {canSpeedUpOrCancel && (
+                            <div className="mt-2">
+                                <button
+                                    type="button"
+                                    className={classnames(
+                                        "rounded-md cursor-pointer text-blue-500 border-current border p-1 font-bold hover:bg-blue-500 hover:text-white transition-colors",
+                                        isQueued
+                                            ? "opacity-50 pointer-events-none"
+                                            : ""
                                     )}
-                                </div>
-                            )}
+                                    disabled={isQueued}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        history.push({
+                                            pathname: "/transaction/speedUp",
+                                            state: {
+                                                txId: id,
+                                            },
+                                        })
+                                    }}
+                                >
+                                    Speed up
+                                </button>
+                                <button
+                                    type="button"
+                                    className="ml-1.5 border p-1 rounded-md cursor-pointer text-gray-500 border-current font-bold hover:bg-gray-500 hover:text-white transition-colors"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        history.push({
+                                            pathname: "/transaction/cancel",
+                                            state: {
+                                                txId: id,
+                                            },
+                                        })
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Amount */}

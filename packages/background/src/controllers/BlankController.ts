@@ -223,6 +223,7 @@ import BridgeController, {
 } from './BridgeController';
 import { IChain } from '../utils/types/chain';
 import { BridgeImplementation } from '../utils/bridgeApi';
+import TokenAllowanceController from './erc-20/transactions/TokenAllowanceController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -262,6 +263,7 @@ export default class BlankController extends EventEmitter {
     private readonly blockFetchController: BlockFetchController;
     private readonly blockUpdatesController: BlockUpdatesController;
     private readonly transactionWatcherController: TransactionWatcherController;
+    private readonly tokenAllowanceController: TokenAllowanceController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -420,20 +422,25 @@ export default class BlankController extends EventEmitter {
             this.blockUpdatesController
         );
 
-        this.swapController = new SwapController(
+        this.tokenAllowanceController = new TokenAllowanceController(
             this.networkController,
             this.preferencesController,
             this.tokenOperationsController,
+            this.transactionController
+        );
+
+        this.swapController = new SwapController(
+            this.networkController,
             this.transactionController,
-            this.tokenController
+            this.tokenController,
+            this.tokenAllowanceController
         );
 
         this.bridgeController = new BridgeController(
             this.networkController,
-            this.preferencesController,
-            this.tokenOperationsController,
             this.transactionController,
             this.tokenController,
+            this.tokenAllowanceController,
             initState.BridgeController
         );
 
@@ -1942,7 +1949,7 @@ export default class BlankController extends EventEmitter {
         tokenAddress,
         customNonce,
     }: RequestApproveBridgeAllowance): Promise<boolean> {
-        return this.bridgeController.approveExchange(
+        return this.tokenAllowanceController.approveAllowance(
             BigNumber.from(allowance),
             BigNumber.from(amount),
             spenderAddress,

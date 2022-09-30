@@ -16,6 +16,7 @@ import ErrorDialog from "../components/dialog/ErrorDialog"
 import AccountIcon from "../components/icons/AccountIcon"
 import ActivityAssetsView from "../components/ActivityAssetsView"
 import GenericTooltip from "../components/label/GenericTooltip"
+import AnimatedIcon, { AnimatedIconName } from "../components/AnimatedIcon"
 
 // Utils
 import { formatHash, formatName } from "../util/formatAccount"
@@ -339,8 +340,9 @@ const PopupPage = () => {
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
-                                        <DoubleArrowHoverAnimation
-                                            vertical={true}
+                                        <AnimatedIcon
+                                            icon={AnimatedIconName.Bridge}
+                                            className="cursor-pointer"
                                         />
                                     </div>
                                     <span className="text-xs font-medium">

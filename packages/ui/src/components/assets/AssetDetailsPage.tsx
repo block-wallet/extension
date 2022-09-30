@@ -14,7 +14,7 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
 import { AssetIcon } from "../AssetsList"
 import RoundedIconButton from "../button/RoundedIconButton"
-
+import AnimatedIcon, { AnimatedIconName } from "../../components/AnimatedIcon"
 import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
 import openExternal from "../../assets/images/icons/open_external.svg"
 import PopupHeader from "../popup/PopupHeader"
@@ -269,8 +269,9 @@ const AssetDetailsPage = () => {
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
-                                    <DoubleArrowHoverAnimation
-                                        vertical={true}
+                                    <AnimatedIcon
+                                        icon={AnimatedIconName.Bridge}
+                                        className="cursor-pointer"
                                     />
                                 </div>
                                 <span className="text-xs font-medium">

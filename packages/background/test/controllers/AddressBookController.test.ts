@@ -29,7 +29,7 @@ import TransactionController from '@block-wallet/background/controllers/transact
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
 import BridgeController from '@block-wallet/background/controllers/BridgeController';
-import TokenAllowanceController from '@block-wallet/background/controllers/TokenAllowanceController';
+import TokenAllowanceController from '@block-wallet/background/controllers/erc-20/transactions/TokenAllowanceController';
 
 describe('Address book controller implementation', function () {
     const accounts = {

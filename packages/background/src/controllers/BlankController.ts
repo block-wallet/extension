@@ -223,7 +223,7 @@ import BridgeController, {
 } from './BridgeController';
 import { IChain } from '../utils/types/chain';
 import { BridgeImplementation } from '../utils/bridgeApi';
-import TokenAllowanceController from './TokenAllowanceController';
+import TokenAllowanceController from './erc-20/transactions/TokenAllowanceController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;

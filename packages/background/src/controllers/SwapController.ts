@@ -27,7 +27,7 @@ import {
     get1InchErrorMessageFromAxiosResponse,
     map1InchErrorMessage,
 } from '../utils/1inchError';
-import TokenAllowanceController from './TokenAllowanceController';
+import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
 
 export enum ExchangeType {
     SWAP_1INCH = 'SWAP_1INCH',

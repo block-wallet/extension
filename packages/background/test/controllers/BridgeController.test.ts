@@ -39,7 +39,7 @@ import {
     TransactionCategories,
     TransactionStatus,
 } from '@block-wallet/background/controllers/transactions/utils/types';
-import TokenAllowanceController from '@block-wallet/background/controllers/TokenAllowanceController';
+import TokenAllowanceController from '@block-wallet/background/controllers/erc-20/transactions/TokenAllowanceController';
 
 const TOKEN_A_GOERLI: IToken = {
     address: 'token_a_g',

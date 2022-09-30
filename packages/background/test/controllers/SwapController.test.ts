@@ -32,7 +32,7 @@ import {
     TokenControllerProps,
 } from '../../src/controllers/erc-20/TokenController';
 import { BASE_SWAP_FEE } from '../../src/utils/types/1inch';
-import TokenAllowanceController from '@block-wallet/background/controllers/TokenAllowanceController';
+import TokenAllowanceController from '@block-wallet/background/controllers/erc-20/transactions/TokenAllowanceController';
 
 const BLANK_TOKEN_ADDRESS = '0x41a3dba3d677e573636ba691a70ff2d606c29666';
 

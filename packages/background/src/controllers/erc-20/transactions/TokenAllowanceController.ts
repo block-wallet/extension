@@ -1,11 +1,11 @@
+import { isNativeTokenAddress } from '../../../utils/token';
 import { BigNumber } from 'ethers';
-import { isNativeTokenAddress } from '../utils/token';
-import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
-import { TransactionFeeData } from './erc-20/transactions/SignedTransaction';
-import { TokenOperationsController } from './erc-20/transactions/Transaction';
-import NetworkController from './NetworkController';
-import { PreferencesController } from './PreferencesController';
-import TransactionController from './transactions/TransactionController';
+import NetworkController from '../../NetworkController';
+import { PreferencesController } from '../../PreferencesController';
+import TransactionController from '../../transactions/TransactionController';
+import { TokenOperationsController } from './Transaction';
+import { TransactionFeeData } from './SignedTransaction';
+import { ApproveTransaction } from './ApproveTransaction';
 
 class TokenAllowanceController {
     constructor(

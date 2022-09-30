@@ -40,7 +40,7 @@ import { toChecksumAddress } from 'ethereumjs-util';
 import { fetchBlockWithRetries } from '../utils/blockFetch';
 import { isNil } from 'lodash';
 import { BaseController } from '../infrastructure/BaseController';
-import TokenAllowanceController from './TokenAllowanceController';
+import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
 const TIMEOUT_FETCH_RECEIVING_TX = 2 * HOUR;
 const STATUS_API_CALLS_DELAY = 30 * SECOND;
 const GET_TX_RECEIPT_DELAY = 2 * SECOND;

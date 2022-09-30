@@ -148,8 +148,8 @@ const AddTokenManualView = ({
             setError("tokenAddress", { message: undefined })
             setIsLoading(true)
             const res = await searchTokenInAssetsList(value)
+            setIsLoading(false)
             if (res) {
-                setIsLoading(false)
                 if (res && res.length) {
                     setValue("tokenAddress", res[0].address)
                     setValue("tokenDecimals", res[0].decimals.toString())
@@ -160,8 +160,6 @@ const AddTokenManualView = ({
 
                     setSubmitEnabled(true)
                 }
-            } else {
-                setIsLoading(false)
             }
         } else {
             reset()

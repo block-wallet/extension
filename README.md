@@ -78,8 +78,7 @@ They should look like:
 **packages/background/.env**
 ```
 // Complete with the corresponding keys.
-INFURA_PROJECT_ID=
-ETHERSCAN_API_KEY=
+ETHERSCAN_API_KEY= // Included in requests to Etherscan. Can be obtained in https://etherscan.io/apis.
 ```
 
 **packages/provider/.env**

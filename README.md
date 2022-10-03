@@ -48,7 +48,7 @@ See the [guideline](docs/guideline.md)
 
 #### Prerequisites
 
-You need a GitHub token with read:packages access to the **block-wallet** GitHub organization in order to download some private libraries. The steps are:
+You need a GitHub token with **read:packages** access to the **block-wallet** GitHub organization in order to download some private libraries. The steps are:
 
 1. Create a file ```~/.npmrc``` file with this configuration:
 
@@ -68,6 +68,24 @@ npm login --scope=@block-wallet --registry=https://npm.pkg.github.com
 ```
 
 That command will ask for your GitHub username, password (use the GitHub token generated before) and also the email.
+
+#### Environment
+
+It's also needed to setup the environment variables on each package. In both ``~/packages/background`` and ``~/packages/provider``, copy the contents of ``env.orig`` file into a new file called ``.env``.
+
+They should look like:
+
+**packages/background/.env**
+```
+// Complete with the corresponding keys.
+ETHERSCAN_API_KEY= // Included in requests to Etherscan. Can be obtained in https://etherscan.io/apis.
+```
+
+**packages/provider/.env**
+```
+LOG_LEVEL=error
+```
+
 
 #### Install
 

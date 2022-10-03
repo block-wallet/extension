@@ -76,7 +76,7 @@ export interface getBridgeQuoteRequest {
     toTokenAddress: string;
     fromAmount: string;
     fromAddress: string;
-    referer?: string;
+    referrer?: string;
     slippage?: number;
 }
 
@@ -204,7 +204,8 @@ const LiFiBridge: IBridge = {
                 toChain: r.toChainId,
                 fromAmount: r.fromAmount,
                 fromAddress: r.fromAddress,
-                referer: r.referer,
+                referrer: r.referrer,
+                integrator: 'blockwallet.io',
                 slippage: r.slippage || 0.5,
             },
         });

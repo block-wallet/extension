@@ -194,44 +194,48 @@ const LiFiBridge: IBridge = {
         }));
     },
     getQuote: async function (r: getBridgeQuoteRequest): Promise<IBridgeQuote> {
-        const response = await axios.get<
-            GetLiFiQuoteResponse | LiFiErrorResponse
-        >(`${LIFI_BRIDGE_ENDPOINT}/quote`, {
-            params: {
-                fromToken: r.fromTokenAddress,
-                toToken: r.toTokenAddress,
-                fromChain: r.fromChainId,
-                toChain: r.toChainId,
-                fromAmount: r.fromAmount,
-                fromAddress: r.fromAddress,
-                referrer: r.referrer,
-                integrator: 'blockwallet.io',
-                slippage: r.slippage || 0.5,
-            },
-        });
-        if (response.status === 404) {
-            const err = response.data as LiFiErrorResponse;
-            const errorCode = err.errors?.length
-                ? err.errors[0].code
-                : 'QUOTE_NOT_FOUND';
-            const message = getMessageFromLiFiError(errorCode);
-            throw new QuoteNotFoundError(message);
+        try {
+            const response = await axios.get<
+                GetLiFiQuoteResponse | LiFiErrorResponse
+            >(`${LIFI_BRIDGE_ENDPOINT}/quote`, {
+                params: {
+                    fromToken: r.fromTokenAddress,
+                    toToken: r.toTokenAddress,
+                    fromChain: r.fromChainId,
+                    toChain: r.toChainId,
+                    fromAmount: r.fromAmount,
+                    fromAddress: r.fromAddress,
+                    referrer: r.referrer,
+                    integrator: 'blockwallet.io',
+                    slippage: r.slippage || 0.5,
+                },
+            });
+            if (response.status === 400) {
+                throw new Error('Request parameters are invalid.');
+            }
+            const responseData = response.data as GetLiFiQuoteResponse;
+            return {
+                spender: responseData.estimate.approvalAddress,
+                transactionRequest: responseData.transactionRequest,
+                fromAmount: responseData.estimate.fromAmount,
+                toAmount: responseData.estimate.toAmount,
+                fromChainId: responseData.action.fromChainId,
+                toChainId: responseData.action.toChainId,
+                fromToken: lifiTokenToIToken(responseData.action.fromToken),
+                toToken: lifiTokenToIToken(responseData.action.toToken),
+                tool: responseData.tool,
+            };
+        } catch (e) {
+            if (e.response.status === 404) {
+                const err = e.response.data as LiFiErrorResponse;
+                const errorCode = err.errors?.length
+                    ? err.errors[0].code
+                    : 'QUOTE_NOT_FOUND';
+                const message = getMessageFromLiFiError(errorCode);
+                throw new QuoteNotFoundError(message);
+            }
+            throw e;
         }
-        if (response.status === 400) {
-            throw new Error('Request parameters are invalid.');
-        }
-        const responseData = response.data as GetLiFiQuoteResponse;
-        return {
-            spender: responseData.estimate.approvalAddress,
-            transactionRequest: responseData.transactionRequest,
-            fromAmount: responseData.estimate.fromAmount,
-            toAmount: responseData.estimate.toAmount,
-            fromChainId: responseData.action.fromChainId,
-            toChainId: responseData.action.toChainId,
-            fromToken: lifiTokenToIToken(responseData.action.fromToken),
-            toToken: lifiTokenToIToken(responseData.action.toToken),
-            tool: responseData.tool,
-        };
     },
     getStatus: async function (r: getStatusRequest): Promise<IBridgeStatus> {
         const response = await axios.get<

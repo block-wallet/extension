@@ -67,3 +67,7 @@ export const populateBridgeTransaction = (
         },
     }
 }
+
+export const isBridgeQuoteNotFoundError = (e: Error): boolean => {
+    return e.name === "QuoteNotFoundError"
+}

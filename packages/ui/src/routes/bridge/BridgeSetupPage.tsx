@@ -16,7 +16,7 @@ import { GetAmountYupSchema } from "../../util/yup/GetAmountSchema"
 import { InferType } from "yup"
 import { NetworkSelector } from "../../components/network/NetworkSelector"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { classnames, Classes } from "../../styles"
+import { classnames } from "../../styles"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { formatUnits, parseUnits } from "ethers/lib/utils"
 import { useBlankState } from "../../context/background/backgroundHooks"
@@ -38,6 +38,7 @@ import { IChain } from "@block-wallet/background/utils/types/chain"
 import {
     checkForBridgeNativeAsset,
     getRouteForNetwork,
+    isBridgeQuoteNotFoundError,
 } from "../../util/bridgeUtils"
 import {
     BridgeQuoteRequest,
@@ -50,6 +51,9 @@ import { AiFillInfoCircle } from "react-icons/ai"
 import GenericTooltip from "../../components/label/GenericTooltip"
 import { BASE_BRIDGE_FEE } from "../../util/constants"
 import { formatNumberLength } from "../../util/formatNumberLength"
+
+const QUOTE_NOT_FOUND_ERR_MESSAGE =
+    "Unable to generate a valid quote. Please try by modifying the amount of the Bridge Asset."
 
 interface SetupBridgePageLocalState {
     amount?: string
@@ -130,6 +134,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const {
         register,
         setValue,
+        clearErrors,
         trigger: triggerAmountValidation,
         watch,
         formState: { errors },
@@ -184,6 +189,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     //executes when the amount hex changes
     useEffect(() => {
         async function handleChangeAmount() {
+            clearErrors()
             if (selectedToken && Number(watchedAmount)) {
                 if (await triggerAmountValidation()) {
                     setBridgeDataState((prev: BridgeState) => ({
@@ -208,6 +214,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         selectedToken?.address,
         triggerAmountValidation,
         setBridgeDataState,
+        clearErrors,
     ])
 
     const onSubmit = () => {
@@ -333,7 +340,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     setisFetchingQuote(false)
                 }
             } catch (error) {
-                setError(capitalize(error.message || "Error fetching quote."))
+                if (isBridgeQuoteNotFoundError(error)) {
+                    setError(QUOTE_NOT_FOUND_ERR_MESSAGE)
+                } else {
+                    setError("Unable to fetch a valid quote. Please try again.")
+                }
                 setisFetchingQuote(false)
             }
         }
@@ -355,6 +366,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bigNumberAmount, errors.amount, selectedAddress, selectedRoute])
+
+    const isAmountError = error === QUOTE_NOT_FOUND_ERR_MESSAGE
 
     return (
         <PopupLayout
@@ -386,19 +399,14 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 <PopupFooter>
                     <ButtonWithLoading
                         label={
-                            error
-                                ? error
-                                : quote?.allowance ===
-                                  BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE
+                            quote?.allowance ===
+                            BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE
                                 ? "Approve"
                                 : "Review"
                         }
                         disabled={!!(error || !quote)}
                         isLoading={isFetchingRoutes || isFetchingQuote}
                         onClick={onSubmit}
-                        buttonClass={classnames(
-                            error && `${Classes.redButton} opacity-100`
-                        )}
                     />
                 </PopupFooter>
             }
@@ -474,8 +482,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 inputFocus
                                     ? "bg-primary-200"
                                     : "bg-primary-100",
-                                errors.amount
-                                    ? "border-red-400"
+                                errors.amount || isAmountError
+                                    ? "border border-red-400"
                                     : "border-opacity-0 border-transparent"
                             )}
                         >
@@ -615,6 +623,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         </div>
                     </>
                 )}
+
+                {error && <ErrorMessage className="mt-2.5" error={error} />}
             </div>
         </PopupLayout>
     )

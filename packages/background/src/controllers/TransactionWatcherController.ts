@@ -725,6 +725,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 return 10000;
             case 56:
                 return 5000;
+            case 280:
+                return 100;
             case 250:
             default:
                 return 2000;

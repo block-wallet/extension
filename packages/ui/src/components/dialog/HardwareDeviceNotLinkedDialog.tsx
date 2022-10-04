@@ -67,8 +67,11 @@ const HardwareDeviceNotLinkedDialog: React.FC<{
                             )}
                         >
                             {steps.map((step, index) => (
-                                <div className="flex flex-row items-center h-7">
-                                    <span className="text-sm" key={index}>
+                                <div
+                                    className="flex flex-row items-center h-7"
+                                    key={index}
+                                >
+                                    <span className="text-sm">
                                         {index + 1}.&nbsp;{step.label}
                                     </span>
                                     {step.info && (

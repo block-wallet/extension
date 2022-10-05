@@ -1,11 +1,10 @@
 # Convention
 
-This convention applies for the commit messages and branch names within this repository. Also, there's stage in the GitHub Workflow that ensures this convention.
+This convention applies for the commit messages and branch names within this repository. Even though this is optional and it isn't enforced by any pipeline we suggest following this convention in this repository.
 
 # Objective
 
-Using a semantic Git commit method can greatly improve the readability 
-of Git logs and help to organize the scope of individual commits.
+Using a semantic Git commit method can greatly improve the readability of Git logs and help to organize the scope of individual commits.
 
 # Description
 
@@ -98,17 +97,15 @@ release/: updates related to a new release. This is only used by our Release wor
 dependabot/: branch use by the Dependabot
 ```
 
-# Workflow
+# Fix 
 
-There's a GitHub workflow called **Convention** with a *validation* stage that checks commit messages and branch names when there's a new Pull Request using *master* branch as a target.
+In case you make a mistake in some commit messages or branch names you can fix them following the next steps.
 
-## Fix 
-
-### Commits messages
+## Commits messages
 
 There are several ways to update old commit messages. The easiest way to do it is using an *amend* or *rebase*. More information here https://thoughtbot.com/blog/git-interactive-rebase-squash-amend-rewriting-history.
 
 
-### Branch name
+## Branch name
 
 The easiest way to fix a branch name is to rename it locally, delete the remote branch with the wrong name and then push the renamed branch. More information here https://www.w3docs.com/snippets/git/how-to-rename-git-local-and-remote-branches.html.

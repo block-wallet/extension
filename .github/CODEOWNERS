@@ -3,7 +3,7 @@
 
 # These owners will be the default owners for everything in the repo.
 *       @ImanH @block-wallet/devops
-*       @julianariel @block-wallet/
+*       @julianariel @block-wallet/devops
 
 /packages/background @block-wallet/backgroundreviewers
 /packages/ui @block-wallet/uireviewers

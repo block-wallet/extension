@@ -180,7 +180,7 @@ const SearchNetworkPage = () => {
                             <div className="text-xs text-gray-500 pt-4 pb-1">
                                 SEARCH NETWORKS
                             </div>
-                            <div className="flex flex-col space-y-4">
+                            <div className="flex flex-col">
                                 {filteredChains && filteredChains.length ? (
                                     filteredChains.map(
                                         ({ chain, isEnabled }) => {

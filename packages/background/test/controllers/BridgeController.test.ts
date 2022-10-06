@@ -79,7 +79,7 @@ const SUPPORTED_GOERLI_TOKENS = Object.values(
 const mockPromiseResponse = <T>(r: T): Promise<T> =>
     new Promise((resolve) => resolve(r));
 
-describe.only('Bridge Controller', () => {
+describe('Bridge Controller', () => {
     const sandbox = sinon.createSandbox();
     const accounts = {
         goerli: [

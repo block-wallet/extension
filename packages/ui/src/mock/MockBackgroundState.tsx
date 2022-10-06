@@ -9,7 +9,6 @@ import { CurrencyAmountPair } from "@block-wallet/background/controllers/blank-d
 import { AddressBook } from "@block-wallet/background/controllers/AddressBookController"
 import { ActionsTimeInterval } from "@block-wallet/background/utils/constants/networks"
 import { AccountStatus, AccountType } from "../context/commTypes"
-import { ONEINCH_SWAPS_NETWORKS } from "@block-wallet/background/utils/types/1inch"
 
 export const initBackgroundState: BackgroundStateType = {
     blankState: {
@@ -21,7 +20,7 @@ export const initBackgroundState: BackgroundStateType = {
         filters: {
             account: [],
         },
-        availableSwapChainIds: ONEINCH_SWAPS_NETWORKS,
+        availableSwapChainIds: [1],
         addressBook: {
             GOERLI: {
                 "0x5621C68f21852811E1fd6208fDDD0FC13A844fD1": {

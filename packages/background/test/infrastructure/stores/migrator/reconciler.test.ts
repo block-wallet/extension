@@ -293,6 +293,10 @@ describe('State reconciler', () => {
                 addressBook: {} as AddressBook,
                 recentAddresses: {} as AddressBook,
             },
+            BridgeController: {
+                bridgeReceivingTransactions: {},
+                perndingBridgeReceivingTransactions: {},
+            },
             AccountTrackerController: {
                 isAccountTrackerLoading: false,
                 accounts: {

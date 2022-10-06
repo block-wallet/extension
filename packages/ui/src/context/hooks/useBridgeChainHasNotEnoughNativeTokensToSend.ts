@@ -1,52 +1,68 @@
-import { getAccountNativeTokenBalance, fetchLatestGasPrice } from "../commActions";
-import { useMemo, useEffect } from "react";
-import useAsyncInvoke, { Status } from "../../util/hooks/useAsyncInvoke";
+import {
+    getAccountNativeTokenBalance,
+    fetchLatestGasPrice,
+} from "../commActions"
+import { useMemo, useEffect } from "react"
+import useAsyncInvoke, { Status } from "../../util/hooks/useAsyncInvoke"
+import { BigNumber } from "ethers"
+import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 
 export enum EnoughNativeTokensToSend {
-    UNKNOWN = 'UNKNOWN',
-    ENOUGH = 'ENOUGH',
-    NOT_ENOUGH = 'NOT_ENOUGH',
+    UNKNOWN = "UNKNOWN",
+    ENOUGH = "ENOUGH",
+    NOT_ENOUGH = "NOT_ENOUGH",
 }
 
-export const useAddressHasEnoughNativeTokensToSend = (
-    chainId: number
-) => {
-    const { run: runNativeToken, isLoading: isLoadingNativeToken, data: dataNativeToken } = useAsyncInvoke({ status: Status.PENDING })
-    const { run: runGasPrice, isLoading: isLoadingGasPrice, data: dataGasPrice } = useAsyncInvoke({ status: Status.PENDING })
+interface NativeAndGasPrices {
+    nativeTokenBalance: BigNumber | undefined
+    gasPrices: GasPriceData | undefined
+}
+
+export const useAddressHasEnoughNativeTokensToSend = (chainId: number) => {
+    const { run, isLoading, data } = useAsyncInvoke<NativeAndGasPrices>({
+        status: Status.PENDING,
+    })
 
     useEffect(() => {
-        runNativeToken(getAccountNativeTokenBalance(chainId))
-        runGasPrice(fetchLatestGasPrice(chainId))
-
-
-    }, []);
+        run(
+            new Promise<NativeAndGasPrices>(async (resolve) => {
+                const [nativeTokenBalance, gasPrices] = await Promise.all([
+                    getAccountNativeTokenBalance(chainId),
+                    fetchLatestGasPrice(chainId),
+                ])
+                return resolve({
+                    nativeTokenBalance,
+                    gasPrices,
+                })
+            })
+        )
+    }, [run, chainId])
 
     return useMemo(() => {
-        const isLoading = isLoadingGasPrice || isLoadingNativeToken
         let result = EnoughNativeTokensToSend.UNKNOWN
-        console.log(isLoading, dataGasPrice, dataNativeToken)
-        if (!isLoading && dataNativeToken && dataGasPrice) {
-            result = EnoughNativeTokensToSend.ENOUGH//calculate(dataNativeToken, dataGasPrice)
+        console.log(isLoading, data)
+        if (!isLoading && data?.nativeTokenBalance && data.gasPrices) {
+            result = EnoughNativeTokensToSend.ENOUGH //calculate(dataNativeToken, dataGasPrice)
         }
-        return { isLoading, result };
-    }, [isLoadingGasPrice, isLoadingNativeToken, dataNativeToken, dataGasPrice])
+        return { isLoading, result }
+    }, [isLoading, data])
 }
 
 // export const useBridgeChainHasNotEnoughNativeTokensToSend = (
 //     address: string,
 //     chainId: number
 // ): EnoughNativeTokensToSend => {
-    // const userCanSend = useAddressHasEnoughNativeTokensToSend(
-    //     chainId
-    // )
+// const userCanSend = useAddressHasEnoughNativeTokensToSend(
+//     chainId
+// )
 
-    // if (isNativeTokenAddress(address)) {
-    //     return EnoughNativeTokensToSend.ENOUGH
-    // }
+// if (isNativeTokenAddress(address)) {
+//     return EnoughNativeTokensToSend.ENOUGH
+// }
 
-    // return userCanSend === undefined ? EnoughNativeTokensToSend.UNKNOWN : userCanSend ? EnoughNativeTokensToSend.ENOUGH : EnoughNativeTokensToSend.NOT_ENOUGH
+// return userCanSend === undefined ? EnoughNativeTokensToSend.UNKNOWN : userCanSend ? EnoughNativeTokensToSend.ENOUGH : EnoughNativeTokensToSend.NOT_ENOUGH
 
 //}
 
 // userCanPayGasPrice(chainId, "send"){}
-// 
+//

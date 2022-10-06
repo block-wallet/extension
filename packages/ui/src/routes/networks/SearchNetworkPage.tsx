@@ -123,7 +123,7 @@ const SearchNetworkPage = () => {
                 ) : null
             }
         >
-            <div className="w-76 w-full p-6 bg-white fixed z-20 flex flex-col">
+            <div className="w-76 w-full p-6 pb-4 bg-white fixed z-20 flex flex-col">
                 <div className="flex flex-row space-x-2">
                     <div className="flex-1">
                         <SearchInput
@@ -176,8 +176,8 @@ const SearchNetworkPage = () => {
                         </div>
                     )}
                     {isSuccess && (
-                        <div className="flex flex-col space-y-2 pb-4">
-                            <div className="text-xs text-gray-500 pt-4 pb-1">
+                        <div className="flex flex-col space-y-1 pb-4">
+                            <div className="text-xs text-gray-500 pt-2 pb-1">
                                 SEARCH NETWORKS
                             </div>
                             <div className="flex flex-col">

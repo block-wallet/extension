@@ -1155,7 +1155,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         });
     }
 
-    public async getSelectedAddressNativeTokenBalance(chainId: number): Promise<BigNumber | undefined> {
+    public async getAccountNativeTokenBalanceForChain(chainId: number): Promise<BigNumber | undefined> {
 
         const selectedAddress =
             this._preferencesController.getSelectedAddress();
@@ -1166,15 +1166,19 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         if (provider === undefined) {
             return undefined
         }
+        try {
+            const balances = await this._getAddressBalances(
+                chainId,
+                provider,
+                selectedAddress,
+                [NATIVE_TOKEN_ADDRESS]
+            );
 
-        const balances = await this._getAddressBalances(
-            chainId,
-            provider,
-            selectedAddress,
-            [NATIVE_TOKEN_ADDRESS]
-        );
+            return balances[NATIVE_TOKEN_ADDRESS]
+        } catch {
+            return undefined
+        }
 
-        return balances[NATIVE_TOKEN_ADDRESS]
     }
 }
 

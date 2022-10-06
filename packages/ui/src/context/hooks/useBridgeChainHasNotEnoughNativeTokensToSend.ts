@@ -1,16 +1,18 @@
 import {
-    getAccountNativeTokenBalance,
-    fetchLatestGasPrice,
+    getAccountNativeTokenBalanceForChain,
+    fetchLatestGasPriceForChain,
 } from "../commActions"
 import { useMemo, useEffect } from "react"
 import useAsyncInvoke, { Status } from "../../util/hooks/useAsyncInvoke"
 import { BigNumber } from "ethers"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
+import { hasEnoughFundsToPayTheGasInSendTransaction } from "../../util/bridgeUtils";
+import { useBlankState } from "../../context/background/backgroundHooks"
 
 export enum EnoughNativeTokensToSend {
     UNKNOWN = "UNKNOWN",
     ENOUGH = "ENOUGH",
-    NOT_ENOUGH = "NOT_ENOUGH",
+    NOT_ENOUGH = "NOT_ENOUGH"
 }
 
 interface NativeAndGasPrices {
@@ -27,13 +29,16 @@ export const useAddressHasEnoughNativeTokensToSend = (
     const { run, isLoading, data } = useAsyncInvoke<NativeAndGasPrices>({
         status: Status.PENDING,
     })
+    const {
+        isEIP1559Compatible,
+    } = useBlankState()!
 
     useEffect(() => {
         run(
             new Promise<NativeAndGasPrices>(async (resolve) => {
                 const [nativeTokenBalance, gasPrices] = await Promise.all([
-                    getAccountNativeTokenBalance(chainId),
-                    fetchLatestGasPrice(chainId),
+                    getAccountNativeTokenBalanceForChain(chainId),
+                    fetchLatestGasPriceForChain(chainId),
                 ])
                 return resolve({
                     nativeTokenBalance,
@@ -45,29 +50,18 @@ export const useAddressHasEnoughNativeTokensToSend = (
 
     return useMemo(() => {
         let result = EnoughNativeTokensToSend.UNKNOWN
-        console.log(isLoading, data)
-        if (!isLoading && data?.nativeTokenBalance && data.gasPrices) {
-            result = EnoughNativeTokensToSend.ENOUGH //calculate(dataNativeToken, dataGasPrice)
+        if (!isLoading) {
+            if (!data || !data.nativeTokenBalance || !data.gasPrices) {
+                result = EnoughNativeTokensToSend.UNKNOWN
+            } else {
+                const hasEnoughFunds = hasEnoughFundsToPayTheGasInSendTransaction(!!isEIP1559Compatible[chainId], data.nativeTokenBalance, data.gasPrices)
+                if (hasEnoughFunds === undefined) {
+                    result = EnoughNativeTokensToSend.UNKNOWN
+                } else {
+                    result = hasEnoughFunds ? EnoughNativeTokensToSend.ENOUGH : EnoughNativeTokensToSend.NOT_ENOUGH
+                }
+            }
         }
         return { isLoading, result }
     }, [isLoading, data])
 }
-
-// export const useBridgeChainHasNotEnoughNativeTokensToSend = (
-//     address: string,
-//     chainId: number
-// ): EnoughNativeTokensToSend => {
-// const userCanSend = useAddressHasEnoughNativeTokensToSend(
-//     chainId
-// )
-
-// if (isNativeTokenAddress(address)) {
-//     return EnoughNativeTokensToSend.ENOUGH
-// }
-
-// return userCanSend === undefined ? EnoughNativeTokensToSend.UNKNOWN : userCanSend ? EnoughNativeTokensToSend.ENOUGH : EnoughNativeTokensToSend.NOT_ENOUGH
-
-//}
-
-// userCanPayGasPrice(chainId, "send"){}
-//

@@ -733,7 +733,7 @@ export default class BlankController extends EventEmitter {
             case Messages.ACCOUNT.GET_BALANCE:
                 return this.getAccountBalance(request as string);
             case Messages.ACCOUNT.GET_NATIVE_TOKEN_BALANCE:
-                return this.getAccountNativeTokenBalance(request as number);
+                return this.getAccountNativeTokenBalanceForChain(request as number);
             case Messages.APP.GET_IDLE_TIMEOUT:
                 return this.getIdleTimeout();
             case Messages.APP.SET_IDLE_TIMEOUT:
@@ -924,7 +924,7 @@ export default class BlankController extends EventEmitter {
             case Messages.TRANSACTION.GET_LATEST_GAS_PRICE:
                 return this.getLatestGasPrice();
             case Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE:
-                return this.fetchLatestGasPrice(request as number);
+                return this.fetchLatestGasPriceForChain(request as number);
             case Messages.TRANSACTION.SEND_ETHER:
                 return this.sendEther(request as RequestSendEther);
             case Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION:
@@ -1154,15 +1154,15 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
-     * getAccountNativeTokenBalance
+     * getAccountNativeTokenBalanceForChain
      *
-     * It gets the specified account balance.
+     * It gets the native token balance from the selected account in the specified network.
      *
-     * @param account The account address
-     * @returns The account balance.
+     * @param chainId the chain id
+     * @returns The native token balance.
      */
-    public async getAccountNativeTokenBalance(chainId: number): Promise<BigNumber | undefined> {
-        return this.accountTrackerController.getSelectedAddressNativeTokenBalance(chainId)
+    public async getAccountNativeTokenBalanceForChain(chainId: number): Promise<BigNumber | undefined> {
+        return this.accountTrackerController.getAccountNativeTokenBalanceForChain(chainId)
     }
     /**
      * It triggers the deposits tree update for the current network
@@ -2442,9 +2442,9 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
-     * It returns the current network latest gas price
+     * It returns the current network latest gas price by fetching it from the Fee service or network
      */
-    private async fetchLatestGasPrice(chainId: number): Promise<GasPriceData | undefined> {
+    private async fetchLatestGasPriceForChain(chainId: number): Promise<GasPriceData | undefined> {
         return this.gasPricesController.fetchGasPriceData(chainId)
     }
 

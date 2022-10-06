@@ -1,6 +1,8 @@
 import { GetBridgeQuoteResponse } from "@block-wallet/background/controllers/BridgeController"
+import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 import { IBridgeRoute } from "@block-wallet/background/utils/bridgeApi"
 import { IChain } from "@block-wallet/background/utils/types/chain"
+import { BigNumber } from "ethers";
 import {
     BridgeImplementation,
     MetaType,
@@ -8,6 +10,8 @@ import {
     TransactionStatus,
 } from "../context/commTypes"
 import { RichedTransactionMeta } from "./transactionUtils"
+import { SEND_GAS_COST } from "../util/constants"
+import { getDisplayGasPrices } from "../components/gas/GasPricesInfo";
 
 const LIFI_NATIVE_ADDRESS = "0x0000000000000000000000000000000000000000"
 
@@ -66,4 +70,12 @@ export const populateBridgeTransaction = (
             role: "SENDING",
         },
     }
+}
+
+export const hasEnoughFundsToPayTheGasInSendTransaction = (isEIP1559Compatible: boolean, balance: BigNumber, gasPricesData: GasPriceData): boolean | undefined => {
+    const gasPrices = getDisplayGasPrices(isEIP1559Compatible, gasPricesData.gasPricesLevels, gasPricesData.estimatedBaseFee!, SEND_GAS_COST)
+    if (gasPrices === undefined) {
+        return undefined
+    }
+    return BigNumber.from(balance).gte(BigNumber.from(gasPrices?.average.totalTransactionCost))
 }

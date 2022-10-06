@@ -223,6 +223,13 @@ export class GasPricesController extends BaseController<GasPricesControllerState
         }
     };
 
+    /**
+     * Fetches the blockchain to get the current gas prices.
+     *
+     * @param chainId
+     * @param isEIP1559Compatible
+     * @returns GasPriceData
+     */
     private async _fetchFeeDataFromChain(chainId: number, isEIP1559Compatible: boolean): Promise<GasPriceData> {
         let gasPriceData: GasPriceData = {} as GasPriceData;
 
@@ -373,6 +380,14 @@ export class GasPricesController extends BaseController<GasPricesControllerState
         }
         return gasPriceData
     }
+
+    /**
+     * Fetches the fee's service to get the current gas prices.
+     *
+     * @param chainId
+     * @param isEIP1559Compatible
+     * @returns GasPriceData or undefined
+     */
     private async _fetchFeeDataFromService(chainId: number, isEIP1559Compatible: boolean): Promise<GasPriceData | undefined> {
 
         let gasPriceData: GasPriceData = {} as GasPriceData;
@@ -955,11 +970,6 @@ export class GasPricesController extends BaseController<GasPricesControllerState
     }
 
     public async fetchGasPriceData(chainId: number): Promise<GasPriceData | undefined> {
-        // const balance = await this._accountTrackerController.getSelectedAddressNativeTokenBalance(chainId)
-        // if (balance === undefined) {
-        //     return HasFundsToPayTheGas.UNVERIFIABLE
-        // }
-
         const isEIP1559Compatible = await this._networkController.getEIP1559Compatibility(chainId);
         let gasPriceData: GasPriceData = {} as GasPriceData;
 
@@ -972,32 +982,14 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                 }
             }
 
-            if (!gasPriceData) { // TRY
+            if (!gasPriceData) {
                 gasPriceData = await this._fetchFeeDataFromChain(chainId, isEIP1559Compatible)
             }
         }
         catch (e) {
             log.error(e);
-            return undefined //HasFundsToPayTheGas.UNKNOWN
+            return undefined
         }
-
-        gasPriceData = this._ensureLowerPrices(chainId, gasPriceData);
-        // const gasLimit = BigNumber.from("0x5208") // Hex for 21000, cost of a simple send.
-
-        // const calculateTransactionGas = (isEIP1559Compatible: boolean, gasPriceData: GasPriceData) => {
-        //     if (isEIP1559Compatible && gasPriceData.estimatedBaseFee) {
-        //         const baseFee = BigNumber.from(gasPriceData.estimatedBaseFee)
-        //         const priority = BigNumber.from(
-        //             gasPriceData.gasPricesLevels.average.maxPriorityFeePerGas ?? 0
-        //         )
-        //         const baseFeePlusTip = baseFee.add(priority)
-        //         return BigNumber.from(gasLimit!.mul(baseFeePlusTip))
-        //     } else {
-        //         return BigNumber.from(gasLimit!.mul(gasPriceData.gasPricesLevels.average.gasPrice ?? 1))
-        //     }
-        // }
-        // const transactionGas = calculateTransactionGas(isEIP1559Compatible, gasPriceData)
-        // return transactionGas.lte(balance) ? HasFundsToPayTheGas.ENOUGH : HasFundsToPayTheGas.NOT_ENOUGH
-        return gasPriceData
+        return this._ensureLowerPrices(chainId, gasPriceData)
     }
 }

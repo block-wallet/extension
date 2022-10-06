@@ -3,14 +3,15 @@ import { classnames } from "../../styles/classes"
 
 const ErrorMessage: FunctionComponent<{
     error?: string | undefined
-}> = ({ error = "" }) => {
+    className?: string | undefined
+}> = ({ error = "", className }) => {
     return (
         <span
             className={classnames(
                 "text-red-500 text-xs break-words",
-                error ? "" : "hidden"
+                error ? "" : "hidden",
+                className
             )}
-            title={error || ""}
         >
             {error || <>&nbsp;</>}
         </span>

@@ -79,7 +79,9 @@ const SUPPORTED_GOERLI_TOKENS = Object.values(
 const mockPromiseResponse = <T>(r: T): Promise<T> =>
     new Promise((resolve) => resolve(r));
 
-describe.only('Bridge Controller', () => {
+describe('Bridge Controller', () => {
+    const quoteSandbox = sinon.createSandbox();
+
     const sandbox = sinon.createSandbox();
     const accounts = {
         goerli: [
@@ -183,6 +185,7 @@ describe.only('Bridge Controller', () => {
 
     afterEach(function () {
         sandbox.restore();
+        quoteSandbox.restore();
     });
 
     describe('Li.Fi Aggregator', () => {
@@ -323,8 +326,6 @@ describe.only('Bridge Controller', () => {
             });
         });
         describe('Quotes and Allowance', () => {
-            const quoteSandbox = sinon.createSandbox();
-
             beforeEach(() => {
                 quoteSandbox.restore();
                 //mock query ok
@@ -332,7 +333,7 @@ describe.only('Bridge Controller', () => {
                     .stub(BridgeAPI.LIFI_BRIDGE, 'getQuote')
                     .withArgs({
                         fromChainId: GOERLI_CHAIN_ID,
-                        referer: BRIDGE_REFERRER_ADDRESS,
+                        referrer: BRIDGE_REFERRER_ADDRESS,
                         toChainId: 1,
                         fromTokenAddress:
                             '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
@@ -441,7 +442,7 @@ describe.only('Bridge Controller', () => {
                             fromAddress:
                                 '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
                             fromAmount: '10000',
-                            referer: BRIDGE_REFERRER_ADDRESS,
+                            referrer: BRIDGE_REFERRER_ADDRESS,
                         })
                         .throwsException(
                             new QuoteNotFoundError('Quote not found')
@@ -641,7 +642,7 @@ describe.only('Bridge Controller', () => {
                                 blocksDropCount: 0,
                                 chainId: 137,
                                 gasEstimationFailed: false,
-                                id: '3ee2ce72-84d0-40be-9ae8-37d638894e7b',
+                                id: 'a7f2cd6c-fa81-4ede-8448-d23a2e315b15',
                                 loadingGasValues: false,
                                 metaType: MetaType.REGULAR,
                                 methodSignature: {

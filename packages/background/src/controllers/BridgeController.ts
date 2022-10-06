@@ -453,7 +453,7 @@ export default class BridgeController extends BaseController<
             this._getAPIImplementation(agg).getQuote({
                 ...request,
                 fromChainId: network.chainId,
-                referer: BRIDGE_REFERRER_ADDRESS,
+                referrer: BRIDGE_REFERRER_ADDRESS,
             })
         );
 

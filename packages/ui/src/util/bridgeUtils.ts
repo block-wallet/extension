@@ -79,3 +79,7 @@ export const hasEnoughFundsToPayTheGasInSendTransaction = (isEIP1559Compatible: 
     }
     return BigNumber.from(balance).gte(BigNumber.from(gasPrices?.average.totalTransactionCost))
 }
+
+export const isBridgeQuoteNotFoundError = (e: Error): boolean => {
+    return e.name === "QuoteNotFoundError"
+}

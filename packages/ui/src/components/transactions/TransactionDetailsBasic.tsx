@@ -189,26 +189,31 @@ export const TransactionDetails: FunctionComponent<
                 }
             }
 
+            const bridgeSendingChainLabel =
+                bridgeDetails?.sendingTransaction?.networkName ||
+                transaction.bridgeParams.fromChainId.toString()
+            const bridgeReceivingChainLabel =
+                bridgeDetails?.receivingTransaction?.networkName ||
+                transaction.bridgeParams.toChainId.toString()
+
             if (
                 transaction.transactionCategory === TransactionCategories.BRIDGE
             ) {
                 details.push({
                     label: "Destination network",
-                    value:
-                        bridgeDetails?.receivingTransaction?.networkName ||
-                        transaction.bridgeParams.toChainId.toString(),
+                    value: bridgeReceivingChainLabel,
                 })
             } else {
                 details.push({
                     label: "Origin network",
-                    value:
-                        bridgeDetails?.sendingTransaction?.networkName ||
-                        transaction.bridgeParams.fromChainId.toString(),
+                    value: bridgeSendingChainLabel,
                 })
             }
 
             details.push({
-                label: isConfirmed ? "Sent" : "Sending",
+                label: (isConfirmed ? "Sent" : "Sending").concat(
+                    ` from ${bridgeSendingChainLabel}`
+                ),
                 value: formatUnits(
                     bnOr0(transaction.bridgeParams.fromTokenAmount),
                     transaction.bridgeParams.fromToken.decimals
@@ -218,7 +223,9 @@ export const TransactionDetails: FunctionComponent<
             })
 
             details.push({
-                label: isConfirmed ? "Received" : "Receiving",
+                label: (isConfirmed ? "Received" : "Receiving").concat(
+                    ` in ${bridgeReceivingChainLabel}`
+                ),
                 value: formatUnits(
                     bnOr0(transaction.bridgeParams.toTokenAmount),
                     transaction.bridgeParams.toToken.decimals
@@ -479,12 +486,15 @@ export const TransactionDetails: FunctionComponent<
                                 detail.noSpace ? "" : "mt-3",
                                 detail.expandable
                                     ? ""
-                                    : "flex justify-between items-center"
+                                    : "flex justify-between items-center space-x-1"
                             )}
                         >
-                            <p className="text-sm font-semibold">
+                            <span
+                                className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap w-36"
+                                title={detail.label}
+                            >
                                 {capitalize(detail.label)}
-                            </p>
+                            </span>
                             {detail.expandable ? (
                                 <ExpandableText className="text-gray-600 mt-1 w-fulltext-sm allow-select">
                                     {detail.value ?? "N/A"}

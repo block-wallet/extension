@@ -499,6 +499,7 @@ export default class BlankController extends EventEmitter {
             AddressBookController: this.addressBookController.store,
             BlankProviderController: this.blankProviderController.store,
             BlockUpdatesController: this.blockUpdatesController.store,
+            SwapController: this.swapController.UIStore,
             BridgeController: this.bridgeController.UIStore,
         });
 

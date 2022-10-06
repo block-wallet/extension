@@ -20,6 +20,7 @@ export const initBackgroundState: BackgroundStateType = {
         filters: {
             account: [],
         },
+        availableSwapChainIds: [1],
         addressBook: {
             GOERLI: {
                 "0x5621C68f21852811E1fd6208fDDD0FC13A844fD1": {

@@ -12,6 +12,7 @@ import {
     REFERRER_ADDRESS,
     BasicToken,
     GAS_LIMIT_INCREASE,
+    ONEINCH_SWAPS_NETWORKS,
 } from '../utils/types/1inch';
 import {
     ContractMethodSignature,
@@ -28,11 +29,16 @@ import {
     map1InchErrorMessage,
 } from '../utils/1inchError';
 import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
+import { BaseController } from '../infrastructure/BaseController';
 
 export enum ExchangeType {
     SWAP_1INCH = 'SWAP_1INCH',
     SWAP_COWSWAP = 'SWAP_COWSWAP',
     LIMIT_1INCH = 'LIMIT_1INCH',
+}
+
+export interface SwapControllerMemState {
+    availableSwapChainIds: number[];
 }
 
 export interface SwapQuote extends OneInchSwapQuoteResponse {
@@ -71,13 +77,20 @@ export interface ExchangeParams {
  * Provides functionality to approve an asset transfer, fetch quotes for exchanges
  * depending on the exchange type, and execute the transactions.
  */
-export default class SwapController {
+export default class SwapController extends BaseController<
+    undefined,
+    SwapControllerMemState
+> {
     constructor(
         private readonly _networkController: NetworkController,
         private readonly _transactionController: TransactionController,
         private readonly _tokenController: TokenController,
         private readonly _tokenAllowanceController: TokenAllowanceController
-    ) {}
+    ) {
+        super(undefined, {
+            availableSwapChainIds: ONEINCH_SWAPS_NETWORKS,
+        });
+    }
 
     /**
      * Checks if the given account has enough allowance to make the swap

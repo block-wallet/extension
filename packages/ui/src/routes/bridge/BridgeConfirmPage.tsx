@@ -74,7 +74,10 @@ import TransactionDetails from "../../components/transactions/TransactionDetails
 import { WithRequired } from "@block-wallet/background/utils/types/helpers"
 import CollapsableWarning from "../../components/CollapsableWarning"
 import { AiOutlineWarning } from "react-icons/ai"
-import { useAddressHasEnoughNativeTokensToSend, EnoughNativeTokensToSend } from "../../context/hooks/useBridgeChainHasNotEnoughNativeTokensToSend"
+import {
+    useAddressHasEnoughNativeTokensToSend,
+    EnoughNativeTokensToSend,
+} from "../../context/hooks/useBridgeChainHasNotEnoughNativeTokensToSend"
 
 export interface BridgeConfirmPageLocalState {
     amount: string
@@ -84,6 +87,20 @@ export interface BridgeConfirmPageLocalState {
     token: Token
     fromAssetPage?: boolean
 }
+
+const BRIDGE_NATIVE_TOKEN_STATUS_WARNING_MESSAGES = new Map<
+    EnoughNativeTokensToSend,
+    string
+>([
+    [
+        EnoughNativeTokensToSend.NOT_ENOUGH,
+        "We noticed you don't have enough funds in the destination network to cover minimum gas fees.",
+    ],
+    [
+        EnoughNativeTokensToSend.UNKNOWN,
+        "We noticed you don't have the destination network added in your wallet so we couldn't check if you have funds to cover minimum gas fees.",
+    ],
+])
 
 // 15s
 const QUOTE_REFRESH_TIMEOUT = 1000 * 20
@@ -130,7 +147,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const { availableNetworks, selectedNetwork, selectedAddress } = useBlankState()!
+    const { availableNetworks, selectedNetwork } = useBlankState()!
     const { gasPricesLevels } = useGasPriceData()
     const { isEIP1559Compatible } = useSelectedNetwork()
     const selectedAccount = useSelectedAccount()
@@ -141,11 +158,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         useTransactionWaitingDialog(
             inProgressTransaction
                 ? {
-                    id: inProgressTransaction.id,
-                    status: inProgressTransaction.status,
-                    error: inProgressTransaction.error as Error,
-                    epochTime: inProgressTransaction?.approveTime,
-                }
+                      id: inProgressTransaction.id,
+                      status: inProgressTransaction.status,
+                      error: inProgressTransaction.error as Error,
+                      epochTime: inProgressTransaction?.approveTime,
+                  }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,
             selectedAccount.accountType,
@@ -168,9 +185,6 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
         bridgeQuote
     )
-
-    // Warning message
-    const [nativeTokenWarningMessage, setNativeTokenWarningMessage] = useState<string | undefined>(undefined)
 
     // Gas
     const [defaultGas, setDefaultGas] = useState<{
@@ -214,9 +228,9 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const isBridgingNativeToken = isBridgeNativeTokenAddress(token.address)
     const total = isBridgingNativeToken
         ? BigNumber.from(
-            quote?.bridgeParams.params.fromAmount ||
-            bridgeQuote.bridgeParams.params.fromAmount
-        ).add(fee)
+              quote?.bridgeParams.params.fromAmount ||
+                  bridgeQuote.bridgeParams.params.fromAmount
+          ).add(fee)
         : fee
 
     const hasNativeAssetBalance = useHasSufficientBalance(
@@ -226,7 +240,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const hasFromTokenBalance = useHasSufficientBalance(
         BigNumber.from(
             quote?.bridgeParams.params.fromAmount ||
-            bridgeQuote.bridgeParams.params.fromAmount
+                bridgeQuote.bridgeParams.params.fromAmount
         ),
         token
     )
@@ -235,11 +249,16 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         ? hasNativeAssetBalance
         : hasNativeAssetBalance && hasFromTokenBalance
 
-    const bridgeNativeTokenStatusWarning = new Map<EnoughNativeTokensToSend, string>([
-        [EnoughNativeTokensToSend.NOT_ENOUGH, "We noticed you don't have enough funds in the destination network to cover minimum gas fees."],
-        [EnoughNativeTokensToSend.UNKNOWN, "We noticed you don't have the destination network added in your wallet so we couldn't check if you have funds to cover minimum gas fees."]
-    ]);
-    const nativeTokensInDestinationNetworkStatus = useAddressHasEnoughNativeTokensToSend(bridgeQuote.bridgeParams.params.toChainId)
+    const nativeTokensInDestinationNetworkStatus =
+        useAddressHasEnoughNativeTokensToSend(
+            bridgeQuote.bridgeParams.params.toChainId
+        )
+
+    const shouldShowDestinationFeeWarning =
+        (nativeTokensInDestinationNetworkStatus.isLoading ||
+            !!inProgressAllowanceTransaction?.id ||
+            !!inProgressTransaction?.id) &&
+        nativeTokensInDestinationNetworkStatus.result !== "ENOUGH"
 
     const onSubmit = async () => {
         if (error || !hasBalance || !quote) return
@@ -262,9 +281,9 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 gasPrice: isEIP1559Compatible
                     ? undefined
                     : selectedGasPrice ||
-                    BigNumber.from(
-                        quote.bridgeParams.params.transactionRequest.gasLimit
-                    ),
+                      BigNumber.from(
+                          quote.bridgeParams.params.transactionRequest.gasLimit
+                      ),
                 maxPriorityFeePerGas: isEIP1559Compatible
                     ? selectedFees.maxPriorityFeePerGas
                     : undefined,
@@ -418,18 +437,18 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                             error
                                 ? error
                                 : hasBalance
-                                    ? "Bridge"
-                                    : isBridgingNativeToken
-                                        ? "You don't have enough funds to cover the bridge and the gas costs."
-                                        : "Insufficient funds"
+                                ? "Bridge"
+                                : isBridgingNativeToken
+                                ? "You don't have enough funds to cover the bridge and the gas costs."
+                                : "Insufficient funds"
                         }
                         isLoading={
                             error || !!inProgressAllowanceTransaction
                                 ? false
                                 : !quote ||
-                                isGasLoading ||
-                                isFetchingParams ||
-                                isBridging
+                                  isGasLoading ||
+                                  isFetchingParams ||
+                                  isBridging
                         }
                         onClick={onSubmit}
                         disabled={!!error || !hasBalance}
@@ -517,32 +536,35 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 vendor={getDeviceFromAccountType(selectedAccount.accountType)}
                 address={selectedAccount.address}
             />
-            {nativeTokenWarningMessage && <CollapsableWarning
-                isCollapsedByDefault={false}
-                collapsedMessage={
-                    <div
-                        className={classnames(
-                            "text-center opacity-90 w-full p-2 bg-yellow-200 hover:bg-yellow-100 space-x-2 flex tems-center font-bold justify-center"
-                        )}
-                    >
-                        <AiOutlineWarning className="w-4 h-4 yellow-300" />
-                        <span className="font-bold">
-                            Warning! Your funds can be stucked!
-                        </span>
-                    </div>
-
-                }
-                dialog={{
-                    title: "Your funds may get stucked!",
-                    message: (
-                        <div>
-                            <span>
-                                {nativeTokenWarningMessage}
+            {!!shouldShowDestinationFeeWarning && (
+                <CollapsableWarning
+                    isCollapsedByDefault={false}
+                    collapsedMessage={
+                        <div
+                            className={classnames(
+                                "text-center opacity-90 w-full p-2 bg-yellow-200 hover:bg-yellow-100 space-x-2 flex tems-center font-bold justify-center"
+                            )}
+                        >
+                            <AiOutlineWarning className="w-4 h-4 yellow-300" />
+                            <span className="font-bold">
+                                Warning! Your funds can be stucked!
                             </span>
                         </div>
-                    ),
-                }}
-            />}
+                    }
+                    dialog={{
+                        title: "Your funds may get stucked!",
+                        message: (
+                            <div>
+                                <span>
+                                    {BRIDGE_NATIVE_TOKEN_STATUS_WARNING_MESSAGES.get(
+                                        nativeTokensInDestinationNetworkStatus.result!
+                                    )}
+                                </span>
+                            </div>
+                        ),
+                    }}
+                />
+            )}
             <div className="flex flex-col px-6 py-3">
                 {/* From Token */}
                 <AssetAmountDisplay

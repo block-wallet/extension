@@ -18,7 +18,12 @@ interface NativeAndGasPrices {
     gasPrices: GasPriceData | undefined
 }
 
-export const useAddressHasEnoughNativeTokensToSend = (chainId: number) => {
+export const useAddressHasEnoughNativeTokensToSend = (
+    chainId: number
+): {
+    isLoading: boolean
+    result: EnoughNativeTokensToSend
+} => {
     const { run, isLoading, data } = useAsyncInvoke<NativeAndGasPrices>({
         status: Status.PENDING,
     })

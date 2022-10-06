@@ -59,6 +59,7 @@ import {
     GetBridgeAvailableRoutesResponse,
     GetBridgeQuoteResponse,
 } from '@block-wallet/background/controllers/BridgeController';
+import { GasPriceData } from '@block-wallet/background/controllers/GasPricesController';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -72,6 +73,7 @@ enum ACCOUNT {
     GET_BALANCE = 'GET_ACCOUNT_BALANCE',
     HIDE = 'HIDE_ACCOUNT',
     UNHIDE = 'UNHIDE_ACCOUNT',
+    GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
 }
 
 enum APP {
@@ -196,6 +198,7 @@ enum TRANSACTION {
     CONFIRM = 'CONFIRM_TRANSACTION',
     REJECT = 'REJECT_TRANSACTION',
     GET_LATEST_GAS_PRICE = 'GET_LATEST_GAS_PRICE',
+    FETCH_LATEST_GAS_PRICE = 'FETCH_LATEST_GAS_PRICE',
     SEND_ETHER = 'SEND_ETHER',
     CANCEL_TRANSACTION = 'CANCEL_TRANSACTION',
     SPEED_UP_TRANSACTION = 'SPEED_UP_TRANSACTION',
@@ -303,6 +306,7 @@ export interface RequestSignatures {
     [Messages.ACCOUNT.RENAME]: [RequestAccountRename, boolean];
     [Messages.ACCOUNT.SELECT]: [RequestAccountSelect, boolean];
     [Messages.ACCOUNT.GET_BALANCE]: [string, BigNumber];
+    [Messages.ACCOUNT.GET_NATIVE_TOKEN_BALANCE]: [number, BigNumber | undefined];
     [Messages.APP.GET_IDLE_TIMEOUT]: [undefined, number];
     [Messages.APP.SET_IDLE_TIMEOUT]: [RequestSetIdleTimeout, void];
     [Messages.APP.SET_LAST_USER_ACTIVE_TIME]: [undefined, void];
@@ -443,6 +447,7 @@ export interface RequestSignatures {
         boolean
     ];
     [Messages.TRANSACTION.GET_LATEST_GAS_PRICE]: [undefined, BigNumber];
+    [Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE]: [number, GasPriceData];
     [Messages.TRANSACTION.SEND_ETHER]: [RequestSendEther, string];
     [Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION]: [
         RequestAddAsNewSendTransaction,
@@ -687,8 +692,8 @@ export interface RequestApproveBridgeAllowance {
     customNonce?: number;
 }
 
-export interface RequestGetBridgeTokens {}
-export interface RequestGetBridgeAvailableChains {}
+export interface RequestGetBridgeTokens { }
+export interface RequestGetBridgeAvailableChains { }
 export interface RequestGetBridgeQuote {
     checkAllowance: boolean;
     quoteRequest: BridgeQuoteRequest;
@@ -892,7 +897,7 @@ export interface RequestWalletCreate {
 export interface RequestSeedPhrase {
     password: string;
 }
-export interface RequestCompleteSetup {}
+export interface RequestCompleteSetup { }
 
 export interface RequestWalletImport {
     password: string;
@@ -1026,7 +1031,7 @@ export interface RequestSearchToken {
     chainId?: number;
 }
 
-export interface RequestAntiPhishingImage {}
+export interface RequestAntiPhishingImage { }
 
 export interface RequestUpdateAntiPhishingImage {
     antiPhishingImage: string;
@@ -1040,7 +1045,7 @@ export interface RequestSetNativeCurrency {
     currencyCode: string;
 }
 
-export interface RequestGetValidCurrencies {}
+export interface RequestGetValidCurrencies { }
 
 export interface RequestToggleReleaseNotesSubscription {
     releaseNotesSubscriptionEnabled: boolean;
@@ -1054,7 +1059,7 @@ export interface RequestRejectTransaction {
     transactionId: string;
 }
 
-export interface RequestAddressBookClear {}
+export interface RequestAddressBookClear { }
 
 export interface RequestAddressBookDelete {
     address: string;
@@ -1066,7 +1071,7 @@ export interface RequestAddressBookSet {
     note?: string;
 }
 
-export interface RequestAddressBookGet {}
+export interface RequestAddressBookGet { }
 export interface RequestAddressBookGetByAddress {
     address: string;
 }
@@ -1165,7 +1170,7 @@ export interface WindowTransportResponseMessage
     origin: Origin;
 }
 
-export interface DismissMessage {}
+export interface DismissMessage { }
 
 export enum Origin {
     BACKGROUND = 'BLANK_BACKGROUND',

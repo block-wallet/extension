@@ -52,8 +52,6 @@ import GenericTooltip from "../../components/label/GenericTooltip"
 import { BASE_BRIDGE_FEE } from "../../util/constants"
 import { formatNumberLength } from "../../util/formatNumberLength"
 import { CgLayoutGrid } from "react-icons/cg"
-import { SEND_GAS_COST } from "../../util/constants"
-import { getDisplayGasPrices } from "../../components/gas/GasPricesInfo";
 import Tooltip from "../../components/label/Tooltip"
 
 interface SetupBridgePageLocalState {
@@ -90,8 +88,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         availableNetworks,
         selectedNetwork,
         availableBridgeChains,
-        gasPriceData,
-        isEIP1559Compatible
     } = useBlankState()!
     const { nativeToken } = useTokensList()
 
@@ -123,10 +119,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 }
             }, []),
         })
-    const [showNativeTokenWarning, setShowNativeTokenWarning] = useState<boolean>(false)
 
     const selectedTokenBalance = useTokenBalance(bridgeDataState.token)
-    const selectedAccount = useSelectedAccount()
 
     const {
         token: selectedToken,
@@ -364,41 +358,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bigNumberAmount, errors.amount, selectedAddress, selectedRoute])
-
-    useEffect(() => {
-        console.log("false by default")
-        setShowNativeTokenWarning(false)
-        if (selectedRoute) {
-            if (!selectedAccount.balances[selectedRoute.toChainId]) {
-                console.log("no chain selected")
-                console.log(selectedRoute)
-                setShowNativeTokenWarning(true)
-            } else {
-                const nativeTokenInDestinationNetwork = selectedAccount.balances[selectedRoute.toChainId].nativeTokenBalance
-                if (selectedRoute.toChainId in gasPriceData) {
-                    const { gasPricesLevels, estimatedBaseFee } = gasPriceData[selectedRoute.toChainId]
-                    const EIP1559Compatible = isEIP1559Compatible[selectedRoute.toChainId] || false
-                    const gasPrices = getDisplayGasPrices(
-                        !!EIP1559Compatible,
-                        gasPricesLevels,
-                        estimatedBaseFee!,
-                        SEND_GAS_COST
-                    )
-                    if (gasPrices) {
-                        if (gasPrices.average.totalTransactionCost.gt(nativeTokenInDestinationNetwork)) {
-                            console.log("not enough")
-                            setShowNativeTokenWarning(true)
-                        } else {
-                            console.log("enough")
-                            setShowNativeTokenWarning(false)
-                        }
-                    }
-                }
-            }
-        }
-
-    }, [selectedRoute])
-
 
     return (
         <PopupLayout

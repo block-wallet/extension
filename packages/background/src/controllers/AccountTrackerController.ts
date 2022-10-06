@@ -654,8 +654,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         const release = !updateAccountsOptions.addresses
             ? await this._mutex.acquire()
             : () => {
-                  return;
-              };
+                return;
+            };
 
         try {
             // Get addresses from state
@@ -831,9 +831,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         )
             ? account.balances[chainId].nativeTokenBalance
             : accountAddress in stateAccounts &&
-              chainId in stateAccounts[accountAddress].balances
-            ? stateAccounts[accountAddress].balances[chainId].nativeTokenBalance
-            : ethers.constants.Zero;
+                chainId in stateAccounts[accountAddress].balances
+                ? stateAccounts[accountAddress].balances[chainId].nativeTokenBalance
+                : ethers.constants.Zero;
 
         let finalTokens: AccountBalanceTokens = {};
         if (
@@ -1042,7 +1042,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             if (
                 this.store.getState().accounts[accountAddress].balances &&
                 chainId in
-                    this.store.getState().accounts[accountAddress].balances
+                this.store.getState().accounts[accountAddress].balances
             ) {
                 return this.store.getState().accounts[accountAddress].balances[
                     chainId
@@ -1129,10 +1129,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     );
 
                 return deviceAccounts.map((a: any) => {
-                    const baseName = `${
-                        device.charAt(0).toUpperCase() +
+                    const baseName = `${device.charAt(0).toUpperCase() +
                         device.slice(1).toLowerCase()
-                    } ${a.index + 1}`;
+                        } ${a.index + 1}`;
 
                     let name = baseName;
                     // Check if the account name is already used by another account
@@ -1155,4 +1154,27 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             return [];
         });
     }
+
+    public async getSelectedAddressNativeTokenBalance(chainId: number): Promise<BigNumber | undefined> {
+
+        const selectedAddress =
+            this._preferencesController.getSelectedAddress();
+
+        const provider =
+            this._networkController.getProviderForChainId(chainId);
+
+        if (provider === undefined) {
+            return undefined
+        }
+
+        const balances = await this._getAddressBalances(
+            chainId,
+            provider,
+            selectedAddress,
+            [NATIVE_TOKEN_ADDRESS]
+        );
+
+        return balances[NATIVE_TOKEN_ADDRESS]
+    }
 }
+

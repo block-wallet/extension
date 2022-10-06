@@ -73,8 +73,8 @@ import { capitalize } from "../../util/capitalize"
 import TransactionDetails from "../../components/transactions/TransactionDetails"
 import { WithRequired } from "@block-wallet/background/utils/types/helpers"
 import CollapsableWarning from "../../components/CollapsableWarning"
-import ToggleButton from "../../components/button/ToggleButton"
 import { AiOutlineWarning } from "react-icons/ai"
+import { useAddressHasEnoughNativeTokensToSend, EnoughNativeTokensToSend } from "../../context/hooks/useBridgeChainHasNotEnoughNativeTokensToSend"
 
 export interface BridgeConfirmPageLocalState {
     amount: string
@@ -94,7 +94,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         () => history.location.state as BridgeConfirmPageLocalState,
         [history.location.state]
     )
-    const [acceptedFunding, setAcceptedFunding] = useState<boolean>(false)
+
     const [timeoutStart, setTimeoutStart] = useState<number | undefined>(
         undefined
     )
@@ -130,7 +130,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const { availableNetworks, selectedNetwork } = useBlankState()!
+    const { availableNetworks, selectedNetwork, selectedAddress } = useBlankState()!
     const { gasPricesLevels } = useGasPriceData()
     const { isEIP1559Compatible } = useSelectedNetwork()
     const selectedAccount = useSelectedAccount()
@@ -168,6 +168,9 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
         bridgeQuote
     )
+
+    // Warning message
+    const [nativeTokenWarningMessage, setNativeTokenWarningMessage] = useState<string | undefined>(undefined)
 
     // Gas
     const [defaultGas, setDefaultGas] = useState<{
@@ -232,6 +235,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         ? hasNativeAssetBalance
         : hasNativeAssetBalance && hasFromTokenBalance
 
+    const bridgeNativeTokenStatusWarning = new Map<EnoughNativeTokensToSend, string>([
+        [EnoughNativeTokensToSend.NOT_ENOUGH, "We noticed you don't have enough funds in the destination network to cover minimum gas fees."],
+        [EnoughNativeTokensToSend.UNKNOWN, "We noticed you don't have the destination network added in your wallet so we couldn't check if you have funds to cover minimum gas fees."]
+    ]);
+    const nativeTokensInDestinationNetworkStatus = useAddressHasEnoughNativeTokensToSend(bridgeQuote.bridgeParams.params.toChainId)
 
     const onSubmit = async () => {
         if (error || !hasBalance || !quote) return
@@ -377,6 +385,12 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         shouldFetchBridgeParams,
     ])
 
+    // useEffect(() => {
+
+    //     setNativeTokenWarningMessage(bridgeNativeTokenStatusWarning.get(nativeTokensInDestinationNetworkStatus))
+
+    // }, []);
+
     return (
         <PopupLayout
             header={
@@ -503,56 +517,32 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 vendor={getDeviceFromAccountType(selectedAccount.accountType)}
                 address={selectedAccount.address}
             />
-            <CollapsableWarning
+            {nativeTokenWarningMessage && <CollapsableWarning
                 isCollapsedByDefault={false}
                 collapsedMessage={
-                    acceptedFunding ? (
-                        <div
-                            className={classnames(
-                                "text-center opacity-90 w-full p-2 bg-green-200 hover:bg-green-100 space-x-2 flex tems-center font-bold justify-center"
-                            )}
-                        >
-                            <AiOutlineWarning className="w-4 h-4 green-300" />
-                            <span className="font-bold">
-                                BlockWallet will cover your fees in the
-                                destination network
-                            </span>
-                        </div>
-                    ) : (
-                        <div
-                            className={classnames(
-                                "text-center opacity-90 w-full p-2 bg-yellow-200 hover:bg-yellow-100 space-x-2 flex tems-center font-bold justify-center"
-                            )}
-                        >
-                            <AiOutlineWarning className="w-4 h-4 yellow-300" />
-                            <span className="font-bold">
-                                Warning! Your funds can be stucked!
-                            </span>
-                        </div>
-                    )
+                    <div
+                        className={classnames(
+                            "text-center opacity-90 w-full p-2 bg-yellow-200 hover:bg-yellow-100 space-x-2 flex tems-center font-bold justify-center"
+                        )}
+                    >
+                        <AiOutlineWarning className="w-4 h-4 yellow-300" />
+                        <span className="font-bold">
+                            Warning! Your funds can be stucked!
+                        </span>
+                    </div>
+
                 }
                 dialog={{
                     title: "Your funds may get stucked!",
                     message: (
                         <div>
                             <span>
-                                We noticed you don't have enough funds in the
-                                destination network to cover minimum gas fees.
-                                But don't worry! BlockWallet can cover them
-                                once.
+                                {nativeTokenWarningMessage}
                             </span>
-                            <br />
-                            <br />
-                            <ToggleButton
-                                label="Receive funding"
-                                defaultChecked={acceptedFunding}
-                                id="button"
-                                onToggle={setAcceptedFunding}
-                            />
                         </div>
                     ),
                 }}
-            />
+            />}
             <div className="flex flex-col px-6 py-3">
                 {/* From Token */}
                 <AssetAmountDisplay

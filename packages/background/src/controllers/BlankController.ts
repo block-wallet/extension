@@ -146,6 +146,7 @@ import TransactionController, {
     GasPriceValue,
     FeeMarketEIP1559Values,
 } from './transactions/TransactionController';
+import { GasPriceData } from './GasPricesController';
 import { PreferencesController, ReleaseNote } from './PreferencesController';
 import { ExchangeRatesController } from './ExchangeRatesController';
 import {
@@ -731,6 +732,8 @@ export default class BlankController extends EventEmitter {
                 return this.accountSelect(request as RequestAccountSelect);
             case Messages.ACCOUNT.GET_BALANCE:
                 return this.getAccountBalance(request as string);
+            case Messages.ACCOUNT.GET_NATIVE_TOKEN_BALANCE:
+                return this.getAccountNativeTokenBalance(request as number);
             case Messages.APP.GET_IDLE_TIMEOUT:
                 return this.getIdleTimeout();
             case Messages.APP.SET_IDLE_TIMEOUT:
@@ -920,6 +923,8 @@ export default class BlankController extends EventEmitter {
                 return this.udResolve(request as RequestUDResolve);
             case Messages.TRANSACTION.GET_LATEST_GAS_PRICE:
                 return this.getLatestGasPrice();
+            case Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE:
+                return this.fetchLatestGasPrice(request as number);
             case Messages.TRANSACTION.SEND_ETHER:
                 return this.sendEther(request as RequestSendEther);
             case Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION:
@@ -1148,6 +1153,17 @@ export default class BlankController extends EventEmitter {
         return this.networkController.getProvider().getBalance(account);
     }
 
+    /**
+     * getAccountNativeTokenBalance
+     *
+     * It gets the specified account balance.
+     *
+     * @param account The account address
+     * @returns The account balance.
+     */
+    public async getAccountNativeTokenBalance(chainId: number): Promise<BigNumber | undefined> {
+        return this.accountTrackerController.getSelectedAddressNativeTokenBalance(chainId)
+    }
     /**
      * It triggers the deposits tree update for the current network
      * (used to update the deposits tree and calculate the subsequent deposits accurately)
@@ -2297,7 +2313,7 @@ export default class BlankController extends EventEmitter {
         });
 
         // As we don't care about the result here, ignore errors in transaction result
-        result.catch(() => {});
+        result.catch(() => { });
 
         // Approve it
         try {
@@ -2347,7 +2363,7 @@ export default class BlankController extends EventEmitter {
                 });
 
             // As we don't care about the result here, ignore errors in transaction result
-            result.catch(() => {});
+            result.catch(() => { });
 
             const { nativeCurrency, iconUrls } = this.networkController.network;
             const logo = iconUrls ? iconUrls[0] : '';
@@ -2423,6 +2439,13 @@ export default class BlankController extends EventEmitter {
      */
     private async getLatestGasPrice(): Promise<BigNumber> {
         return BigNumber.from(this.gasPricesController.getFeeData().gasPrice!);
+    }
+
+    /**
+     * It returns the current network latest gas price
+     */
+    private async fetchLatestGasPrice(chainId: number): Promise<GasPriceData | undefined> {
+        return this.gasPricesController.fetchGasPriceData(chainId)
     }
 
     /**
@@ -2787,7 +2810,7 @@ export default class BlankController extends EventEmitter {
      * Method to mark setup process as complete and to fire a notification.
      *
      */
-    private async completeSetup({}: RequestCompleteSetup): Promise<void> {
+    private async completeSetup({ }: RequestCompleteSetup): Promise<void> {
         if (!this.isSetupComplete) {
             showSetUpCompleteNotification();
             this.isSetupComplete = true;
@@ -3042,7 +3065,7 @@ export default class BlankController extends EventEmitter {
      * Remove all entries in the book
      *
      */
-    private async addressBookClear({}: RequestAddressBookClear): Promise<boolean> {
+    private async addressBookClear({ }: RequestAddressBookClear): Promise<boolean> {
         return this.addressBookController.clear();
     }
 
@@ -3078,7 +3101,7 @@ export default class BlankController extends EventEmitter {
      *
      * @returns - A map with the entries
      */
-    private async addressBookGet({}: RequestAddressBookGet): Promise<NetworkAddressBook> {
+    private async addressBookGet({ }: RequestAddressBookGet): Promise<NetworkAddressBook> {
         return this.addressBookController.get();
     }
 

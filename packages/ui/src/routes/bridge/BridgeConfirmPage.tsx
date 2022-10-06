@@ -276,7 +276,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
             if (!isHardwareWallet(selectedAccount.accountType)) {
                 clearLocationRecovery()
             }
-            g
+
             setPersistedData({
                 submitted: true,
             })

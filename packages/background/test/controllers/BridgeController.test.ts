@@ -80,6 +80,8 @@ const mockPromiseResponse = <T>(r: T): Promise<T> =>
     new Promise((resolve) => resolve(r));
 
 describe('Bridge Controller', () => {
+    const quoteSandbox = sinon.createSandbox();
+
     const sandbox = sinon.createSandbox();
     const accounts = {
         goerli: [
@@ -183,6 +185,7 @@ describe('Bridge Controller', () => {
 
     afterEach(function () {
         sandbox.restore();
+        quoteSandbox.restore();
     });
 
     describe('Li.Fi Aggregator', () => {
@@ -323,8 +326,6 @@ describe('Bridge Controller', () => {
             });
         });
         describe('Quotes and Allowance', () => {
-            const quoteSandbox = sinon.createSandbox();
-
             beforeEach(() => {
                 quoteSandbox.restore();
                 //mock query ok
@@ -641,7 +642,7 @@ describe('Bridge Controller', () => {
                                 blocksDropCount: 0,
                                 chainId: 137,
                                 gasEstimationFailed: false,
-                                id: '3ee2ce72-84d0-40be-9ae8-37d638894e7b',
+                                id: 'a7f2cd6c-fa81-4ede-8448-d23a2e315b15',
                                 loadingGasValues: false,
                                 metaType: MetaType.REGULAR,
                                 methodSignature: {

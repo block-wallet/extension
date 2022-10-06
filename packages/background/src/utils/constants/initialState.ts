@@ -50,6 +50,7 @@ import {
     BridgeControllerMemState,
     BridgeControllerState,
 } from '@block-wallet/background/controllers/BridgeController';
+import { SwapControllerMemState } from '@block-wallet/background/controllers/SwapController';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -88,6 +89,7 @@ export type BlankAppUIState = {
     NetworkController: NetworkControllerState;
     AddressBookController: AddressBookControllerMemState;
     BridgeController: BridgeControllerMemState;
+    SwapController: SwapControllerMemState;
     BlankProviderController: BlankProviderControllerState;
 };
 

@@ -26,7 +26,7 @@
         "jsdom-global": "^3.0.2",
         "mocha": "^9.1.1",
         "nyc": "^15.1.0",
-        "prettier": "^2.4.1",
+        "prettier": "^2.7.1",
         "ts-loader": "^9.1.2",
         "ts-node": "^10.2.1",
         "tsconfig-paths": "^3.11.0",
@@ -39,6 +39,7 @@
         "test": "make test/provider",
         "build": "make build/provider",
         "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html",
-        "lint": "eslint src --ext .ts --quiet"
+        "lint": "prettier --check src/",
+        "lint:fix": "prettier --write src/"
     }
 }

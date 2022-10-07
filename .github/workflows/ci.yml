@@ -53,12 +53,12 @@ jobs:
 
       - name: Check lint in all the packages
         run: |
-          cd packages/ui/
           echo "::group::UI"
+          cd packages/ui/
           if yarn lint; then
             echo "::notice:: UI lint OK"
           else
-            echo '::error:: The lint in the ui package failed. Use "yarn lint:fix" locally to fix it.'
+            echo '::error:: UI lint failed. Run "yarn lint:fix" in the folder "packages/ui/" to fix it and commit your changes.'
             lint_ui=1
           fi
           echo "::endgroup::"
@@ -69,7 +69,7 @@ jobs:
           if yarn lint; then
             echo "::notice:: Background lint OK"
           else
-            echo '::error:: The lint in the background package failed. Use "yarn lint:fix" locally to fix it.'
+            echo '::error:: Background lint failed. Run "yarn lint:fix" in the folder "packages/background/" to fix it and commit your changes.'
             lint_background=1
           fi
           echo "::endgroup::"
@@ -80,7 +80,7 @@ jobs:
           if yarn lint; then
             echo "::notice:: Provider lint OK"
           else
-            echo '::error:: The lint in the provider package failed. Use "yarn lint:fix" locally to fix it.'
+            echo '::error:: Provider lint failed. Run "yarn lint:fix" in the folder "packages/provider/" to fix it and commit your changes.'
             lint_provider=1
           fi
           echo "::endgroup::"

@@ -101,7 +101,6 @@ const NetworksPage = () => {
             header={
                 <PopupHeader
                     title="Networks"
-                    onBack={() => history.push("/settings")}
                 />
             }
         >

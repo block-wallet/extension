@@ -46,7 +46,7 @@ export const isInternalAccount = (accountType: AccountType): boolean => {
 }
 
 export const isActiveAccount = (accountInfo: AccountInfo): boolean => {
-    return accountInfo.status.toString() === AccountStatus.ACTIVE
+    return accountInfo.status?.toString() === AccountStatus.ACTIVE
 }
 
 /**

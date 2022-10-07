@@ -81,7 +81,7 @@ jobs:
           cd provider/
           if yarn lint; then
             echo "::notice:: Provider lint OK"
-            lint_background=0
+            lint_provider=0
           else
             echo '::error:: Provider lint failed. Run "yarn lint:fix" in the folder "packages/provider/" to fix it and commit your changes.'
             lint_provider=1

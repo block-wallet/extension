@@ -1,5 +1,5 @@
 const isNil = (value: any) => {
-    return value !== null && value !== undefined
+    return typeof value === "undefined" || value === null || value === undefined
 }
 
 export default isNil

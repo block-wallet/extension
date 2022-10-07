@@ -306,7 +306,10 @@ export interface RequestSignatures {
     [Messages.ACCOUNT.RENAME]: [RequestAccountRename, boolean];
     [Messages.ACCOUNT.SELECT]: [RequestAccountSelect, boolean];
     [Messages.ACCOUNT.GET_BALANCE]: [string, BigNumber];
-    [Messages.ACCOUNT.GET_NATIVE_TOKEN_BALANCE]: [number, BigNumber | undefined];
+    [Messages.ACCOUNT.GET_NATIVE_TOKEN_BALANCE]: [
+        number,
+        BigNumber | undefined
+    ];
     [Messages.APP.GET_IDLE_TIMEOUT]: [undefined, number];
     [Messages.APP.SET_IDLE_TIMEOUT]: [RequestSetIdleTimeout, void];
     [Messages.APP.SET_LAST_USER_ACTIVE_TIME]: [undefined, void];
@@ -692,8 +695,8 @@ export interface RequestApproveBridgeAllowance {
     customNonce?: number;
 }
 
-export interface RequestGetBridgeTokens { }
-export interface RequestGetBridgeAvailableChains { }
+export interface RequestGetBridgeTokens {}
+export interface RequestGetBridgeAvailableChains {}
 export interface RequestGetBridgeQuote {
     checkAllowance: boolean;
     quoteRequest: BridgeQuoteRequest;
@@ -897,7 +900,7 @@ export interface RequestWalletCreate {
 export interface RequestSeedPhrase {
     password: string;
 }
-export interface RequestCompleteSetup { }
+export interface RequestCompleteSetup {}
 
 export interface RequestWalletImport {
     password: string;
@@ -1031,7 +1034,7 @@ export interface RequestSearchToken {
     chainId?: number;
 }
 
-export interface RequestAntiPhishingImage { }
+export interface RequestAntiPhishingImage {}
 
 export interface RequestUpdateAntiPhishingImage {
     antiPhishingImage: string;
@@ -1045,7 +1048,7 @@ export interface RequestSetNativeCurrency {
     currencyCode: string;
 }
 
-export interface RequestGetValidCurrencies { }
+export interface RequestGetValidCurrencies {}
 
 export interface RequestToggleReleaseNotesSubscription {
     releaseNotesSubscriptionEnabled: boolean;
@@ -1059,7 +1062,7 @@ export interface RequestRejectTransaction {
     transactionId: string;
 }
 
-export interface RequestAddressBookClear { }
+export interface RequestAddressBookClear {}
 
 export interface RequestAddressBookDelete {
     address: string;
@@ -1071,7 +1074,7 @@ export interface RequestAddressBookSet {
     note?: string;
 }
 
-export interface RequestAddressBookGet { }
+export interface RequestAddressBookGet {}
 export interface RequestAddressBookGetByAddress {
     address: string;
 }
@@ -1170,7 +1173,7 @@ export interface WindowTransportResponseMessage
     origin: Origin;
 }
 
-export interface DismissMessage { }
+export interface DismissMessage {}
 
 export enum Origin {
     BACKGROUND = 'BLANK_BACKGROUND',

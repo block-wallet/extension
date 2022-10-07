@@ -87,8 +87,9 @@ jobs:
             lint_provider=1
           fi
           echo "::endgroup::"
-          exit_code=$lint_ui+$lint_background+$lint_provider
-          exit $exit_code
+          if [ "$lint_ui" -ne "0" || "$lint_background" -ne "0" || "$lint_provider" -ne "0" || ]; then
+            exit 1
+          fi
 
   test:
     runs-on: ubuntu-latest

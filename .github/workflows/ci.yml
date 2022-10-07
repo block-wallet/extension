@@ -87,7 +87,7 @@ jobs:
             lint_provider=1
           fi
           echo "::endgroup::"
-          exit_code = $lint_ui+$lint_background+$lint_provider
+          exit_code=$lint_ui+$lint_background+$lint_provider
           exit $exit_code
 
   test:

@@ -87,7 +87,7 @@ jobs:
             lint_provider=1
           fi
           echo "::endgroup::"
-          if [ "$lint_ui" -ne "0" || "$lint_background" -ne "0" || "$lint_provider" -ne "0" || ]; then
+          if [ "$lint_ui" -ne "0" || "$lint_background" -ne "0" || "$lint_provider" -ne "0" ]; then
             exit 1
           fi
 

@@ -112,7 +112,10 @@ const getPendingTransactionMessage = (
     return message
 }
 
-const getTransactionItemStyles = (label: string, txValue: string) => {
+const getTransactionItemStyles = (
+    label: string = "Transaction",
+    txValue: string
+) => {
     let formattedLabel = label
 
     // We're letting both containers to grow based on content but with a limit to keep them inside the container
@@ -121,7 +124,7 @@ const getTransactionItemStyles = (label: string, txValue: string) => {
 
     // If label and value are both long, we crop the label prioritizing the value.
     //Example: Privacy Pool Witdraw X.XXXXX
-    if (label.length > 18 && txValue.length > 7) {
+    if (label.length > 18 && txValue?.length > 7) {
         formattedLabel = formatName(label, 20)
     }
 

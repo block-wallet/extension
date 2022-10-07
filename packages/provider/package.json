@@ -39,7 +39,7 @@
         "test": "make test/provider",
         "build": "make build/provider",
         "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html",
-        "lint": "prettier --check src/ '!**/*.{js,json,ts}'",
-        "lint:fix": "prettier --write src/"
+        "lint": "prettier --check src/ '!**/*.{json}'",
+        "lint:fix": "prettier --write src/ '!**/*.{json}'"
     }
 }

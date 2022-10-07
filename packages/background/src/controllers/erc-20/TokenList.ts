@@ -116,6 +116,7 @@ const NETWORK_TOKENS_LIST: INetworkTokens = {
     42: {}, // kovan
     4: {}, // rinkeby
     97: {}, // bsc testnet
+    280: {}, // zkSync alpha testnet
     1337: {}, // localhost
 };
 
@@ -147,6 +148,7 @@ const NETWORKS_NAMES: { [key in number]: string } = {
     888: 'wanchain',
     100: 'xdai',
     50: 'xdc',
+    280: 'zksync',
 };
 
 export const NETWORK_TOKENS_LIST_ARRAY: { [chainId in number]: string[] } = {};
@@ -162,9 +164,8 @@ for (const chainId in TOKENS_LIST) {
         if ('l' in token) {
             logo = 'https://' + token['l'];
         } else {
-            logo = `https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/${
-                NETWORKS_NAMES[parseInt(chainId)]
-            }/assets/${address}/logo.png`;
+            logo = `https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/${NETWORKS_NAMES[parseInt(chainId)]
+                }/assets/${address}/logo.png`;
         }
 
         let type = '';

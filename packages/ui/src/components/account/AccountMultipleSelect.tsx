@@ -32,6 +32,7 @@ const AccountMultipleSelect: FunctionComponent<{
                         )}
                         onChange={() => toggleAccount(account)}
                         id={`check-account-${account.address}`}
+                        aria-label={account.name}
                     />
                     <AccountDisplay
                         account={account}

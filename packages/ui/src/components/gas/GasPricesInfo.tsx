@@ -160,10 +160,11 @@ const GasPricesInfo: FC = () => {
         <>
             {/* Label */}
             <div
-                className={`flex flex-row items-center space-x-1 ${showGasLevels
+                className={`flex flex-row items-center space-x-1 ${
+                    showGasLevels
                         ? "transition duration-300 hover:text-primary-300  cursor-pointer"
                         : ""
-                    }`}
+                }`}
                 onClick={() => {
                     if (showGasLevels) setActive(!active)
                 }}
@@ -227,7 +228,7 @@ const GasPricesInfo: FC = () => {
                                     ([level, gasPriceData]) => {
                                         const info =
                                             INFO_BY_LEVEL[
-                                            level as keyof DisplayGasPricesLevels
+                                                level as keyof DisplayGasPricesLevels
                                             ]
                                         return (
                                             <div
@@ -238,7 +239,7 @@ const GasPricesInfo: FC = () => {
                                                     className={classnames(
                                                         "flex flex-row  items-center space-x-1 p-3",
                                                         isEIP1559Compatible &&
-                                                        "border-b border-gray-200"
+                                                            "border-b border-gray-200"
                                                     )}
                                                 >
                                                     <img
@@ -271,11 +272,11 @@ const GasPricesInfo: FC = () => {
                                                                 },
                                                                 minValue: 0.01,
                                                                 networkNativeCurrency:
-                                                                {
-                                                                    symbol: networkNativeCurrency.symbol,
-                                                                    decimals:
-                                                                        nativeCurrencyDecimals,
-                                                                },
+                                                                    {
+                                                                        symbol: networkNativeCurrency.symbol,
+                                                                        decimals:
+                                                                            nativeCurrencyDecimals,
+                                                                    },
                                                             }
                                                         )}
                                                     </span>

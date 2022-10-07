@@ -7,6 +7,7 @@ import AccountDisplay from "./AccountDisplay"
 import exportIcon from "../../assets/images/icons/export.svg"
 import trashBinIcon from "../../assets/images/icons/trash_bin.svg"
 import openExternal from "../../assets/images/icons/open_external.svg"
+import switchIcon from "../../assets/images/icons/refresh.svg"
 import qrIcon from "../../assets/images/icons/qr_icon.svg"
 import sites from "../../assets/images/icons/connected_sites.svg"
 import editIcon from "../../assets/images/icons/pencil.svg"
@@ -56,6 +57,11 @@ const AccountMenu = () => {
                 "address"
             ),
         },
+        {
+            icon: switchIcon,
+            label: "Switch Accounts",
+            to: "/accounts",
+        },
     ]
 
     const disabledOptions: { [k: string]: boolean } = {}
@@ -65,14 +71,14 @@ const AccountMenu = () => {
         disabledOptions[exportAccountDataLabel] = true
         tooltipOptions[exportAccountDataLabel] =
             "Not available for Hardware Wallets accounts."
-        options.push({
+        options.splice(options.length-1, 0, {
             icon: trashBinIcon,
             label: removeHWLabel,
             to: undefined,
             next: () => {
                 openHardwareRemove()
             },
-        })
+        });
     }
 
     return (
@@ -90,7 +96,7 @@ const AccountMenu = () => {
                 />
             }
         >
-            <div className="flex flex-col p-6 space-y-8 text-sm text-gray-500">
+            <div className="flex flex-col p-6 space-y-4 text-sm text-gray-500">
                 <div className="flex flex-col">
                     <AccountDisplay
                         account={account}

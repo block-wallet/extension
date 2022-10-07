@@ -396,10 +396,8 @@ const TransactionConfirm: React.FC<{
                             {networkNativeCurrency.symbol}
                         </p>
                         <p>
-                            <span className="font-bold" id="transaction-origin">
-                                Origin:{" "}
-                            </span>
-                            <span aria-labelledby="transaction-origin">
+                            <span className="font-bold">Origin: </span>
+                            <span data-testid="transaction-origin">
                                 {transaction.origin}
                             </span>
                         </p>

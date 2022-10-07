@@ -21,7 +21,6 @@ const AccountsPage = () => {
             header={
                 <PopupHeader
                     title="My Accounts"
-                    onBack={() => history.push("/")}
                 />
             }
         >

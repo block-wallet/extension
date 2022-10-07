@@ -33,13 +33,6 @@ exchangeRatesControllerETH = {
 };
 
 const mockedNetworkController = getNetworkControllerInstance();
-const mockedProvider = MockProvider('goerli');
-sinon
-    .stub(mockedNetworkController, 'getProvider')
-    .callsFake(() => mockedProvider);
-sinon
-    .stub(mockedNetworkController, 'getProviderFromName')
-    .callsFake(() => mockedProvider);
 
 blockUpdatesControllerState = {
     blockData: {},

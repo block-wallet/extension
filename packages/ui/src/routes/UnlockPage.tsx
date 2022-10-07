@@ -32,9 +32,7 @@ const UnlockPage = () => {
     const {
         register,
         handleSubmit,
-        formState: {
-            errors,
-        },
+        formState: { errors },
         setError,
     } = useForm<PasswordFormData>({
         resolver: yupResolver(schema),

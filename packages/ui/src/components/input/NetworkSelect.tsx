@@ -107,7 +107,7 @@ const NetworkSelect: FunctionComponent<{
 
             <div
                 hidden={!networkList}
-                className={`absolute shadow-md rounded-md w-48 mt-2 bg-white z-50 select-none ${optionsContainerClassName}`}
+                className={`absolute shadow-md rounded-md w-48 max-h-96 overflow-y-auto mt-2 bg-white z-50 select-none ${optionsContainerClassName}`}
             >
                 <ul className="text-xs">
                     {Object.values(availableNetworks)

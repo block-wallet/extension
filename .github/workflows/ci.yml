@@ -54,28 +54,36 @@ jobs:
       - name: Check lint in all the packages
         run: |
           cd packages/ui/
-          yarn lint
-          lint_ui=$?
-          if [ $lint_ui -ne 0 ]; then
-            echo "UI lint failed"
+          echo "::group::UI"
+          if yarn lint; then
+            echo "::notice:: UI lint OK"
+          else
             echo '::error:: The lint in the ui package failed. Use "yarn lint:fix" locally to fix it.'
+            lint_ui=1
           fi
+          echo "::endgroup::"
+
+          echo "::group::Background"
           cd ..
           cd background/
-          yarn lint
-          lint_background=$?
-          if [ $lint_background -ne 0 ]; then
-            echo "Background lint failed"
+          if yarn lint; then
+            echo "::notice:: Background lint OK"
+          else
             echo '::error:: The lint in the background package failed. Use "yarn lint:fix" locally to fix it.'
+            lint_background=1
           fi
+          echo "::endgroup::"
+
+          echo "::group::Provider"
           cd ..
           cd provider/
-          yarn lint
-          lint_provider=$?
-          if [ $lint_provider -ne 0 ]; then
-            echo "Provider lint failed"
+          if yarn lint; then
+            echo "::notice:: Provider lint OK"
+          else
             echo '::error:: The lint in the provider package failed. Use "yarn lint:fix" locally to fix it.'
+            lint_provider=1
           fi
+          echo "::endgroup::"
           exit $lint_ui+$lint_background+$lint_provider
 
   test:

@@ -14,7 +14,6 @@ import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
 
-
 const CHAIN_FEE_DATA_SERVICE_URL = 'https://chain-fee.blockwallet.io/v1';
 const BLOCKS_TO_WAIT_BEFORE_CHECKING_FOR_CHAIN_SUPPORT = 100;
 
@@ -223,15 +222,14 @@ export class GasPricesController extends BaseController<GasPricesControllerState
      * @param isEIP1559Compatible
      * @returns GasPriceData
      */
-    private async _fetchFeeDataFromChain(chainId: number, isEIP1559Compatible: boolean): Promise<GasPriceData> {
+    private async _fetchFeeDataFromChain(
+        chainId: number,
+        isEIP1559Compatible: boolean
+    ): Promise<GasPriceData> {
         let gasPriceData: GasPriceData = {} as GasPriceData;
 
-
         if (
-            this._isEth_feeHistorySupportedByChain(
-                chainId,
-                isEIP1559Compatible
-            )
+            this._isEth_feeHistorySupportedByChain(chainId, isEIP1559Compatible)
         ) {
             const provider = this._networkController.getProvider();
             const networkCalls = await Promise.all([
@@ -260,7 +258,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
             if (feeHistory.baseFeePerGas) {
                 estimatedBaseFee = BigNumber.from(
                     feeHistory.baseFeePerGas[
-                    feeHistory.baseFeePerGas.length - 1
+                        feeHistory.baseFeePerGas.length - 1
                     ]
                 );
             }
@@ -272,15 +270,11 @@ export class GasPricesController extends BaseController<GasPricesControllerState
             // add all rewards to rewards array
             if (feeHistory.reward) {
                 for (let i = 0; i < feeHistory.reward.length; i++) {
-                    rewardsSlow.push(
-                        BigNumber.from(feeHistory.reward[i][0])
-                    );
+                    rewardsSlow.push(BigNumber.from(feeHistory.reward[i][0]));
                     rewardsAverage.push(
                         BigNumber.from(feeHistory.reward[i][1])
                     );
-                    rewardsFast.push(
-                        BigNumber.from(feeHistory.reward[i][2])
-                    );
+                    rewardsFast.push(BigNumber.from(feeHistory.reward[i][2]));
                 }
             }
 
@@ -321,8 +315,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                     },
                     average: {
                         gasPrice: null,
-                        maxFeePerGas:
-                            BigNumber.from(maxFeePerGasAverage),
+                        maxFeePerGas: BigNumber.from(maxFeePerGasAverage),
                         maxPriorityFeePerGas: BigNumber.from(
                             maxPriorityFeePerGasAverage
                         ),
@@ -371,7 +364,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                 },
             };
         }
-        return gasPriceData
+        return gasPriceData;
     }
 
     /**
@@ -381,8 +374,10 @@ export class GasPricesController extends BaseController<GasPricesControllerState
      * @param isEIP1559Compatible
      * @returns GasPriceData or undefined
      */
-    private async _fetchFeeDataFromService(chainId: number, isEIP1559Compatible: boolean): Promise<GasPriceData | undefined> {
-
+    private async _fetchFeeDataFromService(
+        chainId: number,
+        isEIP1559Compatible: boolean
+    ): Promise<GasPriceData | undefined> {
         let gasPriceData: GasPriceData = {} as GasPriceData;
 
         // Fetch the service to detect if the chain has support.
@@ -396,24 +391,16 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                 }
             );
 
-            if (
-                feeDataResponse.status === 200 &&
-                feeDataResponse.data
-            ) {
+            if (feeDataResponse.status === 200 && feeDataResponse.data) {
                 // Parsing the gas result considering the EIP1559 status
                 // for the case of fantom(250) we will detect that the network is EIP1559 but the service
                 // won't return gas with that format because eth_feeHistory is not available.
-                if (
-                    isEIP1559Compatible &&
-                    feeDataResponse.data.baseFee
-                ) {
+                if (isEIP1559Compatible && feeDataResponse.data.baseFee) {
                     gasPriceData = {
                         blockGasLimit: BigNumber.from(
                             feeDataResponse.data.blockGasLimit
                         ),
-                        baseFee: BigNumber.from(
-                            feeDataResponse.data.baseFee
-                        ),
+                        baseFee: BigNumber.from(feeDataResponse.data.baseFee),
                         estimatedBaseFee: BigNumber.from(
                             feeDataResponse.data.estimatedBaseFee
                         ),
@@ -421,39 +408,38 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                             slow: {
                                 gasPrice: null,
                                 maxFeePerGas: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels
-                                        .slow.maxFeePerGas
+                                    feeDataResponse.data.gasPricesLevels.slow
+                                        .maxFeePerGas
                                 ),
                                 maxPriorityFeePerGas: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels
-                                        .slow.maxPriorityFeePerGas
+                                    feeDataResponse.data.gasPricesLevels.slow
+                                        .maxPriorityFeePerGas
                                 ),
                             },
                             average: {
                                 gasPrice: null,
                                 maxFeePerGas: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels
-                                        .average.maxFeePerGas
+                                    feeDataResponse.data.gasPricesLevels.average
+                                        .maxFeePerGas
                                 ),
                                 maxPriorityFeePerGas: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels
-                                        .average.maxPriorityFeePerGas
+                                    feeDataResponse.data.gasPricesLevels.average
+                                        .maxPriorityFeePerGas
                                 ),
                             },
                             fast: {
                                 gasPrice: null,
                                 maxFeePerGas: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels
-                                        .fast.maxFeePerGas
+                                    feeDataResponse.data.gasPricesLevels.fast
+                                        .maxFeePerGas
                                 ),
                                 maxPriorityFeePerGas: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels
-                                        .fast.maxPriorityFeePerGas
+                                    feeDataResponse.data.gasPricesLevels.fast
+                                        .maxPriorityFeePerGas
                                 ),
                             },
                         },
                     };
-
                 } else {
                     gasPriceData = {
                         blockGasLimit: BigNumber.from(
@@ -462,24 +448,24 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                         gasPricesLevels: {
                             slow: {
                                 gasPrice: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels
-                                        .slow.gasPrice
+                                    feeDataResponse.data.gasPricesLevels.slow
+                                        .gasPrice
                                 ),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
                             },
                             average: {
                                 gasPrice: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels
-                                        .average.gasPrice
+                                    feeDataResponse.data.gasPricesLevels.average
+                                        .gasPrice
                                 ),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
                             },
                             fast: {
                                 gasPrice: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels
-                                        .fast.gasPrice
+                                    feeDataResponse.data.gasPricesLevels.fast
+                                        .gasPrice
                                 ),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
@@ -488,13 +474,13 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                     };
                 }
 
-                return gasPriceData
+                return gasPriceData;
             }
         } catch (error) {
             log.error('error calling chain fees service', error);
-            return undefined
+            return undefined;
         }
-        return undefined
+        return undefined;
     }
 
     /**
@@ -519,23 +505,27 @@ export class GasPricesController extends BaseController<GasPricesControllerState
 
             // Fetch the service to detect if the chain has support.
 
-            if (
-                this._shouldRequestChainService(currentBlockNumber, chainId)
-            ) {
-                const gasPriceFromChainFeeService = await this._fetchFeeDataFromService(chainId, isEIP1559Compatible);
+            if (this._shouldRequestChainService(currentBlockNumber, chainId)) {
+                const gasPriceFromChainFeeService =
+                    await this._fetchFeeDataFromService(
+                        chainId,
+                        isEIP1559Compatible
+                    );
                 if (gasPriceFromChainFeeService === undefined) {
                     hasToRequestTheChain = true;
                 } else {
-                    gasPriceData = gasPriceFromChainFeeService
+                    gasPriceData = gasPriceFromChainFeeService;
                 }
             } else {
                 hasToRequestTheChain = true;
             }
 
-
             // If it has no support or the service fails we have to query the chain.
             if (hasToRequestTheChain) {
-                gasPriceData = await this._fetchFeeDataFromChain(chainId, isEIP1559Compatible)
+                gasPriceData = await this._fetchFeeDataFromChain(
+                    chainId,
+                    isEIP1559Compatible
+                );
             }
 
             // Filtering gas prices
@@ -962,27 +952,39 @@ export class GasPricesController extends BaseController<GasPricesControllerState
         );
     }
 
-    public async fetchGasPriceData(chainId: number): Promise<GasPriceData | undefined> {
-        const isEIP1559Compatible = await this._networkController.getEIP1559Compatibility(chainId);
+    public async fetchGasPriceData(
+        chainId: number
+    ): Promise<GasPriceData | undefined> {
+        const isEIP1559Compatible =
+            await this._networkController.getEIP1559Compatibility(chainId);
         let gasPriceData: GasPriceData = {} as GasPriceData;
 
         const { chainSupportedByFeeService } = this.getState(chainId);
         try {
-            if (!chainSupportedByFeeService || chainSupportedByFeeService.supported) {
-                const gasPriceFromChainFeeService = await this._fetchFeeDataFromService(chainId, isEIP1559Compatible);
+            if (
+                !chainSupportedByFeeService ||
+                chainSupportedByFeeService.supported
+            ) {
+                const gasPriceFromChainFeeService =
+                    await this._fetchFeeDataFromService(
+                        chainId,
+                        isEIP1559Compatible
+                    );
                 if (gasPriceFromChainFeeService !== undefined) {
-                    gasPriceData = gasPriceFromChainFeeService
+                    gasPriceData = gasPriceFromChainFeeService;
                 }
             }
 
             if (!gasPriceData) {
-                gasPriceData = await this._fetchFeeDataFromChain(chainId, isEIP1559Compatible)
+                gasPriceData = await this._fetchFeeDataFromChain(
+                    chainId,
+                    isEIP1559Compatible
+                );
             }
-        }
-        catch (e) {
+        } catch (e) {
             log.error(e);
-            return undefined
+            return undefined;
         }
-        return this._ensureLowerPrices(chainId, gasPriceData)
+        return this._ensureLowerPrices(chainId, gasPriceData);
     }
 }

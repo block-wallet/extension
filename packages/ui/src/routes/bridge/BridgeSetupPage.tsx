@@ -148,9 +148,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 defaultAmount ||
                 (bridgeDataState?.bigNumberAmount
                     ? formatUnits(
-                        bridgeDataState?.bigNumberAmount?.toString(),
-                        bridgeDataState?.token?.decimals
-                    )
+                          bridgeDataState?.bigNumberAmount?.toString(),
+                          bridgeDataState?.token?.decimals
+                      )
                     : undefined),
         },
     })
@@ -175,18 +175,18 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const formattedAmount =
         selectedToken && bigNumberAmount
             ? formatCurrency(
-                toCurrencyAmount(
-                    bigNumberAmount,
-                    exchangeRates[selectedToken.symbol.toUpperCase()],
-                    selectedToken.decimals
-                ),
-                {
-                    currency: nativeCurrency,
-                    locale_info: localeInfo,
-                    returnNonBreakingSpace: false,
-                    showSymbol: true,
-                }
-            )
+                  toCurrencyAmount(
+                      bigNumberAmount,
+                      exchangeRates[selectedToken.symbol.toUpperCase()],
+                      selectedToken.decimals
+                  ),
+                  {
+                      currency: nativeCurrency,
+                      locale_info: localeInfo,
+                      returnNonBreakingSpace: false,
+                      showSymbol: true,
+                  }
+              )
             : undefined
 
     //executes when the amount hex changes
@@ -382,11 +382,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     onBack={() =>
                         fromAssetPage
                             ? history.push({
-                                pathname: "/asset/details",
-                                state: {
-                                    address: selectedToken?.address,
-                                },
-                            })
+                                  pathname: "/asset/details",
+                                  state: {
+                                      address: selectedToken?.address,
+                                  },
+                              })
                             : history.push("/home")
                     }
                 >
@@ -403,7 +403,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     <ButtonWithLoading
                         label={
                             quote?.allowance ===
-                                BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE
+                            BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE
                                 ? "Approve"
                                 : "Review"
                         }
@@ -432,9 +432,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             selectedAsset={
                                 selectedToken && selectedTokenBalance
                                     ? {
-                                        token: selectedToken,
-                                        balance: selectedTokenBalance,
-                                    }
+                                          token: selectedToken,
+                                          balance: selectedTokenBalance,
+                                      }
                                     : undefined
                             }
                             onAssetChange={(asset) => {
@@ -499,8 +499,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 }}
                                 maxLength={80}
                                 className="p-0 text-base bg-transparent border-none font-semibold -mt-0.5"
-                                placeholder={`0.0 ${selectedToken ? selectedToken.symbol : ""
-                                    }`}
+                                placeholder={`0.0 ${
+                                    selectedToken ? selectedToken.symbol : ""
+                                }`}
                                 autoComplete="off"
                                 autoFocus={true}
                                 onFocus={() => setInputFocus(true)}
@@ -540,8 +541,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Network selector */}
-                <p className="text-sm text-gray-600 pb-2">To Network
-                </p>
+                <p className="text-sm text-gray-600 pb-2">To Network</p>
                 <NetworkSelector
                     topMargin={60}
                     bottomMargin={200}
@@ -549,7 +549,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     isLoading={isFetchingRoutes}
                     selectedNetwork={
                         selectedToNetwork &&
-                            availbleChainsId.includes(selectedToNetwork.id)
+                        availbleChainsId.includes(selectedToNetwork.id)
                             ? selectedToNetwork
                             : undefined
                     }

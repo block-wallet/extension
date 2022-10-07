@@ -6,13 +6,13 @@ import { useMemo, useEffect } from "react"
 import useAsyncInvoke, { Status } from "../../util/hooks/useAsyncInvoke"
 import { BigNumber } from "ethers"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
-import { hasEnoughFundsToPayTheGasInSendTransaction } from "../../util/bridgeUtils";
+import { hasEnoughFundsToPayTheGasInSendTransaction } from "../../util/bridgeUtils"
 import { useBlankState } from "../../context/background/backgroundHooks"
 
 export enum EnoughNativeTokensToSend {
     UNKNOWN = "UNKNOWN",
     ENOUGH = "ENOUGH",
-    NOT_ENOUGH = "NOT_ENOUGH"
+    NOT_ENOUGH = "NOT_ENOUGH",
 }
 
 interface NativeAndGasPrices {
@@ -29,9 +29,7 @@ export const useAddressHasEnoughNativeTokensToSend = (
     const { run, isLoading, data } = useAsyncInvoke<NativeAndGasPrices>({
         status: Status.PENDING,
     })
-    const {
-        isEIP1559Compatible,
-    } = useBlankState()!
+    const { isEIP1559Compatible } = useBlankState()!
 
     useEffect(() => {
         run(
@@ -54,11 +52,18 @@ export const useAddressHasEnoughNativeTokensToSend = (
             if (!data || !data.nativeTokenBalance || !data.gasPrices) {
                 result = EnoughNativeTokensToSend.UNKNOWN
             } else {
-                const hasEnoughFunds = hasEnoughFundsToPayTheGasInSendTransaction(!!isEIP1559Compatible[chainId], data.nativeTokenBalance, data.gasPrices)
+                const hasEnoughFunds =
+                    hasEnoughFundsToPayTheGasInSendTransaction(
+                        !!isEIP1559Compatible[chainId],
+                        data.nativeTokenBalance,
+                        data.gasPrices
+                    )
                 if (hasEnoughFunds === undefined) {
                     result = EnoughNativeTokensToSend.UNKNOWN
                 } else {
-                    result = hasEnoughFunds ? EnoughNativeTokensToSend.ENOUGH : EnoughNativeTokensToSend.NOT_ENOUGH
+                    result = hasEnoughFunds
+                        ? EnoughNativeTokensToSend.ENOUGH
+                        : EnoughNativeTokensToSend.NOT_ENOUGH
                 }
             }
         }

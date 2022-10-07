@@ -253,7 +253,9 @@ export const getAccountNativeTokenBalanceForChain = async (
  * @param chainId The chain id
  * @returns The gas price
  */
-export const fetchLatestGasPriceForChain = async (chainId: number): Promise<GasPriceData | undefined> => {
+export const fetchLatestGasPriceForChain = async (
+    chainId: number
+): Promise<GasPriceData | undefined> => {
     return sendMessage(Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE, chainId)
 }
 /**

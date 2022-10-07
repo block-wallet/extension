@@ -57,6 +57,7 @@ jobs:
           cd packages/ui/
           if yarn lint; then
             echo "::notice:: UI lint OK"
+            lint_ui=0
           else
             echo '::error:: UI lint failed. Run "yarn lint:fix" in the folder "packages/ui/" to fix it and commit your changes.'
             lint_ui=1
@@ -68,6 +69,7 @@ jobs:
           cd background/
           if yarn lint; then
             echo "::notice:: Background lint OK"
+            lint_background=0
           else
             echo '::error:: Background lint failed. Run "yarn lint:fix" in the folder "packages/background/" to fix it and commit your changes.'
             lint_background=1
@@ -79,6 +81,7 @@ jobs:
           cd provider/
           if yarn lint; then
             echo "::notice:: Provider lint OK"
+            lint_background=0
           else
             echo '::error:: Provider lint failed. Run "yarn lint:fix" in the folder "packages/provider/" to fix it and commit your changes.'
             lint_provider=1

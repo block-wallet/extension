@@ -30,73 +30,6 @@ type DataFeed_Contracts = {
     [key: string]: DataFeed_Contract;
 };
 
-interface RateService {
-    getRate(
-        currency: string,
-        symbol: string,
-        networkProvider?: any
-    ): Promise<number>;
-}
-
-const chainLinkService: RateService = {
-    async getRate(currency, symbol, networkProvider) {
-        const dataFeedPair =
-            symbol.toUpperCase() + '/' + currency.toUpperCase();
-        const dataFeedAddress =
-            CHAINLINK_DATAFEEDS_CONTRACTS[dataFeedPair]?.address;
-        const dataFeedABI = CHAINLINK_DATAFEEDS_CONTRACTS[dataFeedPair]?.abi;
-
-        if (dataFeedAddress && dataFeedABI) {
-            const chainLinkDataFeedContract = new Contract(
-                dataFeedAddress,
-                dataFeedABI,
-                networkProvider
-            );
-
-            const roundData = await chainLinkDataFeedContract.latestRoundData();
-            return parseFloat(formatUnits(BigNumber.from(roundData.answer), 8));
-        }
-
-        //At this point there is no dataFeedPair in CHAINLINK_DATAFEEDS_CONTRACTS
-        return 0;
-    },
-};
-
-const coingekoService: RateService = {
-    async getRate(currency, symbol) {
-        const baseApiEndpoint = 'https://api.coingecko.com/api/v3/simple/';
-        const query = `${baseApiEndpoint}price`;
-        const currencyApiId =
-            RATES_IDS_LIST[symbol.toUpperCase() as keyof typeof RATES_IDS_LIST];
-
-        const response = await axios.get(query, {
-            params: {
-                ids: currencyApiId,
-                vs_currencies: currency,
-            },
-        });
-
-        if (response.status != 200) {
-            throw new Error(response.statusText);
-        }
-        
-        return response.data[currencyApiId][currency];
-    },
-};
-
-const rateProvider: Record<string, RateService> = {
-    'usd-eth': chainLinkService,
-};
-
-const getRateService = (
-    nativeCurrency: string,
-    tokenSymbol: string
-): RateService => {
-    const provider =
-        rateProvider[`${nativeCurrency}-${tokenSymbol}`.toLowerCase()];
-    return provider || coingekoService;
-};
-
 const CHAINLINK_DATAFEEDS_CONTRACTS: DataFeed_Contracts = {
     'ETH/USD': {
         address: '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419',
@@ -520,6 +453,73 @@ const CHAINLINK_DATAFEEDS_CONTRACTS: DataFeed_Contracts = {
     },
 };
 
+interface RateService {
+    getRate(
+        currency: string,
+        symbol: string,
+        networkProvider?: any
+    ): Promise<number>;
+}
+
+const chainLinkService: RateService = {
+    async getRate(currency, symbol, networkProvider) {
+        const dataFeedPair =
+            symbol.toUpperCase() + '/' + currency.toUpperCase();
+        const dataFeedAddress =
+            CHAINLINK_DATAFEEDS_CONTRACTS[dataFeedPair]?.address;
+        const dataFeedABI = CHAINLINK_DATAFEEDS_CONTRACTS[dataFeedPair]?.abi;
+
+        if (dataFeedAddress && dataFeedABI) {
+            const chainLinkDataFeedContract = new Contract(
+                dataFeedAddress,
+                dataFeedABI,
+                networkProvider
+            );
+
+            const roundData = await chainLinkDataFeedContract.latestRoundData();
+            return parseFloat(formatUnits(BigNumber.from(roundData.answer), 8));
+        }
+
+        //At this point there is no dataFeedPair in CHAINLINK_DATAFEEDS_CONTRACTS
+        return 0;
+    },
+};
+
+const coingekoService: RateService = {
+    async getRate(currency, symbol) {
+        const baseApiEndpoint = 'https://api.coingecko.com/api/v3/simple/';
+        const query = `${baseApiEndpoint}price`;
+        const currencyApiId =
+            RATES_IDS_LIST[symbol.toUpperCase() as keyof typeof RATES_IDS_LIST];
+
+        const response = await axios.get(query, {
+            params: {
+                ids: currencyApiId,
+                vs_currencies: currency,
+            },
+        });
+
+        if (response.status != 200) {
+            throw new Error(response.statusText);
+        }
+
+        return response.data[currencyApiId][currency];
+    },
+};
+
+const rateProvider: Record<string, RateService> = {
+    'usd-eth': chainLinkService,
+};
+
+const getRateService = (
+    nativeCurrency: string,
+    tokenSymbol: string
+): RateService => {
+    const provider =
+        rateProvider[`${nativeCurrency}-${tokenSymbol}`.toLowerCase()];
+    return provider || coingekoService;
+};
+
 export interface ExchangeRatesControllerState {
     exchangeRates: Rates;
     networkNativeCurrency: {
@@ -554,6 +554,7 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         },
     };
     private readonly _exchangeRateFetchIntervalController: ActionIntervalController;
+    private _exchangeRateService: RateService;
 
     constructor(
         initState: ExchangeRatesControllerState,
@@ -570,6 +571,11 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
 
         this._exchangeRateFetchIntervalController =
             new ActionIntervalController(this._networkController);
+
+        this._exchangeRateService = getRateService(
+            _preferencesController.nativeCurrency.toLowerCase(),
+            this.networkNativeCurrency.symbol
+        );
 
         this._networkController.on(
             NetworkEvents.NETWORK_CHANGE,
@@ -616,6 +622,11 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
                 RATES_IDS_LIST[symbol as keyof typeof RATES_IDS_LIST];
         }
 
+        this._exchangeRateService = getRateService(
+            this._preferencesController.nativeCurrency.toLowerCase(),
+            symbol
+        );
+
         this.store.updateState({
             networkNativeCurrency: {
                 symbol,
@@ -641,9 +652,7 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         const nativeCurrency =
             this._preferencesController.nativeCurrency.toLowerCase();
 
-        const rateService = getRateService(nativeCurrency, symbol);
-
-        rates[symbol] = await rateService.getRate(
+        rates[symbol] = await this._exchangeRateService.getRate(
             nativeCurrency,
             symbol,
             //TODO: check if we want to get the price using the mainnet datafeed even when standing on other networks

@@ -167,17 +167,32 @@ const PopupPage = () => {
             >
                 <div className="flex flex-row items-center justify-between w-full">
                     <div className="flex flex-row items-center space-x-3">
-                        <Link
-                            to="/accounts"
-                            className="transition duration-300"
-                            draggable={false}
-                            data-testid="navigate-account-link"
-                        >
-                            <AccountIcon
-                                className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
-                                fill={getAccountColor(account?.address)}
-                            />
-                        </Link>
+                        <div className="relative flex flex-col items-start group">
+                            <Link
+                                to="/accounts"
+                                className="transition duration-300"
+                                draggable={false}
+                                data-testid="navigate-account-link"
+                            >
+                                <AccountIcon
+                                    className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
+                                    fill={getAccountColor(account?.address)}
+                                />
+                            </Link>
+                            {/* Switch Account Icon ToolTip */}
+                            <div
+                                className={classnames(
+                                    "pointer-events-none absolute bottom-0 -mb-2 transform translate-y-full p-2 rounded-md text-xs font-bold bg-gray-900 text-white whitespace-nowrap",
+                                    "invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200"
+                                )}
+                                style={{ width: "fit-content", height: "fit-content", zIndex: 100 }}
+                            >
+                                <div className="relative">
+                                    <div className="border-t-4 border-r-4 border-gray-900 absolute top-0 left-2 w-2 h-2 -mt-2.5 transform -rotate-45 -translate-x-1/2" />                                    
+                                        <span>Switch Accounts</span>
+                                    </div>
+                                </div>
+                            </div>
                         <div className="flex flex-row items-center space-x-1">
                             <AccountDisplay />
                             <Link

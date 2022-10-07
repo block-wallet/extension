@@ -132,7 +132,7 @@
         "test": "jest",
         "test:watch": "jest --watch",
         "lint": "prettier --check src/ '!**/*.{js,json,ts}'",
-        "lint:fix": "prettier --write src/ '!**/*.{js,jsx,vue}'",
+        "lint:fix": "prettier --write src/ '!**/*.{js,json,ts}'",
         "eslint-report": "eslint src --ext .tsx,.ts -o eslint-report.html -f html"
     },
     "eslintConfig": {

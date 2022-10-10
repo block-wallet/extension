@@ -71,14 +71,14 @@ const AccountMenu = () => {
         disabledOptions[exportAccountDataLabel] = true
         tooltipOptions[exportAccountDataLabel] =
             "Not available for Hardware Wallets accounts."
-        options.splice(options.length-1, 0, {
+        options.splice(options.length - 1, 0, {
             icon: trashBinIcon,
             label: removeHWLabel,
             to: undefined,
             next: () => {
                 openHardwareRemove()
             },
-        });
+        })
     }
 
     return (

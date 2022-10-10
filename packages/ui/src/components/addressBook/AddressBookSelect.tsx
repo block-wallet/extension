@@ -21,9 +21,8 @@ const AddressBookSelect: FunctionComponent<{
         return accountArray
     }, [addressBook])
 
-    const [filteredAccounts, setFilteredAccounts] = useState<AccountInfo[]>(
-        accounts
-    )
+    const [filteredAccounts, setFilteredAccounts] =
+        useState<AccountInfo[]>(accounts)
 
     const [selected, setSelected] = useState<AccountInfo>()
 

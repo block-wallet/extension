@@ -57,7 +57,6 @@ export default {
             NetworkController: {
                 ...persistedState.NetworkController,
                 availableNetworks: { ...updatedNetworks },
-
             },
         };
     },

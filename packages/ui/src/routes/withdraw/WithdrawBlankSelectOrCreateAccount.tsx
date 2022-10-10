@@ -11,11 +11,8 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
 const WithdrawBlankSelectOrCreateAccount = () => {
     const history: any = useOnMountHistory()
-    const {
-        pair,
-        preSelectedAsset,
-        isAssetDetailsPage,
-    } = history.location.state
+    const { pair, preSelectedAsset, isAssetDetailsPage } =
+        history.location.state
     return (
         <PopupLayout
             header={

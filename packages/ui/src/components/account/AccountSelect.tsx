@@ -208,7 +208,7 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                                 actionButtons={
                                     showActionButtons
                                         ? [
-                                            <div
+                                              <div
                                                   key={`current-account-action-button-1`}
                                                   onClick={() => {
                                                       history.push({
@@ -222,8 +222,8 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                                                   }}
                                                   className="cursor-pointer p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
                                               >
-                                                <GearIcon />
-                                            </div>,
+                                                  <GearIcon />
+                                              </div>,
                                           ]
                                         : undefined
                                 }

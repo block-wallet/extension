@@ -7,8 +7,7 @@ export type BackgroundStateType = {
 
 export const initBackgroundState: BackgroundStateType = {}
 
-const BackgroundContext: React.Context<BackgroundStateType> = createContext<BackgroundStateType>(
-    initBackgroundState
-)
+const BackgroundContext: React.Context<BackgroundStateType> =
+    createContext<BackgroundStateType>(initBackgroundState)
 
 export default BackgroundContext

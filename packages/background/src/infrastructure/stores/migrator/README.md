@@ -27,7 +27,7 @@ export default {
     };
   },
   // Migration version must match new bumped package.json version
-  version: '0.2.0',
+  version: "0.2.0",
 };
 ```
 

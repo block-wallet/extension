@@ -3,34 +3,34 @@
 .slide-vertical-enter-done .slide-vertical-exit,
 .slide-vertical-exit-active,
 .slide-vertical-exit-done {
-  will-change: transform;
+    will-change: transform;
 }
 
 .slide-vertical-enter {
-  position: relative;
-  opacity: 0;
-  z-index: 2;
-  transform: translateY(-15px);
+    position: relative;
+    opacity: 0;
+    z-index: 2;
+    transform: translateY(-15px);
 }
 .slide-vertical-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 416ms linear, transform 416ms ease-out;
-  transition-delay: 100ms;
-  z-index: 2;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 416ms linear, transform 416ms ease-out;
+    transition-delay: 100ms;
+    z-index: 2;
 }
 .slide-vertical-exit {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  opacity: 1;
-  transform: translateY(0);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 1;
+    transform: translateY(0);
 }
 .slide-vertical-exit-active {
-  opacity: 0;
-  z-index: 1;
-  transform: translateY(40px);
-  transition: opacity 300ms linear, transform 416ms ease-out;
+    opacity: 0;
+    z-index: 1;
+    transform: translateY(40px);
+    transition: opacity 300ms linear, transform 416ms ease-out;
 }

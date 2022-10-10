@@ -97,7 +97,7 @@ const TransactionConfirmPage = () => {
     return currentTx?.id &&
         currentTx?.transactionCategory !==
             TransactionCategories.TOKEN_METHOD_APPROVE ? (
-                <TransactionConfirm
+        <TransactionConfirm
             transactionId={currentTx.id!}
             transactionCount={transactionCount}
         />
@@ -396,10 +396,8 @@ const TransactionConfirm: React.FC<{
                             {networkNativeCurrency.symbol}
                         </p>
                         <p>
-                            <span className="font-bold" id="transaction-origin">
-                                Origin:{" "}
-                            </span>
-                            <span aria-labelledby="transaction-origin">
+                            <span className="font-bold">Origin: </span>
+                            <span data-testid="transaction-origin">
                                 {transaction.origin}
                             </span>
                         </p>

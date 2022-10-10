@@ -97,7 +97,7 @@ const TransactionConfirmPage = () => {
     return currentTx?.id &&
         currentTx?.transactionCategory !==
             TransactionCategories.TOKEN_METHOD_APPROVE ? (
-                <TransactionConfirm
+        <TransactionConfirm
             transactionId={currentTx.id!}
             transactionCount={transactionCount}
         />

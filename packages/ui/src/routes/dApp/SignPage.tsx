@@ -73,27 +73,18 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
     approveTime,
     error,
 }) => {
-    const {
-        accounts,
-        availableNetworks,
-        selectedAddress,
-        settings,
-    } = useBlankState()!
+    const { accounts, availableNetworks, selectedAddress, settings } =
+        useBlankState()!
     const { nativeToken } = useTokensList()
     const { hideAddressWarning } = useUserSettings()
     const [copied, setCopied] = useState(false)
     const [accountWarningClosed, setAccountWarningClosed] = useState(false)
     const [isEthSignWarningOpen, setIsEthSignWarningOpen] = useState(true)
-    const {
-        isDeviceUnlinked,
-        checkDeviceIsLinked,
-        resetDeviceLinkStatus,
-    } = useCheckAccountDeviceLinked()
+    const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
+        useCheckAccountDeviceLinked()
 
-    const {
-        method,
-        params: dappReqParams,
-    } = dappReqData as DappRequestParams[DappReq.SIGNING]
+    const { method, params: dappReqParams } =
+        dappReqData as DappRequestParams[DappReq.SIGNING]
 
     const websiteIcon = siteMetadata.iconURL
     const { address, data } = dappReqParams
@@ -103,31 +94,24 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
     const checksumFromAddress = getAddress(address)
     const differentAddress = checksumFromAddress !== selectedAddress
 
-    const {
-        status,
-        isOpen,
-        dispatch,
-        texts,
-        titles,
-        closeDialog,
-        gifs,
-    } = useTransactionWaitingDialog(
-        {
-            id: requestId,
-            status: requestStatus,
-            error,
-            epochTime: approveTime,
-        },
-        HardwareWalletOpTypes.SIGN_MESSAGE,
-        accountData.accountType,
-        {
-            reject: useCallback(() => {
-                if (requestId) {
-                    attemptRejectDappRequest(requestId)
-                }
-            }, [requestId]),
-        }
-    )
+    const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
+        useTransactionWaitingDialog(
+            {
+                id: requestId,
+                status: requestStatus,
+                error,
+                epochTime: approveTime,
+            },
+            HardwareWalletOpTypes.SIGN_MESSAGE,
+            accountData.accountType,
+            {
+                reject: useCallback(() => {
+                    if (requestId) {
+                        attemptRejectDappRequest(requestId)
+                    }
+                }, [requestId]),
+            }
+        )
 
     const sign = async () => {
         dispatch({ type: "open", payload: { status: "loading" } })

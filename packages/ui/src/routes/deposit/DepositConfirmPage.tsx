@@ -70,14 +70,11 @@ export interface DepositConfirmLocalState {
 
 const DepositConfirmPage = () => {
     const history: any = useOnMountHistory()
-    let {
-        amount,
-        selectedToken,
-        selectedCurrency,
-        isAssetDetailsPage,
-    } = useMemo(() => history.location.state as DepositConfirmLocalState, [
-        history.location.state,
-    ])
+    let { amount, selectedToken, selectedCurrency, isAssetDetailsPage } =
+        useMemo(
+            () => history.location.state as DepositConfirmLocalState,
+            [history.location.state]
+        )
 
     const [persistedData, setPersistedData] = useLocalStorageState(
         "deposits.confirm",
@@ -90,10 +87,8 @@ const DepositConfirmPage = () => {
     )
 
     const { clear: clearLocationRecovery } = useLocationRecovery()
-    const {
-        transaction: inProgressTransaction,
-        clearTransaction,
-    } = useInProgressInternalTransaction()
+    const { transaction: inProgressTransaction, clearTransaction } =
+        useInProgressInternalTransaction()
 
     useEffect(() => {
         // Tx was either rejected or submitted when the pop-up was closed.
@@ -108,17 +103,10 @@ const DepositConfirmPage = () => {
     const [isUpdating, setIsUpdating] = useState(false)
     const [customNonce, setCustomNonce] = useState<number | undefined>()
 
-    const {
-        exchangeRates,
-        nativeCurrency,
-        localeInfo,
-        networkNativeCurrency,
-    } = useBlankState()!
-    const {
-        isDeviceUnlinked,
-        checkDeviceIsLinked,
-        resetDeviceLinkStatus,
-    } = useCheckAccountDeviceLinked()
+    const { exchangeRates, nativeCurrency, localeInfo, networkNativeCurrency } =
+        useBlankState()!
+    const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
+        useCheckAccountDeviceLinked()
     const { isEIP1559Compatible } = useSelectedNetwork()
     const { gasPricesLevels } = useGasPriceData()
     const selectedAccount = useSelectedAccount()
@@ -128,32 +116,25 @@ const DepositConfirmPage = () => {
             token.symbol.toLowerCase() === selectedCurrency.toLowerCase()
     )?.token?.logo
 
-    const {
-        status,
-        isOpen,
-        dispatch,
-        texts,
-        titles,
-        closeDialog,
-        gifs,
-    } = useTransactionWaitingDialog(
-        inProgressTransaction
-            ? {
-                  status: inProgressTransaction.status,
-                  error: inProgressTransaction.error as Error,
-                  epochTime: inProgressTransaction?.approveTime,
-              }
-            : undefined,
-        HardwareWalletOpTypes.SIGN_TRANSACTION,
-        selectedAccount.accountType,
-        {
-            reject: useCallback(() => {
-                if (inProgressTransaction?.id) {
-                    rejectTransaction(inProgressTransaction?.id)
-                }
-            }, [inProgressTransaction?.id]),
-        }
-    )
+    const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
+        useTransactionWaitingDialog(
+            inProgressTransaction
+                ? {
+                      status: inProgressTransaction.status,
+                      error: inProgressTransaction.error as Error,
+                      epochTime: inProgressTransaction?.approveTime,
+                  }
+                : undefined,
+            HardwareWalletOpTypes.SIGN_TRANSACTION,
+            selectedAccount.accountType,
+            {
+                reject: useCallback(() => {
+                    if (inProgressTransaction?.id) {
+                        rejectTransaction(inProgressTransaction?.id)
+                    }
+                }, [inProgressTransaction?.id]),
+            }
+        )
 
     const [defaultGas, setDefaultGas] = useState<{
         gasPrice: BigNumber
@@ -423,7 +404,8 @@ const DepositConfirmPage = () => {
                             setSelectedGasLimit(gasFees.gasLimit!)
                             setSelectedFees({
                                 maxFeePerGas: gasFees.maxFeePerGas!,
-                                maxPriorityFeePerGas: gasFees.maxPriorityFeePerGas!,
+                                maxPriorityFeePerGas:
+                                    gasFees.maxPriorityFeePerGas!,
                             })
                         }}
                         isParentLoading={isUpdating}

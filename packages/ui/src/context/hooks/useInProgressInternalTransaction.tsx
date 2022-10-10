@@ -12,9 +12,8 @@ export const useInProgressInternalTransaction = (
     // If there is no transaction, and the form has been submitted,
     // means that the user SHOULD not be here (he may have declined the transaction in the HW device with th pop-up closed), so that we should go to the home page.
     // If there is a pending transaction, we should store its ID and attach it to this form, listening to its state changes.
-    const lastPendingTransaction = useWaitingForSigningInternalTransaction(
-        txFilters
-    )
+    const lastPendingTransaction =
+        useWaitingForSigningInternalTransaction(txFilters)
     const [currentTxId, setCurrentTxId] = useState(lastPendingTransaction?.id)
     const { transaction } = useTransactionById(currentTxId)
 
@@ -26,8 +25,9 @@ export const useInProgressInternalTransaction = (
 
     return {
         transaction,
-        clearTransaction: useCallback(() => setCurrentTxId(undefined), [
-            setCurrentTxId,
-        ]),
+        clearTransaction: useCallback(
+            () => setCurrentTxId(undefined),
+            [setCurrentTxId]
+        ),
     }
 }

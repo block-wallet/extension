@@ -1,11 +1,11 @@
-import { Meta } from '@storybook/react'
-import classnames from 'classnames'
+import { Meta } from "@storybook/react"
+import classnames from "classnames"
 
-import { Classes } from '../styles'
-import Placeholder from '../components/Placeholder'
+import { Classes } from "../styles"
+import Placeholder from "../components/Placeholder"
 
 export const BasePlaceholder = () => (
-    <Placeholder className={classnames('h-32 w-64')} />
+    <Placeholder className={classnames("h-32 w-64")} />
 )
 
 export const ComposedPlaceholder = () => (
@@ -18,4 +18,4 @@ export const ComposedPlaceholder = () => (
     </div>
 )
 
-export default { title: 'Loading' } as Meta
+export default { title: "Loading" } as Meta

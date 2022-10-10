@@ -342,6 +342,7 @@ describe('Bridge Controller', () => {
                         fromAddress:
                             '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
                         fromAmount: '10000000000000000',
+                        referrer: BRIDGE_REFERRER_ADDRESS,
                     })
                     .returns(
                         mockPromiseResponse({
@@ -441,6 +442,7 @@ describe('Bridge Controller', () => {
                             fromAddress:
                                 '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
                             fromAmount: '10000',
+                            referrer: BRIDGE_REFERRER_ADDRESS,
                         })
                         .throwsException(
                             new QuoteNotFoundError('Quote not found')

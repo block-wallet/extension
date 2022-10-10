@@ -3,6 +3,7 @@ import { RiArrowDownSLine, RiArrowUpSLine } from "react-icons/ri"
 import { BsCheck } from "react-icons/bs"
 import { useHistory } from "react-router-dom"
 
+import ClickableText from "../button/ClickableText"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import classnames from "classnames"
 import { useOnClickOutside } from "../../util/useOnClickOutside"
@@ -163,15 +164,18 @@ const NetworkSelect: FunctionComponent<{
                                 />
                             ))}
                     <li
-                        className={`cursor-pointer flex flex-row justify-between pl-2 pr-2 pt-1 pb-1 items-center ${showTestNetworks? "border-t border-t-gray-200 border-b border-b-gray-200":""} hover:bg-gray-100`}
-                        onClick={() => history.push("/settings/networks")}
-                        
+                        className={`${
+                            showTestNetworks
+                                ? "border-t border-t-gray-200 border-b border-b-gray-200"
+                                : ""
+                        } hover:bg-gray-100`}
                     >
-                        <label
-                            className="leading-loose text-primary-300 cursor-pointer"
+                        <ClickableText
+                            className={`cursor-pointer flex flex-row justify-between pl-2 pr-2 pt-1 pb-1 leading-loose items-center w-full rounded-none`}
+                            onClick={() => history.push("/settings/networks")}
                         >
                             Edit Networks
-                        </label>
+                        </ClickableText>
                     </li>
                 </ul>
             </div>

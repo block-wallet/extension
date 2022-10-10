@@ -16,6 +16,7 @@ import ErrorDialog from "../components/dialog/ErrorDialog"
 import AccountIcon from "../components/icons/AccountIcon"
 import ActivityAssetsView from "../components/ActivityAssetsView"
 import GenericTooltip from "../components/label/GenericTooltip"
+import Tooltip from "../components/label/Tooltip"
 
 // Utils
 import { formatHash, formatName } from "../util/formatAccount"
@@ -179,20 +180,16 @@ const PopupPage = () => {
                                     fill={getAccountColor(account?.address)}
                                 />
                             </Link>
-                            {/* Switch Account Icon ToolTip */}
-                            <div
-                                className={classnames(
-                                    "pointer-events-none absolute bottom-0 -mb-2 transform translate-y-full p-2 rounded-md text-xs font-bold bg-gray-900 text-white whitespace-nowrap",
-                                    "invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200"
-                                )}
-                                style={{ width: "fit-content", height: "fit-content", zIndex: 100 }}
-                            >
-                                <div className="relative">
-                                    <div className="border-t-4 border-r-4 border-gray-900 absolute top-0 left-2 w-2 h-2 -mt-2.5 transform -rotate-45 -translate-x-1/2" />                                    
+                            <Tooltip
+                                className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-bold bg-gray-900 text-white"
+                                content={
+                                    <>
+                                        <div className="border-t-4 border-r-4 border-gray-900 absolute top-0 left-2 w-2 h-2 -mt-2.5 transform -rotate-45 -translate-x-1/2" />
                                         <span>Switch Accounts</span>
-                                    </div>
-                                </div>
-                            </div>
+                                    </>
+                                }
+                            />
+                        </div>
                         <div className="flex flex-row items-center space-x-1">
                             <AccountDisplay />
                             <Link

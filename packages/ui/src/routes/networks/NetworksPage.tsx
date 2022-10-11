@@ -97,13 +97,7 @@ const NetworksPage = () => {
         })
     }
     return (
-        <PopupLayout
-            header={
-                <PopupHeader
-                    title="Networks"
-                />
-            }
-        >
+        <PopupLayout header={<PopupHeader title="Networks" />}>
             <div className="flex flex-col p-6 space-y-6 w-full">
                 <ActionButton
                     icon={plusIcon}

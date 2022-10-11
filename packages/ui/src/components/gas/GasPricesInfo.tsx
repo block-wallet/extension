@@ -14,9 +14,8 @@ import { AiFillInfoCircle } from "react-icons/ai"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import {
-    calculateTransactionGas,
     gasPriceToNativeCurrency,
-    gasToGweiString,
+    getTransactionFees,
 } from "../../util/gasPrice"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { FeeData } from "@ethersproject/abstract-provider"
@@ -25,7 +24,7 @@ import car from "../../assets/images/icons/car.svg"
 import scooter from "../../assets/images/icons/scooter.svg"
 import plane from "../../assets/images/icons/plane.svg"
 
-type DisplayGasPricesData = {
+export type DisplayGasPricesData = {
     baseFee?: string
     priority?: string
     totalGwei: string
@@ -43,7 +42,7 @@ const defaultObj = {
     totalTransactionCost: BigNumber.from(0),
 }
 
-export const getDisplayGasPrices = (
+const getDisplayGasPrices = (
     isEIP1559Compatible: boolean,
     gasPrices: GasPriceLevels,
     estimatedBaseFee: BigNumber,
@@ -54,36 +53,14 @@ export const getDisplayGasPrices = (
             Object.entries(gasPrices) as Array<[keyof GasPriceLevels, FeeData]>
         ).reduce(
             (acc: DisplayGasPricesLevels, [level, gasPrice]) => {
-                let data = {}
-                if (isEIP1559Compatible && estimatedBaseFee) {
-                    const baseFee = BigNumber.from(estimatedBaseFee)
-                    const priority = BigNumber.from(
-                        gasPrice?.maxPriorityFeePerGas ?? 0
-                    )
-                    const baseFeePlusTip = baseFee.add(priority)
-                    data = {
-                        baseFee: gasToGweiString(baseFee),
-                        priority: gasToGweiString(priority),
-                        totalGwei: gasToGweiString(
-                            BigNumber.from(baseFeePlusTip)
-                        ),
-                        totalTransactionCost: calculateTransactionGas(
-                            gasLimit,
-                            BigNumber.from(baseFeePlusTip)
-                        ),
-                    }
-                } else {
-                    data = {
-                        totalGwei: gasToGweiString(gasPrice?.gasPrice),
-                        totalTransactionCost: calculateTransactionGas(
-                            gasLimit,
-                            BigNumber.from(gasPrice?.gasPrice ?? 1)
-                        ),
-                    }
-                }
                 return {
                     ...acc,
-                    [level]: data,
+                    [level]: getTransactionFees(
+                        isEIP1559Compatible,
+                        gasPrice,
+                        estimatedBaseFee,
+                        gasLimit
+                    ),
                 }
             },
             { slow: defaultObj, average: defaultObj, fast: defaultObj }

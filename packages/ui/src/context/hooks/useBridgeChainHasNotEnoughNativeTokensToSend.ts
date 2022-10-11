@@ -8,6 +8,7 @@ import { BigNumber } from "ethers"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 import { hasEnoughFundsToPayTheGasInSendTransaction } from "../../util/bridgeUtils"
 import { useBlankState } from "../../context/background/backgroundHooks"
+import { isNativeTokenAddress } from "../../util/tokenUtils"
 
 export enum EnoughNativeTokensToSend {
     UNKNOWN = "UNKNOWN",
@@ -21,35 +22,42 @@ interface NativeAndGasPrices {
 }
 
 export const useAddressHasEnoughNativeTokensToSend = (
-    chainId: number
+    chainId: number,
+    tokenAddress: string
 ): {
     isLoading: boolean
     result: EnoughNativeTokensToSend
 } => {
+    const nativeTokenBridge = isNativeTokenAddress(tokenAddress)
+
     const { run, isLoading, data } = useAsyncInvoke<NativeAndGasPrices>({
-        status: Status.PENDING,
+        status: nativeTokenBridge ? Status.IDLE : Status.PENDING,
     })
     const { isEIP1559Compatible } = useBlankState()!
 
     useEffect(() => {
-        run(
-            new Promise<NativeAndGasPrices>(async (resolve) => {
-                const [nativeTokenBalance, gasPrices] = await Promise.all([
-                    getAccountNativeTokenBalanceForChain(chainId),
-                    fetchLatestGasPriceForChain(chainId),
-                ])
-                return resolve({
-                    nativeTokenBalance,
-                    gasPrices,
+        if (!nativeTokenBridge) {
+            run(
+                new Promise<NativeAndGasPrices>(async (resolve) => {
+                    const [nativeTokenBalance, gasPrices] = await Promise.all([
+                        getAccountNativeTokenBalanceForChain(chainId),
+                        fetchLatestGasPriceForChain(chainId),
+                    ])
+                    return resolve({
+                        nativeTokenBalance,
+                        gasPrices,
+                    })
                 })
-            })
-        )
+            )
+        }
     }, [run, chainId])
 
     return useMemo(() => {
         let result = EnoughNativeTokensToSend.UNKNOWN
         if (!isLoading) {
-            if (!data || !data.nativeTokenBalance || !data.gasPrices) {
+            if (nativeTokenBridge) {
+                result = EnoughNativeTokensToSend.ENOUGH
+            } else if (!data || !data.nativeTokenBalance || !data.gasPrices) {
                 result = EnoughNativeTokensToSend.UNKNOWN
             } else {
                 const hasEnoughFunds =

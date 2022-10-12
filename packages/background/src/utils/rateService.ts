@@ -2,7 +2,7 @@ import { BigNumber, Contract, ethers } from 'ethers';
 import { formatUnits } from 'ethers/lib/utils';
 import { RATES_IDS_LIST } from '@block-wallet/chains-assets';
 import axios from 'axios';
-import CHAINLINK_DATAFEEDS_CONTRACTS from './constants/eth-usd-contract';
+import CHAINLINK_DATAFEEDS_CONTRACTS from './chain-link/dataFeeds';
 
 export interface RateService {
     getRate(

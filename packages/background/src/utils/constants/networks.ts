@@ -578,8 +578,8 @@ export const INITIAL_NETWORKS: Networks = {
         ens: false,
         showGasLevels: true,
         rpcUrls: [`https://zksync2-testnet.zksync.dev`],
-        blockExplorerUrls: ['https://zksync2-testnet.zkscan.io'],
-        blockExplorerName: 'zkScan',
+        blockExplorerUrls: ['https://explorer.zksync.io/'],
+        blockExplorerName: 'zkSync Explorer',
         actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,

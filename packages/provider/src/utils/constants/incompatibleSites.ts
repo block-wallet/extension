@@ -35,5 +35,5 @@ export const incompatibleSites = [
     'zed.run',
     'zk.money',
     'manifold.xyz',
-    'orionprotocol.io'
+    'orionprotocol.io',
 ];

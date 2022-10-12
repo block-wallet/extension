@@ -1,6 +1,6 @@
 /**
  * List of sites that are not compatible with block wallet.
- *
+ * If a site is listed here, isBlockWallet flag will be set to false when injecting the provider and isMetamask will be true.
  * Make sure to add the domain name
  */
 export const incompatibleSites = [
@@ -34,4 +34,6 @@ export const incompatibleSites = [
     'yearn.finance',
     'zed.run',
     'zk.money',
+    'manifold.xyz',
+    'orionprotocol.io'
 ];

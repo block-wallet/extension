@@ -119,14 +119,14 @@ describe('Exchange Rates Controller', function () {
                     exchangeRatesController['_exchangeRateService'],
                     'getRate'
                 )
-                .returns(Promise.resolve(0));
+                .returns(Promise.resolve(125));
 
             await exchangeRatesController.updateExchangeRates();
 
             //Run UpdateExchangeRates it should retrieve the object with values
             expect(
                 exchangeRatesController.store.getState().exchangeRates['AVX']
-            ).equal(0);
+            ).equal(125);
         });
     });
 });

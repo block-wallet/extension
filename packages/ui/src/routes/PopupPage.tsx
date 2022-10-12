@@ -1,4 +1,4 @@
-import { useState } from "react"
+import React, { useState } from "react"
 import classnames from "classnames"
 import { Link, useHistory } from "react-router-dom"
 import { formatUnits } from "ethers/lib/utils"
@@ -6,7 +6,6 @@ import { BigNumber } from "ethers"
 import { BiCircle } from "react-icons/bi"
 
 // Components
-import PageLayout from "../components/PageLayout"
 import CopyTooltip from "../components/label/СopyToClipboardTooltip"
 import GearIcon from "../components/icons/GearIcon"
 import QRIcon from "../components/icons/QRIcon"
@@ -33,9 +32,11 @@ import { useConnectedSite } from "../context/hooks/useConnectedSite"
 import { useTokensList } from "../context/hooks/useTokensList"
 
 // Assets
+import eye from "../assets/images/icons/eye.svg"
 import TokenSummary from "../components/token/TokenSummary"
 import GasPricesInfo from "../components/gas/GasPricesInfo"
-import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
+import PopupLayout from "../components/popup/PopupLayout"
+import PopupHeader from "../components/popup/PopupHeader"
 
 const AccountDisplay = () => {
     const blankState = useBlankState()!
@@ -145,13 +146,61 @@ const PopupPage = () => {
     const account = useSelectedAccount()
     const { nativeToken } = useTokensList()
     const network = useSelectedNetwork()
-    const sendsEnabled = network.isSendEnabled
-    const swapsEnabled = network.isSwapEnabled
 
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
 
     return (
-        <PageLayout screen className="max-h-screen popup-layout">
+        <PopupLayout
+            header={
+                <PopupHeader title="" close={false} backButton={false}>
+                    <div className="flex flex-row items-center justify-between w-full">
+                        <div className="flex flex-row items-center space-x-3">
+                            <Link
+                                to="/accounts"
+                                className="transition duration-300"
+                                draggable={false}
+                                data-testid="navigate-account-link"
+                            >
+                                <AccountIcon
+                                    className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
+                                    fill={getAccountColor(account?.address)}
+                                />
+                            </Link>
+                            <div className="flex flex-row items-center space-x-1">
+                                <AccountDisplay />
+                                <Link
+                                    to="/accounts/menu/receive"
+                                    draggable={false}
+                                    onClick={(e) => {
+                                        e.preventDefault()
+
+                                        history.push("/accounts/menu/receive")
+                                    }}
+                                    className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                                >
+                                    <QRIcon />
+                                </Link>
+                            </div>
+                        </div>
+                        <div className="flex flex-row items-center -mr-1 space-x-2">
+                            <GasPricesInfo />
+                            <Link
+                                to="/settings"
+                                draggable={false}
+                                onClick={(e) => {
+                                    e.preventDefault()
+
+                                    history.push("/settings")
+                                }}
+                                className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                            >
+                                <GearIcon />
+                            </Link>
+                        </div>
+                    </div>
+                </PopupHeader>
+            }
+        >
             <ErrorDialog
                 title="Error!"
                 message={error}
@@ -161,57 +210,7 @@ const PopupPage = () => {
                 }}
                 onDone={() => setHasErrorDialog(false)}
             />
-            <div
-                className="absolute top-0 left-0 z-10 flex flex-col items-start w-full p-6 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
-                style={{ backdropFilter: "blur(4px)" }}
-            >
-                <div className="flex flex-row items-center justify-between w-full">
-                    <div className="flex flex-row items-center space-x-3">
-                        <Link
-                            to="/accounts"
-                            className="transition duration-300"
-                            draggable={false}
-                            data-testid="navigate-account-link"
-                        >
-                            <AccountIcon
-                                className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
-                                fill={getAccountColor(account?.address)}
-                            />
-                        </Link>
-                        <div className="flex flex-row items-center space-x-1">
-                            <AccountDisplay />
-                            <Link
-                                to="/accounts/menu/receive"
-                                draggable={false}
-                                onClick={(e) => {
-                                    e.preventDefault()
-
-                                    history.push("/accounts/menu/receive")
-                                }}
-                                className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
-                            >
-                                <QRIcon />
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="flex flex-row items-center -mr-1 space-x-2">
-                        <GasPricesInfo />
-                        <Link
-                            to="/settings"
-                            draggable={false}
-                            onClick={(e) => {
-                                e.preventDefault()
-
-                                history.push("/settings")
-                            }}
-                            className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
-                        >
-                            <GearIcon />
-                        </Link>
-                    </div>
-                </div>
-            </div>
-            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-24 space-y-2 overflow-auto hide-scroll">
+            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-3 space-y-2 overflow-auto hide-scroll">
                 <div className="w-full">
                     <div className="flex flex-row items-start w-full justify-between pt-1 pb-2">
                         <GenericTooltip
@@ -292,31 +291,21 @@ const PopupPage = () => {
                                     Send
                                 </span>
                             </Link>
-                            {swapsEnabled && (
+                            {network.isTornadoEnabled && (
                                 <Link
-                                    to="/swap"
+                                    to="/privacy"
                                     draggable={false}
-                                    className={classnames(
-                                        "flex flex-col items-center space-y-2 group",
-                                        (!sendsEnabled ||
-                                            !state.isUserNetworkOnline) &&
-                                            "pointer-events-none"
-                                    )}
+                                    className="flex flex-col items-center space-y-2 group"
                                 >
-                                    <div
-                                        className={classnames(
-                                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                            !sendsEnabled ||
-                                                !state.isUserNetworkOnline
-                                                ? "bg-gray-300"
-                                                : "bg-primary-300"
-                                        )}
-                                        style={{ transform: "scaleY(-1)" }}
-                                    >
-                                        <DoubleArrowHoverAnimation />
+                                    <div className="group w-8 h-8 flex items-center overflow-hidden transition duration-300 rounded-full bg-primary-300 group-hover:opacity-75">
+                                        <img
+                                            alt="Privacy"
+                                            src={eye}
+                                            className="w-full h-3 group-hover:animate-privacy-rotate select-none"
+                                        />
                                     </div>
                                     <span className="text-xs font-medium">
-                                        Swap
+                                        Privacy
                                     </span>
                                 </Link>
                             )}
@@ -325,7 +314,7 @@ const PopupPage = () => {
                     <ActivityAssetsView initialTab={state.popupTab} />
                 </div>
             </div>
-        </PageLayout>
+        </PopupLayout>
     )
 }
 

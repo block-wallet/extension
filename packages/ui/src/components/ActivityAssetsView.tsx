@@ -1,5 +1,6 @@
-import { FunctionComponent, useState } from "react"
 import { PopupTabs } from "@block-wallet/background/controllers/PreferencesController"
+import { FunctionComponent, useEffect, useState } from "react"
+import { useBlankState } from "../context/background/backgroundHooks"
 import { updatePopupTab } from "../context/commActions"
 import ActivityList from "./ActivityList"
 import AssetsList from "./AssetsList"
@@ -19,6 +20,7 @@ const tabs = [
 const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
     initialTab,
 }) => {
+    const state = useBlankState()!
     const initialTabIndex = initialTab === "activity" ? 0 : 1
     const [tab, setTab] = useState(tabs[initialTabIndex])
     const TabComponent = tab.component
@@ -27,6 +29,15 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
         setTab(value)
         updatePopupTab(value.label.toLowerCase() as PopupTabs)
     }
+
+    //UseHotkeys changes state.popupTab, we do it to change the tab in real time, otherwise it will change only next time we open the extension
+    useEffect(() => {
+        if (state.popupTab !== tab.label.toLocaleLowerCase()) {
+            onTabChange(
+                tabs.find((l) => l.label.toLocaleLowerCase() === state.popupTab)
+            )
+        }
+    }, [state.popupTab])
 
     return (
         <div className="flex flex-col w-full">

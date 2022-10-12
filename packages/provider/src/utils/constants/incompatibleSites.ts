@@ -36,4 +36,5 @@ export const incompatibleSites = [
     'zk.money',
     'manifold.xyz',
     'orionprotocol.io',
+    'portal.zksync.io'
 ];

@@ -170,7 +170,7 @@ jobs:
           make test/background
 
   build:
-    needs: [test]
+    needs: [test, lint]
     env:
       ENVIRONMENT: prod
     runs-on: ubuntu-latest

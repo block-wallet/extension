@@ -243,6 +243,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         destinationNetwork
     )
 
+    // it shows de warning when the user doesn't have enough native tokens in the destination network to perform a send and there is no pending transaction
     const showDestinationFeeWarning =
         !nativeTokensInDestinationNetworkStatus.isLoading &&
         !inProgressAllowanceTransaction?.id &&

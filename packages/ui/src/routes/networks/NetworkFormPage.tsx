@@ -133,7 +133,8 @@ const NetworkFormPage = ({
             }
             return RPCUrlValidation.EMPTY
         })
-
+    const [isNativelySupported, setIsNativelySupported] =
+        useState<boolean>(false)
     const { availableNetworks } = useBlankState()!
 
     const {
@@ -214,6 +215,8 @@ const NetworkFormPage = ({
                     )
                 } catch (e) {
                     //Invalid URL if we were not able to fetch the chainId using the rpcUrl.
+                    console.log(watchRPCUrl)
+                    console.log(e)
                     setRpcValidationStatus(RPCUrlValidation.INVALID_URL)
                 }
             } finally {
@@ -249,7 +252,14 @@ const NetworkFormPage = ({
                 : addNetwork(networkData)
         )
     })
-
+    useEffect(() => {
+        const existingNetwork = Object.values(availableNetworks).find(
+            (network) => network.chainId === Number(watchChainId)
+        )
+        setIsNativelySupported(
+            existingNetwork ? existingNetwork.nativelySupported : false
+        )
+    }, [watchChainId])
     const deleteNetwork = () => {
         removeNetworkInvoke.run(removeNetwork(network!.chainId!))
     }
@@ -311,7 +321,7 @@ const NetworkFormPage = ({
                     actions={
                         !editingSelectedNetwork && canDelete
                             ? [
-                                <div
+                                  <div
                                       key={1}
                                       onClick={() => {
                                           setConfirmDeletion(true)
@@ -320,14 +330,14 @@ const NetworkFormPage = ({
                                           "text-red-500 cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-b-md w-40"
                                       )}
                                   >
-                                    <div className="pl-1 pr-1 w-8">
-                                        <Icon
+                                      <div className="pl-1 pr-1 w-8">
+                                          <Icon
                                               name={IconName.TRASH_BIN}
                                               profile="danger"
                                           />
-                                    </div>
-                                    <span>Delete Network</span>
-                                </div>,
+                                      </div>
+                                      <span>Delete Network</span>
+                                  </div>,
                               ]
                             : undefined
                     }
@@ -346,7 +356,7 @@ const NetworkFormPage = ({
                 ) : null
             }
         >
-            {!network?.nativelySupported && (
+            {!isNativelySupported && (
                 <CollapsableWarning
                     dialog={{
                         title: "Warning",

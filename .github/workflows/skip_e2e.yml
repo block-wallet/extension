@@ -12,9 +12,6 @@ on:
       - '**.json'
       - '**.html'
       - '**.nvmrc'
-      - '!package.json'
-      - '!public/manifest.json'
-      - '!release-notes.json'
 jobs:
   e2e:
     runs-on: ubuntu-latest

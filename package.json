@@ -5,8 +5,8 @@
     "scripts": {
         "install": "make install/ci",
         "install-fresh": "make install",
-        "build": "make build",
         "build-prod": "make build/prod",
+        "build": "make build",
         "test": "make test"
     }
 }

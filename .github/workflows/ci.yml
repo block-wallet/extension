@@ -12,6 +12,9 @@ on:
       - '**.json'
       - '**.html'
       - '**.nvmrc'
+      - '!package.json'
+      - '!public/manifest.json'
+      - '!release-notes.json'
 
 env:
   BLOCK_WALLET_URL: url.txt

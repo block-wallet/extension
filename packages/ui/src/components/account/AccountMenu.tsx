@@ -78,7 +78,7 @@ const AccountMenu = () => {
 
     options.push({
         icon: switchIcon,
-        label: "Switch Accounts",
+        label: "My Accounts",
         to: "/accounts",
     })
 

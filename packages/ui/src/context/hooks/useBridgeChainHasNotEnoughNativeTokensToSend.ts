@@ -21,11 +21,13 @@ interface NativeAndGasPrices {
     gasPrices: GasPriceData | undefined
 }
 
-// Checks the native token balance on the destination network when performing a bridge.
-// Returns "ENOUGH" if the user has enough balance to perform a send tx or he/she's briding to the native token in the destination network
-// Returns "NOT_ENOUGH" if the user hasn't enough balance to perform a send tx in the destination network and he/she isn't bridging to the destination network
-// Returns "UNKNOWN" if we can't verify the native token balance in the destination network (due to an external error or because he/she doesn't have the network in his wallet)
-// or we can't verify the gas prices
+/**
+ * It checks the native token balance on the destination network when performing a bridge and returns:
+ * "ENOUGH" if the user has enough balance to perform a send tx or he/she's briding to the native token in the destination network
+ * "NOT_ENOUGH" if the user hasn't enough balance to perform a send tx in the destination network and he/she isn't bridging to the destination network
+ * "UNKNOWN" if we can't verify the native token balance in the destination network (due to an external error or because he/she doesn't have the network in his wallet)
+ * or we can't verify the gas prices
+ */
 export const useAddressHasEnoughNativeTokensToSend = (
     chainId: number,
     tokenAddress: string

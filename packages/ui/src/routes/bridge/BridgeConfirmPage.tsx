@@ -172,7 +172,8 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
         bridgeQuote
     )
-
+    const { fromAmount, fromToken, transactionRequest, toChainId, toToken } =
+        bridgeQuote.bridgeParams.params
     // Gas
     const [defaultGas, setDefaultGas] = useState<{
         gasPrice: BigNumber
@@ -193,9 +194,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         BigNumber.from(gasPricesLevels.average.gasPrice ?? "0")
     )
     const [selectedGasLimit, setSelectedGasLimit] = useState(
-        BigNumber.from(
-            bridgeQuote.bridgeParams.params.transactionRequest.gasLimit || 0
-        )
+        BigNumber.from(transactionRequest.gasLimit || 0)
     )
 
     const isBridging = status === "loading" && isOpen
@@ -216,8 +215,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const isBridgingNativeToken = isBridgeNativeTokenAddress(token.address)
     const total = isBridgingNativeToken
         ? BigNumber.from(
-              quote?.bridgeParams.params.fromAmount ||
-                  bridgeQuote.bridgeParams.params.fromAmount
+              quote?.bridgeParams.params.fromAmount || fromAmount
           ).add(fee)
         : fee
 
@@ -226,10 +224,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         nativeToken.token
     )
     const hasFromTokenBalance = useHasSufficientBalance(
-        BigNumber.from(
-            quote?.bridgeParams.params.fromAmount ||
-                bridgeQuote.bridgeParams.params.fromAmount
-        ),
+        BigNumber.from(quote?.bridgeParams.params.fromAmount || fromAmount),
         token
     )
 
@@ -238,13 +233,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         : hasNativeAssetBalance && hasFromTokenBalance
 
     const nativeTokensInDestinationNetworkStatus =
-        useAddressHasEnoughNativeTokensToSend(
-            bridgeQuote.bridgeParams.params.toChainId,
-            bridgeQuote.bridgeParams.params.toToken.address
-        )
+        useAddressHasEnoughNativeTokensToSend(toChainId, toToken.address)
 
     const destinationNetwork = Object.values(availableNetworks).find(
-        (n) => n.chainId === bridgeQuote.bridgeParams.params.toChainId
+        (n) => n.chainId === toChainId
     )
     const bridgeWarningMessage = getWarningMessages(
         nativeTokensInDestinationNetworkStatus.result,
@@ -346,11 +338,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         async function fetchQuoteParams() {
             setError(undefined)
             const params: BridgeQuoteRequest = {
-                toChainId: bridgeQuote.bridgeParams.params.toChainId,
-                fromTokenAddress:
-                    bridgeQuote.bridgeParams.params.fromToken.address,
-                toTokenAddress: bridgeQuote.bridgeParams.params.toToken.address,
-                fromAmount: bridgeQuote.bridgeParams.params.fromAmount,
+                toChainId: toChainId,
+                fromTokenAddress: fromToken.address,
+                toTokenAddress: toToken.address,
+                fromAmount: fromAmount,
                 fromAddress: selectedAccount.address,
                 slippage: advancedSettings.slippage,
             }
@@ -392,10 +383,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         }
     }, [
         advancedSettings.slippage,
-        bridgeQuote.bridgeParams.params.fromAmount,
-        bridgeQuote.bridgeParams.params.fromToken.address,
-        bridgeQuote.bridgeParams.params.toChainId,
-        bridgeQuote.bridgeParams.params.toToken.address,
+        fromAmount,
+        fromToken.address,
+        toChainId,
+        toToken.address,
         inProgressAllowanceTransaction?.id,
         selectedAccount.address,
         shouldFetchBridgeParams,
@@ -557,9 +548,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 {/* From Token */}
                 <AssetAmountDisplay
                     asset={token}
-                    amount={BigNumber.from(
-                        bridgeQuote.bridgeParams.params.fromAmount
-                    )}
+                    amount={BigNumber.from(fromAmount)}
                 />
 
                 {/* Divider */}
@@ -577,7 +566,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 {/* To */}
                 <div className="-mt-2">
                     <AssetAmountDisplay
-                        asset={bridgeQuote.bridgeParams.params.toToken}
+                        asset={toToken}
                         amount={
                             quote &&
                             BigNumber.from(quote.bridgeParams.params.toAmount)

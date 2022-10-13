@@ -30,10 +30,6 @@ const App = () => {
     )
 }
 
-const WrappedApp = () => (
-    <BackgroundState>
-        <App />
-    </BackgroundState>
-)
+const WrappedApp = () => <BackgroundState />
 
 export default WrappedApp

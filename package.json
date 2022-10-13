@@ -6,7 +6,7 @@
         "install": "make install/ci",
         "install-fresh": "make install",
         "build": "make build",
-        "test": "make test",
-        "build-prod": "make build/prod"
+        "build-prod": "make build/prod",
+        "test": "make test"
     }
 }

@@ -22,6 +22,7 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    if: startsWith(github.ref_name, 'dependabot/') == false
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v3

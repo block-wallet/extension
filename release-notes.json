@@ -277,6 +277,37 @@
                 }
             ],
             "version": "0.4.0"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added support for zkSync 2.0 Testnet."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Networks, accounts and token management UX improvements."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Bug fixes and other minor improvements ."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Fixed compatibility with more dApps."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.4.1"
         }
     ]
 }

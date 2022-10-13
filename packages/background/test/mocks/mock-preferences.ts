@@ -46,4 +46,8 @@ const mockPreferencesController = new PreferencesController({
     initState: testInitState,
 });
 
-export { mockPreferencesController };
+const mockPreferencesControllerARS = new PreferencesController({
+    initState: { ...testInitState, nativeCurrency: 'ars' },
+});
+
+export { mockPreferencesController, mockPreferencesControllerARS };

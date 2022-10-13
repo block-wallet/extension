@@ -1,7 +1,7 @@
 const CloseIcon = (props: any) => (
     <svg
-        width={props?.size ?? '12'}
-        height={props?.size ?? '12'}
+        width={props?.size ?? "12"}
+        height={props?.size ?? "12"}
         viewBox="0 0 10 10"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"

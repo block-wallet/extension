@@ -38,7 +38,7 @@ jobs:
 
       - name: Install yarn
         run: |
-          exit 1
+          npm install --global yarn
 
       - name: Dependency UI cache
         uses: actions/cache@v3

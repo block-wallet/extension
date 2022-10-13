@@ -106,27 +106,35 @@ export const getWarningMessages = (
     nativeTokenStatus: EnoughNativeTokensToSend,
     network: Network | undefined
 ): BridgeWarningMessage | undefined => {
-    const warningMessage: BridgeWarningMessage = { title: "", body: "" }
-    if (nativeTokenStatus === EnoughNativeTokensToSend.ENOUGH) {
-        return undefined
-    }
-
-    if (nativeTokenStatus === EnoughNativeTokensToSend.NOT_ENOUGH) {
-        warningMessage.title = "Your funds may get stuck!"
-        const networkNativeToken = network
-            ? network.nativeCurrency.symbol
-            : "native token"
-        const networkName = network ? network.desc : "the destination network"
-        warningMessage.body = `We noticed you don't have enough ${networkNativeToken} on ${networkName} to cover minimum gas fees.`
-    } else {
-        if (!network || !network.enable) {
-            warningMessage.title = "Destination network not detected!"
-            warningMessage.body =
-                "We noticed you haven't added the destination network to your wallet. Please ensure you have enough native token on destination network to cover minimum gas fees so your funds do not get stuck."
-        } else {
-            warningMessage.title = "Gas prices currently unavailable"
-            warningMessage.body = `Due to external issues we're unable to retrieve current gas prices on ${network.name}. Please try again in a few moments.`
+    switch (nativeTokenStatus) {
+        case EnoughNativeTokensToSend.ENOUGH: {
+            return undefined
+        }
+        case EnoughNativeTokensToSend.NOT_ENOUGH: {
+            const title = "Your funds may get stuck!"
+            const networkNativeToken = network
+                ? network.nativeCurrency.symbol
+                : "native token"
+            const networkName = network
+                ? network.desc
+                : "the destination network"
+            const body = `We noticed you don't have enough ${networkNativeToken} on ${networkName} to cover minimum gas fees.`
+            return { title: title, body: body }
+        }
+        case EnoughNativeTokensToSend.UNKNOWN: {
+            if (!network || !network.enable) {
+                return {
+                    title: "Destination network not detected!",
+                    body: "We noticed you haven't added the destination network to your wallet. Please ensure you have enough native token on destination network to cover minimum gas fees so your funds do not get stuck.",
+                }
+            } else {
+                return {
+                    title: "Gas prices currently unavailable",
+                    body: `Due to external issues we're unable to retrieve current gas prices on ${network.name}. Please try again in a few moments.`,
+                }
+            }
         }
     }
+
     return warningMessage
 }

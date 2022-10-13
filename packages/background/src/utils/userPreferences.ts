@@ -18,7 +18,6 @@ export const getReleaseNotes = async (): Promise<ReleaseNote[]> => {
     }
 };
 
-
 export const generateOnDemandReleaseNotes = async (
     version: string
 ): Promise<ReleaseNote[]> => {
@@ -26,11 +25,10 @@ export const generateOnDemandReleaseNotes = async (
     const data = generateReleaseNotesNews(releaseNotesData, version, {
         lastVersionSeen: undefined,
         stackNotes: false,
-        currentVersionOnly: true
+        currentVersionOnly: true,
     });
     return data || [];
 };
-
 
 export const resolvePreferencesAfterWalletUpdate = async (
     userPreferences: Partial<PreferencesControllerState>,

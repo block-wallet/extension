@@ -203,9 +203,9 @@
     "@babel/helper-validator-identifier" "^7.18.6"
     to-fast-properties "^2.0.0"
 
-"@block-wallet/chains-assets@https://github.com/block-wallet/chains-assets#v0.0.14":
-  version "0.0.13"
-  resolved "https://github.com/block-wallet/chains-assets#b062d08ead2c181f357db83802e7abcfd4e185b0"
+"@block-wallet/chains-assets@https://github.com/block-wallet/chains-assets#v0.0.17":
+  version "0.0.17"
+  resolved "https://github.com/block-wallet/chains-assets#9579190a32f6f91bd817f6215d6a6e33384e4b6a"
 
 "@block-wallet/circomlib@^0.0.21":
   version "0.0.21"
@@ -6743,7 +6743,7 @@ prepend-http@^1.0.1:
   resolved "https://registry.yarnpkg.com/prepend-http/-/prepend-http-1.0.4.tgz#d4f4562b0ce3696e41ac52d0e002e57a635dc6dc"
   integrity sha512-PhmXi5XmoyKw1Un4E+opM2KcsJInDvKyuOumcjjw3waw86ZNjHwVUOOWLc4bCzLdcKNaWBH9e99sbWzDQsVaYg==
 
-prettier@^2.4.1:
+prettier@^2.7.1:
   version "2.7.1"
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.7.1.tgz#e235806850d057f97bb08368a4f7d899f7760c64"
   integrity sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==

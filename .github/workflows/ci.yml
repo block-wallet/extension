@@ -29,19 +29,19 @@ jobs:
       - name: Dependency UI cache
         uses: actions/cache@v3
         with:
-          path: "packages/ui/node_modules"
+          path: 'packages/ui/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Dependency Background cache
         uses: actions/cache@v3
         with:
-          path: "packages/background/node_modules"
+          path: 'packages/background/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Dependency Provider cache
         uses: actions/cache@v3
         with:
-          path: "packages/provider/node_modules"
+          path: 'packages/provider/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
@@ -51,20 +51,45 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT }}
           NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
-      - name: Check lint in un
+      - name: Check lint in all the packages
         run: |
+          echo "::group::UI"
           cd packages/ui/
-          yarn lint
+          if yarn lint; then
+            echo "::notice:: UI lint OK"
+            lint_ui=0
+          else
+            echo '::error:: UI lint failed. Run "yarn lint:fix" in the folder "packages/ui/" to fix it and commit your changes.'
+            lint_ui=1
+          fi
+          echo "::endgroup::"
 
-      - name: Check lint in background
-        run: |
-          cd packages/background/
-          yarn lint
+          echo "::group::Background"
+          cd ..
+          cd background/
+          if yarn lint; then
+            echo "::notice:: Background lint OK"
+            lint_background=0
+          else
+            echo '::error:: Background lint failed. Run "yarn lint:fix" in the folder "packages/background/" to fix it and commit your changes.'
+            lint_background=1
+          fi
+          echo "::endgroup::"
 
-      - name: Check lint in provider
-        run: |
-          cd packages/provider/
-          yarn lint
+          echo "::group::Provider"
+          cd ..
+          cd provider/
+          if yarn lint; then
+            echo "::notice:: Provider lint OK"
+            lint_provider=0
+          else
+            echo '::error:: Provider lint failed. Run "yarn lint:fix" in the folder "packages/provider/" to fix it and commit your changes.'
+            lint_provider=1
+          fi
+          echo "::endgroup::"
+          if [[ "$lint_ui" -ne "0" || "$lint_background" -ne "0" || "$lint_provider" -ne "0" ]]; then
+            exit 1
+          fi
 
   test:
     runs-on: ubuntu-latest
@@ -85,19 +110,19 @@ jobs:
       - name: Dependency UI cache
         uses: actions/cache@v3
         with:
-          path: "packages/ui/node_modules"
+          path: 'packages/ui/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Dependency Background cache
         uses: actions/cache@v3
         with:
-          path: "packages/background/node_modules"
+          path: 'packages/background/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Dependency Provider cache
         uses: actions/cache@v3
         with:
-          path: "packages/provider/node_modules"
+          path: 'packages/provider/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
@@ -131,6 +156,7 @@ jobs:
           make test/background
 
   build:
+    needs: [test]
     env:
       ENVIRONMENT: prod
     runs-on: ubuntu-latest
@@ -151,19 +177,19 @@ jobs:
       - name: Dependency UI cache
         uses: actions/cache@v3
         with:
-          path: "packages/ui/node_modules"
+          path: 'packages/ui/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Dependency Background cache
         uses: actions/cache@v3
         with:
-          path: "packages/background/node_modules"
+          path: 'packages/background/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Dependency Provider cache
         uses: actions/cache@v3
         with:
-          path: "packages/provider/node_modules"
+          path: 'packages/provider/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
@@ -240,7 +266,7 @@ jobs:
       - name: Install yarn
         run: |
           npm install --global yarn
-          
+
       - name: Cache e2e dependencies
         id: cache-cypress
         uses: actions/cache@v3

@@ -17,6 +17,7 @@ import AccountIcon from "../components/icons/AccountIcon"
 import ActivityAssetsView from "../components/ActivityAssetsView"
 import GenericTooltip from "../components/label/GenericTooltip"
 import AnimatedIcon, { AnimatedIconName } from "../components/AnimatedIcon"
+import Tooltip from "../components/label/Tooltip"
 
 // Utils
 import { formatHash, formatName } from "../util/formatAccount"
@@ -167,17 +168,28 @@ const PopupPage = () => {
             >
                 <div className="flex flex-row items-center justify-between w-full">
                     <div className="flex flex-row items-center space-x-3">
-                        <Link
-                            to="/accounts"
-                            className="transition duration-300"
-                            draggable={false}
-                            data-testid="navigate-account-link"
-                        >
-                            <AccountIcon
-                                className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
-                                fill={getAccountColor(account?.address)}
+                        <div className="relative flex flex-col items-start group">
+                            <Link
+                                to="/accounts"
+                                className="transition duration-300"
+                                draggable={false}
+                                data-testid="navigate-account-link"
+                            >
+                                <AccountIcon
+                                    className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
+                                    fill={getAccountColor(account?.address)}
+                                />
+                            </Link>
+                            <Tooltip
+                                className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-bold bg-gray-900 text-white"
+                                content={
+                                    <>
+                                        <div className="border-t-4 border-r-4 border-gray-900 absolute top-0 left-2 w-2 h-2 -mt-2.5 transform -rotate-45 -translate-x-1/2" />
+                                        <span>Switch Accounts</span>
+                                    </>
+                                }
                             />
-                        </Link>
+                        </div>
                         <div className="flex flex-row items-center space-x-1">
                             <AccountDisplay />
                             <Link

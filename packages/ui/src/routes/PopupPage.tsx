@@ -185,7 +185,7 @@ const PopupPage = () => {
                                 content={
                                     <>
                                         <div className="border-t-4 border-r-4 border-gray-900 absolute top-0 left-2 w-2 h-2 -mt-2.5 transform -rotate-45 -translate-x-1/2" />
-                                        <span>Switch Accounts</span>
+                                        <span>My Accounts</span>
                                     </>
                                 }
                             />

@@ -233,7 +233,7 @@ describe('Bridge Controller', () => {
         methodSignatureSandox.restore();
     });
 
-    describe('Li.Fi Aggregator', () => {
+    describe.only('Li.Fi Aggregator', () => {
         describe('Available chains', () => {
             before(() => {
                 networkController.setNetwork('goerli');
@@ -246,7 +246,7 @@ describe('Bridge Controller', () => {
             it('Should update the available chains memory state correctly', async () => {
                 const newChains = [
                     {
-                        id: 2000,
+                        id: 909202920,
                         logo: '',
                         name: 'chain_2000',
                         test: false,

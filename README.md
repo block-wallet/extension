@@ -10,7 +10,6 @@
   </a>
 </p>
 
-
 <div align="center" style="text-align:center">
 
 [![CI](https://github.com/block-wallet/extension/actions/workflows/ci.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/ci.yml) [![Release (manual)](https://github.com/block-wallet/extension/actions/workflows/build.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/build.yml) [![Release (automated)](https://github.com/block-wallet/extension/actions/workflows/release.yml/badge.svg)](https://github.com/block-wallet/extension/actions/workflows/release.yml)

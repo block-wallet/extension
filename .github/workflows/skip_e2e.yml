@@ -15,7 +15,7 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    #if: startsWith(github.ref_name, 'docs/') == true || startsWith(github.ref_name, 'chore/') == true || startsWith(github.ref_name, 'release/') == true
+    if: startsWith(github.head_ref, 'docs/') == true || startsWith(github.head_ref, 'chore/') == true || startsWith(github.head_ref, 'release/') == true
     steps:
       # Fake job to skip the required status checks on the PR
       - name: Skip e2e

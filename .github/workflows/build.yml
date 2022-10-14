@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       extension-version:
-        description: "Extension version to be released"
+        description: 'Extension version to be released'
         required: true
       release-notes:
-        description: "Release notes of the extension"
+        description: 'Release notes of the extension'
         required: true
       pre-release:
         type: boolean
@@ -39,11 +39,11 @@ jobs:
         uses: booxmedialtd/ws-action-parse-semver@v1
         with:
           input_string: ${{ github.event.inputs.extension-version }}
-          version_extractor_regex: "v(.*)$"
+          version_extractor_regex: 'v(.*)$'
 
       - name: Validate release notes is a valid JSON
         env:
-          DATA: "${{ github.event.inputs.release-notes }}"
+          DATA: '${{ github.event.inputs.release-notes }}'
           READ_ONLY: 1
         run: |
           wget https://raw.githubusercontent.com/block-wallet/release-helpers/main/validate_release_notes_and_convert_to_markdown.py -O validate_release_notes_and_convert_to_markdown.py
@@ -131,7 +131,7 @@ jobs:
       - name: Update release notes
         env:
           VERSION: ${{ steps.remove_preffix.outputs.version }}
-          DATA: "${{ github.event.inputs.release-notes }}"
+          DATA: '${{ github.event.inputs.release-notes }}'
         run: |
           FILE=release-notes.json python3 update_file.py
           rm update_file.py
@@ -156,19 +156,19 @@ jobs:
       - name: Dependency UI cache
         uses: actions/cache@v3
         with:
-          path: "packages/ui/node_modules"
+          path: 'packages/ui/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Dependency Background cache
         uses: actions/cache@v3
         with:
-          path: "packages/background/node_modules"
+          path: 'packages/background/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Dependency Provider cache
         uses: actions/cache@v3
         with:
-          path: "packages/provider/node_modules"
+          path: 'packages/provider/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
@@ -315,7 +315,7 @@ jobs:
 
       - name: Upload version and notes to S3
         env:
-          DATA: "${{ github.event.inputs.release-notes }}"
+          DATA: '${{ github.event.inputs.release-notes }}'
         run: |
           echo "{" > version.json
           echo "\"extension\": \"${{ github.event.inputs.extension-version }}\"," >> version.json
@@ -394,7 +394,7 @@ jobs:
               "attachments": [
                 {
                   "color": "good",
-                  "pretext": "The pull request was created. After reviewing it, please merge it to continue the release process that will launch *Release (automated)*. CC: <@U01H6J242BY>",
+                  "pretext": "The pull request was created. After reviewing it, please merge it to continue the release process that will launch *Release (automated)*. CC: <@U01H6J242BY>, <@U021GBLL00Z>",
                   "author_name": "GitHub Pull Request ${{ github.event.inputs.extension-version }}",
                   "author_link": "${{ needs.pull_request.outputs.pr_url }}",
                   "title": "GitHub Pull Request for the release ${{ github.event.inputs.extension-version }} created as draft"

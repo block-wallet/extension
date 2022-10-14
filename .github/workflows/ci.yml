@@ -1,7 +1,17 @@
 name: CI
 
 on:
-  push:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '**.js'
+      - '**.ts'
+      - '**.tsx'
+      - '**.css'
+      - '**.json'
+      - '**.html'
+      - '**.nvmrc'
 
 env:
   BLOCK_WALLET_URL: url.txt
@@ -12,6 +22,7 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    if: startsWith(github.ref_name, 'dependabot/') == false
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v3

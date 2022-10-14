@@ -432,10 +432,6 @@ export default class BridgeController extends BaseController<
             aggregator,
             bridgeTx
         );
-        this._tokenController.attemptAddToken(
-            bridgeTx.params.toToken.address,
-            bridgeTx.params.toChainId
-        );
         return bridgePromise;
     };
 
@@ -532,6 +528,9 @@ export default class BridgeController extends BaseController<
                 return result;
             }
 
+            //add token if sending tx has been submitted
+            this._tokenController.attemptAddToken(toToken.address, toChainId);
+
             newTransactionMeta.transferType = {
                 amount: BigNumber.from(fromAmount),
                 currency: fromToken.symbol,
@@ -627,7 +626,7 @@ export default class BridgeController extends BaseController<
         fromChainId: number;
         toChainId: number;
         toToken: IToken;
-    }): Promise<void> {
+    }): Promise<string | undefined> {
         const startTime = new Date().getTime();
         let receivingTxFetched = false;
         let receivingTxHash: string | undefined;
@@ -717,6 +716,7 @@ export default class BridgeController extends BaseController<
                 }
             }
         }
+        return receivingTxHash;
     }
 
     private _storePendingTransaction({
@@ -849,6 +849,21 @@ export default class BridgeController extends BaseController<
             }
         }
 
+        const toAmount = sendingTransaction.bridgeParams?.toTokenAmount;
+        let txTime: number | undefined;
+
+        //If the transaction was mined and we have its block number, the fetch timestamp
+        if (isSuccess && !isNil(txReceipt.blockNumber)) {
+            const block = await fetchBlockWithRetries(
+                txReceipt.blockNumber,
+                receivingChainIdProvider
+            );
+            if (block) {
+                //transform to miliseconds
+                txTime = block.timestamp * 1000;
+            }
+        }
+
         const contractSignatureParser = new ContractSignatureParser(
             this._networkController,
             toChainId
@@ -865,21 +880,6 @@ export default class BridgeController extends BaseController<
             accountAddress,
             toChainId
         );
-
-        const toAmount = sendingTransaction.bridgeParams?.toTokenAmount;
-        let txTime: number | undefined;
-
-        //If the transaction was mined and we have its block number, the fetch timestamp
-        if (isSuccess && !isNil(txReceipt.blockNumber)) {
-            const block = await fetchBlockWithRetries(
-                txReceipt.blockNumber,
-                receivingChainIdProvider
-            );
-            if (block) {
-                //transform to miliseconds
-                txTime = block.timestamp * 1000;
-            }
-        }
 
         this._updateStateTransaction(
             toChainId,

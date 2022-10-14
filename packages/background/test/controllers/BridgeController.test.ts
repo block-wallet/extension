@@ -31,15 +31,14 @@ import NETWORK_TOKENS_LIST from '@block-wallet/background/controllers/erc-20/Tok
 import { IToken } from '@block-wallet/background/controllers/erc-20/Token';
 import { ContractSignatureParser } from '@block-wallet/background/controllers/transactions/ContractSignatureParser';
 import { expectThrowsAsync } from 'test/utils/expectThrowsAsync.test';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { getChainListItem } from '@block-wallet/background/utils/chainlist';
 import { BRIDGE_REFERRER_ADDRESS } from '@block-wallet/background/utils/types/lifi';
-import {
-    MetaType,
-    TransactionCategories,
-    TransactionStatus,
-} from '@block-wallet/background/controllers/transactions/utils/types';
+import MOCKS from '../mocks/mock-bridge-operations';
 import TokenAllowanceController from '@block-wallet/background/controllers/erc-20/transactions/TokenAllowanceController';
+import { sleep } from '@block-wallet/background/utils/sleep';
+import MockProvider from 'test/mocks/mock-provider';
+import { TransactionStatus } from '@block-wallet/background/controllers/transactions/utils/types';
 
 const TOKEN_A_GOERLI: IToken = {
     address: 'token_a_g',
@@ -81,8 +80,9 @@ const mockPromiseResponse = <T>(r: T): Promise<T> =>
 
 describe('Bridge Controller', () => {
     const quoteSandbox = sinon.createSandbox();
-
+    const methodSignatureSandox = sinon.createSandbox();
     const sandbox = sinon.createSandbox();
+
     const accounts = {
         goerli: [
             {
@@ -183,13 +183,61 @@ describe('Bridge Controller', () => {
         );
     });
 
+    beforeEach(() => {
+        methodSignatureSandox
+            .stub(ContractSignatureParser.prototype, 'getMethodSignature')
+            .returns(
+                Promise.resolve({
+                    name: 'Bridge',
+                    args: [
+                        {
+                            name: 'caller',
+                            type: 'address',
+                            value: '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                        },
+                        {
+                            name: 'desc',
+                            type: 'tuple',
+                            value: [
+                                '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                                '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                                '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1',
+                                {
+                                    type: 'BigNumber',
+                                    hex: '0x2386f26fc10000',
+                                },
+                                {
+                                    type: 'BigNumber',
+                                    hex: '0x0b9b43e8fe7b3b9fa9',
+                                },
+                                {
+                                    type: 'BigNumber',
+                                    hex: '0x00',
+                                },
+                                '0x',
+                            ],
+                        },
+                        {
+                            name: 'data',
+                            type: 'bytes',
+                            value: '0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000180000000000000000000000000000000000000000000000000000000000000022000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000064d1660f99000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000000000000000000000003110a855333bfb922aecb1b3542ba2fde28d204f00000000000000000000000000000000000000000000000000002d79883d200000000000000000000000000000000000000000000000000000000000000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200000000000000000000000000000000000000000000000000235978e783e00000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000004d0e30db000000000000000000000000000000000000000000000000000000000000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000044a9059cbb000000000000000000000000d8a07e9fe071106bf29536b93e8c9a26527af78700000000000000000000000000000000000000000000000000235978e783e0000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a4b757fed6000000000000000000000000d8a07e9fe071106bf29536b93e8c9a26527af787000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200000000000000000000000041a3dba3d677e573636ba691a70ff2d606c296660000000000000000002dc6c01111111254fb6c44bac0bed2854e76f90643097d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+                        },
+                    ],
+                })
+            );
+    });
+
     afterEach(function () {
         sandbox.restore();
         quoteSandbox.restore();
+        methodSignatureSandox.restore();
     });
 
-    describe('Li.Fi Aggregator', () => {
+    describe.only('Li.Fi Aggregator', () => {
         describe('Available chains', () => {
+            before(() => {
+                networkController.setNetwork('goerli');
+            });
             it('Should initialize the available chains correctly', () => {
                 expect(
                     bridgeController.UIStore.getState().availableBridgeChains
@@ -198,7 +246,7 @@ describe('Bridge Controller', () => {
             it('Should update the available chains memory state correctly', async () => {
                 const newChains = [
                     {
-                        id: 2000,
+                        id: 909202920,
                         logo: '',
                         name: 'chain_2000',
                         test: false,
@@ -240,6 +288,9 @@ describe('Bridge Controller', () => {
         });
         describe('Get tokens', () => {
             let supportedTokenStub: SinonStub | null = null;
+            before(() => {
+                networkController.setNetwork('goerli');
+            });
             beforeEach(() => {
                 supportedTokenStub = sandbox
                     .stub(BridgeAPI.LIFI_BRIDGE, 'getSupportedTokensForChain')
@@ -272,6 +323,9 @@ describe('Bridge Controller', () => {
             });
         });
         describe('Avaialable Routes', () => {
+            before(() => {
+                networkController.setNetwork('goerli');
+            });
             afterEach(() => {
                 sandbox.restore();
             });
@@ -326,6 +380,9 @@ describe('Bridge Controller', () => {
             });
         });
         describe('Quotes and Allowance', () => {
+            before(() => {
+                networkController.setNetwork('goerli');
+            });
             beforeEach(() => {
                 quoteSandbox.restore();
                 //mock query ok
@@ -381,53 +438,11 @@ describe('Bridge Controller', () => {
                             tool: 'custom_tool',
                         })
                     );
-
-                quoteSandbox
-                    .stub(
-                        ContractSignatureParser.prototype,
-                        'getMethodSignature'
-                    )
-                    .returns(
-                        Promise.resolve({
-                            name: 'Bridge',
-                            args: [
-                                {
-                                    name: 'caller',
-                                    type: 'address',
-                                    value: '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
-                                },
-                                {
-                                    name: 'desc',
-                                    type: 'tuple',
-                                    value: [
-                                        '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
-                                        '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
-                                        '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1',
-                                        {
-                                            type: 'BigNumber',
-                                            hex: '0x2386f26fc10000',
-                                        },
-                                        {
-                                            type: 'BigNumber',
-                                            hex: '0x0b9b43e8fe7b3b9fa9',
-                                        },
-                                        {
-                                            type: 'BigNumber',
-                                            hex: '0x00',
-                                        },
-                                        '0x',
-                                    ],
-                                },
-                                {
-                                    name: 'data',
-                                    type: 'bytes',
-                                    value: '0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000180000000000000000000000000000000000000000000000000000000000000022000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000064d1660f99000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000000000000000000000003110a855333bfb922aecb1b3542ba2fde28d204f00000000000000000000000000000000000000000000000000002d79883d200000000000000000000000000000000000000000000000000000000000000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200000000000000000000000000000000000000000000000000235978e783e00000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000004d0e30db000000000000000000000000000000000000000000000000000000000000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000044a9059cbb000000000000000000000000d8a07e9fe071106bf29536b93e8c9a26527af78700000000000000000000000000000000000000000000000000235978e783e0000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a4b757fed6000000000000000000000000d8a07e9fe071106bf29536b93e8c9a26527af787000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200000000000000000000000041a3dba3d677e573636ba691a70ff2d606c296660000000000000000002dc6c01111111254fb6c44bac0bed2854e76f90643097d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
-                                },
-                            ],
-                        })
-                    );
             });
             describe('Quotes without allowance check', () => {
+                before(() => {
+                    networkController.setNetwork('goerli');
+                });
                 it('Should return QuoteNotFound error if there is no quote', async () => {
                     quoteSandbox.restore();
                     //mock errored query
@@ -499,12 +514,15 @@ describe('Bridge Controller', () => {
                 });
             });
             describe('Check Allowance', () => {
+                before(() => {
+                    networkController.setNetwork('goerli');
+                });
                 it('Should fail to check asset allowance', async () => {
                     sandbox.restore();
                     sandbox
                         .stub(tokenOperationsController, 'allowance')
                         .returns(
-                            new Promise<BigNumber>((resolve, reject) => {
+                            new Promise<BigNumber>((_, reject) => {
                                 // 1 BLANK
                                 reject('Error');
                             })
@@ -618,212 +636,133 @@ describe('Bridge Controller', () => {
             });
         });
         describe('Execute bridge', () => {
-            before(() => {
+            const transactionControllerSandbox = sinon.createSandbox();
+            const mainnetNetworkProviderSandox = sinon.createSandbox();
+            const tokenControllerSandbox = sinon.createSandbox();
+            let mockMainnetProvider: ReturnType<typeof MockProvider>;
+            const lifiSandbox = sinon.createSandbox();
+            const sendTx = MOCKS.mockBridgeTransactionAfterAdd();
+            const receivingTxByHash = MOCKS.mockGetReceivingTxByHash();
+            let tokenControllerStubAttepmtAddToken: sinon.SinonSpy;
+
+            beforeEach(async () => {
                 networkController.setNetwork('polygon');
-            });
-            after(() => {
-                networkController = getNetworkControllerInstance();
-            });
-            it('Should submit a bridge transaction', async () => {
-                const tokenControllerStubAttepmtAddToken = sinon.spy(
+                //await for the provider to be initialized
+                //tried with the networkController.waitUntilNetworkLoaded
+                //but it is not working since the proivider is already "ready" for the old network.
+                await sleep(100);
+
+                tokenControllerStubAttepmtAddToken = tokenControllerSandbox.spy(
                     tokenController,
                     'attemptAddToken'
                 );
-                sinon.stub(transactionController, 'addTransaction').returns(
-                    new Promise((resolve) => {
-                        resolve({
-                            result: new Promise((resolve) => {
-                                resolve(
-                                    '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92'
-                                );
-                            }),
-                            transactionMeta: {
-                                approveTime: 1656527770143,
-                                blocksDropCount: 0,
-                                chainId: 137,
-                                gasEstimationFailed: false,
-                                id: 'a7f2cd6c-fa81-4ede-8448-d23a2e315b15',
-                                loadingGasValues: false,
-                                metaType: MetaType.REGULAR,
-                                methodSignature: {
-                                    args: [
-                                        {
-                                            name: 'caller',
-                                            type: 'address',
-                                            value: '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
-                                        },
-                                        {
-                                            name: 'desc',
-                                            type: 'tuple',
-                                            value: [
-                                                '0x0000000000000000000000000000000000000000',
-                                                '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
-                                                '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1',
-                                                {
-                                                    type: 'BigNumber',
-                                                    hex: '0x2386f26fc10000',
-                                                },
-                                                {
-                                                    type: 'BigNumber',
-                                                    hex: '0x0b9b43e8fe7b3b9fa9',
-                                                },
-                                                {
-                                                    type: 'BigNumber',
-                                                    hex: '0x00',
-                                                },
-                                                '0x',
-                                            ],
-                                        },
-                                        {
-                                            name: 'data',
-                                            type: 'bytes',
-                                            value: '0x327a564d00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000160f1111791883d510a6e182e0100606eee7e4e4de3ae9c5232e72a26c3686c024f0000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007d1afa7b718fb893db30a3abc0cfc608aacfebb00000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000001672895d74129699c00000000000000000000000000000000000000000000020d11e176448b25fc41000000000000000000000000000000000000000000000000000000006308dbd30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000054d41544943000000000000000000000000000000000000000000000000000000',
-                                        },
-                                    ],
-                                    name: 'Bridge',
-                                },
-                                origin: 'blank',
-                                rawTransaction:
-                                    '0x327a564d00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000160f1111791883d510a6e182e0100606eee7e4e4de3ae9c5232e72a26c3686c024f0000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007d1afa7b718fb893db30a3abc0cfc608aacfebb00000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000001672895d74129699c00000000000000000000000000000000000000000000020d11e176448b25fc41000000000000000000000000000000000000000000000000000000006308dbd30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000054d41544943000000000000000000000000000000000000000000000000000000',
-                                status: TransactionStatus.CONFIRMED,
-                                submittedTime: 1656527771238,
-                                bridgeParams: {
-                                    bridgeImplementation:
-                                        BridgeImplementation.LIFI_BRIDGE,
-                                    blockWalletFee: BigNumber.from('0'),
-                                    fromToken: {
-                                        address:
-                                            '0x0000000000000000000000000000000000000000',
-                                        decimals: 18,
-                                        logo: 'https://tokens.1inch.io/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png',
-                                        name: 'MATIC',
-                                        symbol: 'MATIC',
-                                        type: '',
-                                    },
-                                    fromTokenAmount: '10000000000000000000000',
-                                    toToken: {
-                                        address:
-                                            '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0',
-                                        decimals: 18,
-                                        logo: 'https://tokens.1inch.io/0xd533a949740bb3306d119cc777fa900ba034cd52.png',
-                                        name: 'MATIC',
-                                        symbol: 'MATIC',
-                                        type: '',
-                                    },
-                                    toTokenAmount: '9985390803817199636125',
-                                    tool: 'hop',
-                                    fromChainId: 137,
-                                    toChainId: 1,
-                                    role: 'SENDING',
-                                },
-                                time: 1656527769648,
-                                transactionCategory:
-                                    TransactionCategories.BRIDGE,
-                                transactionParams: {
-                                    chainId: 137,
-                                    data: '0x327a564d00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000160f1111791883d510a6e182e0100606eee7e4e4de3ae9c5232e72a26c3686c024f0000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007d1afa7b718fb893db30a3abc0cfc608aacfebb00000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000001672895d74129699c00000000000000000000000000000000000000000000020d11e176448b25fc41000000000000000000000000000000000000000000000000000000006308dbd30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000054d41544943000000000000000000000000000000000000000000000000000000',
-                                    from: '0x4A3CD1E36091a66cf6dea0A77dAd564fFC8547a1',
-                                    gasLimit: BigNumber.from('0x149970'),
-                                    hash: '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92',
-                                    maxFeePerGas:
-                                        BigNumber.from('0x3902438500'),
-                                    maxPriorityFeePerGas:
-                                        BigNumber.from('0x20895d1cd1'),
-                                    nonce: 5,
-                                    r: '0x2bd56f6609b4597a75b656f0e1a007b5d7e435d4ef55aa8897b3fc08507c31e4',
-                                    s: '0x33be7bb56f38e57ea4ebdecb3eacccd29daae2d6a0b89ff9f1ac146d870f6301',
-                                    to: '0x1111111254fb6c44bac0bed2854e76f90643097d',
-                                    type: 2,
-                                    v: 0,
-                                    value: BigNumber.from(
-                                        '0x021e19e0c9bab2400000'
-                                    ),
-                                },
-                                transactionReceipt: {
-                                    blockHash:
-                                        '0x88fc8eec1688b14fdb02d7ee88f8f4f0d3c304fdbc7aced63b31bbc2691645b2',
-                                    blockNumber: 30146188,
-                                    byzantium: true,
-                                    confirmations: 5,
-                                    contractAddress:
-                                        '0x1111111254fb6c44bac0bed2854e76f90643097d',
-                                    cumulativeGasUsed:
-                                        BigNumber.from('0x75033c'),
-                                    effectiveGasPrice:
-                                        BigNumber.from('0x387bb41d82'),
-                                    from: '0x4A3CD1E36091a66cf6dea0A77dAd564fFC8547a1',
-                                    gasUsed: BigNumber.from('0x03212a'),
-                                    logs: [],
-                                    logsBloom:
-                                        '0x00200000000000000000000080000000000000000000000000000000200000001000000000008000000000100000000000008000000000000000000000000000000080000000401000000028000000a000000400000000000001000080000a0000400000000000000080200000000020000000000000000080000012000000000000010000001000000000000000001000000001002000080080004000280000200000000000000000000000000000004040000000000020000000000000004001000002000000000801000008801000000000000000801000108000000000000000100020008000000000000000000000000000010000400000000000100800',
-                                    status: 1,
-                                    to: '0x4A3CD1E36091a66cf6dea0A77dAd564fFC8547a1',
-                                    transactionHash:
-                                        '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92',
-                                    transactionIndex: 43,
-                                    type: 2,
-                                },
-                                verifiedOnBlockchain: true,
-                            },
-                        });
-                    })
-                );
-                sinon
+                transactionControllerSandbox
+                    .stub(transactionController, 'addTransaction')
+                    .returns(
+                        new Promise((resolve) => {
+                            resolve({
+                                result: new Promise((resolve) => {
+                                    resolve(
+                                        '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92'
+                                    );
+                                }),
+                                transactionMeta: sendTx,
+                            });
+                        })
+                    );
+
+                transactionControllerSandbox
                     .stub(transactionController, 'updateTransaction')
                     .returns();
-                sinon.stub(transactionController, 'approveTransaction').returns(
-                    new Promise((resolve) => {
-                        resolve();
-                    })
+                transactionControllerSandbox
+                    .stub(transactionController, 'approveTransaction')
+                    .returns(
+                        new Promise((resolve) => {
+                            resolve();
+                        })
+                    );
+                transactionControllerSandbox
+                    .stub(transactionController, 'getTransaction')
+                    .withArgs(sendTx.id)
+                    .returns(sendTx);
+            });
+
+            afterEach(() => {
+                mainnetNetworkProviderSandox.restore();
+                lifiSandbox.restore();
+                tokenControllerSandbox.restore();
+                transactionControllerSandbox.restore();
+            });
+
+            it('Should not invoke add token if sending transaction has failed', async () => {
+                const sendTxWithoutHash = {
+                    ...sendTx,
+                    transactionParams: {
+                        ...sendTx.transactionParams,
+                        hash: undefined,
+                    },
+                };
+                transactionControllerSandbox.restore();
+                transactionControllerSandbox
+                    .stub(transactionController, 'addTransaction')
+                    .returns(
+                        new Promise((resolve) => {
+                            resolve({
+                                result: new Promise((resolve) => {
+                                    resolve(
+                                        '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92'
+                                    );
+                                }),
+                                transactionMeta: sendTxWithoutHash,
+                            });
+                        })
+                    );
+
+                transactionControllerSandbox
+                    .stub(transactionController, 'approveTransaction')
+                    .returns(
+                        new Promise((resolve) => {
+                            resolve();
+                        })
+                    );
+                transactionControllerSandbox
+                    .stub(transactionController, 'getTransaction')
+                    .withArgs(sendTx.id)
+                    .returns(sendTxWithoutHash);
+
+                await bridgeController.executeBridge(
+                    BridgeImplementation.LIFI_BRIDGE,
+                    MOCKS.mockNewBridgeTransactionCallParameters()
                 );
+
+                expect(tokenControllerStubAttepmtAddToken.callCount).to.equal(
+                    0
+                );
+            });
+
+            it('Should submit a successful bridge transaction and wait for final state in an unknonw chain', async () => {
+                mockMainnetProvider = MockProvider(
+                    'mainnet',
+                    mainnetNetworkProviderSandox
+                );
+                lifiSandbox
+                    .stub(BridgeAPI.LIFI_BRIDGE, 'getStatus')
+                    .returns(
+                        Promise.resolve(
+                            MOCKS.mockBridgeSuccessfulOperation(sendTx)
+                        )
+                    );
+                mainnetNetworkProviderSandox
+                    .stub(networkController, 'getProviderForChainId')
+                    .withArgs(1)
+                    .returns(undefined);
 
                 const result = await bridgeController.executeBridge(
                     BridgeImplementation.LIFI_BRIDGE,
-                    {
-                        params: {
-                            fromToken: {
-                                address:
-                                    '0x0000000000000000000000000000000000000000',
-                                decimals: 18,
-                                logo: 'https://tokens.1inch.io/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png',
-                                name: 'MATIC',
-                                symbol: 'MATIC',
-                                type: '',
-                            },
-                            toToken: {
-                                address:
-                                    '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0',
-                                decimals: 18,
-                                logo: 'https://tokens.1inch.io/0xd533a949740bb3306d119cc777fa900ba034cd52.png',
-                                name: 'MATIC',
-                                symbol: 'MATIC',
-                                type: '',
-                            },
-                            tool: 'hop',
-                            blockWalletFee: BigNumber.from(0),
-                            fromAmount: '10000000000000000000000',
-                            toAmount: '9985390803817199636125',
-                            fromChainId: 137,
-                            toChainId: 1,
-                            spender:
-                                '0x362fA9D0bCa5D19f743Db50738345ce2b40eC99f',
-                            transactionRequest: {
-                                chainId: 137,
-                                data: '0x327a564d00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000160f1111791883d510a6e182e0100606eee7e4e4de3ae9c5232e72a26c3686c024f0000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007d1afa7b718fb893db30a3abc0cfc608aacfebb00000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000004a3cd1e36091a66cf6dea0a77dad564ffc8547a1000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000021e19e0c9bab2400000000000000000000000000000000000000000000000000001672895d74129699c00000000000000000000000000000000000000000000020d11e176448b25fc41000000000000000000000000000000000000000000000000000000006308dbd30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000054d41544943000000000000000000000000000000000000000000000000000000',
-                                from: '0x4A3CD1E36091a66cf6dea0A77dAd564fFC8547a1',
-                                gasLimit: '0x149970',
-                                gasPrice: '0x0861c46816',
-                                to: '0x362fA9D0bCa5D19f743Db50738345ce2b40eC99f',
-                                value: '0x021e19e0c9bab2400000',
-                            },
-                        },
-                        customNonce: 5,
-                        gasPrice: BigNumber.from('0'),
-                        maxFeePerGas: BigNumber.from('0x3902438500'),
-                        maxPriorityFeePerGas: BigNumber.from('0x20895d1cd1'),
-                    }
+                    MOCKS.mockNewBridgeTransactionCallParameters()
                 );
 
+                //match sending tx parameters
                 expect(result).not.to.be.undefined;
                 expect(
                     tokenControllerStubAttepmtAddToken.callCount
@@ -831,6 +770,145 @@ describe('Bridge Controller', () => {
                 expect(result).to.be.equal(
                     '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92'
                 );
+
+                //wait for the full operation to be completed
+                await sleep(300);
+
+                const pendingIncomingTransactions =
+                    bridgeController.store.getState()
+                        .perndingBridgeReceivingTransactions[1][
+                        '0x4A3CD1E36091a66cf6dea0A77dAd564fFC8547a1'
+                    ];
+
+                expect(pendingIncomingTransactions).not.to.be.undefined;
+                expect(pendingIncomingTransactions).to.have.lengthOf(1);
+
+                const firstPendingTx = pendingIncomingTransactions[0];
+
+                expect(firstPendingTx.hash).to.equal(receivingTxByHash.hash);
+                expect(firstPendingTx.toToken).not.to.be.undefined;
+                expect(firstPendingTx.sendingTransactionId).to.equal(sendTx.id);
+            });
+
+            it('Should submit a successful bridge transaction and wait for final state in a known chain', async () => {
+                mockMainnetProvider = MockProvider(
+                    'mainnet',
+                    mainnetNetworkProviderSandox
+                );
+
+                lifiSandbox
+                    .stub(BridgeAPI.LIFI_BRIDGE, 'getStatus')
+                    .returns(
+                        Promise.resolve(
+                            MOCKS.mockBridgeSuccessfulOperation(sendTx)
+                        )
+                    );
+
+                mainnetNetworkProviderSandox
+                    .stub(networkController, 'getProviderForChainId')
+                    .withArgs(1)
+                    .returns(mockMainnetProvider);
+
+                //We need to do this to avoid ContractSignatureParser fail when creating a new instance.
+                //As this class needs a provider to be injected, we set null to avoid replicating all prvoider methods.
+                mainnetNetworkProviderSandox
+                    .stub(networkController, 'getProviderFromName')
+                    .withArgs('mainnet')
+                    .returns(null as any);
+
+                mockMainnetProvider.getTransaction.callsFake(
+                    (transactionHash: string | Promise<string>) => {
+                        expect(transactionHash).to.equal(
+                            receivingTxByHash.hash
+                        );
+                        return Promise.resolve(receivingTxByHash) as any;
+                    }
+                );
+
+                mockMainnetProvider.getBlock.callsFake((blockNumber) => {
+                    expect(blockNumber).to.equal(receivingTxByHash.blockNumber);
+                    return Promise.resolve({
+                        hash: '0xa86600048ec06e339e3690f76caf1c1f404b83d410205a95b85ca842082c8c23',
+                        parentHash:
+                            '0xa86600048ec06e339e3690f76caf1c1f404b83d410205a95b85ca842082c8c22',
+                        number: 24539324,
+                        transactions: [],
+                        timestamp: 1665404450000,
+                        nonce: '20',
+                        difficulty: 1,
+                        _difficulty: BigNumber.from(10),
+                        gasLimit: BigNumber.from(210000),
+                        gasUsed: BigNumber.from(210000),
+                        miner: '1',
+                        extraData: '',
+                    });
+                });
+
+                tokenControllerSandbox
+                    .stub(tokenController, 'getToken')
+                    .withArgs(
+                        sendTx.bridgeParams?.toToken.address!,
+                        sinon.match.string,
+                        1
+                    )
+                    .callsFake(() => {
+                        return Promise.resolve(
+                            sendTx.bridgeParams?.toToken as IToken
+                        );
+                    });
+
+                //mock
+                mockMainnetProvider.getTransactionReceipt.callsFake(() => {
+                    return Promise.resolve(MOCKS.mockGetReceivingTxReceipt());
+                });
+
+                const result = await bridgeController.executeBridge(
+                    BridgeImplementation.LIFI_BRIDGE,
+                    MOCKS.mockNewBridgeTransactionCallParameters()
+                );
+
+                //match sending tx parameters
+                expect(result).not.to.be.undefined;
+                expect(
+                    tokenControllerStubAttepmtAddToken.callCount
+                ).to.be.equal(1);
+                expect(result).to.be.equal(
+                    '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92'
+                );
+
+                //wait for the full operation to be completed
+                await sleep(300);
+
+                const bridgingIconmingTXs =
+                    bridgeController.store.getState()
+                        .bridgeReceivingTransactions[1][
+                        '0x4A3CD1E36091a66cf6dea0A77dAd564fFC8547a1'
+                    ];
+
+                expect(bridgingIconmingTXs).not.to.be.undefined;
+                expect(Object.keys(bridgingIconmingTXs)).to.have.lengthOf(1);
+
+                const incomingBridgingTx =
+                    bridgingIconmingTXs[receivingTxByHash.hash];
+
+                expect(incomingBridgingTx).not.to.be.undefined;
+
+                //block timestamp
+                expect(incomingBridgingTx.confirmationTime).to.be.equal(
+                    1665404450000000
+                );
+
+                expect(incomingBridgingTx.chainId).to.be.equal(1);
+                expect(incomingBridgingTx.status).to.be.equal(
+                    TransactionStatus.CONFIRMED
+                );
+                expect(incomingBridgingTx.bridgeParams).not.to.be.undefined;
+                expect(incomingBridgingTx.bridgeParams?.role).to.be.equal(
+                    'RECEIVING'
+                );
+                expect(
+                    incomingBridgingTx.bridgeParams?.fromChainId
+                ).to.be.equal(137);
             });
         });
     });

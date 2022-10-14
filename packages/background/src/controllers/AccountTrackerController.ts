@@ -1155,4 +1155,29 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             return [];
         });
     }
+
+    public async getAccountNativeTokenBalanceForChain(
+        chainId: number
+    ): Promise<BigNumber | undefined> {
+        const selectedAddress =
+            this._preferencesController.getSelectedAddress();
+
+        const provider = this._networkController.getProviderForChainId(chainId);
+
+        if (provider === undefined) {
+            return undefined;
+        }
+        try {
+            const balances = await this._getAddressBalances(
+                chainId,
+                provider,
+                selectedAddress,
+                [NATIVE_TOKEN_ADDRESS]
+            );
+
+            return balances[NATIVE_TOKEN_ADDRESS];
+        } catch {
+            return undefined;
+        }
+    }
 }

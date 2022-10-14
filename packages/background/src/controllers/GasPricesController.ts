@@ -216,6 +216,274 @@ export class GasPricesController extends BaseController<GasPricesControllerState
     };
 
     /**
+     * Fetches the blockchain to get the current gas prices.
+     *
+     * @param chainId
+     * @param isEIP1559Compatible
+     * @returns GasPriceData
+     */
+    private async _fetchFeeDataFromChain(
+        chainId: number,
+        isEIP1559Compatible: boolean
+    ): Promise<GasPriceData> {
+        let gasPriceData: GasPriceData = {} as GasPriceData;
+
+        if (
+            this._isEth_feeHistorySupportedByChain(chainId, isEIP1559Compatible)
+        ) {
+            const provider = this._networkController.getProvider();
+            const networkCalls = await Promise.all([
+                // Get blockBaseFee of the last block
+                this._networkController.getLatestBlock(),
+                // Get eth_feeHistory
+                // gets 10%, 25% and 65% percentile fee history of txs included in last 5 blocks
+                provider.send('eth_feeHistory', [
+                    '0x5',
+                    'latest',
+                    [10, 25, 65],
+                ]),
+            ]);
+
+            const blockGasLimit: BigNumber = BigNumber.from(
+                networkCalls[0].gasLimit
+            );
+
+            const blockBaseFee: BigNumber = BigNumber.from(
+                networkCalls[0].baseFeePerGas
+            );
+            const feeHistory: FeeHistory = networkCalls[1];
+
+            // last element in array is the next block after the latest (estimated)
+            let estimatedBaseFee = blockBaseFee;
+            if (feeHistory.baseFeePerGas) {
+                estimatedBaseFee = BigNumber.from(
+                    feeHistory.baseFeePerGas[
+                        feeHistory.baseFeePerGas.length - 1
+                    ]
+                );
+            }
+
+            const rewardsSlow: BigNumber[] = [];
+            const rewardsAverage: BigNumber[] = [];
+            const rewardsFast: BigNumber[] = [];
+
+            // add all rewards to rewards array
+            if (feeHistory.reward) {
+                for (let i = 0; i < feeHistory.reward.length; i++) {
+                    rewardsSlow.push(BigNumber.from(feeHistory.reward[i][0]));
+                    rewardsAverage.push(
+                        BigNumber.from(feeHistory.reward[i][1])
+                    );
+                    rewardsFast.push(BigNumber.from(feeHistory.reward[i][2]));
+                }
+            }
+
+            // sort rewards array lowest to highest
+            rewardsSlow.sort();
+            rewardsAverage.sort();
+            rewardsFast.sort();
+
+            // choose middle tip as suggested tip
+            const maxPriorityFeePerGasSlow = rewardsSlow[0];
+            const maxPriorityFeePerGasAverage =
+                rewardsAverage[Math.floor(rewardsAverage.length / 2)];
+            const maxPriorityFeePerGasFast =
+                rewardsFast[rewardsFast.length - 1];
+
+            const maxFeePerGasSlow = BigNumber.from(
+                maxPriorityFeePerGasSlow
+            ).add(estimatedBaseFee);
+            const maxFeePerGasAverage = BigNumber.from(
+                maxPriorityFeePerGasAverage
+            ).add(estimatedBaseFee);
+            const maxFeePerGasFast = BigNumber.from(
+                maxPriorityFeePerGasFast
+            ).add(estimatedBaseFee);
+
+            // Parsing the gas result considering the EIP1559 status
+            gasPriceData = {
+                blockGasLimit: blockGasLimit,
+                baseFee: BigNumber.from(blockBaseFee),
+                estimatedBaseFee: BigNumber.from(estimatedBaseFee),
+                gasPricesLevels: {
+                    slow: {
+                        gasPrice: null,
+                        maxFeePerGas: BigNumber.from(maxFeePerGasSlow),
+                        maxPriorityFeePerGas: BigNumber.from(
+                            maxPriorityFeePerGasSlow
+                        ),
+                    },
+                    average: {
+                        gasPrice: null,
+                        maxFeePerGas: BigNumber.from(maxFeePerGasAverage),
+                        maxPriorityFeePerGas: BigNumber.from(
+                            maxPriorityFeePerGasAverage
+                        ),
+                    },
+                    fast: {
+                        gasPrice: null,
+                        maxFeePerGas: BigNumber.from(maxFeePerGasFast),
+                        maxPriorityFeePerGas: BigNumber.from(
+                            maxPriorityFeePerGasFast
+                        ),
+                    },
+                },
+            };
+        } else {
+            const networkCalls = await Promise.all([
+                this._networkController.getProvider().getGasPrice(),
+                this._networkController.getLatestBlock(),
+            ]);
+
+            const gasPrice: BigNumber = BigNumber.from(networkCalls[0]);
+            const { gasLimit: blockGasLimit } = networkCalls[1];
+
+            const gasPriceSlow = gasPrice.mul(85).div(100);
+            const gasPriceAverage = gasPrice;
+            const gasPriceFast = gasPrice.mul(125).div(100);
+
+            // Parsing the gas result considering the EIP1559 status
+            gasPriceData = {
+                blockGasLimit: blockGasLimit,
+                gasPricesLevels: {
+                    slow: {
+                        gasPrice: BigNumber.from(gasPriceSlow),
+                        maxFeePerGas: null,
+                        maxPriorityFeePerGas: null,
+                    },
+                    average: {
+                        gasPrice: BigNumber.from(gasPriceAverage),
+                        maxFeePerGas: null,
+                        maxPriorityFeePerGas: null,
+                    },
+                    fast: {
+                        gasPrice: BigNumber.from(gasPriceFast),
+                        maxFeePerGas: null,
+                        maxPriorityFeePerGas: null,
+                    },
+                },
+            };
+        }
+        return gasPriceData;
+    }
+
+    /**
+     * Fetches the fee's service to get the current gas prices.
+     *
+     * @param chainId
+     * @param isEIP1559Compatible
+     * @returns GasPriceData or undefined
+     */
+    private async _fetchFeeDataFromService(
+        chainId: number,
+        isEIP1559Compatible: boolean
+    ): Promise<GasPriceData | undefined> {
+        let gasPriceData: GasPriceData = {} as GasPriceData;
+
+        // Fetch the service to detect if the chain has support.
+        try {
+            const feeDataResponse = await axios.get(
+                `${CHAIN_FEE_DATA_SERVICE_URL}/fee_data`,
+                {
+                    params: {
+                        chain_id: chainId,
+                    },
+                }
+            );
+
+            if (feeDataResponse.status === 200 && feeDataResponse.data) {
+                // Parsing the gas result considering the EIP1559 status
+                // for the case of fantom(250) we will detect that the network is EIP1559 but the service
+                // won't return gas with that format because eth_feeHistory is not available.
+                if (isEIP1559Compatible && feeDataResponse.data.baseFee) {
+                    gasPriceData = {
+                        blockGasLimit: BigNumber.from(
+                            feeDataResponse.data.blockGasLimit
+                        ),
+                        baseFee: BigNumber.from(feeDataResponse.data.baseFee),
+                        estimatedBaseFee: BigNumber.from(
+                            feeDataResponse.data.estimatedBaseFee
+                        ),
+                        gasPricesLevels: {
+                            slow: {
+                                gasPrice: null,
+                                maxFeePerGas: BigNumber.from(
+                                    feeDataResponse.data.gasPricesLevels.slow
+                                        .maxFeePerGas
+                                ),
+                                maxPriorityFeePerGas: BigNumber.from(
+                                    feeDataResponse.data.gasPricesLevels.slow
+                                        .maxPriorityFeePerGas
+                                ),
+                            },
+                            average: {
+                                gasPrice: null,
+                                maxFeePerGas: BigNumber.from(
+                                    feeDataResponse.data.gasPricesLevels.average
+                                        .maxFeePerGas
+                                ),
+                                maxPriorityFeePerGas: BigNumber.from(
+                                    feeDataResponse.data.gasPricesLevels.average
+                                        .maxPriorityFeePerGas
+                                ),
+                            },
+                            fast: {
+                                gasPrice: null,
+                                maxFeePerGas: BigNumber.from(
+                                    feeDataResponse.data.gasPricesLevels.fast
+                                        .maxFeePerGas
+                                ),
+                                maxPriorityFeePerGas: BigNumber.from(
+                                    feeDataResponse.data.gasPricesLevels.fast
+                                        .maxPriorityFeePerGas
+                                ),
+                            },
+                        },
+                    };
+                } else {
+                    gasPriceData = {
+                        blockGasLimit: BigNumber.from(
+                            feeDataResponse.data.blockGasLimit
+                        ),
+                        gasPricesLevels: {
+                            slow: {
+                                gasPrice: BigNumber.from(
+                                    feeDataResponse.data.gasPricesLevels.slow
+                                        .gasPrice
+                                ),
+                                maxFeePerGas: null,
+                                maxPriorityFeePerGas: null,
+                            },
+                            average: {
+                                gasPrice: BigNumber.from(
+                                    feeDataResponse.data.gasPricesLevels.average
+                                        .gasPrice
+                                ),
+                                maxFeePerGas: null,
+                                maxPriorityFeePerGas: null,
+                            },
+                            fast: {
+                                gasPrice: BigNumber.from(
+                                    feeDataResponse.data.gasPricesLevels.fast
+                                        .gasPrice
+                                ),
+                                maxFeePerGas: null,
+                                maxPriorityFeePerGas: null,
+                            },
+                        },
+                    };
+                }
+
+                return gasPriceData;
+            }
+        } catch (error) {
+            log.error('error calling chain fees service', error);
+            return undefined;
+        }
+        return undefined;
+    }
+
+    /**
      * Fetches the fee's service to get the current gas prices.
      * If the service is not available or the chain is not supported then
      * it requests the chain.
@@ -236,267 +504,28 @@ export class GasPricesController extends BaseController<GasPricesControllerState
             let hasToRequestTheChain = false;
 
             // Fetch the service to detect if the chain has support.
-            try {
-                if (
-                    this._shouldRequestChainService(currentBlockNumber, chainId)
-                ) {
-                    // If the chain has support request the service
-                    const feeDataResponse = await axios.get(
-                        `${CHAIN_FEE_DATA_SERVICE_URL}/fee_data`,
-                        {
-                            params: {
-                                chain_id: chainId,
-                            },
-                        }
-                    );
 
-                    if (
-                        feeDataResponse.status === 200 &&
-                        feeDataResponse.data
-                    ) {
-                        // Parsing the gas result considering the EIP1559 status
-                        // for the case of fantom(250) we will detect that the network is EIP1559 but the service
-                        // won't return gas with that format because eth_feeHistory is not available.
-                        if (
-                            isEIP1559Compatible &&
-                            feeDataResponse.data.baseFee
-                        ) {
-                            gasPriceData = {
-                                blockGasLimit: BigNumber.from(
-                                    feeDataResponse.data.blockGasLimit
-                                ),
-                                baseFee: BigNumber.from(
-                                    feeDataResponse.data.baseFee
-                                ),
-                                estimatedBaseFee: BigNumber.from(
-                                    feeDataResponse.data.estimatedBaseFee
-                                ),
-                                gasPricesLevels: {
-                                    slow: {
-                                        gasPrice: null,
-                                        maxFeePerGas: BigNumber.from(
-                                            feeDataResponse.data.gasPricesLevels
-                                                .slow.maxFeePerGas
-                                        ),
-                                        maxPriorityFeePerGas: BigNumber.from(
-                                            feeDataResponse.data.gasPricesLevels
-                                                .slow.maxPriorityFeePerGas
-                                        ),
-                                    },
-                                    average: {
-                                        gasPrice: null,
-                                        maxFeePerGas: BigNumber.from(
-                                            feeDataResponse.data.gasPricesLevels
-                                                .average.maxFeePerGas
-                                        ),
-                                        maxPriorityFeePerGas: BigNumber.from(
-                                            feeDataResponse.data.gasPricesLevels
-                                                .average.maxPriorityFeePerGas
-                                        ),
-                                    },
-                                    fast: {
-                                        gasPrice: null,
-                                        maxFeePerGas: BigNumber.from(
-                                            feeDataResponse.data.gasPricesLevels
-                                                .fast.maxFeePerGas
-                                        ),
-                                        maxPriorityFeePerGas: BigNumber.from(
-                                            feeDataResponse.data.gasPricesLevels
-                                                .fast.maxPriorityFeePerGas
-                                        ),
-                                    },
-                                },
-                            };
-                        } else {
-                            gasPriceData = {
-                                blockGasLimit: BigNumber.from(
-                                    feeDataResponse.data.blockGasLimit
-                                ),
-                                gasPricesLevels: {
-                                    slow: {
-                                        gasPrice: BigNumber.from(
-                                            feeDataResponse.data.gasPricesLevels
-                                                .slow.gasPrice
-                                        ),
-                                        maxFeePerGas: null,
-                                        maxPriorityFeePerGas: null,
-                                    },
-                                    average: {
-                                        gasPrice: BigNumber.from(
-                                            feeDataResponse.data.gasPricesLevels
-                                                .average.gasPrice
-                                        ),
-                                        maxFeePerGas: null,
-                                        maxPriorityFeePerGas: null,
-                                    },
-                                    fast: {
-                                        gasPrice: BigNumber.from(
-                                            feeDataResponse.data.gasPricesLevels
-                                                .fast.gasPrice
-                                        ),
-                                        maxFeePerGas: null,
-                                        maxPriorityFeePerGas: null,
-                                    },
-                                },
-                            };
-                        }
-                    } else {
-                        hasToRequestTheChain = true;
-                    }
-                } else {
+            if (this._shouldRequestChainService(currentBlockNumber, chainId)) {
+                const gasPriceFromChainFeeService =
+                    await this._fetchFeeDataFromService(
+                        chainId,
+                        isEIP1559Compatible
+                    );
+                if (gasPriceFromChainFeeService === undefined) {
                     hasToRequestTheChain = true;
+                } else {
+                    gasPriceData = gasPriceFromChainFeeService;
                 }
-            } catch (error) {
-                log.error('error calling chain fees service', error);
+            } else {
                 hasToRequestTheChain = true;
             }
 
             // If it has no support or the service fails we have to query the chain.
             if (hasToRequestTheChain) {
-                if (
-                    this._isEth_feeHistorySupportedByChain(
-                        chainId,
-                        isEIP1559Compatible
-                    )
-                ) {
-                    const provider = this._networkController.getProvider();
-                    const networkCalls = await Promise.all([
-                        // Get blockBaseFee of the last block
-                        this._networkController.getLatestBlock(),
-                        // Get eth_feeHistory
-                        // gets 10%, 25% and 50% percentile fee history of txs included in last 5 blocks
-                        provider.send('eth_feeHistory', [
-                            '0x5',
-                            'latest',
-                            [10, 25, 65],
-                        ]),
-                    ]);
-
-                    const blockGasLimit: BigNumber = BigNumber.from(
-                        networkCalls[0].gasLimit
-                    );
-
-                    const blockBaseFee: BigNumber = BigNumber.from(
-                        networkCalls[0].baseFeePerGas
-                    );
-                    const feeHistory: FeeHistory = networkCalls[1];
-
-                    // last element in array is the next block after the latest (estimated)
-                    let estimatedBaseFee = blockBaseFee;
-                    if (feeHistory.baseFeePerGas) {
-                        estimatedBaseFee = BigNumber.from(
-                            feeHistory.baseFeePerGas[
-                                feeHistory.baseFeePerGas.length - 1
-                            ]
-                        );
-                    }
-
-                    const rewardsSlow: BigNumber[] = [];
-                    const rewardsAverage: BigNumber[] = [];
-                    const rewardsFast: BigNumber[] = [];
-
-                    // add all rewards to rewards array
-                    if (feeHistory.reward) {
-                        for (let i = 0; i < feeHistory.reward.length; i++) {
-                            rewardsSlow.push(
-                                BigNumber.from(feeHistory.reward[i][0])
-                            );
-                            rewardsAverage.push(
-                                BigNumber.from(feeHistory.reward[i][1])
-                            );
-                            rewardsFast.push(
-                                BigNumber.from(feeHistory.reward[i][2])
-                            );
-                        }
-                    }
-
-                    // sort rewards array lowest to highest
-                    rewardsSlow.sort();
-                    rewardsAverage.sort();
-                    rewardsFast.sort();
-
-                    // choose middle tip as suggested tip
-                    const maxPriorityFeePerGasSlow = rewardsSlow[0];
-                    const maxPriorityFeePerGasAverage =
-                        rewardsAverage[Math.floor(rewardsAverage.length / 2)];
-                    const maxPriorityFeePerGasFast =
-                        rewardsFast[rewardsFast.length - 1];
-
-                    const maxFeePerGasSlow = BigNumber.from(
-                        maxPriorityFeePerGasSlow
-                    ).add(estimatedBaseFee);
-                    const maxFeePerGasAverage = BigNumber.from(
-                        maxPriorityFeePerGasAverage
-                    ).add(estimatedBaseFee);
-                    const maxFeePerGasFast = BigNumber.from(
-                        maxPriorityFeePerGasFast
-                    ).add(estimatedBaseFee);
-
-                    // Parsing the gas result considering the EIP1559 status
-                    gasPriceData = {
-                        blockGasLimit: blockGasLimit,
-                        baseFee: BigNumber.from(blockBaseFee),
-                        estimatedBaseFee: BigNumber.from(estimatedBaseFee),
-                        gasPricesLevels: {
-                            slow: {
-                                gasPrice: null,
-                                maxFeePerGas: BigNumber.from(maxFeePerGasSlow),
-                                maxPriorityFeePerGas: BigNumber.from(
-                                    maxPriorityFeePerGasSlow
-                                ),
-                            },
-                            average: {
-                                gasPrice: null,
-                                maxFeePerGas:
-                                    BigNumber.from(maxFeePerGasAverage),
-                                maxPriorityFeePerGas: BigNumber.from(
-                                    maxPriorityFeePerGasAverage
-                                ),
-                            },
-                            fast: {
-                                gasPrice: null,
-                                maxFeePerGas: BigNumber.from(maxFeePerGasFast),
-                                maxPriorityFeePerGas: BigNumber.from(
-                                    maxPriorityFeePerGasFast
-                                ),
-                            },
-                        },
-                    };
-                } else {
-                    const networkCalls = await Promise.all([
-                        this._networkController.getProvider().getGasPrice(),
-                        this._networkController.getLatestBlock(),
-                    ]);
-
-                    const gasPrice: BigNumber = BigNumber.from(networkCalls[0]);
-                    const { gasLimit: blockGasLimit } = networkCalls[1];
-
-                    const gasPriceSlow = gasPrice.mul(85).div(100);
-                    const gasPriceAverage = gasPrice;
-                    const gasPriceFast = gasPrice.mul(125).div(100);
-
-                    // Parsing the gas result considering the EIP1559 status
-                    gasPriceData = {
-                        blockGasLimit: blockGasLimit,
-                        gasPricesLevels: {
-                            slow: {
-                                gasPrice: BigNumber.from(gasPriceSlow),
-                                maxFeePerGas: null,
-                                maxPriorityFeePerGas: null,
-                            },
-                            average: {
-                                gasPrice: BigNumber.from(gasPriceAverage),
-                                maxFeePerGas: null,
-                                maxPriorityFeePerGas: null,
-                            },
-                            fast: {
-                                gasPrice: BigNumber.from(gasPriceFast),
-                                maxFeePerGas: null,
-                                maxPriorityFeePerGas: null,
-                            },
-                        },
-                    };
-                }
+                gasPriceData = await this._fetchFeeDataFromChain(
+                    chainId,
+                    isEIP1559Compatible
+                );
             }
 
             // Filtering gas prices
@@ -921,5 +950,41 @@ export class GasPricesController extends BaseController<GasPricesControllerState
             currentBlockNumber - chainSupportedByFeeService.lastBlockChecked >
             BLOCKS_TO_WAIT_BEFORE_CHECKING_FOR_CHAIN_SUPPORT
         );
+    }
+
+    public async fetchGasPriceData(
+        chainId: number
+    ): Promise<GasPriceData | undefined> {
+        const isEIP1559Compatible =
+            await this._networkController.getEIP1559Compatibility(chainId);
+        let gasPriceData: GasPriceData = {} as GasPriceData;
+
+        const { chainSupportedByFeeService } = this.getState(chainId);
+        try {
+            if (
+                !chainSupportedByFeeService ||
+                chainSupportedByFeeService.supported
+            ) {
+                const gasPriceFromChainFeeService =
+                    await this._fetchFeeDataFromService(
+                        chainId,
+                        isEIP1559Compatible
+                    );
+                if (gasPriceFromChainFeeService !== undefined) {
+                    gasPriceData = gasPriceFromChainFeeService;
+                }
+            }
+
+            if (!gasPriceData) {
+                gasPriceData = await this._fetchFeeDataFromChain(
+                    chainId,
+                    isEIP1559Compatible
+                );
+            }
+        } catch (e) {
+            log.error(e);
+            return undefined;
+        }
+        return this._ensureLowerPrices(chainId, gasPriceData);
     }
 }

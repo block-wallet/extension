@@ -32,6 +32,7 @@ import {
 import {
     isBridgeNativeTokenAddress,
     populateBridgeTransaction,
+    getWarningMessages,
 } from "../../util/bridgeUtils"
 import { isHardwareWallet } from "../../util/account"
 import { useBlankState } from "../../context/background/backgroundHooks"
@@ -72,6 +73,12 @@ import {
 import { capitalize } from "../../util/capitalize"
 import TransactionDetails from "../../components/transactions/TransactionDetails"
 import { WithRequired } from "@block-wallet/background/utils/types/helpers"
+import CollapsableWarning from "../../components/CollapsableWarning"
+import { AiOutlineWarning } from "react-icons/ai"
+import {
+    useAddressHasEnoughNativeTokensToSend,
+    EnoughNativeTokensToSend,
+} from "../../context/hooks/useBridgeChainHasNotEnoughNativeTokensToSend"
 
 export interface BridgeConfirmPageLocalState {
     amount: string
@@ -165,7 +172,8 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
         bridgeQuote
     )
-
+    const { fromAmount, fromToken, transactionRequest, toChainId, toToken } =
+        bridgeQuote.bridgeParams.params
     // Gas
     const [defaultGas, setDefaultGas] = useState<{
         gasPrice: BigNumber
@@ -186,9 +194,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         BigNumber.from(gasPricesLevels.average.gasPrice ?? "0")
     )
     const [selectedGasLimit, setSelectedGasLimit] = useState(
-        BigNumber.from(
-            bridgeQuote.bridgeParams.params.transactionRequest.gasLimit || 0
-        )
+        BigNumber.from(transactionRequest.gasLimit || 0)
     )
 
     const isBridging = status === "loading" && isOpen
@@ -205,11 +211,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         : selectedGasPrice
 
     const fee = selectedGasLimit.mul(feePerGas)
+
     const isBridgingNativeToken = isBridgeNativeTokenAddress(token.address)
     const total = isBridgingNativeToken
         ? BigNumber.from(
-              quote?.bridgeParams.params.fromAmount ||
-                  bridgeQuote.bridgeParams.params.fromAmount
+              quote?.bridgeParams.params.fromAmount || fromAmount
           ).add(fee)
         : fee
 
@@ -218,16 +224,32 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         nativeToken.token
     )
     const hasFromTokenBalance = useHasSufficientBalance(
-        BigNumber.from(
-            quote?.bridgeParams.params.fromAmount ||
-                bridgeQuote.bridgeParams.params.fromAmount
-        ),
+        BigNumber.from(quote?.bridgeParams.params.fromAmount || fromAmount),
         token
     )
 
     const hasBalance = isBridgingNativeToken
         ? hasNativeAssetBalance
         : hasNativeAssetBalance && hasFromTokenBalance
+
+    const nativeTokensInDestinationNetworkStatus =
+        useAddressHasEnoughNativeTokensToSend(toChainId, toToken.address)
+
+    const destinationNetwork = Object.values(availableNetworks).find(
+        (n) => n.chainId === toChainId
+    )
+    const bridgeWarningMessage = getWarningMessages(
+        nativeTokensInDestinationNetworkStatus.result,
+        destinationNetwork
+    )
+
+    // it shows de warning when the user doesn't have enough native tokens in the destination network to perform a send and there is no pending transaction
+    const showDestinationFeeWarning =
+        !nativeTokensInDestinationNetworkStatus.isLoading &&
+        !inProgressAllowanceTransaction?.id &&
+        !inProgressTransaction?.id &&
+        nativeTokensInDestinationNetworkStatus.result !==
+            EnoughNativeTokensToSend.ENOUGH
 
     const onSubmit = async () => {
         if (error || !hasBalance || !quote) return
@@ -315,14 +337,12 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         }
 
         async function fetchQuoteParams() {
-            console.log("slippage", advancedSettings.slippage)
             setError(undefined)
             const params: BridgeQuoteRequest = {
-                toChainId: bridgeQuote.bridgeParams.params.toChainId,
-                fromTokenAddress:
-                    bridgeQuote.bridgeParams.params.fromToken.address,
-                toTokenAddress: bridgeQuote.bridgeParams.params.toToken.address,
-                fromAmount: bridgeQuote.bridgeParams.params.fromAmount,
+                toChainId: toChainId,
+                fromTokenAddress: fromToken.address,
+                toTokenAddress: toToken.address,
+                fromAmount: fromAmount,
                 fromAddress: selectedAccount.address,
                 slippage: advancedSettings.slippage,
             }
@@ -364,10 +384,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         }
     }, [
         advancedSettings.slippage,
-        bridgeQuote.bridgeParams.params.fromAmount,
-        bridgeQuote.bridgeParams.params.fromToken.address,
-        bridgeQuote.bridgeParams.params.toChainId,
-        bridgeQuote.bridgeParams.params.toToken.address,
+        fromAmount,
+        fromToken.address,
+        toChainId,
+        toToken.address,
         inProgressAllowanceTransaction?.id,
         selectedAccount.address,
         shouldFetchBridgeParams,
@@ -411,7 +431,8 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                                 : !quote ||
                                   isGasLoading ||
                                   isFetchingParams ||
-                                  isBridging
+                                  isBridging ||
+                                  nativeTokensInDestinationNetworkStatus.isLoading
                         }
                         onClick={onSubmit}
                         disabled={!!error || !hasBalance}
@@ -499,13 +520,36 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 vendor={getDeviceFromAccountType(selectedAccount.accountType)}
                 address={selectedAccount.address}
             />
+            {!!showDestinationFeeWarning && !!bridgeWarningMessage && (
+                <CollapsableWarning
+                    isCollapsedByDefault={false}
+                    collapsedMessage={
+                        <div
+                            className={classnames(
+                                "text-center opacity-90 w-full p-2 bg-yellow-200 hover:bg-yellow-100 space-x-2 flex tems-center font-bold justify-center"
+                            )}
+                        >
+                            <AiOutlineWarning className="w-4 h-4 yellow-300" />
+                            <span className="font-bold">
+                                {bridgeWarningMessage.title}
+                            </span>
+                        </div>
+                    }
+                    dialog={{
+                        title: bridgeWarningMessage.title,
+                        message: (
+                            <div>
+                                <span>{bridgeWarningMessage.body}</span>
+                            </div>
+                        ),
+                    }}
+                />
+            )}
             <div className="flex flex-col px-6 py-3">
                 {/* From Token */}
                 <AssetAmountDisplay
                     asset={token}
-                    amount={BigNumber.from(
-                        bridgeQuote.bridgeParams.params.fromAmount
-                    )}
+                    amount={BigNumber.from(fromAmount)}
                 />
 
                 {/* Divider */}
@@ -523,7 +567,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 {/* To */}
                 <div className="-mt-2">
                     <AssetAmountDisplay
-                        asset={bridgeQuote.bridgeParams.params.toToken}
+                        asset={toToken}
                         amount={
                             quote &&
                             BigNumber.from(quote.bridgeParams.params.toAmount)

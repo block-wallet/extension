@@ -63,6 +63,7 @@ import {
     GetBridgeAvailableRoutesResponse,
     GetBridgeQuoteResponse,
 } from "@block-wallet/background/controllers/BridgeController"
+import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 
 let requestId = 0
 
@@ -230,6 +231,33 @@ export const getAccountBalance = async (
     return sendMessage(Messages.ACCOUNT.GET_BALANCE, address)
 }
 
+/**
+ * getAccountNativeTokenBalanceForChain
+ *
+ * It gets the native token balance for a specified chain using the selected account.
+ *
+ * @param chainId The chain id
+ * @returns The account's native token balance.
+ */
+export const getAccountNativeTokenBalanceForChain = async (
+    chainId: number
+): Promise<BigNumber | undefined> => {
+    return sendMessage(Messages.ACCOUNT.GET_NATIVE_TOKEN_BALANCE, chainId)
+}
+
+/**
+ * fetchLatestGasPriceForChain
+ *
+ * It fetches the latest gas price from the Fee service and/or the network for a specified chain
+ *
+ * @param chainId The chain id
+ * @returns The gas price
+ */
+export const fetchLatestGasPriceForChain = async (
+    chainId: number
+): Promise<GasPriceData | undefined> => {
+    return sendMessage(Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE, chainId)
+}
 /**
  * Update last user activity time
  *

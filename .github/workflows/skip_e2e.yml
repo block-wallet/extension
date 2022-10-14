@@ -15,6 +15,7 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    if: startsWith(github.head_ref, 'docs/') == true || startsWith(github.head_ref, 'chore/') == true || startsWith(github.head_ref, 'release/') == true || startsWith(github.head_ref, 'dependabot/') == true
     steps:
       # Fake job to skip the required status checks on the PR
       - name: Skip e2e

@@ -504,8 +504,10 @@ export default class NetworkController extends BaseController<NetworkControllerS
     /**
      * It returns the latest block from the network
      */
-    public async getLatestBlock(): Promise<ethers.providers.Block> {
-        return this.getProvider().getBlock('latest');
+    public async getLatestBlock(
+        provider: ethers.providers.JsonRpcProvider = this.getProvider()
+    ): Promise<ethers.providers.Block> {
+        return provider.getBlock('latest');
     }
 
     /**
@@ -513,7 +515,10 @@ export default class NetworkController extends BaseController<NetworkControllerS
      */
     public async getEIP1559Compatibility(
         chainId: number = this.network.chainId,
-        forceUpdate?: boolean
+        forceUpdate = false,
+        //required by parameter to avoid returning undefined if the user hasn't added the chain
+        //previous check should be done before invoking this method.
+        provider: ethers.providers.JsonRpcProvider = this.getProvider()
     ): Promise<boolean> {
         let shouldFetchTheCurrentState = false;
 
@@ -530,13 +535,14 @@ export default class NetworkController extends BaseController<NetworkControllerS
         }
 
         if (shouldFetchTheCurrentState) {
-            let baseFeePerGas = (await this.getLatestBlock()).baseFeePerGas;
+            let baseFeePerGas = (await this.getLatestBlock(provider))
+                .baseFeePerGas;
 
             // detection for the fantom case,
             // the network seems to be eip1559 but eth_feeHistory is not available.
             if (baseFeePerGas) {
                 try {
-                    await this.provider.send('eth_feeHistory', [
+                    await provider.send('eth_feeHistory', [
                         '0x1',
                         'latest',
                         [50],

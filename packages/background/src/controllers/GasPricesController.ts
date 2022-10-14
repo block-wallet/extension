@@ -1,6 +1,6 @@
 import { BaseController } from '../infrastructure/BaseController';
 import NetworkController, { NetworkEvents } from './NetworkController';
-import { BigNumber, utils } from 'ethers';
+import { BigNumber, ethers, utils } from 'ethers';
 import log from 'loglevel';
 import { Mutex } from 'async-mutex';
 import {
@@ -224,17 +224,19 @@ export class GasPricesController extends BaseController<GasPricesControllerState
      */
     private async _fetchFeeDataFromChain(
         chainId: number,
-        isEIP1559Compatible: boolean
+        isEIP1559Compatible: boolean,
+        //required by parameter to avoid returning undefined if the user hasn't added the chain
+        //previous check should be done before invoking this method.
+        provider: ethers.providers.StaticJsonRpcProvider = this._networkController.getProvider()
     ): Promise<GasPriceData> {
         let gasPriceData: GasPriceData = {} as GasPriceData;
 
         if (
             this._isEth_feeHistorySupportedByChain(chainId, isEIP1559Compatible)
         ) {
-            const provider = this._networkController.getProvider();
             const networkCalls = await Promise.all([
                 // Get blockBaseFee of the last block
-                this._networkController.getLatestBlock(),
+                this._networkController.getLatestBlock(provider),
                 // Get eth_feeHistory
                 // gets 10%, 25% and 65% percentile fee history of txs included in last 5 blocks
                 provider.send('eth_feeHistory', [
@@ -331,8 +333,8 @@ export class GasPricesController extends BaseController<GasPricesControllerState
             };
         } else {
             const networkCalls = await Promise.all([
-                this._networkController.getProvider().getGasPrice(),
-                this._networkController.getLatestBlock(),
+                provider.getGasPrice(),
+                this._networkController.getLatestBlock(provider),
             ]);
 
             const gasPrice: BigNumber = BigNumber.from(networkCalls[0]);
@@ -955,9 +957,19 @@ export class GasPricesController extends BaseController<GasPricesControllerState
     public async fetchGasPriceData(
         chainId: number
     ): Promise<GasPriceData | undefined> {
+        const provider = this._networkController.getProviderForChainId(chainId);
+
+        if (!provider) {
+            return undefined;
+        }
+
         const isEIP1559Compatible =
-            await this._networkController.getEIP1559Compatibility(chainId);
-        let gasPriceData: GasPriceData = {} as GasPriceData;
+            await this._networkController.getEIP1559Compatibility(
+                chainId,
+                false,
+                provider
+            );
+        let gasPriceData: GasPriceData | undefined = undefined;
 
         const { chainSupportedByFeeService } = this.getState(chainId);
         try {
@@ -976,15 +988,19 @@ export class GasPricesController extends BaseController<GasPricesControllerState
             }
 
             if (!gasPriceData) {
-                gasPriceData = await this._fetchFeeDataFromChain(
-                    chainId,
-                    isEIP1559Compatible
-                );
+                if (provider) {
+                    gasPriceData = await this._fetchFeeDataFromChain(
+                        chainId,
+                        isEIP1559Compatible
+                    );
+                }
             }
         } catch (e) {
             log.error(e);
             return undefined;
         }
-        return this._ensureLowerPrices(chainId, gasPriceData);
+        return gasPriceData
+            ? this._ensureLowerPrices(chainId, gasPriceData)
+            : undefined;
     }
 }

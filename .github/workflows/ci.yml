@@ -12,6 +12,9 @@ on:
       - '**.json'
       - '**.html'
       - '**.nvmrc'
+      - '!package.json'
+      - '!public/manifest.json'
+      - '!release-notes.json'
 
 env:
   BLOCK_WALLET_URL: url.txt
@@ -22,7 +25,7 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref_name, 'dependabot/') == false
+    if: startsWith(github.head_ref, 'dependabot/') == false
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v3
@@ -167,7 +170,7 @@ jobs:
           make test/background
 
   build:
-    needs: [test]
+    needs: [test, lint]
     env:
       ENVIRONMENT: prod
     runs-on: ubuntu-latest
@@ -217,7 +220,7 @@ jobs:
           make build/prod
 
       - name: Zip build
-        if: startsWith(github.ref_name, 'dependabot/') == false
+        if: startsWith(github.head_ref, 'dependabot/') == false
         id: zip
         run: |
           file=block-wallet-${GITHUB_SHA::7}
@@ -225,7 +228,7 @@ jobs:
           echo "::set-output name=file::$file.zip"
 
       - name: Configure AWS credentials
-        if: startsWith(github.ref_name, 'dependabot/') == false
+        if: startsWith(github.head_ref, 'dependabot/') == false
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_RELEASE_BUCKET }}
@@ -233,7 +236,7 @@ jobs:
           aws-region: us-east-2
 
       - name: Upload zip to S3
-        if: startsWith(github.ref_name, 'dependabot/') == false
+        if: startsWith(github.head_ref, 'dependabot/') == false
         run: |
           zip=${{ steps.zip.outputs.file }} 
           aws s3 cp $zip $S3_PATH
@@ -242,7 +245,7 @@ jobs:
           cat $BLOCK_WALLET_URL
 
       - name: Save extension url
-        if: startsWith(github.ref_name, 'dependabot/') == false
+        if: startsWith(github.head_ref, 'dependabot/') == false
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.BLOCK_WALLET_FOLDER }}
@@ -253,7 +256,7 @@ jobs:
     needs: [build]
     container: cypress/browsers:node16.16.0-chrome105-ff99-edge
     runs-on: ubuntu-latest
-    if: startsWith(github.ref_name, 'dependabot/') == false
+    if: startsWith(github.head_ref, 'dependabot/') == false
     steps:
       - name: Checkout e2e repository
         uses: actions/checkout@v2

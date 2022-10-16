@@ -2,7 +2,6 @@ import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { useCallback, useEffect, useState } from "react"
 
-import { editNetworkOrder } from "@block-wallet/background/utils/types/communication"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import NetworkDisplay from "../../components/networks/NetworkDisplay"

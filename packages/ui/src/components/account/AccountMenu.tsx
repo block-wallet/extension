@@ -57,11 +57,6 @@ const AccountMenu = () => {
                 "address"
             ),
         },
-        {
-            icon: accounts,
-            label: "Switch Accounts",
-            to: "/accounts",
-        },
     ]
 
     const disabledOptions: { [k: string]: boolean } = {}
@@ -71,7 +66,7 @@ const AccountMenu = () => {
         disabledOptions[exportAccountDataLabel] = true
         tooltipOptions[exportAccountDataLabel] =
             "Not available for Hardware Wallets accounts."
-        options.splice(options.length - 1, 0, {
+        options.push({
             icon: trashBinIcon,
             label: removeHWLabel,
             to: undefined,

@@ -63,7 +63,7 @@ export const DropdownMenuItem: React.FC<
                 toggleMenu(e.nativeEvent) // Close the menu after an item is clicked
             }}
             className={classnames(
-                "flex flex-row justify-between items-center w-full p-2 cursor-pointer hover:bg-gray-100",
+                "flex flex-row justify-between items-center w-full cursor-pointer hover:bg-gray-100",
                 className || "",
                 selected && "text-primary-300"
             )}

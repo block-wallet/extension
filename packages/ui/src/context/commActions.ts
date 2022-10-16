@@ -18,6 +18,7 @@ import {
     ResponseBlankCurrencyDepositsCount,
     RequestAddNetwork,
     RequestEditNetwork,
+    RequestEditNetworksOrder,
 } from "@block-wallet/background/utils/types/communication"
 import { Devices, ExchangeType, Messages } from "./commTypes"
 import {
@@ -1046,6 +1047,16 @@ export const addNetwork = async (networkInput: RequestAddNetwork) => {
  */
 export const editNetwork = async (editNetworkInput: RequestEditNetwork) => {
     return sendMessage(Messages.NETWORK.EDIT_NETWORK, editNetworkInput)
+}
+
+/**
+ * Edit networks order.
+ *
+ */
+export const editNetworksOrder = async (
+    editNetworksOrder: RequestEditNetworksOrder
+) => {
+    return sendMessage(Messages.NETWORK.EDIT_NETWORKS_ORDER, editNetworksOrder)
 }
 
 /**

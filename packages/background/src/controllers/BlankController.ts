@@ -114,6 +114,7 @@ import type {
     RequestRemoveHardwareWallet,
     RequestGenerateOnDemandReleaseNotes,
     RequestEditNetwork,
+    RequestEditNetworksOrder,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -825,6 +826,10 @@ export default class BlankController extends EventEmitter {
                 return this.addNetwork(request as RequestAddNetwork);
             case Messages.NETWORK.EDIT_NETWORK:
                 return this.editNetwork(request as RequestEditNetwork);
+            case Messages.NETWORK.EDIT_NETWORKS_ORDER:
+                return this.editNetworksOrder(
+                    request as RequestEditNetworksOrder
+                );
             case Messages.NETWORK.REMOVE_NETWORK:
                 return this.removeNetwork(request as RequestRemoveNetwork);
             case Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS:
@@ -2016,6 +2021,18 @@ export default class BlankController extends EventEmitter {
             rpcUrls: [request.updates.rpcUrl],
             name: request.updates.name,
         });
+    }
+
+    /**
+     * editNetworksOrder
+     *
+     * @param chainId The chain identifier of the network
+     * @param order Order of network
+     */
+    private async editNetworksOrder(
+        request: RequestEditNetworksOrder
+    ): Promise<void> {
+        return this.networkController.editNetworksOrder(request);
     }
 
     /**

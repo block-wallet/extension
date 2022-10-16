@@ -8,6 +8,7 @@ import {
     AddNetworkType,
     FAST_TIME_INTERVALS_DEFAULT_VALUES,
     EditNetworkUpdatesType,
+    EditNetworksOrder,
 } from '../utils/constants/networks';
 import { constants, ethers } from 'ethers';
 import { poll } from '@ethersproject/web';
@@ -165,6 +166,36 @@ export default class NetworkController extends BaseController<NetworkControllerS
     }
 
     /**
+     * Change list of networks order.
+     */
+    public editNetworksOrder(newNetworksOrder: EditNetworksOrder): void {
+        const newNetworks = { ...this.networks };
+        newNetworksOrder.networksOrder.forEach((networkOrderUpdate) => {
+            const { chainId, order } = networkOrderUpdate;
+
+            //Validations
+            if (!chainId || Number.isNaN(chainId)) {
+                throw new Error('ChainId is required and must be numeric.');
+            }
+
+            const existingNetwork = this.getNetworkFromChainId(chainId);
+
+            if (!existingNetwork) {
+                throw new Error(
+                    'The network you are trying to edit does not exist.'
+                );
+            }
+
+            const networkKey = this._getNetworkKey(existingNetwork);
+
+            newNetworks[networkKey].order = order;
+        });
+
+        this.networks = newNetworks;
+        this.orderNetworks();
+    }
+
+    /**
      * removeNetwork
      *
      * Removes a network from the list of available networks
@@ -211,6 +242,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             const newNetworks = { ...this.networks };
             delete newNetworks[key];
             this.networks = newNetworks;
+            this.orderNetworks();
         }
 
         //TODO: Review if we should remove related information from the store
@@ -218,6 +250,42 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
     private _getNetworkKey = (network: Network): string => {
         return network.name.toUpperCase();
+    };
+
+    /**
+     * Sorts the networks by order and adjusts the order property
+     */
+    private orderNetworks = (): void => {
+        const currentNetworks = this.networks;
+
+        // Sort the current networks based on their current order property
+        const orderedNetworks = Object.entries(currentNetworks)
+            .sort(
+                ([, networkValue1], [, networkValue2]) =>
+                    networkValue1.order - networkValue2.order
+            )
+            .reduce(
+                (previousNetworksValue, [networkKey, networkValue]) => ({
+                    ...previousNetworksValue,
+                    [networkKey]: networkValue,
+                }),
+                {}
+            ) as Networks;
+
+        // Adjust order property number to remove gaps
+        let mainnetsCount = 0;
+        let testnetsCount = 0;
+        Object.keys(orderedNetworks).forEach((networkKey) => {
+            if (orderedNetworks[networkKey].test) {
+                orderedNetworks[networkKey].order = testnetsCount;
+                testnetsCount++;
+            } else {
+                orderedNetworks[networkKey].order = mainnetsCount;
+                mainnetsCount++;
+            }
+        });
+
+        this.networks = orderedNetworks;
     };
 
     public async editNetwork(
@@ -386,6 +454,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 test: !!network.test,
                 order:
                     Object.values(this.networks)
+                        .filter((n) => n.test === network.test)
                         .map((c) => c.order)
                         .sort((a, b) => b - a)[0] + 1,
                 iconUrls: nativeCurrencyIcon ? [nativeCurrencyIcon] : undefined,

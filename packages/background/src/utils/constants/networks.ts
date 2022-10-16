@@ -513,7 +513,7 @@ export const INITIAL_NETWORKS: Networks = {
         networkVersion: '97',
         nativeCurrency: {
             name: 'BNB Chain Native Token',
-            symbol: 'BNB',
+            symbol: 'tBNB',
             decimals: 18,
         },
         isCustomNetwork: false,
@@ -526,7 +526,7 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
-        rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545/'],
+        rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545'],
         blockExplorerUrls: ['https://testnet.bscscan.io'],
         blockExplorerName: 'Bscscan',
         actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
@@ -588,8 +588,8 @@ export const INITIAL_NETWORKS: Networks = {
         ens: false,
         showGasLevels: true,
         rpcUrls: [`https://zksync2-testnet.zksync.dev`],
-        blockExplorerUrls: ['https://zksync2-testnet.zkscan.io'],
-        blockExplorerName: 'zkScan',
+        blockExplorerUrls: ['https://explorer.zksync.io/'],
+        blockExplorerName: 'zkSync Explorer',
         actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,

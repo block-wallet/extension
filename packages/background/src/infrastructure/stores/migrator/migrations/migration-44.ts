@@ -1,47 +1,27 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
-import { Networks } from '@block-wallet/background/utils/constants/networks';
 import { IMigration } from '../IMigration';
 
 /**
- * This migration reorder networks and separates order of testnets and mainnets each starting from zero
+ * This migration fixes the symbol and RPC url of BSC Testnet
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
-        const currentNetworks =
-            persistedState.NetworkController.availableNetworks;
+        const { availableNetworks } = persistedState.NetworkController;
+        const updatedNetworks = { ...availableNetworks };
 
-        // Sort the current networks based on their order property
-        const orderedNetworks = Object.entries(currentNetworks)
-            .sort(
-                ([, networkValue1], [, networkValue2]) =>
-                    networkValue1.order - networkValue2.order
-            )
-            .reduce(
-                (r, [networkKey, networkValue]) => ({
-                    ...r,
-                    [networkKey]: networkValue,
-                }),
-                {}
-            ) as Networks;
-
-        // Adjust order property number to remove gaps
-        let mainnetsCount = 0;
-        let testnetsCount = 0;
-        Object.keys(orderedNetworks).forEach((networkKey) => {
-            if (orderedNetworks[networkKey].test) {
-                orderedNetworks[networkKey].order = testnetsCount;
-                testnetsCount++;
-            } else {
-                orderedNetworks[networkKey].order = mainnetsCount;
-                mainnetsCount++;
-            }
-        });
-
+        updatedNetworks.BSC_TESTNET = {
+            ...updatedNetworks.BSC_TESTNET,
+            rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545'],
+            nativeCurrency: {
+                ...updatedNetworks.BSC_TESTNET.nativeCurrency,
+                symbol: 'tBNB',
+            },
+        };
         return {
             ...persistedState,
             NetworkController: {
                 ...persistedState.NetworkController,
-                availableNetworks: { ...orderedNetworks },
+                availableNetworks: { ...updatedNetworks },
             },
         };
     },

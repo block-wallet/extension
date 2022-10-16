@@ -151,15 +151,8 @@ const NetworksPage = () => {
     }, [])
 
     return (
-        <PopupLayout
-            header={
-                <PopupHeader
-                    title="Networks"
-                    onBack={() => history.push("/settings")}
-                />
-            }
-        >
-            <div className="flex flex-col p-6 space-y-4 w-full">
+        <PopupLayout header={<PopupHeader title="Networks" />}>
+            <div className="flex flex-col p-6 space-y-6 w-full">
                 <ActionButton
                     icon={plusIcon}
                     label="Add New Network"

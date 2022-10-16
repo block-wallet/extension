@@ -5,6 +5,7 @@ import {
     DEFAULT_TORNADO_CONFIRMATION,
     DERIVATIONS_FORWARD,
 } from '../../controllers/blank-deposit/types';
+import { editNetworkOrder } from '../types/communication';
 
 export type TornadoIntervals = {
     depositConfirmations: number;
@@ -79,6 +80,15 @@ export interface EditNetworkUpdatesType {
     name: string;
 }
 
+export interface EditNetworkOrder {
+    chainId: number;
+    order: number;
+}
+
+export interface EditNetworksOrder {
+    networksOrder: editNetworkOrder[];
+}
+
 export interface ActionsTimeInterval {
     blockNumberPull: Duration; // wait between block pulls
     balanceFetch: Duration; // native and watched tokens balance feth
@@ -142,7 +152,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: false,
         enable: true,
         test: false,
-        order: 1,
+        order: 0,
         features: [FEATURES.SENDS, FEATURES.SWAPS, FEATURES.TORNADO],
         ens: true,
         showGasLevels: true,
@@ -172,7 +182,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: true,
         enable: true,
         test: false,
-        order: 2,
+        order: 1,
         features: [FEATURES.SENDS, FEATURES.SWAPS],
         ens: false,
         showGasLevels: false,
@@ -202,7 +212,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: true,
         enable: false,
         test: false,
-        order: 3,
+        order: 2,
         features: [FEATURES.SENDS, FEATURES.SWAPS],
         ens: false,
         showGasLevels: false,
@@ -233,7 +243,7 @@ export const INITIAL_NETWORKS: Networks = {
         ],
         enable: true,
         test: false,
-        order: 4,
+        order: 3,
         features: [FEATURES.SENDS, FEATURES.SWAPS, FEATURES.TORNADO],
         ens: false,
         showGasLevels: true,
@@ -269,7 +279,7 @@ export const INITIAL_NETWORKS: Networks = {
         },
         enable: true,
         test: false,
-        order: 5,
+        order: 4,
         features: [FEATURES.SENDS, FEATURES.TORNADO, FEATURES.SWAPS],
         ens: false,
         showGasLevels: true,
@@ -305,7 +315,7 @@ export const INITIAL_NETWORKS: Networks = {
         },
         enable: true,
         test: false,
-        order: 6,
+        order: 5,
         features: [FEATURES.SENDS, FEATURES.SWAPS],
         ens: false,
         showGasLevels: true,
@@ -338,7 +348,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: false,
         enable: true,
         test: false,
-        order: 7,
+        order: 6,
         features: [FEATURES.SENDS, FEATURES.SWAPS],
         ens: false,
         showGasLevels: true,
@@ -366,7 +376,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: true,
         enable: false,
         test: false,
-        order: 8,
+        order: 7,
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,
@@ -397,7 +407,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: false,
         enable: true,
         test: true,
-        order: 9,
+        order: 0,
         features: [FEATURES.SENDS, FEATURES.TORNADO],
         ens: true,
         showGasLevels: true,
@@ -425,7 +435,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: false,
         enable: false,
         test: true,
-        order: 10,
+        order: 1,
         features: [FEATURES.SENDS],
         ens: true,
         showGasLevels: true,
@@ -453,7 +463,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: false,
         enable: false,
         test: true,
-        order: 11,
+        order: 2,
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
@@ -481,7 +491,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: false,
         enable: false,
         test: true,
-        order: 12,
+        order: 3,
         features: [FEATURES.SENDS],
         ens: true,
         showGasLevels: true,
@@ -512,7 +522,7 @@ export const INITIAL_NETWORKS: Networks = {
         ],
         enable: true,
         test: true,
-        order: 13,
+        order: 4,
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
@@ -542,7 +552,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: false,
         enable: true,
         test: true,
-        order: 14,
+        order: 5,
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
@@ -573,7 +583,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: true,
         enable: true,
         test: true,
-        order: 15,
+        order: 6,
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
@@ -600,7 +610,7 @@ export const INITIAL_NETWORKS: Networks = {
         isCustomNetwork: true,
         enable: true,
         test: true,
-        order: 16,
+        order: 7,
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,

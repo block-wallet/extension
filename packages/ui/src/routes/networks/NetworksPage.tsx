@@ -55,6 +55,7 @@ const NetworkDisplay = ({
 const NetworksPage = () => {
     const { availableNetworks } = useBlankState()!
     const history = useOnMountHistory()
+    const isFromHomePage = history.location.state?.isFromHomePage ?? false
     const parsedNetworks = Object.values(availableNetworks)
         .sort(sortNetworksByOrder)
         .reduce(
@@ -97,7 +98,16 @@ const NetworksPage = () => {
         })
     }
     return (
-        <PopupLayout header={<PopupHeader title="Networks" />}>
+        <PopupLayout
+            header={
+                <PopupHeader
+                    title="Networks"
+                    onBack={() =>
+                        history.push(isFromHomePage ? "/" : "/settings")
+                    }
+                />
+            }
+        >
             <div className="flex flex-col p-6 space-y-6 w-full">
                 <ActionButton
                     icon={plusIcon}

@@ -172,7 +172,12 @@ const NetworkSelect: FunctionComponent<{
                     >
                         <ClickableText
                             className={`cursor-pointer flex flex-row justify-between pl-2 pr-2 pt-1 pb-1 leading-loose items-center w-full rounded-none`}
-                            onClick={() => history.push("/settings/networks")}
+                            onClick={() =>
+                                history.push({
+                                    pathname: "/settings/networks",
+                                    state: { isFromHomePage: true },
+                                })
+                            }
                         >
                             Edit Networks
                         </ClickableText>

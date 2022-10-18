@@ -4,19 +4,19 @@ import { RATES_IDS_LIST } from '@block-wallet/chains-assets';
 import axios from 'axios';
 import CHAINLINK_DATAFEEDS_CONTRACTS from './chain-link/dataFeeds';
 
+interface getRateOptions {
+    networkProvider?: ethers.providers.StaticJsonRpcProvider;
+}
+
 export interface RateService {
     getRate(
         currency: string,
         symbol: string,
-        networkProvider?: any
+        options?: getRateOptions
     ): Promise<number>;
 }
 
 export const BaseApiEndpoint = 'https://api.coingecko.com/api/v3/simple/';
-
-interface getRateOptions {
-    networkProvider?: ethers.providers.StaticJsonRpcProvider;
-}
 
 export const chainLinkService: RateService = {
     async getRate(currency, symbol, options: getRateOptions = {}) {

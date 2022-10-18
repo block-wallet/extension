@@ -160,7 +160,10 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
             nativeCurrency,
             symbol,
             //TODO: check if we want to get the price using the mainnet datafeed even when standing on other networks
-            this._networkController.getProviderFromName('mainnet')
+            {
+                networkProvider:
+                    this._networkController.getProviderFromName('mainnet'),
+            }
             // this._networkController.getProvider()
         );
 

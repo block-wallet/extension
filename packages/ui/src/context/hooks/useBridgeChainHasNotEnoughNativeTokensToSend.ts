@@ -8,7 +8,6 @@ import { BigNumber } from "ethers"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 import { hasEnoughFundsToPayTheGasInSendTransaction } from "../../util/bridgeUtils"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import { boolean } from "yup"
 
 export enum EnoughNativeTokensToSend {
     UNKNOWN = "UNKNOWN",

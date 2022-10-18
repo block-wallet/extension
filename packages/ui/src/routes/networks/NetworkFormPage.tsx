@@ -326,9 +326,9 @@ const NetworkFormPage = ({
                                       onClick={() => {
                                           setConfirmDeletion(true)
                                       }}
-                                      className={classnames(
-                                          "text-red-500 cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-b-md w-40"
-                                      )}
+                                      className={
+                                          "text-red-500 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 rounded-md w-40"
+                                      }
                                   >
                                       <div className="pl-1 pr-1 w-8">
                                           <Icon

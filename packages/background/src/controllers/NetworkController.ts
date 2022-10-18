@@ -13,6 +13,8 @@ import {
 import { constants, ethers } from 'ethers';
 import { poll } from '@ethersproject/web';
 import { ErrorCode } from '@ethersproject/logger';
+import { cloneDeep } from 'lodash';
+
 import { checkIfRateLimitError } from '../utils/ethersError';
 import { getChainListItem } from '../utils/chainlist';
 import { FEATURES } from '../utils/constants/features';
@@ -21,6 +23,7 @@ import {
     getUrlWithoutTrailingSlash,
     validateNetworkChainId,
 } from '../utils/ethereumChain';
+import { normalizeNetworksOrder } from '../utils/networks';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -99,7 +102,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * Set a new list of networks.
      */
     public set networks(networks: Networks) {
-        this.store.updateState({ availableNetworks: networks });
+        this.store.updateState({
+            availableNetworks: normalizeNetworksOrder(networks),
+        });
     }
 
     /**
@@ -169,7 +174,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * Change list of networks order.
      */
     public editNetworksOrder(newNetworksOrder: EditNetworksOrder): void {
-        const newNetworks = { ...this.networks };
+        const newNetworks = cloneDeep(this.networks);
         newNetworksOrder.networksOrder.forEach((networkOrderUpdate) => {
             const { chainId, order } = networkOrderUpdate;
 
@@ -191,8 +196,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             newNetworks[networkKey].order = order;
         });
 
-        this.networks = newNetworks;
-        this.orderNetworks();
+        this.networks = normalizeNetworksOrder(newNetworks);
     }
 
     /**
@@ -228,7 +232,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             if (network.chainId === 1) {
                 throw new Error(`Mainnet cannot be removed`);
             }
-            const newNetworks = { ...this.networks };
+            const newNetworks = cloneDeep(this.networks);
 
             // If network is natively supported, the key is its uppercased name
             const key = this._getNetworkKey(network);
@@ -239,10 +243,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
             const key = this.getNonNativeNetworkKey(chainId);
 
             // Remove network from list
-            const newNetworks = { ...this.networks };
+            const newNetworks = cloneDeep(this.networks);
             delete newNetworks[key];
-            this.networks = newNetworks;
-            this.orderNetworks();
+            this.networks = normalizeNetworksOrder(newNetworks);
         }
 
         //TODO: Review if we should remove related information from the store
@@ -250,42 +253,6 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
     private _getNetworkKey = (network: Network): string => {
         return network.name.toUpperCase();
-    };
-
-    /**
-     * Sorts the networks by order and adjusts the order property
-     */
-    private orderNetworks = (): void => {
-        const currentNetworks = this.networks;
-
-        // Sort the current networks based on their current order property
-        const orderedNetworks = Object.entries(currentNetworks)
-            .sort(
-                ([, networkValue1], [, networkValue2]) =>
-                    networkValue1.order - networkValue2.order
-            )
-            .reduce(
-                (previousNetworksValue, [networkKey, networkValue]) => ({
-                    ...previousNetworksValue,
-                    [networkKey]: networkValue,
-                }),
-                {}
-            ) as Networks;
-
-        // Adjust order property number to remove gaps
-        let mainnetsCount = 0;
-        let testnetsCount = 0;
-        Object.keys(orderedNetworks).forEach((networkKey) => {
-            if (orderedNetworks[networkKey].test) {
-                orderedNetworks[networkKey].order = testnetsCount;
-                testnetsCount++;
-            } else {
-                orderedNetworks[networkKey].order = mainnetsCount;
-                mainnetsCount++;
-            }
-        });
-
-        this.networks = orderedNetworks;
     };
 
     public async editNetwork(
@@ -327,11 +294,11 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         const networkKey = this._getNetworkKey(existingNetwork);
 
-        const newNetworks = { ...this.networks };
+        const newNetworks = cloneDeep(this.networks);
         newNetworks[networkKey].desc = updates.name;
         newNetworks[networkKey].rpcUrls = [rpcUrl];
         newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
-        this.networks = newNetworks;
+        this.networks = normalizeNetworksOrder(newNetworks);
         return;
     }
 

@@ -42,10 +42,12 @@ const NetworksPage = () => {
         })
     }
 
-    const moveMainNetworkCard = useCallback(
-        (draggedIndex: number, hoveredOnIndex: number) => {
-            const draggedItem = mainNetworks[draggedIndex]
-            const hoveredOnItem = mainNetworks[hoveredOnIndex]
+    const moveNetworkCard = useCallback(
+        (draggedIndex: number, hoveredOnIndex: number, isTestnet: boolean) => {
+            const networks = isTestnet ? testNetworks : mainNetworks
+            const setNetworks = isTestnet ? setTestNetworks : setMainNetworks
+            const draggedItem = networks[draggedIndex]
+            const hoveredOnItem = networks[hoveredOnIndex]
 
             const hoveredOnOrder = hoveredOnItem.order
             const draggedOrder = draggedItem.order
@@ -63,7 +65,7 @@ const NetworksPage = () => {
                 ],
             })
 
-            setMainNetworks((prevNetworksState) => {
+            setNetworks((prevNetworksState) => {
                 const updatedNetworksList = [...prevNetworksState]
                 // Switch order properties of draggedItem and hoveredOnItem
                 updatedNetworksList[draggedIndex].order = hoveredOnOrder
@@ -74,42 +76,7 @@ const NetworksPage = () => {
                 return updatedNetworksList
             })
         },
-        [mainNetworks]
-    )
-
-    const moveTestNetworkCard = useCallback(
-        (draggedIndex: number, hoveredOnIndex: number) => {
-            const draggedItem = testNetworks[draggedIndex]
-            const hoveredOnItem = testNetworks[hoveredOnIndex]
-            const hoveredOnOrder = hoveredOnItem.order
-            const draggedOrder = draggedItem.order
-
-            editNetworksOrder({
-                networksOrder: [
-                    {
-                        chainId: draggedItem.chainId,
-                        order: hoveredOnOrder,
-                    },
-                    {
-                        chainId: hoveredOnItem.chainId,
-                        order: draggedOrder,
-                    },
-                ],
-            })
-
-            setTestNetworks((prevNetworksState) => {
-                const updatedNetworksList = [...prevNetworksState]
-
-                // Switch order properties of draggedItem and hoveredOnItem
-                updatedNetworksList[draggedIndex].order = hoveredOnOrder
-                updatedNetworksList[hoveredOnIndex].order = draggedOrder
-                // Switch the positions of draggedItem and hoveredOnItem in the array
-                updatedNetworksList[draggedIndex] = hoveredOnItem
-                updatedNetworksList[hoveredOnIndex] = draggedItem
-                return updatedNetworksList
-            })
-        },
-        [testNetworks]
+        [mainNetworks, testNetworks]
     )
 
     useEffect(() => {
@@ -178,7 +145,7 @@ const NetworksPage = () => {
                                     networkInfo={network}
                                     onClick={() => onClickNetwork(network)}
                                     index={index}
-                                    moveCard={moveMainNetworkCard}
+                                    moveCard={moveNetworkCard}
                                 />
                             ))}
                         </div>
@@ -192,7 +159,7 @@ const NetworksPage = () => {
                                     networkInfo={network}
                                     onClick={() => onClickNetwork(network)}
                                     index={index}
-                                    moveCard={moveTestNetworkCard}
+                                    moveCard={moveNetworkCard}
                                     isTestnet
                                 />
                             ))}

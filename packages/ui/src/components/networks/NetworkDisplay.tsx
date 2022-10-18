@@ -19,7 +19,11 @@ const NetworkDisplay = ({
     networkInfo: NetworkInfo
     onClick: () => void
     index: number
-    moveCard: (draggedIndex: number, hoveredOnIndex: number) => void
+    moveCard: (
+        draggedIndex: number,
+        hoveredOnIndex: number,
+        isTestnet: boolean
+    ) => void
     isTestnet?: boolean
 }) => {
     const ref = useRef<HTMLDivElement>(null)
@@ -59,7 +63,7 @@ const NetworkDisplay = ({
                     return
 
                 if (draggedIndex !== hoveredOnIndex) {
-                    moveCard(draggedIndex, hoveredOnIndex)
+                    moveCard(draggedIndex, hoveredOnIndex, isTestnet)
                     item.index = hoveredOnIndex
                 }
             },
@@ -77,7 +81,7 @@ const NetworkDisplay = ({
             end: (item: { index: number }, monitor: DragSourceMonitor) => {
                 const didDrop = monitor.didDrop()
                 if (!didDrop) {
-                    moveCard(item.index, index)
+                    moveCard(item.index, index, isTestnet)
                 }
             },
         }),

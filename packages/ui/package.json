@@ -107,6 +107,8 @@
         "postcss-preset-env": "6.7.0",
         "postcss-safe-parser": "5.0.2",
         "prettier": "^2.7.1",
+        "react-dnd-cjs": "^9.5.1",
+        "react-dnd-html5-backend-cjs": "^9.5.1",
         "react-is": "^17.0.2",
         "react-scripts": "^4.0.3",
         "sass-loader": "8.0.2",
@@ -201,7 +203,10 @@
         "modulePaths": [],
         "moduleNameMapper": {
             "^react-native$": "react-native-web",
-            "^.+\\.module\\.(css|sass|scss)$": "identity-obj-proxy"
+            "^.+\\.module\\.(css|sass|scss)$": "identity-obj-proxy",
+            "react-dnd": "react-dnd-cjs",
+            "react-dnd-html5-backend": "react-dnd-html5-backend-cjs",
+            "dnd-core": "dnd-core-cjs"
         },
         "moduleFileExtensions": [
             "web.js",

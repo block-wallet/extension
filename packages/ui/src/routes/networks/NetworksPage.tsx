@@ -31,6 +31,8 @@ const NetworksPage = () => {
     const [mainNetworks, setMainNetworks] = useState([] as NetworkInfo[])
     const [testNetworks, setTestNetworks] = useState([] as NetworkInfo[])
 
+    const isFromHomePage = history.location.state?.isFromHomePage ?? false
+
     const onClickNetwork = (network: NetworkInfo) => {
         history.push({
             pathname: "/settings/networks/details",
@@ -150,7 +152,16 @@ const NetworksPage = () => {
     }, [])
 
     return (
-        <PopupLayout header={<PopupHeader title="Networks" />}>
+        <PopupLayout
+            header={
+                <PopupHeader
+                    title="Networks"
+                    onBack={() =>
+                        history.push(isFromHomePage ? "/" : "/settings")
+                    }
+                />
+            }
+        >
             <div className="flex flex-col p-6 space-y-6 w-full">
                 <ActionButton
                     icon={plusIcon}

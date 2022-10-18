@@ -416,7 +416,7 @@ const NetworkFormPage = ({
                     if (addNetworkInvoke.isError) {
                         return addNetworkInvoke.reset()
                     }
-                    history.push("/settings/networks")
+                    history.replace("/settings/networks")
                 }}
             />
             <WaitingDialog

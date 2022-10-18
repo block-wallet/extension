@@ -4,10 +4,10 @@ import { RATES_IDS_LIST } from '@block-wallet/chains-assets';
 import axios from 'axios';
 import CHAINLINK_DATAFEEDS_CONTRACTS from './chain-link/dataFeeds';
 
+
 interface getRateOptions {
     networkProvider?: ethers.providers.StaticJsonRpcProvider;
 }
-
 export interface RateService {
     getRate(
         currency: string,

@@ -133,7 +133,8 @@ const NetworkFormPage = ({
             }
             return RPCUrlValidation.EMPTY
         })
-
+    const [isNativelySupported, setIsNativelySupported] =
+        useState<boolean>(false)
     const { availableNetworks } = useBlankState()!
 
     const {
@@ -251,7 +252,14 @@ const NetworkFormPage = ({
                 : addNetwork(networkData)
         )
     })
-
+    useEffect(() => {
+        const existingNetwork = Object.values(availableNetworks).find(
+            (network) => network.chainId === Number(watchChainId)
+        )
+        setIsNativelySupported(
+            existingNetwork ? existingNetwork.nativelySupported : false
+        )
+    }, [watchChainId])
     const deleteNetwork = () => {
         removeNetworkInvoke.run(removeNetwork(network!.chainId!))
     }
@@ -348,7 +356,7 @@ const NetworkFormPage = ({
                 ) : null
             }
         >
-            {!network?.nativelySupported && (
+            {!isNativelySupported && (
                 <CollapsableWarning
                     dialog={{
                         title: "Warning",
@@ -410,7 +418,7 @@ const NetworkFormPage = ({
                     if (addNetworkInvoke.isError) {
                         return addNetworkInvoke.reset()
                     }
-                    history.push("/settings/networks")
+                    history.replace("/settings/networks")
                 }}
             />
             <WaitingDialog

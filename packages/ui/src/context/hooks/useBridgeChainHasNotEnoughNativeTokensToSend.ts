@@ -2,13 +2,13 @@ import {
     getAccountNativeTokenBalanceForChain,
     fetchLatestGasPriceForChain,
 } from "../commActions"
-import { useMemo, useEffect } from "react"
+import { useMemo, useEffect, useCallback, useState } from "react"
 import useAsyncInvoke, { Status } from "../../util/hooks/useAsyncInvoke"
 import { BigNumber } from "ethers"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 import { hasEnoughFundsToPayTheGasInSendTransaction } from "../../util/bridgeUtils"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import { isNativeTokenAddress } from "../../util/tokenUtils"
+import { boolean } from "yup"
 
 export enum EnoughNativeTokensToSend {
     UNKNOWN = "UNKNOWN",
@@ -21,55 +21,52 @@ interface NativeAndGasPrices {
     gasPrices: GasPriceData | undefined
 }
 
+interface EnoughNativeTokenToSend {
+    check: () => Promise<any>
+    result: EnoughNativeTokensToSend | undefined
+    isLoading: boolean
+}
+
 /**
  * useAddressHasEnoughNativeTokensToSend
  *
- * This hooks checks the native token balance on the destination network when performing a bridge and @returns:
+ * This hooks checks the native token balance on the destination network (defined by chainId parameter) and @returns:
  *
- * "ENOUGH" if the user has enough balance to perform a send tx or he/she's briding to the native token in the destination network
+ * check(): callback that checks the native token in the destination network and the gas prices of that network
  *
- * "NOT_ENOUGH" if the user hasn't enough balance to perform a send tx in the destination network and he/she isn't bridging to the destination network
+ * result: undefined if the check didn't run, "ENOUGH"/"NOT_ENOUGH" if the user has/hasn't enough balance to perform a send tx in the destination network, "UNKNOWN" if we can't verify the native token balance in the destination network (due to an external error or because he/she doesn't have the network in his wallet)
  *
- * "UNKNOWN" if we can't verify the native token balance in the destination network (due to an external error or because he/she doesn't have the network in his wallet)
- * or we can't verify the gas prices
+ * isLoading: false if the check didn't run or it finished and true if it's still runinng.
  */
 export const useAddressHasEnoughNativeTokensToSend = (
-    chainId: number,
-    tokenAddress: string
-): {
-    isLoading: boolean
-    result: EnoughNativeTokensToSend
-} => {
-    const nativeTokenBridge = isNativeTokenAddress(tokenAddress)
-
+    chainId: number
+): EnoughNativeTokenToSend => {
     const { run, isLoading, data } = useAsyncInvoke<NativeAndGasPrices>({
-        status: nativeTokenBridge ? Status.IDLE : Status.PENDING,
+        status: Status.IDLE,
     })
+    const [hasStarted, setHasStarted] = useState<boolean>(false)
     const { isEIP1559Compatible } = useBlankState()!
 
-    useEffect(() => {
-        if (!nativeTokenBridge) {
-            run(
-                new Promise<NativeAndGasPrices>(async (resolve) => {
-                    const [nativeTokenBalance, gasPrices] = await Promise.all([
-                        getAccountNativeTokenBalanceForChain(chainId),
-                        fetchLatestGasPriceForChain(chainId),
-                    ])
-                    return resolve({
-                        nativeTokenBalance,
-                        gasPrices,
-                    })
+    const check = useCallback(() => {
+        return run(
+            new Promise<NativeAndGasPrices>(async (resolve) => {
+                setHasStarted(true)
+                const [nativeTokenBalance, gasPrices] = await Promise.all([
+                    getAccountNativeTokenBalanceForChain(chainId),
+                    fetchLatestGasPriceForChain(chainId),
+                ])
+                return resolve({
+                    nativeTokenBalance,
+                    gasPrices,
                 })
-            )
-        }
-    }, [run, chainId])
+            })
+        )
+    }, [])
 
     return useMemo(() => {
-        let result = EnoughNativeTokensToSend.UNKNOWN
-        if (!isLoading) {
-            if (nativeTokenBridge) {
-                result = EnoughNativeTokensToSend.ENOUGH
-            } else if (!data || !data.nativeTokenBalance || !data.gasPrices) {
+        let result = undefined
+        if (hasStarted && !isLoading) {
+            if (!data || !data.nativeTokenBalance || !data.gasPrices) {
                 result = EnoughNativeTokensToSend.UNKNOWN
             } else {
                 const hasEnoughFunds =
@@ -87,6 +84,6 @@ export const useAddressHasEnoughNativeTokensToSend = (
                 }
             }
         }
-        return { isLoading, result }
-    }, [isLoading, data])
+        return { isLoading, result, check }
+    }, [isLoading, data, check])
 }

@@ -196,7 +196,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             newNetworks[networkKey].order = order;
         });
 
-        this.networks = normalizeNetworksOrder(newNetworks);
+        this.networks = newNetworks;
     }
 
     /**
@@ -245,7 +245,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             // Remove network from list
             const newNetworks = cloneDeep(this.networks);
             delete newNetworks[key];
-            this.networks = normalizeNetworksOrder(newNetworks);
+            this.networks = newNetworks;
         }
 
         //TODO: Review if we should remove related information from the store
@@ -298,7 +298,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         newNetworks[networkKey].desc = updates.name;
         newNetworks[networkKey].rpcUrls = [rpcUrl];
         newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
-        this.networks = normalizeNetworksOrder(newNetworks);
+        this.networks = newNetworks;
         return;
     }
 

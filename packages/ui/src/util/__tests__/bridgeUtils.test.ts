@@ -1,5 +1,5 @@
 import { Network } from "@block-wallet/background/utils/constants/networks"
-import { EnoughNativeTokensToSend } from "../../context/hooks/useBridgeChainHasNotEnoughNativeTokensToSend"
+import { EnoughNativeTokensToSend } from "../../context/hooks/useSelectedAccountHasEnoughNativeTokensToSend"
 import { getWarningMessages } from "../bridgeUtils"
 
 describe("Bridge Utils tests", () => {

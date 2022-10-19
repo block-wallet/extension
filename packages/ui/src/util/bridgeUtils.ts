@@ -12,7 +12,7 @@ import {
 import { RichedTransactionMeta } from "./transactionUtils"
 import { SEND_GAS_COST } from "../util/constants"
 import { getTransactionFees } from "../util/gasPrice"
-import { EnoughNativeTokensToSend } from "../context/hooks/useBridgeChainHasNotEnoughNativeTokensToSend"
+import { EnoughNativeTokensToSend } from "../context/hooks/useSelectedAccountHasEnoughNativeTokensToSend"
 import { Network } from "@block-wallet/background/utils/constants/networks"
 
 const LIFI_NATIVE_ADDRESS = "0x0000000000000000000000000000000000000000"

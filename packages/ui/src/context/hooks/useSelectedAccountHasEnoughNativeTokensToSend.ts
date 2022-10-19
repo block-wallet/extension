@@ -7,7 +7,7 @@ import useAsyncInvoke, { Status } from "../../util/hooks/useAsyncInvoke"
 import { BigNumber } from "ethers"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 import { hasEnoughFundsToPayTheGasInSendTransaction } from "../../util/bridgeUtils"
-import { useBlankState } from "../../context/background/backgroundHooks"
+import { useBlankState } from "../background/backgroundHooks"
 
 export enum EnoughNativeTokensToSend {
     UNKNOWN = "UNKNOWN",
@@ -27,7 +27,7 @@ interface EnoughNativeTokenToSend {
 }
 
 /**
- * useAddressHasEnoughNativeTokensToSend
+ * useSelectedAccountHasEnoughNativeTokensToSend
  *
  * This hooks checks the native token balance on the destination network (defined by chainId parameter) and @returns:
  *
@@ -37,7 +37,7 @@ interface EnoughNativeTokenToSend {
  *
  * isLoading: false if the check didn't run or it finished and true if it's still runinng.
  */
-export const useAddressHasEnoughNativeTokensToSend = (
+export const useSelectedAccountHasEnoughNativeTokensToSend = (
     chainId: number
 ): EnoughNativeTokenToSend => {
     const { run, isLoading, data } = useAsyncInvoke<NativeAndGasPrices>({

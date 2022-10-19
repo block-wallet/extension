@@ -78,9 +78,9 @@ import { WithRequired } from "@block-wallet/background/utils/types/helpers"
 import CollapsableWarning from "../../components/CollapsableWarning"
 import { AiOutlineWarning } from "react-icons/ai"
 import {
-    useAddressHasEnoughNativeTokensToSend,
+    useSelectedAccountHasEnoughNativeTokensToSend,
     EnoughNativeTokensToSend,
-} from "../../context/hooks/useBridgeChainHasNotEnoughNativeTokensToSend"
+} from "../../context/hooks/useSelectedAccountHasEnoughNativeTokensToSend"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
 
 export interface BridgeConfirmPageLocalState {
@@ -241,8 +241,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         : hasNativeAssetBalance && hasFromTokenBalance
 
     const { hideBridgeInsufficientNativeTokenWarning } = useUserSettings()
-    const { isLoading, result, check } =
-        useAddressHasEnoughNativeTokensToSend(toChainId)
+    const {
+        isLoading: isLoadingSelectedAccountHasEnoughNativeTokensToSend,
+        result: selectedAccountNativeTokensInDestinationNetwork,
+        check: checkSelectedAccountHasEnoughNativeTokensToSend,
+    } = useSelectedAccountHasEnoughNativeTokensToSend(toChainId)
 
     const destinationTokenIsNative = isNativeTokenAddress(toToken.address)
     const destinationNetwork = Object.values(availableNetworks).find(
@@ -253,7 +256,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
             !hideBridgeInsufficientNativeTokenWarning &&
             !destinationTokenIsNative
         ) {
-            check()
+            checkSelectedAccountHasEnoughNativeTokensToSend()
         }
     }, [])
 
@@ -262,22 +265,30 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         if (
             !hideBridgeInsufficientNativeTokenWarning &&
             !destinationTokenIsNative &&
-            !isLoading &&
-            !!result
+            !isLoadingSelectedAccountHasEnoughNativeTokensToSend &&
+            !!selectedAccountNativeTokensInDestinationNetwork
         ) {
             setBridgeWarningMessage(
-                getWarningMessages(result, destinationNetwork)
+                getWarningMessages(
+                    selectedAccountNativeTokensInDestinationNetwork,
+                    destinationNetwork
+                )
             )
             setShowDestinationFeeWarning(
                 !hideBridgeInsufficientNativeTokenWarning &&
-                    !isLoading &&
+                    !isLoadingSelectedAccountHasEnoughNativeTokensToSend &&
                     !inProgressAllowanceTransaction?.id &&
                     !inProgressTransaction?.id &&
-                    !!result &&
-                    result !== EnoughNativeTokensToSend.ENOUGH
+                    !!selectedAccountNativeTokensInDestinationNetwork &&
+                    selectedAccountNativeTokensInDestinationNetwork !==
+                        EnoughNativeTokensToSend.ENOUGH
             )
         }
-    }, [isLoading, inProgressAllowanceTransaction, inProgressTransaction])
+    }, [
+        isLoadingSelectedAccountHasEnoughNativeTokensToSend,
+        inProgressAllowanceTransaction,
+        inProgressTransaction,
+    ])
 
     const onSubmit = async () => {
         if (error || !hasBalance || !quote) return
@@ -460,7 +471,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                                   isGasLoading ||
                                   isFetchingParams ||
                                   isBridging ||
-                                  !!isLoading
+                                  !!isLoadingSelectedAccountHasEnoughNativeTokensToSend
                         }
                         onClick={onSubmit}
                         disabled={!!error || !hasBalance}

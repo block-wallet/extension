@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Classes } from "../../styles/classes"
 
@@ -15,6 +15,7 @@ import { createWallet, requestSeedPhrase } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import log from "loglevel"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
+import { useBlankState } from "../../context/background/backgroundHooks"
 
 const schema = yup.object().shape({
     password: yup
@@ -34,6 +35,7 @@ const schema = yup.object().shape({
         .required("You must accept the Terms of Use.")
         .oneOf([true], "You must accept the Terms of Use."),
 })
+
 type PasswordSetupFormData = {
     password: string
     passwordConfirmation: string
@@ -45,6 +47,16 @@ const PasswordSetupPage = () => {
     const [passwordScore, setPasswordScore] = useState<number>(0)
     const [isCreating, setIsCreating] = useState<boolean>(false)
 
+    // if the onboarding is ready the user shoulnd't set the password again.
+    const state = useBlankState()
+    useEffect(() => {
+        if (!state || state.isOnboarded) {
+            history.push({
+                pathname: "/setup/done",
+            })
+        }
+    }, [state, history])
+
     const {
         register,
         handleSubmit,
@@ -54,6 +66,7 @@ const PasswordSetupPage = () => {
     } = useForm<PasswordSetupFormData>({
         resolver: yupResolver(schema),
     })
+
     const onSubmit = handleSubmit(async (data: PasswordSetupFormData) => {
         if (passwordScore < 3) {
             return setError(

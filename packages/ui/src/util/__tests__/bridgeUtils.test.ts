@@ -1,6 +1,6 @@
 import { Network } from "@block-wallet/background/utils/constants/networks"
 import { EnoughNativeTokensToSend } from "../../context/hooks/useSelectedAccountHasEnoughNativeTokensToSend"
-import { getWarningMessages } from "../bridgeUtils"
+import { getBridgeWarningMessages } from "../bridgeUtils"
 
 describe("Bridge Utils tests", () => {
     const enabledNetwork: Network = {
@@ -35,26 +35,29 @@ describe("Bridge Utils tests", () => {
 
     const disabledNetwork = { ...enabledNetwork, enable: false }
 
-    describe("getWarningMessages", () => {
+    describe("getBridgeWarningMessages", () => {
         it("Should return undefined because there's enough native tokens", () => {
             expect(
-                getWarningMessages(EnoughNativeTokensToSend.ENOUGH, undefined)
+                getBridgeWarningMessages(
+                    EnoughNativeTokensToSend.ENOUGH,
+                    undefined
+                )
             ).toBeUndefined()
             expect(
-                getWarningMessages(
+                getBridgeWarningMessages(
                     EnoughNativeTokensToSend.ENOUGH,
                     enabledNetwork
                 )
             ).toBeUndefined()
             expect(
-                getWarningMessages(
+                getBridgeWarningMessages(
                     EnoughNativeTokensToSend.ENOUGH,
                     disabledNetwork
                 )
             ).toBeUndefined()
         })
         it("Should return that the funds may get stuck", () => {
-            const stuckMessage = getWarningMessages(
+            const stuckMessage = getBridgeWarningMessages(
                 EnoughNativeTokensToSend.NOT_ENOUGH,
                 undefined
             )
@@ -62,7 +65,7 @@ describe("Bridge Utils tests", () => {
             expect(stuckMessage?.title).toContain("get stuck")
             expect(stuckMessage?.body).toContain("the destination network")
             expect(stuckMessage?.body).toContain("native token")
-            const stuckMessage2 = getWarningMessages(
+            const stuckMessage2 = getBridgeWarningMessages(
                 EnoughNativeTokensToSend.NOT_ENOUGH,
                 enabledNetwork
             )
@@ -74,7 +77,7 @@ describe("Bridge Utils tests", () => {
             )
         })
         it("Should return that the destination network was not detected", () => {
-            const undetectedMessage = getWarningMessages(
+            const undetectedMessage = getBridgeWarningMessages(
                 EnoughNativeTokensToSend.UNKNOWN,
                 undefined
             )
@@ -82,7 +85,7 @@ describe("Bridge Utils tests", () => {
             expect(undetectedMessage?.title).toContain("not detected")
             expect(undetectedMessage?.body).toContain("the destination network")
 
-            const undetectedMessage2 = getWarningMessages(
+            const undetectedMessage2 = getBridgeWarningMessages(
                 EnoughNativeTokensToSend.UNKNOWN,
                 disabledNetwork
             )
@@ -93,7 +96,7 @@ describe("Bridge Utils tests", () => {
             )
         })
         it("Should return that the gas prices are unavailable", () => {
-            const undetectedMessage = getWarningMessages(
+            const undetectedMessage = getBridgeWarningMessages(
                 EnoughNativeTokensToSend.UNKNOWN,
                 enabledNetwork
             )

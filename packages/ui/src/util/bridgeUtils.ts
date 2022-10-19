@@ -102,7 +102,7 @@ export const isBridgeQuoteNotFoundError = (e: Error): boolean => {
     return e.name === "QuoteNotFoundError"
 }
 
-export const getWarningMessages = (
+export const getBridgeWarningMessages = (
     nativeTokenStatus: EnoughNativeTokensToSend,
     network: Network | undefined
 ): BridgeWarningMessage | undefined => {

@@ -149,6 +149,7 @@ const initialState: BlankAppState = {
             defaultBrowserWallet: true,
             hideEstimatedGasExceedsThresholdWarning: false, // Shown by default,
             hideDepositsExternalAccountsWarning: false,
+            hideBridgeInsufficientNativeTokenWarning: false, // Shown by default
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',

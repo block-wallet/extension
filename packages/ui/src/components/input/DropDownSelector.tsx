@@ -13,6 +13,7 @@ type DropDownSelectorProps = {
     error?: string
     disabled?: boolean
     customWidth?: string
+    className?: string
 }
 
 /**
@@ -32,6 +33,7 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
     display,
     topMargin,
     bottomMargin,
+    className,
     popupMargin,
     error,
     disabled,
@@ -102,7 +104,8 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
                     active && Classes.blueSectionActive,
                     error
                         ? "border-red-400"
-                        : "border-opacity-0 border-transparent"
+                        : "border-opacity-0 border-transparent",
+                    className
                 )}
                 onClick={() => !disabled && setActive(!active)}
                 ref={displayRef}

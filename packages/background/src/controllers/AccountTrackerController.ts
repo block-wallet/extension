@@ -1035,7 +1035,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      * @returns The list of the specified address tokens
      */
     public getAccountTokens(
-        accountAddress: string,
+        accountAddress: string = this._preferencesController.getSelectedAddress(),
         chainId: number = this._networkController.network.chainId
     ): AccountBalanceTokens {
         if (accountAddress in this.store.getState().accounts) {
@@ -1050,6 +1050,30 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
         }
         return {} as AccountBalanceTokens;
+    }
+
+    /**
+     * getAccountNativeToken
+     *
+     * @param accountAddress The account address
+     * @returns The account native token
+     */
+    public getAccountNativeTokenBalance(
+        accountAddress: string = this._preferencesController.getSelectedAddress(),
+        chainId: number = this._networkController.network.chainId
+    ): BigNumber {
+        if (accountAddress in this.store.getState().accounts) {
+            if (
+                this.store.getState().accounts[accountAddress].balances &&
+                chainId in
+                    this.store.getState().accounts[accountAddress].balances
+            ) {
+                return this.store.getState().accounts[accountAddress].balances[
+                    chainId
+                ].nativeTokenBalance;
+            }
+        }
+        return BigNumber.from('0');
     }
 
     /**

@@ -46,17 +46,18 @@ import {
     GetBridgeQuoteResponse,
 } from "@block-wallet/background/controllers/BridgeController"
 import { ApproveOperation } from "../transaction/ApprovePage"
-import { BridgeAllowanceCheck } from "../../context/commTypes"
+import { BridgeAllowanceCheck, QuoteFeeStatus } from "../../context/commTypes"
 import { defaultAdvancedSettings } from "../../components/transactions/AdvancedSettings"
-import { AiFillInfoCircle } from "react-icons/ai"
-import GenericTooltip from "../../components/label/GenericTooltip"
 import { BASE_BRIDGE_FEE } from "../../util/constants"
 import { formatNumberLength } from "../../util/formatNumberLength"
-import { CgLayoutGrid } from "react-icons/cg"
-import Tooltip from "../../components/label/Tooltip"
+import { formatRounded } from "../../util/formatRounded"
+import FeeDetails from "../../components/FeeDetails"
+import ClickableText from "../../components/button/ClickableText"
 
 const QUOTE_NOT_FOUND_ERR_MESSAGE =
     "Unable to generate a valid quote. Please try by modifying the amount of the Bridge Asset."
+
+const INSUFFICIENT_BALANCE_TO_COVER_FEES = `You don't have enough balance to cover the bridge fees.`
 
 interface SetupBridgePageLocalState {
     amount?: string
@@ -340,6 +341,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
                 if (isValidFetch) {
                     setQuote(fetchedQuote)
+                    if (fetchedQuote.quoteFeeStatus !== QuoteFeeStatus.OK) {
+                        setError(INSUFFICIENT_BALANCE_TO_COVER_FEES)
+                    }
                     setisFetchingQuote(false)
                 }
             } catch (error) {
@@ -371,6 +375,25 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     }, [bigNumberAmount, errors.amount, selectedAddress, selectedRoute])
 
     const isAmountError = error === QUOTE_NOT_FOUND_ERR_MESSAGE
+    const isFeeError =
+        error &&
+        quote?.quoteFeeStatus ===
+            QuoteFeeStatus.INSUFFICIENT_BALANCE_TO_COVER_FEES
+    const bridgeFeeSummary = quote?.bridgeParams.params.feeCosts.reduce(
+        (feeDetails, fee) => {
+            if (feeDetails) {
+                feeDetails = feeDetails.concat(" + ")
+            }
+            return feeDetails.concat(
+                `${formatRounded(
+                    formatUnits(fee.total, fee.token.decimals),
+                    4
+                )} 
+                ${fee.token.symbol}`
+            )
+        },
+        ""
+    )
 
     return (
         <PopupLayout
@@ -525,11 +548,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         !errors.amount?.message && "hidden"
                     )}
                 >
-                    <ErrorMessage error={errors.amount?.message} />
+                    <ErrorMessage>{errors.amount?.message}</ErrorMessage>
                 </div>
 
                 {/* Divider */}
-                <div className="pt-6">
+                <div className="pt-3 h-8">
                     <hr className="-mx-5" />
                     <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-grey-200 bg-white z-10">
                         <img
@@ -579,55 +602,58 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
                 {/* Bridge fee */}
                 {quote && (
-                    <>
-                        <div className="flex items-center pt-2">
-                            <p className="text-xs text-gray-600 pt-0.5 mr-1">
-                                Bridge fee: 0{" "}
-                                {quote.bridgeParams.params.fromToken.symbol}
-                            </p>
-                            <GenericTooltip
-                                top
-                                centerX
-                                content={
-                                    <div className="min-w-max p-1 text-center">
-                                        <p className="pb-0.5">
-                                            This bridge is on us!
-                                        </p>
-                                        <p>
-                                            Original fee:{" "}
-                                            {formatNumberLength(
-                                                formatUnits(
-                                                    BigNumber.from(
-                                                        quote.bridgeParams
-                                                            .params.fromAmount
-                                                    )
-                                                        .mul(
-                                                            BASE_BRIDGE_FEE * 10
-                                                        )
-                                                        .div(1000),
+                    <div className="flex flex-row items-center justify-between">
+                        <FeeDetails
+                            summary={`Bridge fees: ${bridgeFeeSummary}`}
+                            details={
+                                <div className="p-1 text-center !break-word !whitespace-normal">
+                                    <p className="pb-0.5">
+                                        BlockWallet is not charging fees for
+                                        this brdige!
+                                    </p>
+                                    <br />
+                                    <p>
+                                        <b>Original BlockWallet fee:</b>{" "}
+                                        {formatNumberLength(
+                                            formatUnits(
+                                                BigNumber.from(
                                                     quote.bridgeParams.params
-                                                        .fromToken.decimals
-                                                ),
-                                                8
-                                            )}{" "}
-                                            {
+                                                        .fromAmount
+                                                )
+                                                    .mul(BASE_BRIDGE_FEE * 10)
+                                                    .div(1000),
                                                 quote.bridgeParams.params
-                                                    .fromToken.symbol
-                                            }
-                                        </p>
-                                    </div>
-                                }
-                            >
-                                <AiFillInfoCircle
-                                    size={18}
-                                    className="cursor-pointer text-primary-200 hover:text-primary-300"
-                                />
-                            </GenericTooltip>
-                        </div>
-                    </>
+                                                    .fromToken.decimals
+                                            ),
+                                            8
+                                        )}{" "}
+                                        {
+                                            quote.bridgeParams.params.fromToken
+                                                .symbol
+                                        }
+                                    </p>
+                                </div>
+                            }
+                        />
+                        {!error && (
+                            <ClickableText className="pt-2" onClick={() => {}}>
+                                View details
+                            </ClickableText>
+                        )}
+                    </div>
                 )}
-
-                {error && <ErrorMessage className="mt-2.5" error={error} />}
+                {error && (
+                    <ErrorMessage className="mt-4">
+                        <span>
+                            {error}{" "}
+                            <ClickableText
+                                onClick={() => (isFeeError ? "" : "")}
+                            >
+                                View details
+                            </ClickableText>
+                        </span>
+                    </ErrorMessage>
+                )}
             </div>
         </PopupLayout>
     )

@@ -829,9 +829,9 @@ const SendConfirmPage = () => {
                             />
                             {errors.asset?.message && (
                                 <div className="pl-1 my-2">
-                                    <ErrorMessage
-                                        error={errors.asset?.message}
-                                    />
+                                    <ErrorMessage>
+                                        {errors.asset?.message}
+                                    </ErrorMessage>
                                 </div>
                             )}
                         </div>
@@ -932,7 +932,9 @@ const SendConfirmPage = () => {
                                     errors.amount?.message ? "pl-1 my-2" : null
                                 }`}
                             >
-                                <ErrorMessage error={errors.amount?.message} />
+                                <ErrorMessage>
+                                    {errors.amount?.message}
+                                </ErrorMessage>
                             </div>
                         </div>
 
@@ -970,7 +972,7 @@ const SendConfirmPage = () => {
                             />
                         )}
                         <div className={`${error ? "pl-1 my-2" : null}`}>
-                            <ErrorMessage error={error} />
+                            <ErrorMessage>{error}</ErrorMessage>
                         </div>
 
                         <div className="mt-3">

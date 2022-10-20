@@ -64,6 +64,7 @@ const transactionMessages = {
     [TransactionCategories.EXCHANGE]: "BlockWallet Swap",
     [TransactionCategories.BRIDGE]: "BlockWallet Bridge",
     [TransactionCategories.INCOMING_BRIDGE]: "Incoming Bridge",
+    [TransactionCategories.INCOMING_BRIDGE_REFUND]: "Bridge Refund",
     [TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER]: "Incoming Bridge",
 }
 
@@ -453,6 +454,7 @@ const TransactionItem: React.FC<{
             case TransactionCategories.BLANK_WITHDRAWAL:
             case TransactionCategories.INCOMING_BRIDGE:
             case TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER:
+            case TransactionCategories.INCOMING_BRIDGE_REFUND:
                 return "+"
 
             default:

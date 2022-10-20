@@ -513,7 +513,7 @@ const SwapPage = () => {
                         !errors.amount?.message && "hidden"
                     )}
                 >
-                    <ErrorMessage error={errors.amount?.message} />
+                    <ErrorMessage>{errors.amount?.message}</ErrorMessage>
                 </div>
 
                 {/* Switch Inputs */}

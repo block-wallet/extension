@@ -136,7 +136,7 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
             network={selectedNetwork}
             padding={false}
             transparent={true}
-            bigLogo={true}
+            bigLogo={false}
         />
     ) : (
         <div className="text-base font-semibold">Select...</div>

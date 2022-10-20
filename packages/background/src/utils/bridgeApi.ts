@@ -10,6 +10,7 @@ import {
     lifiBridgeStatusToBridgeStatus,
     lifiBridgeSubstatusToBridgeSubstatus,
     LiFiErrorResponse,
+    lifiFeeCostsToIBridgeFeeCosts,
     lifiTokenToIToken,
     LIFI_BRIDGE_ENDPOINT,
 } from './types/lifi';
@@ -31,6 +32,9 @@ export class QuoteNotFoundError extends Error {
         this.name = 'QuoteNotFoundError';
     }
 }
+
+export const isQuoteNotFoundError = (e: Error) =>
+    'QuoteNotFoundError' === e.name;
 
 export enum BridgeImplementation {
     LIFI_BRIDGE = 'LIFI_BRIDGE',
@@ -69,6 +73,17 @@ export interface getBridgeRoutesRequest {
     toTokenAddress?: string;
 }
 
+export interface IBridgeFeeCost {
+    token: IToken;
+    details: {
+        name: string;
+        description: string;
+        amount: string;
+        percentage: string;
+    }[];
+    total: string;
+}
+
 export interface getBridgeQuoteRequest {
     fromChainId: number;
     toChainId: number;
@@ -100,6 +115,7 @@ export interface IBridgeQuote {
     fromChainId: number;
     toChainId: number;
     tool: string;
+    feeCosts: IBridgeFeeCost[];
 }
 
 export interface IBridgeRoute {
@@ -208,6 +224,7 @@ const LiFiBridge: IBridge = {
                     referrer: r.referrer,
                     integrator: 'blockwallet.io',
                     slippage: r.slippage || 0.5,
+                    //allowBridges: ['stargate'],
                 },
             });
             if (response.status === 400) {
@@ -224,6 +241,9 @@ const LiFiBridge: IBridge = {
                 fromToken: lifiTokenToIToken(responseData.action.fromToken),
                 toToken: lifiTokenToIToken(responseData.action.toToken),
                 tool: responseData.tool,
+                feeCosts: lifiFeeCostsToIBridgeFeeCosts(
+                    responseData.estimate.feeCosts
+                ),
             };
         } catch (e) {
             if (e.response.status === 404) {

@@ -185,6 +185,7 @@ export default {
                     to: '0x362fA9D0bCa5D19f743Db50738345ce2b40eC99f',
                     value: '0x021e19e0c9bab2400000',
                 },
+                feeCosts: [],
             },
             customNonce: 5,
             gasPrice: BigNumber.from('0'),

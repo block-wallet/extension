@@ -39,6 +39,9 @@ import TokenAllowanceController from '@block-wallet/background/controllers/erc-2
 import { sleep } from '@block-wallet/background/utils/sleep';
 import MockProvider from 'test/mocks/mock-provider';
 import { TransactionStatus } from '@block-wallet/background/controllers/transactions/utils/types';
+import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
+import { AccountTrackerController } from '@block-wallet/background/controllers/AccountTrackerController';
+import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
 
 const TOKEN_A_GOERLI: IToken = {
     address: 'token_a_g',
@@ -106,7 +109,7 @@ describe('Bridge Controller', () => {
     let transactionController: TransactionController;
     let bridgeController: BridgeController;
     let tokenAllowanceController: TokenAllowanceController;
-
+    let accountTrackerController: AccountTrackerController;
     before(() => {
         //mock supported chains
         sandbox
@@ -175,11 +178,29 @@ describe('Bridge Controller', () => {
             { txHistoryLimit: 40 }
         );
 
+        accountTrackerController = new AccountTrackerController(
+            mockKeyringController,
+            networkController,
+            tokenController,
+            tokenOperationsController,
+            preferencesController,
+            blockUpdatesController,
+            new TransactionWatcherController(
+                networkController,
+                preferencesController,
+                blockUpdatesController,
+                tokenController,
+                transactionController,
+                { transactions: [] }
+            )
+        );
+
         bridgeController = new BridgeController(
             networkController,
             transactionController,
             tokenController,
-            tokenAllowanceController
+            tokenAllowanceController,
+            accountTrackerController
         );
     });
 
@@ -406,6 +427,7 @@ describe('Bridge Controller', () => {
                             fromAmount: '10000000000000000',
                             fromChainId: GOERLI_CHAIN_ID,
                             toChainId: 1,
+                            feeCosts: [],
                             fromToken: {
                                 address:
                                     '0x41A3Dba3D677E573636BA691a70ff2D606c29666',

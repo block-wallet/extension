@@ -442,6 +442,7 @@ export default class BlankController extends EventEmitter {
             this.transactionController,
             this.tokenController,
             this.tokenAllowanceController,
+            this.accountTrackerController,
             initState.BridgeController
         );
 

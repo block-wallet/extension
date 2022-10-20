@@ -488,7 +488,7 @@ const WithdrawBlankConfirm = () => {
                             </span>
                         </div>
                     </div>
-                    <ErrorMessage error={error} />
+                    <ErrorMessage>{error}</ErrorMessage>
                 </div>
             </div>
         </PopupLayout>

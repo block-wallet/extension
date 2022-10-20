@@ -23,6 +23,8 @@ import BridgeAPI, {
     getBridgeQuoteRequest,
     IBridgeRoute,
     BridgeStatus,
+    BridgeSubstatus,
+    isQuoteNotFoundError,
 } from '../utils/bridgeApi';
 import {
     BASE_BRIDGE_FEE,
@@ -41,9 +43,14 @@ import { fetchBlockWithRetries } from '../utils/blockFetch';
 import { isNil } from 'lodash';
 import { BaseController } from '../infrastructure/BaseController';
 import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
+import { fillTokenData, isNativeTokenAddress } from '../utils/token';
+import { AccountTrackerController } from './AccountTrackerController';
 const TIMEOUT_FETCH_RECEIVING_TX = 2 * HOUR;
 const STATUS_API_CALLS_DELAY = 30 * SECOND;
+const BRIDGE_STATUS_INVALID_MAX_COUNT = 10;
 const GET_TX_RECEIPT_DELAY = 2 * SECOND;
+
+const BRIDGE_PENDING_STATUSES = [BridgeStatus.NOT_FOUND, BridgeStatus.PENDING];
 
 export interface BridgeControllerMemState {
     availableBridgeChains: IChain[];
@@ -77,6 +84,11 @@ export enum BridgeAllowanceCheck {
     INSUFFICIENT_ALLOWANCE = 'INSUFFICIENT_ALLOWANCE',
 }
 
+export enum QuoteFeeStatus {
+    OK = 'OK',
+    INSUFFICIENT_BALANCE_TO_COVER_FEES = 'INSUFFICIENT_BALANCE_TO_COVER_FEES',
+}
+
 export interface BridgeQuote extends IBridgeQuote {
     // BlockWallet fee in spender token units
     blockWalletFee: BigNumber;
@@ -90,6 +102,7 @@ interface BridgeParameters {
 export interface GetBridgeQuoteResponse {
     bridgeParams: BridgeParameters;
     allowance: BridgeAllowanceCheck;
+    quoteFeeStatus: QuoteFeeStatus;
 }
 
 export interface BridgeTransaction extends BridgeParameters {
@@ -129,6 +142,7 @@ export default class BridgeController extends BaseController<
         private readonly _transactionController: TransactionController,
         private readonly _tokenController: TokenController,
         private readonly _tokenAllowanceController: TokenAllowanceController,
+        private readonly _accountTrackerController: AccountTrackerController,
         initialState?: BridgeControllerState
     ) {
         super(initialState, { availableBridgeChains: [] });
@@ -195,9 +209,7 @@ export default class BridgeController extends BaseController<
             }
 
             if (
-                [BridgeStatus.PENDING, BridgeStatus.NOT_FOUND].includes(
-                    tx.bridgeParams.status || ''
-                )
+                BRIDGE_PENDING_STATUSES.includes(tx.bridgeParams.status || '')
             ) {
                 this._waitForBridgeFinalState({
                     //tx params comes in lowercase format and we need the real address not the lowercased one.
@@ -410,14 +422,52 @@ export default class BridgeController extends BaseController<
                   ),
               }
             : quote;
+
+        const quoteFeeStatus = this._checkQuoteStatus(normalizedQuote);
         return {
             bridgeParams: {
                 params: normalizedQuote,
                 methodSignature,
             },
             allowance: allowanceCheck,
+            quoteFeeStatus,
         };
     };
+
+    private _checkQuoteStatus(quote: IBridgeQuote): QuoteFeeStatus {
+        if (quote.feeCosts && quote.feeCosts.length) {
+            const userTokenBalances =
+                this._accountTrackerController.getAccountTokens();
+            const nativeTokenBalance =
+                this._accountTrackerController.getAccountNativeTokenBalance();
+            for (const fee of quote.feeCosts) {
+                //fees from the "fromToken" and "toToken" are already calculated in the quote.
+                const feeTokenAddress = fee.token.address.toLowerCase();
+                const fromAndToTokenAddresses = [
+                    quote.fromToken.address.toLowerCase(),
+                    quote.toToken.address.toLowerCase(),
+                ];
+                if (!fromAndToTokenAddresses.includes(feeTokenAddress)) {
+                    const userTokenBalance = isNativeTokenAddress(
+                        fee.token.address
+                    )
+                        ? nativeTokenBalance
+                        : userTokenBalances[
+                              toChecksumAddress(fee.token.address)
+                          ]?.balance;
+
+                    //If we don't have the token balance then avoid checking and stopping the operation.
+                    if (
+                        userTokenBalance &&
+                        userTokenBalance.lt(BigNumber.from(fee.total))
+                    ) {
+                        return QuoteFeeStatus.INSUFFICIENT_BALANCE_TO_COVER_FEES;
+                    }
+                }
+            }
+        }
+        return QuoteFeeStatus.OK;
+    }
 
     /**
      * Executes the bridge
@@ -445,12 +495,18 @@ export default class BridgeController extends BaseController<
         request: BridgeQuoteRequest
     ): Promise<BridgeQuote> => {
         const { network } = this._networkController;
-        const res = await retryHandling<IBridgeQuote>(() =>
-            this._getAPIImplementation(agg).getQuote({
-                ...request,
-                fromChainId: network.chainId,
-                referrer: BRIDGE_REFERRER_ADDRESS,
-            })
+        const res = await retryHandling<IBridgeQuote>(
+            () =>
+                this._getAPIImplementation(agg).getQuote({
+                    ...request,
+                    fromChainId: network.chainId,
+                    referrer: BRIDGE_REFERRER_ADDRESS,
+                }),
+            400,
+            4,
+            (e: Error) => {
+                return !isQuoteNotFoundError(e);
+            }
         );
 
         return {
@@ -529,7 +585,11 @@ export default class BridgeController extends BaseController<
             }
 
             //add token if sending tx has been submitted
-            this._tokenController.attemptAddToken(toToken.address, toChainId);
+            this._tokenController.attemptAddToken(
+                toToken.address,
+                toChainId,
+                toToken
+            );
 
             newTransactionMeta.transferType = {
                 amount: BigNumber.from(fromAmount),
@@ -630,6 +690,7 @@ export default class BridgeController extends BaseController<
         const startTime = new Date().getTime();
         let receivingTxFetched = false;
         let receivingTxHash: string | undefined;
+        let invalidStatusCount = 0;
         let sendingTx =
             this._transactionController.getTransaction(sendingTransactionId);
 
@@ -650,7 +711,7 @@ export default class BridgeController extends BaseController<
                 return true;
             }
             return (
-                [BridgeStatus.PENDING, BridgeStatus.NOT_FOUND].includes(
+                BRIDGE_PENDING_STATUSES.includes(
                     sendingTx.bridgeParams.status
                 ) &&
                 ![
@@ -665,6 +726,7 @@ export default class BridgeController extends BaseController<
 
         while (
             isBridgePending &&
+            invalidStatusCount < BRIDGE_STATUS_INVALID_MAX_COUNT &&
             //Set a timeout to avoid looping without an stop condition.
             new Date().getTime() - startTime < TIMEOUT_FETCH_RECEIVING_TX
         ) {
@@ -681,6 +743,29 @@ export default class BridgeController extends BaseController<
 
                 receivingTxHash = bridgeStatus.receiveTransaction?.txHash;
 
+                if (bridgeStatus.status === BridgeStatus.INVALID) {
+                    invalidStatusCount++;
+
+                    //Store INVALID bridge statuses as NOT_FOUND to keep them as pending for a while.
+                    if (invalidStatusCount < BRIDGE_STATUS_INVALID_MAX_COUNT) {
+                        bridgeStatus.status = BridgeStatus.NOT_FOUND;
+                    }
+                }
+
+                const effectiveToToken = bridgeStatus?.receiveTransaction?.token
+                    ? //retrieve original token from
+                      await this._normalizeTokenData(
+                          bridgeStatus?.receiveTransaction?.token,
+                          toChainId
+                      )
+                    : undefined;
+
+                const effectiveToTokenAmount =
+                    bridgeStatus?.receiveTransaction?.amount;
+
+                const effectiveToChainId =
+                    bridgeStatus?.receiveTransaction?.chainId;
+
                 //update bridge status, substatus and recevingTxHash in the state.
                 sendingTx = this._updateTransactionBridgeParams(
                     sendingTransactionId,
@@ -691,6 +776,9 @@ export default class BridgeController extends BaseController<
                         sendingTxLink: bridgeStatus?.sendTransaction?.txLink,
                         receivingTxLink:
                             bridgeStatus?.receiveTransaction?.txLink,
+                        effectiveToToken,
+                        effectiveToTokenAmount,
+                        effectiveToChainId,
                     }
                 );
 
@@ -701,8 +789,8 @@ export default class BridgeController extends BaseController<
                         accountAddress,
                         receivingTxHash,
                         sendingTransaction: sendingTx,
-                        toChainId,
-                        toToken,
+                        toChainId: effectiveToChainId || toChainId,
+                        toToken: effectiveToToken || toToken,
                     });
                 }
 
@@ -789,6 +877,15 @@ export default class BridgeController extends BaseController<
             return false;
         }
 
+        //Attepmt to add token here as well as the toToken.address could have changed due to:
+        // - Refunds
+        // - Partial bridges, where the received token is different from the one specified in the quote.
+        this._tokenController.attemptAddToken(
+            toToken.address,
+            toChainId,
+            toToken
+        );
+
         let transactionByHash: ethers.providers.TransactionResponse;
         try {
             transactionByHash =
@@ -805,8 +902,18 @@ export default class BridgeController extends BaseController<
             return false;
         }
 
-        const transactionMeta =
-            this._transactionByHashToTransactionMeta(transactionByHash);
+        const isRefund =
+            (sendingTransaction.bridgeParams?.substatus &&
+                [
+                    BridgeSubstatus.REFUNDED,
+                    BridgeSubstatus.REFUND_IN_PROGRESS,
+                ].includes(sendingTransaction.bridgeParams?.substatus)) ??
+            false;
+
+        const transactionMeta = this._transactionByHashToTransactionMeta(
+            transactionByHash,
+            isRefund ?? false
+        );
 
         //Set bridge parameters
         transactionMeta.bridgeParams = {
@@ -849,7 +956,9 @@ export default class BridgeController extends BaseController<
             }
         }
 
-        const toAmount = sendingTransaction.bridgeParams?.toTokenAmount;
+        const toAmount =
+            sendingTransaction.bridgeParams?.effectiveToTokenAmount ||
+            sendingTransaction.bridgeParams?.toTokenAmount;
         let txTime: number | undefined;
 
         //If the transaction was mined and we have its block number, the fetch timestamp
@@ -888,7 +997,9 @@ export default class BridgeController extends BaseController<
             {
                 confirmationTime: txTime,
                 methodSignature,
-                transactionReceipt: txReceipt,
+                transactionReceipt: {
+                    ...txReceipt,
+                },
                 transferType: transactionToken
                     ? {
                           logo: transactionToken.logo,
@@ -934,11 +1045,6 @@ export default class BridgeController extends BaseController<
                 //If sending transaction doesn't exist, then avoid persisting this transaction as well.
                 if (sendingTransaction) {
                     try {
-                        //attempt adding the toToken again
-                        this._tokenController.attemptAddToken(
-                            pendingTx.toToken.address,
-                            chainId
-                        );
                         await this._fetchBridgeReceivingTransaction({
                             accountAddress: address,
                             receivingTxHash: pendingTx.hash,
@@ -987,14 +1093,7 @@ export default class BridgeController extends BaseController<
             const realToken = token || transactionToken;
 
             //try to fetch the token from our list, if it is not present, use the transaction token data.
-            return {
-                address: realToken.address || transactionToken.address,
-                decimals: realToken.decimals || transactionToken.decimals,
-                logo: realToken.logo || transactionToken.logo,
-                name: realToken.name || transactionToken.name,
-                symbol: realToken.symbol || transactionToken.symbol,
-                type: realToken.type,
-            };
+            return fillTokenData(realToken, transactionToken);
         } catch (e) {
             log.warn('_fetchToken', 'tokenController.search', e);
             return transactionToken;
@@ -1002,7 +1101,8 @@ export default class BridgeController extends BaseController<
     }
 
     private _transactionByHashToTransactionMeta(
-        transaction: ethers.providers.TransactionResponse
+        transaction: ethers.providers.TransactionResponse,
+        isRefund: boolean
     ): Partial<TransactionMeta> {
         return {
             rawTransaction: transaction.data,
@@ -1012,7 +1112,9 @@ export default class BridgeController extends BaseController<
             verifiedOnBlockchain: true,
             chainId: transaction.chainId,
             origin: 'blank',
-            transactionCategory: TransactionCategories.INCOMING_BRIDGE,
+            transactionCategory: isRefund
+                ? TransactionCategories.INCOMING_BRIDGE_REFUND
+                : TransactionCategories.INCOMING_BRIDGE,
             metaType: MetaType.REGULAR,
             status: transaction.blockNumber
                 ? TransactionStatus.CONFIRMED

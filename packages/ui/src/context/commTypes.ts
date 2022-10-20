@@ -246,6 +246,7 @@ export enum TransactionCategories {
     EXCHANGE = "exchange",
     BRIDGE = "bridge",
     INCOMING_BRIDGE = "incoming_bridge",
+    INCOMING_BRIDGE_REFUND = "incoming_bridge_refund",
     // Category that temporarely represents receiving transactions in a bridge operation:
     INCOMING_BRIDGE_PLACEHOLDER = "incoming_bridge_placeholder",
 }
@@ -405,4 +406,9 @@ export enum BridgeSubstatus {
     COMPLETED = "COMPLETED",
     PARTIAL = "PARTIAL",
     REFUNDED = "REFUNDED",
+}
+
+export enum QuoteFeeStatus {
+    OK = "OK",
+    INSUFFICIENT_BALANCE_TO_COVER_FEES = "INSUFFICIENT_BALANCE_TO_COVER_FEES",
 }

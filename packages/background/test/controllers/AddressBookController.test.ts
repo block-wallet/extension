@@ -30,6 +30,8 @@ import BlockFetchController from '@block-wallet/background/controllers/block-upd
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
 import BridgeController from '@block-wallet/background/controllers/BridgeController';
 import TokenAllowanceController from '@block-wallet/background/controllers/erc-20/transactions/TokenAllowanceController';
+import { AccountTrackerController } from '@block-wallet/background/controllers/AccountTrackerController';
+import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
 
 describe('Address book controller implementation', function () {
     const accounts = {
@@ -59,6 +61,7 @@ describe('Address book controller implementation', function () {
     let blockUpdatesController: BlockUpdatesController;
     let transactionWatcherController: TransactionWatcherController;
     let tokenAllowanceController: TokenAllowanceController;
+    let accountTrackerController: AccountTrackerController;
 
     this.beforeAll(() => {
         networkController = getNetworkControllerInstance();
@@ -152,11 +155,23 @@ describe('Address book controller implementation', function () {
             tokenOperationsController,
             transactionController
         );
+
+        accountTrackerController = new AccountTrackerController(
+            mockKeyringController,
+            networkController,
+            tokenController,
+            tokenOperationsController,
+            preferencesController,
+            blockUpdatesController,
+            transactionWatcherController
+        );
+
         bridgeController = new BridgeController(
             networkController,
             transactionController,
             tokenController,
             tokenAllowanceController,
+            accountTrackerController,
             {
                 bridgeReceivingTransactions: {},
                 perndingBridgeReceivingTransactions: {},

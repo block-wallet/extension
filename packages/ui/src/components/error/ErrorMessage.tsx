@@ -1,19 +1,19 @@
-import { FunctionComponent } from "react"
+import React, { FunctionComponent } from "react"
 import { classnames } from "../../styles/classes"
 
 const ErrorMessage: FunctionComponent<{
-    error?: string | undefined
+    children?: React.ReactNode
     className?: string | undefined
-}> = ({ error = "", className }) => {
+}> = ({ children = "", className }) => {
     return (
         <span
             className={classnames(
                 "text-red-500 text-xs break-words",
-                error ? "" : "hidden",
+                children ? "" : "hidden",
                 className
             )}
         >
-            {error || <>&nbsp;</>}
+            {children}
         </span>
     )
 }

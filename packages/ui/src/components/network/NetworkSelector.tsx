@@ -158,6 +158,7 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
                     disabled={false}
                     autoFocus={true}
                     onChange={onSearchInputChange}
+                    defaultValue={search || ""}
                 />
             </div>
             <NetworkList />

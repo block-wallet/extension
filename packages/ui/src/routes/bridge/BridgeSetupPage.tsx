@@ -54,8 +54,7 @@ import { formatRounded } from "../../util/formatRounded"
 import FeeDetails from "../../components/FeeDetails"
 import ClickableText from "../../components/button/ClickableText"
 
-const QUOTE_NOT_FOUND_ERR_MESSAGE =
-    "Unable to generate a valid quote. Please try by modifying the amount of the Bridge Asset."
+const QUOTE_NOT_FOUND_ERR_MESSAGE = "Unable to generate a valid quote."
 
 const INSUFFICIENT_BALANCE_TO_COVER_FEES = `You don't have enough balance to cover the bridge fees.`
 
@@ -374,7 +373,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bigNumberAmount, errors.amount, selectedAddress, selectedRoute])
 
-    const isAmountError = error === QUOTE_NOT_FOUND_ERR_MESSAGE
+    const isQuoteNotFound = error === QUOTE_NOT_FOUND_ERR_MESSAGE
     const isFeeError =
         error &&
         quote?.quoteFeeStatus ===
@@ -508,7 +507,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 inputFocus
                                     ? "bg-primary-200"
                                     : "bg-primary-100",
-                                errors.amount || isAmountError
+                                errors.amount
                                     ? "border border-red-400"
                                     : "border-opacity-0 border-transparent"
                             )}
@@ -606,14 +605,14 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         <FeeDetails
                             summary={`Bridge fees: ${bridgeFeeSummary}`}
                             details={
-                                <div className="p-1 text-center !break-word !whitespace-normal">
+                                <div className="p-1 text-left !break-word !whitespace-normal">
                                     <p className="pb-0.5">
                                         BlockWallet is not charging fees for
                                         this brdige!
                                     </p>
                                     <br />
                                     <p>
-                                        <b>Original BlockWallet fee:</b>{" "}
+                                        <b>Original fee:</b>{" "}
                                         {formatNumberLength(
                                             formatUnits(
                                                 BigNumber.from(
@@ -646,11 +645,24 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     <ErrorMessage className="mt-4">
                         <span>
                             {error}{" "}
-                            <ClickableText
-                                onClick={() => (isFeeError ? "" : "")}
-                            >
-                                View details
-                            </ClickableText>
+                            {isQuoteNotFound ? (
+                                <span>
+                                    Please{" "}
+                                    <ClickableText
+                                        onClick={() => (isFeeError ? "" : "")}
+                                        className="!break-word !whitespace-normal"
+                                    >
+                                        check the details
+                                    </ClickableText>{" "}
+                                    and try again.
+                                </span>
+                            ) : (
+                                <ClickableText
+                                    onClick={() => (isFeeError ? "" : "")}
+                                >
+                                    View details
+                                </ClickableText>
+                            )}
                         </span>
                     </ErrorMessage>
                 )}

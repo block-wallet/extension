@@ -16,8 +16,7 @@ const FeeDetails: FC<FeeDetailsProps> = ({ summary, details }) => {
                     divFull={false}
                     content={details}
                     top
-                    centerX
-                    className="!w-40 !break-word !whitespace-normal"
+                    className="!w-60 !break-word !whitespace-normal !-translate-x-20 !opacity-100 !border"
                 >
                     <AiFillInfoCircle
                         size={18}

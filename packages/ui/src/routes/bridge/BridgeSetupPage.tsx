@@ -296,13 +296,16 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             network: undefined,
                         }))
                     }
-
                     setIsFetchingRoutes(false)
                 }
             } catch (error) {
-                setError(capitalize(error.message || "Error fetching routes."))
-                setAvailableRoutes([])
-                setIsFetchingRoutes(false)
+                if (isValidFetch) {
+                    setError(
+                        capitalize(error.message || "Error fetching routes.")
+                    )
+                    setAvailableRoutes([])
+                    setIsFetchingRoutes(false)
+                }
             }
         }
 
@@ -346,12 +349,16 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     setisFetchingQuote(false)
                 }
             } catch (error) {
-                if (isBridgeQuoteNotFoundError(error)) {
-                    setError(QUOTE_NOT_FOUND_ERR_MESSAGE)
-                } else {
-                    setError("Unable to fetch a valid quote. Please try again.")
+                if (isValidFetch) {
+                    if (isBridgeQuoteNotFoundError(error)) {
+                        setError(QUOTE_NOT_FOUND_ERR_MESSAGE)
+                    } else {
+                        setError(
+                            "Unable to fetch a valid quote. Please try again."
+                        )
+                    }
+                    setisFetchingQuote(false)
                 }
-                setisFetchingQuote(false)
             }
         }
 
@@ -647,12 +654,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             {error}{" "}
                             {isQuoteNotFound ? (
                                 <span>
-                                    Please{" "}
                                     <ClickableText
                                         onClick={() => (isFeeError ? "" : "")}
                                         className="!break-word !whitespace-normal"
                                     >
-                                        check the details
+                                        Check the details
                                     </ClickableText>{" "}
                                     and try again.
                                 </span>

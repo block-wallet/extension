@@ -15,8 +15,9 @@ const FeeDetails: FC<FeeDetailsProps> = ({ summary, details }) => {
                 <GenericTooltip
                     divFull={false}
                     content={details}
+                    left
                     top
-                    className="!w-60 !break-word !whitespace-normal !-translate-x-20 !opacity-100 !border"
+                    className="!w-60 !break-word !whitespace-normal !opacity-100 !border"
                 >
                     <AiFillInfoCircle
                         size={18}

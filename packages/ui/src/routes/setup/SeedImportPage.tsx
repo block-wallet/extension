@@ -5,9 +5,13 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import SeedImport from "../../components/setup/SeedImport"
 import { importWallet } from "../../context/commActions"
 import { getQueryParameter } from "../../util/url"
+import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboarded"
 
 const SeedImportPage = () => {
     const history: any = useOnMountHistory()
+
+    // if the onboarding is ready the user shoulnd't set the seedphrase again.
+    useCheckUserIsOnboarded()
 
     const onSubmit = async (password: string, seedPhrase: string) => {
         const defaultNetwork = getQueryParameter("defaultNetwork")

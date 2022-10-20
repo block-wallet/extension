@@ -7,13 +7,22 @@ import PageLayout from "../../components/PageLayout"
 
 import logo from "../../assets/images/logo.svg"
 import { completeSetup } from "../../context/commActions"
+import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
 const SetupDonePage = () => {
+    const history: any = useOnMountHistory()
     const [confettiActive, setConfettiActive] = useState(false)
+
     useEffect(() => {
         setConfettiActive(true)
-        completeSetup()
-    }, [])
+
+        let sendNotification = true
+        if (history.location && history.location.state) {
+            sendNotification = history.location.state.sendNotification
+        }
+        completeSetup(sendNotification)
+    }, [history])
+
     const config = {
         angle: 90,
         spread: 360,

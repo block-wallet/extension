@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { Classes } from "../../styles/classes"
 
@@ -15,7 +15,7 @@ import { createWallet, requestSeedPhrase } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import log from "loglevel"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
-import { useBlankState } from "../../context/background/backgroundHooks"
+import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboarded"
 
 const schema = yup.object().shape({
     password: yup
@@ -48,14 +48,7 @@ const PasswordSetupPage = () => {
     const [isCreating, setIsCreating] = useState<boolean>(false)
 
     // if the onboarding is ready the user shoulnd't set the password again.
-    const state = useBlankState()
-    useEffect(() => {
-        if (!state || state.isOnboarded) {
-            history.push({
-                pathname: "/setup/done",
-            })
-        }
-    }, [state, history])
+    useCheckUserIsOnboarded()
 
     const {
         register,

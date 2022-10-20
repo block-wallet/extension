@@ -1,6 +1,6 @@
-import { FunctionComponent, useEffect } from "react"
+import { FunctionComponent } from "react"
 
-import { Link, useHistory } from "react-router-dom"
+import { Link } from "react-router-dom"
 import Divider from "../../components/Divider"
 import { Classes, classnames } from "../../styles/classes"
 
@@ -8,8 +8,7 @@ import crossIcon from "../../assets/images/icons/cross.svg"
 
 import checkmarkIcon from "../../assets/images/icons/checkmark.svg"
 import PageLayout from "../../components/PageLayout"
-import { useBlankState } from "../../context/background/backgroundHooks"
-import { useOnMountHistory } from "../../context/hooks/useOnMount"
+import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboarded"
 
 const SetupOption: FunctionComponent<{
     title: string
@@ -40,15 +39,7 @@ const SetupOption: FunctionComponent<{
 
 const SetupPage = () => {
     // if the onboarding is ready the user shoulnd't do it again.
-    const history = useHistory()
-    const state = useBlankState()
-    useEffect(() => {
-        if (!state || state.isOnboarded) {
-            history.push({
-                pathname: "/setup/done",
-            })
-        }
-    }, [state, history])
+    useCheckUserIsOnboarded()
 
     return (
         <PageLayout className="relative" header>

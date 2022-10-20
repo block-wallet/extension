@@ -17,14 +17,10 @@ const SetupDonePage = () => {
         setConfettiActive(true)
 
         let sendNotification = true
-        if (
-            !history.location ||
-            !history.location.state ||
-            !history.location.state.doSendNotification
-        ) {
-            sendNotification = false
+        if (history.location && history.location.state) {
+            sendNotification = history.location.state.sendNotification
         }
-        completeSetup(!sendNotification)
+        completeSetup(sendNotification)
     }, [history])
 
     const config = {

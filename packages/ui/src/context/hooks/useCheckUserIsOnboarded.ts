@@ -9,7 +9,7 @@ export const useCheckUserIsOnboarded = () => {
         if (!state || state.isOnboarded) {
             history.push({
                 pathname: "/setup/done",
-                state: { doSendNotification: true },
+                state: { sendNotification: false },
             })
         }
     }, [])

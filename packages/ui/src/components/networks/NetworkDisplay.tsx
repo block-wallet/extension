@@ -1,5 +1,5 @@
 import { useDrag, useDrop, DragSourceMonitor } from "react-dnd"
-import { useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { RiArrowRightSLine } from "react-icons/ri"
 import { HiDotsVertical } from "react-icons/hi"
 
@@ -7,6 +7,11 @@ import { Network } from "@block-wallet/background/utils/constants/networks"
 
 interface NetworkInfo extends Network {
     color: string
+}
+
+type NetworkCardProps = {
+    index: number
+    isTestnet: boolean
 }
 
 const NetworkDisplay = ({
@@ -26,12 +31,14 @@ const NetworkDisplay = ({
     ) => void
     isTestnet?: boolean
 }) => {
+    const [dropAnimation, setDropAnimation] = useState(false)
+
     const ref = useRef<HTMLDivElement>(null)
 
     const [, drop] = useDrop(
         () => ({
             accept: isTestnet ? "testnet" : "mainnet",
-            hover(item: { index: number }, monitor: any) {
+            hover(item: NetworkCardProps, monitor: any) {
                 if (!ref.current) {
                     return
                 }
@@ -67,6 +74,21 @@ const NetworkDisplay = ({
                     item.index = hoveredOnIndex
                 }
             },
+            collect(monitor) {
+                if (monitor.didDrop()) {
+                    const dropResult =
+                        monitor.getDropResult() as NetworkCardProps
+                    if (
+                        dropResult.index === index &&
+                        dropResult.isTestnet === isTestnet
+                    ) {
+                        setDropAnimation(true)
+                    }
+                }
+            },
+            drop(item: NetworkCardProps) {
+                return item
+            },
         }),
         [moveCard, index]
     )
@@ -74,11 +96,11 @@ const NetworkDisplay = ({
     const [{ isDragging }, drag] = useDrag(
         () => ({
             type: isTestnet ? "testnet" : "mainnet",
-            item: { index },
+            item: { index, isTestnet },
             collect: (monitor: DragSourceMonitor) => ({
                 isDragging: monitor.isDragging(),
             }),
-            end: (item: { index: number }, monitor: DragSourceMonitor) => {
+            end: (item: NetworkCardProps, monitor: DragSourceMonitor) => {
                 const didDrop = monitor.didDrop()
                 if (!didDrop) {
                     moveCard(item.index, index, isTestnet)
@@ -90,31 +112,56 @@ const NetworkDisplay = ({
 
     drag(drop(ref))
 
+    useEffect(() => {
+        if (dropAnimation) {
+            setTimeout(() => {
+                setDropAnimation(false)
+            }, 1500)
+        }
+    }, [dropAnimation])
+
     return (
         <div
             onClick={onClick}
-            className="hover:bg-gray-100 hover:cursor-pointer rounded-md"
+            className={`hover:bg-gray-100 hover:cursor-pointer rounded-md cursor-pointer ${
+                isDragging ? "bg-slate-600" : ""
+            }`}
             ref={ref}
-            style={{ cursor: "pointer", opacity: isDragging ? 0.4 : 1 }}
         >
-            <div className="flex flex-row justify-between items-center p-2 pl-0">
-                <div className="flex flex-row items-center">
-                    <HiDotsVertical className="text-gray-500 mr-2" size={20} />
-                    <span
-                        className="h-2 w-2 rounded-xl mr-2"
-                        style={{
-                            backgroundColor: networkInfo.color,
-                        }}
-                    />
-                    <span
-                        title={networkInfo.desc}
-                        className="text-sm font-bold text-ellipsis overflow-hidden whitespace-nowrap"
-                    >
-                        {networkInfo.desc}
-                    </span>
-                </div>
-                <RiArrowRightSLine size={20} />
-            </div>
+            {!isDragging ? (
+                <>
+                    <div className="flex flex-row justify-between items-center p-2 pl-0">
+                        <div className="flex flex-row group items-center">
+                            <div
+                                className="flex flex-row items-center cursor-move"
+                                title="Drag to sort"
+                            >
+                                <HiDotsVertical
+                                    className="text-gray-500 mr-2"
+                                    size={20}
+                                />
+                                <span
+                                    className={`h-2 w-2 rounded-xl mr-2 ${
+                                        dropAnimation ? "animate-ping" : ""
+                                    }`}
+                                    style={{
+                                        backgroundColor: dropAnimation
+                                            ? "#22c55e"
+                                            : networkInfo.color,
+                                    }}
+                                />
+                            </div>
+                            <span className="text-sm font-bold text-ellipsis overflow-hidden whitespace-nowrap">
+                                {networkInfo.desc}
+                            </span>
+                        </div>
+
+                        <RiArrowRightSLine size={20} />
+                    </div>
+                </>
+            ) : (
+                <div className="h-9"></div>
+            )}
         </div>
     )
 }

@@ -12,6 +12,7 @@ import { AccountStatus, AccountType } from "../context/commTypes"
 
 export const initBackgroundState: BackgroundStateType = {
     blankState: {
+        idleTimeout: 0,
         antiPhishingImage: "",
         userTokens: {},
         deletedUserTokens: {},

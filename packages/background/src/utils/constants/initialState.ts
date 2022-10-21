@@ -6,10 +6,7 @@ import { ValuesOf } from '../types/helpers';
 import { IObservableStore } from '../../infrastructure/stores/ObservableStore';
 
 import { AccountTrackerState } from '../../controllers/AccountTrackerController';
-import {
-    AppStateControllerMemState,
-    AppStateControllerState,
-} from '../../controllers/AppStateController';
+import { AppStateControllerState } from '../../controllers/AppStateController';
 import { OnboardingControllerState } from '../../controllers/OnboardingController';
 import { PreferencesControllerState } from '../../controllers/PreferencesController';
 import type {
@@ -68,7 +65,7 @@ export type BlankAppState = {
 
 export type BlankAppUIState = {
     AccountTrackerController: AccountTrackerState;
-    AppStateController: AppStateControllerMemState;
+    AppStateController: AppStateControllerState;
     KeyringController: KeyringControllerMemState;
     OnboardingController: OnboardingControllerState;
     PreferencesController: PreferencesControllerState;
@@ -113,6 +110,9 @@ const initialState: BlankAppState = {
     },
     AppStateController: {
         idleTimeout: 5,
+        isAppUnlocked: false,
+        lastActiveTime: 0,
+        lockedByTimeout: false,
     },
     BlockUpdatesController: { blockData: {} },
     KeyringController: {

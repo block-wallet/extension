@@ -450,7 +450,7 @@ export default class BlankController extends EventEmitter {
 
         this.UIStore = new ComposedStore<BlankAppUIState>({
             NetworkController: this.networkController.store,
-            AppStateController: this.appStateController.UIStore,
+            AppStateController: this.appStateController.store,
             OnboardingController: this.onboardingController.store,
             KeyringController: this.keyringController.memStore,
             AccountTrackerController: this.accountTrackerController.store,
@@ -512,7 +512,7 @@ export default class BlankController extends EventEmitter {
 
         // Check if app is unlocked
         const isAppUnlocked =
-            this.appStateController.UIStore.getState().isAppUnlocked;
+            this.appStateController.store.getState().isAppUnlocked;
 
         this.blockUpdatesController.setActiveSubscriptions(
             isAppUnlocked,

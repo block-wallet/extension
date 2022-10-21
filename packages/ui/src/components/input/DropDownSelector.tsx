@@ -144,7 +144,7 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
                 {active &&
                     Children.map(children, (child) => {
                         return child.type !== "div"
-                            ? cloneElement(child, { setActive })
+                            ? cloneElement(child, { setActive, ...child.props })
                             : cloneElement(child)
                     })}
             </div>

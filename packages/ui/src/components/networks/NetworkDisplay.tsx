@@ -1,5 +1,6 @@
 import { useDrag, useDrop, DragSourceMonitor } from "react-dnd"
 import { useEffect, useRef, useState } from "react"
+import classnames from "classnames"
 import { RiArrowRightSLine } from "react-icons/ri"
 import { HiDotsVertical } from "react-icons/hi"
 
@@ -116,16 +117,20 @@ const NetworkDisplay = ({
         if (dropAnimation) {
             setTimeout(() => {
                 setDropAnimation(false)
-            }, 1500)
+            }, 750)
         }
     }, [dropAnimation])
 
     return (
         <div
             onClick={onClick}
-            className={`hover:bg-gray-100 hover:cursor-pointer rounded-md cursor-pointer ${
-                isDragging ? "bg-slate-600" : ""
-            }`}
+            className={classnames(
+                "rounded-md",
+                isDragging && "bg-slate-600",
+                dropAnimation &&
+                    "bg-green-100 transition-colors animate-bounce",
+                !dropAnimation && "hover:bg-gray-100 hover:cursor-pointer"
+            )}
             ref={ref}
         >
             {!isDragging ? (
@@ -141,13 +146,9 @@ const NetworkDisplay = ({
                                     size={20}
                                 />
                                 <span
-                                    className={`h-2 w-2 rounded-xl mr-2 ${
-                                        dropAnimation ? "animate-ping" : ""
-                                    }`}
+                                    className={"h-2 w-2 rounded-xl mr-2"}
                                     style={{
-                                        backgroundColor: dropAnimation
-                                            ? "#22c55e"
-                                            : networkInfo.color,
+                                        backgroundColor: networkInfo.color,
                                     }}
                                 />
                             </div>

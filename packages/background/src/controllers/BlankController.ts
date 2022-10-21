@@ -220,6 +220,7 @@ import { generateOnDemandReleaseNotes } from '../utils/userPreferences';
 import { TransactionWatcherController } from './TransactionWatcherController';
 import BridgeController, {
     GetBridgeAvailableRoutesResponse,
+    GetBridgeQuoteNotFoundResponse,
     GetBridgeQuoteResponse,
 } from './BridgeController';
 import { IChain } from '../utils/types/chain';
@@ -2020,7 +2021,9 @@ export default class BlankController extends EventEmitter {
     private async getBridgeQuote({
         checkAllowance,
         quoteRequest,
-    }: RequestGetBridgeQuote): Promise<GetBridgeQuoteResponse> {
+    }: RequestGetBridgeQuote): Promise<
+        GetBridgeQuoteResponse | GetBridgeQuoteNotFoundResponse
+    > {
         return this.bridgeController.getQuote(
             BridgeImplementation.LIFI_BRIDGE,
             quoteRequest,

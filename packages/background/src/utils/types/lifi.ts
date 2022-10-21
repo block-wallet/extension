@@ -145,6 +145,8 @@ export interface LiFiErrorResponse {
     errors: {
         errorType: string;
         code: string;
+        tool: string;
+        message: string;
     }[];
 }
 

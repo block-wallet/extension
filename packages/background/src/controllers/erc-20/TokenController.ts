@@ -17,7 +17,9 @@ import { TokenOperationsController } from './transactions/Transaction';
 import { BasicToken } from '@block-wallet/background/utils/types/1inch';
 
 const tokenAddressParamNotPresentError = new Error('token address is required');
-const tokenAddressInvalidError = new Error('token address is invalid for selected network');
+const tokenAddressInvalidError = new Error(
+    'token address is invalid for selected network'
+);
 const tokenParamNotPresentError = new Error('token is required');
 const fromParamNotPresentError = new Error('from is required');
 const toParamNotPresentError = new Error('to is required');

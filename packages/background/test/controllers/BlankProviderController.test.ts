@@ -187,6 +187,9 @@ describe('Blank Provider Controller', function () {
         appStateController = new AppStateController(
             {
                 idleTimeout: defaultIdleTimeout,
+                isAppUnlocked: true,
+                lastActiveTime: 0,
+                lockedByTimeout: false,
             },
             mockKeyringController,
             transactionController,

@@ -7,18 +7,12 @@ import TransactionController from './transactions/TransactionController';
 
 export interface AppStateControllerState {
     idleTimeout: number; // Minutes until auto-lock - Zero if disabled
-}
-
-export interface AppStateControllerMemState {
     isAppUnlocked: boolean;
     lockedByTimeout: boolean;
     lastActiveTime: number;
 }
 
-export default class AppStateController extends BaseController<
-    AppStateControllerState,
-    AppStateControllerMemState
-> {
+export default class AppStateController extends BaseController<AppStateControllerState> {
     private _timer: ReturnType<typeof setTimeout> | null;
 
     constructor(
@@ -27,13 +21,19 @@ export default class AppStateController extends BaseController<
         private readonly _transactionController: TransactionController,
         private readonly _privacyAsyncController: PrivacyAsyncController
     ) {
-        super(initState, {
-            isAppUnlocked: false,
-            lastActiveTime: new Date().getTime(),
-            lockedByTimeout: false,
-        });
+        super(initState);
 
         this._timer = null;
+
+        const { idleTimeout, isAppUnlocked, lastActiveTime } =
+            this.store.getState();
+
+        if (isAppUnlocked) {
+            const now = new Date().getTime();
+            if (lastActiveTime + idleTimeout * 60 * 1000 < now) {
+                this.lock(true);
+            }
+        }
 
         this._resetTimer();
     }
@@ -43,7 +43,7 @@ export default class AppStateController extends BaseController<
      *
      */
     public setLastActiveTime = (): void => {
-        this.UIStore.updateState({ lastActiveTime: new Date().getTime() });
+        this.store.updateState({ lastActiveTime: new Date().getTime() });
         this._resetTimer();
     };
 
@@ -93,7 +93,7 @@ export default class AppStateController extends BaseController<
             chrome.storage.session.clear();
 
             // Update controller state
-            this.UIStore.updateState({ isAppUnlocked: false, lockedByTimeout });
+            this.store.updateState({ isAppUnlocked: false, lockedByTimeout });
         } catch (error) {
             throw new Error(error.message || error);
         }
@@ -123,7 +123,7 @@ export default class AppStateController extends BaseController<
     };
 
     public autoUnlock = async (): Promise<void> => {
-        const { isAppUnlocked } = this.UIStore.getState();
+        const { isAppUnlocked } = this.store.getState();
         if (!isAppUnlocked) {
             // @ts-ignore
             chrome.storage.session.get(
@@ -148,7 +148,7 @@ export default class AppStateController extends BaseController<
         await this._keyringController.setLedgerWebHIDTransportType();
 
         // Update controller state
-        this.UIStore.updateState({
+        this.store.updateState({
             isAppUnlocked: true,
         });
 

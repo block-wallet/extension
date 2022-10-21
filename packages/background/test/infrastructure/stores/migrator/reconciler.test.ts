@@ -43,6 +43,9 @@ const persistedState = {
     },
     AppStateController: {
         idleTimeout: 5,
+        isAppUnlocked: true,
+        lastActiveTime: 0,
+        lockedByTimeout: false,
     },
     BlankDepositController: {
         pendingWithdrawals: {
@@ -165,6 +168,9 @@ const initialState: BlankAppState & {
     },
     AppStateController: {
         idleTimeout: 5,
+        isAppUnlocked: true,
+        lastActiveTime: 0,
+        lockedByTimeout: false,
     },
     KeyringController: {
         isUnlocked: false,
@@ -308,6 +314,9 @@ describe('State reconciler', () => {
             },
             AppStateController: {
                 idleTimeout: 5,
+                isAppUnlocked: true,
+                lastActiveTime: 0,
+                lockedByTimeout: false,
             },
             BlankDepositController: {
                 pendingWithdrawals: {

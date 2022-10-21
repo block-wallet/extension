@@ -49,6 +49,7 @@ import {
 import { ApproveOperation } from "../transaction/ApprovePage"
 import { BridgeAllowanceCheck, QuoteFeeStatus } from "../../context/commTypes"
 import { defaultAdvancedSettings } from "../../components/transactions/AdvancedSettings"
+import { BridgeNotFoundQuoteDetails } from "../../components/transactions/BridgeNotFoundQuoteDetails"
 import { BASE_BRIDGE_FEE } from "../../util/constants"
 import { formatNumberLength } from "../../util/formatNumberLength"
 import { formatRounded } from "../../util/formatRounded"
@@ -175,6 +176,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         }
         return availbleChainsId.includes(chain.id)
     })
+    const [showBridgeNotFoundQuoteDetails, setShowBridgeNotFoundQuoteDetails] =
+        useState<boolean>(false)
 
     const isANotFoundQuote = (
         quote: GetBridgeQuoteResponse | GetBridgeQuoteNotFoundResponse
@@ -663,7 +666,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             {isQuoteNotFound ? (
                                 <span>
                                     <ClickableText
-                                        onClick={() => (isFeeError ? "" : "")}
+                                        onClick={() =>
+                                            setShowBridgeNotFoundQuoteDetails(
+                                                true
+                                            )
+                                        }
                                         className="!break-word !whitespace-normal"
                                     >
                                         Check the details
@@ -679,6 +686,15 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             )}
                         </span>
                     </ErrorMessage>
+                )}
+
+                {quoteNotFound && (
+                    <BridgeNotFoundQuoteDetails
+                        message={quoteNotFound.message}
+                        open={showBridgeNotFoundQuoteDetails}
+                        onClose={() => setShowBridgeNotFoundQuoteDetails(false)}
+                        errors={quoteNotFound.errors}
+                    />
                 )}
             </div>
         </PopupLayout>

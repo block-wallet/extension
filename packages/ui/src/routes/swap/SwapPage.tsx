@@ -581,7 +581,6 @@ const SwapPage = () => {
                             </p>
                             <GenericTooltip
                                 bottom
-                                centerX
                                 content={
                                     <div className="min-w-max p-1 text-center">
                                         <p className="pb-0.5">

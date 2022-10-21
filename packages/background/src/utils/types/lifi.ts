@@ -187,7 +187,7 @@ export const lifiFeeCostsToIBridgeFeeCosts = (
                     total: BigNumber.from(tokenInfoTotal)
                         .add(BigNumber.from(fee.amount))
                         .toString(),
-                    detials: [
+                    details: [
                         ...tokenInfoDetails,
                         {
                             name: fee.name,

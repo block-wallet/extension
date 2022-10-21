@@ -8,7 +8,7 @@ import {
     AddNetworkType,
     FAST_TIME_INTERVALS_DEFAULT_VALUES,
     EditNetworkUpdatesType,
-    EditNetworksOrder,
+    EditNetworkOrderType,
 } from '../utils/constants/networks';
 import { constants, ethers } from 'ethers';
 import { poll } from '@ethersproject/web';
@@ -173,9 +173,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
     /**
      * Change list of networks order.
      */
-    public editNetworksOrder(newNetworksOrder: EditNetworksOrder): void {
+    public editNetworksOrder(networksOrder: EditNetworkOrderType[]): void {
         const newNetworks = cloneDeep(this.networks);
-        newNetworksOrder.networksOrder.forEach((networkOrderUpdate) => {
+        networksOrder.forEach((networkOrderUpdate) => {
             const { chainId, order } = networkOrderUpdate;
 
             //Validations

@@ -2029,10 +2029,10 @@ export default class BlankController extends EventEmitter {
      * @param chainId The chain identifier of the network
      * @param order Order of network
      */
-    private async editNetworksOrder(
-        request: RequestEditNetworksOrder
-    ): Promise<void> {
-        return this.networkController.editNetworksOrder(request);
+    private async editNetworksOrder({
+        networksOrder,
+    }: RequestEditNetworksOrder): Promise<void> {
+        return this.networkController.editNetworksOrder(networksOrder);
     }
 
     /**

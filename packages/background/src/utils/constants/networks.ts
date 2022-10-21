@@ -5,7 +5,6 @@ import {
     DEFAULT_TORNADO_CONFIRMATION,
     DERIVATIONS_FORWARD,
 } from '../../controllers/blank-deposit/types';
-import { editNetworkOrder } from '../types/communication';
 
 export type TornadoIntervals = {
     depositConfirmations: number;
@@ -80,14 +79,7 @@ export interface EditNetworkUpdatesType {
     name: string;
 }
 
-export interface EditNetworkOrder {
-    chainId: number;
-    order: number;
-}
-
-export interface EditNetworksOrder {
-    networksOrder: editNetworkOrder[];
-}
+export type EditNetworkOrderType = Pick<Network, 'chainId' | 'order'>;
 
 export interface ActionsTimeInterval {
     blockNumberPull: Duration; // wait between block pulls

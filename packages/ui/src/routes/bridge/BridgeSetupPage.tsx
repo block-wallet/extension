@@ -42,6 +42,7 @@ import {
     isBridgeQuoteNotFoundError,
 } from "../../util/bridgeUtils"
 import {
+    BridgeQuote,
     BridgeQuoteRequest,
     GetBridgeQuoteResponse,
     GetBridgeQuoteNotFoundResponse,
@@ -55,6 +56,28 @@ import { formatNumberLength } from "../../util/formatNumberLength"
 import { formatRounded } from "../../util/formatRounded"
 import FeeDetails from "../../components/FeeDetails"
 import ClickableText from "../../components/button/ClickableText"
+import BridgeDetails from "../../components/bridge/BridgeDetails"
+import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
+import { getBlockWalletOriginalFee } from "../../util/bridgeTransactionUtils"
+
+const quoteToFakeTx = (quote: BridgeQuote): Partial<TransactionMeta> => {
+    return {
+        id: "",
+        chainId: quote.fromChainId,
+        bridgeParams: {
+            fromToken: quote.fromToken,
+            toToken: quote.toToken,
+            fromTokenAmount: quote.fromAmount,
+            toTokenAmount: quote.toAmount,
+            blockWalletFee: quote.blockWalletFee,
+            fromChainId: quote.fromChainId,
+            toChainId: quote.toChainId,
+            tool: quote.tool, //store the tool used for executing the bridge.
+            role: "SENDING",
+            feeCosts: quote.feeCosts,
+        },
+    }
+}
 
 const QUOTE_NOT_FOUND_ERR_MESSAGE = "Unable to generate a valid quote."
 
@@ -97,6 +120,10 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     } = useBlankState()!
     const { nativeToken } = useTokensList()
 
+    const [bridgeDetails, setBridgeDetails] = useState<{
+        isOpen: boolean
+        tab?: "summary" | "fees"
+    }>({ isOpen: false })
     // State
     const [error, setError] = useState<string | undefined>(undefined)
     const [inputFocus, setInputFocus] = useState(false)
@@ -454,6 +481,15 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 </PopupFooter>
             }
         >
+            {quote && (
+                <BridgeDetails
+                    tab={bridgeDetails.tab}
+                    open={bridgeDetails.isOpen}
+                    transaction={quoteToFakeTx(quote.bridgeParams.params)}
+                    onClose={() => setBridgeDetails({ isOpen: false })}
+                />
+            )}
+
             <div className="flex flex-col p-6">
                 <div
                     className={classnames(
@@ -631,23 +667,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                     <br />
                                     <p>
                                         <b>Original fee:</b>{" "}
-                                        {formatNumberLength(
-                                            formatUnits(
-                                                BigNumber.from(
-                                                    quote.bridgeParams.params
-                                                        .fromAmount
-                                                )
-                                                    .mul(BASE_BRIDGE_FEE * 10)
-                                                    .div(1000),
-                                                quote.bridgeParams.params
-                                                    .fromToken.decimals
-                                            ),
-                                            8
-                                        )}{" "}
-                                        {
+                                        {getBlockWalletOriginalFee(
+                                            quote.bridgeParams.params
+                                                .fromAmount,
                                             quote.bridgeParams.params.fromToken
-                                                .symbol
-                                        }
+                                        )}
                                     </p>
                                 </div>
                             }
@@ -679,7 +703,12 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 </span>
                             ) : (
                                 <ClickableText
-                                    onClick={() => (isFeeError ? "" : "")}
+                                    onClick={() =>
+                                        setBridgeDetails({
+                                            isOpen: true,
+                                            tab: "fees",
+                                        })
+                                    }
                                 >
                                     View details
                                 </ClickableText>

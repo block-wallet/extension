@@ -99,7 +99,7 @@ export interface TransactionMeta {
 }
 
 export interface BridgeTransactionParams {
-    bridgeImplementation: BridgeImplementation;
+    bridgeImplementation?: BridgeImplementation;
     fromToken: IToken;
     toToken: IToken;
     fromTokenAmount: string;

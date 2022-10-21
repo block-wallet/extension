@@ -548,6 +548,7 @@ export default class BridgeController extends BaseController<
                 fromChainId,
                 toChainId,
                 tool,
+                feeCosts,
             },
         }: BridgeTransaction
     ): Promise<string> => {
@@ -618,6 +619,7 @@ export default class BridgeController extends BaseController<
                 tool, //store the tool used for executing the bridge.
                 role: 'SENDING',
                 sendingTxHash: newTransactionMeta.transactionParams.hash,
+                feeCosts,
             };
 
             this._transactionController.updateTransaction(newTransactionMeta);

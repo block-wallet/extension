@@ -887,11 +887,7 @@ export default class BridgeController extends BaseController<
         //Attepmt to add token here as well as the toToken.address could have changed due to:
         // - Refunds
         // - Partial bridges, where the received token is different from the one specified in the quote.
-        this._tokenController.attemptAddToken(
-            toToken.address,
-            toChainId,
-            toToken
-        );
+        this._tokenController.attemptAddToken(toToken.address, toChainId);
 
         let transactionByHash: ethers.providers.TransactionResponse;
         try {

@@ -44,6 +44,7 @@ import {
 import {
     BridgeQuoteRequest,
     GetBridgeQuoteResponse,
+    GetBridgeQuoteNotFoundResponse,
 } from "@block-wallet/background/controllers/BridgeController"
 import { ApproveOperation } from "../transaction/ApprovePage"
 import { BridgeAllowanceCheck, QuoteFeeStatus } from "../../context/commTypes"
@@ -106,6 +107,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
         bridgeQuote
     )
+    const [quoteNotFound, setQuoteNotFound] = useState<
+        GetBridgeQuoteNotFoundResponse | undefined
+    >(undefined)
 
     const [bridgeDataState, setBridgeDataState] =
         useLocalStorageState<BridgeState>("bridge.form", {
@@ -172,6 +176,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         return availbleChainsId.includes(chain.id)
     })
 
+    const isANotFoundQuote = (
+        quote: GetBridgeQuoteResponse | GetBridgeQuoteNotFoundResponse
+    ) => {
+        return "name" in quote && quote.name === "QuoteNotFoundError"
+    }
     const formattedAmount =
         selectedToken && bigNumberAmount
             ? formatCurrency(
@@ -340,23 +349,23 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 }
 
                 const fetchedQuote = await getBridgeQuote(params, true)
-
-                if (isValidFetch) {
-                    setQuote(fetchedQuote)
-                    if (fetchedQuote.quoteFeeStatus !== QuoteFeeStatus.OK) {
+                if (isANotFoundQuote(fetchedQuote)) {
+                    console.log("not found")
+                    setError(QUOTE_NOT_FOUND_ERR_MESSAGE)
+                    setQuoteNotFound(
+                        fetchedQuote as GetBridgeQuoteNotFoundResponse
+                    )
+                } else if (isValidFetch) {
+                    const validQuote = fetchedQuote as GetBridgeQuoteResponse
+                    setQuote(validQuote)
+                    if (validQuote.quoteFeeStatus !== QuoteFeeStatus.OK) {
                         setError(INSUFFICIENT_BALANCE_TO_COVER_FEES)
                     }
-                    setisFetchingQuote(false)
                 }
+                setisFetchingQuote(false)
             } catch (error) {
                 if (isValidFetch) {
-                    if (isBridgeQuoteNotFoundError(error)) {
-                        setError(QUOTE_NOT_FOUND_ERR_MESSAGE)
-                    } else {
-                        setError(
-                            "Unable to fetch a valid quote. Please try again."
-                        )
-                    }
+                    setError("Unable to fetch a valid quote. Please try again.")
                     setisFetchingQuote(false)
                 }
             }
@@ -379,7 +388,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bigNumberAmount, errors.amount, selectedAddress, selectedRoute])
-
+    console.log(quote)
     const isQuoteNotFound = error === QUOTE_NOT_FOUND_ERR_MESSAGE
     const isFeeError =
         error &&
@@ -400,7 +409,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         },
         ""
     )
-
     return (
         <PopupLayout
             header={

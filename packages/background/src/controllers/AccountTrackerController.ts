@@ -185,15 +185,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 tokenAddress?: string
             ) => {
                 try {
-                    console.log(
-                        'Token change running - accountAddress:' +
-                            accountAddress +
-                            ' - chainId: ' +
-                            chainId +
-                            ' - tokenAddress: ' +
-                            tokenAddress +
-                            ''
-                    );
                     // If there is a tokenAddress, we update that asset balance, else we update account balances
                     if (!tokenAddress) {
                         await this.updateAccounts({

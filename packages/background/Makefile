@@ -22,6 +22,11 @@ test/background:
 		--exit
 
 build/background:
+ifeq ($(ENVIRONMENT), dev)
+	@echo "Building in development mode"
+	npx webpack --config ./webpack/webpack.dev.js
+else
+	@echo "Building in production mode"
 	npx webpack --config ./webpack/webpack.config.js
 
 

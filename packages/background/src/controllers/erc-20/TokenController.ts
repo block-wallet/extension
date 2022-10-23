@@ -357,6 +357,15 @@ export class TokenController extends BaseController<TokenControllerState> {
             chainId,
             ignoreEvent
         );
+
+        this.emit(
+            TokenControllerEvents.USER_TOKEN_CHANGE,
+            this.getSelectedAccountAddress(),
+            this.getSelectedNetworkChainId(),
+            tokens.map(function (token) {
+                return token.address;
+            })
+        );
     }
 
     /**
@@ -636,6 +645,13 @@ export class TokenController extends BaseController<TokenControllerState> {
 
         //If token to doesn't exists, then attempt to add
         if (tokenExists) {
+            this.emit(
+                TokenControllerEvents.USER_TOKEN_CHANGE,
+                this.getSelectedAccountAddress(),
+                this.getSelectedNetworkChainId(),
+                token.address
+            );
+
             return;
         }
 
@@ -648,6 +664,7 @@ export class TokenController extends BaseController<TokenControllerState> {
         if (!firstToken.symbol) {
             return;
         }
+
         return this.addCustomToken(firstToken);
     };
 }

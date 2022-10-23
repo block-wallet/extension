@@ -179,17 +179,37 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
         this._tokenController.on(
             TokenControllerEvents.USER_TOKEN_CHANGE,
-            async (accountAddress: string, chainId: number) => {
+            async (
+                accountAddress: string,
+                chainId: number,
+                tokenAddress?: string
+            ) => {
                 try {
-                    // Update the account balances
-                    await this.updateAccounts({
-                        addresses: [accountAddress],
-                        assetAddresses:
-                            await this._tokenController.getUserTokenContractAddresses(
-                                accountAddress,
-                                chainId
-                            ),
-                    });
+                    console.log(
+                        'Token change running - accountAddress:' +
+                            accountAddress +
+                            ' - chainId: ' +
+                            chainId +
+                            ' - tokenAddress: ' +
+                            tokenAddress +
+                            ''
+                    );
+                    // If there is a tokenAddress, we update that asset balance, else we update account balances
+                    if (!tokenAddress) {
+                        await this.updateAccounts({
+                            addresses: [accountAddress],
+                            assetAddresses:
+                                await this._tokenController.getUserTokenContractAddresses(
+                                    accountAddress,
+                                    chainId
+                                ),
+                        });
+                    } else {
+                        await this.updateAccounts({
+                            addresses: [accountAddress],
+                            assetAddresses: [tokenAddress],
+                        });
+                    }
                 } catch (err) {
                     log.warn(
                         'An error ocurred while updating the accouns',

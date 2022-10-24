@@ -28,7 +28,8 @@ ifeq ($(ENVIRONMENT), dev)
 else
 	@echo "Building in production mode"
 	npx webpack --config ./webpack/webpack.config.js
-
+endif
+	@cp ./src/infrastructure/hardware/trezor/trezor-usb-permissions.html ../../dist/trezor-usb-permissions.html
 
 depcheck:
 	@npx depcheck

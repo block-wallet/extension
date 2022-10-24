@@ -5,6 +5,9 @@ import {
     useOnMountHistory,
     useOnMountLastLocation,
 } from "../../context/hooks/useOnMount"
+import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
+import NetworkDisplayBadge from "../chain/NetworkDisplayBadge"
+
 import AppIcon from "../icons/AppIcon"
 
 import CloseIcon from "../icons/CloseIcon"
@@ -16,6 +19,7 @@ export interface PopupHeaderProps {
     title: string
     backButton?: boolean
     keepState?: boolean // if true, keeps the previous state while going back using the back button
+    networkIndicator?: boolean
     close?: string | boolean
     icon?: string | null
     disabled?: boolean // used to disable back or close buttons
@@ -31,6 +35,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     title,
     backButton = true,
     keepState = false,
+    networkIndicator = false,
     close = "/home",
     icon,
     children,
@@ -43,6 +48,8 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
 }) => {
     const history = useOnMountHistory()
     const lastLocation = useOnMountLastLocation()
+    const network = useSelectedNetwork()
+
     const [fromAction, setFromAction] = useState(false)
 
     const [mounted, setMounted] = useState(false)
@@ -120,24 +127,28 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
             >
                 {title}
             </span>
-            {close && (
-                <button
-                    onClick={(e) => {
-                        if (onClose) return onClose(e)
-                        history.push(
-                            typeof close === "string" ? close : "/home"
-                        )
-                    }}
-                    disabled={disabled}
-                    className={classnames(
-                        "p-2 ml-auto -mr-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300",
-                        disabled && "pointer-events-none text-gray-300"
-                    )}
-                    type="button"
-                >
-                    <CloseIcon />
-                </button>
-            )}
+            <div className="ml-auto flex space-x-1">
+                {networkIndicator && <NetworkDisplayBadge network={network} />}
+                {close && (
+                    <button
+                        onClick={(e) => {
+                            if (onClose) return onClose(e)
+                            history.push(
+                                typeof close === "string" ? close : "/home"
+                            )
+                        }}
+                        disabled={disabled}
+                        className={classnames(
+                            "p-2 -mr-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300",
+                            disabled && "pointer-events-none text-gray-300"
+                        )}
+                        type="button"
+                    >
+                        <CloseIcon />
+                    </button>
+                )}
+            </div>
+
             {actions && (
                 <div className="ml-auto">
                     <Dropdown>

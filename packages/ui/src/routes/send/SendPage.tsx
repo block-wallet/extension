@@ -128,6 +128,7 @@ const SendPage = () => {
             header={
                 <PopupHeader
                     title="Send"
+                    networkIndicator
                     onBack={() => {
                         history.push(
                             fromAssetPage

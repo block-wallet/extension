@@ -736,7 +736,14 @@ const SendConfirmPage = () => {
     const [inputFocus, setInputFocus] = useState(false)
     return (
         <PopupLayout
-            header={<PopupHeader title="Send" disabled={isLoading} keepState />}
+            header={
+                <PopupHeader
+                    title="Send"
+                    disabled={isLoading}
+                    keepState
+                    networkIndicator
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading

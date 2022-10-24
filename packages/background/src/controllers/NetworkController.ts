@@ -8,10 +8,13 @@ import {
     AddNetworkType,
     FAST_TIME_INTERVALS_DEFAULT_VALUES,
     EditNetworkUpdatesType,
+    EditNetworkOrderType,
 } from '../utils/constants/networks';
 import { constants, ethers } from 'ethers';
 import { poll } from '@ethersproject/web';
 import { ErrorCode } from '@ethersproject/logger';
+import { cloneDeep } from 'lodash';
+
 import { checkIfRateLimitError } from '../utils/ethersError';
 import { getChainListItem } from '../utils/chainlist';
 import { FEATURES } from '../utils/constants/features';
@@ -20,6 +23,7 @@ import {
     getUrlWithoutTrailingSlash,
     validateNetworkChainId,
 } from '../utils/ethereumChain';
+import { normalizeNetworksOrder } from '../utils/networks';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -98,7 +102,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * Set a new list of networks.
      */
     public set networks(networks: Networks) {
-        this.store.updateState({ availableNetworks: networks });
+        this.store.updateState({
+            availableNetworks: normalizeNetworksOrder(networks),
+        });
     }
 
     /**
@@ -165,6 +171,35 @@ export default class NetworkController extends BaseController<NetworkControllerS
     }
 
     /**
+     * Change list of networks order.
+     */
+    public editNetworksOrder(networksOrder: EditNetworkOrderType[]): void {
+        const newNetworks = cloneDeep(this.networks);
+        networksOrder.forEach((networkOrderUpdate) => {
+            const { chainId, order } = networkOrderUpdate;
+
+            //Validations
+            if (!chainId || Number.isNaN(chainId)) {
+                throw new Error('ChainId is required and must be numeric.');
+            }
+
+            const existingNetwork = this.getNetworkFromChainId(chainId);
+
+            if (!existingNetwork) {
+                throw new Error(
+                    'The network you are trying to edit does not exist.'
+                );
+            }
+
+            const networkKey = this._getNetworkKey(existingNetwork);
+
+            newNetworks[networkKey].order = order;
+        });
+
+        this.networks = newNetworks;
+    }
+
+    /**
      * removeNetwork
      *
      * Removes a network from the list of available networks
@@ -197,7 +232,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             if (network.chainId === 1) {
                 throw new Error(`Mainnet cannot be removed`);
             }
-            const newNetworks = { ...this.networks };
+            const newNetworks = cloneDeep(this.networks);
 
             // If network is natively supported, the key is its uppercased name
             const key = this._getNetworkKey(network);
@@ -208,7 +243,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             const key = this.getNonNativeNetworkKey(chainId);
 
             // Remove network from list
-            const newNetworks = { ...this.networks };
+            const newNetworks = cloneDeep(this.networks);
             delete newNetworks[key];
             this.networks = newNetworks;
         }
@@ -259,7 +294,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         const networkKey = this._getNetworkKey(existingNetwork);
 
-        const newNetworks = { ...this.networks };
+        const newNetworks = cloneDeep(this.networks);
         newNetworks[networkKey].desc = updates.name;
         newNetworks[networkKey].rpcUrls = [rpcUrl];
         newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
@@ -386,6 +421,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 test: !!network.test,
                 order:
                     Object.values(this.networks)
+                        .filter((n) => n.test === network.test)
                         .map((c) => c.order)
                         .sort((a, b) => b - a)[0] + 1,
                 iconUrls: nativeCurrencyIcon ? [nativeCurrencyIcon] : undefined,

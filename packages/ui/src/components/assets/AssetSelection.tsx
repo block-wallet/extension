@@ -293,9 +293,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
                             onClick={() => onAssetClick(asset, setActive)}
                         >
                             <TokenDisplay
-                                data={{
-                                    ...asset.token,
-                                }}
+                                data={{ ...asset }}
                                 clickable={false}
                                 active={
                                     selectedAsset?.token.address ===

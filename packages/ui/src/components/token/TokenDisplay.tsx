@@ -1,11 +1,13 @@
 import TokenLogo from "./TokenLogo"
 import checkmarkMiniIcon from "../../assets/images/icons/checkmark_mini.svg"
 import classnames from "classnames"
-import { TokenResponse } from "../../routes/settings/AddTokensPage"
 import { useState, FunctionComponent } from "react"
+import { TokenWithBalance } from "../../context/hooks/useTokensList"
+import { formatUnits } from "ethers/lib/utils"
+import { formatRounded } from "../../util/formatRounded"
 
 type TokenDisplayType = {
-    data: TokenResponse
+    data: TokenWithBalance
     clickable?: boolean
     active?: boolean | false
     hoverable?: boolean | false
@@ -40,12 +42,28 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
             )}
             onClick={() => (clickable ? setSelected(!selected) : null)}
         >
-            <TokenLogo bigLogo logo={data.logo} name={data.name} />
-            <p className={"text-sm text-black font-semibold ml-4 truncate"}>
-                {data.name}
+            <TokenLogo bigLogo logo={data.token.logo} name={data.token.name} />
+            <p className="ml-4 truncate">
+                <span className={"text-sm text-black font-semibold"}>
+                    {data.token.name}
+                </span>
+                <span
+                    className="text-xs text-gray-600"
+                    title={formatUnits(
+                        data.balance || "0",
+                        data.token.decimals
+                    )}
+                >
+                    <br />
+                    Balance:{" "}
+                    {formatRounded(
+                        formatUnits(data.balance || "0", data.token.decimals),
+                        6
+                    )}
+                </span>
             </p>
             <p className={"text-sm text-gray-400 ml-auto pl-1 pr-6"}>
-                {data.symbol}
+                {data.token.symbol}
             </p>
             <img
                 src={checkmarkMiniIcon}

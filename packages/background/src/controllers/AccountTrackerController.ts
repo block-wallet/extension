@@ -182,11 +182,16 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             async (
                 accountAddress: string,
                 chainId: number,
-                tokenAddress?: string
+                tokenAddresses: string[] = []
             ) => {
                 try {
                     // If there is a tokenAddress, we update that asset balance, else we update account balances
-                    if (!tokenAddress) {
+                    if (tokenAddresses.length > 0) {
+                        await this.updateAccounts({
+                            addresses: [accountAddress],
+                            assetAddresses: tokenAddresses,
+                        });
+                    } else {
                         await this.updateAccounts({
                             addresses: [accountAddress],
                             assetAddresses:
@@ -194,11 +199,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                     accountAddress,
                                     chainId
                                 ),
-                        });
-                    } else {
-                        await this.updateAccounts({
-                            addresses: [accountAddress],
-                            assetAddresses: [tokenAddress],
                         });
                     }
                 } catch (err) {

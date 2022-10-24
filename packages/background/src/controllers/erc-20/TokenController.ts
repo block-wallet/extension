@@ -649,7 +649,7 @@ export class TokenController extends BaseController<TokenControllerState> {
                 TokenControllerEvents.USER_TOKEN_CHANGE,
                 this.getSelectedAccountAddress(),
                 this.getSelectedNetworkChainId(),
-                token.address
+                [token.address]
             );
 
             return;

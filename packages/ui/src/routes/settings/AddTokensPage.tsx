@@ -94,6 +94,7 @@ const AddTokensPage = () => {
                             history.replace("/")
                         }
                     }}
+                    networkIndicator
                 />
             }
             // submitOnEnter={{ isEnabled: submitEnabled }}

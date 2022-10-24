@@ -102,7 +102,7 @@ const AssetDetailsPage = () => {
                                   >
                                       <div
                                           className={classnames(
-                                              "text-grey-900 cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-t-md",
+                                              "text-grey-900 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 rounded-t-md",
                                               optionsWidth
                                           )}
                                       >
@@ -123,7 +123,7 @@ const AssetDetailsPage = () => {
                                           setConfirmOpen(true)
                                       }}
                                       className={classnames(
-                                          "text-red-500 cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-b-md w-40",
+                                          "text-red-500 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 rounded-b-md w-40",
                                           optionsWidth
                                       )}
                                   >

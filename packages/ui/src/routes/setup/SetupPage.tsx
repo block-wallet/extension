@@ -8,6 +8,7 @@ import crossIcon from "../../assets/images/icons/cross.svg"
 
 import checkmarkIcon from "../../assets/images/icons/checkmark.svg"
 import PageLayout from "../../components/PageLayout"
+import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboarded"
 
 const SetupOption: FunctionComponent<{
     title: string
@@ -36,8 +37,11 @@ const SetupOption: FunctionComponent<{
     </div>
 )
 
-const SetupPage = () => (
-    <>
+const SetupPage = () => {
+    // if the onboarding is ready the user shoulnd't do it again.
+    useCheckUserIsOnboarded()
+
+    return (
         <PageLayout className="relative" header>
             <span className="my-6 text-lg font-bold font-title">
                 New to BlockWallet?
@@ -60,7 +64,7 @@ const SetupPage = () => (
                 />
             </div>
         </PageLayout>
-    </>
-)
+    )
+}
 
 export default SetupPage

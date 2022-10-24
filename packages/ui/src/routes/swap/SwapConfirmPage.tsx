@@ -384,6 +384,7 @@ const SwapPageConfirm: FC<{}> = () => {
                         })
                     }}
                     disabled={isSwapping}
+                    networkIndicator
                 />
             }
             footer={

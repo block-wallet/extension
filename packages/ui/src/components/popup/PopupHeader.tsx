@@ -5,6 +5,9 @@ import {
     useOnMountHistory,
     useOnMountLastLocation,
 } from "../../context/hooks/useOnMount"
+import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
+import NetworkDisplayBadge from "../chain/NetworkDisplayBadge"
+
 import AppIcon from "../icons/AppIcon"
 
 import CloseIcon from "../icons/CloseIcon"
@@ -16,6 +19,7 @@ export interface PopupHeaderProps {
     title: string
     backButton?: boolean
     keepState?: boolean // if true, keeps the previous state while going back using the back button
+    networkIndicator?: boolean
     close?: string | boolean
     icon?: string | null
     disabled?: boolean // used to disable back or close buttons
@@ -31,6 +35,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     title,
     backButton = true,
     keepState = false,
+    networkIndicator = false,
     close = "/home",
     icon,
     children,
@@ -43,6 +48,8 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
 }) => {
     const history = useOnMountHistory()
     const lastLocation = useOnMountLastLocation()
+    const network = useSelectedNetwork()
+
     const [fromAction, setFromAction] = useState(false)
 
     const [mounted, setMounted] = useState(false)

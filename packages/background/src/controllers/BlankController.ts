@@ -2819,9 +2819,13 @@ export default class BlankController extends EventEmitter {
      * Method to mark setup process as complete and to fire a notification.
      *
      */
-    private async completeSetup({}: RequestCompleteSetup): Promise<void> {
+    private async completeSetup({
+        sendNotification,
+    }: RequestCompleteSetup): Promise<void> {
         if (!this.isSetupComplete) {
-            showSetUpCompleteNotification();
+            if (sendNotification) {
+                showSetUpCompleteNotification();
+            }
             this.isSetupComplete = true;
         }
     }

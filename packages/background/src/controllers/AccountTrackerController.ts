@@ -185,7 +185,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 tokenAddresses: string[] = []
             ) => {
                 try {
-                    // If there is a tokenAddress, we update that asset balance, else we update account balances
+                    // If array tokenAddresses contains at least 1 value, we update that asset balance, else we update all account balances
                     if (tokenAddresses.length > 0) {
                         await this.updateAccounts({
                             addresses: [accountAddress],

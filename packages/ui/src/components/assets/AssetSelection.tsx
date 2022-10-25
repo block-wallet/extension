@@ -293,13 +293,14 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
                             onClick={() => onAssetClick(asset, setActive)}
                         >
                             <TokenDisplay
-                                data={{ ...asset }}
+                                data={{ ...asset.token }}
                                 clickable={false}
                                 active={
                                     selectedAsset?.token.address ===
                                     asset.token.address
                                 }
                                 hoverable={true}
+                                balance={asset.balance}
                             />
                         </div>
                     )

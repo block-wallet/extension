@@ -2,15 +2,17 @@ import TokenLogo from "./TokenLogo"
 import checkmarkMiniIcon from "../../assets/images/icons/checkmark_mini.svg"
 import classnames from "classnames"
 import { useState, FunctionComponent } from "react"
-import { TokenWithBalance } from "../../context/hooks/useTokensList"
 import { formatUnits } from "ethers/lib/utils"
 import { formatRounded } from "../../util/formatRounded"
+import { TokenResponse } from "../../routes/settings/AddTokensPage"
+import { BigNumber } from "ethers"
 
 type TokenDisplayType = {
-    data: TokenWithBalance
+    data: TokenResponse
     clickable?: boolean
     active?: boolean | false
     hoverable?: boolean | false
+    balance?: BigNumber | undefined
 }
 
 /**
@@ -23,12 +25,14 @@ type TokenDisplayType = {
  * @param clickable - Determines if you can click element to show selected style.
  * @param active - Determines if the element is already showing selected style.
  * @param hoverable - Determines if the element shows a hover style.
+ * @param balance - Contains the asset balance in case it exists. e.g. if it is a New Asset there is no balance
  */
 const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
     data,
     clickable,
     active,
     hoverable,
+    balance,
 }) => {
     const [selected, setSelected] = useState<boolean>(active ? active : false)
 
@@ -42,28 +46,22 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
             )}
             onClick={() => (clickable ? setSelected(!selected) : null)}
         >
-            <TokenLogo bigLogo logo={data.token.logo} name={data.token.name} />
-            <p className="ml-4 truncate">
+            <TokenLogo bigLogo logo={data.logo} name={data.name} />
+            <div className="flex flex-col ml-4 truncate">
                 <span className={"text-sm text-black font-semibold"}>
-                    {data.token.name}
+                    {data.name}
                 </span>
-                <span
-                    className="text-xs text-gray-600"
-                    title={formatUnits(
-                        data.balance || "0",
-                        data.token.decimals
-                    )}
-                >
-                    <br />
-                    Balance:{" "}
-                    {formatRounded(
-                        formatUnits(data.balance || "0", data.token.decimals),
-                        6
-                    )}
-                </span>
-            </p>
+                {balance && (
+                    <span
+                        className={"text-xs text-gray-600 mt-1"}
+                        title={formatUnits(balance, data.decimals)}
+                    >
+                        {formatRounded(formatUnits(balance, data.decimals), 6)}
+                    </span>
+                )}
+            </div>
             <p className={"text-sm text-gray-400 ml-auto pl-1 pr-6"}>
-                {data.token.symbol}
+                {data.symbol}
             </p>
             <img
                 src={checkmarkMiniIcon}

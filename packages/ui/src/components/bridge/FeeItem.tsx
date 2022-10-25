@@ -46,7 +46,9 @@ const FeeItem = ({
                     isCollapsed ? "h-0" : ""
                 )}
             >
-                <i className="ml-1 text-gray-500">{`${detail.description} (${detail.percentage}%)`}</i>
+                <i className="ml-1 text-gray-500">{`${
+                    detail.description ?? detail.name
+                } (${detail.percentage}%)`}</i>
             </div>
         </li>
     )

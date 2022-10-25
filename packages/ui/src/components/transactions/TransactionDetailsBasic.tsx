@@ -1,13 +1,9 @@
 import { BigNumber } from "ethers"
 import { formatUnits } from "ethers/lib/utils"
 import { FunctionComponent, useMemo, useState } from "react"
-import { formatNumberLength } from "../../util/formatNumberLength"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
-import { classnames } from "../../styles"
-import { capitalize } from "../../util/capitalize"
 import { getAccountColor } from "../../util/getAccountColor"
 import Divider from "../Divider"
-import ExpandableText from "../ExpandableText"
 import AccountIcon from "../icons/AccountIcon"
 import { TransactionDetailsTabProps } from "./TransactionDetails"
 import arrowRight from "../../assets/images/icons/arrow_right_black.svg"
@@ -24,20 +20,18 @@ import {
 } from "../../context/commTypes"
 import { calcExchangeRate } from "../../util/exchangeUtils"
 import isNil from "../../util/isNil"
-import useGetBridgeDetails from "../../util/hooks/useGetBridgeDetails"
-import { getAdditionalBridgeExplorer } from "../../util/bridgeTransactionUtils"
+import TransactionDetailsList from "./TransactionDetailsList"
+import { bnOr0 } from "../../util/numberUtils"
+import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 
-const bnOr0 = (value: any = 0) => BigNumber.from(value)
-
-export const TransactionDetails: FunctionComponent<
+export const TransactionDetailsBasic: FunctionComponent<
     TransactionDetailsTabProps & { nonce?: number }
-> = ({ transaction, nonce: _nonce }) => {
+> = ({ transaction: _transaction, nonce: _nonce }) => {
     const state = useBlankState()!
     const { nativeCurrency } = useSelectedNetwork()
     const accounts = useSortedAccounts()
     const addressBook = useAddressBook()
-    //bridge data
-    const bridgeDetails = useGetBridgeDetails(transaction)
+    const transaction = _transaction as TransactionMeta
 
     const details = useMemo(() => {
         const isConfirmed = transaction.status === TransactionStatus.CONFIRMED
@@ -148,90 +142,6 @@ export const TransactionDetails: FunctionComponent<
                 value: rate.toString(),
                 decimals: 5,
                 unitName: `${transaction.exchangeParams.toToken.symbol}/${transaction.exchangeParams.fromToken.symbol}`,
-            })
-
-            return details
-        }
-
-        // Bridge details
-        if (
-            (transaction.transactionCategory === TransactionCategories.BRIDGE ||
-                transaction.transactionCategory ===
-                    TransactionCategories.INCOMING_BRIDGE) &&
-            transaction.bridgeParams !== undefined
-        ) {
-            if (transaction.transactionParams.hash !== undefined) {
-                if (!isNil(nonce)) {
-                    details.push({
-                        label: "Nonce",
-                        value: nonce!.toString(),
-                        noSpace: false,
-                    })
-                }
-
-                if (gasLimit.gt(0)) {
-                    let txFee = BigNumber.from(0)
-
-                    if (maxPriorityFeePerGas.gt(0) && maxFeePerGas.gt(0)) {
-                        txFee = maxFeePerGas.mul(gasLimit)
-                    } else if (gasPrice.gt(0)) {
-                        txFee = gasPrice.mul(gasLimit)
-                    }
-
-                    if (txFee.gt(0)) {
-                        details.push({
-                            label: "Transaction fee",
-                            value: formatUnits(txFee, nativeCurrency.decimals),
-                            decimals: 10,
-                            unitName: nativeCurrency.symbol,
-                        })
-                    }
-                }
-            }
-
-            const bridgeSendingChainLabel =
-                bridgeDetails?.sendingTransaction?.networkName ||
-                transaction.bridgeParams.fromChainId.toString()
-            const bridgeReceivingChainLabel =
-                bridgeDetails?.receivingTransaction?.networkName ||
-                transaction.bridgeParams.toChainId.toString()
-
-            if (
-                transaction.transactionCategory === TransactionCategories.BRIDGE
-            ) {
-                details.push({
-                    label: "Destination network",
-                    value: bridgeReceivingChainLabel,
-                })
-            } else {
-                details.push({
-                    label: "Origin network",
-                    value: bridgeSendingChainLabel,
-                })
-            }
-
-            details.push({
-                label: (isConfirmed ? "Sent" : "Sending").concat(
-                    ` from ${bridgeSendingChainLabel}`
-                ),
-                value: formatUnits(
-                    bnOr0(transaction.bridgeParams.fromTokenAmount),
-                    transaction.bridgeParams.fromToken.decimals
-                ),
-                decimals: 10,
-                unitName: transaction.bridgeParams.fromToken.symbol,
-            })
-
-            details.push({
-                label: (isConfirmed ? "Received" : "Receiving").concat(
-                    ` in ${bridgeReceivingChainLabel}`
-                ),
-                value: formatUnits(
-                    bnOr0(transaction.bridgeParams.toTokenAmount),
-                    transaction.bridgeParams.toToken.decimals
-                ),
-                decimals: 10,
-                unitName: transaction.bridgeParams.toToken.symbol,
             })
 
             return details
@@ -349,7 +259,7 @@ export const TransactionDetails: FunctionComponent<
         return details
 
         // eslint-disable-next-line
-    }, [transaction, _nonce, bridgeDetails])
+    }, [transaction, _nonce])
 
     const [copied, setCopied] = useState(-1)
 
@@ -393,11 +303,6 @@ export const TransactionDetails: FunctionComponent<
     const explorerName = getExplorerTitle(
         state.availableNetworks,
         state.selectedNetwork
-    )
-
-    const additionalExplorer = getAdditionalBridgeExplorer(
-        transaction,
-        bridgeDetails
     )
 
     return (
@@ -477,65 +382,7 @@ export const TransactionDetails: FunctionComponent<
                 <Divider />
             </div>
             <main>
-                {details.map((detail, i) =>
-                    detail ? (
-                        <div
-                            key={i.toString()}
-                            className={classnames(
-                                "w-full",
-                                detail.noSpace ? "" : "mt-3",
-                                detail.expandable
-                                    ? ""
-                                    : "flex justify-between items-center space-x-1"
-                            )}
-                        >
-                            <span
-                                className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap w-36"
-                                title={detail.label}
-                            >
-                                {capitalize(detail.label)}
-                            </span>
-                            {detail.expandable ? (
-                                <ExpandableText className="text-gray-600 mt-1 w-fulltext-sm allow-select">
-                                    {detail.value ?? "N/A"}
-                                </ExpandableText>
-                            ) : (
-                                <span
-                                    className={classnames(
-                                        "text-gray-600 text-sm allow-select",
-                                        detail.expandable ? "w-11/12 mt-1" : ""
-                                    )}
-                                    title={`${detail.value ?? "N/A"} ${
-                                        detail.unitName ?? ""
-                                    }`}
-                                >
-                                    {detail.value
-                                        ? detail.decimals
-                                            ? `${formatNumberLength(
-                                                  detail.value,
-                                                  detail.decimals,
-                                                  false
-                                              )} ${detail.unitName ?? ""}`
-                                            : `${detail.value} ${
-                                                  detail.unitName ?? ""
-                                              }`
-                                        : "N/A"}
-                                </span>
-                            )}
-                        </div>
-                    ) : (
-                        <div
-                            className="py-3"
-                            style={{
-                                width: "calc(100% + 1.5rem)",
-                                marginLeft: "-0.75rem",
-                            }}
-                            key={i.toString()}
-                        >
-                            <Divider />
-                        </div>
-                    )
-                )}
+                <TransactionDetailsList details={details} />
             </main>
             {!!transaction.transactionParams.hash && (
                 <div className="flex flex-col">
@@ -559,27 +406,10 @@ export const TransactionDetails: FunctionComponent<
                             />
                         </a>
                     </div>
-                    {additionalExplorer ? (
-                        <div className="flex w-full items-center justify-start mt-3">
-                            <a
-                                href={additionalExplorer.explorerLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex flex-row items-center space-x-2 text-sm font-bold text-primary-300"
-                            >
-                                <span>{additionalExplorer.viewOnText}</span>
-                                <img
-                                    src={openIcon}
-                                    alt="Open icon"
-                                    className="w-3 h-3"
-                                />
-                            </a>
-                        </div>
-                    ) : null}
                 </div>
             )}
         </div>
     )
 }
 
-export default TransactionDetails
+export default TransactionDetailsBasic

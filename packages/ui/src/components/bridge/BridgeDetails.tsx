@@ -7,24 +7,26 @@ import HorizontalSelect from "../input/HorizontalSelect"
 import GenericTooltip from "../label/GenericTooltip"
 import { Classes } from "../../styles"
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
-import BridgeDetilsFees from "./BridgeDetailsFee"
-const BridgeDetailsBasic: FC<{ transaction: Partial<TransactionMeta> }> = ({
-    transaction,
-}) => {
-    return <div />
-}
+import BridgeDetilsFees from "./BridgeDetailsFees"
+import BridgeDetailsSummary from "./BridgeDetailsSummary"
+import useGetBridgeTransactionsData from "../../util/hooks/useGetBridgeTransactionsData"
+import TransactionDetailsBasic from "../transactions/TransactionDetailsBasic"
+import isNil from "../../util/isNil"
 
 const BridgeDetails: FC<{
     onClose: () => void
     open: boolean
     transaction?: Partial<TransactionMeta>
+    nonce?: number
     tab?: "summary" | "fees"
-}> = ({ onClose, open, transaction, tab }) => {
+}> = ({ onClose, open, transaction, tab, nonce }) => {
+    const bridgeTransactionsData = useGetBridgeTransactionsData(transaction)
+    const _nonce = nonce ?? transaction?.transactionParams?.nonce
     const tabs = [
         {
             id: "summary",
             label: "Summary",
-            component: BridgeDetailsBasic,
+            component: BridgeDetailsSummary,
             disabled: false,
         },
         {
@@ -32,6 +34,12 @@ const BridgeDetails: FC<{
             label: "Fees",
             component: BridgeDetilsFees,
             disabled: false,
+        },
+        {
+            id: "transaction",
+            label: "Transaction",
+            component: TransactionDetailsBasic,
+            disabled: isNil(_nonce),
         },
     ]
 
@@ -66,9 +74,9 @@ const BridgeDetails: FC<{
                     options={tabs}
                     value={tab}
                     onChange={(tab) => {
-                        if (selectedTab.disabled) return
-
-                        setSelectedTab(tab)
+                        if (!tab.disabled) {
+                            setSelectedTab(tab)
+                        }
                     }}
                     display={(t) => {
                         return (
@@ -77,7 +85,7 @@ const BridgeDetails: FC<{
                                 divFull
                                 disabled={!t.disabled}
                                 className="w-38 p-2 left-1"
-                                content="Not available for this transaction"
+                                content="Not available yet"
                             >
                                 {t.label}
                             </GenericTooltip>
@@ -98,10 +106,14 @@ const BridgeDetails: FC<{
                     }}
                 />
                 <div
-                    className="flex flex-col h-[17rem] overflow-auto py-4 -ml-3 px-3"
+                    className="flex flex-col h-[17rem] overflow-hidden overflow-y-auto py-2 -ml-3 px-3"
                     style={{ width: "calc(100% + 1.5rem)" }}
                 >
-                    <TabComponent transaction={transaction} />
+                    <TabComponent
+                        transaction={transaction}
+                        bridgeTransactionsData={bridgeTransactionsData}
+                        nonce={_nonce}
+                    />
                 </div>
             </div>
             <div className="-mx-3">

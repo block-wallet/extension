@@ -22,6 +22,9 @@ const GenericTooltip: FunctionComponent<{
     left?: boolean
     className?: string
     divFull?: boolean
+    autoPositioning?: {
+        paddingFromRight: number
+    }
     children?: React.ReactNode
 }> = ({
     children,
@@ -33,24 +36,27 @@ const GenericTooltip: FunctionComponent<{
     left,
     className,
     divFull,
+    autoPositioning = {
+        paddingFromRight: 40,
+    },
 }) => {
     const ref = useRef<HTMLDivElement | null>(null)
 
     useLayoutEffect(() => {
-        let padding = 14
+        let paddingRight = autoPositioning.paddingFromRight ?? 14
         if (ref.current) {
             const placeholderRect = ref.current.getBoundingClientRect()
             const { innerWidth } = window
             const placeholderRightX = placeholderRect.x + placeholderRect.width
             if (placeholderRightX > innerWidth) {
                 ref.current.style.transform = `translateX(${
-                    innerWidth - placeholderRightX - padding
+                    innerWidth - placeholderRightX - paddingRight
                 }px)`
             }
         }
-    }, [])
+    }, [autoPositioning.paddingFromRight])
 
-    return disabled ? (
+    return disabled || !content ? (
         <>{children}</>
     ) : (
         <div className={classnames("group relative", divFull && "w-full")}>

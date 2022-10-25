@@ -118,6 +118,7 @@ export interface IBridgeQuote {
     toChainId: number;
     tool: string;
     feeCosts: IBridgeFeeCost[];
+    slippage: number;
 }
 
 export interface IBridgeRoute {
@@ -226,7 +227,6 @@ const LiFiBridge: IBridge = {
                     referrer: r.referrer,
                     integrator: 'blockwallet.io',
                     slippage: r.slippage || 0.5,
-                    //allowBridges: ['stargate'],
                 },
             });
             if (response.status === 400) {
@@ -243,6 +243,7 @@ const LiFiBridge: IBridge = {
                 fromToken: lifiTokenToIToken(responseData.action.fromToken),
                 toToken: lifiTokenToIToken(responseData.action.toToken),
                 tool: responseData.tool,
+                slippage: responseData.action.slippage,
                 feeCosts: lifiFeeCostsToIBridgeFeeCosts(
                     responseData.estimate.feeCosts
                 ),

@@ -9,7 +9,7 @@ import { formatUnits } from "ethers/lib/utils"
 import { BridgeStatus, BridgeSubstatus } from "../context/commTypes"
 import { BASE_BRIDGE_FEE } from "./constants"
 import { formatNumberLength } from "./formatNumberLength"
-import useGetBridgeDetails from "./hooks/useGetBridgeDetails"
+import useGetBridgeTransactionsData from "./hooks/useGetBridgeTransactionsData"
 
 interface BridgeAdditonalExplorer {
     viewOnText: string
@@ -67,19 +67,35 @@ export const getBlockWalletFeeCost = (
 export const getBridgePendingMessage = (
     bridgeParams: BridgeTransactionParams,
     destinationNetworkName?: string
-) => {
+): { label: string; info?: string } | null => {
+    if (bridgeParams.status === BridgeStatus.NOT_FOUND) {
+        return {
+            label: "Processing bridge",
+        }
+    }
     if (bridgeParams.status === BridgeStatus.PENDING) {
         switch (bridgeParams.substatus) {
             case BridgeSubstatus.NOT_PROCESSABLE_REFUND_NEEDED:
             case BridgeSubstatus.REFUND_IN_PROGRESS:
-                return "Failed bridge: Processing refund"
+                return {
+                    label: "Refund in progress",
+                    info: "The bridge has failed and there in course as a refund of the amount sent.",
+                }
+            case BridgeSubstatus.CHAIN_NOT_AVAILABLE:
+            case BridgeSubstatus.BRIDGE_NOT_AVAILABLE:
+            case BridgeSubstatus.UNKNOWN_ERROR:
             case BridgeSubstatus.WAIT_SOURCE_CONFIRMATIONS: {
-                return "Processing bridge"
+                return {
+                    label: "Processing bridge",
+                }
             }
             case BridgeSubstatus.WAIT_DESTINATION_TRANSACTION: {
-                return `Waiting for ${
-                    destinationNetworkName || "destination"
-                } transaction`
+                return {
+                    label: `Waiting for ${
+                        destinationNetworkName || "destination network"
+                    } transaction`,
+                    info: "The sending transaction is mined and we're awaiting for the destination transaction to be processed.",
+                }
             }
         }
     }
@@ -88,7 +104,7 @@ export const getBridgePendingMessage = (
 
 export const getAdditionalBridgeExplorer = (
     transaction: TransactionMeta,
-    bridgeDetails: ReturnType<typeof useGetBridgeDetails>
+    bridgeDetails: ReturnType<typeof useGetBridgeTransactionsData>
 ): BridgeAdditonalExplorer | undefined => {
     if (bridgeDetails) {
         if (

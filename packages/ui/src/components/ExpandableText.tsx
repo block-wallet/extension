@@ -1,8 +1,8 @@
-import { useState } from "react"
+import { ReactNode, useState } from "react"
 import classnames from "classnames"
 
 type ExpandableTextProps = {
-    children: string
+    children: string | ReactNode
     className: string
 }
 

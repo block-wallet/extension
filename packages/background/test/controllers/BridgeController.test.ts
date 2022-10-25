@@ -439,6 +439,7 @@ describe('Bridge Controller', () => {
                             },
                             toAmount: '10000000000000000',
                             spender: 'spender_1_2_3',
+                            slippage: 0.5,
                             toToken: {
                                 address:
                                     '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1',

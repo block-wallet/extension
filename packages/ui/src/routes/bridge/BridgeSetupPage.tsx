@@ -26,7 +26,6 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useState, useEffect, FunctionComponent } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
 import { useTokensList } from "../../context/hooks/useTokensList"
-import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { yupResolver } from "@hookform/resolvers/yup"
 import {
     getBridgeAvailableRoutes,
@@ -40,6 +39,7 @@ import {
     checkForBridgeNativeAsset,
     getRouteForNetwork,
     isBridgeQuoteNotFoundError,
+    populateBridgeTransaction,
 } from "../../util/bridgeUtils"
 import {
     BridgeQuote,
@@ -49,37 +49,12 @@ import {
 import { ApproveOperation } from "../transaction/ApprovePage"
 import { BridgeAllowanceCheck, QuoteFeeStatus } from "../../context/commTypes"
 import { defaultAdvancedSettings } from "../../components/transactions/AdvancedSettings"
-import { BASE_BRIDGE_FEE } from "../../util/constants"
-import { formatNumberLength } from "../../util/formatNumberLength"
 import { formatRounded } from "../../util/formatRounded"
 import FeeDetails from "../../components/FeeDetails"
 import ClickableText from "../../components/button/ClickableText"
 import BridgeDetails from "../../components/bridge/BridgeDetails"
-import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 import { getBlockWalletOriginalFee } from "../../util/bridgeTransactionUtils"
-
-const quoteToFakeTx = (quote: BridgeQuote): Partial<TransactionMeta> => {
-    return {
-        id: "",
-        chainId: quote.fromChainId,
-        bridgeParams: {
-            fromToken: quote.fromToken,
-            toToken: quote.toToken,
-            fromTokenAmount: quote.fromAmount,
-            toTokenAmount: quote.toAmount,
-            blockWalletFee: quote.blockWalletFee,
-            fromChainId: quote.fromChainId,
-            toChainId: quote.toChainId,
-            tool: quote.tool, //store the tool used for executing the bridge.
-            role: "SENDING",
-            feeCosts: quote.feeCosts,
-        },
-    }
-}
-
-const QUOTE_NOT_FOUND_ERR_MESSAGE = "Unable to generate a valid quote."
-
-const INSUFFICIENT_BALANCE_TO_COVER_FEES = `You don't have enough balance to cover the bridge fees.`
+import BridgeErrorMessage, { BridgeErrorType } from "./BridgeErrorMessage"
 
 interface SetupBridgePageLocalState {
     amount?: string
@@ -124,6 +99,10 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     }>({ isOpen: false })
     // State
     const [error, setError] = useState<string | undefined>(undefined)
+    const [bridgeQuoteError, setBridgeQuoteError] = useState<
+        BridgeErrorType | undefined
+    >(undefined)
+
     const [inputFocus, setInputFocus] = useState(false)
     const [isFetchingRoutes, setIsFetchingRoutes] = useState<boolean>(false)
     const [isFetchingQuote, setisFetchingQuote] = useState<boolean>(false)
@@ -297,7 +276,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     useEffect(() => {
         let isValidFetch = true
         setError(undefined)
-
+        setBridgeQuoteError(undefined)
         const fetchRoutes = async () => {
             setIsFetchingRoutes(true)
             try {
@@ -352,7 +331,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     useEffect(() => {
         let isValidFetch = true
         setError(undefined)
-
+        setBridgeQuoteError(undefined)
         const fetchQuote = async () => {
             setisFetchingQuote(true)
 
@@ -371,18 +350,18 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 if (isValidFetch) {
                     setQuote(fetchedQuote)
                     if (fetchedQuote.quoteFeeStatus !== QuoteFeeStatus.OK) {
-                        setError(INSUFFICIENT_BALANCE_TO_COVER_FEES)
+                        setBridgeQuoteError(
+                            BridgeErrorType.INSUFFICIENT_BALANCE_TO_COVER_FEES
+                        )
                     }
                     setisFetchingQuote(false)
                 }
             } catch (error) {
                 if (isValidFetch) {
                     if (isBridgeQuoteNotFoundError(error)) {
-                        setError(QUOTE_NOT_FOUND_ERR_MESSAGE)
+                        setBridgeQuoteError(BridgeErrorType.QUOTE_NOT_FOUND)
                     } else {
-                        setError(
-                            "Unable to fetch a valid quote. Please try again."
-                        )
+                        setBridgeQuoteError(BridgeErrorType.OTHER)
                     }
                     setisFetchingQuote(false)
                 }
@@ -407,11 +386,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bigNumberAmount, errors.amount, selectedAddress, selectedRoute])
 
-    const isQuoteNotFound = error === QUOTE_NOT_FOUND_ERR_MESSAGE
-    const isFeeError =
-        error &&
-        quote?.quoteFeeStatus ===
-            QuoteFeeStatus.INSUFFICIENT_BALANCE_TO_COVER_FEES
     const bridgeFeeSummary = quote?.bridgeParams.params.feeCosts.reduce(
         (feeDetails, fee) => {
             if (feeDetails) {
@@ -463,7 +437,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 ? "Approve"
                                 : "Review"
                         }
-                        disabled={!!(error || !quote)}
+                        disabled={!!(error || bridgeQuoteError || !quote)}
                         isLoading={isFetchingRoutes || isFetchingQuote}
                         onClick={onSubmit}
                     />
@@ -474,7 +448,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 <BridgeDetails
                     tab={bridgeDetails.tab}
                     open={bridgeDetails.isOpen}
-                    transaction={quoteToFakeTx(quote.bridgeParams.params)}
+                    transaction={populateBridgeTransaction(quote)}
                     onClose={() => setBridgeDetails({ isOpen: false })}
                 />
             )}
@@ -641,6 +615,19 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         />
                     </div>
                 )}
+                {quote && !bridgeQuoteError && (
+                    <ClickableText
+                        className="pt-2 flex ml-auto"
+                        onClick={() =>
+                            setBridgeDetails({
+                                isOpen: true,
+                                tab: "summary",
+                            })
+                        }
+                    >
+                        View details
+                    </ClickableText>
+                )}
 
                 {/* Bridge fee */}
                 {quote && (
@@ -665,41 +652,24 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 </div>
                             }
                         />
-                        {!error && (
-                            <ClickableText className="pt-2" onClick={() => {}}>
-                                View details
-                            </ClickableText>
-                        )}
                     </div>
                 )}
-                {error && (
-                    <ErrorMessage className="mt-4">
-                        <span>
-                            {error}{" "}
-                            {isQuoteNotFound ? (
-                                <span>
-                                    <ClickableText
-                                        onClick={() => (isFeeError ? "" : "")}
-                                        className="!break-word !whitespace-normal"
-                                    >
-                                        Check the details
-                                    </ClickableText>{" "}
-                                    and try again.
-                                </span>
-                            ) : (
-                                <ClickableText
-                                    onClick={() =>
-                                        setBridgeDetails({
-                                            isOpen: true,
-                                            tab: "fees",
-                                        })
-                                    }
-                                >
-                                    View details
-                                </ClickableText>
-                            )}
-                        </span>
-                    </ErrorMessage>
+                {bridgeQuoteError && (
+                    <BridgeErrorMessage
+                        type={bridgeQuoteError}
+                        onClickDetails={(type) => {
+                            if (
+                                type ===
+                                BridgeErrorType.INSUFFICIENT_BALANCE_TO_COVER_FEES
+                            ) {
+                                setBridgeDetails({ isOpen: true, tab: "fees" })
+                            }
+                        }}
+                    />
+                )}
+                {/** Only display custom errors if there isn't a quote error already. */}
+                {error && !bridgeQuoteError && (
+                    <ErrorMessage className="mt-4">{error}</ErrorMessage>
                 )}
             </div>
         </PopupLayout>

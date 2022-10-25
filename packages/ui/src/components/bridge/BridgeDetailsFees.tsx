@@ -2,12 +2,14 @@ import { TransactionMeta } from "@block-wallet/background/controllers/transactio
 import { IBridgeFeeCost } from "@block-wallet/background/utils/bridgeApi"
 import { FC } from "react"
 import { getBlockWalletFeeCost } from "../../util/bridgeTransactionUtils"
+import { BridgeTransactionsData } from "../../util/hooks/useGetBridgeTransactionsData"
 import Divider from "../Divider"
 import FeeTokenSummaryDisplay from "./FeeTokenSummaryDisplay"
 
-const BridgeDetilsFees: FC<{ transaction: Partial<TransactionMeta> }> = ({
-    transaction,
-}) => {
+const BridgeDetilsFees: FC<{
+    transaction: Partial<TransactionMeta>
+    bridgeTransactionsData: BridgeTransactionsData | null
+}> = ({ transaction }) => {
     if (!transaction.bridgeParams) {
         return null
     }

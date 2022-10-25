@@ -542,6 +542,7 @@ export default class BridgeController extends BaseController<
                 toChainId,
                 tool,
                 feeCosts,
+                slippage,
             },
         }: BridgeTransaction
     ): Promise<string> => {
@@ -609,6 +610,7 @@ export default class BridgeController extends BaseController<
                 blockWalletFee,
                 fromChainId,
                 toChainId,
+                slippage,
                 tool, //store the tool used for executing the bridge.
                 role: 'SENDING',
                 sendingTxHash: newTransactionMeta.transactionParams.hash,
@@ -921,8 +923,6 @@ export default class BridgeController extends BaseController<
         transactionMeta.bridgeParams = {
             ...(sendingTransaction.bridgeParams ||
                 ({} as BridgeTransactionParams)),
-            status: undefined,
-            substatus: undefined,
             role: 'RECEIVING',
         };
 

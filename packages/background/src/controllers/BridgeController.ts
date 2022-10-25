@@ -388,8 +388,9 @@ export default class BridgeController extends BaseController<
             quote = await this.getQuoteFromAggregator(aggregator, quoteRequest);
         } catch (e) {
             if (isQuoteNotFoundError(e)) {
-                return e as GetBridgeQuoteNotFoundResponse;
+                return e.details as GetBridgeQuoteNotFoundResponse;
             }
+            // TODO: throw new Error("error getting");
         }
 
         if (quoteRequest.fromTokenAddress === LIFI_NATIVE_ADDRESS) {

@@ -1,30 +1,46 @@
 import { FunctionComponent, useState } from "react"
-import TransactionDetailsBasic from "./TransactionDetailsBasic"
-import TransactionDetailsAdvanced from "./TransactionDetailsAdvanced"
 import Dialog from "../dialog/Dialog"
-import HorizontalSelect from "../input/HorizontalSelect"
 import CloseIcon from "../icons/CloseIcon"
 import Divider from "../Divider"
 import { Classes, classnames } from "../../styles"
-import { RichedTransactionMeta } from "../../util/transactionUtils"
-import GenericTooltip from "../label/GenericTooltip"
-interface Error {
-    errorType: string
-    code: string
-    tool: string
-    message: string
-}
+import BridgeErrorDisplay from "../../components/bridge/BridgeQuoteNotFoundErrorDetails"
+import { GetBridgeQuoteNotFoundResponse } from "@block-wallet/background/controllers/BridgeController"
+import openIcon from "../../assets/images/icons/open_external.svg"
+import download from "../../assets/images/icons/download.svg"
 
-export type BridgeNotFoundQuoteDetailsProps = {
+export type BridgeNotFoundQuoteErrorsProps = {
     open: boolean
     onClose: () => void
+    details: GetBridgeQuoteNotFoundResponse
+}
+
+export type BridgeError = {
+    code: string
+    type: string
     message: string
-    errors: Error[]
+    fromToken: string
+    toToken: string
 }
 
 export const BridgeNotFoundQuoteDetails: FunctionComponent<
-    BridgeNotFoundQuoteDetailsProps
-> = ({ open, onClose, message, errors }) => {
+    BridgeNotFoundQuoteErrorsProps
+> = ({ open, onClose, details }) => {
+    let errorsByTool = new Map<string, BridgeError[]>()
+
+    details.errors.map((error) => {
+        const err = {
+            code: error.code,
+            type: error.tool,
+            message: error.message,
+            fromToken: error.action.fromToken.symbol,
+            toToken: error.action.toToken.symbol,
+        }
+        if (errorsByTool.has(error.tool)) {
+            errorsByTool.get(error.tool)?.push(err)
+        } else {
+            errorsByTool.set(error.tool, [err])
+        }
+    })
     return (
         <Dialog open={open} onClickOutside={onClose}>
             <span className="absolute top-0 right-0 p-4 z-50">
@@ -38,14 +54,87 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
 
             <div className="flex flex-col w-full h-full">
                 <h2 className="px-2 pr-0 pb-2 mt-2 text-lg font-bold">
-                    Quote not founds details
+                    Unable to generate a quote
                 </h2>
+                <Divider />
                 <div
                     className="flex flex-col h-[17rem] overflow-auto py-4 -ml-3 px-3"
                     style={{ width: "calc(100% + 1.5rem)" }}
                 >
-                    {"<TabComponent transaction={transaction} nonce={nonce} />"}
+                    <main className="p-1">
+                        <span className="text-sm font-bold">Summary</span>
+                        <div className="mt-2">{details.message}</div>
+                        <div className="py-3">
+                            <Divider />
+                        </div>
+                        {errorsByTool && (
+                            <div className="flex-1 flex flex-col">
+                                <main className="p-1">
+                                    <span className="text-sm font-bold">
+                                        Errors by tool
+                                    </span>
+                                    <br />
+                                    <div className="flex flex-col">
+                                        {Array.from(errorsByTool.keys()).map(
+                                            (tool, i) => {
+                                                const errors =
+                                                    errorsByTool.get(tool)
+                                                return (
+                                                    errors && (
+                                                        <div className="mt-2">
+                                                            <BridgeErrorDisplay
+                                                                tool={tool}
+                                                                bridgeError={
+                                                                    errors
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )
+                                                )
+                                            }
+                                        )}
+                                    </div>
+                                </main>
+                            </div>
+                        )}
+                        <div className="flex flex-col">
+                            <div className="flex w-full items-center justify-around mt-2">
+                                <a
+                                    href="https://blockwallet.io/terms-of-use-of-block-wallet.html"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-300"
+                                >
+                                    <span>Read about bridges</span>
+                                    <img
+                                        src={openIcon}
+                                        alt="Open icon"
+                                        className="w-3 h-3"
+                                    />
+                                </a>{" "}
+                                <a
+                                    href={`data:text/json;chatset=utf-8,${encodeURIComponent(
+                                        JSON.stringify(details)
+                                    )}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download={"quote_not_found.json"}
+                                    className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-300"
+                                >
+                                    <span>Download report</span>
+                                    <img
+                                        src={download}
+                                        alt="Download icon"
+                                        className="w-3 h-3"
+                                    />
+                                </a>
+                            </div>
+                        </div>
+                    </main>
                 </div>
+            </div>
+            <div className="-mx-3">
+                <Divider />
             </div>
             <div className="-mx-3">
                 <Divider />

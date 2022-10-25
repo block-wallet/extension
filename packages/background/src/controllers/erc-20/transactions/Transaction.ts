@@ -6,6 +6,7 @@ import {
     ownerParamNotPresentError,
     spenderParamNotPresentError,
     tokenAddressParamNotPresentError,
+    tokenAddressInvalidError,
 } from '../TokenController';
 import { Token } from '../Token';
 import { Interface } from 'ethers/lib/utils';
@@ -109,25 +110,18 @@ export class TokenOperationsController extends TokenTransactionController {
             const symbolPromise = contract.symbol();
             const decimalsPromise = contract.decimals();
 
-            const results = await Promise.allSettled([
+            const results = await Promise.all([
                 namePromise,
                 symbolPromise,
                 decimalsPromise,
-            ]);
+            ]).catch((error) => {
+                log.error(error);
+                throw tokenAddressInvalidError;
+            });
 
-            const nameResult = results[0];
-            const symbolResult = results[1];
-            const decimalsResult = results[2];
-
-            if (nameResult.status === 'fulfilled') {
-                name = nameResult.value as string;
-            }
-            if (symbolResult.status === 'fulfilled') {
-                symbol = symbolResult.value as string;
-            }
-            if (decimalsResult.status === 'fulfilled') {
-                decimals = parseFloat(decimalsResult.value as string);
-            }
+            name = results[0] as string;
+            symbol = results[1] as string;
+            decimals = parseFloat(results[2] as string);
         } catch (error) {
             log.error(error.message || error);
         }

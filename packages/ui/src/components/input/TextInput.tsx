@@ -29,6 +29,7 @@ type TextInputProps = {
     type?: HTMLInputTypeAttribute
     info?: string | JSX.Element
     onClickInfo?: () => void
+    spellCheck?: boolean
 }
 
 /**
@@ -50,6 +51,7 @@ type TextInputProps = {
  * @param onChange - Function to execute on input change.
  * @param onKeyDown - Function to execute on input key down.
  * @param readOnly - readOnly attribute
+ * @param spellCheck - spellCheck attribute
  */
 const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     (props: TextInputProps, ref) => {
@@ -74,6 +76,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             type,
             info,
             onClickInfo,
+            spellCheck = true,
         } = props
 
         const [hasFocus, setHasFocus] = useState(autoFocus)
@@ -112,6 +115,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                 onBlur={() => {
                     setHasFocus(false)
                 }}
+                spellCheck={spellCheck}
             />
         )
 

@@ -39,7 +39,8 @@ export const BRIDGE_PENDING_STATUS = [
 ]
 
 export const isBridgeNativeTokenAddress = (address: string): boolean => {
-    return address.toLowerCase() === LIFI_NATIVE_ADDRESS.toLowerCase()
+    const parsedAddress = checkForBridgeNativeAsset(address)
+    return parsedAddress.toLowerCase() === LIFI_NATIVE_ADDRESS.toLowerCase()
 }
 
 export const checkForBridgeNativeAsset = (address: string): string => {

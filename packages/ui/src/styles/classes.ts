@@ -108,7 +108,7 @@ export class Classes {
     )
 
     static blueSelectionDisabled = classnames(
-        "cursor-default hover:bg-primary-100"
+        "cursor-not-allowed hover:bg-primary-100"
     )
 
     static blueSectionActive = classnames("bg-primary-200")

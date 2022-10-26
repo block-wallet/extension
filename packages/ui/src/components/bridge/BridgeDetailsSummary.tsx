@@ -27,7 +27,6 @@ const Explorer = ({
     explorerLink: string
     explorerName: string
 }) => {
-    const viewOn = `View on ${explorerName}`
     return (
         <div className="flex w-full items-center justify-start">
             <a
@@ -35,10 +34,10 @@ const Explorer = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex flex-row items-center space-x-1"
-                title={viewOn}
+                title={explorerName}
             >
                 <span className="text-sm font-bold text-primary-300 whitespace-nowrap text-ellipsis overflow-hidden">
-                    {viewOn}
+                    {explorerName}
                 </span>
                 <img src={openIcon} alt="Open icon" className="w-3 h-3" />
             </a>

@@ -290,6 +290,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
                     disabled={false}
                     autoFocus={true}
                     onChange={onSearchInputChange}
+                    defaultValue={search ?? ""}
                 />
             </div>
             <AssetList

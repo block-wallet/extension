@@ -293,6 +293,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
                 if (isValidFetch) {
                     const { routes } = routesRes
+                    if (!routes.length) {
+                        setError(
+                            "There isn't any available route for the selected asset."
+                        )
+                    }
                     setAvailableRoutes(routes)
 
                     //check if network is still valid.
@@ -599,6 +604,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     bottomMargin={200}
                     networkList={filteredAvailableNetworks}
                     isLoading={isFetchingRoutes}
+                    loadingText="Loading networks..."
+                    emptyText="Select network"
                     selectedNetwork={
                         selectedToNetwork &&
                         availbleChainsId.includes(selectedToNetwork.id)
@@ -615,7 +622,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 />
 
                 {/* Asset in destination */}
-                {selectedRoute && (
+                {selectedRoute && !isFetchingRoutes && (
                     <div className="pt-3">
                         <AssetAmountDisplay
                             asset={selectedRoute.toTokens[0]}
@@ -682,6 +689,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         onClose={() => setShowBridgeNotFoundQuoteDetails(false)}
                         details={quoteNotFoundErrors}
                     />
+                )}
+                {error && !bridgeQuoteError && (
+                    <ErrorMessage className="mt-4">{error}</ErrorMessage>
                 )}
                 {quote && !bridgeQuoteError && (
                     <ClickableText

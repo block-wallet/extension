@@ -21,6 +21,8 @@ interface NetworkSelectorProps {
     bottomMargin?: number
     popupMargin?: number
     isLoading?: boolean
+    loadingText?: string
+    emptyText?: string
 }
 
 export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
@@ -32,6 +34,8 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
     bottomMargin = 0,
     popupMargin = 16,
     isLoading = false,
+    loadingText = "",
+    emptyText = "",
 }) => {
     const [searchResult, setSearchResult] = useState<IChain[]>([])
     const [search, setSearch] = useState<string | null>(null)
@@ -93,6 +97,8 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
         <DropDownSelector
             display={
                 <NetworkDropdownDisplay
+                    loadingText={loadingText}
+                    emptyText={emptyText}
                     isEmpty={!networkList.length}
                     isLoading={isLoading}
                     selectedNetwork={selectedNetwork}

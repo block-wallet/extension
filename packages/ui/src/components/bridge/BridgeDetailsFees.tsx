@@ -23,14 +23,18 @@ const BridgeDetilsFees: FC<{
                 <span className="text-sm font-bold">BlockWallet Fee</span>
                 <br />
                 <div className="mt-2">
-                    <FeeTokenSummaryDisplay feeDetail={blockWalletFee} />
+                    <FeeTokenSummaryDisplay
+                        feeDetail={blockWalletFee}
+                        expandable={false}
+                    />
                 </div>
-                <div className="py-3">
-                    <Divider />
-                </div>
-                {extraFees && (
-                    <div>
-                        <span className="text-sm font-bold">Bridge Fees</span>
+                {extraFees && extraFees.length > 0 && (
+                    <div className="py-2">
+                        <Divider />
+                        <br />
+                        <span className="text-sm font-bold pt-3">
+                            Bridge Fees
+                        </span>
                         <br />
                         <div className="flex flex-col">
                             {extraFees.map((extraFee) => {

@@ -17,9 +17,11 @@ type Unpacked<T> = T extends (infer U)[]
 const FeeItem = ({
     detail,
     token,
+    expandable = true,
 }: {
     detail: Unpacked<IBridgeFeeCost["details"]>
     token: IToken
+    expandable: boolean
 }) => {
     const [isCollapsed, setIsCollapsed] = useState<boolean>(true)
     const amountStr = `${formatRounded(
@@ -29,27 +31,32 @@ const FeeItem = ({
     return (
         <li>
             <div
-                className="flex items-center cursor-pointer space-x-1"
+                className={classnames(
+                    "flex items-center space-x-1",
+                    expandable ? "cursor-pointer" : "cursor-default"
+                )}
                 onClick={() => {
                     setIsCollapsed(!isCollapsed)
                 }}
             >
-                <ArrowUpDown active={!isCollapsed} />
+                {expandable && <ArrowUpDown active={!isCollapsed} />}
                 <div>
                     <span className="font-bold">{detail.name}:</span>
                     <span className="ml-1">{amountStr}</span>
                 </div>
             </div>
-            <div
-                className={classnames(
-                    "overflow-hidden",
-                    isCollapsed ? "h-0" : ""
-                )}
-            >
-                <i className="ml-1 text-gray-500">{`${
-                    detail.description ?? detail.name
-                } (${detail.percentage}%)`}</i>
-            </div>
+            {expandable && (
+                <div
+                    className={classnames(
+                        "overflow-hidden",
+                        isCollapsed ? "h-0" : ""
+                    )}
+                >
+                    <i className="ml-1 text-gray-500">{`${
+                        detail.description ?? detail.name
+                    } (${detail.percentage}%)`}</i>
+                </div>
+            )}
         </li>
     )
 }

@@ -6,8 +6,10 @@ import FeeItem from "./FeeItem"
 
 const FeeTokenSummaryDisplay = ({
     feeDetail,
+    expandable = true,
 }: {
     feeDetail: IBridgeFeeCost
+    expandable?: boolean
 }) => {
     return (
         <div>
@@ -22,7 +24,11 @@ const FeeTokenSummaryDisplay = ({
                 {feeDetail.details?.map((fee) => {
                     return (
                         <React.Fragment key={fee.name}>
-                            <FeeItem detail={fee} token={feeDetail.token} />
+                            <FeeItem
+                                detail={fee}
+                                token={feeDetail.token}
+                                expandable={expandable}
+                            />
                         </React.Fragment>
                     )
                 })}

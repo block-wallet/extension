@@ -295,7 +295,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     const { routes } = routesRes
                     if (!routes.length) {
                         setError(
-                            "There isn't any available route for the selected asset."
+                            "There are no routes available for the selected asset."
                         )
                     }
                     setAvailableRoutes(routes)

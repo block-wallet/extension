@@ -58,25 +58,28 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                 </h2>
                 <Divider />
                 <div
-                    className="flex flex-col h-[17rem] overflow-auto py-4 -ml-3 px-3"
+                    className="flex flex-col h-[17rem] justify-between overflow-auto py-4 -ml-3 px-3"
                     style={{ width: "calc(100% + 1.5rem)" }}
                 >
-                    <main className="p-1">
+                    <div className="p-1">
                         <span className="text-sm font-bold">Summary</span>
                         <div className="mt-2">{details.message}</div>
-                        <div className="py-3">
-                            <Divider />
-                        </div>
-                        {errorsByTool && (
-                            <div className="flex-1 flex flex-col">
-                                <main className="p-1">
-                                    <span className="text-sm font-bold">
-                                        Errors by tool
-                                    </span>
-                                    <br />
-                                    <div className="flex flex-col">
-                                        {Array.from(errorsByTool.keys()).map(
-                                            (tool, i) => {
+
+                        {errorsByTool && errorsByTool.size > 0 && (
+                            <>
+                                <div className="py-3">
+                                    <Divider />
+                                </div>
+                                <div className="flex-1 flex flex-col">
+                                    <main className="p-1">
+                                        <span className="text-sm font-bold">
+                                            Errors by tool
+                                        </span>
+                                        <br />
+                                        <div className="flex flex-col">
+                                            {Array.from(
+                                                errorsByTool.keys()
+                                            ).map((tool, i) => {
                                                 const errors =
                                                     errorsByTool.get(tool)
                                                 return (
@@ -94,46 +97,45 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                                                         </div>
                                                     )
                                                 )
-                                            }
-                                        )}
-                                    </div>
-                                </main>
-                            </div>
+                                            })}
+                                        </div>
+                                    </main>
+                                </div>
+                            </>
                         )}
-                        <div className="flex flex-col">
-                            <div className="flex w-full items-center justify-between mt-2">
-                                <a
-                                    href="https://blockwallet.io/terms-of-use-of-block-wallet.html"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-300"
-                                >
-                                    <span>Read about bridges</span>
-                                    <img
-                                        src={openIcon}
-                                        alt="Open icon"
-                                        className="w-3 h-3"
-                                    />
-                                </a>{" "}
-                                <a
-                                    href={`data:text/json;chatset=utf-8,${encodeURIComponent(
-                                        JSON.stringify(details)
-                                    )}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    download={"quote_not_found.json"}
-                                    className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-300"
-                                >
-                                    <span>Download report</span>
-                                    <img
-                                        src={download}
-                                        alt="Download icon"
-                                        className="w-3 h-3"
-                                    />
-                                </a>
-                            </div>
-                        </div>
-                    </main>
+                    </div>
+
+                    <div className="flex w-full items-center justify-between mt-2">
+                        <a
+                            href="https://blockwallet.io/terms-of-use-of-block-wallet.html"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-300"
+                        >
+                            <span>Read about bridges</span>
+                            <img
+                                src={openIcon}
+                                alt="Open icon"
+                                className="w-3 h-3"
+                            />
+                        </a>{" "}
+                        <a
+                            href={`data:text/json;chatset=utf-8,${encodeURIComponent(
+                                JSON.stringify(details)
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download={"quote_not_found.json"}
+                            className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-300"
+                        >
+                            <span>Download report</span>
+                            <img
+                                src={download}
+                                alt="Download icon"
+                                className="w-3 h-3"
+                            />
+                        </a>
+                    </div>
                 </div>
             </div>
             <div className="-mx-3">

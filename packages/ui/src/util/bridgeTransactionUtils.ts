@@ -94,7 +94,7 @@ export const getBridgePendingMessage = (
                     label: `Waiting for ${
                         destinationNetworkName || "destination network"
                     } transaction`,
-                    info: "The sending transaction is mined and we're awaiting for the destination transaction to be processed.",
+                    info: `The sending transaction is mined and we're awaiting for the ${destinationNetworkName} transaction to be processed.`,
                 }
             }
         }

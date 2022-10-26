@@ -58,7 +58,7 @@ const ErroredBridgeStatus = () => {
     return (
         <Status>
             <span className="relative inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-red-400 pointer-events-none" />
-            <span className="text-yellow-600">Failed</span>
+            <span className="text-red-600">Failed</span>
         </Status>
     )
 }
@@ -87,7 +87,7 @@ const PendingBridgeStatus: FC<{ transaction: Partial<TransactionMeta> }> = ({
         <GenericTooltip content={pendingMessage?.info ?? ""}>
             <Status>
                 <Spinner color="text-blue-200" size="1rem" />
-                <span className="whitespace-nowrap text-ellipsis overflow-hidden text-blue-600 ml-1 max-w-[140px]">
+                <span className="whitespace-nowrap text-ellipsis overflow-hidden text-blue-600 ml-1 max-w-[200px]">
                     {pendingMessage.label}
                 </span>
             </Status>

@@ -57,6 +57,7 @@ const ChainFiltersButton: React.FC<ChainFiltersProps> = ({
                                 <Dropdown.MenuItem
                                     value={value}
                                     selected={filters.includes(value)}
+                                    className="p-2"
                                 >
                                     {label}
                                 </Dropdown.MenuItem>

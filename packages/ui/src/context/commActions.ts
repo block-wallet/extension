@@ -347,8 +347,10 @@ export const verifySeedPhrase = async (
  * Method to mark setup process as complete and to fire a notification.
  *
  */
-export const completeSetup = async (): Promise<void> => {
-    return sendMessage(Messages.WALLET.SETUP_COMPLETE, {})
+export const completeSetup = async (
+    sendNotification: boolean = true
+): Promise<void> => {
+    return sendMessage(Messages.WALLET.SETUP_COMPLETE, { sendNotification })
 }
 
 /**

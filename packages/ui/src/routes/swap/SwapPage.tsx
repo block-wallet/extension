@@ -360,6 +360,7 @@ const SwapPage = () => {
                 <PopupHeader
                     title="Swap"
                     close="/"
+                    networkIndicator
                     keepState
                     onBack={() =>
                         fromAssetPage

@@ -17,7 +17,7 @@ import {
 import { RichedTransactionMeta } from "./transactionUtils"
 import { SEND_GAS_COST } from "../util/constants"
 import { getTransactionFees } from "../util/gasPrice"
-import { EnoughNativeTokensToSend } from "../context/hooks/useBridgeChainHasNotEnoughNativeTokensToSend"
+import { EnoughNativeTokensToSend } from "../context/hooks/useSelectedAccountHasEnoughNativeTokensToSend"
 import { Network } from "@block-wallet/background/utils/constants/networks"
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 import { DetailedItem } from "../components/transactions/TransactionDetailsList"
@@ -126,7 +126,8 @@ export const isANotFoundQuote = (
 ) => {
     return "errors" in quote
 }
-export const getWarningMessages = (
+
+export const getBridgeWarningMessages = (
     nativeTokenStatus: EnoughNativeTokensToSend,
     network: Network | undefined
 ): BridgeWarningMessage | undefined => {

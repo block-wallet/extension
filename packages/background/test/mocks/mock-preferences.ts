@@ -32,6 +32,7 @@ testInitState = {
         defaultBrowserWallet: true,
         hideEstimatedGasExceedsThresholdWarning: false,
         hideDepositsExternalAccountsWarning: false,
+        hideBridgeInsufficientNativeTokenWarning: false,
     },
     releaseNotesSettings: {
         lastVersionUserSawNews: '0.1.3',

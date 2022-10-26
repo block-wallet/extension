@@ -900,7 +900,9 @@ export interface RequestWalletCreate {
 export interface RequestSeedPhrase {
     password: string;
 }
-export interface RequestCompleteSetup {}
+export interface RequestCompleteSetup {
+    sendNotification: boolean;
+}
 
 export interface RequestWalletImport {
     password: string;

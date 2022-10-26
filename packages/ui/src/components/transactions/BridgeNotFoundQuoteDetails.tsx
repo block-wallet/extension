@@ -53,7 +53,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
             </span>
 
             <div className="flex flex-col w-full h-full">
-                <h2 className="px-2 pr-0 pb-2 mt-2 text-lg font-bold">
+                <h2 className="px-2 pr-0 pb-4 mt-2 text-lg font-bold">
                     Unable to generate a quote
                 </h2>
                 <Divider />
@@ -81,10 +81,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                                                     errorsByTool.get(tool)
                                                 return (
                                                     errors && (
-                                                        <div
-                                                            className="mt-2"
-                                                            key={i}
-                                                        >
+                                                        <div className="mt-2">
                                                             <BridgeErrorDisplay
                                                                 tool={tool}
                                                                 bridgeError={

@@ -86,6 +86,7 @@ import {
 import BridgeDetails from "../../components/bridge/BridgeDetails"
 import ErrorMessage from "../../components/error/ErrorMessage"
 import BridgeErrorMessage, { BridgeErrorType } from "./BridgeErrorMessage"
+import BridgeNotFoundQuoteDetails from "../../components/transactions/BridgeNotFoundQuoteDetails"
 
 export interface BridgeConfirmPageLocalState {
     amount: string
@@ -146,6 +147,13 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const { isEIP1559Compatible } = useSelectedNetwork()
     const selectedAccount = useSelectedAccount()
     const { nativeToken } = useTokensList()
+
+    const [quoteNotFoundErrors, setQuoteNotFoundErrors] = useState<
+        GetBridgeQuoteNotFoundResponse | undefined
+    >(undefined)
+
+    const [showBridgeNotFoundQuoteDetails, setShowBridgeNotFoundQuoteDetails] =
+        useState<boolean>(false)
     const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
         useCheckAccountDeviceLinked()
     const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
@@ -381,10 +389,13 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 | GetBridgeQuoteNotFoundResponse
                 | undefined
             let validQuote: GetBridgeQuoteResponse | undefined
+            let invalidQuote: GetBridgeQuoteNotFoundResponse | undefined
             try {
                 fetchedQuote = await getBridgeQuote(params)
                 if (isANotFoundQuote(fetchedQuote)) {
                     errorType = BridgeErrorType.QUOTE_NOT_FOUND
+                    invalidQuote =
+                        fetchedQuote as GetBridgeQuoteNotFoundResponse
                 } else {
                     validQuote = fetchedQuote as GetBridgeQuoteResponse
                     if (validQuote.quoteFeeStatus !== QuoteFeeStatus.OK) {
@@ -401,6 +412,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                         fetchedQuote ? new Date().getTime() : undefined
                     )
                     setQuote(validQuote)
+                    setQuoteNotFoundErrors(invalidQuote)
                     setIsFetchingParams(false)
                     setBridgeQuoteError(errorType)
                 }
@@ -680,15 +692,31 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                         <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
                     </OutlinedButton>
                 </div>
+                {!!quoteNotFoundErrors && (
+                    <BridgeNotFoundQuoteDetails
+                        open={showBridgeNotFoundQuoteDetails}
+                        onClose={() => setShowBridgeNotFoundQuoteDetails(false)}
+                        details={quoteNotFoundErrors}
+                    />
+                )}
                 {bridgeQuoteError && (
                     <BridgeErrorMessage
                         type={bridgeQuoteError}
-                        onClickDetails={() =>
-                            setBridgeDetailsModal({
-                                isOpen: true,
-                                tab: "fees",
-                            })
-                        }
+                        onClickDetails={(type) => {
+                            if (
+                                type ===
+                                BridgeErrorType.INSUFFICIENT_BALANCE_TO_COVER_FEES
+                            ) {
+                                setBridgeDetailsModal({
+                                    isOpen: true,
+                                    tab: "fees",
+                                })
+                            }
+
+                            if (type === BridgeErrorType.QUOTE_NOT_FOUND) {
+                                setShowBridgeNotFoundQuoteDetails(true)
+                            }
+                        }}
                         className="mt-1"
                     />
                 )}

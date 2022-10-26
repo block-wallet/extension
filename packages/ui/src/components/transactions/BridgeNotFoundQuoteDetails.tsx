@@ -81,7 +81,10 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                                                     errorsByTool.get(tool)
                                                 return (
                                                     errors && (
-                                                        <div className="mt-2">
+                                                        <div
+                                                            className="mt-2"
+                                                            key={i}
+                                                        >
                                                             <BridgeErrorDisplay
                                                                 tool={tool}
                                                                 bridgeError={

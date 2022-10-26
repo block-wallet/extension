@@ -114,7 +114,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
         bridgeQuote
     )
-    const [quoteNotFound, setQuoteNotFound] = useState<
+    const [quoteNotFoundErrors, setQuoteNotFoundErrors] = useState<
         GetBridgeQuoteNotFoundResponse | undefined
     >(undefined)
 
@@ -356,7 +356,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 if (isValidFetch) {
                     if (isANotFoundQuote(fetchedQuote)) {
                         setBridgeQuoteError(BridgeErrorType.QUOTE_NOT_FOUND)
-                        setQuoteNotFound(
+                        setQuoteNotFoundErrors(
                             fetchedQuote as GetBridgeQuoteNotFoundResponse
                         )
                     } else {
@@ -686,11 +686,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         />
                     </div>
                 )}
-                {!!quoteNotFound && (
+                {!!quoteNotFoundErrors && (
                     <BridgeNotFoundQuoteDetails
                         open={showBridgeNotFoundQuoteDetails}
                         onClose={() => setShowBridgeNotFoundQuoteDetails(false)}
-                        details={quoteNotFound}
+                        details={quoteNotFoundErrors}
                     />
                 )}
             </div>

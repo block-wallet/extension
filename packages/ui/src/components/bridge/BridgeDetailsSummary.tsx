@@ -33,9 +33,13 @@ const Explorer = ({
                 href={explorerLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-row items-center space-x-2 text-sm font-bold text-primary-300 whitespace-nowrap text-ellipsis overflow-hidden "
+                className="flex flex-row items-center space-x-1"
+                title={explorerName}
             >
-                <span>{`View on ${explorerName}`}</span>
+                <span className="text-sm font-bold text-primary-300 whitespace-nowrap text-ellipsis overflow-hidden">
+                    {explorerName}
+                </span>
+                <img src={openIcon} alt="Open icon" className="w-3 h-3" />
             </a>
         </div>
     )
@@ -67,7 +71,7 @@ const BridgeDetailsSummary: FC<BridgeDetailsSummaryProps> = ({
 
     if (bridgeTransactionsData?.sendingTransaction?.explorerLink) {
         explorerDetails.push({
-            label: "Origin transaction",
+            label: "Origin Tx",
             value: (
                 <Explorer
                     explorerLink={
@@ -99,12 +103,12 @@ const BridgeDetailsSummary: FC<BridgeDetailsSummaryProps> = ({
         )
         if (transaction.bridgeParams?.substatus === BridgeSubstatus.REFUNDED) {
             explorerDetails.push({
-                label: "Refund transaction",
+                label: "Refund Tx",
                 value: explorer,
             })
         } else {
             explorerDetails.push({
-                label: "Receiving transaction",
+                label: "Destination Tx",
                 value: explorer,
             })
         }

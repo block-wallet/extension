@@ -111,10 +111,16 @@ interface QuoteAction {
     toToken: LiFiToken;
     fromAmount: string;
     slippage: number;
-    fromAddress: string;
+    fromAddress?: string;
     toAddress: string;
 }
-
+interface QuoteNotFoundErrorDetails {
+    errorType: string;
+    code: string;
+    action: QuoteAction;
+    tool: string;
+    message: string;
+}
 interface LiFiTransactionRequest {
     from: string;
     to: string;
@@ -142,10 +148,7 @@ interface Connection {
 
 export interface LiFiErrorResponse {
     message: string;
-    errors: {
-        errorType: string;
-        code: string;
-    }[];
+    errors: QuoteNotFoundErrorDetails[];
 }
 
 export const lifiTokenToIToken = (token: LiFiToken): IToken => {

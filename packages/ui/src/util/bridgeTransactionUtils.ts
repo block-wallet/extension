@@ -48,7 +48,7 @@ export const getBlockWalletFeeCost = (
         details: [
             {
                 amount: chargedBlockWalletFee.toString(),
-                name: "BlockWalletFee",
+                name: BRIDGE_ON_US_DESCRIPTION,
                 description:
                     chargedBlockWalletFee.toNumber() === 0
                         ? BRIDGE_ON_US_DESCRIPTION
@@ -94,7 +94,7 @@ export const getBridgePendingMessage = (
                     label: `Waiting for ${
                         destinationNetworkName || "destination network"
                     } transaction`,
-                    info: "The sending transaction is mined and we're awaiting for the destination transaction to be processed.",
+                    info: `The sending transaction is mined and we're awaiting for the ${destinationNetworkName} transaction to be processed.`,
                 }
             }
         }

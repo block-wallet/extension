@@ -81,11 +81,11 @@ const BridgeDetails: FC<{
                     display={(t) => {
                         return (
                             <GenericTooltip
-                                top
+                                bottom
                                 divFull
                                 disabled={!t.disabled}
-                                className="w-38 p-2 left-1"
-                                content="Not available yet"
+                                className="!w-254 p-2 border"
+                                content="Not available"
                             >
                                 {t.label}
                             </GenericTooltip>
@@ -93,12 +93,15 @@ const BridgeDetails: FC<{
                     }}
                     disableStyles
                     optionClassName={(value) =>
-                        `flex-1 flex flex-row items-center justify-center p-3 text-sm group
+                        classnames(
+                            `flex-1 flex flex-row items-center justify-center p-3 text-sm group
                                     ${
                                         selectedTab.label === value.label
                                             ? "border-primary-300 border-b-2 text-primary-300 font-bold"
                                             : "border-gray-200 text-gray-500 border-b"
-                                    }`
+                                    }`,
+                            value.disabled && "cursor-default"
+                        )
                     }
                     containerClassName="flex flex-row -ml-3"
                     containerStyle={{

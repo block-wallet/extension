@@ -25,11 +25,13 @@ const getMessageFromLiFiError = (errCode: string) => {
 };
 
 export class QuoteNotFoundError extends Error {
-    constructor(message: string | undefined) {
+    details: LiFiErrorResponse;
+    constructor(message: string | undefined, details: LiFiErrorResponse) {
         super();
         this.message =
             message || "There isn't a quote for the requested parameters.";
         this.name = 'QuoteNotFoundError';
+        this.details = details;
     }
 }
 
@@ -253,7 +255,7 @@ const LiFiBridge: IBridge = {
                     ? err.errors[0].code
                     : 'QUOTE_NOT_FOUND';
                 const message = getMessageFromLiFiError(errorCode);
-                throw new QuoteNotFoundError(message);
+                throw new QuoteNotFoundError(message, err);
             }
             throw e;
         }

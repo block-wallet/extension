@@ -166,6 +166,9 @@ const transactionIcons = {
     [TransactionCategories.INCOMING_BRIDGE]: (
         <GiSuspensionBridge size="1.5rem" />
     ),
+    [TransactionCategories.INCOMING_BRIDGE_REFUND]: (
+        <GiSuspensionBridge size="1.5rem" />
+    ),
     [TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER]: (
         <GiSuspensionBridge size="1.5rem" />
     ),

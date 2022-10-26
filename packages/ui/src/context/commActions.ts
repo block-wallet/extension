@@ -62,6 +62,7 @@ import {
     BridgeTransaction,
     GetBridgeAvailableRoutesResponse,
     GetBridgeQuoteResponse,
+    GetBridgeQuoteNotFoundResponse,
 } from "@block-wallet/background/controllers/BridgeController"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 
@@ -1695,7 +1696,7 @@ export const approveBridgeAllowance = async (
 export const getBridgeQuote = async (
     quoteRequest: BridgeQuoteRequest,
     checkAllowance: boolean = false
-): Promise<GetBridgeQuoteResponse> => {
+): Promise<GetBridgeQuoteResponse | GetBridgeQuoteNotFoundResponse> => {
     return sendMessage(Messages.BRIDGE.GET_BRIDGE_QUOTE, {
         quoteRequest,
         checkAllowance,

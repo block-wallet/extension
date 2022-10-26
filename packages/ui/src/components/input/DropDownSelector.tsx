@@ -102,6 +102,7 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
                     "h-[4.5rem]",
                     "space-x-1",
                     active && Classes.blueSectionActive,
+                    disabled && Classes.blueSelectionDisabled,
                     error
                         ? "border-red-400"
                         : "border-opacity-0 border-transparent",

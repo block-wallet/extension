@@ -29,6 +29,7 @@ import BridgeAPI, {
 import {
     BASE_BRIDGE_FEE,
     BRIDGE_REFERRER_ADDRESS,
+    LiFiErrorResponse,
     LIFI_NATIVE_ADDRESS,
 } from '../utils/types/lifi';
 import { IToken, Token } from './erc-20/Token';
@@ -98,6 +99,8 @@ interface BridgeParameters {
     params: BridgeQuote;
     methodSignature?: ContractMethodSignature;
 }
+
+export interface GetBridgeQuoteNotFoundResponse extends LiFiErrorResponse {}
 
 export interface GetBridgeQuoteResponse {
     bridgeParams: BridgeParameters;
@@ -375,15 +378,20 @@ export default class BridgeController extends BaseController<
         aggregator: BridgeImplementation = BridgeImplementation.LIFI_BRIDGE,
         quoteRequest: BridgeQuoteRequest,
         checkAllowance = false
-    ): Promise<GetBridgeQuoteResponse> => {
+    ): Promise<GetBridgeQuoteResponse | GetBridgeQuoteNotFoundResponse> => {
         let allowanceCheck = BridgeAllowanceCheck.NOT_CHECKED;
         const contractSignatureParser = new ContractSignatureParser(
             this._networkController
         );
-        const quote = await this.getQuoteFromAggregator(
-            aggregator,
-            quoteRequest
-        );
+        let quote!: BridgeQuote;
+        try {
+            quote = await this.getQuoteFromAggregator(aggregator, quoteRequest);
+        } catch (e) {
+            if (isQuoteNotFoundError(e)) {
+                return e.details as GetBridgeQuoteNotFoundResponse;
+            }
+            // TODO: throw new Error("error getting");
+        }
 
         if (quoteRequest.fromTokenAddress === LIFI_NATIVE_ADDRESS) {
             allowanceCheck = BridgeAllowanceCheck.ENOUGH_ALLOWANCE;
@@ -589,8 +597,8 @@ export default class BridgeController extends BaseController<
             //add token if sending tx has been submitted
             this._tokenController.attemptAddToken(
                 toToken.address,
-                toChainId,
-                toToken
+                toChainId
+                // toToken
             );
 
             newTransactionMeta.transferType = {
@@ -884,11 +892,7 @@ export default class BridgeController extends BaseController<
         //Attepmt to add token here as well as the toToken.address could have changed due to:
         // - Refunds
         // - Partial bridges, where the received token is different from the one specified in the quote.
-        this._tokenController.attemptAddToken(
-            toToken.address,
-            toChainId,
-            toToken
-        );
+        this._tokenController.attemptAddToken(toToken.address, toChainId);
 
         let transactionByHash: ethers.providers.TransactionResponse;
         try {

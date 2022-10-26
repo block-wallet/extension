@@ -2,6 +2,8 @@ import BlockFetchController from '@block-wallet/background/controllers/block-upd
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
 import BridgeController, {
     BridgeAllowanceCheck,
+    BridgeQuoteRequest,
+    GetBridgeQuoteResponse,
 } from '@block-wallet/background/controllers/BridgeController';
 import {
     TokenController,
@@ -483,7 +485,10 @@ describe('Bridge Controller', () => {
                             referrer: BRIDGE_REFERRER_ADDRESS,
                         })
                         .throwsException(
-                            new QuoteNotFoundError('Quote not found')
+                            new QuoteNotFoundError('Quote not found', {
+                                errors: [],
+                                message: '',
+                            })
                         );
                     const err = await expectThrowsAsync(async () => {
                         await bridgeController.getQuote(
@@ -504,7 +509,7 @@ describe('Bridge Controller', () => {
                 });
                 it('Should return a valid quote without checking allowance', async () => {
                     sandbox.restore();
-                    const quoteResponse = await bridgeController.getQuote(
+                    const quoteResponse = (await bridgeController.getQuote(
                         BridgeImplementation.LIFI_BRIDGE,
                         {
                             toChainId: 1,
@@ -517,7 +522,7 @@ describe('Bridge Controller', () => {
                                 '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
                             fromAmount: '10000000000000000',
                         }
-                    );
+                    )) as GetBridgeQuoteResponse;
                     expect(quoteResponse.allowance).to.equal(
                         BridgeAllowanceCheck.NOT_CHECKED
                     );
@@ -580,7 +585,7 @@ describe('Bridge Controller', () => {
                                 resolve(BigNumber.from('20'));
                             })
                         );
-                    const quoteResponse = await bridgeController.getQuote(
+                    const quoteResponse = (await bridgeController.getQuote(
                         BridgeImplementation.LIFI_BRIDGE,
                         {
                             toChainId: 1,
@@ -594,7 +599,7 @@ describe('Bridge Controller', () => {
                             fromAmount: '10000000000000000',
                         },
                         true
-                    );
+                    )) as GetBridgeQuoteResponse;
                     expect(quoteResponse.allowance).to.equal(
                         BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE
                     );
@@ -623,7 +628,7 @@ describe('Bridge Controller', () => {
                                 resolve(BigNumber.from('10000000000000001'));
                             })
                         );
-                    const quoteResponse = await bridgeController.getQuote(
+                    const quoteResponse = (await bridgeController.getQuote(
                         BridgeImplementation.LIFI_BRIDGE,
                         {
                             toChainId: 1,
@@ -637,7 +642,7 @@ describe('Bridge Controller', () => {
                             fromAmount: '10000000000000000',
                         },
                         true
-                    );
+                    )) as GetBridgeQuoteResponse;
                     expect(quoteResponse.allowance).to.equal(
                         BridgeAllowanceCheck.ENOUGH_ALLOWANCE
                     );

@@ -19,7 +19,7 @@ const ExpandableText = ({ children, className }: ExpandableTextProps) => {
             onClick={(_) => {
                 setIsExpended(!isExpended)
             }}
-            title={children}
+            title={typeof children === "string" ? children : undefined}
         >
             {children}
         </p>

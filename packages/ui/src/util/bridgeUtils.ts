@@ -1,4 +1,7 @@
-import { GetBridgeQuoteResponse } from "@block-wallet/background/controllers/BridgeController"
+import {
+    GetBridgeQuoteResponse,
+    GetBridgeQuoteNotFoundResponse,
+} from "@block-wallet/background/controllers/BridgeController"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 import { IBridgeRoute } from "@block-wallet/background/utils/bridgeApi"
 import { IChain } from "@block-wallet/background/utils/types/chain"
@@ -36,7 +39,8 @@ export const BRIDGE_PENDING_STATUS = [
 ]
 
 export const isBridgeNativeTokenAddress = (address: string): boolean => {
-    return address.toLowerCase() === LIFI_NATIVE_ADDRESS.toLowerCase()
+    const parsedAddress = checkForBridgeNativeAsset(address)
+    return parsedAddress.toLowerCase() === LIFI_NATIVE_ADDRESS.toLowerCase()
 }
 
 export const checkForBridgeNativeAsset = (address: string): string => {
@@ -117,6 +121,11 @@ export const isBridgeQuoteNotFoundError = (e: Error): boolean => {
     return e.name === "QuoteNotFoundError"
 }
 
+export const isANotFoundQuote = (
+    quote: GetBridgeQuoteResponse | GetBridgeQuoteNotFoundResponse
+) => {
+    return "errors" in quote
+}
 export const getWarningMessages = (
     nativeTokenStatus: EnoughNativeTokensToSend,
     network: Network | undefined

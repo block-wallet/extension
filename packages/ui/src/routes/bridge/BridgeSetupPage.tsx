@@ -38,22 +38,24 @@ import { IChain } from "@block-wallet/background/utils/types/chain"
 import {
     checkForBridgeNativeAsset,
     getRouteForNetwork,
-    isBridgeQuoteNotFoundError,
-    populateBridgeTransaction,
+    isANotFoundQuote,
 } from "../../util/bridgeUtils"
 import {
     BridgeQuote,
     BridgeQuoteRequest,
     GetBridgeQuoteResponse,
+    GetBridgeQuoteNotFoundResponse,
 } from "@block-wallet/background/controllers/BridgeController"
 import { ApproveOperation } from "../transaction/ApprovePage"
 import { BridgeAllowanceCheck, QuoteFeeStatus } from "../../context/commTypes"
 import { defaultAdvancedSettings } from "../../components/transactions/AdvancedSettings"
+import { BridgeNotFoundQuoteDetails } from "../../components/transactions/BridgeNotFoundQuoteDetails"
 import { formatRounded } from "../../util/formatRounded"
 import FeeDetails from "../../components/FeeDetails"
 import ClickableText from "../../components/button/ClickableText"
 import BridgeDetails from "../../components/bridge/BridgeDetails"
 import { getBlockWalletOriginalFee } from "../../util/bridgeTransactionUtils"
+import { populateBridgeTransaction } from "../../util/bridgeUtils"
 import BridgeErrorMessage, { BridgeErrorType } from "./BridgeErrorMessage"
 
 interface SetupBridgePageLocalState {
@@ -76,7 +78,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const {
         token,
         network,
-        bridgeQuote,
         routes,
         amount: defaultAmount,
         fromAssetPage,
@@ -110,8 +111,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         routes || []
     )
     const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
-        bridgeQuote
+        undefined
     )
+    const [quoteNotFoundErrors, setQuoteNotFoundErrors] = useState<
+        GetBridgeQuoteNotFoundResponse | undefined
+    >(undefined)
 
     const [bridgeDataState, setBridgeDataState] =
         useLocalStorageState<BridgeState>("bridge.form", {
@@ -151,13 +155,12 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         resolver: yupResolver(schema),
         defaultValues: {
             amount:
-                defaultAmount ||
                 (bridgeDataState?.bigNumberAmount
                     ? formatUnits(
                           bridgeDataState?.bigNumberAmount?.toString(),
                           bridgeDataState?.token?.decimals
                       )
-                    : undefined),
+                    : undefined) || defaultAmount,
         },
     })
 
@@ -177,6 +180,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         }
         return availbleChainsId.includes(chain.id)
     })
+    const [showBridgeNotFoundQuoteDetails, setShowBridgeNotFoundQuoteDetails] =
+        useState<boolean>(false)
 
     const formattedAmount =
         selectedToken && bigNumberAmount
@@ -288,6 +293,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
                 if (isValidFetch) {
                     const { routes } = routesRes
+                    if (!routes.length) {
+                        setError(
+                            "There isn't any available route for the selected asset."
+                        )
+                    }
                     setAvailableRoutes(routes)
 
                     //check if network is still valid.
@@ -346,23 +356,27 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 }
 
                 const fetchedQuote = await getBridgeQuote(params, true)
-
                 if (isValidFetch) {
-                    setQuote(fetchedQuote)
-                    if (fetchedQuote.quoteFeeStatus !== QuoteFeeStatus.OK) {
-                        setBridgeQuoteError(
-                            BridgeErrorType.INSUFFICIENT_BALANCE_TO_COVER_FEES
+                    if (isANotFoundQuote(fetchedQuote)) {
+                        setBridgeQuoteError(BridgeErrorType.QUOTE_NOT_FOUND)
+                        setQuoteNotFoundErrors(
+                            fetchedQuote as GetBridgeQuoteNotFoundResponse
                         )
+                    } else {
+                        const validQuote =
+                            fetchedQuote as GetBridgeQuoteResponse
+                        setQuote(validQuote)
+                        if (validQuote.quoteFeeStatus !== QuoteFeeStatus.OK) {
+                            setBridgeQuoteError(
+                                BridgeErrorType.INSUFFICIENT_BALANCE_TO_COVER_FEES
+                            )
+                        }
                     }
                     setisFetchingQuote(false)
                 }
             } catch (error) {
                 if (isValidFetch) {
-                    if (isBridgeQuoteNotFoundError(error)) {
-                        setBridgeQuoteError(BridgeErrorType.QUOTE_NOT_FOUND)
-                    } else {
-                        setBridgeQuoteError(BridgeErrorType.OTHER)
-                    }
+                    setBridgeQuoteError(BridgeErrorType.OTHER)
                     setisFetchingQuote(false)
                 }
             }
@@ -399,9 +413,13 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 ${fee.token.symbol}`
             )
         },
-        ""
+        quote
+            ? getBlockWalletOriginalFee(
+                  "0",
+                  quote?.bridgeParams.params.fromToken
+              )
+            : ""
     )
-
     return (
         <PopupLayout
             header={
@@ -586,6 +604,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     bottomMargin={200}
                     networkList={filteredAvailableNetworks}
                     isLoading={isFetchingRoutes}
+                    loadingText="Loading networks..."
+                    emptyText="Select network"
                     selectedNetwork={
                         selectedToNetwork &&
                         availbleChainsId.includes(selectedToNetwork.id)
@@ -602,7 +622,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 />
 
                 {/* Asset in destination */}
-                {selectedRoute && (
+                {selectedRoute && !isFetchingRoutes && (
                     <div className="pt-3">
                         <AssetAmountDisplay
                             asset={selectedRoute.toTokens[0]}
@@ -615,20 +635,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         />
                     </div>
                 )}
-                {quote && !bridgeQuoteError && (
-                    <ClickableText
-                        className="pt-2 flex ml-auto"
-                        onClick={() =>
-                            setBridgeDetails({
-                                isOpen: true,
-                                tab: "summary",
-                            })
-                        }
-                    >
-                        View details
-                    </ClickableText>
-                )}
-
                 {/* Bridge fee */}
                 {quote && (
                     <div className="flex flex-row items-center justify-between">
@@ -655,21 +661,50 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     </div>
                 )}
                 {bridgeQuoteError && (
-                    <BridgeErrorMessage
-                        type={bridgeQuoteError}
-                        onClickDetails={(type) => {
-                            if (
-                                type ===
-                                BridgeErrorType.INSUFFICIENT_BALANCE_TO_COVER_FEES
-                            ) {
-                                setBridgeDetails({ isOpen: true, tab: "fees" })
-                            }
-                        }}
+                    <div>
+                        <br />
+                        <BridgeErrorMessage
+                            type={bridgeQuoteError}
+                            onClickDetails={(type) => {
+                                if (
+                                    type ===
+                                    BridgeErrorType.INSUFFICIENT_BALANCE_TO_COVER_FEES
+                                ) {
+                                    setBridgeDetails({
+                                        isOpen: true,
+                                        tab: "fees",
+                                    })
+                                } else if (
+                                    type === BridgeErrorType.QUOTE_NOT_FOUND
+                                ) {
+                                    setShowBridgeNotFoundQuoteDetails(true)
+                                }
+                            }}
+                        />
+                    </div>
+                )}
+                {!!quoteNotFoundErrors && (
+                    <BridgeNotFoundQuoteDetails
+                        open={showBridgeNotFoundQuoteDetails}
+                        onClose={() => setShowBridgeNotFoundQuoteDetails(false)}
+                        details={quoteNotFoundErrors}
                     />
                 )}
-                {/** Only display custom errors if there isn't a quote error already. */}
                 {error && !bridgeQuoteError && (
                     <ErrorMessage className="mt-4">{error}</ErrorMessage>
+                )}
+                {quote && !bridgeQuoteError && (
+                    <ClickableText
+                        className="pt-2 flex"
+                        onClick={() =>
+                            setBridgeDetails({
+                                isOpen: true,
+                                tab: "summary",
+                            })
+                        }
+                    >
+                        View details
+                    </ClickableText>
                 )}
             </div>
         </PopupLayout>

@@ -34,7 +34,6 @@ import {
     isBridgeNativeTokenAddress,
     populateBridgeTransaction,
     getWarningMessages,
-    isBridgeQuoteNotFoundError,
     isANotFoundQuote,
 } from "../../util/bridgeUtils"
 import { isHardwareWallet } from "../../util/account"

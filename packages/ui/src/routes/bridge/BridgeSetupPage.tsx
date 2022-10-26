@@ -78,7 +78,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const {
         token,
         network,
-        bridgeQuote,
         routes,
         amount: defaultAmount,
         fromAssetPage,
@@ -112,7 +111,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         routes || []
     )
     const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
-        bridgeQuote
+        undefined
     )
     const [quoteNotFoundErrors, setQuoteNotFoundErrors] = useState<
         GetBridgeQuoteNotFoundResponse | undefined
@@ -156,13 +155,12 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         resolver: yupResolver(schema),
         defaultValues: {
             amount:
-                defaultAmount ||
                 (bridgeDataState?.bigNumberAmount
                     ? formatUnits(
                           bridgeDataState?.bigNumberAmount?.toString(),
                           bridgeDataState?.token?.decimals
                       )
-                    : undefined),
+                    : undefined) || defaultAmount,
         },
     })
 
@@ -396,6 +394,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bigNumberAmount, errors.amount, selectedAddress, selectedRoute])
+
     const bridgeFeeSummary = quote?.bridgeParams.params.feeCosts.reduce(
         (feeDetails, fee) => {
             if (feeDetails) {
@@ -409,7 +408,12 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 ${fee.token.symbol}`
             )
         },
-        ""
+        quote
+            ? getBlockWalletOriginalFee(
+                  "0",
+                  quote?.bridgeParams.params.fromToken
+              )
+            : ""
     )
     return (
         <PopupLayout
@@ -624,20 +628,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         />
                     </div>
                 )}
-                {quote && !bridgeQuoteError && (
-                    <ClickableText
-                        className="pt-2 flex ml-auto"
-                        onClick={() =>
-                            setBridgeDetails({
-                                isOpen: true,
-                                tab: "summary",
-                            })
-                        }
-                    >
-                        View details
-                    </ClickableText>
-                )}
-
                 {/* Bridge fee */}
                 {quote && (
                     <div className="flex flex-row items-center justify-between">
@@ -692,6 +682,19 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         onClose={() => setShowBridgeNotFoundQuoteDetails(false)}
                         details={quoteNotFoundErrors}
                     />
+                )}
+                {quote && !bridgeQuoteError && (
+                    <ClickableText
+                        className="pt-2 flex"
+                        onClick={() =>
+                            setBridgeDetails({
+                                isOpen: true,
+                                tab: "summary",
+                            })
+                        }
+                    >
+                        View details
+                    </ClickableText>
                 )}
             </div>
         </PopupLayout>

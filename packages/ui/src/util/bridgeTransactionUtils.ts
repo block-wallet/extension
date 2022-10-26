@@ -48,7 +48,7 @@ export const getBlockWalletFeeCost = (
         details: [
             {
                 amount: chargedBlockWalletFee.toString(),
-                name: "BlockWalletFee",
+                name: BRIDGE_ON_US_DESCRIPTION,
                 description:
                     chargedBlockWalletFee.toNumber() === 0
                         ? BRIDGE_ON_US_DESCRIPTION

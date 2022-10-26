@@ -681,22 +681,16 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     </OutlinedButton>
                 </div>
                 {bridgeQuoteError && (
-                    <div className="flex flex-col">
-                        <BridgeErrorMessage
-                            type={bridgeQuoteError}
-                            onClickDetails={() =>
-                                setBridgeDetailsModal({
-                                    isOpen: true,
-                                    tab: "fees",
-                                })
-                            }
-                            className="mt-1"
-                        />
-                        <RefreshLabel
-                            value={remainingSuffix}
-                            className="pt-2"
-                        />
-                    </div>
+                    <BridgeErrorMessage
+                        type={bridgeQuoteError}
+                        onClickDetails={() =>
+                            setBridgeDetailsModal({
+                                isOpen: true,
+                                tab: "fees",
+                            })
+                        }
+                        className="mt-1"
+                    />
                 )}
                 {/** Only display custom errors if there isn't a quote error already. */}
                 {error && !bridgeQuoteError && (
@@ -705,10 +699,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 {remainingSuffix &&
                     !isFetchingParams &&
                     !error &&
-                    !bridgeQuote && (
+                    bridgeQuote && (
                         <RefreshLabel
                             value={remainingSuffix}
-                            className="pt-1"
+                            className="pt-4"
                         />
                     )}
             </div>

@@ -56,27 +56,6 @@ import ClickableText from "../../components/button/ClickableText"
 import BridgeDetails from "../../components/bridge/BridgeDetails"
 import { getBlockWalletOriginalFee } from "../../util/bridgeTransactionUtils"
 import { populateBridgeTransaction } from "../../util/bridgeUtils"
-// import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
-
-// const quoteToFakeTx = (quote: BridgeQuote): Partial<TransactionMeta> => {
-//     return {
-//         id: "",
-//         chainId: quote.fromChainId,
-//         bridgeParams: {
-//             fromToken: quote.fromToken,
-//             toToken: quote.toToken,
-//             fromTokenAmount: quote.fromAmount,
-//             toTokenAmount: quote.toAmount,
-//             blockWalletFee: quote.blockWalletFee,
-//             fromChainId: quote.fromChainId,
-//             toChainId: quote.toChainId,
-//             tool: quote.tool, //store the tool used for executing the bridge.
-//             role: "SENDING",
-//             feeCosts: quote.feeCosts,
-//         },
-//     }
-// }
-
 import BridgeErrorMessage, { BridgeErrorType } from "./BridgeErrorMessage"
 
 interface SetupBridgePageLocalState {

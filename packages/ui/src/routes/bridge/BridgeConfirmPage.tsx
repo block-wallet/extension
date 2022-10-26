@@ -257,13 +257,15 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
 
     useEffect(() => {
         if (!hasBalance) {
-            return setError(
-                "You don't have enough balance to cover the bridge and the gas costs"
-            )
+            if (!error) {
+                setError(
+                    "You don't have enough balance to cover the bridge and the gas costs"
+                )
+            }
         } else {
             setError(undefined)
         }
-    }, [hasBalance])
+    }, [hasBalance, quote])
 
     const nativeTokensInDestinationNetworkStatus =
         useAddressHasEnoughNativeTokensToSend(toChainId, toToken.address)

@@ -101,7 +101,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                             </div>
                         )}
                         <div className="flex flex-col">
-                            <div className="flex w-full items-center justify-around mt-2">
+                            <div className="flex w-full items-center justify-between mt-2">
                                 <a
                                     href="https://blockwallet.io/terms-of-use-of-block-wallet.html"
                                     target="_blank"

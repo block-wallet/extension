@@ -667,6 +667,8 @@ describe('Bridge Controller', () => {
             const transactionControllerSandbox = sinon.createSandbox();
             const mainnetNetworkProviderSandox = sinon.createSandbox();
             const tokenControllerSandbox = sinon.createSandbox();
+            const accountControllerSandbox = sinon.createSandbox();
+
             let mockMainnetProvider: ReturnType<typeof MockProvider>;
             const lifiSandbox = sinon.createSandbox();
             const sendTx = MOCKS.mockBridgeTransactionAfterAdd();
@@ -679,7 +681,9 @@ describe('Bridge Controller', () => {
                 //tried with the networkController.waitUntilNetworkLoaded
                 //but it is not working since the proivider is already "ready" for the old network.
                 await sleep(100);
-
+                accountControllerSandbox
+                    .stub(accountTrackerController, 'updateAccounts')
+                    .returns(Promise.resolve());
                 tokenControllerStubAttepmtAddToken = tokenControllerSandbox.spy(
                     tokenController,
                     'attemptAddToken'
@@ -720,6 +724,7 @@ describe('Bridge Controller', () => {
                 lifiSandbox.restore();
                 tokenControllerSandbox.restore();
                 transactionControllerSandbox.restore();
+                accountControllerSandbox.restore();
             });
 
             it('Should not invoke add token if sending transaction has failed', async () => {
@@ -897,9 +902,8 @@ describe('Bridge Controller', () => {
 
                 //match sending tx parameters
                 expect(result).not.to.be.undefined;
-                expect(
-                    tokenControllerStubAttepmtAddToken.callCount
-                ).to.be.equal(1);
+                //
+                expect(tokenControllerStubAttepmtAddToken.called).to.be.true;
                 expect(result).to.be.equal(
                     '0xee26207273811c16adfa74c3401361add6b1296102e57c7502431965dbc9af92'
                 );

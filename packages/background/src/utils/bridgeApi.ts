@@ -229,9 +229,6 @@ const LiFiBridge: IBridge = {
                     slippage: r.slippage || 0.5,
                 },
             });
-            if (response.status === 400) {
-                throw new Error('Request parameters are invalid.');
-            }
             const responseData = response.data as GetLiFiQuoteResponse;
             return {
                 spender: responseData.estimate.approvalAddress,
@@ -249,7 +246,9 @@ const LiFiBridge: IBridge = {
                 ),
             };
         } catch (e) {
-            if (e.response.status === 404) {
+            if (e.response.status === 400) {
+                throw new Error('Request parameters are invalid.');
+            } else if (e.response.status === 404) {
                 const err = e.response.data as LiFiErrorResponse;
                 const errorCode = err.errors?.length
                     ? err.errors[0].code

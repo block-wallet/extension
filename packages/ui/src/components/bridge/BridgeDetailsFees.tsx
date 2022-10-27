@@ -45,6 +45,7 @@ const BridgeDetilsFees: FC<{
                                     >
                                         <FeeTokenSummaryDisplay
                                             feeDetail={extraFee}
+                                            expandable={false}
                                         />
                                     </div>
                                 )

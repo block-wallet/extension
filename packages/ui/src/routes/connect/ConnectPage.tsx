@@ -29,6 +29,7 @@ import WaitingDialog, {
 import { PermissionRequest } from "@block-wallet/background/controllers/PermissionsController"
 import useDebouncedState from "../../util/hooks/useDebouncedState"
 import { DAPP_FEEDBACK_WINDOW_TIMEOUT } from "../../util/constants"
+import GenericTooltip from "../../components/label/GenericTooltip"
 
 const ConnectPage = () => {
     const pendingPermissionRequest = usePendingPermissionRequest()
@@ -200,9 +201,29 @@ const ConnectSteps = ({
                         size={14}
                         background={false}
                     />
-                    <span className="text-sm text-gray-800 whitespace-pre-wrap max-w-xs">
-                        {site.origin}
-                    </span>
+                    <div className="w-max max-w-full group relative">
+                        <p className="text-center text-sm text-gray-800 whitespace-pre-wrap max-w-full truncate">
+                            {site.origin}
+                        </p>
+                        <GenericTooltip
+                            bottom
+                            className="p-2 break-all max-w-[310px]"
+                            content={
+                                <div>
+                                    <p>
+                                        <span className="font-bold">
+                                            Origin:
+                                        </span>
+                                        <br />
+                                        <span data-testid="transaction-origin">
+                                            {site.origin}
+                                        </span>
+                                    </p>
+                                </div>
+                            }
+                        />
+                    </div>
+
                     <span className="text-xs text-gray-600">
                         Only connect with sites you trust.
                     </span>

@@ -213,7 +213,6 @@ const SwapPage = () => {
     const isUsingNetworkNativeCurrency =
         tokenFrom?.address === nativeToken.token.address
     const maxAmount = tokenFromBalance
-    console.log(maxAmount)
     const isMaxAmountEnabled =
         maxAmount && !(bigNumberAmount && maxAmount.eq(bigNumberAmount))
 

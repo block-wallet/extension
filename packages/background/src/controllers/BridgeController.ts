@@ -100,7 +100,7 @@ interface BridgeParameters {
     methodSignature?: ContractMethodSignature;
 }
 
-export interface GetBridgeQuoteNotFoundResponse extends LiFiErrorResponse {}
+export type GetBridgeQuoteNotFoundResponse = LiFiErrorResponse;
 
 export interface GetBridgeQuoteResponse {
     bridgeParams: BridgeParameters;
@@ -1146,6 +1146,7 @@ export default class BridgeController extends BaseController<
         txId: string,
         brideParams: Partial<BridgeTransactionParams>
     ): TransactionMeta {
+        // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
         const tx = this._transactionController.getTransaction(txId)!;
         this._transactionController.updateTransactionPartially(txId, {
             bridgeParams: {
@@ -1153,6 +1154,7 @@ export default class BridgeController extends BaseController<
                 ...brideParams,
             },
         });
+        // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
         return this._transactionController.getTransaction(txId)!;
     }
 }

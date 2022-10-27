@@ -35,7 +35,7 @@ export class QuoteNotFoundError extends Error {
     }
 }
 
-export const isQuoteNotFoundError = (e: Error) =>
+export const isQuoteNotFoundError = (e: Error): boolean =>
     'QuoteNotFoundError' === e.name;
 
 export enum BridgeImplementation {

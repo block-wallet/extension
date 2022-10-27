@@ -23,6 +23,9 @@ import { TokenOperationsController } from './transactions/Transaction';
 import { fillTokenData, isNativeTokenAddress } from '../../utils/token';
 
 const tokenAddressParamNotPresentError = new Error('token address is required');
+const tokenAddressInvalidError = new Error(
+    'token address is invalid for selected network'
+);
 const tokenParamNotPresentError = new Error('token is required');
 const fromParamNotPresentError = new Error('from is required');
 const toParamNotPresentError = new Error('to is required');
@@ -51,6 +54,7 @@ const transactionIdParamNotPresentError = new Error(
 const transactionNotFound = new Error('transaction not found');
 export {
     tokenAddressParamNotPresentError,
+    tokenAddressInvalidError,
     tokenParamNotPresentError,
     fromParamNotPresentError,
     toParamNotPresentError,
@@ -373,6 +377,15 @@ export class TokenController extends BaseController<TokenControllerState> {
             chainId,
             ignoreEvent
         );
+
+        this.emit(
+            TokenControllerEvents.USER_TOKEN_CHANGE,
+            this.getSelectedAccountAddress(),
+            this.getSelectedNetworkChainId(),
+            tokens.map(function (token) {
+                return token.address;
+            })
+        );
     }
 
     /**
@@ -657,6 +670,13 @@ export class TokenController extends BaseController<TokenControllerState> {
 
         //If token to doesn't exists, then attempt to add
         if (tokenExists) {
+            this.emit(
+                TokenControllerEvents.USER_TOKEN_CHANGE,
+                this.getSelectedAccountAddress(),
+                this.getSelectedNetworkChainId(),
+                [tokenAddress]
+            );
+
             return;
         }
 

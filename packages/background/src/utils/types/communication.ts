@@ -155,6 +155,7 @@ enum NETWORK {
     SET_SHOW_TEST_NETWORKS = 'SHOW_TEST_NETWORKS',
     ADD_NETWORK = 'ADD_NETWORK',
     EDIT_NETWORK = 'EDIT_NETWORK',
+    EDIT_NETWORKS_ORDER = 'EDIT_NETWORKS_ORDER',
     REMOVE_NETWORK = 'REMOVE_NETWORK',
     GET_SPECIFIC_CHAIN_DETAILS = 'GET_SPECIFIC_CHAIN_DETAILS',
     GET_RPC_CHAIN_ID = 'GET_RPC_CHAIN_ID',
@@ -413,6 +414,7 @@ export interface RequestSignatures {
     ];
     [Messages.NETWORK.ADD_NETWORK]: [RequestAddNetwork, void];
     [Messages.NETWORK.EDIT_NETWORK]: [RequestEditNetwork, void];
+    [Messages.NETWORK.EDIT_NETWORKS_ORDER]: [RequestEditNetworksOrder, void];
     [Messages.NETWORK.REMOVE_NETWORK]: [RequestRemoveNetwork, void];
     [Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS]: [
         RequestGetChainData,
@@ -817,6 +819,15 @@ export interface RequestEditNetwork {
         blockExplorerUrl?: string;
         name: string;
     };
+}
+
+export interface editNetworkOrder {
+    chainId: number;
+    order: number;
+}
+
+export interface RequestEditNetworksOrder {
+    networksOrder: editNetworkOrder[];
 }
 
 export interface RequestRemoveNetwork {

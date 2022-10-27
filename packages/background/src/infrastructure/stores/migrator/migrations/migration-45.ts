@@ -1,21 +1,22 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
+import { normalizeNetworksOrder } from '../../../../utils/networks';
 import { IMigration } from '../IMigration';
 
 /**
- * This migration fixes the symbol and RPC url of BSC Testnet
+ * This migration reorder networks and separates order of testnets and mainnets each starting from zero
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
+        const currentNetworks =
+            persistedState.NetworkController.availableNetworks;
+
+        const orderedNetworks = normalizeNetworksOrder(currentNetworks);
+
         return {
             ...persistedState,
-            PreferencesController: {
-                ...persistedState.PreferencesController,
-                settings: {
-                    ...persistedState.PreferencesController.settings,
-                    hideBridgeInsufficientNativeTokenWarning:
-                        persistedState.PreferencesController.settings
-                            .hideBridgeInsufficientNativeTokenWarning ?? false,
-                },
+            NetworkController: {
+                ...persistedState.NetworkController,
+                availableNetworks: { ...orderedNetworks },
             },
         };
     },

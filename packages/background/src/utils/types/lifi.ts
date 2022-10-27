@@ -1,5 +1,6 @@
 import { IToken } from '@block-wallet/background/controllers/erc-20/Token';
-import { BridgeStatus, BridgeSubstatus } from '../bridgeApi';
+import { BigNumber } from 'ethers';
+import { BridgeStatus, BridgeSubstatus, IBridgeFeeCost } from '../bridgeApi';
 
 /**
  * Fees Config
@@ -13,6 +14,7 @@ export const LIFI_NATIVE_ADDRESS = '0x0000000000000000000000000000000000000000';
 // Base endpoint
 export const LIFI_BRIDGE_ENDPOINT = 'https://li.quest/v1';
 
+//To learn how do they work, please refer to their documentation: https://docs.li.fi/products/more-integration-options/li.fi-api/checking-the-status-of-a-transactio
 export enum LiFiBridgeStatus {
     NOT_FOUND = 'NOT_FOUND',
     INVALID = 'INVALID',
@@ -86,6 +88,14 @@ interface LifiTransactionData {
     chainId: number;
 }
 
+interface LifiFeeCost {
+    name: string;
+    description: string;
+    percentage: string;
+    token: LiFiToken;
+    amount: string;
+}
+
 export interface GetLiFiStatusResponse {
     sending: LifiTransactionData;
     receiving: LifiTransactionData;
@@ -101,10 +111,16 @@ interface QuoteAction {
     toToken: LiFiToken;
     fromAmount: string;
     slippage: number;
-    fromAddress: string;
+    fromAddress?: string;
     toAddress: string;
 }
-
+interface QuoteNotFoundErrorDetails {
+    errorType: string;
+    code: string;
+    action: QuoteAction;
+    tool: string;
+    message: string;
+}
 interface LiFiTransactionRequest {
     from: string;
     to: string;
@@ -113,12 +129,14 @@ interface LiFiTransactionRequest {
     value: string;
     gasLimit: string;
     gasPrice: string;
+    feeCosts: LifiFeeCost[];
 }
 
 interface Estimate {
     approvalAddress: string;
     fromAmount: string;
     toAmount: string;
+    feeCosts: LifiFeeCost[];
 }
 
 interface Connection {
@@ -130,10 +148,7 @@ interface Connection {
 
 export interface LiFiErrorResponse {
     message: string;
-    errors: {
-        errorType: string;
-        code: string;
-    }[];
+    errors: QuoteNotFoundErrorDetails[];
 }
 
 export const lifiTokenToIToken = (token: LiFiToken): IToken => {
@@ -157,4 +172,37 @@ export const lifiBridgeSubstatusToBridgeSubstatus = (
     lifiSubstatus: LiFiBridgeSubstatus
 ): BridgeSubstatus => {
     return BridgeSubstatus[lifiSubstatus];
+};
+
+export const lifiFeeCostsToIBridgeFeeCosts = (
+    lifiFees: LifiFeeCost[]
+): IBridgeFeeCost[] => {
+    const collectedFeesPerToken = lifiFees.reduce(
+        (acc: Record<string, IBridgeFeeCost>, fee) => {
+            const tokenInfo = acc[fee.token.address] || {};
+            const tokenInfoDetails = tokenInfo.details || [];
+            const tokenInfoTotal = tokenInfo.total ?? '0';
+            return {
+                ...acc,
+                [fee.token.address]: {
+                    ...tokenInfo,
+                    token: lifiTokenToIToken(fee.token),
+                    total: BigNumber.from(tokenInfoTotal)
+                        .add(BigNumber.from(fee.amount))
+                        .toString(),
+                    details: [
+                        ...tokenInfoDetails,
+                        {
+                            name: fee.name,
+                            description: fee.description,
+                            amount: fee.amount,
+                            percentage: fee.percentage,
+                        },
+                    ],
+                },
+            };
+        },
+        {}
+    );
+    return Object.values(collectedFeesPerToken);
 };

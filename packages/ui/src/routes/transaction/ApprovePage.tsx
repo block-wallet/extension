@@ -659,12 +659,9 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 >
                     Set custom allowance
                 </div>
-                <ErrorMessage
-                    error={
-                        // texts?.error ||
-                        hasBalance ? undefined : "Insufficient funds"
-                    }
-                />
+                <ErrorMessage>
+                    {hasBalance ? undefined : "Insufficient funds"}
+                </ErrorMessage>
             </div>
         </>
     )
@@ -745,7 +742,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     onInput={handleChangeAllowance}
                     placeholder="Enter custom allowance"
                 />
-                <ErrorMessage error={errors.customAllowance?.message} />
+                <ErrorMessage>{errors.customAllowance?.message}</ErrorMessage>
             </div>
         </div>
     )

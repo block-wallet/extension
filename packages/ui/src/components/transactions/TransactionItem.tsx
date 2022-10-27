@@ -48,7 +48,9 @@ import Dots from "../loading/LoadingDots"
 import useContextMenu from "../../util/hooks/useContextMenu"
 import { getBridgePendingMessage } from "../../util/bridgeTransactionUtils"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
-import useGetBridgeDetails from "../../util/hooks/useGetBridgeDetails"
+import useGetBridgeTransactionsData from "../../util/hooks/useGetBridgeTransactionsData"
+import BridgeDetails from "../bridge/BridgeDetails"
+import { BRIDGE_PENDING_STATUS } from "../../util/bridgeUtils"
 
 const transactionMessages = {
     [TransactionCategories.BLANK_DEPOSIT]: "Privacy Pool Deposit",
@@ -64,6 +66,7 @@ const transactionMessages = {
     [TransactionCategories.EXCHANGE]: "BlockWallet Swap",
     [TransactionCategories.BRIDGE]: "BlockWallet Bridge",
     [TransactionCategories.INCOMING_BRIDGE]: "Incoming Bridge",
+    [TransactionCategories.INCOMING_BRIDGE_REFUND]: "Bridge Refund",
     [TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER]: "Incoming Bridge",
 }
 
@@ -161,6 +164,9 @@ const transactionIcons = {
     [TransactionCategories.EXCHANGE]: <RiCopperCoinFill size="1.5rem" />,
     [TransactionCategories.BRIDGE]: <GiSuspensionBridge size="1.5rem" />,
     [TransactionCategories.INCOMING_BRIDGE]: (
+        <GiSuspensionBridge size="1.5rem" />
+    ),
+    [TransactionCategories.INCOMING_BRIDGE_REFUND]: (
         <GiSuspensionBridge size="1.5rem" />
     ),
     [TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER]: (
@@ -362,13 +368,15 @@ const getTransactionTimeOrStatus = (
     forceDrop: boolean,
     bridgeParams?: BridgeTransactionParams
 ) => {
-    if (forceDrop)
+    if (forceDrop) {
         return (
             <span className="text-xs text-red-600">
                 {capitalize(TransactionStatus.DROPPED.toLowerCase())}
             </span>
         )
-    else if (failedStatuses.includes(status) && metaType === MetaType.REGULAR) {
+    }
+
+    if (failedStatuses.includes(status) && metaType === MetaType.REGULAR) {
         return (
             <span className="text-xs text-red-600">
                 {capitalize(
@@ -378,21 +386,25 @@ const getTransactionTimeOrStatus = (
                 )}
             </span>
         )
-    } else {
-        if (bridgeParams?.substatus === BridgeSubstatus.REFUNDED) {
-            return (
-                <span className="text-xs text-red-600">
-                    Failed bridge: Refunded
-                </span>
-            )
-        }
-        return getTransactionTime(
-            status,
-            metaType,
-            confirmationTime || submittedTime || time,
-            isQueued
+    }
+
+    if (
+        bridgeParams?.substatus === BridgeSubstatus.REFUNDED &&
+        bridgeParams.role !== "RECEIVING"
+    ) {
+        return (
+            <span className="text-xs text-red-600">
+                Failed bridge: Refunded
+            </span>
         )
     }
+
+    return getTransactionTime(
+        status,
+        metaType,
+        confirmationTime || submittedTime || time,
+        isQueued
+    )
 }
 
 const TransactionItem: React.FC<{
@@ -415,7 +427,7 @@ const TransactionItem: React.FC<{
         forceDrop,
         bridgeParams,
     } = transaction
-    const bridgeDetails = useGetBridgeDetails(transaction)
+    const bridgeTransactionsData = useGetBridgeTransactionsData(transaction)
 
     const history: any = useOnMountHistory()
     const formatter = useCurrencyFromatter()
@@ -453,6 +465,7 @@ const TransactionItem: React.FC<{
             case TransactionCategories.BLANK_WITHDRAWAL:
             case TransactionCategories.INCOMING_BRIDGE:
             case TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER:
+            case TransactionCategories.INCOMING_BRIDGE_REFUND:
                 return "+"
 
             default:
@@ -494,9 +507,19 @@ const TransactionItem: React.FC<{
             TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER &&
         !isBlankWithdraw
 
+    const OperationDetails =
+        transactionCategory &&
+        [
+            TransactionCategories.BRIDGE,
+            TransactionCategories.INCOMING_BRIDGE_REFUND,
+            TransactionCategories.INCOMING_BRIDGE,
+        ].includes(transactionCategory)
+            ? BridgeDetails
+            : TransactionDetails
+
     return (
         <>
-            <TransactionDetails
+            <OperationDetails
                 transaction={transaction}
                 open={hasDetails}
                 onClose={() => setHasDetails(false)}
@@ -673,19 +696,19 @@ const TransactionItem: React.FC<{
                 {status === TransactionStatus.CONFIRMED &&
                 transactionCategory === TransactionCategories.BRIDGE &&
                 bridgeParams &&
-                [BridgeStatus.PENDING, BridgeStatus.NOT_FOUND].includes(
-                    bridgeParams!.status! || ""
-                ) ? (
+                BRIDGE_PENDING_STATUS.includes(bridgeParams!.status! || "") ? (
                     <div className="ml-11 mt-2">
                         <i className="text-gray-500">
-                            {bridgeParams.status === BridgeStatus.NOT_FOUND
-                                ? "Processing bridge"
-                                : getBridgePendingMessage(
-                                      bridgeParams!,
-                                      bridgeDetails?.receivingTransaction
-                                          ?.networkName
-                                  )}
-                            <Dots />
+                            <>
+                                {
+                                    getBridgePendingMessage(
+                                        bridgeParams!,
+                                        bridgeTransactionsData
+                                            ?.receivingTransaction?.networkName
+                                    )?.label
+                                }
+                                <Dots />
+                            </>
                         </i>
                     </div>
                 ) : null}

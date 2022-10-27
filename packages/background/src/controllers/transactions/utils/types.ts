@@ -2,6 +2,7 @@ import {
     BridgeImplementation,
     BridgeStatus,
     BridgeSubstatus,
+    IBridgeFeeCost,
 } from '@block-wallet/background/utils/bridgeApi';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { BigNumber, Transaction } from 'ethers';
@@ -98,7 +99,7 @@ export interface TransactionMeta {
 }
 
 export interface BridgeTransactionParams {
-    bridgeImplementation: BridgeImplementation;
+    bridgeImplementation?: BridgeImplementation;
     fromToken: IToken;
     toToken: IToken;
     fromTokenAmount: string;
@@ -107,6 +108,7 @@ export interface BridgeTransactionParams {
     fromChainId: number;
     toChainId: number;
     tool: string; //tool used to perform the bridging.
+    slippage: number;
     receivingTxLink?: string;
     receivingTxHash?: string;
     sendingTxHash?: string;
@@ -114,6 +116,11 @@ export interface BridgeTransactionParams {
     role: 'SENDING' | 'RECEIVING';
     substatus?: BridgeSubstatus;
     status?: BridgeStatus;
+    feeCosts?: IBridgeFeeCost[];
+    //effective token involved on the bridge process
+    effectiveToToken?: IToken;
+    effectiveToTokenAmount?: string;
+    effectiveToChainId?: number;
 }
 
 export interface uiTransactionParams extends TransactionParams {
@@ -169,6 +176,7 @@ export enum TransactionCategories {
     EXCHANGE = 'exchange',
     BRIDGE = 'bridge',
     INCOMING_BRIDGE = 'incoming_bridge',
+    INCOMING_BRIDGE_REFUND = 'incoming_bridge_refund',
     // Category that temporarely represents receiving transactions in a bridge operation:
     // - These transactions are placeholders for the real transaction that will replace them.
     // - These transactions are not persisted in the state, they are only meant to be shown in the Activity list.

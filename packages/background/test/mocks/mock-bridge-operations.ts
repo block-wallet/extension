@@ -73,6 +73,7 @@ const BASE_SENDING_TRANSACTION = {
             symbol: 'MATIC',
             type: '',
         },
+        slippage: 0.5,
         fromTokenAmount: '10000000000000000000000',
         toToken: {
             address: '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0',
@@ -170,6 +171,7 @@ export default {
                     type: '',
                 },
                 tool: 'hop',
+                slippage: 0.5,
                 blockWalletFee: BigNumber.from(0),
                 fromAmount: '10000000000000000000000',
                 toAmount: '9985390803817199636125',
@@ -185,6 +187,7 @@ export default {
                     to: '0x362fA9D0bCa5D19f743Db50738345ce2b40eC99f',
                     value: '0x021e19e0c9bab2400000',
                 },
+                feeCosts: [],
             },
             customNonce: 5,
             gasPrice: BigNumber.from('0'),

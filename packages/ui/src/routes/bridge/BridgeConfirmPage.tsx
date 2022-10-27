@@ -18,6 +18,7 @@ import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import {
     HardwareWalletOpTypes,
+    QuoteFeeStatus,
     TransactionCategories,
 } from "../../context/commTypes"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
@@ -32,6 +33,7 @@ import {
 import {
     isBridgeNativeTokenAddress,
     populateBridgeTransaction,
+    isANotFoundQuote,
     getBridgeWarningMessages,
 } from "../../util/bridgeUtils"
 import { isHardwareWallet } from "../../util/account"
@@ -70,12 +72,17 @@ import {
     BridgeQuoteRequest,
     BridgeTransaction,
     GetBridgeQuoteResponse,
+    GetBridgeQuoteNotFoundResponse,
 } from "@block-wallet/background/controllers/BridgeController"
 import { capitalize } from "../../util/capitalize"
 import TransactionDetails from "../../components/transactions/TransactionDetails"
 import { WithRequired } from "@block-wallet/background/utils/types/helpers"
 import CollapsableWarning from "../../components/CollapsableWarning"
 import { AiOutlineWarning } from "react-icons/ai"
+import BridgeDetails from "../../components/bridge/BridgeDetails"
+import ErrorMessage from "../../components/error/ErrorMessage"
+import BridgeErrorMessage, { BridgeErrorType } from "./BridgeErrorMessage"
+import BridgeNotFoundQuoteDetails from "../../components/transactions/BridgeNotFoundQuoteDetails"
 import { useSelectedAccountHasEnoughNativeTokensToSend } from "../../context/hooks/useSelectedAccountHasEnoughNativeTokensToSend"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
 
@@ -138,6 +145,13 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const { isEIP1559Compatible } = useSelectedNetwork()
     const selectedAccount = useSelectedAccount()
     const { nativeToken } = useTokensList()
+
+    const [quoteNotFoundErrors, setQuoteNotFoundErrors] = useState<
+        GetBridgeQuoteNotFoundResponse | undefined
+    >(undefined)
+
+    const [showBridgeNotFoundQuoteDetails, setShowBridgeNotFoundQuoteDetails] =
+        useState<boolean>(false)
     const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
         useCheckAccountDeviceLinked()
     const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
@@ -164,7 +178,16 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const [isFetchingParams, setIsFetchingParams] = useState<boolean>(false)
     const [isGasLoading, setIsGasLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | undefined>(undefined)
-    const [showDetails, setShowDetails] = useState<boolean>(false)
+    const [bridgeQuoteError, setBridgeQuoteError] = useState<
+        BridgeErrorType | undefined
+    >()
+    const [bridgeDetailsModal, setBridgeDetailsModal] = useState<{
+        isOpen: boolean
+        tab?: "summary" | "fees"
+    }>({
+        isOpen: false,
+        tab: "summary",
+    })
 
     const [advancedSettings, setAdvancedSettings] = useState<
         WithRequired<TransactionAdvancedData, "slippage">
@@ -232,6 +255,18 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         ? hasNativeAssetBalance
         : hasNativeAssetBalance && hasFromTokenBalance
 
+    useEffect(() => {
+        if (!hasBalance) {
+            if (!error) {
+                setError(
+                    "You don't have enough balance to cover the bridge and the gas costs"
+                )
+            }
+        } else {
+            setError(undefined)
+        }
+    }, [hasBalance, quote])
+
     const { hideBridgeInsufficientNativeTokenWarning } = useUserSettings()
     const {
         isLoading: isLoadingSelectedAccountHasEnoughNativeTokensToSend,
@@ -268,7 +303,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const showBridgeWarningMessage = idleScreen && !!bridgeWarningMessage
 
     const onSubmit = async () => {
-        if (error || !hasBalance || !quote) return
+        if (error || !quote || bridgeQuoteError) return
 
         dispatch({ type: "open", payload: { status: "loading" } })
         const isLinked = await checkDeviceIsLinked()
@@ -354,6 +389,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
 
         async function fetchQuoteParams() {
             setError(undefined)
+            setBridgeQuoteError(undefined)
             const params: BridgeQuoteRequest = {
                 toChainId: toChainId,
                 fromTokenAddress: fromToken.address,
@@ -364,23 +400,38 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
             }
 
             setIsFetchingParams(true)
-            let errorMessage: string | "" = ""
-            let fetchedQuote: GetBridgeQuoteResponse | undefined
+            let errorType: BridgeErrorType | undefined
+            let fetchedQuote:
+                | GetBridgeQuoteResponse
+                | GetBridgeQuoteNotFoundResponse
+                | undefined
+            let validQuote: GetBridgeQuoteResponse | undefined
+            let invalidQuote: GetBridgeQuoteNotFoundResponse | undefined
             try {
                 fetchedQuote = await getBridgeQuote(params)
+                if (isANotFoundQuote(fetchedQuote)) {
+                    errorType = BridgeErrorType.QUOTE_NOT_FOUND
+                    invalidQuote =
+                        fetchedQuote as GetBridgeQuoteNotFoundResponse
+                } else {
+                    validQuote = fetchedQuote as GetBridgeQuoteResponse
+                    if (validQuote.quoteFeeStatus !== QuoteFeeStatus.OK) {
+                        errorType =
+                            BridgeErrorType.INSUFFICIENT_BALANCE_TO_COVER_FEES
+                    }
+                }
             } catch (error) {
-                errorMessage = capitalize(
-                    error.message || "Error fetching quote"
-                )
+                errorType = BridgeErrorType.OTHER
             } finally {
                 //in case the effect was unmounted after invoking the background
                 if (isValidFetch) {
                     setTimeoutStart(
                         fetchedQuote ? new Date().getTime() : undefined
                     )
-                    setQuote(fetchedQuote)
+                    setQuote(validQuote)
+                    setQuoteNotFoundErrors(invalidQuote)
                     setIsFetchingParams(false)
-                    setError(errorMessage)
+                    setBridgeQuoteError(errorType)
                 }
             }
         }
@@ -432,15 +483,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
-                        label={
-                            error
-                                ? error
-                                : hasBalance
-                                ? "Bridge"
-                                : isBridgingNativeToken
-                                ? "You don't have enough funds to cover the bridge and the gas costs."
-                                : "Insufficient funds"
-                        }
+                        label="Bridge"
                         isLoading={
                             error || !!inProgressAllowanceTransaction
                                 ? false
@@ -451,12 +494,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                                   !!isLoadingSelectedAccountHasEnoughNativeTokensToSend
                         }
                         onClick={onSubmit}
-                        disabled={!!error || !hasBalance}
-                        buttonClass={classnames(
-                            error || !hasBalance
-                                ? `${Classes.redButton} opacity-100`
-                                : ""
-                        )}
+                        disabled={!!error || !!bridgeQuoteError}
                     />
                 </PopupFooter>
             }
@@ -523,11 +561,12 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 ])}
             />
             {quote && (
-                <TransactionDetails
+                <BridgeDetails
                     transaction={populateBridgeTransaction(quote)}
-                    open={showDetails}
-                    onClose={() => setShowDetails(false)}
+                    open={bridgeDetailsModal.isOpen}
+                    onClose={() => setBridgeDetailsModal({ isOpen: false })}
                     nonce={advancedSettings.customNonce}
+                    tab={bridgeDetailsModal.tab}
                 />
             )}
             <HardwareDeviceNotLinkedDialog
@@ -630,7 +669,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     />
                 )}
 
-                <div className="flex flex-row items-center py-3">
+                <div className="flex flex-row items-center pt-2">
                     {/* Settings */}
                     <AdvancedSettings
                         address={selectedAccount.address}
@@ -655,7 +694,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     {/* Details */}
                     <OutlinedButton
                         onClick={() => {
-                            quote && setShowDetails(true)
+                            quote &&
+                                setBridgeDetailsModal({
+                                    isOpen: true,
+                                    tab: "summary",
+                                })
                         }}
                         className={classnames(
                             "w-full ml-2",
@@ -666,9 +709,47 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                         <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
                     </OutlinedButton>
                 </div>
-                {remainingSuffix && !isFetchingParams && (
-                    <RefreshLabel value={remainingSuffix} className="pt-1" />
+                {!!quoteNotFoundErrors && (
+                    <BridgeNotFoundQuoteDetails
+                        open={showBridgeNotFoundQuoteDetails}
+                        onClose={() => setShowBridgeNotFoundQuoteDetails(false)}
+                        details={quoteNotFoundErrors}
+                    />
                 )}
+                {bridgeQuoteError && (
+                    <BridgeErrorMessage
+                        type={bridgeQuoteError}
+                        onClickDetails={(type) => {
+                            if (
+                                type ===
+                                BridgeErrorType.INSUFFICIENT_BALANCE_TO_COVER_FEES
+                            ) {
+                                setBridgeDetailsModal({
+                                    isOpen: true,
+                                    tab: "fees",
+                                })
+                            }
+
+                            if (type === BridgeErrorType.QUOTE_NOT_FOUND) {
+                                setShowBridgeNotFoundQuoteDetails(true)
+                            }
+                        }}
+                        className="mt-1"
+                    />
+                )}
+                {/** Only display custom errors if there isn't a quote error already. */}
+                {error && !bridgeQuoteError && (
+                    <ErrorMessage className="mt-2">{error}</ErrorMessage>
+                )}
+                {remainingSuffix &&
+                    !isFetchingParams &&
+                    !error &&
+                    bridgeQuote && (
+                        <RefreshLabel
+                            value={remainingSuffix}
+                            className="pt-4"
+                        />
+                    )}
             </div>
         </PopupLayout>
     )

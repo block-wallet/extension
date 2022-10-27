@@ -13,6 +13,7 @@ type DropDownSelectorProps = {
     error?: string
     disabled?: boolean
     customWidth?: string
+    className?: string
 }
 
 /**
@@ -32,6 +33,7 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
     display,
     topMargin,
     bottomMargin,
+    className,
     popupMargin,
     error,
     disabled,
@@ -100,9 +102,11 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
                     "h-[4.5rem]",
                     "space-x-1",
                     active && Classes.blueSectionActive,
+                    disabled && Classes.blueSelectionDisabled,
                     error
                         ? "border-red-400"
-                        : "border-opacity-0 border-transparent"
+                        : "border-opacity-0 border-transparent",
+                    className
                 )}
                 onClick={() => !disabled && setActive(!active)}
                 ref={displayRef}
@@ -141,7 +145,7 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
                 {active &&
                     Children.map(children, (child) => {
                         return child.type !== "div"
-                            ? cloneElement(child, { setActive })
+                            ? cloneElement(child, { setActive, ...child.props })
                             : cloneElement(child)
                     })}
             </div>

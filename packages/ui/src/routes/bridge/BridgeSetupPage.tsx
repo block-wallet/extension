@@ -26,7 +26,6 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useState, useEffect, FunctionComponent } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
 import { useTokensList } from "../../context/hooks/useTokensList"
-import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { yupResolver } from "@hookform/resolvers/yup"
 import {
     getBridgeAvailableRoutes,
@@ -39,24 +38,26 @@ import { IChain } from "@block-wallet/background/utils/types/chain"
 import {
     checkForBridgeNativeAsset,
     getRouteForNetwork,
-    isBridgeQuoteNotFoundError,
+    isANotFoundQuote,
 } from "../../util/bridgeUtils"
 import {
+    BridgeQuote,
     BridgeQuoteRequest,
     GetBridgeQuoteResponse,
+    GetBridgeQuoteNotFoundResponse,
 } from "@block-wallet/background/controllers/BridgeController"
 import { ApproveOperation } from "../transaction/ApprovePage"
-import { BridgeAllowanceCheck } from "../../context/commTypes"
+import { BridgeAllowanceCheck, QuoteFeeStatus } from "../../context/commTypes"
 import { defaultAdvancedSettings } from "../../components/transactions/AdvancedSettings"
-import { AiFillInfoCircle } from "react-icons/ai"
-import GenericTooltip from "../../components/label/GenericTooltip"
-import { BASE_BRIDGE_FEE } from "../../util/constants"
-import { formatNumberLength } from "../../util/formatNumberLength"
-import { CgLayoutGrid } from "react-icons/cg"
-import Tooltip from "../../components/label/Tooltip"
-
-const QUOTE_NOT_FOUND_ERR_MESSAGE =
-    "Unable to generate a valid quote. Please try by modifying the amount of the Bridge Asset."
+import { BridgeNotFoundQuoteDetails } from "../../components/transactions/BridgeNotFoundQuoteDetails"
+import { formatRounded } from "../../util/formatRounded"
+import FeeDetails from "../../components/FeeDetails"
+import ClickableText from "../../components/button/ClickableText"
+import BridgeDetails from "../../components/bridge/BridgeDetails"
+import { getBlockWalletOriginalFee } from "../../util/bridgeTransactionUtils"
+import { populateBridgeTransaction } from "../../util/bridgeUtils"
+import BridgeErrorMessage, { BridgeErrorType } from "./BridgeErrorMessage"
+import usePersistedLocalStorageForm from "../../util/hooks/usePersistedLocalStorageForm"
 
 interface SetupBridgePageLocalState {
     amount?: string
@@ -78,9 +79,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const {
         token,
         network,
-        bridgeQuote,
         routes,
-        amount: defaultAmount,
+        amount: historyAmount,
         fromAssetPage,
     } = (history.location.state || {}) as SetupBridgePageLocalState
 
@@ -95,8 +95,18 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     } = useBlankState()!
     const { nativeToken } = useTokensList()
 
+    const [bridgeDetails, setBridgeDetails] = useState<{
+        isOpen: boolean
+        tab?: "summary" | "fees"
+    }>({ isOpen: false })
     // State
-    const [error, setError] = useState<string | undefined>(undefined)
+    const [routesError, setRoutesError] = useState<string | undefined>(
+        undefined
+    )
+    const [bridgeQuoteError, setBridgeQuoteError] = useState<
+        BridgeErrorType | undefined
+    >(undefined)
+
     const [inputFocus, setInputFocus] = useState(false)
     const [isFetchingRoutes, setIsFetchingRoutes] = useState<boolean>(false)
     const [isFetchingQuote, setisFetchingQuote] = useState<boolean>(false)
@@ -104,8 +114,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         routes || []
     )
     const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
-        bridgeQuote
+        undefined
     )
+    const [quoteNotFoundErrors, setQuoteNotFoundErrors] = useState<
+        GetBridgeQuoteNotFoundResponse | undefined
+    >(undefined)
 
     const [bridgeDataState, setBridgeDataState] =
         useLocalStorageState<BridgeState>("bridge.form", {
@@ -141,19 +154,23 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         trigger: triggerAmountValidation,
         watch,
         formState: { errors },
-    } = useForm<InferType<typeof schema>>({
-        resolver: yupResolver(schema),
-        defaultValues: {
-            amount:
-                defaultAmount ||
-                (bridgeDataState?.bigNumberAmount
-                    ? formatUnits(
-                          bridgeDataState?.bigNumberAmount?.toString(),
-                          bridgeDataState?.token?.decimals
-                      )
-                    : undefined),
+    } = usePersistedLocalStorageForm<InferType<typeof schema>>(
+        {
+            key: "bridges.amount.form",
         },
-    })
+        {
+            resolver: yupResolver(schema),
+            defaultValues: {
+                amount:
+                    (bridgeDataState?.bigNumberAmount
+                        ? formatUnits(
+                              bridgeDataState?.bigNumberAmount?.toString(),
+                              bridgeDataState?.token?.decimals
+                          )
+                        : undefined) || historyAmount,
+            },
+        }
+    )
 
     const watchedAmount = watch("amount")
 
@@ -171,6 +188,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         }
         return availbleChainsId.includes(chain.id)
     })
+    const [showBridgeNotFoundQuoteDetails, setShowBridgeNotFoundQuoteDetails] =
+        useState<boolean>(false)
 
     const formattedAmount =
         selectedToken && bigNumberAmount
@@ -195,7 +214,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
             clearErrors()
             if (selectedToken && Number(watchedAmount)) {
                 if (await triggerAmountValidation()) {
-                    setBridgeDataState((prev: BridgeState) => ({
+                    return setBridgeDataState((prev: BridgeState) => ({
                         ...prev,
                         bigNumberAmount: parseUnits(
                             watchedAmount,
@@ -203,12 +222,12 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         ),
                     }))
                 }
-            } else {
-                setBridgeDataState((prev: BridgeState) => ({
-                    ...prev,
-                    bigNumberAmount: undefined,
-                }))
             }
+
+            setBridgeDataState((prev: BridgeState) => ({
+                ...prev,
+                bigNumberAmount: undefined,
+            }))
         }
         handleChangeAmount()
     }, [
@@ -269,8 +288,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
     useEffect(() => {
         let isValidFetch = true
-        setError(undefined)
-
+        setRoutesError(undefined)
+        setBridgeQuoteError(undefined)
         const fetchRoutes = async () => {
             setIsFetchingRoutes(true)
             try {
@@ -282,6 +301,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
                 if (isValidFetch) {
                     const { routes } = routesRes
+                    if (!routes.length) {
+                        setRoutesError(
+                            "There are no routes available for the selected asset."
+                        )
+                    }
                     setAvailableRoutes(routes)
 
                     //check if network is still valid.
@@ -296,13 +320,16 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             network: undefined,
                         }))
                     }
-
                     setIsFetchingRoutes(false)
                 }
             } catch (error) {
-                setError(capitalize(error.message || "Error fetching routes."))
-                setAvailableRoutes([])
-                setIsFetchingRoutes(false)
+                if (isValidFetch) {
+                    setRoutesError(
+                        capitalize(error.message || "Error fetching routes.")
+                    )
+                    setAvailableRoutes([])
+                    setIsFetchingRoutes(false)
+                }
             }
         }
 
@@ -321,8 +348,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
     useEffect(() => {
         let isValidFetch = true
-        setError(undefined)
-
+        setBridgeQuoteError(undefined)
         const fetchQuote = async () => {
             setisFetchingQuote(true)
 
@@ -337,18 +363,29 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 }
 
                 const fetchedQuote = await getBridgeQuote(params, true)
-
                 if (isValidFetch) {
-                    setQuote(fetchedQuote)
+                    if (isANotFoundQuote(fetchedQuote)) {
+                        setBridgeQuoteError(BridgeErrorType.QUOTE_NOT_FOUND)
+                        setQuoteNotFoundErrors(
+                            fetchedQuote as GetBridgeQuoteNotFoundResponse
+                        )
+                    } else {
+                        const validQuote =
+                            fetchedQuote as GetBridgeQuoteResponse
+                        setQuote(validQuote)
+                        if (validQuote.quoteFeeStatus !== QuoteFeeStatus.OK) {
+                            setBridgeQuoteError(
+                                BridgeErrorType.INSUFFICIENT_BALANCE_TO_COVER_FEES
+                            )
+                        }
+                    }
                     setisFetchingQuote(false)
                 }
             } catch (error) {
-                if (isBridgeQuoteNotFoundError(error)) {
-                    setError(QUOTE_NOT_FOUND_ERR_MESSAGE)
-                } else {
-                    setError("Unable to fetch a valid quote. Please try again.")
+                if (isValidFetch) {
+                    setBridgeQuoteError(BridgeErrorType.OTHER)
+                    setisFetchingQuote(false)
                 }
-                setisFetchingQuote(false)
             }
         }
 
@@ -370,8 +407,26 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [bigNumberAmount, errors.amount, selectedAddress, selectedRoute])
 
-    const isAmountError = error === QUOTE_NOT_FOUND_ERR_MESSAGE
-
+    const bridgeFeeSummary = quote?.bridgeParams.params.feeCosts.reduce(
+        (feeDetails, fee) => {
+            if (feeDetails) {
+                feeDetails = feeDetails.concat(" + ")
+            }
+            return feeDetails.concat(
+                `${formatRounded(
+                    formatUnits(fee.total, fee.token.decimals),
+                    4
+                )} 
+                ${fee.token.symbol}`
+            )
+        },
+        quote
+            ? getBlockWalletOriginalFee(
+                  "0",
+                  quote?.bridgeParams.params.fromToken
+              )
+            : ""
+    )
     return (
         <PopupLayout
             header={
@@ -407,13 +462,22 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 ? "Approve"
                                 : "Review"
                         }
-                        disabled={!!(error || !quote)}
+                        disabled={!!(routesError || bridgeQuoteError || !quote)}
                         isLoading={isFetchingRoutes || isFetchingQuote}
                         onClick={onSubmit}
                     />
                 </PopupFooter>
             }
         >
+            {quote && (
+                <BridgeDetails
+                    tab={bridgeDetails.tab}
+                    open={bridgeDetails.isOpen}
+                    transaction={populateBridgeTransaction(quote)}
+                    onClose={() => setBridgeDetails({ isOpen: false })}
+                />
+            )}
+
             <div className="flex flex-col p-6">
                 <div
                     className={classnames(
@@ -485,7 +549,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 inputFocus
                                     ? "bg-primary-200"
                                     : "bg-primary-100",
-                                errors.amount || isAmountError
+                                errors.amount
                                     ? "border border-red-400"
                                     : "border-opacity-0 border-transparent"
                             )}
@@ -525,11 +589,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         !errors.amount?.message && "hidden"
                     )}
                 >
-                    <ErrorMessage error={errors.amount?.message} />
+                    <ErrorMessage>{errors.amount?.message}</ErrorMessage>
                 </div>
 
                 {/* Divider */}
-                <div className="pt-6">
+                <div className="pt-3 h-8">
                     <hr className="-mx-5" />
                     <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-grey-200 bg-white z-10">
                         <img
@@ -547,6 +611,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     bottomMargin={200}
                     networkList={filteredAvailableNetworks}
                     isLoading={isFetchingRoutes}
+                    loadingText="Loading networks..."
+                    emptyText="Select network"
                     selectedNetwork={
                         selectedToNetwork &&
                         availbleChainsId.includes(selectedToNetwork.id)
@@ -563,7 +629,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 />
 
                 {/* Asset in destination */}
-                {selectedRoute && (
+                {selectedRoute && !isFetchingRoutes && (
                     <div className="pt-3">
                         <AssetAmountDisplay
                             asset={selectedRoute.toTokens[0]}
@@ -576,58 +642,77 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         />
                     </div>
                 )}
-
                 {/* Bridge fee */}
                 {quote && (
-                    <>
-                        <div className="flex items-center pt-2">
-                            <p className="text-xs text-gray-600 pt-0.5 mr-1">
-                                Bridge fee: 0{" "}
-                                {quote.bridgeParams.params.fromToken.symbol}
-                            </p>
-                            <GenericTooltip
-                                top
-                                centerX
-                                content={
-                                    <div className="min-w-max p-1 text-center">
-                                        <p className="pb-0.5">
-                                            This bridge is on us!
-                                        </p>
-                                        <p>
-                                            Original fee:{" "}
-                                            {formatNumberLength(
-                                                formatUnits(
-                                                    BigNumber.from(
-                                                        quote.bridgeParams
-                                                            .params.fromAmount
-                                                    )
-                                                        .mul(
-                                                            BASE_BRIDGE_FEE * 10
-                                                        )
-                                                        .div(1000),
-                                                    quote.bridgeParams.params
-                                                        .fromToken.decimals
-                                                ),
-                                                8
-                                            )}{" "}
-                                            {
-                                                quote.bridgeParams.params
-                                                    .fromToken.symbol
-                                            }
-                                        </p>
-                                    </div>
-                                }
-                            >
-                                <AiFillInfoCircle
-                                    size={18}
-                                    className="cursor-pointer text-primary-200 hover:text-primary-300"
-                                />
-                            </GenericTooltip>
-                        </div>
-                    </>
+                    <div className="flex flex-row items-center justify-between">
+                        <FeeDetails
+                            summary={`Bridge fees: ${bridgeFeeSummary}`}
+                            details={
+                                <div className="p-1 text-left !break-word !whitespace-normal">
+                                    <p className="pb-0.5">
+                                        BlockWallet is not charging fees for
+                                        this brdige!
+                                    </p>
+                                    <br />
+                                    <p>
+                                        <b>Original fee:</b>{" "}
+                                        {getBlockWalletOriginalFee(
+                                            quote.bridgeParams.params
+                                                .fromAmount,
+                                            quote.bridgeParams.params.fromToken
+                                        )}
+                                    </p>
+                                </div>
+                            }
+                        />
+                    </div>
                 )}
-
-                {error && <ErrorMessage className="mt-2.5" error={error} />}
+                {bridgeQuoteError && (
+                    <div>
+                        <br />
+                        <BridgeErrorMessage
+                            type={bridgeQuoteError}
+                            onClickDetails={(type) => {
+                                if (
+                                    type ===
+                                    BridgeErrorType.INSUFFICIENT_BALANCE_TO_COVER_FEES
+                                ) {
+                                    setBridgeDetails({
+                                        isOpen: true,
+                                        tab: "fees",
+                                    })
+                                } else if (
+                                    type === BridgeErrorType.QUOTE_NOT_FOUND
+                                ) {
+                                    setShowBridgeNotFoundQuoteDetails(true)
+                                }
+                            }}
+                        />
+                    </div>
+                )}
+                {!!quoteNotFoundErrors && (
+                    <BridgeNotFoundQuoteDetails
+                        open={showBridgeNotFoundQuoteDetails}
+                        onClose={() => setShowBridgeNotFoundQuoteDetails(false)}
+                        details={quoteNotFoundErrors}
+                    />
+                )}
+                {routesError && !bridgeQuoteError && (
+                    <ErrorMessage className="mt-4">{routesError}</ErrorMessage>
+                )}
+                {quote && !bridgeQuoteError && (
+                    <ClickableText
+                        className="pt-2 flex"
+                        onClick={() =>
+                            setBridgeDetails({
+                                isOpen: true,
+                                tab: "summary",
+                            })
+                        }
+                    >
+                        View details
+                    </ClickableText>
+                )}
             </div>
         </PopupLayout>
     )

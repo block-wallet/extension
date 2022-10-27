@@ -10,6 +10,7 @@ import {
     lifiBridgeStatusToBridgeStatus,
     lifiBridgeSubstatusToBridgeSubstatus,
     LiFiErrorResponse,
+    lifiFeeCostsToIBridgeFeeCosts,
     lifiTokenToIToken,
     LIFI_BRIDGE_ENDPOINT,
 } from './types/lifi';
@@ -24,13 +25,18 @@ const getMessageFromLiFiError = (errCode: string) => {
 };
 
 export class QuoteNotFoundError extends Error {
-    constructor(message: string | undefined) {
+    details: LiFiErrorResponse;
+    constructor(message: string | undefined, details: LiFiErrorResponse) {
         super();
         this.message =
             message || "There isn't a quote for the requested parameters.";
         this.name = 'QuoteNotFoundError';
+        this.details = details;
     }
 }
+
+export const isQuoteNotFoundError = (e: Error) =>
+    'QuoteNotFoundError' === e.name;
 
 export enum BridgeImplementation {
     LIFI_BRIDGE = 'LIFI_BRIDGE',
@@ -69,6 +75,17 @@ export interface getBridgeRoutesRequest {
     toTokenAddress?: string;
 }
 
+export interface IBridgeFeeCost {
+    token: IToken;
+    details: {
+        name: string;
+        description: string;
+        amount: string;
+        percentage: string;
+    }[];
+    total: string;
+}
+
 export interface getBridgeQuoteRequest {
     fromChainId: number;
     toChainId: number;
@@ -100,6 +117,8 @@ export interface IBridgeQuote {
     fromChainId: number;
     toChainId: number;
     tool: string;
+    feeCosts: IBridgeFeeCost[];
+    slippage: number;
 }
 
 export interface IBridgeRoute {
@@ -224,6 +243,10 @@ const LiFiBridge: IBridge = {
                 fromToken: lifiTokenToIToken(responseData.action.fromToken),
                 toToken: lifiTokenToIToken(responseData.action.toToken),
                 tool: responseData.tool,
+                slippage: responseData.action.slippage,
+                feeCosts: lifiFeeCostsToIBridgeFeeCosts(
+                    responseData.estimate.feeCosts
+                ),
             };
         } catch (e) {
             if (e.response.status === 404) {
@@ -232,7 +255,7 @@ const LiFiBridge: IBridge = {
                     ? err.errors[0].code
                     : 'QUOTE_NOT_FOUND';
                 const message = getMessageFromLiFiError(errorCode);
-                throw new QuoteNotFoundError(message);
+                throw new QuoteNotFoundError(message, err);
             }
             throw e;
         }

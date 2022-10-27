@@ -14,6 +14,7 @@ interface ChainExplorerData {
 const BRIDGE_TX_CATEGORIES = [
     TransactionCategories.BRIDGE,
     TransactionCategories.INCOMING_BRIDGE,
+    TransactionCategories.INCOMING_BRIDGE_REFUND,
 ]
 
 interface BridgeTxDetails {
@@ -22,19 +23,18 @@ interface BridgeTxDetails {
     explorerName?: string
 }
 
-interface BridgeDetails {
+export interface BridgeTransactionsData {
     sendingTransaction?: BridgeTxDetails
     receivingTransaction?: BridgeTxDetails
 }
 
-const useGetBridgeDetails = (
-    transaction: TransactionMeta
-): BridgeDetails | null => {
+const useGetBridgeTransactionsData = (
+    transaction?: TransactionMeta | Partial<TransactionMeta>
+): BridgeTransactionsData | null => {
     const { availableNetworks } = useBlankState()!
 
-    const [bridgeDetails, setBridgeDetails] = useState<BridgeDetails | null>(
-        null
-    )
+    const [bridgeDetails, setBridgeDetails] =
+        useState<BridgeTransactionsData | null>(null)
 
     useEffect(() => {
         async function getChainData(chainId: number) {
@@ -89,7 +89,7 @@ const useGetBridgeDetails = (
         }
 
         async function fillBridgeDetails() {
-            const { bridgeParams } = transaction
+            const { bridgeParams } = transaction!
             if (!bridgeParams) {
                 return
             }
@@ -98,7 +98,7 @@ const useGetBridgeDetails = (
                 bridgeParams!.fromChainId
             )
             const receivingChainData = await getChainData(
-                bridgeParams!.toChainId
+                bridgeParams!.effectiveToChainId ?? bridgeParams!.toChainId
             )
 
             const bridgeDetails = {
@@ -136,4 +136,4 @@ const useGetBridgeDetails = (
     return bridgeDetails
 }
 
-export default useGetBridgeDetails
+export default useGetBridgeTransactionsData

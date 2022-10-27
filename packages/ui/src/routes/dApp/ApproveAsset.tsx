@@ -568,7 +568,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     }
                     onFocus={handleFocus}
                 />
-                <ErrorMessage error={errors.customAllowance?.message} />
+                <ErrorMessage>{errors.customAllowance?.message}</ErrorMessage>
             </div>
         </div>
     )

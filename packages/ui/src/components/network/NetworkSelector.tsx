@@ -1,7 +1,4 @@
 import DropDownSelector from "../input/DropDownSelector"
-import DropdownNetworkDisplay from "./DropdownNetworkDisplay"
-import NetworkDisplay from "./NetworkDisplay"
-import Spinner from "../spinner/Spinner"
 import {
     ChangeEvent,
     Dispatch,
@@ -12,6 +9,8 @@ import {
 } from "react"
 import { IChain } from "@block-wallet/background/utils/types/chain"
 import SearchInput from "../input/SearchInput"
+import NetworkSelectorList from "./NetworkSelectorList"
+import NetworkDropdownDisplay from "./NetworkDropdownDisplay"
 
 interface NetworkSelectorProps {
     networkList: IChain[]
@@ -22,6 +21,8 @@ interface NetworkSelectorProps {
     bottomMargin?: number
     popupMargin?: number
     isLoading?: boolean
+    loadingText?: string
+    emptyText?: string
 }
 
 export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
@@ -33,6 +34,8 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
     bottomMargin = 0,
     popupMargin = 16,
     isLoading = false,
+    loadingText = "",
+    emptyText = "",
 }) => {
     const [searchResult, setSearchResult] = useState<IChain[]>([])
     const [search, setSearch] = useState<string | null>(null)
@@ -90,61 +93,17 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
         setSearch(value)
     }
 
-    // List
-    const NetworkList = ({
-        setActive,
-    }: {
-        setActive?: Dispatch<SetStateAction<boolean>>
-    }) => {
-        return (
-            <>
-                <input
-                    readOnly
-                    name="network"
-                    className="hidden"
-                    value={selectedNetwork?.id}
-                />
-                {Object.values(searchResult).map((network, index) => {
-                    return (
-                        <DropdownNetworkDisplay
-                            key={index.toString()}
-                            network={network}
-                            active={selectedNetwork?.id === network.id}
-                            onClick={() => onAssetClick(network, setActive)}
-                        />
-                    )
-                })}
-                {search && searchResult.length === 0 && (
-                    <div className="p-3">
-                        <p className="text-xs text-black text-center">
-                            No available networks match with the search.
-                        </p>
-                    </div>
-                )}
-            </>
-        )
-    }
-
-    const dropdownDisplay = isLoading ? (
-        <div className="flex items-center justify-center w-full">
-            <Spinner size="24" />
-        </div>
-    ) : !networkList.length ? (
-        <div className="text-base font-semibold">No available networks</div>
-    ) : selectedNetwork ? (
-        <NetworkDisplay
-            network={selectedNetwork}
-            padding={false}
-            transparent={true}
-            bigLogo={true}
-        />
-    ) : (
-        <div className="text-base font-semibold">Select...</div>
-    )
-
     return (
         <DropDownSelector
-            display={dropdownDisplay}
+            display={
+                <NetworkDropdownDisplay
+                    loadingText={loadingText}
+                    emptyText={emptyText}
+                    isEmpty={!networkList.length}
+                    isLoading={isLoading}
+                    selectedNetwork={selectedNetwork}
+                />
+            }
             error={error}
             topMargin={topMargin}
             bottomMargin={bottomMargin}
@@ -158,9 +117,22 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
                     disabled={false}
                     autoFocus={true}
                     onChange={onSearchInputChange}
+                    defaultValue={search || ""}
                 />
             </div>
-            <NetworkList />
+            {search && searchResult.length === 0 ? (
+                <div className="p-3">
+                    <p className="text-xs text-black text-center">
+                        No available networks match with the search.
+                    </p>
+                </div>
+            ) : (
+                <NetworkSelectorList
+                    networks={searchResult}
+                    onAssetClick={onAssetClick}
+                    selectedNetwork={selectedNetwork?.id}
+                />
+            )}
         </DropDownSelector>
     )
 }

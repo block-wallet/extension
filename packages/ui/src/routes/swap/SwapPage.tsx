@@ -514,7 +514,7 @@ const SwapPage = () => {
                         !errors.amount?.message && "hidden"
                     )}
                 >
-                    <ErrorMessage error={errors.amount?.message} />
+                    <ErrorMessage>{errors.amount?.message}</ErrorMessage>
                 </div>
 
                 {/* Switch Inputs */}
@@ -582,7 +582,6 @@ const SwapPage = () => {
                             </p>
                             <GenericTooltip
                                 bottom
-                                centerX
                                 content={
                                     <div className="min-w-max p-1 text-center">
                                         <p className="pb-0.5">

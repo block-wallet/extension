@@ -1,46 +1,60 @@
-import { FunctionComponent, useState } from "react"
-import TransactionDetailsBasic from "./TransactionDetailsBasic"
-import TransactionDetailsAdvanced from "./TransactionDetailsAdvanced"
+import React, { FC, useEffect, useState } from "react"
+import classnames from "classnames"
 import Dialog from "../dialog/Dialog"
-import HorizontalSelect from "../input/HorizontalSelect"
-import CloseIcon from "../icons/CloseIcon"
 import Divider from "../Divider"
-import { Classes, classnames } from "../../styles"
+import CloseIcon from "../icons/CloseIcon"
+import HorizontalSelect from "../input/HorizontalSelect"
 import GenericTooltip from "../label/GenericTooltip"
+import { Classes } from "../../styles"
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
+import BridgeDetilsFees from "./BridgeDetailsFees"
+import BridgeDetailsSummary from "./BridgeDetailsSummary"
+import useGetBridgeTransactionsData from "../../util/hooks/useGetBridgeTransactionsData"
+import TransactionDetailsBasic from "../transactions/TransactionDetailsBasic"
+import isNil from "../../util/isNil"
 
-export type TransactionDetailsProps = {
-    open: boolean
+const BridgeDetails: FC<{
     onClose: () => void
-    transaction: Partial<TransactionMeta>
+    open: boolean
+    transaction?: Partial<TransactionMeta>
     nonce?: number
-}
-
-export type TransactionDetailsTabProps = {
-    transaction: TransactionMeta | Partial<TransactionMeta>
-}
-
-export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
-    open,
-    onClose,
-    transaction,
-    nonce,
-}) => {
+    tab?: "summary" | "fees"
+}> = ({ onClose, open, transaction, tab, nonce }) => {
+    const bridgeTransactionsData = useGetBridgeTransactionsData(transaction)
+    const _nonce = nonce ?? transaction?.transactionParams?.nonce
     const tabs = [
         {
+            id: "summary",
             label: "Summary",
-            component: TransactionDetailsBasic,
+            component: BridgeDetailsSummary,
             disabled: false,
         },
         {
-            label: "Contract",
-            component: TransactionDetailsAdvanced,
-            disabled: !transaction.methodSignature,
+            id: "fees",
+            label: "Fees",
+            component: BridgeDetilsFees,
+            disabled: false,
+        },
+        {
+            id: "transaction",
+            label: "Transaction",
+            component: TransactionDetailsBasic,
+            disabled: isNil(_nonce),
         },
     ]
 
-    const [tab, setTab] = useState(() => tabs[0])
-    const TabComponent = tab.component
+    const [selectedTab, setSelectedTab] = useState(() => tabs[0])
+    const TabComponent = selectedTab.component
+
+    useEffect(() => {
+        if (tab) {
+            setSelectedTab(tabs.find((t) => t.id === tab) || tabs[0])
+        }
+    }, [tab])
+
+    if (!transaction) {
+        return null
+    }
 
     return (
         <Dialog open={open} onClickOutside={onClose}>
@@ -52,27 +66,26 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
                     <CloseIcon size="10" />
                 </div>
             </span>
-
             <div className="flex flex-col w-full h-full">
                 <h2 className="px-2 pr-0 pb-2 mt-2 text-lg font-bold">
-                    Transaction details
+                    Bridge details
                 </h2>
                 <HorizontalSelect
                     options={tabs}
                     value={tab}
                     onChange={(tab) => {
-                        if (tab.disabled) return
-
-                        setTab(tab)
+                        if (!tab.disabled) {
+                            setSelectedTab(tab)
+                        }
                     }}
                     display={(t) => {
                         return (
                             <GenericTooltip
-                                top
+                                bottom
                                 divFull
                                 disabled={!t.disabled}
-                                className="w-38 p-2 left-1"
-                                content="Not available for this transaction"
+                                className="!w-254 p-2 border"
+                                content="Not available"
                             >
                                 {t.label}
                             </GenericTooltip>
@@ -80,12 +93,15 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
                     }}
                     disableStyles
                     optionClassName={(value) =>
-                        `flex-1 flex flex-row items-center justify-center p-3 text-sm group
+                        classnames(
+                            `flex-1 flex flex-row items-center justify-center p-3 text-sm group
                                     ${
-                                        tab.label === value.label
+                                        selectedTab.label === value.label
                                             ? "border-primary-300 border-b-2 text-primary-300 font-bold"
                                             : "border-gray-200 text-gray-500 border-b"
-                                    }`
+                                    }`,
+                            value.disabled && "cursor-default"
+                        )
                     }
                     containerClassName="flex flex-row -ml-3"
                     containerStyle={{
@@ -93,10 +109,14 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
                     }}
                 />
                 <div
-                    className="flex flex-col h-[17rem] overflow-auto py-4 -ml-3 px-3"
+                    className="flex flex-col h-[17rem] overflow-hidden overflow-y-auto py-2 -ml-3 px-3"
                     style={{ width: "calc(100% + 1.5rem)" }}
                 >
-                    <TabComponent transaction={transaction} nonce={nonce} />
+                    <TabComponent
+                        transaction={transaction}
+                        bridgeTransactionsData={bridgeTransactionsData}
+                        nonce={_nonce}
+                    />
                 </div>
             </div>
             <div className="-mx-3">
@@ -113,4 +133,4 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
     )
 }
 
-export default TransactionDetails
+export default BridgeDetails

@@ -246,6 +246,7 @@ export enum TransactionCategories {
     EXCHANGE = "exchange",
     BRIDGE = "bridge",
     INCOMING_BRIDGE = "incoming_bridge",
+    INCOMING_BRIDGE_REFUND = "incoming_bridge_refund",
     // Category that temporarely represents receiving transactions in a bridge operation:
     INCOMING_BRIDGE_PLACEHOLDER = "incoming_bridge_placeholder",
 }
@@ -397,12 +398,17 @@ export enum BridgeSubstatus {
     WAIT_DESTINATION_TRANSACTION = "WAIT_DESTINATION_TRANSACTION",
     BRIDGE_NOT_AVAILABLE = "BRIDGE_NOT_AVAILABLE",
     CHAIN_NOT_AVAILABLE = "CHAIN_NOT_AVAILABLE",
+    UNKNOWN_ERROR = "UNKNOWN_ERROR",
     NOT_PROCESSABLE_REFUND_NEEDED = "NOT_PROCESSABLE_REFUND_NEEDED",
     REFUND_IN_PROGRESS = "REFUND_IN_PROGRESS",
-    UNKNOWN_ERROR = "UNKNOWN_ERROR",
 
     //Substatus of Done state
     COMPLETED = "COMPLETED",
     PARTIAL = "PARTIAL",
     REFUNDED = "REFUNDED",
+}
+
+export enum QuoteFeeStatus {
+    OK = "OK",
+    INSUFFICIENT_BALANCE_TO_COVER_FEES = "INSUFFICIENT_BALANCE_TO_COVER_FEES",
 }

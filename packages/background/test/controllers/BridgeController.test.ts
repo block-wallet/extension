@@ -2,8 +2,8 @@ import BlockFetchController from '@block-wallet/background/controllers/block-upd
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
 import BridgeController, {
     BridgeAllowanceCheck,
-    BridgeQuoteRequest,
     GetBridgeQuoteResponse,
+    GetBridgeQuoteNotFoundResponse,
 } from '@block-wallet/background/controllers/BridgeController';
 import {
     TokenController,
@@ -470,7 +470,49 @@ describe('Bridge Controller', () => {
                 });
                 it('Should return QuoteNotFound error if there is no quote', async () => {
                     quoteSandbox.restore();
-                    //mock errored query
+                    const errorMessage = 'quote not found';
+                    const errors = [
+                        {
+                            errorType: 'NOT_FOUND',
+                            code: '123',
+                            action: {
+                                fromChainId: 123,
+                                toChainId: 123,
+                                fromToken: {
+                                    address:
+                                        '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                                    decimals: 18,
+                                    logo: 'logo1',
+                                    chainId: 1,
+                                    name: 'eth',
+                                    symbol: 'GETH',
+                                    type: '',
+                                    coinKey: 'coin',
+                                    priceUSD: 1,
+                                    logoURI: 'logo.png',
+                                },
+                                toToken: {
+                                    address:
+                                        '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                                    decimals: 18,
+                                    logo: 'logo1',
+                                    chainId: 1,
+                                    name: 'eth',
+                                    symbol: 'GETH',
+                                    type: '',
+                                    coinKey: 'coin',
+                                    priceUSD: 2,
+                                    logoURI: 'logo.png',
+                                },
+                                fromAmount: 'asd',
+                                slippage: 123,
+                                toAddress:
+                                    '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                            },
+                            tool: 'tool',
+                            message: 'message',
+                        },
+                    ];
                     quoteSandbox
                         .stub(BridgeAPI.LIFI_BRIDGE, 'getQuote')
                         .withArgs({
@@ -485,27 +527,28 @@ describe('Bridge Controller', () => {
                             referrer: BRIDGE_REFERRER_ADDRESS,
                         })
                         .throwsException(
-                            new QuoteNotFoundError('Quote not found', {
-                                errors: [],
-                                message: '',
+                            new QuoteNotFoundError('quote not found', {
+                                errors: errors,
+                                message: errorMessage,
                             })
                         );
-                    const err = await expectThrowsAsync(async () => {
-                        await bridgeController.getQuote(
-                            BridgeImplementation.LIFI_BRIDGE,
-                            {
-                                toChainId: 1,
-                                fromTokenAddress: 'token_a_g',
-                                toTokenAddress: 'random_token',
-                                slippage: 0.01,
-                                fromAddress:
-                                    '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
-                                fromAmount: '10000',
-                            }
-                        );
-                    });
-                    expect(err).not.to.be.undefined;
-                    expect(err).to.equal('Quote not found');
+
+                    const quoteResponse = (await bridgeController.getQuote(
+                        BridgeImplementation.LIFI_BRIDGE,
+                        {
+                            toChainId: 1,
+                            fromTokenAddress: 'token_a_g',
+                            toTokenAddress: 'random_token',
+                            slippage: 0.01,
+                            fromAddress:
+                                '0x220bdA5c8994804Ac96ebe4DF184d25e5c2196D4',
+                            fromAmount: '10000',
+                            referrer: BRIDGE_REFERRER_ADDRESS,
+                        }
+                    )) as GetBridgeQuoteNotFoundResponse;
+                    expect(quoteResponse).not.to.be.undefined;
+                    expect(quoteResponse.message).to.equal(errorMessage);
+                    expect(quoteResponse.errors).to.equal(errors);
                 });
                 it('Should return a valid quote without checking allowance', async () => {
                     sandbox.restore();

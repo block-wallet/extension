@@ -286,7 +286,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
             <div className="w-full p-3">
                 <SearchInput
                     name="tokenName"
-                    placeholder="Search Tokens by name or fill in Address"
+                    placeholder="Search tokens by name or address"
                     disabled={false}
                     autoFocus={true}
                     onChange={onSearchInputChange}

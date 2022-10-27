@@ -3,7 +3,6 @@ import BlankProviderController, {
     BlankProviderEvents,
 } from '@block-wallet/background/controllers/BlankProviderController';
 import KeyringControllerDerivated from '@block-wallet/background/controllers/KeyringControllerDerivated';
-import { MockPrivacyController } from '../mocks/mock-deposit-controller';
 import NetworkController from '../../src/controllers/NetworkController';
 import PermissionsController from '@block-wallet/background/controllers/PermissionsController';
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
@@ -151,8 +150,6 @@ describe('Blank Provider Controller', function () {
     let transactionWatcherController: TransactionWatcherController;
 
     beforeEach(function () {
-        const privacyController = MockPrivacyController();
-
         // Instantiate objects
         networkController = getNetworkControllerInstance();
 
@@ -192,8 +189,7 @@ describe('Blank Provider Controller', function () {
                 lockedByTimeout: false,
             },
             mockKeyringController,
-            transactionController,
-            privacyController as unknown as PrivacyAsyncController
+            transactionController
         );
 
         gasPricesController = new GasPricesController(

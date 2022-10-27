@@ -1,3 +1,7 @@
+import {
+    BlankSupportedFeatures,
+    FEATURES,
+} from '../../../../utils/constants/features';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
 
@@ -20,6 +24,13 @@ export default {
                     currentInterval + currentInterval / 2
                 );
 
+                const features: BlankSupportedFeatures[] = [];
+                for (const feature in updatedNetworks[key].features) {
+                    if (feature !== FEATURES.TORNADO) {
+                        features.push(feature as BlankSupportedFeatures);
+                    }
+                }
+
                 // update the value
                 updatedNetworks[key] = {
                     ...updatedNetworks[key],
@@ -27,6 +38,7 @@ export default {
                         ...updatedNetworks[key].actionsTimeIntervals,
                         blockNumberPull: newInterval,
                     },
+                    features: features,
                 };
             }
         }

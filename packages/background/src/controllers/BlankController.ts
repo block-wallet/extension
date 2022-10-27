@@ -17,12 +17,6 @@ import type {
     RequestAccountSelect,
     RequestAddNewSiteWithPermissions,
     RequestAppUnlock,
-    RequestBlankCompliance,
-    RequestBlankCurrencyDepositsCount,
-    RequestBlankDeposit,
-    RequestBlankGetDepositNoteString,
-    RequestBlankWithdrawalFees,
-    RequestBlankHasDepositedFromAddress,
     RequestEnsResolve,
     RequestEnsLookup,
     RequestUDResolve,
@@ -36,8 +30,6 @@ import type {
     RequestAddCustomTokens,
     RequestGetUserTokens,
     RequestPopulateTokenData,
-    RequestBlankPairDepositsCount,
-    RequestBlankWithdraw,
     RequestExternalRequest,
     RequestGetAccountPermissions,
     RequestNetworkChange,
@@ -61,7 +53,6 @@ import type {
     RequestSearchToken,
     RequestShowTestNetworks,
     RequestUpdatePopupTab,
-    RequestCalculateDepositTransactionGasLimit,
     RequestAddAsNewSendTransaction,
     RequestUpdateSendTransactionGas,
     RequestApproveSendTransaction,
@@ -70,8 +61,6 @@ import type {
     RequestRejectTransaction,
     RequestSetIdleTimeout,
     RequestSetIcon,
-    RequestBlankGetInstanceTokenAllowance,
-    RequestCalculateApproveTransactionGasLimit,
     RequestDeleteCustomToken,
     RequestAddressBookGetByAddress,
     RequestAddressBookGet,
@@ -81,7 +70,6 @@ import type {
     RequestAddressBookGetRecentAddresses,
     RequestCompleteSetup,
     RequestAddNetwork,
-    RequestBlankGetLatestDepositDate,
     RequestConfirmDappRequest,
     RequestWalletReset,
     RequestUserSettings,
@@ -97,13 +85,9 @@ import type {
     RequestConnectHardwareWallet,
     RequestGetHardwareWalletAccounts,
     RequestImportHardwareWalletAccounts,
-    RequestGetSubsequentDepositsCount,
-    RequestGetAnonimitySet,
-    RequestBlankDepositsTreeUpdate,
     RequestSetAccountFilters,
     RequestWalletGetHDPath,
     RequestWalletSetHDPath,
-    RequestDepositAllowance,
     RequestRemoveNetwork,
     RequestGetChainData,
     RequestGetRpcChainId,
@@ -118,7 +102,7 @@ import type {
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
-import { BigNumber, utils } from 'ethers';
+import { BigNumber } from 'ethers';
 import BlankStorageStore from '../infrastructure/stores/BlankStorageStore';
 import { Flatten } from '../utils/types/helpers';
 import { Messages } from '../utils/types/communication';
@@ -173,7 +157,6 @@ import {
     ProviderEvents,
     ProviderSetupData,
 } from '@block-wallet/provider/types';
-import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import {
     AddressBookController,
     AddressBookEntry,
@@ -358,21 +341,13 @@ export default class BlankController extends EventEmitter {
 
         this.privacyController = new PrivacyAsyncController({
             networkController: this.networkController,
-            preferencesController: this.preferencesController,
-            transactionController: this.transactionController,
-            tokenOperationsController: this.tokenOperationsController,
-            tokenController: this.tokenController,
-            gasPricesController: this.gasPricesController,
-            blockUpdatesController: this.blockUpdatesController,
-            keyringController: this.keyringController,
             state: initState.BlankDepositController,
         });
 
         this.appStateController = new AppStateController(
             initState.AppStateController,
             this.keyringController,
-            this.transactionController,
-            this.privacyController
+            this.transactionController
         );
 
         this.transactionWatcherController = new TransactionWatcherController(
@@ -715,66 +690,6 @@ export default class BlankController extends EventEmitter {
                 return this.rejectUnconfirmedRequests();
             case Messages.APP.SET_USER_ONLINE:
                 return this.setUserOnline(request as RequestSetUserOnline);
-            case Messages.BLANK.DEPOSIT:
-                return this.blankDeposit(request as RequestBlankDeposit);
-            case Messages.BLANK.DEPOSIT_ALLOWANCE:
-                return this.blankDepositAllowance(
-                    request as RequestDepositAllowance
-                );
-            case Messages.BLANK.CALCULATE_DEPOSIT_TRANSACTION_GAS_LIMIT:
-                return this.calculateDepositTransactionGasLimit(
-                    request as RequestCalculateDepositTransactionGasLimit
-                );
-            case Messages.BLANK.WITHDRAW:
-                return this.blankWithdraw(request as RequestBlankWithdraw);
-            case Messages.BLANK.COMPLIANCE:
-                return this.getComplianceInformation(
-                    request as RequestBlankCompliance
-                );
-            case Messages.BLANK.PAIR_DEPOSITS_COUNT:
-                return this.getPairDepositsCount(
-                    request as RequestBlankPairDepositsCount
-                );
-            case Messages.BLANK.CURRENCY_DEPOSITS_COUNT:
-                return this.getCurrencyDepositsCount(
-                    request as RequestBlankCurrencyDepositsCount
-                );
-            case Messages.BLANK.GET_UNSPENT_DEPOSITS:
-                return this.getUnspentDeposits();
-            case Messages.BLANK.GET_DEPOSIT_NOTE_STRING:
-                return this.getDepositNoteString(
-                    request as RequestBlankGetDepositNoteString
-                );
-            case Messages.BLANK.UPDATE_SPENT_NOTES:
-                return this.updateNotesSpentState();
-            case Messages.BLANK.UPDATE_DEPOSITS_TREE:
-                return this.updateDepositsTree(
-                    request as RequestBlankDepositsTreeUpdate
-                );
-            case Messages.BLANK.GET_INSTANCE_ALLOWANCE:
-                return this.getTornadoInstanceAllowance(
-                    request as RequestBlankGetInstanceTokenAllowance
-                );
-            case Messages.BLANK.GET_WITHDRAWAL_FEES:
-                return this.getWithdrawalFees(
-                    request as RequestBlankWithdrawalFees
-                );
-            case Messages.BLANK.HAS_DEPOSITED_FROM_ADDRESS:
-                return this.hasDepositedFromAddress(
-                    request as RequestBlankHasDepositedFromAddress
-                );
-            case Messages.BLANK.FORCE_DEPOSITS_IMPORT:
-                return this.forceDepositsImport();
-            case Messages.BLANK.GET_LATEST_DEPOSIT_DATE:
-                return this.getLatestDepositDate(
-                    request as RequestBlankGetLatestDepositDate
-                );
-            case Messages.BLANK.GET_ANONIMITY_SET:
-                return this.getAnonimitySet(request as RequestGetAnonimitySet);
-            case Messages.BLANK.GET_SUBSEQUENT_DEPOSITS_COUNT:
-                return this.getSubsequentDepositsCount(
-                    request as RequestGetSubsequentDepositsCount
-                );
             case Messages.DAPP.CONFIRM_REQUEST:
                 return this.confirmDappRequest(
                     request as RequestConfirmDappRequest
@@ -893,10 +808,6 @@ export default class BlankController extends EventEmitter {
             case Messages.TRANSACTION.CALCULATE_SEND_TRANSACTION_GAS_LIMIT:
                 return this.calculateSendTransactionGasLimit(
                     request as RequestCalculateSendTransactionGasLimit
-                );
-            case Messages.TRANSACTION.CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT:
-                return this.calculateApproveTransactionGasLimit(
-                    request as RequestCalculateApproveTransactionGasLimit
                 );
             case Messages.TRANSACTION.CANCEL_TRANSACTION:
                 return this.cancelTransaction(
@@ -1109,60 +1020,6 @@ export default class BlankController extends EventEmitter {
      */
     public async getAccountBalance(account: string): Promise<BigNumber> {
         return this.networkController.getProvider().getBalance(account);
-    }
-
-    /**
-     * It triggers the deposits tree update for the current network
-     * (used to update the deposits tree and calculate the subsequent deposits accurately)
-     */
-    public async updateDepositsTree({
-        pair,
-    }: RequestBlankDepositsTreeUpdate): Promise<void> {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        return blankDepositController.updateDepositsTree(pair);
-    }
-
-    /**
-     * It gets the subsequent deposits from the user's most recent for a given pair.
-     * @param pair The pair to get subsequent deposits for.
-     *
-     * @returns If successful, it returns the subsequent deposits.
-     */
-    public async getSubsequentDepositsCount({
-        pair,
-    }: RequestGetSubsequentDepositsCount): Promise<number | undefined> {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        return blankDepositController.getPairSubsequentDepositsCount(pair);
-    }
-
-    /**
-     * It gets the pair's pool anonimity set.
-     *
-     * @param pair The pair to get the anonimity set for.
-     * @returns If successful, it returns the anonimity set.
-     */
-    public async getAnonimitySet({
-        pair,
-    }: RequestGetAnonimitySet): Promise<number> {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        return blankDepositController.getPairAnonimitySet(pair);
-    }
-
-    /**
-     * It returns the date of the latest deposit made
-     * for the specified currency/amount pair
-     *
-     * @param pair The currency amount pair to look for
-     */
-    public async getLatestDepositDate({
-        pair,
-    }: RequestBlankGetLatestDepositDate): Promise<Date> {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        return blankDepositController.getLatestDepositDate(pair);
     }
 
     /**
@@ -1474,84 +1331,6 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
-     * It forces an asynchronous deposits reconstruction
-     * The vault must be initialized in order to do so
-     */
-    private async forceDepositsImport() {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        blankDepositController.importDeposits();
-    }
-
-    /**
-     * It returns the withdrawal operation gas cost
-     */
-    private async getWithdrawalFees({ pair }: RequestBlankWithdrawalFees) {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        return blankDepositController.getWithdrawalFees(pair);
-    }
-    /**
-     * It checks for possible spent notes and updates their internal state
-     */
-    private async updateNotesSpentState() {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        return blankDepositController.updateNotesSpentState();
-    }
-
-    /**
-     * It returns the deposit formatted note
-     */
-    private async getDepositNoteString(
-        request: RequestBlankGetDepositNoteString
-    ) {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        return blankDepositController.getDepositNoteString(request.id);
-    }
-
-    /**
-     * It returns the list of unspent deposits ordered by timestamp
-     * with their notes string removed
-     */
-    private async getUnspentDeposits() {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        return blankDepositController.getDeposits();
-    }
-
-    /**
-     * It returns the currency/amount pair unspent deposits count
-     */
-    private async getCurrencyDepositsCount(
-        request: RequestBlankCurrencyDepositsCount
-    ) {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        return blankDepositController.getCurrencyDepositsCount(
-            request.currency
-        );
-    }
-
-    /**
-     * It returns the currency/amount pair unspent deposits count
-     */
-    private async getPairDepositsCount(request: RequestBlankPairDepositsCount) {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        return blankDepositController.getUnspentDepositsCount(request.pair);
-    }
-
-    private async getTornadoInstanceAllowance({
-        pair,
-    }: RequestBlankGetInstanceTokenAllowance): Promise<BigNumber> {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        return blankDepositController.getInstanceTokenAllowance(pair);
-    }
-
-    /**
      * Method to confirm a transaction
      *
      * @param id - id of the transaction being confirmed.
@@ -1620,184 +1399,6 @@ export default class BlankController extends EventEmitter {
             transactionId
         );
     };
-
-    /**
-     * It returns information of a deposit for compliance purposes
-     */
-    private async getComplianceInformation(request: RequestBlankCompliance) {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        const deposit = await blankDepositController.getDeposit(request.id);
-        return blankDepositController.getComplianceInformation(deposit);
-    }
-
-    /**
-     * hasDepositedFromAddress
-     *
-     * @returns Whether or not the user has made at least one deposit from this address in the past
-     */
-    private async hasDepositedFromAddress({
-        pair,
-        withdrawAddress,
-    }: RequestBlankHasDepositedFromAddress) {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        let depositsMadeFromWithdrawalAddress = (
-            await blankDepositController.getDeposits(false)
-        ).filter((d) => d.depositAddress === withdrawAddress);
-
-        // If pair was provided filter for that as well
-        if (pair) {
-            depositsMadeFromWithdrawalAddress =
-                depositsMadeFromWithdrawalAddress.filter(
-                    (d) =>
-                        d.pair.amount === pair.amount &&
-                        d.pair.currency === pair.currency
-                );
-        }
-
-        return depositsMadeFromWithdrawalAddress.length !== 0;
-    }
-
-    /**
-     * It makes a Blank withdrawal from the oldest deposit note
-     * of the specified currency amount pair
-     *
-     * @param request The Blank withdraw request
-     */
-    private async blankWithdraw({
-        pair,
-        accountAddressOrIndex,
-    }: RequestBlankWithdraw) {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-        // Pick a deposit randomly
-        const deposit = await blankDepositController.getDepositToWithdraw(pair);
-
-        let address = undefined;
-        if (typeof accountAddressOrIndex === 'string') {
-            // If it is an address, check if it's valid
-            if (!utils.isAddress(accountAddressOrIndex)) {
-                throw new Error('Invalid address');
-            }
-            address = accountAddressOrIndex;
-        } else if (typeof accountAddressOrIndex === 'number') {
-            const account =
-                await this.accountTrackerController.getAccountByIndex(
-                    accountAddressOrIndex
-                );
-
-            address = account.address;
-        }
-
-        // Trigger withdraw
-        try {
-            const hash = await blankDepositController.withdraw(
-                deposit,
-                address
-            );
-            return hash;
-        } catch (e: any) {
-            // If we detect a backend error, we parse it and throw the proper error
-            if ('error' in e) {
-                throw new Error(
-                    (e.error?.body
-                        ? JSON.parse(e.error?.body).error?.message
-                        : e.reason) ?? e.message
-                );
-            }
-
-            throw e;
-        }
-    }
-
-    /**
-     * It makes a Blank deposit
-     *
-     * @param request The Blank deposit request
-     */
-    private async blankDeposit({
-        pair,
-        feeData,
-        customNonce,
-    }: RequestBlankDeposit) {
-        try {
-            const blankDepositController =
-                await this.privacyController.getBlankDepositController();
-            const hash = await blankDepositController.deposit(
-                pair,
-                feeData,
-                customNonce
-            );
-            return hash;
-        } catch (e: any) {
-            // If we detect a backend error, we parse it and throw the proper error
-            if ('error' in e) {
-                throw new Error(
-                    (e.error?.body
-                        ? JSON.parse(e.error?.body).error?.message
-                        : e.reason) ?? e.message
-                );
-            }
-
-            throw e;
-        }
-    }
-
-    /**
-     * Submits an approval transaction to setup asset allowance
-     */
-    private async blankDepositAllowance({
-        allowance,
-        customNonce,
-        feeData,
-        pair,
-    }: RequestDepositAllowance) {
-        try {
-            const blankDepositController =
-                await this.privacyController.getBlankDepositController();
-            return blankDepositController.depositAllowance(
-                BigNumber.from(allowance),
-                feeData,
-                pair,
-                customNonce
-            );
-        } catch (e: any) {
-            // If we detect a backend error, we parse it and throw the proper error
-            if ('error' in e) {
-                throw new Error(
-                    (e.error?.body
-                        ? JSON.parse(e.error?.body).error?.message
-                        : e.reason) ?? e.message
-                );
-            }
-
-            throw e;
-        }
-    }
-
-    private async calculateDepositTransactionGasLimit({
-        currencyAmountPair,
-    }: RequestCalculateDepositTransactionGasLimit): Promise<TransactionGasEstimation> {
-        try {
-            const blankDepositController =
-                await this.privacyController.getBlankDepositController();
-            return blankDepositController.calculateDepositTransactionGasLimit(
-                currencyAmountPair
-            );
-        } catch (e: any) {
-            // If we detect a backend error, we parse it and throw the proper error
-            if ('error' in e) {
-                throw new Error(
-                    (e.error?.body
-                        ? JSON.parse(e.error?.body).error?.message
-                        : e.reason) ?? e.message
-                );
-            }
-
-            throw e;
-        }
-    }
 
     public shouldInject(): boolean {
         return this.preferencesController.settings.defaultBrowserWallet;
@@ -2332,35 +1933,6 @@ export default class BlankController extends EventEmitter {
      */
     private async getLatestGasPrice(): Promise<BigNumber> {
         return BigNumber.from(this.gasPricesController.getFeeData().gasPrice!);
-    }
-
-    /**
-     * Calculate the gas limit for an approve transaction
-     */
-    private async calculateApproveTransactionGasLimit({
-        tokenAddress,
-        spender,
-        amount,
-    }: RequestCalculateApproveTransactionGasLimit): Promise<TransactionGasEstimation> {
-        const blankDepositController =
-            await this.privacyController.getBlankDepositController();
-
-        const approveTransaction = new ApproveTransaction({
-            transactionController: this.transactionController,
-            preferencesController: this.preferencesController,
-            networkController: this.networkController,
-        });
-
-        spender =
-            spender === 'deposit'
-                ? blankDepositController.proxyContractAddress
-                : spender;
-
-        return approveTransaction.calculateTransactionGasLimit({
-            tokenAddress,
-            spender,
-            amount,
-        });
     }
 
     private cancelTransaction({

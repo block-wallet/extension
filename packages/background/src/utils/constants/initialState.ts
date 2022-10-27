@@ -9,10 +9,6 @@ import { AccountTrackerState } from '../../controllers/AccountTrackerController'
 import { AppStateControllerState } from '../../controllers/AppStateController';
 import { OnboardingControllerState } from '../../controllers/OnboardingController';
 import { PreferencesControllerState } from '../../controllers/PreferencesController';
-import type {
-    BlankDepositControllerStoreState,
-    BlankDepositControllerUIStoreState,
-} from '../../controllers/blank-deposit/BlankDepositController';
 import { ExchangeRatesControllerState } from '../../controllers/ExchangeRatesController';
 import { GasPricesControllerState } from '../../controllers/GasPricesController';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -43,6 +39,10 @@ import {
 } from '../../controllers/block-updates/BlockFetchController';
 import { SIGN_TRANSACTION_TIMEOUT } from './time';
 import { TransactionWatcherControllerState } from '@block-wallet/background/controllers/TransactionWatcherController';
+import {
+    BlankDepositControllerStoreState,
+    BlankDepositControllerUIStoreState,
+} from '@block-wallet/background/controllers/blank-deposit/types';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;

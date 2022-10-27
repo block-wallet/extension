@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import log from 'loglevel';
 import { BaseController } from '../infrastructure/BaseController';
-import { PrivacyAsyncController } from './blank-deposit/PrivacyAsyncController';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 import TransactionController from './transactions/TransactionController';
 
@@ -18,8 +17,7 @@ export default class AppStateController extends BaseController<AppStateControlle
     constructor(
         initState: AppStateControllerState,
         private readonly _keyringController: KeyringControllerDerivated,
-        private readonly _transactionController: TransactionController,
-        private readonly _privacyAsyncController: PrivacyAsyncController
+        private readonly _transactionController: TransactionController
     ) {
         super(initState);
 
@@ -84,9 +82,6 @@ export default class AppStateController extends BaseController<AppStateControlle
         try {
             // Lock vault
             await this._keyringController.setLocked();
-
-            // Lock deposits
-            await this._privacyAsyncController.lock();
 
             // Removing login token from storage
             // @ts-ignore

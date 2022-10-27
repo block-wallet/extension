@@ -1,3 +1,7 @@
+import { BigNumber } from 'ethers';
+import { ContractMethodSignature } from '../transactions/ContractSignatureParser';
+import { TransactionReceipt } from '@ethersproject/providers';
+
 /**
  * List of known supported networks
  */
@@ -203,3 +207,76 @@ export const DEFAULT_TORNADO_CONFIRMATION = 4;
  * Default transaction receipt timeout
  */
 export const DEFAULT_TX_RECEIPT_TIMEOUT = 60000;
+
+//
+export interface BlankDepositControllerStoreState {
+    pendingWithdrawals: PendingWithdrawalsStore;
+    vaultState: { vault: string };
+}
+export enum PendingWithdrawalStatus {
+    UNSUBMITTED = 'UNSUBMITTED',
+    PENDING = 'PENDING',
+    CONFIRMED = 'CONFIRMED',
+    FAILED = 'FAILED',
+    REJECTED = 'REJECTED',
+    MINED = 'MINED',
+}
+
+export type PendingWithdrawal = {
+    pendingId: string;
+    relayerUrl: string;
+    jobId: string;
+    depositId: string;
+    pair: CurrencyAmountPair;
+    toAddress: string;
+    time: number;
+    fee?: BigNumber;
+    decimals?: number;
+    transactionReceipt?: TransactionReceipt;
+    errMessage?: string;
+    transactionHash?: string;
+    status?: PendingWithdrawalStatus;
+    statusMessage?: string;
+    chainId: number;
+    data?: string;
+    methodSignature?: ContractMethodSignature;
+    value?: BigNumber;
+    nonce?: number;
+    gasLimit?: BigNumber;
+    gasPrice?: BigNumber;
+    maxFeePerGas?: BigNumber;
+    maxPriorityFeePerGas?: BigNumber;
+};
+
+export type PendingWithdrawalsStore = {
+    [network in AvailableNetworks]: {
+        pending: PendingWithdrawal[];
+    };
+};
+
+export type PairCount = {
+    pair: CurrencyAmountPair;
+    count: number;
+}[];
+
+export interface BlankDepositControllerUIStoreState {
+    previousWithdrawals: {
+        depositId: string;
+        time: number;
+        pair: CurrencyAmountPair;
+    }[];
+    depositsCount: {
+        [key in KnownCurrencies]?: PairCount;
+    };
+    pendingWithdrawals: PendingWithdrawal[];
+    pendingDeposits: {
+        [currency in KnownCurrencies]?: {
+            [amount in CurrencyAmountType[currency]]: boolean;
+        };
+    };
+    isVaultInitialized: boolean;
+    isImportingDeposits: boolean;
+    areDepositsPending: boolean;
+    areWithdrawalsPending: boolean;
+    importingErrors: string[];
+}

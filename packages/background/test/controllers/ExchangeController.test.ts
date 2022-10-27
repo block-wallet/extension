@@ -19,7 +19,6 @@ import {
 } from '@block-wallet/background/controllers/transactions/utils/types';
 import { PreferencesController } from '../../src/controllers/PreferencesController';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
-import { TypedTransaction } from '@ethereumjs/tx';
 import { expect } from 'chai';
 import { expectThrowsAsync } from 'test/utils/expectThrowsAsync.test';
 import { getNetworkControllerInstance } from '../mocks/mock-network-instance';
@@ -32,6 +31,7 @@ import {
 } from '../../src/controllers/erc-20/TokenController';
 import { BASE_SWAP_FEE } from '../../src/utils/types/1inch';
 import httpClient from './../../src/utils/http';
+import { TypedTransaction } from '@ethereumjs/tx';
 
 const BLANK_TOKEN_ADDRESS = '0x41a3dba3d677e573636ba691a70ff2d606c29666';
 

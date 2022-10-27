@@ -100,7 +100,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         tab?: "summary" | "fees"
     }>({ isOpen: false })
     // State
-    const [error, setError] = useState<string | undefined>(undefined)
+    const [routesError, setRoutesError] = useState<string | undefined>(
+        undefined
+    )
     const [bridgeQuoteError, setBridgeQuoteError] = useState<
         BridgeErrorType | undefined
     >(undefined)
@@ -286,7 +288,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
     useEffect(() => {
         let isValidFetch = true
-        setError(undefined)
+        setRoutesError(undefined)
         setBridgeQuoteError(undefined)
         const fetchRoutes = async () => {
             setIsFetchingRoutes(true)
@@ -300,7 +302,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 if (isValidFetch) {
                     const { routes } = routesRes
                     if (!routes.length) {
-                        setError(
+                        setRoutesError(
                             "There are no routes available for the selected asset."
                         )
                     }
@@ -322,7 +324,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 }
             } catch (error) {
                 if (isValidFetch) {
-                    setError(
+                    setRoutesError(
                         capitalize(error.message || "Error fetching routes.")
                     )
                     setAvailableRoutes([])
@@ -346,7 +348,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
     useEffect(() => {
         let isValidFetch = true
-        setError(undefined)
         setBridgeQuoteError(undefined)
         const fetchQuote = async () => {
             setisFetchingQuote(true)
@@ -461,7 +462,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 ? "Approve"
                                 : "Review"
                         }
-                        disabled={!!(error || bridgeQuoteError || !quote)}
+                        disabled={!!(routesError || bridgeQuoteError || !quote)}
                         isLoading={isFetchingRoutes || isFetchingQuote}
                         onClick={onSubmit}
                     />
@@ -696,8 +697,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         details={quoteNotFoundErrors}
                     />
                 )}
-                {error && !bridgeQuoteError && (
-                    <ErrorMessage className="mt-4">{error}</ErrorMessage>
+                {routesError && !bridgeQuoteError && (
+                    <ErrorMessage className="mt-4">{routesError}</ErrorMessage>
                 )}
                 {quote && !bridgeQuoteError && (
                     <ClickableText

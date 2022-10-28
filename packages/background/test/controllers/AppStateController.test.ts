@@ -62,7 +62,7 @@ describe('AppState Controller', function () {
             {
                 idleTimeout: defaultIdleTimeout,
                 isAppUnlocked: true,
-                lastActiveTime: 0,
+                lastActiveTime: new Date().getTime(),
                 lockedByTimeout: false,
             },
             mockKeyringController,
@@ -138,6 +138,6 @@ describe('AppState Controller', function () {
                 appStateController.store.getState().isAppUnlocked
             ).to.be.false;
             done();
-        }, 700);
+        }, 1000);
     });
 });

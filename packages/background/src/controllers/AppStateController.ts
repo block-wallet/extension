@@ -85,7 +85,7 @@ export default class AppStateController extends BaseController<AppStateControlle
 
             // Removing login token from storage
             // @ts-ignore
-            chrome.storage.session.clear();
+            chrome.storage.session && chrome.storage.session.clear();
 
             // Update controller state
             this.store.updateState({ isAppUnlocked: false, lockedByTimeout });
@@ -107,9 +107,10 @@ export default class AppStateController extends BaseController<AppStateControlle
             );
 
             // @ts-ignore
-            chrome.storage.session.set({ loginToken }).catch((err: any) => {
-                log.error('error setting loginToken', err);
-            });
+            chrome.storage.session &&
+                chrome.storage.session.set({ loginToken }).catch((err: any) => {
+                    log.error('error setting loginToken', err);
+                });
 
             await this._postLoginAction();
         } catch (error) {
@@ -121,17 +122,18 @@ export default class AppStateController extends BaseController<AppStateControlle
         const { isAppUnlocked } = this.store.getState();
         if (!isAppUnlocked) {
             // @ts-ignore
-            chrome.storage.session.get(
-                ['loginToken'],
-                async ({ loginToken }: { [key: string]: string }) => {
-                    if (loginToken) {
-                        await this._keyringController.submitEncryptionKey(
-                            loginToken
-                        );
-                        await this._postLoginAction();
+            chrome.storage.session &&
+                chrome.storage.session.get(
+                    ['loginToken'],
+                    async ({ loginToken }: { [key: string]: string }) => {
+                        if (loginToken) {
+                            await this._keyringController.submitEncryptionKey(
+                                loginToken
+                            );
+                            await this._postLoginAction();
+                        }
                     }
-                }
-            );
+                );
         }
     };
 

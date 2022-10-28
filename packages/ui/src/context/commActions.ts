@@ -3,11 +3,6 @@ import {
     AccountInfo,
     DeviceAccountInfo,
 } from "@block-wallet/background/controllers/AccountTrackerController"
-import { ComplianceInfo } from "@block-wallet/background/controllers/blank-deposit/infrastructure/IBlankDepositService"
-import {
-    CurrencyAmountPair,
-    KnownCurrencies,
-} from "@block-wallet/background/controllers/blank-deposit/types"
 import {
     MessageTypes,
     RequestTypes,
@@ -15,7 +10,6 @@ import {
     ResponseGetState,
     StateSubscription,
     SubscriptionMessageTypes,
-    ResponseBlankCurrencyDepositsCount,
     RequestAddNetwork,
     RequestEditNetwork,
 } from "@block-wallet/background/utils/types/communication"
@@ -24,7 +18,6 @@ import {
     ITokens,
     Token,
 } from "@block-wallet/background/controllers/erc-20/Token"
-import { IBlankDeposit } from "@block-wallet/background/controllers/blank-deposit/BlankDeposit"
 import { SiteMetadata } from "@block-wallet/provider/types"
 import {
     TransactionAdvancedData,
@@ -684,186 +677,12 @@ export const resetWallet = async (
 }
 
 /**
- * It makes a Blank deposit
- *
- * @param pair The currency/amount pair
- * @param feeData gas fee data
- * @param customNonce Custom transaction nonce
- */
-export const makeBlankDeposit = async (
-    pair: CurrencyAmountPair,
-    feeData: TransactionFeeData,
-    customNonce?: number
-): Promise<string> => {
-    return sendMessage(Messages.BLANK.DEPOSIT, {
-        pair,
-        feeData,
-        customNonce,
-    })
-}
-
-/**
- * Submits an approval transaction to setup asset allowance
- *
- * @param allowance User selected allowance
- * @param feeData Deposit gas fee data
- * @param pair The deposit currency and amount values
- * @param customNonce Custom transaction nonce
- */
-export const blankDepositAllowance = async (
-    allowance: BigNumber,
-    feeData: TransactionFeeData,
-    pair: CurrencyAmountPair,
-    customNonce?: number
-): Promise<boolean> => {
-    return sendMessage(Messages.BLANK.DEPOSIT_ALLOWANCE, {
-        allowance,
-        feeData,
-        pair,
-        customNonce,
-    })
-}
-
-/**
- * Obtains the underlying token allowance of a deposit contract instance
- *
- * @param pair The pair associated to the contract instance
- * @returns The specified pair instance underlying token allowance
- */
-export const getDepositInstanceAllowance = async (pair: CurrencyAmountPair) => {
-    return sendMessage(Messages.BLANK.GET_INSTANCE_ALLOWANCE, {
-        pair,
-    })
-}
-
-/**
- * It makes a Blank withdrawal
- *
- * @param pair The currency/amount pair
- * @param address The withdrawal recipient (Defaults to selected address)
- */
-export const makeBlankWithdrawal = async (
-    pair: CurrencyAmountPair,
-    accountAddressOrIndex?: string | number
-): Promise<string> => {
-    return sendMessage(Messages.BLANK.WITHDRAW, {
-        pair,
-        accountAddressOrIndex,
-    })
-}
-
-/**
- * It returns compliance information for the specified deposit
- *
- * @param id The Deposit Id
- */
-export const getDepositComplianceInformation = async (
-    id: string
-): Promise<ComplianceInfo> => {
-    return sendMessage(Messages.BLANK.COMPLIANCE, { id })
-}
-
-/**
- * It returns the unspent deposit count for the specified pair
- *
- * @param pair The currency/amount pair
- */
-export const getDepositsCount = async (
-    pair: CurrencyAmountPair
-): Promise<number> => {
-    return sendMessage(Messages.BLANK.PAIR_DEPOSITS_COUNT, { pair })
-}
-
-/**
- * It returns the unspent deposit count for the specified pair
- *
- * @param pair The currency/amount pair
- */
-export const getCurrencyDepositsCount = async (
-    currency: KnownCurrencies
-): Promise<ResponseBlankCurrencyDepositsCount> => {
-    return sendMessage(Messages.BLANK.CURRENCY_DEPOSITS_COUNT, { currency })
-}
-
-/**
- * It returns the list of unspent deposits
- */
-export const getUnspentDeposits = async (): Promise<IBlankDeposit[]> => {
-    return sendMessage(Messages.BLANK.GET_UNSPENT_DEPOSITS)
-}
-
-/**
- * It obtains the Deposit formatted note
- *
- * @param id The Deposit id
- */
-export const getDepositFormattedNote = async (id: string): Promise<string> => {
-    return sendMessage(Messages.BLANK.GET_DEPOSIT_NOTE_STRING, { id })
-}
-
-/**
- * It returns the withdrawal operation fees
- */
-export const getWithdrawalFees = async (pair: CurrencyAmountPair) => {
-    return sendMessage(Messages.BLANK.GET_WITHDRAWAL_FEES, { pair })
-}
-
-/**
  * Updates the popup tab to focus when opening the popup next time
  */
 export const updatePopupTab = async (popupTab: PopupTabs): Promise<void> => {
     return sendMessage(Messages.APP.UPDATE_POPUP_TAB, {
         popupTab,
     })
-}
-
-/**
- * It forces the deposit reconstruction for the current network
- */
-export const forceDepositsImport = async () => {
-    return sendMessage(Messages.BLANK.FORCE_DEPOSITS_IMPORT)
-}
-
-/**
- * It checks for possible spent notes and updates their internal state
- */
-export const updateNotesSpentState = async () => {
-    return sendMessage(Messages.BLANK.UPDATE_SPENT_NOTES)
-}
-
-/**
- * It triggers the deposits tree update for the current network
- * (used to update the deposits tree and calculate the subsequent deposits accurately)
- */
-export const updateDepositsTree = async (pair: CurrencyAmountPair) => {
-    return sendMessage(Messages.BLANK.UPDATE_DEPOSITS_TREE, { pair })
-}
-
-/**
- * hasDepositedFromAddress
- *
- * @returns Whether or not the user has made at least one deposit from this address in the past
- */
-export const hasDepositedFromAddress = async (
-    withdrawAddress: string,
-    pair?: CurrencyAmountPair
-) => {
-    return sendMessage(Messages.BLANK.HAS_DEPOSITED_FROM_ADDRESS, {
-        pair,
-        withdrawAddress,
-    })
-}
-
-/**
- * It returns the date of the latest deposit made
- * for the specified currency/amount pair
- *
- * @param pair The currency/amount pair
- */
-export const getLatestDepositDate = async (
-    pair: CurrencyAmountPair
-): Promise<Date> => {
-    return sendMessage(Messages.BLANK.GET_LATEST_DEPOSIT_DATE, { pair })
 }
 
 /**
@@ -974,20 +793,6 @@ export const getApproveTransactionGasLimit = async (
             amount,
         }
     )
-}
-
-/**
- * It calculates a Deposit transaction gas limit
- *
- * @param currencyAmountPair The currency amount pair
- * @returns The Deposit estimated gas limit
- */
-export const getDepositTransactionGasLimit = async (
-    currencyAmountPair: CurrencyAmountPair
-): Promise<TransactionGasEstimation> => {
-    return sendMessage(Messages.BLANK.CALCULATE_DEPOSIT_TRANSACTION_GAS_LIMIT, {
-        currencyAmountPair,
-    })
 }
 
 /**
@@ -1420,30 +1225,6 @@ export const getHardwareWalletHDPath = async (
 
 export const getWindowId = () => {
     return sendMessage(Messages.BROWSER.GET_WINDOW_ID)
-}
-
-/**
- * It gets the subsequent deposits from the user's most recent for a given pair.
- * @param pair The pair to get subsequent deposits for.
- *
- * @returns If successful, it returns the subsequent deposits.
- */
-export const getSubsequentDepositsCount = async (pair: CurrencyAmountPair) => {
-    return sendMessage(Messages.BLANK.GET_SUBSEQUENT_DEPOSITS_COUNT, {
-        pair,
-    })
-}
-
-/**
- * It gets the pair's pool anonimity set.
- *
- * @param pair The pair to get the anonimity set for.
- * @returns If successful, it returns the anonimity set.
- */
-export const getAnonimitySet = async (pair: CurrencyAmountPair) => {
-    return sendMessage(Messages.BLANK.GET_ANONIMITY_SET, {
-        pair,
-    })
 }
 
 export const searchChainsByTerm = async (term: string) => {

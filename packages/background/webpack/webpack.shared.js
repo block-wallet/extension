@@ -26,12 +26,6 @@ const plugins = [
     }),
     new webpack.IgnorePlugin({ resourceRegExp: /^worker_threads$/ }),
     new webpack.IgnorePlugin({ resourceRegExp: /^fs$/ }),
-    new webpack.BannerPlugin({
-        banner: 'var window = self;',
-        raw: true,
-        entryOnly: false,
-        test: 'vendors~circuit.prover.js',
-    }),
     new ESLintWebpackPlugin({
         extensions: ['ts'],
         eslintPath: require.resolve('eslint'),

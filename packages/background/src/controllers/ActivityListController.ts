@@ -2,8 +2,8 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { parseUnits } from 'ethers/lib/utils';
 import { BaseController } from '../infrastructure/BaseController';
 import { Network } from '../utils/constants/networks';
-import type { PendingWithdrawal } from './blank-deposit/BlankDepositController';
-import { PrivacyAsyncController } from './blank-deposit/PrivacyAsyncController';
+import { PrivacyAsyncController } from './privacy/PrivacyAsyncController';
+import { PendingWithdrawal } from './privacy/types';
 import NetworkController from './NetworkController';
 import { PreferencesController } from './PreferencesController';
 import { TransactionController } from './transactions/TransactionController';
@@ -27,7 +27,6 @@ export interface IActivityListState {
     };
 }
 
-// Copy of blank-deposit/BlankDepositController
 // PendingWithdrawalStatus for chunking purposes.
 enum PendingWithdrawalStatus {
     UNSUBMITTED = 'UNSUBMITTED',
@@ -41,7 +40,7 @@ enum PendingWithdrawalStatus {
 export class ActivityListController extends BaseController<IActivityListState> {
     constructor(
         private readonly _transactionsController: TransactionController,
-        private readonly _blankDepositsController: PrivacyAsyncController,
+        private readonly _privacyController: PrivacyAsyncController,
         private readonly _preferencesController: PreferencesController,
         private readonly _networkController: NetworkController,
         private readonly _transactionWatcherController: TransactionWatcherController
@@ -50,7 +49,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
 
         // If any of the following stores were updated trigger the ActivityList update
         this._transactionsController.UIStore.subscribe(this.onStoreUpdate);
-        this._blankDepositsController.UIStore.subscribe(this.onStoreUpdate);
+        this._privacyController.UIStore.subscribe(this.onStoreUpdate);
         this._preferencesController.store.subscribe(this.onStoreUpdate);
         this._networkController.store.subscribe(this.onStoreUpdate);
         this._transactionWatcherController.store.subscribe(this.onStoreUpdate);
@@ -244,7 +243,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
         network: Network
     ) {
         const { pendingWithdrawals } =
-            this._blankDepositsController.UIStore.getState();
+            this._privacyController.UIStore.getState();
 
         const { nativeCurrency } = network;
 

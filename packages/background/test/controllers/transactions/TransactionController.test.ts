@@ -416,6 +416,7 @@ describe('Transactions Controller', () => {
                 maxFeePerGas: BigNumber.from('200000000000'),
                 maxPriorityFeePerGas: BigNumber.from('1000000000'),
                 gasPrice: BigNumber.from('100000000000'),
+                lastBaseFeePerGas: null,
             });
 
             sinon.stub(gasPricesController, 'store').get(() => ({

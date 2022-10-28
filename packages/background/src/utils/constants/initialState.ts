@@ -9,10 +9,6 @@ import { AccountTrackerState } from '../../controllers/AccountTrackerController'
 import { AppStateControllerState } from '../../controllers/AppStateController';
 import { OnboardingControllerState } from '../../controllers/OnboardingController';
 import { PreferencesControllerState } from '../../controllers/PreferencesController';
-import type {
-    BlankDepositControllerStoreState,
-    BlankDepositControllerUIStoreState,
-} from '../../controllers/blank-deposit/BlankDepositController';
 import { ExchangeRatesControllerState } from '../../controllers/ExchangeRatesController';
 import { GasPricesControllerState } from '../../controllers/GasPricesController';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -43,6 +39,10 @@ import {
 } from '../../controllers/block-updates/BlockFetchController';
 import { SIGN_TRANSACTION_TIMEOUT } from './time';
 import { TransactionWatcherControllerState } from '@block-wallet/background/controllers/TransactionWatcherController';
+import {
+    PrivacyControllerStoreState,
+    PrivacyControllerUIStoreState,
+} from '@block-wallet/background/controllers/privacy/types';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -51,7 +51,7 @@ export type BlankAppState = {
     OnboardingController: OnboardingControllerState;
     PreferencesController: PreferencesControllerState;
     TransactionController: TransactionControllerState;
-    BlankDepositController: BlankDepositControllerStoreState;
+    BlankDepositController: PrivacyControllerStoreState;
     BlockUpdatesController: BlockUpdatesControllerState;
     ExchangeRatesController: ExchangeRatesControllerState;
     GasPricesController: GasPricesControllerState;
@@ -70,7 +70,7 @@ export type BlankAppUIState = {
     OnboardingController: OnboardingControllerState;
     PreferencesController: PreferencesControllerState;
     TransactionController: TransactionVolatileControllerState;
-    BlankDepositController: BlankDepositControllerUIStoreState;
+    BlankDepositController: PrivacyControllerUIStoreState;
     BlockUpdatesController: BlockUpdatesControllerState;
     ExchangeRatesController: ExchangeRatesControllerState;
     GasPricesController: GasPricesControllerState;
@@ -192,16 +192,19 @@ const initialState: BlankAppState = {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     fast: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     slow: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                 },
             },

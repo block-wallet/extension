@@ -110,7 +110,7 @@ describe('OffChainBlockFetchService', () => {
         it('should return a block number if the service returns ok', async () => {
             sinon.stub(httpClient, 'get').returns(
                 new Promise((resolve, _) => {
-                    resolve({ blockNumber: '50120221117' });
+                    resolve({ bn: '50120221117' });
                 })
             );
 
@@ -128,7 +128,7 @@ describe('OffChainBlockFetchService', () => {
 
             sinon.stub(httpClient, 'get').returns(
                 new Promise((resolve, _) => {
-                    resolve({ blockNumber: mockBlockNumber.toString() });
+                    resolve({ bn: mockBlockNumber.toString() });
                 })
             );
 
@@ -247,7 +247,7 @@ describe('OffChainBlockFetchService', () => {
 
             sinon.stub(httpClient, 'get').returns(
                 new Promise((resolve, _) => {
-                    resolve({ blockNumber: '50120221117' });
+                    resolve({ bn: '50120221117' });
                 })
             );
 
@@ -301,7 +301,7 @@ describe('OffChainBlockFetchService', () => {
             for (let i = 0; i < 200; i++) {
                 stubGet.onCall(i).returns(
                     new Promise((resolve, _) => {
-                        resolve({ blockNumber: i.toString() });
+                        resolve({ bn: i.toString() });
                     })
                 );
             }
@@ -382,7 +382,7 @@ describe('BlockFetchController', () => {
 
             sinon.stub(httpClient, 'get').returns(
                 new Promise((resolve, _) => {
-                    resolve({ blockNumber: '20000' });
+                    resolve({ bn: '20000' });
                 })
             );
 
@@ -475,7 +475,7 @@ describe('BlockFetchController', () => {
                 .onFirstCall()
                 .returns(
                     new Promise((resolve, _) => {
-                        resolve({ blockNumber: '1234' });
+                        resolve({ bn: '1234' });
                     })
                 )
                 .onSecondCall()
@@ -537,7 +537,7 @@ describe('BlockFetchController', () => {
             for (let i = 0; i < 500; i++) {
                 stubGet.onCall(i).returns(
                     new Promise((resolve, _) => {
-                        resolve({ blockNumber: (i + 2000).toString() });
+                        resolve({ bn: (i + 2000).toString() });
                     })
                 );
             }

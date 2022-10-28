@@ -59,13 +59,12 @@ export default class KeyringControllerDerivated extends KeyringController {
     ): Promise<KeyringControllerState> {
         const releaseLock = await this._mutex.acquire();
         try {
-            let vault;
             const currentAccounts = await super.getAccounts();
-            if (currentAccounts.length > 0) {
-                vault = super.fullUpdate();
-            } else {
-                vault = await super.createNewVaultAndKeychain(password);
+            if (currentAccounts.length < 1) {
+                await super.createNewVaultAndKeychain(password);
             }
+
+            const vault = super.fullUpdate();
 
             // Verify keyring
             await this.verifyAccounts();
@@ -157,12 +156,8 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @returns {Promise<string>} Seed phrase.
      */
     @Hasheable
-    public async verifySeedPhrase(
-        @Hash password: string,
-        alreadyHashed?: string
-    ): Promise<string> {
-        // TODO: Remove the second parameter (alreadyHashed) when the tornado code is removed.
-        await super.verifyPassword(alreadyHashed || password);
+    public async verifySeedPhrase(@Hash password: string): Promise<string> {
+        await super.verifyPassword(password);
         await this.verifyAccounts();
 
         const primaryKeyring = super.getKeyringsByType(
@@ -636,6 +631,14 @@ export default class KeyringControllerDerivated extends KeyringController {
 
     private async getMnemonicFromKeyring(keyring: any): Promise<string> {
         const serialized = await keyring.serialize();
-        return String.fromCharCode(...serialized.mnemonic);
+        return bin2String(serialized.mnemonic);
     }
+}
+
+function bin2String(array: number[]) {
+    let result = '';
+    for (let i = 0; i < array.length; i++) {
+        result += String.fromCharCode(array[i]);
+    }
+    return result;
 }

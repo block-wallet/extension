@@ -26,7 +26,7 @@ export type UnionToIntersection<U> = (
 /**
  * It flattens an object one level down
  */
-export type Flatten<T> = Pick<T, NonObjectKeysOf<T>> &
+export type Flatten<T extends Object> = Pick<T, NonObjectKeysOf<T>> &
     UnionToIntersection<ObjectValuesOf<T>>;
 
 export type Full<T> = {

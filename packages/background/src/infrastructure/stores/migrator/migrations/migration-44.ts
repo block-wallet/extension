@@ -1,3 +1,7 @@
+import {
+    BlankSupportedFeatures,
+    FEATURES,
+} from '../../../../utils/constants/features';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
 
@@ -20,6 +24,13 @@ export default {
                     currentInterval + currentInterval / 2
                 );
 
+                const features: BlankSupportedFeatures[] = [];
+                for (const feature in updatedNetworks[key].features) {
+                    if (feature !== FEATURES.TORNADO) {
+                        features.push(feature as BlankSupportedFeatures);
+                    }
+                }
+
                 // update the value
                 updatedNetworks[key] = {
                     ...updatedNetworks[key],
@@ -27,8 +38,34 @@ export default {
                         ...updatedNetworks[key].actionsTimeIntervals,
                         blockNumberPull: newInterval,
                     },
+                    features: features,
                 };
             }
+        }
+
+        const { gasPriceData } = persistedState.GasPricesController;
+        const updatedGasPriceData = { ...gasPriceData };
+
+        for (const c in updatedGasPriceData) {
+            const chainId = parseInt(c);
+
+            const gasPriceData = updatedGasPriceData[chainId];
+            gasPriceData.gasPricesLevels.slow = {
+                ...gasPriceData.gasPricesLevels.slow,
+                lastBaseFeePerGas: null,
+            };
+            gasPriceData.gasPricesLevels.average = {
+                ...gasPriceData.gasPricesLevels.average,
+                lastBaseFeePerGas: null,
+            };
+            gasPriceData.gasPricesLevels.fast = {
+                ...gasPriceData.gasPricesLevels.fast,
+                lastBaseFeePerGas: null,
+            };
+
+            updatedGasPriceData[c] = {
+                ...gasPriceData,
+            };
         }
 
         return {
@@ -36,6 +73,10 @@ export default {
             NetworkController: {
                 ...persistedState.NetworkController,
                 availableNetworks: { ...updatedNetworks },
+            },
+            GasPricesController: {
+                ...persistedState.GasPricesController,
+                gasPriceData: { ...updatedGasPriceData },
             },
         };
     },

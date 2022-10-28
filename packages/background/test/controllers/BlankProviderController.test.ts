@@ -3,7 +3,6 @@ import BlankProviderController, {
     BlankProviderEvents,
 } from '@block-wallet/background/controllers/BlankProviderController';
 import KeyringControllerDerivated from '@block-wallet/background/controllers/KeyringControllerDerivated';
-import { MockPrivacyController } from '../mocks/mock-deposit-controller';
 import NetworkController from '../../src/controllers/NetworkController';
 import PermissionsController from '@block-wallet/background/controllers/PermissionsController';
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
@@ -38,7 +37,7 @@ import BlockFetchController from '@block-wallet/background/controllers/block-upd
 import { ExternalEventSubscription } from '@block-wallet/background/utils/types/communication';
 import * as random from '@block-wallet/background/utils/randomBytes';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
-import { PrivacyAsyncController } from '@block-wallet/background/controllers/blank-deposit/PrivacyAsyncController';
+import { PrivacyAsyncController } from '@block-wallet/background/controllers/privacy/PrivacyAsyncController';
 
 const UNI_ORIGIN = 'https://app.uniswap.org';
 const TX_HASH =
@@ -151,8 +150,6 @@ describe('Blank Provider Controller', function () {
     let transactionWatcherController: TransactionWatcherController;
 
     beforeEach(function () {
-        const privacyController = MockPrivacyController();
-
         // Instantiate objects
         networkController = getNetworkControllerInstance();
 
@@ -188,12 +185,11 @@ describe('Blank Provider Controller', function () {
             {
                 idleTimeout: defaultIdleTimeout,
                 isAppUnlocked: true,
-                lastActiveTime: 0,
+                lastActiveTime: new Date().getTime(),
                 lockedByTimeout: false,
             },
             mockKeyringController,
-            transactionController,
-            privacyController as unknown as PrivacyAsyncController
+            transactionController
         );
 
         gasPricesController = new GasPricesController(
@@ -406,7 +402,7 @@ describe('Blank Provider Controller', function () {
 
             sinon.stub(appStateController.UIStore, 'getState').returns({
                 isAppUnlocked: true,
-                lastActiveTime: 0,
+                lastActiveTime: new Date().getTime(),
                 lockedByTimeout: false,
             });
             sinon.stub(permissionsController.store, 'getState').returns({

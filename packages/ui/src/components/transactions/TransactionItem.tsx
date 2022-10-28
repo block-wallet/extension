@@ -11,7 +11,6 @@ import classNames from "classnames"
 import { Classes, classnames } from "../../styles"
 
 // Components
-import ComplianceMenu from "../privacy/ComplianceMenu"
 import { AssetIcon } from "./../AssetsList"
 import Tooltip from "../../components/label/Tooltip"
 
@@ -47,7 +46,6 @@ import {
     RichedTransactionMeta,
 } from "../../util/transactionUtils"
 import Dots from "../loading/LoadingDots"
-import useContextMenu from "../../util/hooks/useContextMenu"
 import { getValueByKey } from "../../util/objectUtils"
 
 const DEFAULT_TORNADO_CONFIRMATION = 4
@@ -422,7 +420,6 @@ const TransactionItem: React.FC<{
     }
     const isBlankWithdraw: boolean =
         transactionCategory === "blankWithdrawal" ? true : false
-    const blankWithdrawId: string = id
 
     const label = getTransactionLabel(
         status,
@@ -470,9 +467,6 @@ const TransactionItem: React.FC<{
     })
 
     const contextMenuRef = useRef(null)
-
-    const { anchorPoint, show: showContextMenu } =
-        useContextMenu(contextMenuRef)
 
     return (
         <>
@@ -713,20 +707,6 @@ const TransactionItem: React.FC<{
                     )}
                 </div>
             </div>
-            {/* Compliance Menu */}
-            {isBlankWithdraw &&
-            status !== TransactionStatus.SUBMITTED &&
-            showContextMenu ? (
-                <div
-                    className="absolute"
-                    style={{ top: anchorPoint.y, left: anchorPoint.x }}
-                >
-                    <ComplianceMenu
-                        withdrawId={blankWithdrawId}
-                        active={true}
-                    />
-                </div>
-            ) : null}
         </>
     )
 }

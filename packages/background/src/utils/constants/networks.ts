@@ -4,7 +4,7 @@ import { Duration, MINUTE, SECOND } from './time';
 import {
     DEFAULT_TORNADO_CONFIRMATION,
     DERIVATIONS_FORWARD,
-} from '../../controllers/blank-deposit/types';
+} from '../../controllers/privacy/types';
 
 export type TornadoIntervals = {
     depositConfirmations: number;
@@ -143,7 +143,7 @@ export const INITIAL_NETWORKS: Networks = {
         enable: true,
         test: false,
         order: 1,
-        features: [FEATURES.SENDS, FEATURES.SWAPS, FEATURES.TORNADO],
+        features: [FEATURES.SENDS, FEATURES.SWAPS],
         ens: true,
         showGasLevels: true,
         rpcUrls: [`https://mainnet-node.blockwallet.io`],
@@ -234,7 +234,7 @@ export const INITIAL_NETWORKS: Networks = {
         enable: true,
         test: false,
         order: 4,
-        features: [FEATURES.SENDS, FEATURES.SWAPS, FEATURES.TORNADO],
+        features: [FEATURES.SENDS, FEATURES.SWAPS],
         ens: false,
         showGasLevels: true,
         rpcUrls: ['https://bsc-node.blockwallet.io'],
@@ -270,7 +270,7 @@ export const INITIAL_NETWORKS: Networks = {
         enable: true,
         test: false,
         order: 5,
-        features: [FEATURES.SENDS, FEATURES.TORNADO, FEATURES.SWAPS],
+        features: [FEATURES.SENDS, FEATURES.SWAPS],
         ens: false,
         showGasLevels: true,
         rpcUrls: [`https://polygon-node.blockwallet.io`],
@@ -398,7 +398,7 @@ export const INITIAL_NETWORKS: Networks = {
         enable: true,
         test: true,
         order: 9,
-        features: [FEATURES.SENDS, FEATURES.TORNADO],
+        features: [FEATURES.SENDS],
         ens: true,
         showGasLevels: true,
         rpcUrls: [`https://goerli-node.blockwallet.io`],

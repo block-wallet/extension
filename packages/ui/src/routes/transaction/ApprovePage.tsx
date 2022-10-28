@@ -16,7 +16,6 @@ import {
 } from "react"
 import {
     approveExchange,
-    blankDepositAllowance,
     getApproveTransactionGasLimit,
     getLatestGasPrice,
 } from "../../context/commActions"
@@ -50,7 +49,6 @@ import { isHardwareWallet } from "../../util/account"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { HardwareWalletOpTypes } from "../../context/commTypes"
 import { rejectTransaction } from "../../context/commActions"
-import { DepositConfirmLocalState } from "../deposit/DepositConfirmPage"
 import { SwapConfirmPageLocalState } from "../swap/SwapConfirmPage"
 import { ExchangeType } from "../../context/commTypes"
 
@@ -136,20 +134,14 @@ const GetAllowanceYupSchema = (
 export interface ApprovePageLocalState {
     assetAddress: string
     minAllowance?: BigNumber
-    isSwap?: boolean
-    nextLocationState: SwapConfirmPageLocalState | DepositConfirmLocalState
+    nextLocationState: SwapConfirmPageLocalState
 }
 
 const ApprovePage: FunctionComponent<{}> = () => {
     // History
     const { clear: clearLocationRecovery } = useLocationRecovery()
     const history: any = useOnMountHistory()
-    const {
-        assetAddress,
-        minAllowance,
-        isSwap = false,
-        nextLocationState,
-    } = useMemo(
+    const { assetAddress, minAllowance, nextLocationState } = useMemo(
         () => history.location.state as ApprovePageLocalState,
         [history.location.state]
     )
@@ -328,7 +320,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         (
                             await getApproveTransactionGasLimit(
                                 localAsset.token.address,
-                                isSwap ? selectedAccount.address : "deposit"
+                                selectedAccount.address
                             )
                         ).gasLimit
                     ),
@@ -405,52 +397,27 @@ const ApprovePage: FunctionComponent<{}> = () => {
         try {
             let res: boolean = false
 
-            if (isSwap) {
-                const nextState = nextLocationState as SwapConfirmPageLocalState
+            const nextState = nextLocationState as SwapConfirmPageLocalState
 
-                res = await approveExchange(
-                    assetAllowance,
-                    BigNumber.from(nextState.swapQuote.fromTokenAmount),
-                    ExchangeType.SWAP_1INCH,
-                    {
-                        gasPrice: !isEIP1559Compatible
-                            ? selectedGasPrice
-                            : undefined,
-                        gasLimit: selectedGasLimit,
-                        maxFeePerGas: isEIP1559Compatible
-                            ? selectedFees.maxFeePerGas
-                            : undefined,
-                        maxPriorityFeePerGas: isEIP1559Compatible
-                            ? selectedFees.maxPriorityFeePerGas
-                            : undefined,
-                    },
-                    nextState.swapQuote.fromToken.address,
-                    customNonce
-                )
-            } else {
-                const nextState = nextLocationState as DepositConfirmLocalState
-
-                res = await blankDepositAllowance(
-                    assetAllowance,
-                    {
-                        gasPrice: !isEIP1559Compatible
-                            ? selectedGasPrice
-                            : undefined,
-                        gasLimit: selectedGasLimit,
-                        maxFeePerGas: isEIP1559Compatible
-                            ? selectedFees.maxFeePerGas
-                            : undefined,
-                        maxPriorityFeePerGas: isEIP1559Compatible
-                            ? selectedFees.maxPriorityFeePerGas
-                            : undefined,
-                    },
-                    {
-                        currency: nextState.selectedCurrency,
-                        amount: nextState.amount as any,
-                    },
-                    customNonce
-                )
-            }
+            res = await approveExchange(
+                assetAllowance,
+                BigNumber.from(nextState.swapQuote.fromTokenAmount),
+                ExchangeType.SWAP_1INCH,
+                {
+                    gasPrice: !isEIP1559Compatible
+                        ? selectedGasPrice
+                        : undefined,
+                    gasLimit: selectedGasLimit,
+                    maxFeePerGas: isEIP1559Compatible
+                        ? selectedFees.maxFeePerGas
+                        : undefined,
+                    maxPriorityFeePerGas: isEIP1559Compatible
+                        ? selectedFees.maxPriorityFeePerGas
+                        : undefined,
+                },
+                nextState.swapQuote.fromToken.address,
+                customNonce
+            )
 
             if (res) {
                 dispatch({
@@ -480,7 +447,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
         }
 
         history.push({
-            pathname: isSwap ? "/swap/confirm" : "/",
+            pathname: "/swap/confirm",
             state: nextLocationState,
         })
     }
@@ -493,16 +460,14 @@ const ApprovePage: FunctionComponent<{}> = () => {
             }
         }
 
-        if (isSwap) {
-            return () => {
-                history.push({
-                    pathname: "/swap",
-                    state: {
-                        ...nextLocationState,
-                        transitionDirection: "right",
-                    },
-                })
-            }
+        return () => {
+            history.push({
+                pathname: "/swap",
+                state: {
+                    ...nextLocationState,
+                    transitionDirection: "right",
+                },
+            })
         }
     }
 
@@ -510,14 +475,10 @@ const ApprovePage: FunctionComponent<{}> = () => {
         <>
             <div className="flex flex-col space-y-3 px-6 py-4">
                 <p className="text-sm font-bold">
-                    {isSwap
-                        ? `Approve BlockWallet to swap your ${assetName}`
-                        : "Allow the Privacy Pool to:"}
+                    {`Approve BlockWallet to swap your ${assetName}`}
                 </p>
                 <p className="text-sm text-gray-500">
-                    {isSwap
-                        ? `Allow BlockWallet Swaps to withdraw your ${assetName} and automate transactions for you.`
-                        : `Transfer ${assetName} from your account to the Privacy Pool to make the deposit.`}
+                    {`Allow BlockWallet Swaps to withdraw your ${assetName} and automate transactions for you.`}
                 </p>
             </div>
             <Divider />
@@ -587,11 +548,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const editAllowanceSection = (
         <div className="flex flex-col space-y-3 px-6 pt-4">
             <p className="text-gray-500 text-sm pb-1">
-                {`Allow ${
-                    isSwap ? "BlockWallet Swaps" : "the Privacy Pool"
-                } to ${
-                    isSwap ? "swap" : "deposit"
-                } up to the following amount of ${assetName}:`}
+                {`Allow BlockWallet Swaps to swap up to the following amount of ${assetName}:`}
             </p>
             <div
                 className="relative flex flex-col p-3 rounded-md border border-gray-200 cursor-pointer"

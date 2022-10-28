@@ -17,6 +17,7 @@ import BlockUpdatesController from '@block-wallet/background/controllers/block-u
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import httpClient, { RequestError } from './../../src/utils/http';
 
+// TODO(REC): FIX US!
 describe('GasPrices Controller', () => {
     let gasPricesController: GasPricesController;
     let networkController: NetworkController;
@@ -101,16 +102,19 @@ describe('GasPrices Controller', () => {
                                 gasPrice: BigNumber.from('181000000000'),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                             fast: {
                                 gasPrice: BigNumber.from('165000000000'),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                             slow: {
                                 gasPrice: BigNumber.from('125000000000'),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                         },
                     },
@@ -124,7 +128,7 @@ describe('GasPrices Controller', () => {
             );
             _fetchFeeDataStub.returns(
                 Promise.resolve({
-                    average: { gasPrice: BigNumber.from('181000000001') },
+                    average: { gasPrice: BigNumber.from('181000000000') },
                     fast: { gasPrice: BigNumber.from('165000000000') },
                     slow: { gasPrice: BigNumber.from('125000000000') },
                 })
@@ -148,7 +152,7 @@ describe('GasPrices Controller', () => {
             _fetchFeeDataStub.returns(
                 Promise.resolve({
                     average: { gasPrice: BigNumber.from('181000000000') },
-                    fast: { gasPrice: BigNumber.from('165000000001') },
+                    fast: { gasPrice: BigNumber.from('165000000000') },
                     slow: { gasPrice: BigNumber.from('125000000000') },
                 })
             );
@@ -208,18 +212,21 @@ describe('GasPrices Controller', () => {
                                     BigNumber.from('181000000000'),
                                 maxFeePerGas: BigNumber.from('181000000000'),
                                 gasPrice: null,
+                                lastBaseFeePerGas: null,
                             },
                             fast: {
                                 maxPriorityFeePerGas:
                                     BigNumber.from('165000000000'),
                                 maxFeePerGas: BigNumber.from('165000000000'),
                                 gasPrice: null,
+                                lastBaseFeePerGas: null,
                             },
                             slow: {
                                 maxPriorityFeePerGas:
                                     BigNumber.from('125000000000'),
                                 maxFeePerGas: BigNumber.from('125000000000'),
                                 gasPrice: null,
+                                lastBaseFeePerGas: null,
                             },
                         },
                     },
@@ -341,18 +348,21 @@ describe('GasPrices Controller', () => {
                                     BigNumber.from('181000000000'),
                                 maxFeePerGas: BigNumber.from('181000000000'),
                                 gasPrice: null,
+                                lastBaseFeePerGas: null,
                             },
                             fast: {
                                 maxPriorityFeePerGas:
                                     BigNumber.from('165000000000'),
                                 maxFeePerGas: BigNumber.from('165000000000'),
                                 gasPrice: null,
+                                lastBaseFeePerGas: null,
                             },
                             slow: {
                                 maxPriorityFeePerGas:
                                     BigNumber.from('125000000000'),
                                 maxFeePerGas: BigNumber.from('125000000000'),
                                 gasPrice: null,
+                                lastBaseFeePerGas: null,
                             },
                         },
                     },
@@ -367,7 +377,7 @@ describe('GasPrices Controller', () => {
             _fetchFeeDataStub.returns(
                 Promise.resolve({
                     average: {
-                        maxPriorityFeePerGas: BigNumber.from('181000000001'),
+                        maxPriorityFeePerGas: BigNumber.from('181000000000'),
                     },
                     fast: {
                         maxPriorityFeePerGas: BigNumber.from('165000000000'),
@@ -1055,16 +1065,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: BigNumber.from('25500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 average: {
                     gasPrice: BigNumber.from('30000000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 fast: {
                     gasPrice: BigNumber.from('37500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
             } as GasPriceLevels);
 
@@ -1124,16 +1137,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('45920644752'),
                     maxPriorityFeePerGas: BigNumber.from('500000000'),
+                    lastBaseFeePerGas: BigNumber.from('51022938614'),
                 },
                 average: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('57125232475'),
                     maxPriorityFeePerGas: BigNumber.from('1000000000'),
+                    lastBaseFeePerGas: BigNumber.from('51022938614'),
                 },
                 fast: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('67829820198'),
                     maxPriorityFeePerGas: BigNumber.from('1500000000'),
+                    lastBaseFeePerGas: BigNumber.from('51022938614'),
                 },
             } as GasPriceLevels);
 
@@ -1191,16 +1207,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: BigNumber.from('25500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 average: {
                     gasPrice: BigNumber.from('30000000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 fast: {
                     gasPrice: BigNumber.from('37500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
             } as GasPriceLevels);
 
@@ -1269,16 +1288,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('130000'),
                     maxPriorityFeePerGas: BigNumber.from('20000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
                 average: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('133000'),
                     maxPriorityFeePerGas: BigNumber.from('23000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
                 fast: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('136000'),
                     maxPriorityFeePerGas: BigNumber.from('26000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
             } as GasPriceLevels);
 
@@ -1330,16 +1352,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: BigNumber.from('25500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 average: {
                     gasPrice: BigNumber.from('30000000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 fast: {
                     gasPrice: BigNumber.from('37500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
             } as GasPriceLevels);
 
@@ -1408,16 +1433,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('130000'),
                     maxPriorityFeePerGas: BigNumber.from('20000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
                 average: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('133000'),
                     maxPriorityFeePerGas: BigNumber.from('23000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
                 fast: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('136000'),
                     maxPriorityFeePerGas: BigNumber.from('26000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
             } as GasPriceLevels);
 
@@ -1475,16 +1503,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: BigNumber.from('25500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 average: {
                     gasPrice: BigNumber.from('30000000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 fast: {
                     gasPrice: BigNumber.from('37500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
             } as GasPriceLevels);
 
@@ -1553,16 +1584,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('130000'),
                     maxPriorityFeePerGas: BigNumber.from('20000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
                 average: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('133000'),
                     maxPriorityFeePerGas: BigNumber.from('23000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
                 fast: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('136000'),
                     maxPriorityFeePerGas: BigNumber.from('26000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
             } as GasPriceLevels);
 

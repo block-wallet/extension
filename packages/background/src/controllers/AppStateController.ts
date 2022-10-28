@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import log from 'loglevel';
 import { BaseController } from '../infrastructure/BaseController';
-import { PrivacyAsyncController } from './blank-deposit/PrivacyAsyncController';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 import TransactionController from './transactions/TransactionController';
 
@@ -18,8 +17,7 @@ export default class AppStateController extends BaseController<AppStateControlle
     constructor(
         initState: AppStateControllerState,
         private readonly _keyringController: KeyringControllerDerivated,
-        private readonly _transactionController: TransactionController,
-        private readonly _privacyAsyncController: PrivacyAsyncController
+        private readonly _transactionController: TransactionController
     ) {
         super(initState);
 
@@ -85,12 +83,9 @@ export default class AppStateController extends BaseController<AppStateControlle
             // Lock vault
             await this._keyringController.setLocked();
 
-            // Lock deposits
-            await this._privacyAsyncController.lock();
-
             // Removing login token from storage
             // @ts-ignore
-            chrome.storage.session.clear();
+            chrome.storage.session && chrome.storage.session.clear();
 
             // Update controller state
             this.store.updateState({ isAppUnlocked: false, lockedByTimeout });
@@ -112,9 +107,11 @@ export default class AppStateController extends BaseController<AppStateControlle
             );
 
             // @ts-ignore
-            chrome.storage.session.set({ loginToken }).catch((err: any) => {
-                log.error('error setting loginToken', err);
-            });
+            chrome.storage.session &&
+                // @ts-ignore
+                chrome.storage.session.set({ loginToken }).catch((err: any) => {
+                    log.error('error setting loginToken', err);
+                });
 
             await this._postLoginAction();
         } catch (error) {
@@ -126,17 +123,19 @@ export default class AppStateController extends BaseController<AppStateControlle
         const { isAppUnlocked } = this.store.getState();
         if (!isAppUnlocked) {
             // @ts-ignore
-            chrome.storage.session.get(
-                ['loginToken'],
-                async ({ loginToken }: { [key: string]: string }) => {
-                    if (loginToken) {
-                        await this._keyringController.submitEncryptionKey(
-                            loginToken
-                        );
-                        await this._postLoginAction();
+            chrome.storage.session &&
+                // @ts-ignore
+                chrome.storage.session.get(
+                    ['loginToken'],
+                    async ({ loginToken }: { [key: string]: string }) => {
+                        if (loginToken) {
+                            await this._keyringController.submitEncryptionKey(
+                                loginToken
+                            );
+                            await this._postLoginAction();
+                        }
                     }
-                }
-            );
+                );
         }
     };
 

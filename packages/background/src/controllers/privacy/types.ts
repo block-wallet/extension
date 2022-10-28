@@ -209,7 +209,7 @@ export const DEFAULT_TORNADO_CONFIRMATION = 4;
 export const DEFAULT_TX_RECEIPT_TIMEOUT = 60000;
 
 //
-export interface BlankDepositControllerStoreState {
+export interface PrivacyControllerStoreState {
     pendingWithdrawals: PendingWithdrawalsStore;
     vaultState: { vault: string };
 }
@@ -259,7 +259,7 @@ export type PairCount = {
     count: number;
 }[];
 
-export interface BlankDepositControllerUIStoreState {
+export interface PrivacyControllerUIStoreState {
     previousWithdrawals: {
         depositId: string;
         time: number;

@@ -10,7 +10,7 @@ import PermissionsController from '@block-wallet/background/controllers/Permissi
 import { PreferencesController } from '@block-wallet/background/controllers/PreferencesController';
 import { mockedPermissionsController } from '../mocks/mock-permissions';
 import { ActivityListController } from '@block-wallet/background/controllers/ActivityListController';
-import { PendingWithdrawalsStore } from '@block-wallet/background/controllers/blank-deposit/types';
+import { PendingWithdrawalsStore } from '@block-wallet/background/controllers/privacy/types';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
 import {
     TokenController,
@@ -24,7 +24,7 @@ import BlockUpdatesController from '@block-wallet/background/controllers/block-u
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
-import { PrivacyAsyncController } from '@block-wallet/background/controllers/blank-deposit/PrivacyAsyncController';
+import { PrivacyAsyncController } from '@block-wallet/background/controllers/privacy/PrivacyAsyncController';
 
 describe('Address book controller implementation', function () {
     const accounts = {
@@ -45,7 +45,7 @@ describe('Address book controller implementation', function () {
     let preferencesController: PreferencesController;
     let permissionsController: PermissionsController;
     let activityListController: ActivityListController;
-    let privacyDepositController: PrivacyAsyncController;
+    let privacyController: PrivacyAsyncController;
     let tokenOperationsController: TokenOperationsController;
     let tokenController: TokenController;
     let blockFetchController: BlockFetchController;
@@ -108,7 +108,7 @@ describe('Address book controller implementation', function () {
             { txHistoryLimit: 40 }
         );
 
-        privacyDepositController = new PrivacyAsyncController({
+        privacyController = new PrivacyAsyncController({
             networkController: networkController,
             state: {
                 pendingWithdrawals: {} as PendingWithdrawalsStore,
@@ -127,7 +127,7 @@ describe('Address book controller implementation', function () {
         );
         activityListController = new ActivityListController(
             transactionController,
-            privacyDepositController,
+            privacyController,
             preferencesController,
             networkController,
             transactionWatcherController

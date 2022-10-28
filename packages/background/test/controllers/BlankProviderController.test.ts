@@ -37,7 +37,7 @@ import BlockFetchController from '@block-wallet/background/controllers/block-upd
 import { ExternalEventSubscription } from '@block-wallet/background/utils/types/communication';
 import * as random from '@block-wallet/background/utils/randomBytes';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
-import { PrivacyAsyncController } from '@block-wallet/background/controllers/blank-deposit/PrivacyAsyncController';
+import { PrivacyAsyncController } from '@block-wallet/background/controllers/privacy/PrivacyAsyncController';
 
 const UNI_ORIGIN = 'https://app.uniswap.org';
 const TX_HASH =

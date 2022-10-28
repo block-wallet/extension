@@ -4,10 +4,6 @@ import {
     DeviceAccountInfo,
 } from "@block-wallet/background/controllers/AccountTrackerController"
 import {
-    CurrencyAmountPair,
-    KnownCurrencies,
-} from "@block-wallet/background/controllers/blank-deposit/types"
-import {
     MessageTypes,
     RequestTypes,
     ResponseTypes,

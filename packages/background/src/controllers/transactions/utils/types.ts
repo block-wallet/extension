@@ -1,11 +1,11 @@
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { BigNumber, Transaction } from 'ethers';
-import { CurrencyAmountPair } from '../../blank-deposit/types';
+import { CurrencyAmountPair } from '../../privacy/types';
 import { ExchangeParams } from '../../ExchangeController';
 import { ContractMethodSignature } from '../ContractSignatureParser';
 
 /**
- * TransactionParams
+ * TransactionParams../../privacy/types
  * @link https://github.com/ethers-io/ethers.js/issues/321
  * @link https://github.com/ethers-io/ethers.js/issues/299
  */

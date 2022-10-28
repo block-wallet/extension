@@ -57,7 +57,7 @@ import BlockUpdatesController, {
 } from '../block-updates/BlockUpdatesController';
 import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES } from '../../utils/constants/networks';
 import { SIGN_TRANSACTION_TIMEOUT } from '../../utils/constants/time';
-import { DEFAULT_TORNADO_CONFIRMATION } from '../blank-deposit/types';
+import { DEFAULT_TORNADO_CONFIRMATION } from '../privacy/types';
 import {
     parseHardwareWalletError,
     SignTimeoutError,

@@ -40,9 +40,9 @@ import {
 import { SIGN_TRANSACTION_TIMEOUT } from './time';
 import { TransactionWatcherControllerState } from '@block-wallet/background/controllers/TransactionWatcherController';
 import {
-    BlankDepositControllerStoreState,
-    BlankDepositControllerUIStoreState,
-} from '@block-wallet/background/controllers/blank-deposit/types';
+    PrivacyControllerStoreState,
+    PrivacyControllerUIStoreState,
+} from '@block-wallet/background/controllers/privacy/types';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -51,7 +51,7 @@ export type BlankAppState = {
     OnboardingController: OnboardingControllerState;
     PreferencesController: PreferencesControllerState;
     TransactionController: TransactionControllerState;
-    BlankDepositController: BlankDepositControllerStoreState;
+    BlankDepositController: PrivacyControllerStoreState;
     BlockUpdatesController: BlockUpdatesControllerState;
     ExchangeRatesController: ExchangeRatesControllerState;
     GasPricesController: GasPricesControllerState;
@@ -70,7 +70,7 @@ export type BlankAppUIState = {
     OnboardingController: OnboardingControllerState;
     PreferencesController: PreferencesControllerState;
     TransactionController: TransactionVolatileControllerState;
-    BlankDepositController: BlankDepositControllerUIStoreState;
+    BlankDepositController: PrivacyControllerUIStoreState;
     BlockUpdatesController: BlockUpdatesControllerState;
     ExchangeRatesController: ExchangeRatesControllerState;
     GasPricesController: GasPricesControllerState;

@@ -4,7 +4,7 @@ import { Duration, MINUTE, SECOND } from './time';
 import {
     DEFAULT_TORNADO_CONFIRMATION,
     DERIVATIONS_FORWARD,
-} from '../../controllers/blank-deposit/types';
+} from '../../controllers/privacy/types';
 
 export type TornadoIntervals = {
     depositConfirmations: number;

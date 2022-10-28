@@ -8,7 +8,7 @@ import {
     MetaType,
 } from "../../context/commTypes"
 import { parseEther } from "@ethersproject/units"
-import { CurrencyAmountPair } from "@block-wallet/background/controllers/blank-deposit/types"
+import { CurrencyAmountPair } from "@block-wallet/background/controllers/privacy/types"
 import { DappReq } from "../../context/hooks/useDappRequest"
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 import { NormalizedAddEthereumChainParameter } from "@block-wallet/background/utils/types/ethereum"
@@ -181,7 +181,8 @@ export const TransactionConfirm = () => (
                     status: "UNAPPROVED" as TransactionStatus,
                     time: 1234,
                     origin: "https://app.uniswap.org",
-                    transactionCategory: "contractInteraction" as TransactionCategories,
+                    transactionCategory:
+                        "contractInteraction" as TransactionCategories,
                     methodSignature: {
                         args: [
                             {
@@ -199,8 +200,7 @@ export const TransactionConfirm = () => (
                             {
                                 name: null,
                                 type: "address",
-                                value:
-                                    "0xaA141A506F62a0E59A0FdfB0C986735C7665f0b9",
+                                value: "0xaA141A506F62a0E59A0FdfB0C986735C7665f0b9",
                             },
                             {
                                 name: null,
@@ -233,7 +233,8 @@ export const TransactionConfirm = () => (
                     status: "UNAPPROVED" as TransactionStatus,
                     time: 1234,
                     origin: "https://app.uniswap.org",
-                    transactionCategory: "contractInteraction" as TransactionCategories,
+                    transactionCategory:
+                        "contractInteraction" as TransactionCategories,
                     methodSignature: {
                         args: [
                             {
@@ -251,8 +252,7 @@ export const TransactionConfirm = () => (
                             {
                                 name: null,
                                 type: "address",
-                                value:
-                                    "0xaA141A506F62a0E59A0FdfB0C986735C7665f0b9",
+                                value: "0xaA141A506F62a0E59A0FdfB0C986735C7665f0b9",
                             },
                             {
                                 name: null,

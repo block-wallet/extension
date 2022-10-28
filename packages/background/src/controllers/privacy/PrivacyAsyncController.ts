@@ -5,17 +5,17 @@ import { NetworkEvents } from '../NetworkController';
 import { BaseController } from '../../infrastructure/BaseController';
 import {
     AvailableNetworks,
-    BlankDepositControllerStoreState,
-    BlankDepositControllerUIStoreState,
+    PrivacyControllerStoreState,
+    PrivacyControllerUIStoreState,
 } from './types';
 
 export class PrivacyAsyncController extends BaseController<
-    BlankDepositControllerStoreState,
-    BlankDepositControllerUIStoreState
+    PrivacyControllerStoreState,
+    PrivacyControllerUIStoreState
 > {
     constructor(props: {
         networkController: NetworkController;
-        state: BlankDepositControllerStoreState;
+        state: PrivacyControllerStoreState;
     }) {
         super(props.state, {
             previousWithdrawals: [],

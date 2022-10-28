@@ -185,7 +185,7 @@ import {
     getCurrencies,
     isCurrencyCodeValid,
 } from '../utils/currency';
-import { AvailableNetworks } from './blank-deposit/types';
+import { AvailableNetworks } from './privacy/types';
 
 import { toError } from '../utils/toError';
 
@@ -196,7 +196,7 @@ import { Network } from '../utils/constants/networks';
 
 import { generateOnDemandReleaseNotes } from '../utils/userPreferences';
 import { TransactionWatcherController } from './TransactionWatcherController';
-import { PrivacyAsyncController } from './blank-deposit/PrivacyAsyncController';
+import { PrivacyAsyncController } from './privacy/PrivacyAsyncController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -2079,9 +2079,6 @@ export default class BlankController extends EventEmitter {
         // Create keyring
         await this.keyringController.createNewVaultAndKeychain(password);
 
-        // Initialize vault -- Commented due to feature deprecation
-        // await this.blankDepositController.initializeVault(password);
-
         // Get account
         const account = (await this.keyringController.getAccounts())[0];
 
@@ -2145,19 +2142,12 @@ export default class BlankController extends EventEmitter {
         );
 
         if (!reImport) {
-            // Initialize deposit vault -- Commented due to feature deprecation
-            // await this.blankDepositController.initializeVault(password);
-
             // Show the welcome to the wallet message
             this.preferencesController.setShowWelcomeMessage(true);
 
             // Show the default wallet preferences
             this.preferencesController.setShowDefaultWalletPreferences(true);
         }
-        // Commented due to feature deprecation
-        // else {
-        //     await this.blankDepositController.reinitializeVault(password);
-        // }
 
         // Set Seed Phrase Backed up
         this.onboardingController.isSeedPhraseBackedUp = true;
@@ -2196,9 +2186,6 @@ export default class BlankController extends EventEmitter {
             }
         }
         await this.networkController.setNetwork(network);
-
-        // Commented due to feature deprecation
-        // await this.blankDepositController.initialize();
 
         // reconstruct past erc20 transfers
         this.transactionWatcherController.fetchTransactions();

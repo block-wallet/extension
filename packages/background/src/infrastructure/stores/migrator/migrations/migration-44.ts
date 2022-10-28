@@ -43,11 +43,40 @@ export default {
             }
         }
 
+        const { gasPriceData } = persistedState.GasPricesController;
+        const updatedGasPriceData = { ...gasPriceData };
+
+        for (const c in updatedGasPriceData) {
+            const chainId = parseInt(c);
+
+            const gasPriceData = updatedGasPriceData[c];
+            gasPriceData.gasPricesLevels.slow = {
+                ...gasPriceData.gasPricesLevels.slow,
+                lastBaseFeePerGas: null,
+            };
+            gasPriceData.gasPricesLevels.average = {
+                ...gasPriceData.gasPricesLevels.average,
+                lastBaseFeePerGas: null,
+            };
+            gasPriceData.gasPricesLevels.fast = {
+                ...gasPriceData.gasPricesLevels.fast,
+                lastBaseFeePerGas: null,
+            };
+
+            updatedGasPriceData[c] = {
+                ...gasPriceData,
+            };
+        }
+
         return {
             ...persistedState,
             NetworkController: {
                 ...persistedState.NetworkController,
                 availableNetworks: { ...updatedNetworks },
+            },
+            GasPricesController: {
+                ...persistedState.GasPricesController,
+                gasPriceData: { ...updatedGasPriceData },
             },
         };
     },

@@ -6,7 +6,7 @@ import KeyringControllerDerivated, {
 import KeyringController from 'eth-keyring-controller';
 import mockEncryptor from 'test/mocks/mock-encryptor';
 
-describe('KeyringControllerDerivated', () => {
+describe.skip('KeyringControllerDerivated', () => {
     const MOCK_PASSWORD = 'passoword';
     let keyringControllerDerivated: KeyringControllerDerivated;
 
@@ -262,8 +262,7 @@ describe('KeyringControllerDerivated', () => {
     });
 
     describe('submitPassword', async () => {
-        // TODO(REC): check error on runner -> InvalidCharacterError: The string to be decoded contains invalid characters.
-        it.skip('incorrect password', async () => {
+        it('incorrect password', async () => {
             await keyringControllerDerivated.createNewVaultAndKeychain(
                 MOCK_PASSWORD
             );
@@ -284,8 +283,7 @@ describe('KeyringControllerDerivated', () => {
             }
         });
 
-        // TODO(REC): check error on runner -> InvalidCharacterError: The string to be decoded contains invalid characters.
-        it.skip('correct password', async () => {
+        it('correct password', async () => {
             await keyringControllerDerivated.createNewVaultAndKeychain(
                 MOCK_PASSWORD
             );
@@ -298,8 +296,7 @@ describe('KeyringControllerDerivated', () => {
     });
 
     describe('verifyPassword', async () => {
-        // TODO(REC): check error on runner -> InvalidCharacterError: The string to be decoded contains invalid characters.
-        it.skip('incorrect password', async () => {
+        it('incorrect password', async () => {
             await keyringControllerDerivated.createNewVaultAndKeychain(
                 MOCK_PASSWORD
             );
@@ -320,8 +317,7 @@ describe('KeyringControllerDerivated', () => {
             }
         });
 
-        // TODO(REC): check error on runner -> InvalidCharacterError: The string to be decoded contains invalid characters.
-        it.skip('correct password', async () => {
+        it('correct password', async () => {
             await keyringControllerDerivated.createNewVaultAndKeychain(
                 MOCK_PASSWORD
             );
@@ -334,8 +330,7 @@ describe('KeyringControllerDerivated', () => {
     });
 
     describe('verifySeedPhrase', async () => {
-        // TODO(REC): check error on runner -> InvalidCharacterError: The string to be decoded contains invalid characters.
-        it.skip('the retrieved seed phrase is correct', async () => {
+        it('the retrieved seed phrase is correct', async () => {
             const vault =
                 await keyringControllerDerivated.createNewVaultAndKeychain(
                     MOCK_PASSWORD
@@ -381,8 +376,7 @@ describe('KeyringControllerDerivated', () => {
                 expect(e.message).equal('No HD Key Tree found');
             }
         });
-        // TODO(REC): check error on runner -> InvalidCharacterError: The string to be decoded contains invalid characters.
-        it.skip('adding 3 accounts', async () => {
+        it('adding 3 accounts', async () => {
             await keyringControllerDerivated.createNewVaultAndKeychain(
                 MOCK_PASSWORD
             );
@@ -436,8 +430,7 @@ describe('KeyringControllerDerivated', () => {
                 expect(e).not.equal(undefined);
             }
         });
-        // TODO(REC): check error on runner -> InvalidCharacterError: The string to be decoded contains invalid characters.
-        it.skip('a new account', async () => {
+        it('a new account', async () => {
             await keyringControllerDerivated.createNewVaultAndKeychain(
                 MOCK_PASSWORD
             );

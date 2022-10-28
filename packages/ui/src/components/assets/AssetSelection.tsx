@@ -21,7 +21,6 @@ import { formatRounded } from "../../util/formatRounded"
 import { formatUnits } from "ethers/lib/utils"
 import { searchTokenInAssetsList } from "../../context/commActions"
 import { useCustomCompareEffect } from "use-custom-compare"
-import { useDepositTokens } from "../../context/hooks/useDepositTokens"
 import { useSwappedTokenList } from "../../context/hooks/useSwappedTokenList"
 import classnames from "classnames"
 import TokenLogo from "../token/TokenLogo"
@@ -29,7 +28,6 @@ import TokenLogo from "../token/TokenLogo"
 export enum AssetListType {
     ALL = "ALL",
     DEFAULT = "DEFAULT",
-    DEPOSIT = "DEPOSIT",
 }
 
 interface AssetSelectionProps {
@@ -72,7 +70,6 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
     const [assetList, setAssetList] = useState<TokenWithBalance[]>([])
 
     const { currentNetworkTokens, nativeToken } = useTokensList()
-    const depositsAssetList = useDepositTokens()
     const swappedAssetList = useSwappedTokenList()
 
     const defaultAssetList = [nativeToken].concat(currentNetworkTokens)
@@ -80,15 +77,11 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
     useEffect(() => {
         // Only set asset list if this keeps being empty due to hooks init
         if (!assetList.length) {
-            setAssetList(
-                selectedAssetList === AssetListType.DEFAULT
-                    ? defaultAssetList
-                    : depositsAssetList
-            )
+            setAssetList(defaultAssetList)
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [defaultAssetList, depositsAssetList])
+    }, [defaultAssetList])
 
     useEffect(() => {
         const searchAll = async () => {
@@ -306,25 +299,22 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
                         </div>
                     )
                 })}
-                {search &&
-                    searchResult.length === 0 &&
-                    selectedAssetList !== AssetListType.DEPOSIT && (
-                        <div className="px-3">
-                            <p className="text-xs text-black text-center p-4">
-                                The asset couldn’t be found, try adding it
-                                manually.
-                            </p>
-                            <ActionButton
-                                icon={plusIcon}
-                                label="Add Token"
-                                to="/settings/tokens/add"
-                                state={{
-                                    addTokenState,
-                                    searchValue: search,
-                                }}
-                            />
-                        </div>
-                    )}
+                {search && searchResult.length === 0 && (
+                    <div className="px-3">
+                        <p className="text-xs text-black text-center p-4">
+                            The asset couldn’t be found, try adding it manually.
+                        </p>
+                        <ActionButton
+                            icon={plusIcon}
+                            label="Add Token"
+                            to="/settings/tokens/add"
+                            state={{
+                                addTokenState,
+                                searchValue: search,
+                            }}
+                        />
+                    </div>
+                )}
             </div>
         )
     }

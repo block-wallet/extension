@@ -65,11 +65,9 @@ export class Hasher {
         for (const [index, paramValue] of paramValues.entries()) {
             if (paramIndexes.indexOf(index) != -1) {
                 if (typeof paramValue !== 'undefined') {
-                    console.log('before hasing');
                     paramValues[index] = sha256(
-                        Buffer.from(paramValue + SALT)
+                        Buffer.from('' + paramValue + SALT)
                     ).toString();
-                    console.log('after hasing');
                 }
             }
         }

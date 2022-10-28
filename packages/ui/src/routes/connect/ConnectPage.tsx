@@ -16,7 +16,7 @@ import { confirmPermission } from "../../context/commActions"
 import { usePendingPermissionRequest } from "../../context/hooks/usePendingPermissionRequest"
 import { Redirect } from "react-router-dom"
 import LoadingOverlay from "../../components/loading/LoadingOverlay"
-import { AiFillInfoCircle } from "react-icons/ai"
+import { AiFillInfoCircle, AiOutlineWarning } from "react-icons/ai"
 import Tooltip from "../../components/label/Tooltip"
 import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
 import useNextRequestRoute from "../../context/hooks/useNextRequestRoute"
@@ -30,6 +30,8 @@ import { PermissionRequest } from "@block-wallet/background/controllers/Permissi
 import useDebouncedState from "../../util/hooks/useDebouncedState"
 import { DAPP_FEEDBACK_WINDOW_TIMEOUT } from "../../util/constants"
 import GenericTooltip from "../../components/label/GenericTooltip"
+import CollapsableWarning from "../../components/CollapsableWarning"
+import { isOriginSafe } from "../../util/isOriginSafe"
 
 const ConnectPage = () => {
     const pendingPermissionRequest = usePendingPermissionRequest()
@@ -58,6 +60,7 @@ const ConnectSteps = ({
     requestId: string
     site: PermissionRequest
 }) => {
+    const isSiteOriginSafe = isOriginSafe(site.origin)
     const accountsList = useSortedAccounts()
     const account = useSelectedAccount()
 
@@ -171,6 +174,31 @@ const ConnectSteps = ({
             }
         >
             {isLoading && <LoadingOverlay />}
+            {!isSiteOriginSafe && (
+                <CollapsableWarning
+                    dialog={{
+                        title: "Warning",
+                        message: (
+                            <span>
+                                DApp URL seems malicious. Make sure you know &
+                                trust this decentralized application before
+                                connecting your account.
+                            </span>
+                        ),
+                    }}
+                    isCollapsedByDefault
+                    collapsedMessage={
+                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-bold justify-center">
+                            <AiOutlineWarning className="w-4 h-4 yellow-300" />
+                            <span className="text-xs text-yellow-900">
+                                <span className="font-bold">
+                                    DApp URL seems malicious.
+                                </span>
+                            </span>
+                        </div>
+                    }
+                />
+            )}
             <WaitingDialog
                 status={status}
                 open={isOpen}

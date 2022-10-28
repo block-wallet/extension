@@ -49,7 +49,7 @@ export default {
         for (const c in updatedGasPriceData) {
             const chainId = parseInt(c);
 
-            const gasPriceData = updatedGasPriceData[c];
+            const gasPriceData = updatedGasPriceData[chainId];
             gasPriceData.gasPricesLevels.slow = {
                 ...gasPriceData.gasPricesLevels.slow,
                 lastBaseFeePerGas: null,

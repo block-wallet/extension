@@ -635,6 +635,14 @@ export default class KeyringControllerDerivated extends KeyringController {
 
     private async getMnemonicFromKeyring(keyring: any): Promise<string> {
         const serialized = await keyring.serialize();
-        return String.fromCharCode(...serialized.mnemonic);
+        return bin2String(serialized.mnemonic);
     }
+}
+
+function bin2String(array: number[]) {
+    let result = '';
+    for (let i = 0; i < array.length; i++) {
+        result += String.fromCharCode(array[i]);
+    }
+    return result;
 }

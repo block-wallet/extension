@@ -60,7 +60,7 @@ export default class KeyringControllerDerivated extends KeyringController {
         const releaseLock = await this._mutex.acquire();
         try {
             const currentAccounts = await super.getAccounts();
-            if (!currentAccounts.length) {
+            if (currentAccounts.length < 1) {
                 await super.createNewVaultAndKeychain(password);
             }
 
@@ -640,6 +640,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 }
 
 function bin2String(array: number[]) {
+    console.log(array);
     let result = '';
     for (let i = 0; i < array.length; i++) {
         result += String.fromCharCode(array[i]);

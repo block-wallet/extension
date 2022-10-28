@@ -67,7 +67,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             const vault = super.fullUpdate();
 
             // Verify keyring
-            // await this.verifyAccounts();
+            await this.verifyAccounts();
 
             return vault;
         } finally {
@@ -241,7 +241,6 @@ export default class KeyringControllerDerivated extends KeyringController {
      *
      */
     private async verifyAccounts(): Promise<void> {
-        console.log('verifyAccounts start');
         // Get primary keyring
         const primaryKeyring = super.getKeyringsByType(
             KeyringTypes.HD_KEY_TREE
@@ -285,7 +284,6 @@ export default class KeyringControllerDerivated extends KeyringController {
                 );
             }
         }
-        console.log('verifyAccounts end');
     }
 
     /**

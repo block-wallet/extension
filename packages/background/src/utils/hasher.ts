@@ -2,7 +2,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { sha256 } from 'ethereumjs-util';
 
-export const SALT = chrome.runtime.id;
+export const SALT =
+    chrome && chrome.runtime && chrome.runtime.id ? chrome.runtime.id : 'salt';
 
 export function Hash(
     target: any,
@@ -64,9 +65,11 @@ export class Hasher {
         for (const [index, paramValue] of paramValues.entries()) {
             if (paramIndexes.indexOf(index) != -1) {
                 if (typeof paramValue !== 'undefined') {
+                    console.log('before hasing');
                     paramValues[index] = sha256(
                         Buffer.from(paramValue + SALT)
                     ).toString();
+                    console.log('after hasing');
                 }
             }
         }

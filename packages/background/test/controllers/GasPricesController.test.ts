@@ -152,7 +152,7 @@ describe('GasPrices Controller', () => {
             _fetchFeeDataStub.returns(
                 Promise.resolve({
                     average: { gasPrice: BigNumber.from('181000000000') },
-                    fast: { gasPrice: BigNumber.from('165000000001') },
+                    fast: { gasPrice: BigNumber.from('165000000000') },
                     slow: { gasPrice: BigNumber.from('125000000000') },
                 })
             );

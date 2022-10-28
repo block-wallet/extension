@@ -390,7 +390,7 @@ export default class BridgeController extends BaseController<
             if (isQuoteNotFoundError(e)) {
                 return e.details as GetBridgeQuoteNotFoundResponse;
             }
-            // TODO: throw new Error("error getting");
+            throw new Error('Error requesting the quote.');
         }
 
         if (quoteRequest.fromTokenAddress === LIFI_NATIVE_ADDRESS) {

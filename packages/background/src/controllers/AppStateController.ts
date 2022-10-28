@@ -108,6 +108,7 @@ export default class AppStateController extends BaseController<AppStateControlle
 
             // @ts-ignore
             chrome.storage.session &&
+                // @ts-ignore
                 chrome.storage.session.set({ loginToken }).catch((err: any) => {
                     log.error('error setting loginToken', err);
                 });
@@ -123,6 +124,7 @@ export default class AppStateController extends BaseController<AppStateControlle
         if (!isAppUnlocked) {
             // @ts-ignore
             chrome.storage.session &&
+                // @ts-ignore
                 chrome.storage.session.get(
                     ['loginToken'],
                     async ({ loginToken }: { [key: string]: string }) => {

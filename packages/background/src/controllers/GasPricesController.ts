@@ -336,6 +336,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                             feeDataResponse.gasPricesLevels.slow
                                                 .maxPriorityFeePerGas
                                         ),
+                                        lastBaseFeePerGas: null,
                                     },
                                     average: {
                                         gasPrice: null,
@@ -347,6 +348,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                             feeDataResponse.gasPricesLevels
                                                 .average.maxPriorityFeePerGas
                                         ),
+                                        lastBaseFeePerGas: null,
                                     },
                                     fast: {
                                         gasPrice: null,
@@ -358,6 +360,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                             feeDataResponse.gasPricesLevels.fast
                                                 .maxPriorityFeePerGas
                                         ),
+                                        lastBaseFeePerGas: null,
                                     },
                                 },
                             };
@@ -374,6 +377,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                         ),
                                         maxFeePerGas: null,
                                         maxPriorityFeePerGas: null,
+                                        lastBaseFeePerGas: null,
                                     },
                                     average: {
                                         gasPrice: BigNumber.from(
@@ -382,6 +386,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                         ),
                                         maxFeePerGas: null,
                                         maxPriorityFeePerGas: null,
+                                        lastBaseFeePerGas: null,
                                     },
                                     fast: {
                                         gasPrice: BigNumber.from(
@@ -390,6 +395,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                         ),
                                         maxFeePerGas: null,
                                         maxPriorityFeePerGas: null,
+                                        lastBaseFeePerGas: null,
                                     },
                                 },
                             };
@@ -498,6 +504,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                 maxPriorityFeePerGas: BigNumber.from(
                                     maxPriorityFeePerGasSlow
                                 ),
+                                lastBaseFeePerGas: null,
                             },
                             average: {
                                 gasPrice: null,
@@ -506,6 +513,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                 maxPriorityFeePerGas: BigNumber.from(
                                     maxPriorityFeePerGasAverage
                                 ),
+                                lastBaseFeePerGas: null,
                             },
                             fast: {
                                 gasPrice: null,
@@ -513,6 +521,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                 maxPriorityFeePerGas: BigNumber.from(
                                     maxPriorityFeePerGasFast
                                 ),
+                                lastBaseFeePerGas: null,
                             },
                         },
                     };
@@ -537,16 +546,19 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                 gasPrice: BigNumber.from(gasPriceSlow),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                             average: {
                                 gasPrice: BigNumber.from(gasPriceAverage),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                             fast: {
                                 gasPrice: BigNumber.from(gasPriceFast),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                         },
                     };

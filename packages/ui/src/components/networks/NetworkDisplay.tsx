@@ -33,14 +33,14 @@ const NetworkDisplay = ({
     isTestnet?: boolean
 }) => {
     const [dropAnimation, setDropAnimation] = useState(false)
-
-    const ref = useRef<HTMLDivElement>(null)
+    const dropRef = useRef<HTMLDivElement>(null)
+    const dragRef = useRef<HTMLDivElement>(null)
 
     const [, drop] = useDrop(
         () => ({
             accept: isTestnet ? "testnet" : "mainnet",
             hover(item: NetworkCardProps, monitor: any) {
-                if (!ref.current) {
+                if (!dropRef.current) {
                     return
                 }
 
@@ -51,7 +51,8 @@ const NetworkDisplay = ({
                     return
                 }
 
-                const hoverBoundingRect = ref.current?.getBoundingClientRect()
+                const hoverBoundingRect =
+                    dropRef.current.getBoundingClientRect()
                 const hoverMiddleY =
                     (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
                 const hoverActualY =
@@ -70,10 +71,8 @@ const NetworkDisplay = ({
                 )
                     return
 
-                if (draggedIndex !== hoveredOnIndex) {
-                    moveCard(draggedIndex, hoveredOnIndex, isTestnet)
-                    item.index = hoveredOnIndex
-                }
+                moveCard(draggedIndex, hoveredOnIndex, isTestnet)
+                item.index = hoveredOnIndex
             },
             collect(monitor) {
                 if (monitor.didDrop()) {
@@ -94,7 +93,7 @@ const NetworkDisplay = ({
         [moveCard, index]
     )
 
-    const [{ isDragging }, drag] = useDrag(
+    const [{ isDragging }, drag, preview] = useDrag(
         () => ({
             type: isTestnet ? "testnet" : "mainnet",
             item: { index, isTestnet },
@@ -111,7 +110,8 @@ const NetworkDisplay = ({
         [index, moveCard]
     )
 
-    drag(drop(ref))
+    preview(drop(dropRef))
+    drag(dragRef)
 
     useEffect(() => {
         if (dropAnimation) {
@@ -121,48 +121,46 @@ const NetworkDisplay = ({
         }
     }, [dropAnimation])
 
+    const opacity = isDragging ? 0 : 1
+
     return (
         <div
             onClick={onClick}
             className={classnames(
                 "rounded-md",
-                isDragging && "bg-slate-600",
-                dropAnimation &&
-                    "bg-green-100 transition-colors animate-bounce",
+                dropAnimation && "bg-blue-100 transition-colors animate-pulse",
                 !dropAnimation && "hover:bg-gray-100 hover:cursor-pointer"
             )}
-            ref={ref}
+            ref={dropRef}
+            style={{ opacity }}
         >
-            {!isDragging ? (
-                <>
-                    <div className="flex flex-row justify-between items-center p-2 pl-0">
-                        <div className="flex flex-row group items-center">
-                            <div
-                                className="flex flex-row items-center cursor-move"
-                                title="Drag to sort"
-                            >
-                                <HiDotsVertical
-                                    className="text-gray-500 mr-2"
-                                    size={20}
-                                />
-                                <span
-                                    className={"h-2 w-2 rounded-xl mr-2"}
-                                    style={{
-                                        backgroundColor: networkInfo.color,
-                                    }}
-                                />
-                            </div>
-                            <span className="text-sm font-bold text-ellipsis overflow-hidden whitespace-nowrap">
-                                {networkInfo.desc}
-                            </span>
+            <>
+                <div className="flex flex-row justify-between items-center p-2 pl-0">
+                    <div className="flex flex-row group items-center">
+                        <div
+                            className="flex flex-row items-center cursor-move"
+                            title="Drag to sort"
+                            ref={dragRef}
+                        >
+                            <HiDotsVertical
+                                className="text-gray-500 mr-2"
+                                size={20}
+                            />
+                            <span
+                                className={"h-2 w-2 rounded-xl mr-2"}
+                                style={{
+                                    backgroundColor: networkInfo.color,
+                                }}
+                            />
                         </div>
-
-                        <RiArrowRightSLine size={20} />
+                        <span className="text-sm font-bold text-ellipsis overflow-hidden whitespace-nowrap">
+                            {networkInfo.desc}
+                        </span>
                     </div>
-                </>
-            ) : (
-                <div className="h-9"></div>
-            )}
+
+                    <RiArrowRightSLine size={20} />
+                </div>
+            </>
         </div>
     )
 }

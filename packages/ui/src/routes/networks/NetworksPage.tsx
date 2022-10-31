@@ -141,7 +141,7 @@ const NetworksPage = () => {
                         <div className="flex flex-col space-y-2">
                             {mainNetworks.map((network, index) => (
                                 <NetworkDisplay
-                                    key={index}
+                                    key={network.name}
                                     networkInfo={network}
                                     onClick={() => onClickNetwork(network)}
                                     index={index}
@@ -155,7 +155,7 @@ const NetworksPage = () => {
                         <div className="flex flex-col space-y-2">
                             {testNetworks.map((network, index) => (
                                 <NetworkDisplay
-                                    key={index}
+                                    key={network.name}
                                     networkInfo={network}
                                     onClick={() => onClickNetwork(network)}
                                     index={index}

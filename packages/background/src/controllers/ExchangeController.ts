@@ -249,8 +249,8 @@ export default class ExchangeController {
             return {
                 ...res.data,
                 blockWalletFee: BigNumber.from(res.data.fromTokenAmount)
-                    .mul(BASE_SWAP_FEE * 1000)
-                    .div(100000),
+                    .mul(BASE_SWAP_FEE * 10)
+                    .div(1000),
                 estimatedGas: Math.round(
                     res.data.estimatedGas * GAS_LIMIT_INCREASE
                 ),
@@ -303,8 +303,8 @@ export default class ExchangeController {
                 ...res.data,
                 methodSignature,
                 blockWalletFee: BigNumber.from(res.data.fromTokenAmount)
-                    .mul(BASE_SWAP_FEE * 1000)
-                    .div(100000),
+                    .mul(BASE_SWAP_FEE * 10)
+                    .div(1000),
                 tx: {
                     ...res.data.tx,
                     gas: Math.round(res.data.tx.gas * GAS_LIMIT_INCREASE),

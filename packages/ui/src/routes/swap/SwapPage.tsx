@@ -415,6 +415,18 @@ const SwapPage = () => {
             : undefined
     }, [quote?.toTokenAmount])
 
+    const swapFee = quote
+        ? `${formatNumberLength(
+              formatUnits(
+                  BigNumber.from(quote.fromTokenAmount)
+                      .mul(BASE_SWAP_FEE * 10)
+                      .div(1000),
+                  quote.fromToken.decimals
+              ),
+              8
+          )} ${quote.fromToken.symbol}`
+        : undefined
+
     return (
         <PopupLayout
             header={
@@ -629,49 +641,10 @@ const SwapPage = () => {
                         toToken: tokenTo,
                     }}
                 />
-                {quote && (
+                {swapFee && (
                     <>
-                        <div className="flex items-center pt-2">
-                            <p className="text-xs text-gray-600 pt-0.5 mr-1">
-                                {/* We don't display the actual fee since it's 0
-                                until further notice
-                                {formatUnits(
-                                    BigNumber.from(quote.blockWalletFee),
-                                    quote.fromToken.decimals
-                                )} */}
-                                Swap fee: 0 {quote.fromToken.symbol}
-                            </p>
-                            <GenericTooltip
-                                bottom
-                                centerX
-                                content={
-                                    <div className="min-w-max p-1 text-center">
-                                        <p className="pb-0.5">
-                                            This swap is on us!
-                                        </p>
-                                        <p>
-                                            Original fee:{" "}
-                                            {formatNumberLength(
-                                                formatUnits(
-                                                    BigNumber.from(
-                                                        quote.fromTokenAmount
-                                                    )
-                                                        .mul(BASE_SWAP_FEE * 10)
-                                                        .div(1000),
-                                                    quote.fromToken.decimals
-                                                ),
-                                                8
-                                            )}{" "}
-                                            {quote.fromToken.symbol}
-                                        </p>
-                                    </div>
-                                }
-                            >
-                                <AiFillInfoCircle
-                                    size={18}
-                                    className="cursor-pointer text-primary-200 hover:text-primary-300"
-                                />
-                            </GenericTooltip>
+                        <div className="flex items-center pt-2 text-xs text-gray-600 pt-0.5 mr-1 mt-2">
+                            <span>{`BlockWallet fee (${BASE_SWAP_FEE}%): ${swapFee}`}</span>
                         </div>
                     </>
                 )}

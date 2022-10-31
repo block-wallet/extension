@@ -21,7 +21,7 @@ export const ONEINCH_SWAPS_NETWORKS: number[] = [
 /**
  * Swap Fees Config
  */
-export const BASE_SWAP_FEE = 0.01;
+export const BASE_SWAP_FEE = 0.5;
 export const REFERRER_ADDRESS = '0x3110a855333bfb922aeCB1B3542ba2fdE28d204F';
 
 // API Recommended gas limit increase

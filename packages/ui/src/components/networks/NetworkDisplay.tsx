@@ -11,75 +11,83 @@ interface NetworkInfo extends Network {
 }
 
 type NetworkCardProps = {
-    index: number
+    networkInfo: NetworkInfo
     isTestnet: boolean
 }
 
 const NetworkDisplay = ({
     networkInfo,
     onClick,
-    index,
     moveCard,
     isTestnet = false,
+    findNetworkCard,
 }: {
     networkInfo: NetworkInfo
     onClick: () => void
-    index: number
     moveCard: (
         draggedIndex: number,
         hoveredOnIndex: number,
         isTestnet: boolean
     ) => void
+    findNetworkCard: (
+        chainId: number,
+        isTestnet: boolean
+    ) => {
+        network: NetworkInfo
+        index: number
+    }
     isTestnet?: boolean
 }) => {
     const [dropAnimation, setDropAnimation] = useState(false)
     const dropRef = useRef<HTMLDivElement>(null)
     const dragRef = useRef<HTMLDivElement>(null)
 
+    const originalIndex = findNetworkCard(networkInfo.chainId, isTestnet).index
+
+    const [{ isDragging }, drag, preview] = useDrag(
+        () => ({
+            type: isTestnet ? "testnet" : "mainnet",
+            item: { networkInfo, originalIndex, isTestnet },
+            collect: (monitor: DragSourceMonitor) => ({
+                isDragging: monitor.isDragging(),
+            }),
+            end: (item: NetworkCardProps, monitor: DragSourceMonitor) => {
+                const didDrop = monitor.didDrop()
+                if (!didDrop) {
+                    moveCard(
+                        item.networkInfo.chainId,
+                        originalIndex,
+                        item.isTestnet
+                    )
+                }
+            },
+        }),
+        [networkInfo, originalIndex, moveCard]
+    )
+
     const [, drop] = useDrop(
         () => ({
             accept: isTestnet ? "testnet" : "mainnet",
-            hover(item: NetworkCardProps, monitor: any) {
-                if (!dropRef.current) {
-                    return
+            hover(item: NetworkCardProps) {
+                if (item.networkInfo.chainId !== networkInfo.chainId) {
+                    const { index: overIndex } = findNetworkCard(
+                        networkInfo.chainId,
+                        isTestnet
+                    )
+                    moveCard(
+                        item.networkInfo.chainId,
+                        overIndex,
+                        item.isTestnet
+                    )
                 }
-
-                const draggedIndex = item.index
-                const hoveredOnIndex = index
-
-                if (draggedIndex === hoveredOnIndex) {
-                    return
-                }
-
-                const hoverBoundingRect =
-                    dropRef.current.getBoundingClientRect()
-                const hoverMiddleY =
-                    (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
-                const hoverActualY =
-                    monitor.getClientOffset().y - hoverBoundingRect.top
-
-                // if dragging down, continue only when hover is smaller than middle Y
-                if (
-                    draggedIndex < hoveredOnIndex &&
-                    hoverActualY < hoverMiddleY
-                )
-                    return
-                // if dragging up, continue only when hover is bigger than middle Y
-                if (
-                    draggedIndex > hoveredOnIndex &&
-                    hoverActualY > hoverMiddleY
-                )
-                    return
-
-                moveCard(draggedIndex, hoveredOnIndex, isTestnet)
-                item.index = hoveredOnIndex
             },
             collect(monitor) {
                 if (monitor.didDrop()) {
                     const dropResult =
                         monitor.getDropResult() as NetworkCardProps
                     if (
-                        dropResult.index === index &&
+                        dropResult.networkInfo.chainId ===
+                            networkInfo.chainId &&
                         dropResult.isTestnet === isTestnet
                     ) {
                         setDropAnimation(true)
@@ -90,24 +98,7 @@ const NetworkDisplay = ({
                 return item
             },
         }),
-        [moveCard, index]
-    )
-
-    const [{ isDragging }, drag, preview] = useDrag(
-        () => ({
-            type: isTestnet ? "testnet" : "mainnet",
-            item: { index, isTestnet },
-            collect: (monitor: DragSourceMonitor) => ({
-                isDragging: monitor.isDragging(),
-            }),
-            end: (item: NetworkCardProps, monitor: DragSourceMonitor) => {
-                const didDrop = monitor.didDrop()
-                if (!didDrop) {
-                    moveCard(item.index, index, isTestnet)
-                }
-            },
-        }),
-        [index, moveCard]
+        [moveCard, findNetworkCard]
     )
 
     preview(drop(dropRef))
@@ -117,22 +108,20 @@ const NetworkDisplay = ({
         if (dropAnimation) {
             setTimeout(() => {
                 setDropAnimation(false)
-            }, 750)
+            }, 800)
         }
     }, [dropAnimation])
-
-    const opacity = isDragging ? 0 : 1
 
     return (
         <div
             onClick={onClick}
             className={classnames(
                 "rounded-md",
-                dropAnimation && "bg-blue-100 transition-colors animate-pulse",
+                dropAnimation &&
+                    "bg-blue-100 transition-colors animate-[pulse_0.8s]",
                 !dropAnimation && "hover:bg-gray-100 hover:cursor-pointer"
             )}
             ref={dropRef}
-            style={{ opacity }}
         >
             <>
                 <div className="flex flex-row justify-between items-center p-2 pl-0">

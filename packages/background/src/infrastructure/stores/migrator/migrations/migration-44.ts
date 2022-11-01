@@ -1,84 +1,29 @@
-import {
-    BlankSupportedFeatures,
-    FEATURES,
-} from '../../../../utils/constants/features';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
 
 /**
- * This migration increases the block fetch intervals for all the networks
+ * This migration fixes the symbol and RPC url of BSC Testnet
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
         const { availableNetworks } = persistedState.NetworkController;
         const updatedNetworks = { ...availableNetworks };
 
-        for (const key in updatedNetworks) {
-            const network = updatedNetworks[key];
-            if (network.nativelySupported) {
-                const currentInterval =
-                    network.actionsTimeIntervals.blockNumberPull;
-
-                // increase the current interval by 50%
-                const newInterval = Math.trunc(
-                    currentInterval + currentInterval / 2
-                );
-
-                const features: BlankSupportedFeatures[] = [];
-                for (const feature in updatedNetworks[key].features) {
-                    if (feature !== FEATURES.TORNADO) {
-                        features.push(feature as BlankSupportedFeatures);
-                    }
-                }
-
-                // update the value
-                updatedNetworks[key] = {
-                    ...updatedNetworks[key],
-                    actionsTimeIntervals: {
-                        ...updatedNetworks[key].actionsTimeIntervals,
-                        blockNumberPull: newInterval,
-                    },
-                    features: features,
-                };
-            }
-        }
-
-        const { gasPriceData } = persistedState.GasPricesController;
-        const updatedGasPriceData = { ...gasPriceData };
-
-        for (const c in updatedGasPriceData) {
-            const chainId = parseInt(c);
-
-            const gasPriceData = updatedGasPriceData[chainId];
-            gasPriceData.gasPricesLevels.slow = {
-                ...gasPriceData.gasPricesLevels.slow,
-                lastBaseFeePerGas: null,
-            };
-            gasPriceData.gasPricesLevels.average = {
-                ...gasPriceData.gasPricesLevels.average,
-                lastBaseFeePerGas: null,
-            };
-            gasPriceData.gasPricesLevels.fast = {
-                ...gasPriceData.gasPricesLevels.fast,
-                lastBaseFeePerGas: null,
-            };
-
-            updatedGasPriceData[c] = {
-                ...gasPriceData,
-            };
-        }
-
+        updatedNetworks.BSC_TESTNET = {
+            ...updatedNetworks.BSC_TESTNET,
+            rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545'],
+            nativeCurrency: {
+                ...updatedNetworks.BSC_TESTNET.nativeCurrency,
+                symbol: 'tBNB',
+            },
+        };
         return {
             ...persistedState,
             NetworkController: {
                 ...persistedState.NetworkController,
                 availableNetworks: { ...updatedNetworks },
             },
-            GasPricesController: {
-                ...persistedState.GasPricesController,
-                gasPriceData: { ...updatedGasPriceData },
-            },
         };
     },
-    version: '0.8.0',
+    version: '0.7.2',
 } as IMigration;

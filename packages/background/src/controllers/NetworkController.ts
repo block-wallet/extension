@@ -8,10 +8,13 @@ import {
     AddNetworkType,
     FAST_TIME_INTERVALS_DEFAULT_VALUES,
     EditNetworkUpdatesType,
+    EditNetworkOrderType,
 } from '../utils/constants/networks';
 import { constants, ethers } from 'ethers';
 import { poll } from '@ethersproject/web';
 import { ErrorCode } from '@ethersproject/logger';
+import { cloneDeep } from 'lodash';
+
 import { checkIfRateLimitError } from '../utils/ethersError';
 import { getChainListItem } from '../utils/chainlist';
 import { FEATURES } from '../utils/constants/features';
@@ -20,6 +23,7 @@ import {
     getUrlWithoutTrailingSlash,
     validateNetworkChainId,
 } from '../utils/ethereumChain';
+import { normalizeNetworksOrder } from '../utils/networks';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -88,7 +92,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * Set a new list of networks.
      */
     public set networks(networks: Networks) {
-        this.store.updateState({ availableNetworks: networks });
+        this.store.updateState({
+            availableNetworks: normalizeNetworksOrder(networks),
+        });
     }
 
     /**
@@ -155,6 +161,35 @@ export default class NetworkController extends BaseController<NetworkControllerS
     }
 
     /**
+     * Change list of networks order.
+     */
+    public editNetworksOrder(networksOrder: EditNetworkOrderType[]): void {
+        const newNetworks = cloneDeep(this.networks);
+        networksOrder.forEach((networkOrderUpdate) => {
+            const { chainId, order } = networkOrderUpdate;
+
+            //Validations
+            if (!chainId || Number.isNaN(chainId)) {
+                throw new Error('ChainId is required and must be numeric.');
+            }
+
+            const existingNetwork = this.getNetworkFromChainId(chainId);
+
+            if (!existingNetwork) {
+                throw new Error(
+                    'The network you are trying to edit does not exist.'
+                );
+            }
+
+            const networkKey = this._getNetworkKey(existingNetwork);
+
+            newNetworks[networkKey].order = order;
+        });
+
+        this.networks = newNetworks;
+    }
+
+    /**
      * removeNetwork
      *
      * Removes a network from the list of available networks
@@ -187,7 +222,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             if (network.chainId === 1) {
                 throw new Error(`Mainnet cannot be removed`);
             }
-            const newNetworks = { ...this.networks };
+            const newNetworks = cloneDeep(this.networks);
 
             // If network is natively supported, the key is its uppercased name
             const key = this._getNetworkKey(network);
@@ -198,7 +233,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             const key = this.getNonNativeNetworkKey(chainId);
 
             // Remove network from list
-            const newNetworks = { ...this.networks };
+            const newNetworks = cloneDeep(this.networks);
             delete newNetworks[key];
             this.networks = newNetworks;
         }
@@ -249,7 +284,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         const networkKey = this._getNetworkKey(existingNetwork);
 
-        const newNetworks = { ...this.networks };
+        const newNetworks = cloneDeep(this.networks);
         newNetworks[networkKey].desc = updates.name;
         newNetworks[networkKey].rpcUrls = [rpcUrl];
         newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
@@ -325,7 +360,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         if (typeof existingNetwork !== 'undefined') {
             // Here we handle the nativelySupported networks which are disabled
             const key = this._getNetworkKey(existingNetwork);
-            const newNetworks = { ...this.networks };
+            const newNetworks = cloneDeep(this.networks);
             newNetworks[key].enable = true;
             newNetworks[key].rpcUrls = [rpcUrl];
             newNetworks[key].blockExplorerName =
@@ -376,6 +411,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 test: !!network.test,
                 order:
                     Object.values(this.networks)
+                        .filter((n) => n.test === network.test)
                         .map((c) => c.order)
                         .sort((a, b) => b - a)[0] + 1,
                 iconUrls: nativeCurrencyIcon ? [nativeCurrencyIcon] : undefined,
@@ -439,20 +475,64 @@ export default class NetworkController extends BaseController<NetworkControllerS
         networkName: string
     ): ethers.providers.StaticJsonRpcProvider => {
         const network = this.searchNetworkByName(networkName);
+        return this._getProviderForNework(network.chainId, network.rpcUrls[0]);
+    };
+
+    /**
+     * Gets a provider for a given chainId.
+     *
+     * @param chainId the network's chainId
+     * @param userNetworksOnly whether return the generated provider if the chainId exists on the user's network list.
+     * @returns {ethers.providers.StaticJsonRpcProvider}
+     */
+    public getProviderForChainId = (
+        chainId: number,
+        userNetworksOnly = true
+    ): ethers.providers.StaticJsonRpcProvider | undefined => {
+        if (this.network.chainId === chainId) {
+            return this.provider;
+        }
+
+        const userNetwork = Object.values(
+            this.store.getState().availableNetworks
+        ).find(
+            (network) => Number(network.chainId) === chainId && network.enable
+        );
+
+        if (userNetwork) {
+            return this._getProviderForNework(
+                userNetwork.chainId,
+                userNetwork.rpcUrls[0]
+            );
+        }
+
+        if (userNetworksOnly) {
+            return;
+        }
+
+        const chain = getChainListItem(chainId);
+        if (chain && chain.rpc && chain.rpc[0]) {
+            return this._getProviderForNework(chainId, chain.rpc[0]);
+        }
+    };
+
+    private _getProviderForNework(chainId: number, rpcUrl: string) {
         return this._overloadProviderMethods(
-            network,
+            { chainId },
             new ethers.providers.StaticJsonRpcProvider({
-                url: network.rpcUrls[0],
-                allowGzip: network.rpcUrls[0].endsWith('.blockwallet.io'),
+                url: rpcUrl,
+                allowGzip: rpcUrl.endsWith('.blockwallet.io'),
             })
         );
-    };
+    }
 
     /**
      * It returns the latest block from the network
      */
-    public async getLatestBlock(): Promise<ethers.providers.Block> {
-        return this.getProvider().getBlock('latest');
+    public async getLatestBlock(
+        provider: ethers.providers.JsonRpcProvider = this.getProvider()
+    ): Promise<ethers.providers.Block> {
+        return provider.getBlock('latest');
     }
 
     /**
@@ -460,7 +540,10 @@ export default class NetworkController extends BaseController<NetworkControllerS
      */
     public async getEIP1559Compatibility(
         chainId: number = this.network.chainId,
-        forceUpdate?: boolean
+        forceUpdate = false,
+        //required by parameter to avoid returning undefined if the user hasn't added the chain
+        //previous check should be done before invoking this method.
+        provider: ethers.providers.JsonRpcProvider = this.getProvider()
     ): Promise<boolean> {
         let shouldFetchTheCurrentState = false;
 
@@ -477,13 +560,14 @@ export default class NetworkController extends BaseController<NetworkControllerS
         }
 
         if (shouldFetchTheCurrentState) {
-            let baseFeePerGas = (await this.getLatestBlock()).baseFeePerGas;
+            let baseFeePerGas = (await this.getLatestBlock(provider))
+                .baseFeePerGas;
 
             // detection for the fantom case,
             // the network seems to be eip1559 but eth_feeHistory is not available.
             if (baseFeePerGas) {
                 try {
-                    await this.provider.send('eth_feeHistory', [
+                    await provider.send('eth_feeHistory', [
                         '0x1',
                         'latest',
                         [50],
@@ -712,10 +796,10 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * @returns {ethers.providers.StaticJsonRpcProvider}
      */
     private _overloadProviderMethods = (
-        network: Network,
+        { chainId }: { chainId: number },
         provider: ethers.providers.StaticJsonRpcProvider
     ): ethers.providers.StaticJsonRpcProvider => {
-        switch (network.chainId) {
+        switch (chainId) {
             // celo
             case 42220: {
                 const originalBlockFormatter: (

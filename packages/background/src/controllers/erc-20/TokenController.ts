@@ -1,4 +1,10 @@
-import { IAccountTokens, INetworkTokens, ITokens, Token } from './Token';
+import {
+    IAccountTokens,
+    INetworkTokens,
+    IToken,
+    ITokens,
+    Token,
+} from './Token';
 import { BaseController } from '../../infrastructure/BaseController';
 import NetworkController from '../NetworkController';
 import NETWORK_TOKENS_LIST, {
@@ -14,9 +20,12 @@ import { PreferencesController } from '../PreferencesController';
 import { Mutex } from 'async-mutex';
 import initialState from '../../utils/constants/initialState';
 import { TokenOperationsController } from './transactions/Transaction';
-import { BasicToken } from '@block-wallet/background/utils/types/1inch';
+import { fillTokenData, isNativeTokenAddress } from '../../utils/token';
 
 const tokenAddressParamNotPresentError = new Error('token address is required');
+const tokenAddressInvalidError = new Error(
+    'token address is invalid for selected network'
+);
 const tokenParamNotPresentError = new Error('token is required');
 const fromParamNotPresentError = new Error('from is required');
 const toParamNotPresentError = new Error('to is required');
@@ -45,6 +54,7 @@ const transactionIdParamNotPresentError = new Error(
 const transactionNotFound = new Error('transaction not found');
 export {
     tokenAddressParamNotPresentError,
+    tokenAddressInvalidError,
     tokenParamNotPresentError,
     fromParamNotPresentError,
     toParamNotPresentError,
@@ -323,18 +333,28 @@ export class TokenController extends BaseController<TokenControllerState> {
             userTokens[key].symbol.toLowerCase()
         );
 
-        const cleanedTokens = tokens.filter((token) => {
-            if (userSymbols.includes(token.symbol.toLowerCase())) {
-                const tokenAddress = toChecksumAddress(token.address);
+        const cleanedTokens = tokens
+            .filter((token) => {
+                if (userSymbols.includes(token.symbol.toLowerCase())) {
+                    const tokenAddress = toChecksumAddress(token.address);
 
-                // Check if it's a token update
-                if (userTokens[tokenAddress].address !== tokenAddress) {
-                    return false;
+                    // Check if it's a token update
+                    if (userTokens[tokenAddress].address !== tokenAddress) {
+                        return false;
+                    }
                 }
-            }
 
-            return true;
-        });
+                return true;
+            })
+            .map((token) => {
+                if (!token.name) {
+                    return {
+                        ...token,
+                        name: token.symbol,
+                    };
+                }
+                return token;
+            });
 
         for (let i = 0; i < cleanedTokens.length; i++) {
             cleanedTokens[i].address = toChecksumAddress(
@@ -356,6 +376,15 @@ export class TokenController extends BaseController<TokenControllerState> {
             accountAddress,
             chainId,
             ignoreEvent
+        );
+
+        this.emit(
+            TokenControllerEvents.USER_TOKEN_CHANGE,
+            this.getSelectedAccountAddress(),
+            this.getSelectedNetworkChainId(),
+            tokens.map(function (token) {
+                return token.address;
+            })
         );
     }
 
@@ -615,9 +644,7 @@ export class TokenController extends BaseController<TokenControllerState> {
         if (!address) {
             throw tokenAddressParamNotPresentError;
         }
-        return ['0x0000000000000000000000000000000000000000', '0x0'].includes(
-            address
-        );
+        return isNativeTokenAddress(address);
     }
 
     /**
@@ -631,23 +658,51 @@ export class TokenController extends BaseController<TokenControllerState> {
     /**
      * Attemps to add a token to the user's token list.
      */
-    public attemptAddToken = async (token: BasicToken): Promise<void> => {
-        const tokenExists = (await this.getUserTokens())[token.address];
+    public attemptAddToken = async (
+        tokenAddress: string,
+        chainId?: number,
+        //default data if the token is not found.
+        defaultTokenData?: IToken
+    ): Promise<void> => {
+        const tokenExists = (
+            await this.getUserTokens(this.getSelectedAccountAddress(), chainId)
+        )[tokenAddress];
 
         //If token to doesn't exists, then attempt to add
         if (tokenExists) {
+            this.emit(
+                TokenControllerEvents.USER_TOKEN_CHANGE,
+                this.getSelectedAccountAddress(),
+                this.getSelectedNetworkChainId(),
+                [tokenAddress]
+            );
+
             return;
         }
 
-        const fullToken = await this.search(token.address);
-        if (!fullToken || !fullToken.length) {
+        const fullToken = await this.search(
+            tokenAddress,
+            false,
+            this.getSelectedAccountAddress(),
+            chainId
+        );
+
+        if ((!fullToken || !fullToken.length) && !defaultTokenData) {
             return;
         }
-        const firstToken = fullToken[0];
+
+        const token = fillTokenData(fullToken[0] as IToken, defaultTokenData);
+
         //If the token has no symbol, ensure that the user adds it manually.
-        if (!firstToken.symbol) {
+        if (!token.symbol) {
             return;
         }
-        return this.addCustomToken(firstToken);
+
+        return this.addCustomToken(
+            token,
+            this.getSelectedAccountAddress(),
+            chainId,
+            false
+        );
     };
 }

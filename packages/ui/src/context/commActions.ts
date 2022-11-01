@@ -12,9 +12,11 @@ import {
     SubscriptionMessageTypes,
     RequestAddNetwork,
     RequestEditNetwork,
+    RequestEditNetworksOrder,
 } from "@block-wallet/background/utils/types/communication"
 import { Devices, ExchangeType, Messages } from "./commTypes"
 import {
+    IToken,
     ITokens,
     Token,
 } from "@block-wallet/background/controllers/erc-20/Token"
@@ -43,12 +45,21 @@ import {
     SwapParameters,
     SwapQuote,
     SwapTransaction,
-} from "@block-wallet/background/controllers/ExchangeController"
+} from "@block-wallet/background/controllers/SwapController"
 import {
     OneInchSwapQuoteParams,
     OneInchSwapRequestParams,
 } from "@block-wallet/background/utils/types/1inch"
 import { generatePhishingPreventionBase64 } from "../util/phishingPrevention"
+import {
+    BridgeQuoteRequest,
+    BridgeRoutesRequest,
+    BridgeTransaction,
+    GetBridgeAvailableRoutesResponse,
+    GetBridgeQuoteResponse,
+    GetBridgeQuoteNotFoundResponse,
+} from "@block-wallet/background/controllers/BridgeController"
+import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 
 let requestId = 0
 
@@ -217,6 +228,33 @@ export const getAccountBalance = async (
 }
 
 /**
+ * getAccountNativeTokenBalanceForChain
+ *
+ * It gets the native token balance for a specified chain using the selected account.
+ *
+ * @param chainId The chain id
+ * @returns The account's native token balance.
+ */
+export const getAccountNativeTokenBalanceForChain = async (
+    chainId: number
+): Promise<BigNumber | undefined> => {
+    return sendMessage(Messages.ACCOUNT.GET_NATIVE_TOKEN_BALANCE, chainId)
+}
+
+/**
+ * fetchLatestGasPriceForChain
+ *
+ * It fetches the latest gas price from the Fee service and/or the network for a specified chain
+ *
+ * @param chainId The chain id
+ * @returns The gas price
+ */
+export const fetchLatestGasPriceForChain = async (
+    chainId: number
+): Promise<GasPriceData | undefined> => {
+    return sendMessage(Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE, chainId)
+}
+/**
  * Update last user activity time
  *
  * @param lastUserActivtyTime the new timeout
@@ -304,8 +342,10 @@ export const verifySeedPhrase = async (
  * Method to mark setup process as complete and to fire a notification.
  *
  */
-export const completeSetup = async (): Promise<void> => {
-    return sendMessage(Messages.WALLET.SETUP_COMPLETE, {})
+export const completeSetup = async (
+    sendNotification: boolean = true
+): Promise<void> => {
+    return sendMessage(Messages.WALLET.SETUP_COMPLETE, { sendNotification })
 }
 
 /**
@@ -863,6 +903,16 @@ export const editNetwork = async (editNetworkInput: RequestEditNetwork) => {
 }
 
 /**
+ * Edit networks order.
+ *
+ */
+export const editNetworksOrder = async (
+    editNetworksOrder: RequestEditNetworksOrder
+) => {
+    return sendMessage(Messages.NETWORK.EDIT_NETWORKS_ORDER, editNetworksOrder)
+}
+
+/**
  * Fetches the chainId from the specified rpc url
  *
  * @param rpcUrl The url of the chain rpc
@@ -1399,4 +1449,83 @@ export const subscribeNetworkStatus = () => {
         window.addEventListener("online", () => setNetworkStatus(true))
         window.addEventListener("offline", () => setNetworkStatus(false))
     }
+}
+/*
+* Returns the available tokes for bridging in the current user's network
+*/
+export const getBridgeTokens = async (): Promise<IToken[]> => {
+    return sendMessage(Messages.BRIDGE.GET_BRIDGE_TOKENS)
+}
+
+/**
+ * Returns all the available routes based on the parameters specified in the request.
+ * The fromChainId value is automatically filled with the current user's network
+ * @param fromTokenAddress Address of the token from which the user want to bridge
+ * @param toChainId Optional destination chain Id
+ * @param toTokenAddress Optional destination token address in the destination chain Id
+ */
+export const getBridgeAvailableRoutes = async (
+    routesRequest: BridgeRoutesRequest
+): Promise<GetBridgeAvailableRoutesResponse> => {
+    return sendMessage(Messages.BRIDGE.GET_BRIDGE_ROUTES, {
+        routesRequest,
+    })
+}
+
+//export const getBridgeRoute = async():
+
+/**
+ * Submits an approval transaction to setup asset allowance
+ *
+ * @param allowance User selected allowance
+ * @param amount Exchange amount
+ * @param spenderAddress The spender address for the allowance
+ * @param feeData Transaction gas fee data
+ * @param tokenAddress Spended asset token address
+ * @param customNonce Custom transaction nonce
+ */
+export const approveBridgeAllowance = async (
+    allowance: BigNumber,
+    amount: BigNumber,
+    spenderAddress: string,
+    feeData: TransactionFeeData,
+    tokenAddress: string,
+    customNonce?: number
+): Promise<boolean> => {
+    return sendMessage(Messages.BRIDGE.APPROVE_BRIDGE_ALLOWANCE, {
+        allowance,
+        amount,
+        spenderAddress,
+        feeData,
+        tokenAddress,
+        customNonce,
+    })
+}
+
+/**
+ * Gets a bridge quote for the  parameters and optionally checks the allowance for the transaction sepender
+ *
+ * @param quoteParams Quote parameters
+ */
+export const getBridgeQuote = async (
+    quoteRequest: BridgeQuoteRequest,
+    checkAllowance: boolean = false
+): Promise<GetBridgeQuoteResponse | GetBridgeQuoteNotFoundResponse> => {
+    return sendMessage(Messages.BRIDGE.GET_BRIDGE_QUOTE, {
+        quoteRequest,
+        checkAllowance,
+    })
+}
+
+/**
+ * Executes the specified bridge transaction
+ *
+ * @param bridgeTransaction Parameters got after requesting a quote and cusotm one specified by the user
+ */
+export const executeBridge = async (
+    bridgeTransaction: BridgeTransaction
+): Promise<string> => {
+    return sendMessage(Messages.BRIDGE.EXECUTE_BRIDGE, {
+        bridgeTransaction,
+    })
 }

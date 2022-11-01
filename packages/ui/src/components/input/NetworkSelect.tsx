@@ -1,6 +1,9 @@
 import { FunctionComponent, useRef, useState } from "react"
 import { RiArrowDownSLine, RiArrowUpSLine } from "react-icons/ri"
 import { BsCheck } from "react-icons/bs"
+import { useHistory } from "react-router-dom"
+
+import ClickableText from "../button/ClickableText"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import classnames from "classnames"
 import { useOnClickOutside } from "../../util/useOnClickOutside"
@@ -42,6 +45,7 @@ const NetworkSelect: FunctionComponent<{
     className?: string
     optionsContainerClassName?: string
 }> = ({ className, optionsContainerClassName }) => {
+    const history = useHistory()!
     const [networkList, setNetworkList] = useState(false)
     const [networkChanging, setNetworkChanging] = useState(false)
     const {
@@ -107,7 +111,7 @@ const NetworkSelect: FunctionComponent<{
 
             <div
                 hidden={!networkList}
-                className={`absolute shadow-md rounded-md w-48 mt-2 bg-white z-50 select-none ${optionsContainerClassName}`}
+                className={`absolute shadow-md rounded-md w-48 max-h-96 overflow-y-auto mt-2 bg-white z-50 select-none ${optionsContainerClassName}`}
             >
                 <ul className="text-xs">
                     {Object.values(availableNetworks)
@@ -159,6 +163,25 @@ const NetworkSelect: FunctionComponent<{
                                     }
                                 />
                             ))}
+                    <li
+                        className={`${
+                            showTestNetworks
+                                ? "border-t border-t-gray-200 border-b border-b-gray-200"
+                                : ""
+                        } hover:bg-gray-100`}
+                    >
+                        <ClickableText
+                            className={`cursor-pointer flex flex-row justify-between pl-2 pr-2 pt-1 pb-1 leading-loose items-center w-full rounded-none`}
+                            onClick={() =>
+                                history.push({
+                                    pathname: "/settings/networks",
+                                    state: { isFromHomePage: true },
+                                })
+                            }
+                        >
+                            Edit Networks
+                        </ClickableText>
+                    </li>
                 </ul>
             </div>
         </div>

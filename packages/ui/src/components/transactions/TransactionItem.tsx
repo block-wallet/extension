@@ -3,6 +3,7 @@ import { FaExchangeAlt } from "react-icons/fa"
 import { FiUpload } from "react-icons/fi"
 import { RiCopperCoinFill } from "react-icons/ri"
 import { AiFillInfoCircle } from "react-icons/ai"
+import { GiSuspensionBridge } from "react-icons/gi"
 import { ImSpinner } from "react-icons/im"
 import { BigNumber } from "ethers"
 import classNames from "classnames"
@@ -19,21 +20,21 @@ import eth from "../../assets/images/icons/ETH.svg"
 import blankLogo from "../../assets/images/logo.svg"
 import flashbotsLogo from "../../assets/images/flashbots.png"
 
-// Context
-import { useBlankState } from "../../context/background/backgroundHooks"
 import {
+    BridgeStatus,
+    BridgeSubstatus,
     MetaType,
     TransactionCategories,
     TransactionStatus,
 } from "../../context/commTypes"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import {
+    BridgeTransactionParams,
     TransactionMeta,
     TransferType,
 } from "@block-wallet/background/controllers/transactions/utils/types"
 
 // Utils
-import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { capitalize } from "../../util/capitalize"
 import { getDisplayTime } from "../../util/getDisplayTime"
 import formatTransactionValue from "../../util/formatTransactionValue"
@@ -41,14 +42,13 @@ import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import AppIcon from "./../icons/AppIcon"
 import TransactionDetails from "./TransactionDetails"
 import { formatName } from "../../util/formatAccount"
-import {
-    getDepositTransactionInfo,
-    RichedTransactionMeta,
-} from "../../util/transactionUtils"
+import { RichedTransactionMeta } from "../../util/transactionUtils"
 import Dots from "../loading/LoadingDots"
-import { getValueByKey } from "../../util/objectUtils"
-
-const DEFAULT_TORNADO_CONFIRMATION = 4
+import { getBridgePendingMessage } from "../../util/bridgeTransactionUtils"
+import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
+import useGetBridgeTransactionsData from "../../util/hooks/useGetBridgeTransactionsData"
+import BridgeDetails from "../bridge/BridgeDetails"
+import { BRIDGE_PENDING_STATUS } from "../../util/bridgeUtils"
 
 const transactionMessages = {
     [TransactionCategories.BLANK_DEPOSIT]: "Privacy Pool Deposit",
@@ -62,6 +62,10 @@ const transactionMessages = {
     [TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER]: "Received Token",
     [TransactionCategories.TOKEN_METHOD_TRANSFER_FROM]: "Token Transfer From",
     [TransactionCategories.EXCHANGE]: "BlockWallet Swap",
+    [TransactionCategories.BRIDGE]: "BlockWallet Bridge",
+    [TransactionCategories.INCOMING_BRIDGE]: "Incoming Bridge",
+    [TransactionCategories.INCOMING_BRIDGE_REFUND]: "Bridge Refund",
+    [TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER]: "Incoming Bridge",
 }
 
 const pendingTransactionMessages: { [x: string]: string } = {
@@ -110,7 +114,10 @@ const getPendingTransactionMessage = (
     return message
 }
 
-const getTransactionItemStyles = (label: string, txValue: string) => {
+const getTransactionItemStyles = (
+    label: string = "Transaction",
+    txValue: string
+) => {
     let formattedLabel = label
 
     // We're letting both containers to grow based on content but with a limit to keep them inside the container
@@ -119,7 +126,7 @@ const getTransactionItemStyles = (label: string, txValue: string) => {
 
     // If label and value are both long, we crop the label prioritizing the value.
     //Example: Privacy Pool Witdraw X.XXXXX
-    if (label.length > 18 && txValue.length > 7) {
+    if (label.length > 18 && txValue?.length > 7) {
         formattedLabel = formatName(label, 20)
     }
 
@@ -153,6 +160,16 @@ const transactionIcons = {
         <RiCopperCoinFill size="1.5rem" />
     ),
     [TransactionCategories.EXCHANGE]: <RiCopperCoinFill size="1.5rem" />,
+    [TransactionCategories.BRIDGE]: <GiSuspensionBridge size="1.5rem" />,
+    [TransactionCategories.INCOMING_BRIDGE]: (
+        <GiSuspensionBridge size="1.5rem" />
+    ),
+    [TransactionCategories.INCOMING_BRIDGE_REFUND]: (
+        <GiSuspensionBridge size="1.5rem" />
+    ),
+    [TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER]: (
+        <GiSuspensionBridge size="1.5rem" />
+    ),
 }
 
 const failedStatuses = [
@@ -204,7 +221,6 @@ const getTransactionTime = (
     status: TransactionStatus,
     metaType: MetaType,
     time: number,
-    pendingIndex: number,
     isQueued: boolean
 ) => {
     const [{ color, label }, extraInfo] = (() => {
@@ -346,17 +362,19 @@ const getTransactionTimeOrStatus = (
     confirmationTime: number | undefined,
     submittedTime: number | undefined,
     time: number,
-    index: number,
     isQueued: boolean,
-    forceDrop: boolean
+    forceDrop: boolean,
+    bridgeParams?: BridgeTransactionParams
 ) => {
-    if (forceDrop)
+    if (forceDrop) {
         return (
             <span className="text-xs text-red-600">
                 {capitalize(TransactionStatus.DROPPED.toLowerCase())}
             </span>
         )
-    else if (failedStatuses.includes(status) && metaType === MetaType.REGULAR) {
+    }
+
+    if (failedStatuses.includes(status) && metaType === MetaType.REGULAR) {
         return (
             <span className="text-xs text-red-600">
                 {capitalize(
@@ -366,15 +384,25 @@ const getTransactionTimeOrStatus = (
                 )}
             </span>
         )
-    } else {
-        return getTransactionTime(
-            status,
-            metaType,
-            confirmationTime || submittedTime || time,
-            index,
-            isQueued
+    }
+
+    if (
+        bridgeParams?.substatus === BridgeSubstatus.REFUNDED &&
+        bridgeParams.role !== "RECEIVING"
+    ) {
+        return (
+            <span className="text-xs text-red-600">
+                Failed bridge: Refunded
+            </span>
         )
     }
+
+    return getTransactionTime(
+        status,
+        metaType,
+        confirmationTime || submittedTime || time,
+        isQueued
+    )
 }
 
 const TransactionItem: React.FC<{
@@ -382,7 +410,6 @@ const TransactionItem: React.FC<{
     index: number
 }> = ({ index, transaction }) => {
     const {
-        blankDepositId,
         transactionParams: { value, hash },
         transactionCategory,
         methodSignature,
@@ -392,22 +419,19 @@ const TransactionItem: React.FC<{
         submittedTime,
         transferType,
         metaType,
-        transactionReceipt,
         id,
         flashbots,
         isQueued,
         forceDrop,
+        bridgeParams,
     } = transaction
-
-    const state = useBlankState()!
+    const bridgeTransactionsData = useGetBridgeTransactionsData(transaction)
 
     const history: any = useOnMountHistory()
+    const formatter = useCurrencyFromatter()
 
-    const {
-        nativeCurrency: networkNativeCurrency,
-        defaultNetworkLogo,
-        tornadoIntervals,
-    } = useSelectedNetwork()
+    const { nativeCurrency: networkNativeCurrency, defaultNetworkLogo } =
+        useSelectedNetwork()
 
     const [hasDetails, setHasDetails] = useState(false)
 
@@ -418,6 +442,7 @@ const TransactionItem: React.FC<{
         decimals: networkNativeCurrency.decimals,
         logo: defaultNetworkLogo,
     }
+
     const isBlankWithdraw: boolean =
         transactionCategory === "blankWithdrawal" ? true : false
 
@@ -435,6 +460,9 @@ const TransactionItem: React.FC<{
             case TransactionCategories.INCOMING:
             case TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER:
             case TransactionCategories.BLANK_WITHDRAWAL:
+            case TransactionCategories.INCOMING_BRIDGE:
+            case TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER:
+            case TransactionCategories.INCOMING_BRIDGE_REFUND:
                 return "+"
 
             default:
@@ -446,38 +474,53 @@ const TransactionItem: React.FC<{
         ? formatTransactionValue(transfer as TransferType, true, 5)[0]
         : ""
 
-    const tokenExchangeRate = getValueByKey(
-        state.exchangeRates,
-        transfer.currency
-            ? transfer.currency.toUpperCase()
-            : networkNativeCurrency.symbol.toUpperCase(),
-        0
-    )
-
     const valueLabel = `${txValueSign}${txValue}`
 
     const { formattedLabel, typeCss, amountCss } = getTransactionItemStyles(
         label,
         valueLabel
     )
-    const depositTransactionInfo = getDepositTransactionInfo({
-        transactionReceipt,
-        blankDepositId,
-        status,
-    })
 
     const contextMenuRef = useRef(null)
 
+    const tokenSymbol = transfer.currency
+        ? transfer.currency.toUpperCase()
+        : networkNativeCurrency.symbol.toUpperCase()
+
+    const transferCurrencyAmount = formatter.format(
+        transfer.amount,
+        tokenSymbol,
+        transfer.decimals,
+        transfer.currency === networkNativeCurrency.symbol.toUpperCase()
+    )
+
+    const canSpeedUpOrCancel =
+        status === TransactionStatus.SUBMITTED &&
+        metaType === MetaType.REGULAR &&
+        transactionCategory !==
+            TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER &&
+        !isBlankWithdraw
+
+    const OperationDetails =
+        transactionCategory &&
+        [
+            TransactionCategories.BRIDGE,
+            TransactionCategories.INCOMING_BRIDGE_REFUND,
+            TransactionCategories.INCOMING_BRIDGE,
+        ].includes(transactionCategory)
+            ? BridgeDetails
+            : TransactionDetails
+
     return (
         <>
-            <TransactionDetails
+            <OperationDetails
                 transaction={transaction}
                 open={hasDetails}
                 onClose={() => setHasDetails(false)}
             />
 
             <div
-                className={`flex flex-row justify-between items-center px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 ${
+                className={`flex flex-col px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 ${
                     !(txHash && transaction.transactionParams.from) &&
                     "cursor-default"
                 }`}
@@ -492,7 +535,7 @@ const TransactionItem: React.FC<{
                 ref={contextMenuRef}
             >
                 {/* Type */}
-                <div className="flex flex-row items-center w-full">
+                <div className="flex flex-row items-center w-full justify-between">
                     <TransactionIcon
                         transaction={{
                             transactionCategory,
@@ -562,85 +605,51 @@ const TransactionItem: React.FC<{
                             confirmationTime,
                             submittedTime,
                             time,
-                            index,
                             isQueued || false,
-                            forceDrop || false
+                            forceDrop || false,
+                            bridgeParams
                         )}
 
-                        {status === TransactionStatus.SUBMITTED &&
-                            metaType === MetaType.REGULAR &&
-                            !isBlankWithdraw && (
-                                <div className="mt-2">
-                                    {blankDepositId &&
-                                    depositTransactionInfo.isAwaitingForConfirmation ? (
-                                        <div className="group relative self-start">
-                                            <div className="flex flex-row items-center">
-                                                <i className="text-gray-500">
-                                                    {`${
-                                                        depositTransactionInfo.confirmations
-                                                    } of ${
-                                                        tornadoIntervals?.depositConfirmations ||
-                                                        DEFAULT_TORNADO_CONFIRMATION
-                                                    } blocks confirmed`}
-                                                    <Dots />
-                                                </i>
-                                            </div>
-                                            <Tooltip
-                                                className="translate-x-1.5 !w-52 !break-word !whitespace-normal"
-                                                content={
-                                                    <span>
-                                                        {`BlockWallet waits ${
-                                                            tornadoIntervals?.depositConfirmations ||
-                                                            DEFAULT_TORNADO_CONFIRMATION
-                                                        } blocks to mark the deposits as confirmed`}
-                                                    </span>
-                                                }
-                                            />
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <button
-                                                type="button"
-                                                className={classnames(
-                                                    "rounded-md cursor-pointer text-blue-500 border-current border p-1 font-bold hover:bg-blue-500 hover:text-white transition-colors",
-                                                    isQueued
-                                                        ? "opacity-50 pointer-events-none"
-                                                        : ""
-                                                )}
-                                                disabled={isQueued}
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    history.push({
-                                                        pathname:
-                                                            "/transaction/speedUp",
-                                                        state: {
-                                                            txId: id,
-                                                        },
-                                                    })
-                                                }}
-                                            >
-                                                Speed up
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="ml-1.5 border p-1 rounded-md cursor-pointer text-gray-500 border-current font-bold hover:bg-gray-500 hover:text-white transition-colors"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    history.push({
-                                                        pathname:
-                                                            "/transaction/cancel",
-                                                        state: {
-                                                            txId: id,
-                                                        },
-                                                    })
-                                                }}
-                                            >
-                                                Cancel
-                                            </button>
-                                        </>
+                        {canSpeedUpOrCancel && (
+                            <div className="mt-2">
+                                <button
+                                    type="button"
+                                    className={classnames(
+                                        "rounded-md cursor-pointer text-blue-500 border-current border p-1 font-bold hover:bg-blue-500 hover:text-white transition-colors",
+                                        isQueued
+                                            ? "opacity-50 pointer-events-none"
+                                            : ""
                                     )}
-                                </div>
-                            )}
+                                    disabled={isQueued}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        history.push({
+                                            pathname: "/transaction/speedUp",
+                                            state: {
+                                                txId: id,
+                                            },
+                                        })
+                                    }}
+                                >
+                                    Speed up
+                                </button>
+                                <button
+                                    type="button"
+                                    className="ml-1.5 border p-1 rounded-md cursor-pointer text-gray-500 border-current font-bold hover:bg-gray-500 hover:text-white transition-colors"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        history.push({
+                                            pathname: "/transaction/cancel",
+                                            state: {
+                                                txId: id,
+                                            },
+                                        })
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Amount */}
@@ -669,43 +678,34 @@ const TransactionItem: React.FC<{
                             </div>
                             <div className="w-full flex justify-end">
                                 <span
-                                    className="text-xs text-gray-600 truncate w-5/6 text-right mr-1"
-                                    title={formatCurrency(
-                                        toCurrencyAmount(
-                                            transfer.amount,
-                                            tokenExchangeRate,
-                                            transfer.decimals
-                                        ),
-                                        {
-                                            currency: state.nativeCurrency,
-                                            locale_info: state.localeInfo,
-                                            returnNonBreakingSpace: true,
-                                            showSymbol: true,
-                                        }
-                                    )}
+                                    className="text-xs text-gray-600 truncate"
+                                    title={transferCurrencyAmount}
                                 >
-                                    {formatCurrency(
-                                        toCurrencyAmount(
-                                            transfer.amount,
-                                            tokenExchangeRate,
-                                            transfer.decimals
-                                        ),
-                                        {
-                                            currency: state.nativeCurrency,
-                                            locale_info: state.localeInfo,
-                                            returnNonBreakingSpace: true,
-                                            showSymbol: true,
-                                            showCurrency: false,
-                                        }
-                                    )}
-                                </span>
-                                <span className="text-xs text-gray-600 text-right">
-                                    {state.nativeCurrency.toUpperCase()}
+                                    {transferCurrencyAmount}
                                 </span>
                             </div>
                         </div>
                     )}
                 </div>
+                {status === TransactionStatus.CONFIRMED &&
+                transactionCategory === TransactionCategories.BRIDGE &&
+                bridgeParams &&
+                BRIDGE_PENDING_STATUS.includes(bridgeParams!.status! || "") ? (
+                    <div className="ml-11 mt-2">
+                        <i className="text-gray-500">
+                            <>
+                                {
+                                    getBridgePendingMessage(
+                                        bridgeParams!,
+                                        bridgeTransactionsData
+                                            ?.receivingTransaction?.networkName
+                                    )?.label
+                                }
+                                <Dots />
+                            </>
+                        </i>
+                    </div>
+                ) : null}
             </div>
         </>
     )

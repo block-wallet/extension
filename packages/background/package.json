@@ -3,11 +3,15 @@
     "version": "0.8.0",
     "private": true,
     "dependencies": {
-        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.14",
+        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.17",
+        "@block-wallet/circomlib": "^0.0.21",
         "@block-wallet/eth-ledger-bridge-keyring": "https://github.com/block-wallet/eth-ledger-bridge-keyring",
         "@block-wallet/explorer-link": "https://github.com/block-wallet/explorer-link#v2.2.2",
         "@ethereumjs/tx": "^3.5.2",
         "@unstoppabledomains/resolution": "^8.3.3",
+        "@block-wallet/fixed-merkle-tree": "^0.6.1",
+        "@block-wallet/snarkjs": "^0.1.20",
+        "@block-wallet/websnark": "^0.0.5",
         "async-mutex": "^0.3.2",
         "banned-assets": "https://github.com/block-wallet/banned-assets#v0.0.1",
         "bip39": "^3.0.3",
@@ -21,6 +25,7 @@
         "ethereumjs-util": "^7.0.7",
         "ethereumjs-wallet": "^1.0.1",
         "ethers": "^5.4.0",
+        "idb": "^6.0.0",
         "lodash": "^4.17.21",
         "loglevel": "^1.7.1",
         "schema-validator": "git+https://github.com/block-wallet/schema-validator.git",
@@ -58,7 +63,7 @@
         "mock-require": "^3.0.3",
         "npm-run-all": "^4.1.5",
         "nyc": "^15.1.0",
-        "prettier": "^2.4.1",
+        "prettier": "^2.7.1",
         "semver": "^7.3.7",
         "sinon": "^9.2.3",
         "sinon-chrome": "^3.0.1",
@@ -81,6 +86,7 @@
         "test": "make test/background",
         "build": "make build/background",
         "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html",
-        "lint": "eslint src --ext .ts --quiet"
+        "lint": "prettier --check src/ '!**/*.json'",
+        "lint:fix": "prettier --write src/ '!**/*.json'"
     }
 }

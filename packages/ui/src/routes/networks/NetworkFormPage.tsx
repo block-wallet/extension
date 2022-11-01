@@ -37,11 +37,11 @@ import usePersistedLocalStorageForm from "../../util/hooks/usePersistedLocalStor
 
 const URLRegExp = new RegExp(
     "^(https:\\/\\/)?" + // protocol
-    "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
-    "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
-    "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
-    "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
-    "(\\#[-a-z\\d_]*)?$",
+        "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
+        "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
+        "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
+        "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
+        "(\\#[-a-z\\d_]*)?$",
     "i"
 )
 
@@ -133,7 +133,8 @@ const NetworkFormPage = ({
             }
             return RPCUrlValidation.EMPTY
         })
-
+    const [isNativelySupported, setIsNativelySupported] =
+        useState<boolean>(false)
     const { availableNetworks } = useBlankState()!
 
     const {
@@ -177,7 +178,7 @@ const NetworkFormPage = ({
                     if (
                         !chainDetailsRef.current ||
                         Number(chainDetailsRef.current?.chainId) !==
-                        parsedChainId
+                            parsedChainId
                     ) {
                         chainDetailsRef.current = await getSpecificChainDetails(
                             parsedChainId
@@ -207,15 +208,13 @@ const NetworkFormPage = ({
                     setRpcValidationStatus(
                         Number(chainId) === parsedChainId
                             ? getStatusFromEnpoint(
-                                chainDetailsRef.current,
-                                watchRPCUrl
-                            )
+                                  chainDetailsRef.current,
+                                  watchRPCUrl
+                              )
                             : RPCUrlValidation.CHAIN_ID_DOESNT_MATCH
                     )
                 } catch (e) {
                     //Invalid URL if we were not able to fetch the chainId using the rpcUrl.
-                    console.log(watchRPCUrl)
-                    console.log(e)
                     setRpcValidationStatus(RPCUrlValidation.INVALID_URL)
                 }
             } finally {
@@ -241,17 +240,24 @@ const NetworkFormPage = ({
         addNetworkInvoke.run(
             isEdit
                 ? editNetwork({
-                    chainId: parseChainId(data.chainId)!.toString(),
-                    updates: {
-                        rpcUrl: data.rpcUrl,
-                        blockExplorerUrl: data.blockExplorerUrl,
-                        name: data.name!,
-                    },
-                })
+                      chainId: parseChainId(data.chainId)!.toString(),
+                      updates: {
+                          rpcUrl: data.rpcUrl,
+                          blockExplorerUrl: data.blockExplorerUrl,
+                          name: data.name!,
+                      },
+                  })
                 : addNetwork(networkData)
         )
     })
-
+    useEffect(() => {
+        const existingNetwork = Object.values(availableNetworks).find(
+            (network) => network.chainId === Number(watchChainId)
+        )
+        setIsNativelySupported(
+            existingNetwork ? existingNetwork.nativelySupported : false
+        )
+    }, [watchChainId])
     const deleteNetwork = () => {
         removeNetworkInvoke.run(removeNetwork(network!.chainId!))
     }
@@ -265,7 +271,7 @@ const NetworkFormPage = ({
     const invalidCurrencySymbolWarn =
         chainDetailsRef.current && watchCurrencySymbol
             ? chainDetailsRef.current.nativeCurrency.symbol !==
-            watchCurrencySymbol
+              watchCurrencySymbol
             : false
 
     const networkAlreadyExistError = useMemo(() => {
@@ -313,24 +319,24 @@ const NetworkFormPage = ({
                     actions={
                         !editingSelectedNetwork && canDelete
                             ? [
-                                <div
-                                    key={1}
-                                    onClick={() => {
-                                        setConfirmDeletion(true)
-                                    }}
-                                    className={classnames(
-                                        "text-red-500 cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-b-md w-40"
-                                    )}
-                                >
-                                    <div className="pl-1 pr-1 w-8">
-                                        <Icon
-                                            name={IconName.TRASH_BIN}
-                                            profile="danger"
-                                        />
-                                    </div>
-                                    <span>Delete Network</span>
-                                </div>,
-                            ]
+                                  <div
+                                      key={1}
+                                      onClick={() => {
+                                          setConfirmDeletion(true)
+                                      }}
+                                      className={
+                                          "text-red-500 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 rounded-md w-40"
+                                      }
+                                  >
+                                      <div className="pl-1 pr-1 w-8">
+                                          <Icon
+                                              name={IconName.TRASH_BIN}
+                                              profile="danger"
+                                          />
+                                      </div>
+                                      <span>Delete Network</span>
+                                  </div>,
+                              ]
                             : undefined
                     }
                 />
@@ -348,7 +354,7 @@ const NetworkFormPage = ({
                 ) : null
             }
         >
-            {!network?.nativelySupported && (
+            {!isNativelySupported && (
                 <CollapsableWarning
                     dialog={{
                         title: "Warning",
@@ -388,8 +394,8 @@ const NetworkFormPage = ({
                     addNetworkInvoke.isError
                         ? "error"
                         : addNetworkInvoke.isSuccess
-                            ? "success"
-                            : "loading"
+                        ? "success"
+                        : "loading"
                 }
                 titles={{
                     loading: isEdit ? "Editing..." : "Adding...",
@@ -410,7 +416,7 @@ const NetworkFormPage = ({
                     if (addNetworkInvoke.isError) {
                         return addNetworkInvoke.reset()
                     }
-                    history.push("/settings/networks")
+                    history.replace("/settings/networks")
                 }}
             />
             <WaitingDialog
@@ -419,8 +425,8 @@ const NetworkFormPage = ({
                     removeNetworkInvoke.isError
                         ? "error"
                         : removeNetworkInvoke.isSuccess
-                            ? "success"
-                            : "loading"
+                        ? "success"
+                        : "loading"
                 }
                 titles={{
                     loading: "Deleting...",

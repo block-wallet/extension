@@ -140,6 +140,10 @@ const initialState: BlankAppState & {
     TransactionWatcherControllerState: {
         transactions: {},
     },
+    BridgeController: {
+        bridgeReceivingTransactions: {},
+        perndingBridgeReceivingTransactions: {},
+    },
     BlockFetchController: {
         blockFetchData: {
             1: {
@@ -208,6 +212,7 @@ const initialState: BlankAppState & {
             defaultBrowserWallet: true,
             hideEstimatedGasExceedsThresholdWarning: false,
             hideDepositsExternalAccountsWarning: false,
+            hideBridgeInsufficientNativeTokenWarning: false,
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',
@@ -297,6 +302,10 @@ describe('State reconciler', () => {
             AddressBookController: {
                 addressBook: {} as AddressBook,
                 recentAddresses: {} as AddressBook,
+            },
+            BridgeController: {
+                bridgeReceivingTransactions: {},
+                perndingBridgeReceivingTransactions: {},
             },
             AccountTrackerController: {
                 isAccountTrackerLoading: false,
@@ -418,6 +427,7 @@ describe('State reconciler', () => {
                     defaultBrowserWallet: true,
                     hideEstimatedGasExceedsThresholdWarning: false,
                     hideDepositsExternalAccountsWarning: false,
+                    hideBridgeInsufficientNativeTokenWarning: false,
                 },
                 releaseNotesSettings: {
                     lastVersionUserSawNews: '0.1.3',

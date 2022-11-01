@@ -28,7 +28,7 @@ import {
     SwapQuote,
     SwapParameters,
     SwapTransaction,
-} from "@block-wallet/background/controllers/ExchangeController"
+} from "@block-wallet/background/controllers/SwapController"
 import {
     ExchangeType,
     HardwareWalletOpTypes,
@@ -43,11 +43,6 @@ import { BigNumber } from "ethers"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import { OneInchSwapRequestParams } from "@block-wallet/background/utils/types/1inch"
-import {
-    defaultSwapSettings,
-    SwapSettings,
-    SwapSettingsData,
-} from "../../components/swaps/SwapSettings"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { classnames, Classes } from "../../styles"
 import { formatRounded } from "../../util/formatRounded"
@@ -72,6 +67,12 @@ import { useInProgressAllowanceTransaction } from "../../context/hooks/useInProg
 import LoadingDialog from "../../components/dialog/LoadingDialog"
 import ClickableText from "../../components/button/ClickableText"
 import Divider from "../../components/Divider"
+import {
+    AdvancedSettings,
+    defaultAdvancedSettings,
+} from "../../components/transactions/AdvancedSettings"
+import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
+import { WithRequired } from "@block-wallet/background/utils/types/helpers"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token
@@ -161,8 +162,9 @@ const SwapPageConfirm: FC<{}> = () => {
         SwapParameters | undefined
     >(undefined)
     const [showDetails, setShowDetails] = useState<boolean>(false)
-    const [selectedSwapSettings, setSelectedSwapSettings] =
-        useState<SwapSettingsData>(defaultSwapSettings)
+    const [advancedSettings, setAdvancedSettings] = useState<
+        WithRequired<TransactionAdvancedData, "slippage">
+    >(defaultAdvancedSettings)
 
     // Gas
     const [defaultGas, setDefaultGas] = useState<{
@@ -247,8 +249,8 @@ const SwapPageConfirm: FC<{}> = () => {
 
             const swapTransactionParams: SwapTransaction = {
                 ...swapParameters,
-                customNonce: selectedSwapSettings.customNonce,
-                flashbots: selectedSwapSettings.flashbots,
+                customNonce: advancedSettings.customNonce,
+                flashbots: advancedSettings.flashbots,
                 gasPrice: isEIP1559Compatible
                     ? undefined
                     : selectedGasPrice || swapParameters.tx.gasPrice,
@@ -279,7 +281,7 @@ const SwapPageConfirm: FC<{}> = () => {
             fromTokenAddress: swapQuote.fromToken.address,
             toTokenAddress: swapQuote.toToken.address,
             amount: swapQuote.fromTokenAmount,
-            slippage: selectedSwapSettings.slippage,
+            slippage: advancedSettings.slippage,
         }
 
         setIsFetchingSwaps(true)
@@ -297,7 +299,7 @@ const SwapPageConfirm: FC<{}> = () => {
         }
     }, [
         selectedAccount.address,
-        selectedSwapSettings.slippage,
+        advancedSettings.slippage,
         swapQuote.fromToken.address,
         swapQuote.fromTokenAmount,
         swapQuote.toToken.address,
@@ -382,6 +384,7 @@ const SwapPageConfirm: FC<{}> = () => {
                         })
                     }}
                     disabled={isSwapping}
+                    networkIndicator
                 />
             }
             footer={
@@ -481,7 +484,7 @@ const SwapPageConfirm: FC<{}> = () => {
                     transaction={populateExchangeTransaction(swapParameters)}
                     open={showDetails}
                     onClose={() => setShowDetails(false)}
-                    nonce={selectedSwapSettings.customNonce}
+                    nonce={advancedSettings.customNonce}
                 />
             )}
             <HardwareDeviceNotLinkedDialog
@@ -494,7 +497,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 assetName={swapQuote.toToken.symbol}
                 assetDecimals={toToken.decimals}
                 rate={rate}
-                threshold={selectedSwapSettings.slippage}
+                threshold={advancedSettings.slippage}
             />
             <div className="flex flex-col px-6 py-3">
                 {/* From Token */}
@@ -569,12 +572,27 @@ const SwapPageConfirm: FC<{}> = () => {
                     />
                 )}
 
-                <div className="flex flex-row space-x-2 items-center py-3">
-                    {/* Swap Settings */}
-                    <SwapSettings
+                <div className="flex flex-row items-center py-3">
+                    {/* Settings */}
+                    <AdvancedSettings
                         address={selectedAccount.address}
-                        swapSettings={selectedSwapSettings}
-                        setSwapSettings={setSelectedSwapSettings}
+                        advancedSettings={advancedSettings}
+                        display={{
+                            nonce: true,
+                            flashbots: true,
+                            slippage: true,
+                        }}
+                        setAdvancedSettings={(
+                            newSettings: TransactionAdvancedData
+                        ) => {
+                            setAdvancedSettings({
+                                ...newSettings,
+                                slippage:
+                                    newSettings.slippage ||
+                                    defaultAdvancedSettings.slippage,
+                            })
+                        }}
+                        label={"Settings"}
                     />
                     {/* Swap Details */}
                     <OutlinedButton
@@ -582,7 +600,7 @@ const SwapPageConfirm: FC<{}> = () => {
                             swapParameters && setShowDetails(true)
                         }}
                         className={classnames(
-                            "w-full",
+                            "w-full ml-2",
                             !swapParameters &&
                                 "cursor-not-allowed hover:border-default"
                         )}

@@ -15,6 +15,7 @@ import {
     TokenControllerProps,
 } from '@block-wallet/background/controllers/erc-20/TokenController';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { sleep } from '@block-wallet/background/utils/sleep';
 
 describe('AppState Controller', function () {
     let appStateController: AppStateController;
@@ -96,6 +97,7 @@ describe('AppState Controller', function () {
     it('should update the last user active time', async function () {
         const initialTime = appStateController.store.getState().lastActiveTime;
         expect(initialTime).to.be.greaterThan(0);
+        const promise = await sleep(600);
         appStateController.setLastActiveTime();
         expect(
             appStateController.store.getState().lastActiveTime

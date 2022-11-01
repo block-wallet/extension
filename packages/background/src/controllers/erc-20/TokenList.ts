@@ -164,8 +164,9 @@ for (const chainId in TOKENS_LIST) {
         if ('l' in token) {
             logo = 'https://' + token['l'];
         } else {
-            logo = `https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/${NETWORKS_NAMES[parseInt(chainId)]
-                }/assets/${address}/logo.png`;
+            logo = `https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/${
+                NETWORKS_NAMES[parseInt(chainId)]
+            }/assets/${address}/logo.png`;
         }
 
         let type = '';

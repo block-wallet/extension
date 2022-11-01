@@ -736,7 +736,14 @@ const SendConfirmPage = () => {
     const [inputFocus, setInputFocus] = useState(false)
     return (
         <PopupLayout
-            header={<PopupHeader title="Send" disabled={isLoading} keepState />}
+            header={
+                <PopupHeader
+                    title="Send"
+                    disabled={isLoading}
+                    keepState
+                    networkIndicator
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
@@ -829,9 +836,9 @@ const SendConfirmPage = () => {
                             />
                             {errors.asset?.message && (
                                 <div className="pl-1 my-2">
-                                    <ErrorMessage
-                                        error={errors.asset?.message}
-                                    />
+                                    <ErrorMessage>
+                                        {errors.asset?.message}
+                                    </ErrorMessage>
                                 </div>
                             )}
                         </div>
@@ -932,7 +939,9 @@ const SendConfirmPage = () => {
                                     errors.amount?.message ? "pl-1 my-2" : null
                                 }`}
                             >
-                                <ErrorMessage error={errors.amount?.message} />
+                                <ErrorMessage>
+                                    {errors.amount?.message}
+                                </ErrorMessage>
                             </div>
                         </div>
 
@@ -970,22 +979,23 @@ const SendConfirmPage = () => {
                             />
                         )}
                         <div className={`${error ? "pl-1 my-2" : null}`}>
-                            <ErrorMessage error={error} />
+                            <ErrorMessage>{error}</ErrorMessage>
                         </div>
 
                         <div className="mt-3">
                             <AdvancedSettings
-                                config={{
-                                    showCustomNonce: true,
-                                    showFlashbots: false,
-                                    address,
+                                address={address}
+                                advancedSettings={transactionAdvancedData}
+                                display={{
+                                    nonce: true,
+                                    flashbots: false,
+                                    slippage: false,
                                 }}
-                                data={{}}
-                                setData={function (
-                                    data: TransactionAdvancedData
-                                ): void {
+                                setAdvancedSettings={(
+                                    newSettings: TransactionAdvancedData
+                                ) => {
                                     setTransactionAdvancedData({
-                                        customNonce: data.customNonce,
+                                        customNonce: newSettings.customNonce,
                                     })
                                 }}
                             />

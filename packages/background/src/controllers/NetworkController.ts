@@ -487,10 +487,13 @@ export default class NetworkController extends BaseController<NetworkControllerS
         const network = this.searchNetworkByName(networkName);
         return this._overloadProviderMethods(
             network,
-            new ethers.providers.StaticJsonRpcProvider({
-                url: network.rpcUrls[0],
-                allowGzip: network.rpcUrls[0].endsWith('.blockwallet.io'),
-            })
+            new ethers.providers.StaticJsonRpcProvider(
+                {
+                    url: network.rpcUrls[0],
+                    allowGzip: network.rpcUrls[0].endsWith('.blockwallet.io'),
+                },
+                network.chainId // network?: Networkish
+            )
         );
     };
 

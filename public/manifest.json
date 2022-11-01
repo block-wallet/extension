@@ -31,7 +31,7 @@
         "128": "icons/icon-128.png"
     },
     "content_security_policy": {
-        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+        "extension_pages": "script-src 'self'; object-src 'self'"
     },
     "manifest_version": 3,
     "name": "BlockWallet",
@@ -41,11 +41,7 @@
     "version": "0.4.0",
     "web_accessible_resources": [
         {
-            "resources": [
-                "snarks/tornado/tornadoProvingKey.bin",
-                "snarks/tornado/tornado.json",
-                "blankProvider.js"
-            ],
+            "resources": ["blankProvider.js"],
             "matches": ["https://*/*"]
         }
     ]

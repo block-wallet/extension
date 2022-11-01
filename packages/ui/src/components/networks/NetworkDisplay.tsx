@@ -112,6 +112,8 @@ const NetworkDisplay = ({
         }
     }, [dropAnimation])
 
+    const opacity = isDragging ? 0 : 1
+
     return (
         <div
             onClick={onClick}
@@ -122,6 +124,7 @@ const NetworkDisplay = ({
                 !dropAnimation && "hover:bg-gray-100 hover:cursor-pointer"
             )}
             ref={dropRef}
+            style={{ opacity }}
         >
             <>
                 <div className="flex flex-row justify-between items-center p-2 pl-0">

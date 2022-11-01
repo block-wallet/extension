@@ -163,10 +163,7 @@ const NetworksPage = () => {
                         <div className="flex flex-col space-y-2">
                             {mainNetworks.map((network) => (
                                 <NetworkDisplay
-                                    key={
-                                        findNetworkCard(network.chainId, false)
-                                            .index
-                                    }
+                                    key={network.chainId}
                                     networkInfo={network}
                                     onClick={() => onClickNetwork(network)}
                                     moveCard={moveNetworkCard}
@@ -180,10 +177,7 @@ const NetworksPage = () => {
                         <div className="flex flex-col space-y-2">
                             {testNetworks.map((network) => (
                                 <NetworkDisplay
-                                    key={
-                                        findNetworkCard(network.chainId, true)
-                                            .index
-                                    }
+                                    key={network.chainId}
                                     networkInfo={network}
                                     onClick={() => onClickNetwork(network)}
                                     moveCard={moveNetworkCard}

@@ -247,6 +247,7 @@ const NetworkFormPage = ({
                           rpcUrl: data.rpcUrl,
                           blockExplorerUrl: data.blockExplorerUrl,
                           name: data.name!,
+                          test: !!data.test,
                       },
                   })
                 : addNetwork(networkData)
@@ -307,7 +308,7 @@ const NetworkFormPage = ({
         !networkAlreadyExistError &&
         !networkNameInUseError &&
         !editingSelectedNetwork
-
+    console.log(network)
     return (
         <PopupLayout
             submitOnEnter={{
@@ -563,7 +564,8 @@ const NetworkFormPage = ({
                         onToggle={(isChecked) => {
                             setValue("test", isChecked)
                         }}
-                        readOnly={isEdit}
+                        readOnly={isNativelySupported}
+                        disabled={isNativelySupported}
                     />
                     {networkAlreadyExistError && (
                         <Alert type="error">

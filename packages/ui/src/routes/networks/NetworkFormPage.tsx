@@ -308,7 +308,7 @@ const NetworkFormPage = ({
         !networkAlreadyExistError &&
         !networkNameInUseError &&
         !editingSelectedNetwork
-    console.log(network)
+
     return (
         <PopupLayout
             submitOnEnter={{

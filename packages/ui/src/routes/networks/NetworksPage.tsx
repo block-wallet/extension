@@ -1,4 +1,6 @@
 import { DndProvider } from "react-dnd"
+import update from "immutability-helper"
+
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { useCallback, useEffect, useState } from "react"
 
@@ -14,6 +16,7 @@ import { ethers } from "ethers"
 import { getAccountColor } from "../../util/getAccountColor"
 import { Network } from "@block-wallet/background/utils/constants/networks"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
+import { editNetworkOrder } from "@block-wallet/background/utils/types/communication"
 
 interface NetworkInfo extends Network {
     color: string
@@ -42,42 +45,61 @@ const NetworksPage = () => {
         })
     }
 
-    const moveNetworkCard = useCallback(
-        (draggedIndex: number, hoveredOnIndex: number, isTestnet: boolean) => {
+    const findNetworkCard = useCallback(
+        (chainId: number, isTestnet: boolean) => {
             const networks = isTestnet ? testNetworks : mainNetworks
-            const setNetworks = isTestnet ? setTestNetworks : setMainNetworks
-            const draggedItem = networks[draggedIndex]
-            const hoveredOnItem = networks[hoveredOnIndex]
 
-            const hoveredOnOrder = hoveredOnItem.order
-            const draggedOrder = draggedItem.order
-
-            editNetworksOrder({
-                networksOrder: [
-                    {
-                        chainId: draggedItem.chainId,
-                        order: hoveredOnOrder,
-                    },
-                    {
-                        chainId: hoveredOnItem.chainId,
-                        order: draggedOrder,
-                    },
-                ],
-            })
-
-            setNetworks((prevNetworksState) => {
-                const updatedNetworksList = [...prevNetworksState]
-                // Switch order properties of draggedItem and hoveredOnItem
-                updatedNetworksList[draggedIndex].order = hoveredOnOrder
-                updatedNetworksList[hoveredOnIndex].order = draggedOrder
-                // Switch the positions of draggedItem and hoveredOnItem in the array
-                updatedNetworksList[draggedIndex] = hoveredOnItem
-                updatedNetworksList[hoveredOnIndex] = draggedItem
-                return updatedNetworksList
-            })
+            const network = networks.filter((n) => n.chainId === chainId)[0]
+            return {
+                network,
+                index: networks.indexOf(network),
+            }
         },
         [mainNetworks, testNetworks]
     )
+
+    const moveNetworkCard = useCallback(
+        (chainId: number, hoveredOnIndex: number, isTestnet: boolean) => {
+            const { network, index: draggedIndex } = findNetworkCard(
+                chainId,
+                isTestnet
+            )
+
+            const networks = isTestnet ? testNetworks : mainNetworks
+            const setNetworks = isTestnet ? setTestNetworks : setMainNetworks
+            const draggedItem = network
+
+            setNetworks(
+                update(networks, {
+                    $splice: [
+                        [draggedIndex, 1],
+                        [hoveredOnIndex, 0, draggedItem],
+                    ],
+                })
+            )
+        },
+        [mainNetworks, testNetworks]
+    )
+
+    useEffect(() => {
+        let networksOrder: editNetworkOrder[] = []
+        mainNetworks.forEach((network, index) => {
+            networksOrder.push({
+                chainId: network.chainId,
+                order: index + 1,
+            })
+        })
+
+        testNetworks.forEach((network, index) => {
+            networksOrder.push({
+                chainId: network.chainId,
+                order: index + 1,
+            })
+        })
+        editNetworksOrder({
+            networksOrder: networksOrder,
+        })
+    }, [mainNetworks, testNetworks])
 
     useEffect(() => {
         const parsedAvailableNetworks = Object.values(availableNetworks)
@@ -139,13 +161,13 @@ const NetworksPage = () => {
                     <div className="flex flex-col space-y-2">
                         <span className="text-xs text-gray-500">MAINNET</span>
                         <div className="flex flex-col space-y-2">
-                            {mainNetworks.map((network, index) => (
+                            {mainNetworks.map((network) => (
                                 <NetworkDisplay
-                                    key={index}
+                                    key={network.chainId}
                                     networkInfo={network}
                                     onClick={() => onClickNetwork(network)}
-                                    index={index}
-                                    moveCard={moveNetworkCard}
+                                    moveNetworkCard={moveNetworkCard}
+                                    findNetworkCard={findNetworkCard}
                                 />
                             ))}
                         </div>
@@ -153,13 +175,13 @@ const NetworksPage = () => {
                             TESTNET
                         </span>
                         <div className="flex flex-col space-y-2">
-                            {testNetworks.map((network, index) => (
+                            {testNetworks.map((network) => (
                                 <NetworkDisplay
-                                    key={index}
+                                    key={network.chainId}
                                     networkInfo={network}
                                     onClick={() => onClickNetwork(network)}
-                                    index={index}
-                                    moveCard={moveNetworkCard}
+                                    moveNetworkCard={moveNetworkCard}
+                                    findNetworkCard={findNetworkCard}
                                     isTestnet
                                 />
                             ))}

@@ -658,22 +658,18 @@ const TransactionItem: React.FC<{
                             className={classNames("flex flex-col items-end")}
                             style={amountCss}
                         >
-                            <div className="w-full flex justify-end">
+                            <div
+                                className="w-full flex justify-end"
+                                title={formatTransactionValue(
+                                    transfer as TransferType
+                                ).reduce((acc, curr) => `${acc} ${curr}`, "")}
+                            >
                                 <span
                                     className={classNames(
-                                        "text-sm font-bold text-right truncate mr-1"
-                                    )}
-                                    title={formatTransactionValue(
-                                        transfer as TransferType
-                                    ).reduce(
-                                        (acc, curr) => `${acc} ${curr}`,
-                                        ""
+                                        "text-sm font-bold text-right mr-1 truncate max-w-[130px]"
                                     )}
                                 >
-                                    {valueLabel}
-                                </span>
-                                <span className="text-sm font-bold text-right">
-                                    {transfer.currency.toUpperCase()}
+                                    {`${valueLabel} ${transfer.currency.toUpperCase()}`}
                                 </span>
                             </div>
                             <div className="w-full flex justify-end">

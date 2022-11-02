@@ -406,7 +406,7 @@ export const TransactionDetails: FunctionComponent<
                             ) : (
                                 <span
                                     className={classnames(
-                                        "text-gray-600 text-sm allow-select",
+                                        "text-gray-600 text-sm allow-select max-w-[160px] truncate",
                                         detail.expandable ? "w-11/12 mt-1" : ""
                                     )}
                                     title={`${detail.value ?? "N/A"} ${

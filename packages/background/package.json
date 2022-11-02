@@ -15,7 +15,7 @@
         "compare-versions": "^3.6.0",
         "eslint-webpack-plugin": "^3.2.0",
         "eth-ens-namehash": "^2.0.8",
-        "eth-keyring-controller": "MetaMask/KeyringController#mv3-decrypted-key",
+        "eth-keyring-controller": "MetaMask/KeyringController#export-key",
         "eth-sig-util": "^3.0.1",
         "eth-trezor-keyring": "https://github.com/block-wallet/eth-trezor-keyring#v0.10.1",
         "ethereumjs-util": "^7.0.7",

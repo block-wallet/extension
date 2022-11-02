@@ -6,7 +6,7 @@ import { BlankAppState } from '@block-wallet/background/utils/constants/initialS
 import { IMigration } from '../IMigration';
 
 /**
- * This migration increases the block fetch intervals for all the networks
+ * This migration increases the block fetch intervals for all the networks and also removes the TORNADO feature flag for every network.
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {

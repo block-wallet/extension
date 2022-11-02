@@ -245,6 +245,7 @@ const AddTokenManualView = ({
                                     defaultValue={values.tokenSymbol}
                                     error={errors.tokenSymbol?.message}
                                     {...register("tokenSymbol")}
+                                    disabled={true}
                                 />
                             </div>
 

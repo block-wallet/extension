@@ -7,6 +7,10 @@ import checkmarkMiniIcon from "../../assets/images/icons/checkmark_mini.svg"
 // Types
 import { TokenResponse } from "../../routes/settings/AddTokensPage"
 import TokenLogo from "./TokenLogo"
+import { formatName } from "../../util/formatAccount"
+import { BigNumber } from "ethers"
+import { formatRounded } from "../../util/formatRounded"
+import { formatUnits } from "ethers/lib/utils"
 
 type TokenDisplayType = {
     data: TokenResponse
@@ -15,6 +19,7 @@ type TokenDisplayType = {
     hoverable?: boolean | false
     textSize?: "base" | "sm"
     isSmall?: boolean | false
+    balance?: BigNumber | undefined
 }
 
 /**
@@ -28,6 +33,7 @@ type TokenDisplayType = {
  * @param active - Determines if the element is already showing selected style.
  * @param hoverable - Determines if the element shows an hover style.
  * @param isSmall - small font size, to fit into popup for example
+ * @param balance - Contains the asset balance in case it exists. e.g. if it is a New Asset there is no balance
  */
 const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
     data,
@@ -36,79 +42,47 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
     hoverable,
     textSize = "base",
     isSmall,
+    balance,
 }) => {
     // State
     const [selected, setSelected] = useState<boolean>(active ? active : false)
 
-    const chars = 20
-    const printSymbol = (symbol: string, name: string) => {
-        if (symbol.length < chars - name.length) {
-            return symbol
-        } else {
-            if (name.length < chars - 2) {
-                return `${symbol.slice(0, chars - 2 - name.length)}..`
-            } else {
-                return `${symbol.slice(0, 3)}..`
-            }
-        }
-    }
-    const printName = (name: string, symbol: string) => {
-        if (name.length < chars - symbol.length) {
-            return name
-        } else {
-            return `${name.substring(0, chars - 5)}..`
-        }
-    }
-
     // Render
     return (
         <div
-            className={`
-        flex justify-between items-center flex-row relative px-3 mt-1 rounded-md transition-all duration-300 active:scale-95
-        ${clickable ? "cursor-pointer" : null}
-        ${selected ? "bg-primary-200" : null}
-        ${hoverable ? "hover:bg-primary-100" : null}
-      `}
+            className={classnames(
+                "relative flex items-center p-3 my-0.5 rounded-md transition-all duration-300 active:scale-95",
+                clickable && "cursor-pointer",
+                selected && "bg-primary-200",
+                hoverable && "hover:bg-primary-100"
+            )}
             onClick={() => (clickable ? setSelected(!selected) : null)}
         >
+            <TokenLogo logo={data.logo} name={data.name} />
+            <div className="flex flex-col ml-4 truncate">
+                <span className={"text-sm text-black font-semibold"}>
+                    {formatName(data.name, 22)}
+                </span>
+                {balance && (
+                    <span
+                        className={"text-xs text-gray-600 mt-1"}
+                        title={formatUnits(balance, data.decimals)}
+                    >
+                        {formatRounded(formatUnits(balance, data.decimals), 6)}
+                    </span>
+                )}
+            </div>
+            <p className={"text-sm text-gray-400 ml-auto pl-1 pr-6"}>
+                {data.symbol}
+            </p>
             <img
                 src={checkmarkMiniIcon}
                 alt="checkmark"
-                className={`
-          absolute mr-6 right-0
-          ${selected ? "visible" : "hidden"}
-        `}
+                className={classnames(
+                    "absolute right-3",
+                    selected ? "visible" : "hidden"
+                )}
             />
-            <div className="flex justify-start items-center flex-row py-3">
-                <div className="flex flex-row items-center justify-center w-9 h-9 p-1.5 bg-white border border-gray-200 rounded-full">
-                    <TokenLogo src={data.logo} alt={data.name} />
-                </div>
-                <div
-                    className={`flex justify-start items-center h-full box-border
-                    ${isSmall ? "ml-1" : "ml-4"}`}
-                >
-                    <span
-                        className={classnames(
-                            `text-${textSize}`,
-                            isSmall
-                                ? "text-xs font-small"
-                                : "text-black font-semibold mr-1"
-                        )}
-                    >
-                        {printName(data.name, data.symbol)}
-                    </span>
-                    <span
-                        className={classnames(
-                            "text-gray-400",
-                            isSmall
-                                ? "text-xs font-small text-overflow"
-                                : `text-${textSize}`
-                        )}
-                    >
-                        {printSymbol(data.symbol, data.name)}
-                    </span>
-                </div>
-            </div>
         </div>
     )
 }

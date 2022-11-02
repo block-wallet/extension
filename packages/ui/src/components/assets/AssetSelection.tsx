@@ -302,6 +302,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
                                     asset.token.address
                                 }
                                 hoverable={true}
+                                balance={asset.balance}
                             />
                         </div>
                     )
@@ -334,8 +335,8 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
             {displayIcon && (
                 <div className="flex items-center justify-center w-6 h-6 rounded-full mr-2">
                     <TokenLogo
-                        src={selectedAsset.token.logo}
-                        alt={selectedAsset.token.name}
+                        logo={selectedAsset.token.logo}
+                        name={selectedAsset.token.name}
                     />
                 </div>
             )}

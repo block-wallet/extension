@@ -179,17 +179,28 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
         this._tokenController.on(
             TokenControllerEvents.USER_TOKEN_CHANGE,
-            async (accountAddress: string, chainId: number) => {
+            async (
+                accountAddress: string,
+                chainId: number,
+                tokenAddresses: string[] = []
+            ) => {
                 try {
-                    // Update the account balances
-                    await this.updateAccounts({
-                        addresses: [accountAddress],
-                        assetAddresses:
-                            await this._tokenController.getUserTokenContractAddresses(
-                                accountAddress,
-                                chainId
-                            ),
-                    });
+                    // If array tokenAddresses contains at least 1 value, we update that asset balance, else we update all account balances
+                    if (tokenAddresses.length > 0) {
+                        await this.updateAccounts({
+                            addresses: [accountAddress],
+                            assetAddresses: tokenAddresses,
+                        });
+                    } else {
+                        await this.updateAccounts({
+                            addresses: [accountAddress],
+                            assetAddresses:
+                                await this._tokenController.getUserTokenContractAddresses(
+                                    accountAddress,
+                                    chainId
+                                ),
+                        });
+                    }
                 } catch (err) {
                     log.warn(
                         'An error ocurred while updating the accouns',

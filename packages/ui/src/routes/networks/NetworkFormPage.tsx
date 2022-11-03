@@ -111,7 +111,7 @@ const networkSchema = yup.object({
             "match url shape",
             "Invalid URL. Make sure that you are using http/s protocol.",
             (url) => {
-                return !url || validateUrl(url) // Optional or valid
+                return !url || validateUrl(url)
             }
         ),
     test: yup.boolean(),

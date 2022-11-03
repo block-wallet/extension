@@ -92,7 +92,7 @@ const RPCValidationEndLabelInfo = ({
                             "!-translate-x-3/4 !border !border-gray-200 !w-40 !break-word !whitespace-normal",
                             toolTipClassName
                         )}
-                        content="The RPC URL is invalid so it can't be verified."
+                        content="An invalid URL can't be verified."
                     />
                 </>
             )
@@ -106,7 +106,7 @@ const RPCValidationEndLabelInfo = ({
                             "!-translate-x-3/4 !border !border-gray-200 !w-40 !break-word !whitespace-normal",
                             toolTipClassName
                         )}
-                        content="The URL is valid but it's not an RPC node endpoint."
+                        content="Invalid node endpoint."
                     />
                 </>
             )
@@ -126,6 +126,25 @@ const RPCValidationEndLabelInfo = ({
                             toolTipClassName
                         )}
                         content="This node endpoint is not recognized by BlockWallet. Please make sure that this configuration will not compromise your funds."
+                    />
+                </>
+            )
+        }
+        case RPCUrlValidation.EMPTY_UNKNOWN_CHAIN: {
+            return withWrapper(
+                <>
+                    <AiOutlineWarning
+                        className={classnames(
+                            "w-4 h-4 z-20",
+                            "text-yellow-400"
+                        )}
+                    />
+                    <Tooltip
+                        className={classnames(
+                            "!-translate-x-full !border !border-gray-200 !w-56 !break-word !whitespace-normal",
+                            toolTipClassName
+                        )}
+                        content="This network is not recognized by BlockWallet. Please make sure that this configuration will not compromise your funds."
                     />
                 </>
             )

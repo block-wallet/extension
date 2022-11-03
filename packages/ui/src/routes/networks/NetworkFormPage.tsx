@@ -49,11 +49,8 @@ const getStatusFromEnpoint = (
 
 const validateUrl = (url: string) => {
     try {
-        const parsedUrl = new URL(url.toLowerCase())
-        return (
-            parsedUrl.href.startsWith("http://") ||
-            parsedUrl.href.startsWith("https://")
-        )
+        new URL(url.toLowerCase())
+        return url.startsWith("http://") || url.startsWith("https://")
     } catch {
         return false
     }
@@ -136,12 +133,7 @@ const NetworkFormPage = ({
     const [isValidating, setIsValidating] = useState<boolean>(false)
     const [confirmDeletion, setConfirmDeletion] = useState<boolean>(false)
     const [rpcValidationStatus, setRpcValidationStatus] =
-        useState<RPCUrlValidation>(() => {
-            if (network) {
-                return RPCUrlValidation.VERIFIED_ENDPOINT
-            }
-            return RPCUrlValidation.EMPTY
-        })
+        useState<RPCUrlValidation>(RPCUrlValidation.EMPTY)
     const [isNativelySupported, setIsNativelySupported] =
         useState<boolean>(false)
     const { availableNetworks } = useBlankState()!
@@ -156,7 +148,6 @@ const NetworkFormPage = ({
         { key: "networks.form" },
         {
             resolver: yupResolver(networkSchema),
-            mode: "all",
             defaultValues: {
                 name: network?.name,
                 blockExplorerUrl: network?.blockExplorerUrl,
@@ -205,13 +196,12 @@ const NetworkFormPage = ({
                     setRpcValidationStatus(RPCUrlValidation.EMPTY)
                     return
                 }
-                if (errors.rpcUrl !== undefined) {
+
+                if (errors.rpcUrl !== undefined || !validateUrl(watchRPCUrl)) {
                     setRpcValidationStatus(RPCUrlValidation.INVALID_URL)
                     return
                 }
                 try {
-                    const chainId = await getRpcChainId(watchRPCUrl)
-
                     //Unknown chain id, validation cannot be done.
                     if (!chainDetailsRef.current) {
                         setRpcValidationStatus(
@@ -220,6 +210,7 @@ const NetworkFormPage = ({
                         return
                     }
 
+                    const chainId = await getRpcChainId(watchRPCUrl)
                     setRpcValidationStatus(
                         Number(chainId) === parsedChainId
                             ? getStatusFromEnpoint(

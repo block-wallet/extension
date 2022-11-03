@@ -49,7 +49,7 @@ const NetworksPage = () => {
         (chainId: number, isTestnet: boolean) => {
             const networks = isTestnet ? testNetworks : mainNetworks
 
-            const network = networks.filter((n) => n.chainId === chainId)[0]
+            const network = networks.find((n) => n.chainId === chainId)!
             return {
                 network,
                 index: networks.indexOf(network),
@@ -71,9 +71,10 @@ const NetworksPage = () => {
 
             setNetworks(
                 update(networks, {
+                    // apply multiple splice functions on the networks array using each item in the $splice array as parameters
                     $splice: [
-                        [draggedIndex, 1],
-                        [hoveredOnIndex, 0, draggedItem],
+                        [draggedIndex, 1], // removing what is being dragged.
+                        [hoveredOnIndex, 0, draggedItem], // adding the dragged item to the new hovered on index.
                     ],
                 })
             )
@@ -81,25 +82,22 @@ const NetworksPage = () => {
         [mainNetworks, testNetworks]
     )
 
-    useEffect(() => {
+    function onSuccessfulDrop(isTestnet: boolean) {
+        const networks = isTestnet ? testNetworks : mainNetworks
+
         let networksOrder: editNetworkOrder[] = []
-        mainNetworks.forEach((network, index) => {
+
+        networks.forEach((network, index) => {
             networksOrder.push({
                 chainId: network.chainId,
                 order: index + 1,
             })
         })
 
-        testNetworks.forEach((network, index) => {
-            networksOrder.push({
-                chainId: network.chainId,
-                order: index + 1,
-            })
-        })
         editNetworksOrder({
             networksOrder: networksOrder,
         })
-    }, [mainNetworks, testNetworks])
+    }
 
     useEffect(() => {
         const parsedAvailableNetworks = Object.values(availableNetworks)
@@ -168,6 +166,9 @@ const NetworksPage = () => {
                                     onClick={() => onClickNetwork(network)}
                                     moveNetworkCard={moveNetworkCard}
                                     findNetworkCard={findNetworkCard}
+                                    onSuccessfulDrop={() =>
+                                        onSuccessfulDrop(false)
+                                    }
                                 />
                             ))}
                         </div>
@@ -183,6 +184,9 @@ const NetworksPage = () => {
                                     moveNetworkCard={moveNetworkCard}
                                     findNetworkCard={findNetworkCard}
                                     isTestnet
+                                    onSuccessfulDrop={() =>
+                                        onSuccessfulDrop(true)
+                                    }
                                 />
                             ))}
                         </div>

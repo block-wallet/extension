@@ -22,6 +22,7 @@ const NetworkDisplay = ({
     moveNetworkCard,
     isTestnet = false,
     findNetworkCard,
+    onSuccessfulDrop,
 }: {
     networkInfo: NetworkInfo
     onClick: () => void
@@ -38,6 +39,7 @@ const NetworkDisplay = ({
         index: number
     }
     isTestnet?: boolean
+    onSuccessfulDrop: () => void
 }) => {
     const [dropAnimation, setDropAnimation] = useState(false)
     const dropRef = useRef<HTMLDivElement>(null)
@@ -92,6 +94,7 @@ const NetworkDisplay = ({
                         dropResult.isTestnet === isTestnet
                     ) {
                         setDropAnimation(true)
+                        onSuccessfulDrop()
                     }
                 }
             },

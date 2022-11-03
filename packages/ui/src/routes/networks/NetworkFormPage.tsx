@@ -322,7 +322,9 @@ const NetworkFormPage = ({
         rpcEndpointIsValid &&
         !networkAlreadyExistError &&
         !networkNameInUseError &&
-        !editingSelectedNetwork
+        !editingSelectedNetwork &&
+        !!watchName &&
+        !!watchCurrencySymbol
 
     return (
         <PopupLayout

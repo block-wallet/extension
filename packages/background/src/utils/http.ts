@@ -38,7 +38,16 @@ const request = async <T>(
 
     // Check the method and set the options accordingly
     if (method === 'GET') {
-        url += '?' + new URLSearchParams(params).toString();
+        const safeURLParams: Record<string, any> = {};
+        for (const property in params) {
+            if (
+                Object.prototype.hasOwnProperty.call(params, property) &&
+                params[property] !== undefined
+            ) {
+                safeURLParams[property] = params[property];
+            }
+        }
+        url += '?' + new URLSearchParams(safeURLParams).toString();
     } else {
         options.body = JSON.stringify(params);
     }

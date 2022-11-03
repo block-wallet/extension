@@ -179,7 +179,9 @@ const NetworkFormPage = ({
 
     useEffect(() => {
         let ref: NodeJS.Timeout | null = null
-        setIsValidating(true)
+        if (!!watchRPCUrl && !!watchChainId) {
+            setIsValidating(true)
+        }
         const derivateRPCStatusFromWatchers = async () => {
             try {
                 const parsedChainId = parseChainId(watchChainId)
@@ -203,9 +205,7 @@ const NetworkFormPage = ({
                     setRpcValidationStatus(RPCUrlValidation.EMPTY)
                     return
                 }
-                console.log(errors)
                 if (errors.rpcUrl !== undefined) {
-                    console.log("INVALID_URL")
                     setRpcValidationStatus(RPCUrlValidation.INVALID_URL)
                     return
                 }

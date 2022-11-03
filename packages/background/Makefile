@@ -31,7 +31,6 @@ else
 endif
 	@cp ./src/infrastructure/hardware/trezor/trezor-usb-permissions.html ../../dist/trezor-usb-permissions.html
 
-
 depcheck:
 	@npx depcheck
 

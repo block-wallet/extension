@@ -177,12 +177,14 @@ const ConnectSteps = ({
             {!isSiteOriginSafe && (
                 <CollapsableWarning
                     dialog={{
-                        title: "Warning",
+                        title: "Warning: Suspicious URL",
                         message: (
                             <span>
-                                DApp URL seems malicious. Make sure you know &
-                                trust this decentralized application before
-                                connecting your account.
+                                The DApp URL you are connecting to seems
+                                malicious. Make sure you know and trust this
+                                decentralized application before connecting your
+                                wallet. Failure to do so may result in loss of
+                                funds.
                             </span>
                         ),
                     }}
@@ -192,7 +194,7 @@ const ConnectSteps = ({
                             <AiOutlineWarning className="w-4 h-4 yellow-300" />
                             <span className="text-xs text-yellow-900">
                                 <span className="font-bold">
-                                    DApp URL seems malicious.
+                                    This DApp URL seems malicious.
                                 </span>
                             </span>
                         </div>

@@ -51,11 +51,14 @@ const NetworkDisplay = ({
         () => ({
             type: isTestnet ? "testnet" : "mainnet",
             item: { networkInfo, originalIndex, isTestnet },
+            // This is used to inject isDragging variable into the component
             collect: (monitor: DragSourceMonitor) => ({
                 isDragging: monitor.isDragging(),
             }),
+            // triggered when the dragging of this component is stopped
             end: (item: NetworkCardProps, monitor: DragSourceMonitor) => {
                 const didDrop = monitor.didDrop()
+                // if the drop was not successful in a dropzone, we return the card to its original position
                 if (!didDrop) {
                     moveNetworkCard(
                         item.networkInfo.chainId,
@@ -71,12 +74,14 @@ const NetworkDisplay = ({
     const [, drop] = useDrop(
         () => ({
             accept: isTestnet ? "testnet" : "mainnet",
+            // Called when a dragged item is hovered over this component.
             hover(item: NetworkCardProps) {
                 if (item.networkInfo.chainId !== networkInfo.chainId) {
                     const { index: overIndex } = findNetworkCard(
                         networkInfo.chainId,
                         isTestnet
                     )
+                    // move the dragged item to the hovered item's position
                     moveNetworkCard(
                         item.networkInfo.chainId,
                         overIndex,
@@ -88,6 +93,7 @@ const NetworkDisplay = ({
                 if (monitor.didDrop()) {
                     const dropResult =
                         monitor.getDropResult() as NetworkCardProps
+                    // If the drop was successful, we trigger the animation and update background networks state
                     if (
                         dropResult.networkInfo.chainId ===
                             networkInfo.chainId &&

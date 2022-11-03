@@ -32,6 +32,8 @@ export enum RPCUrlValidation {
     UNVERIFIED_ENDPOINT,
     //Invalid URL
     INVALID_URL,
+    //The URL is valid but it's not a node endpoint
+    INVALID_ENDPOINT,
 }
 
 const RPCValidationEndLabelInfo = ({
@@ -76,7 +78,7 @@ const RPCValidationEndLabelInfo = ({
                             "!-translate-x-3/4 !border !border-gray-200 !w-40 !break-word !whitespace-normal",
                             toolTipClassName
                         )}
-                        content={`Invalid endpoint for Chain ${currentChainId}.`}
+                        content={`Invalid node endpoint for Chain ${currentChainId}.`}
                     />
                 </>
             )
@@ -90,7 +92,21 @@ const RPCValidationEndLabelInfo = ({
                             "!-translate-x-3/4 !border !border-gray-200 !w-40 !break-word !whitespace-normal",
                             toolTipClassName
                         )}
-                        content="Invalid endpoint."
+                        content="The RPC URL is invalid so it can't be verified."
+                    />
+                </>
+            )
+        }
+        case RPCUrlValidation.INVALID_ENDPOINT: {
+            return withWrapper(
+                <>
+                    <CgDanger className="w-4 h-4 text-red-700 z-20" />
+                    <Tooltip
+                        className={classnames(
+                            "!-translate-x-3/4 !border !border-gray-200 !w-40 !break-word !whitespace-normal",
+                            toolTipClassName
+                        )}
+                        content="The URL is valid but it's not an RPC node endpoint."
                     />
                 </>
             )
@@ -109,7 +125,7 @@ const RPCValidationEndLabelInfo = ({
                             "!-translate-x-full !border !border-gray-200 !w-56 !break-word !whitespace-normal",
                             toolTipClassName
                         )}
-                        content="This endpoint is not recognized by BlockWallet. Please make sure that this configuration will not compromise your funds."
+                        content="This node endpoint is not recognized by BlockWallet. Please make sure that this configuration will not compromise your funds."
                     />
                 </>
             )

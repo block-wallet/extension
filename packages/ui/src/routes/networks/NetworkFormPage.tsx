@@ -35,16 +35,6 @@ import CollapsableWarning from "../../components/CollapsableWarning"
 import { AiOutlineWarning } from "react-icons/ai"
 import usePersistedLocalStorageForm from "../../util/hooks/usePersistedLocalStorageForm"
 
-const URLRegExp = new RegExp(
-    "^(https:\\/\\/)?" + // protocol
-        "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
-        "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
-        "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
-        "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
-        "(\\#[-a-z\\d_]*)?$",
-    "i"
-)
-
 const getStatusFromEnpoint = (
     chainInfo: ChainListItem,
     configuredUrl: string
@@ -55,6 +45,18 @@ const getStatusFromEnpoint = (
     )
         ? RPCUrlValidation.VERIFIED_ENDPOINT
         : RPCUrlValidation.UNVERIFIED_ENDPOINT
+}
+
+const validateUrl = (url: string) => {
+    try {
+        const parsedUrl = new URL(url.toLowerCase())
+        return (
+            parsedUrl.href.startsWith("http://") ||
+            parsedUrl.href.startsWith("https://")
+        )
+    } catch {
+        return false
+    }
 }
 
 interface NetworkInputs {
@@ -79,17 +81,23 @@ interface Props {
 const networkSchema = yup.object({
     name: yup
         .string()
+        .trim()
         .test("is-empty", "Network name is empty.", (s) => {
             return !!s && s.trim().length > 0
         })
-        .max(40, "Network name is too long"),
+        .max(40, "Network name is too long")
+        .required(),
     rpcUrl: yup
         .string()
-        .matches(
-            URLRegExp,
-            "Invalid URL. Make sure that you are using https protocol."
+        .test(
+            "match url shape",
+            "Invalid URL. Make sure that you are using http/s protocol.",
+            (url) => {
+                return url === undefined ? false : validateUrl(url)
+            }
         )
-        .required("RPC URL is empty."),
+        .trim()
+        .required(),
     chainId: yup
         .string()
         .test("is-empty", "Chain Id is empty", (s) => {
@@ -97,15 +105,16 @@ const networkSchema = yup.object({
         })
         .test("numeric", "Chain ID must be numeric", (s) => {
             return !Number.isNaN(Number(s))
-        }),
+        })
+        .required(),
     symbol: yup.string().required("Currency Symbol is empty"),
     blockExplorerUrl: yup
         .string()
         .test(
             "match url shape",
-            "Invalid URL. Make sure that you are using https protocol.",
-            (value) => {
-                return !value || !!URLRegExp.test(value)
+            "Invalid URL. Make sure that you are using http/s protocol.",
+            (url) => {
+                return !url || validateUrl(url) // Optional or valid
             }
         ),
     test: yup.boolean(),
@@ -147,6 +156,7 @@ const NetworkFormPage = ({
         { key: "networks.form" },
         {
             resolver: yupResolver(networkSchema),
+            mode: "all",
             defaultValues: {
                 name: network?.name,
                 blockExplorerUrl: network?.blockExplorerUrl,
@@ -193,7 +203,12 @@ const NetworkFormPage = ({
                     setRpcValidationStatus(RPCUrlValidation.EMPTY)
                     return
                 }
-
+                console.log(errors)
+                if (errors.rpcUrl !== undefined) {
+                    console.log("INVALID_URL")
+                    setRpcValidationStatus(RPCUrlValidation.INVALID_URL)
+                    return
+                }
                 try {
                     const chainId = await getRpcChainId(watchRPCUrl)
 
@@ -217,7 +232,7 @@ const NetworkFormPage = ({
                     //Invalid URL if we were not able to fetch the chainId using the rpcUrl.
                     console.log(watchRPCUrl)
                     console.log(e)
-                    setRpcValidationStatus(RPCUrlValidation.INVALID_URL)
+                    setRpcValidationStatus(RPCUrlValidation.INVALID_ENDPOINT)
                 }
             } finally {
                 setIsValidating(false)

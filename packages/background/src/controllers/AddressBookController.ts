@@ -8,6 +8,7 @@ import {
     TransactionMeta,
 } from './transactions/utils/types';
 import { PreferencesController } from './PreferencesController';
+import { NATIVE_TOKEN_ADDRESS } from './erc-20/TokenController';
 
 /**
  * @type AddressBookControllerProps
@@ -303,7 +304,7 @@ export class AddressBookController extends BaseController<AddressBookControllerM
                     continue;
             }
 
-            if (!address) {
+            if (!address || address === NATIVE_TOKEN_ADDRESS) {
                 continue;
             }
 

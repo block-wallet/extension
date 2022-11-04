@@ -28,7 +28,7 @@ import WaitingDialog, {
 } from "../../components/dialog/WaitingDialog"
 import { PermissionRequest } from "@block-wallet/background/controllers/PermissionsController"
 import useDebouncedState from "../../util/hooks/useDebouncedState"
-import { DAPP_FEEDBACK_WINDOW_TIMEOUT } from "../../util/constants"
+import { DAPP_FEEDBACK_WINDOW_TIMEOUT, LINKS } from "../../util/constants"
 import GenericTooltip from "../../components/label/GenericTooltip"
 import CollapsableWarning from "../../components/CollapsableWarning"
 import { isOriginSafe } from "../../util/isOriginSafe"
@@ -181,10 +181,18 @@ const ConnectSteps = ({
                         message: (
                             <span>
                                 The DApp URL you are connecting to seems
-                                malicious. Make sure you know and trust this
-                                decentralized application before connecting your
-                                wallet. Failure to do so may result in loss of
-                                funds.
+                                malicious. Make sure{" "}
+                                <a
+                                    className="underline text-blue-600 hover:text-blue-800"
+                                    href={LINKS.ARTICLES.MALICIOUS_DAPPS}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    you know and trust this decentralized
+                                    application
+                                </a>{" "}
+                                before connecting your wallet. Failure to do so
+                                may result in loss of funds.
                             </span>
                         ),
                     }}

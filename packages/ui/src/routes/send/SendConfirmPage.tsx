@@ -68,6 +68,8 @@ import { HardwareWalletOpTypes } from "../../context/commTypes"
 import { useInProgressInternalTransaction } from "../../context/hooks/useInProgressInternalTransaction"
 import { rejectTransaction } from "../../context/commActions"
 import { getValueByKey } from "../../util/objectUtils"
+import { AddressDisplay } from "../../components/addressBook/AddressDisplay"
+import { getAccountNameByAddress } from "../../context/util/getAccountNameByAddress"
 
 // Schema
 const GetAmountYupSchema = (
@@ -174,64 +176,6 @@ const schema = GetAmountYupSchema(
     false
 )
 type AmountFormData = InferType<typeof schema>
-
-// Subcomponent
-const AddressDisplay: FunctionComponent<{
-    showingTheWholeAddress: boolean
-    setShowingTheWholeAddress: React.Dispatch<React.SetStateAction<boolean>>
-}> = ({ showingTheWholeAddress, setShowingTheWholeAddress }) => {
-    const history = useOnMountHistory()
-    const receivingAddress = history.location.state.address
-    const selectedAccountName = history.location.state.name
-
-    const { accounts } = useBlankState()!
-    const addressBook = useAddressBook()
-
-    const account =
-        receivingAddress in accounts
-            ? (accounts[receivingAddress] as AccountInfo)
-            : receivingAddress in addressBook
-            ? ({
-                  name: addressBook[receivingAddress].name,
-                  address: addressBook[receivingAddress].address,
-              } as AccountInfo)
-            : undefined
-    return (
-        <>
-            <div
-                className="flex flex-row items-center w-full px-6 py-3 space-x-3"
-                style={{ maxWidth: "100vw" }}
-                title={formatHash(receivingAddress, receivingAddress.length)}
-                onClick={() =>
-                    setShowingTheWholeAddress(!showingTheWholeAddress)
-                }
-            >
-                <CheckmarkCircle classes="w-4 h-4" />
-                {selectedAccountName || account?.name ? (
-                    <div>
-                        <span className="font-bold text-green-500 mr-2">
-                            {selectedAccountName
-                                ? formatName(selectedAccountName, 20)
-                                : formatName(account?.name, 20)}
-                        </span>
-                        <span className="text-gray truncate">
-                            {formatHash(receivingAddress)}
-                        </span>
-                    </div>
-                ) : (
-                    <span className="font-bold text-green-500 truncate cursor-pointer">
-                        {showingTheWholeAddress
-                            ? formatHash(
-                                  receivingAddress,
-                                  receivingAddress.length
-                              )
-                            : formatHash(receivingAddress)}
-                    </span>
-                )}
-            </div>
-        </>
-    )
-}
 
 // Tools
 
@@ -350,7 +294,6 @@ const SendConfirmPage = () => {
     ] = useState(false)
 
     const [isGasLoading, setIsGasLoading] = useState(true)
-    const [showingTheWholeAddress, setShowingTheWholeAddress] = useState(false)
     const [usingMax, setUsingMax] = useState(false)
     const [nativeCurrencyAmt, setNativeCurrency] = useState(0)
 
@@ -808,8 +751,11 @@ const SendConfirmPage = () => {
                     style={{ maxHeight: "452px" }}
                 >
                     <AddressDisplay
-                        showingTheWholeAddress={showingTheWholeAddress}
-                        setShowingTheWholeAddress={setShowingTheWholeAddress}
+                        receivingAddress={history.location.state.address}
+                        selectedAccountName={
+                            history.location.state.name ??
+                            getAccountNameByAddress(receivingAddress)
+                        }
                     />
 
                     <div

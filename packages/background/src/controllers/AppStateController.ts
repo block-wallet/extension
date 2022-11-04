@@ -54,21 +54,24 @@ export default class AppStateController extends BaseController<AppStateControlle
             if (isExpired) {
                 this.lock(true);
             } else {
-                chrome.storage.session.get(
-                    [LOGIN_TOKEN_KEY],
-                    async ({
-                        [LOGIN_TOKEN_KEY]: loginToken,
-                    }: {
-                        [key: string]: string;
-                    }) => {
-                        if (loginToken) {
-                            await this._keyringController.submitEncryptionKey(
-                                loginToken
-                            );
-                            await this._postLoginAction();
+                // @ts-ignore
+                chrome.storage.session &&
+                    // @ts-ignore
+                    chrome.storage.session.get(
+                        [LOGIN_TOKEN_KEY],
+                        async ({
+                            [LOGIN_TOKEN_KEY]: loginToken,
+                        }: {
+                            [key: string]: string;
+                        }) => {
+                            if (loginToken) {
+                                await this._keyringController.submitEncryptionKey(
+                                    loginToken
+                                );
+                                await this._postLoginAction();
+                            }
                         }
-                    }
-                );
+                    );
             }
         }
     }

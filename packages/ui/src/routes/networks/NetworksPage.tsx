@@ -1,5 +1,4 @@
 import { DndProvider } from "react-dnd"
-import update from "immutability-helper"
 
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { useCallback, useEffect, useState } from "react"
@@ -69,15 +68,11 @@ const NetworksPage = () => {
             const setNetworks = isTestnet ? setTestNetworks : setMainNetworks
             const draggedItem = network
 
-            setNetworks(
-                update(networks, {
-                    // apply multiple splice functions on the networks array using each item in the $splice array as parameters
-                    $splice: [
-                        [draggedIndex, 1], // removing what is being dragged.
-                        [hoveredOnIndex, 0, draggedItem], // adding the dragged item to the new hovered on index.
-                    ],
-                })
-            )
+            const newNetworks = structuredClone(networks)
+            newNetworks.splice(draggedIndex, 1) // removing what is being dragged.
+            newNetworks.splice(hoveredOnIndex, 0, draggedItem) // adding the dragged item to the new hovered on index.
+
+            setNetworks(newNetworks)
         },
         [mainNetworks, testNetworks]
     )

@@ -499,9 +499,6 @@ export default class BlankController extends EventEmitter {
 
         // Set devtools callback on state update
         this.store.subscribe(this.devToolSubscription);
-
-        // mv3 auto unlock
-        this.appStateController.autoUnlock();
     }
 
     /**

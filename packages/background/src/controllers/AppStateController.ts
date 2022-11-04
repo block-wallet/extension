@@ -4,12 +4,22 @@ import { BaseController } from '../infrastructure/BaseController';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 import TransactionController from './transactions/TransactionController';
 
+export const LOGIN_TOKEN_KEY = 'loginToken';
+
 export interface AppStateControllerState {
     idleTimeout: number; // Minutes until auto-lock - Zero if disabled
     isAppUnlocked: boolean;
     lockedByTimeout: boolean;
     lastActiveTime: number;
 }
+
+const isSessionExpired = (
+    lastActiveTime: number,
+    idleTimeout: number
+): boolean => {
+    const now = new Date().getTime();
+    return lastActiveTime + idleTimeout * 60 * 1000 < now;
+};
 
 export default class AppStateController extends BaseController<AppStateControllerState> {
     private _timer: ReturnType<typeof setTimeout> | null;
@@ -23,17 +33,44 @@ export default class AppStateController extends BaseController<AppStateControlle
 
         this._timer = null;
 
+        //attempt to restore previous session
+        this._restoreSession();
+
+        this._resetTimer();
+    }
+
+    /**
+     * _restoreSession
+     * Attempts to restore a previous user session.
+     * If either the app is locked or the session is expired, then no session is restored and the user should unlock again.
+     * If the app is unlocked and the session is still alived, an encryption key grabbed from the session storage is used to regenerate keyrings.
+     */
+    private _restoreSession() {
         const { idleTimeout, isAppUnlocked, lastActiveTime } =
             this.store.getState();
 
         if (isAppUnlocked) {
-            const now = new Date().getTime();
-            if (lastActiveTime + idleTimeout * 60 * 1000 < now) {
+            const isExpired = isSessionExpired(lastActiveTime, idleTimeout);
+            if (isExpired) {
                 this.lock(true);
+            } else {
+                chrome.storage.session.get(
+                    [LOGIN_TOKEN_KEY],
+                    async ({
+                        [LOGIN_TOKEN_KEY]: loginToken,
+                    }: {
+                        [key: string]: string;
+                    }) => {
+                        if (loginToken) {
+                            await this._keyringController.submitEncryptionKey(
+                                loginToken
+                            );
+                            await this._postLoginAction();
+                        }
+                    }
+                );
             }
         }
-
-        this._resetTimer();
     }
 
     /**
@@ -109,33 +146,15 @@ export default class AppStateController extends BaseController<AppStateControlle
             // @ts-ignore
             chrome.storage.session &&
                 // @ts-ignore
-                chrome.storage.session.set({ loginToken }).catch((err: any) => {
-                    log.error('error setting loginToken', err);
-                });
+                chrome.storage.session
+                    .set({ [LOGIN_TOKEN_KEY]: loginToken })
+                    .catch((err: any) => {
+                        log.error('error setting loginToken', err);
+                    });
 
             await this._postLoginAction();
         } catch (error) {
             throw new Error(error.message || error);
-        }
-    };
-
-    public autoUnlock = async (): Promise<void> => {
-        const { isAppUnlocked } = this.store.getState();
-        if (!isAppUnlocked) {
-            // @ts-ignore
-            chrome.storage.session &&
-                // @ts-ignore
-                chrome.storage.session.get(
-                    ['loginToken'],
-                    async ({ loginToken }: { [key: string]: string }) => {
-                        if (loginToken) {
-                            await this._keyringController.submitEncryptionKey(
-                                loginToken
-                            );
-                            await this._postLoginAction();
-                        }
-                    }
-                );
         }
     };
 

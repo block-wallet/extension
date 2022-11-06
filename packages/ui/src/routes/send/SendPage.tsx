@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useMergeRefs } from "../../context/hooks/useMergeRefs"
+import { useAddressBook } from "../../context/hooks/useAddressBook"
+import { addressBookSet } from "../../context/commActions"
 
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
@@ -17,10 +19,10 @@ import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { TokenWithBalance } from "../../context/hooks/useTokensList"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
-
 import AccountSearchResults, {
     AccountResult,
 } from "../../components/account/AccountSearchResults"
+import Checkbox from "../../components/input/Checkbox"
 
 // Schema
 const schema = yup.object().shape({
@@ -40,6 +42,8 @@ const SendPage = () => {
     const fromAssetPage = defaultAsset ?? false
     const currentAccount = useSelectedAccount()
 
+    const addressBook = useAddressBook()
+
     // State
     const [selectedAccount, setSelectedAccount] = useState<AccountResult>()
     const [searchString, setSearchString] = useState<string>("")
@@ -47,7 +51,11 @@ const SendPage = () => {
     const [preSelectedAsset, setPreSelectedAsset] = useState<TokenWithBalance>()
     const [isAddress, setIsAddress] = useState<boolean>(false)
 
+    const [addContact, setAddContact] = useState(false)
+    const [isInContacts, setIsInContacts] = useState(true)
+
     const searchInputRef = useRef<HTMLInputElement>(null)
+    const displayAddToContacts = isAddress && !isInContacts
 
     const {
         register,
@@ -73,7 +81,14 @@ const SendPage = () => {
     }
 
     // Handlers
-    const onSubmit = handleSubmit((data: AddressFormData) => {
+    const onSubmit = handleSubmit(async (data: AddressFormData) => {
+        if (addContact) {
+            await addressBookSet(
+                data.address,
+                `Contact ${Object.keys(addressBook).length + 1}`,
+                ""
+            )
+        }
         history.push({
             pathname: "/send/confirm",
             state: {
@@ -179,17 +194,25 @@ const SendPage = () => {
                         }}
                         debounced
                     />
+                    {displayAddToContacts && (
+                        <Checkbox
+                            label="Add to contacts"
+                            checked={addContact}
+                            onChange={() => setAddContact(!addContact)}
+                        />
+                    )}
                 </div>
             </div>
             <div
                 className={classnames(
                     "pt-28 pb-6 space-y-4",
-                    warning !== "" ? "mt-5" : "mt-1"
+                    warning !== "" || displayAddToContacts ? "mt-5" : "mt-1"
                 )}
             >
                 <AccountSearchResults
                     filter={searchString}
                     onSelect={onAccountSelect}
+                    setIsInContacts={setIsInContacts}
                 />
             </div>
         </PopupLayout>

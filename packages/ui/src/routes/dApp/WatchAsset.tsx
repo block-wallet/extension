@@ -339,7 +339,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                         </span>
                         <WarningTip
                             text={
-                                <span>
+                                <span className="font-normal">
                                     <span className="font-bold">
                                         Attention!{" "}
                                     </span>

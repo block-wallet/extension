@@ -20,7 +20,7 @@ type AccountSearchResultsProps = {
         ud?: boolean
     }
     onSelect: (account: any) => void
-    setIsInContacts: (isInContacts: boolean) => void
+    setIsInContacts?: (isInContacts: boolean) => void
 }
 
 export type AccountResult = {
@@ -80,7 +80,7 @@ const AccountSearchResults = ({
     }
 
     useEffect(() => {
-        setIsInContacts(!noAddressBookResults)
+        setIsInContacts && setIsInContacts(!noAddressBookResults)
     }, [noAddressBookResults])
 
     useEffect(() => {

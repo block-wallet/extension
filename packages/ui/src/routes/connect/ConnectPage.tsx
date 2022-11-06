@@ -16,7 +16,7 @@ import { confirmPermission } from "../../context/commActions"
 import { usePendingPermissionRequest } from "../../context/hooks/usePendingPermissionRequest"
 import { Redirect } from "react-router-dom"
 import LoadingOverlay from "../../components/loading/LoadingOverlay"
-import { AiFillInfoCircle } from "react-icons/ai"
+import { AiFillInfoCircle, AiOutlineWarning } from "react-icons/ai"
 import Tooltip from "../../components/label/Tooltip"
 import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
 import useNextRequestRoute from "../../context/hooks/useNextRequestRoute"
@@ -28,7 +28,10 @@ import WaitingDialog, {
 } from "../../components/dialog/WaitingDialog"
 import { PermissionRequest } from "@block-wallet/background/controllers/PermissionsController"
 import useDebouncedState from "../../util/hooks/useDebouncedState"
-import { DAPP_FEEDBACK_WINDOW_TIMEOUT } from "../../util/constants"
+import { DAPP_FEEDBACK_WINDOW_TIMEOUT, LINKS } from "../../util/constants"
+import GenericTooltip from "../../components/label/GenericTooltip"
+import CollapsableWarning from "../../components/CollapsableWarning"
+import { isOriginSafe } from "../../util/isOriginSafe"
 
 const ConnectPage = () => {
     const pendingPermissionRequest = usePendingPermissionRequest()
@@ -57,6 +60,7 @@ const ConnectSteps = ({
     requestId: string
     site: PermissionRequest
 }) => {
+    const isSiteOriginSafe = isOriginSafe(site.origin)
     const accountsList = useSortedAccounts()
     const account = useSelectedAccount()
 
@@ -170,6 +174,41 @@ const ConnectSteps = ({
             }
         >
             {isLoading && <LoadingOverlay />}
+            {!isSiteOriginSafe && (
+                <CollapsableWarning
+                    dialog={{
+                        title: "Warning: Suspicious URL",
+                        message: (
+                            <span>
+                                The DApp URL you are connecting to seems
+                                malicious. Make sure{" "}
+                                <a
+                                    className="underline text-blue-600 hover:text-blue-800"
+                                    href={LINKS.ARTICLES.MALICIOUS_DAPPS}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    you know and trust this decentralized
+                                    application
+                                </a>{" "}
+                                before connecting your wallet. Failure to do so
+                                may result in loss of funds.
+                            </span>
+                        ),
+                    }}
+                    isCollapsedByDefault
+                    collapsedMessage={
+                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-bold justify-center">
+                            <AiOutlineWarning className="w-4 h-4 yellow-300" />
+                            <span className="text-xs text-yellow-900">
+                                <span className="font-bold">
+                                    This DApp URL seems malicious.
+                                </span>
+                            </span>
+                        </div>
+                    }
+                />
+            )}
             <WaitingDialog
                 status={status}
                 open={isOpen}
@@ -200,9 +239,29 @@ const ConnectSteps = ({
                         size={14}
                         background={false}
                     />
-                    <span className="text-sm text-gray-800 whitespace-pre-wrap max-w-xs">
-                        {site.origin}
-                    </span>
+                    <div className="w-max max-w-full group relative">
+                        <p className="text-center text-sm text-gray-800 whitespace-pre-wrap max-w-full truncate">
+                            {site.origin}
+                        </p>
+                        <GenericTooltip
+                            bottom
+                            className="p-2 break-all max-w-[310px]"
+                            content={
+                                <div>
+                                    <p>
+                                        <span className="font-bold">
+                                            Origin:
+                                        </span>
+                                        <br />
+                                        <span data-testid="transaction-origin">
+                                            {site.origin}
+                                        </span>
+                                    </p>
+                                </div>
+                            }
+                        />
+                    </div>
+
                     <span className="text-xs text-gray-600">
                         Only connect with sites you trust.
                     </span>

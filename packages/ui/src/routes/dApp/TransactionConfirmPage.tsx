@@ -384,7 +384,7 @@ const TransactionConfirm: React.FC<{
         return (
             <GenericTooltip
                 top
-                className="w-60 p-2 ml-8"
+                className="w-60 p-2 ml-8 break-all"
                 content={
                     <div>
                         <p>

@@ -44,7 +44,7 @@ export default {
                 derivationsForward: DERIVATIONS_FORWARD,
             },
             nativelySupported: true,
-        }
+        };
         updatedNetworks.SCROLL_L2_TESTNET = {
             name: 'scroll_l2_testnet',
             desc: 'Scroll L2 Testnet',
@@ -74,7 +74,7 @@ export default {
                 derivationsForward: DERIVATIONS_FORWARD,
             },
             nativelySupported: true,
-        }
+        };
 
         updatedNetworks.LOCALHOST = {
             ...updatedNetworks.LOCALHOST,

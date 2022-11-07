@@ -299,6 +299,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         newNetworks[networkKey].desc = updates.name;
         newNetworks[networkKey].rpcUrls = [rpcUrl];
         newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
+        newNetworks[networkKey].test = updates.test;
         this.networks = newNetworks;
         return;
     }

@@ -49,8 +49,8 @@ const getStatusFromEnpoint = (
 
 const validateUrl = (url: string) => {
     try {
-        new URL(url.toLowerCase())
-        return url.startsWith("http://") || url.startsWith("https://")
+        new URL(url)
+        return url.toLowerCase().startsWith("http://") || url.toLowerCase().startsWith("https://")
     } catch {
         return false
     }
@@ -182,7 +182,7 @@ const NetworkFormPage = ({
                     if (
                         !chainDetailsRef.current ||
                         Number(chainDetailsRef.current?.chainId) !==
-                            parsedChainId
+                        parsedChainId
                     ) {
                         chainDetailsRef.current = await getSpecificChainDetails(
                             parsedChainId
@@ -216,9 +216,9 @@ const NetworkFormPage = ({
                     setRpcValidationStatus(
                         Number(chainId) === parsedChainId
                             ? getStatusFromEnpoint(
-                                  chainDetailsRef.current,
-                                  watchRPCUrl
-                              )
+                                chainDetailsRef.current,
+                                watchRPCUrl
+                            )
                             : RPCUrlValidation.CHAIN_ID_DOESNT_MATCH
                     )
                 } catch (e) {
@@ -250,14 +250,14 @@ const NetworkFormPage = ({
         addNetworkInvoke.run(
             isEdit
                 ? editNetwork({
-                      chainId: parseChainId(data.chainId)!.toString(),
-                      updates: {
-                          rpcUrl: data.rpcUrl,
-                          blockExplorerUrl: data.blockExplorerUrl,
-                          name: data.name!,
-                          test: !!data.test,
-                      },
-                  })
+                    chainId: parseChainId(data.chainId)!.toString(),
+                    updates: {
+                        rpcUrl: data.rpcUrl,
+                        blockExplorerUrl: data.blockExplorerUrl,
+                        name: data.name!,
+                        test: !!data.test,
+                    },
+                })
                 : addNetwork(networkData)
         )
     })
@@ -282,7 +282,7 @@ const NetworkFormPage = ({
     const invalidCurrencySymbolWarn =
         chainDetailsRef.current && watchCurrencySymbol
             ? chainDetailsRef.current.nativeCurrency.symbol !==
-              watchCurrencySymbol
+            watchCurrencySymbol
             : false
 
     const networkAlreadyExistError = useMemo(() => {
@@ -332,24 +332,24 @@ const NetworkFormPage = ({
                     actions={
                         !editingSelectedNetwork && canDelete
                             ? [
-                                  <div
-                                      key={1}
-                                      onClick={() => {
-                                          setConfirmDeletion(true)
-                                      }}
-                                      className={
-                                          "text-red-500 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 rounded-md w-40"
-                                      }
-                                  >
-                                      <div className="pl-1 pr-1 w-8">
-                                          <Icon
-                                              name={IconName.TRASH_BIN}
-                                              profile="danger"
-                                          />
-                                      </div>
-                                      <span>Delete Network</span>
-                                  </div>,
-                              ]
+                                <div
+                                    key={1}
+                                    onClick={() => {
+                                        setConfirmDeletion(true)
+                                    }}
+                                    className={
+                                        "text-red-500 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 rounded-md w-40"
+                                    }
+                                >
+                                    <div className="pl-1 pr-1 w-8">
+                                        <Icon
+                                            name={IconName.TRASH_BIN}
+                                            profile="danger"
+                                        />
+                                    </div>
+                                    <span>Delete Network</span>
+                                </div>,
+                            ]
                             : undefined
                     }
                 />
@@ -407,8 +407,8 @@ const NetworkFormPage = ({
                     addNetworkInvoke.isError
                         ? "error"
                         : addNetworkInvoke.isSuccess
-                        ? "success"
-                        : "loading"
+                            ? "success"
+                            : "loading"
                 }
                 titles={{
                     loading: isEdit ? "Editing..." : "Adding...",
@@ -438,8 +438,8 @@ const NetworkFormPage = ({
                     removeNetworkInvoke.isError
                         ? "error"
                         : removeNetworkInvoke.isSuccess
-                        ? "success"
-                        : "loading"
+                            ? "success"
+                            : "loading"
                 }
                 titles={{
                     loading: "Deleting...",

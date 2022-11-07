@@ -32,14 +32,17 @@ export enum RPCUrlValidation {
     UNVERIFIED_ENDPOINT,
     //Invalid URL
     INVALID_URL,
+    //The URL is valid but it's not a node endpoint
+    INVALID_ENDPOINT,
 }
 
 const RPCValidationEndLabelInfo = ({
     isValidating,
-    rpcValidation,
-    currentChainId,
     toolTipClassName,
     wrapperClassName,
+    rpcValidation,
+    currentChainId,
+    rpcChainId,
 }: {
     isValidating: boolean
     toolTipClassName?: string
@@ -50,6 +53,7 @@ const RPCValidationEndLabelInfo = ({
         | ChainIdValidation
         | IconURLValidation
     currentChainId?: string
+    rpcChainId?: number
 }) => {
     if (isValidating) {
         return <Spinner />
@@ -76,7 +80,7 @@ const RPCValidationEndLabelInfo = ({
                             "!-translate-x-3/4 !border !border-gray-200 !w-40 !break-word !whitespace-normal",
                             toolTipClassName
                         )}
-                        content={`Invalid endpoint for Chain ${currentChainId}.`}
+                        content={`Invalid node endpoint, Chain ID ${currentChainId} does not match with node's Chain ID ${rpcChainId}.`}
                     />
                 </>
             )
@@ -90,7 +94,21 @@ const RPCValidationEndLabelInfo = ({
                             "!-translate-x-3/4 !border !border-gray-200 !w-40 !break-word !whitespace-normal",
                             toolTipClassName
                         )}
-                        content="Invalid endpoint."
+                        content="An invalid URL can't be verified."
+                    />
+                </>
+            )
+        }
+        case RPCUrlValidation.INVALID_ENDPOINT: {
+            return withWrapper(
+                <>
+                    <CgDanger className="w-4 h-4 text-red-700 z-20" />
+                    <Tooltip
+                        className={classnames(
+                            "!-translate-x-3/4 !border !border-gray-200 !w-40 !break-word !whitespace-normal",
+                            toolTipClassName
+                        )}
+                        content="Invalid endpoint, could not connect to an RPC node in that URL."
                     />
                 </>
             )
@@ -109,7 +127,26 @@ const RPCValidationEndLabelInfo = ({
                             "!-translate-x-full !border !border-gray-200 !w-56 !break-word !whitespace-normal",
                             toolTipClassName
                         )}
-                        content="This endpoint is not recognized by BlockWallet. Please make sure that this configuration will not compromise your funds."
+                        content="This node endpoint is not recognized by BlockWallet. Please make sure that this configuration will not compromise your funds."
+                    />
+                </>
+            )
+        }
+        case RPCUrlValidation.EMPTY_UNKNOWN_CHAIN: {
+            return withWrapper(
+                <>
+                    <AiOutlineWarning
+                        className={classnames(
+                            "w-4 h-4 z-20",
+                            "text-yellow-400"
+                        )}
+                    />
+                    <Tooltip
+                        className={classnames(
+                            "!-translate-x-full !border !border-gray-200 !w-56 !break-word !whitespace-normal",
+                            toolTipClassName
+                        )}
+                        content="This network is not recognized by BlockWallet. Please make sure that this configuration will not compromise your funds."
                     />
                 </>
             )

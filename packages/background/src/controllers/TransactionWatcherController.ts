@@ -656,8 +656,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             currentBlock - this._getMaxBlockBatchSize(chainId) * batchMultiplier
         );
 
-        console.log({ batchMultiplier, oldestSafeBlock, lastBlockQueried });
-
         return Math.max(lastBlockQueried, oldestSafeBlock);
     };
 

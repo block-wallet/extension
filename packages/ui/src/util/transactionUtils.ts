@@ -3,7 +3,7 @@ import {
     TransactionMeta,
     uiTransactionParams,
 } from "@block-wallet/background/controllers/transactions/utils/types"
-import { TransactionStatus } from "../context/commTypes"
+import { TransactionCategories, TransactionStatus } from "../context/commTypes"
 import { BigNumber } from "ethers"
 import { DappRequestSigningStatus } from "../context/hooks/useDappRequest"
 export interface RichedTransactionMeta extends TransactionMeta {
@@ -114,4 +114,14 @@ export const canUserSubmitTransaction = (
     status: TransactionStatus
 ): boolean => {
     return [TransactionStatus.UNAPPROVED].includes(status)
+}
+
+export const resolveTransactionTo = (tx: TransactionMeta): string => {
+    let to: string | undefined
+    if (
+        tx.transactionCategory === TransactionCategories.TOKEN_METHOD_TRANSFER
+    ) {
+        to = tx.transferType?.to
+    }
+    return to ?? tx.transactionParams.to ?? ""
 }

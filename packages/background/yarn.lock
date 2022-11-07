@@ -203,9 +203,9 @@
     "@babel/helper-validator-identifier" "^7.18.6"
     to-fast-properties "^2.0.0"
 
-"@block-wallet/chains-assets@https://github.com/block-wallet/chains-assets#v0.0.18":
-  version "0.0.17"
-  resolved "https://github.com/block-wallet/chains-assets#01a8636c70f818aec7fdda999dc95fbc89eb6e1b"
+"@block-wallet/chains-assets@https://github.com/block-wallet/chains-assets#v0.0.19":
+  version "0.0.19"
+  resolved "https://github.com/block-wallet/chains-assets#ca25b313c8517805ba7a99cf7caaf220eed1fb7e"
 
 "@block-wallet/circomlib@^0.0.21":
   version "0.0.21"

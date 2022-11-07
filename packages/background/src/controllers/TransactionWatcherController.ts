@@ -1341,7 +1341,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             confirmationTime: time,
             submittedTime: time,
             status:
-                parseInt(tx.isError) === 0
+                parseInt(tx.isError ?? 0) === 0
                     ? TransactionStatus.CONFIRMED
                     : TransactionStatus.FAILED,
             chainId: chainId,
@@ -1349,7 +1349,10 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             transactionParams: {
                 to: tx.to,
                 from: tx.from,
-                value: BigNumber.from(tx.value),
+                value:
+                    type === TransactionTypeEnum.Native
+                        ? BigNumber.from(tx.value)
+                        : BigNumber.from(0),
                 hash: tx.hash,
                 nonce: Number(tx.nonce),
                 data: tx.input,

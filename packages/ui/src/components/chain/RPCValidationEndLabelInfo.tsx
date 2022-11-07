@@ -38,10 +38,11 @@ export enum RPCUrlValidation {
 
 const RPCValidationEndLabelInfo = ({
     isValidating,
-    rpcValidation,
-    currentChainId,
     toolTipClassName,
     wrapperClassName,
+    rpcValidation,
+    currentChainId,
+    rpcChainId,
 }: {
     isValidating: boolean
     toolTipClassName?: string
@@ -52,6 +53,7 @@ const RPCValidationEndLabelInfo = ({
         | ChainIdValidation
         | IconURLValidation
     currentChainId?: string
+    rpcChainId?: number
 }) => {
     if (isValidating) {
         return <Spinner />
@@ -78,7 +80,7 @@ const RPCValidationEndLabelInfo = ({
                             "!-translate-x-3/4 !border !border-gray-200 !w-40 !break-word !whitespace-normal",
                             toolTipClassName
                         )}
-                        content={`Invalid node endpoint for Chain ${currentChainId}.`}
+                        content={`Invalid node endpoint, Chain ID ${currentChainId} does not match with node's Chain ID ${rpcChainId}.`}
                     />
                 </>
             )
@@ -106,7 +108,7 @@ const RPCValidationEndLabelInfo = ({
                             "!-translate-x-3/4 !border !border-gray-200 !w-40 !break-word !whitespace-normal",
                             toolTipClassName
                         )}
-                        content="Invalid node endpoint."
+                        content="Invalid endpoint, could not connect to an RPC node in that URL."
                     />
                 </>
             )

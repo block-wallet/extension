@@ -134,6 +134,7 @@ const NetworkFormPage = ({
     const [confirmDeletion, setConfirmDeletion] = useState<boolean>(false)
     const [rpcValidationStatus, setRpcValidationStatus] =
         useState<RPCUrlValidation>(RPCUrlValidation.EMPTY)
+    const [rpcChainId, setRpcChainId] = useState<number>(0)
     const [isNativelySupported, setIsNativelySupported] =
         useState<boolean>(false)
     const { availableNetworks } = useBlankState()!
@@ -211,6 +212,7 @@ const NetworkFormPage = ({
                     }
 
                     const chainId = await getRpcChainId(watchRPCUrl)
+                    setRpcChainId(chainId)
                     setRpcValidationStatus(
                         Number(chainId) === parsedChainId
                             ? getStatusFromEnpoint(
@@ -507,6 +509,7 @@ const NetworkFormPage = ({
                         endLabel={
                             <RPCValidationEndLabelInfo
                                 currentChainId={watchChainId}
+                                rpcChainId={rpcChainId}
                                 isValidating={isValidating}
                                 rpcValidation={rpcValidationStatus}
                             />

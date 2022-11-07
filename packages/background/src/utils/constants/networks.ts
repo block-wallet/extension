@@ -77,6 +77,7 @@ export interface EditNetworkUpdatesType {
     blockExplorerUrls?: string[];
     rpcUrls?: string[];
     name: string;
+    test: boolean;
 }
 
 export type EditNetworkOrderType = Pick<Network, 'chainId' | 'order'>;

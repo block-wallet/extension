@@ -668,7 +668,7 @@ export class TokenController extends BaseController<TokenControllerState> {
             await this.getUserTokens(this.getSelectedAccountAddress(), chainId)
         )[tokenAddress];
 
-        //If token to doesn't exists, then attempt to add
+        //If the token already exists, then fire an event to update it's balance
         if (tokenExists) {
             this.emit(
                 TokenControllerEvents.USER_TOKEN_CHANGE,
@@ -676,7 +676,6 @@ export class TokenController extends BaseController<TokenControllerState> {
                 this.getSelectedNetworkChainId(),
                 [tokenAddress]
             );
-
             return;
         }
 

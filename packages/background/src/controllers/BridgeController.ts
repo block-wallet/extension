@@ -597,8 +597,8 @@ export default class BridgeController extends BaseController<
             //add token if sending tx has been submitted
             this._tokenController.attemptAddToken(
                 toToken.address,
-                toChainId
-                // toToken
+                toChainId,
+                toToken
             );
 
             newTransactionMeta.transferType = {
@@ -889,10 +889,14 @@ export default class BridgeController extends BaseController<
             return false;
         }
 
-        //Attepmt to add token here as well as the toToken.address could have changed due to:
+        //Attempt to add the token here, as the toToken address might have changed due to
         // - Refunds
         // - Partial bridges, where the received token is different from the one specified in the quote.
-        this._tokenController.attemptAddToken(toToken.address, toChainId);
+        this._tokenController.attemptAddToken(
+            toToken.address,
+            toChainId,
+            toToken
+        );
 
         let transactionByHash: ethers.providers.TransactionResponse;
         try {

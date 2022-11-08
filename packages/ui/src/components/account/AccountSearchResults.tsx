@@ -20,7 +20,6 @@ type AccountSearchResultsProps = {
         ud?: boolean
     }
     onSelect: (account: any) => void
-    setIsInContacts?: (isInContacts: boolean) => void
 }
 
 export type AccountResult = {
@@ -39,7 +38,6 @@ const AccountSearchResults = ({
     filter,
     onSelect,
     resultsToDisplay = { wallet: true, addressBook: true, ens: true, ud: true },
-    setIsInContacts,
 }: AccountSearchResultsProps) => {
     // Hooks
     const { ens } = useSelectedNetwork()
@@ -78,10 +76,6 @@ const AccountSearchResults = ({
             filter !== ""
         )
     }
-
-    useEffect(() => {
-        setIsInContacts && setIsInContacts(!noAddressBookResults)
-    }, [noAddressBookResults])
 
     useEffect(() => {
         const search = async () => {

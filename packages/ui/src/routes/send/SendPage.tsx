@@ -18,6 +18,7 @@ import { utils } from "ethers"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { TokenWithBalance } from "../../context/hooks/useTokensList"
+import { useAddressBookAccounts } from "../../context/hooks/useAddressBookAccounts"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import AccountSearchResults, {
     AccountResult,
@@ -43,6 +44,7 @@ const SendPage = () => {
     const currentAccount = useSelectedAccount()
 
     const addressBook = useAddressBook()
+    const addressBookAccounts = useAddressBookAccounts()
 
     // State
     const [selectedAccount, setSelectedAccount] = useState<AccountResult>()
@@ -52,10 +54,21 @@ const SendPage = () => {
     const [isAddress, setIsAddress] = useState<boolean>(false)
 
     const [addContact, setAddContact] = useState(false)
-    const [isInContacts, setIsInContacts] = useState(true)
 
     const searchInputRef = useRef<HTMLInputElement>(null)
-    const displayAddToContacts = isAddress && !isInContacts
+
+    const displayAddToContacts = () => {
+        let foundInAddressBook = false
+        if (addressBookAccounts.length > 0) {
+            const test = addressBookAccounts.find(
+                (account) => account.address === searchString
+            )
+            if (test) {
+                foundInAddressBook = true
+            }
+        }
+        return isAddress && !foundInAddressBook
+    }
 
     const {
         register,
@@ -194,7 +207,7 @@ const SendPage = () => {
                         }}
                         debounced
                     />
-                    {displayAddToContacts && (
+                    {displayAddToContacts() && (
                         <Checkbox
                             label="Add to contacts"
                             checked={addContact}
@@ -206,13 +219,12 @@ const SendPage = () => {
             <div
                 className={classnames(
                     "pt-28 pb-6 space-y-4",
-                    warning !== "" || displayAddToContacts ? "mt-5" : "mt-1"
+                    warning !== "" || displayAddToContacts() ? "mt-5" : "mt-1"
                 )}
             >
                 <AccountSearchResults
                     filter={searchString}
                     onSelect={onAccountSelect}
-                    setIsInContacts={setIsInContacts}
                 />
             </div>
         </PopupLayout>

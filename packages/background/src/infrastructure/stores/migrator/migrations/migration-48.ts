@@ -1,6 +1,6 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
-import { TESTNET_TIME_INTERVALS_DEFAULT_VALUES } from '../../../../utils/constants/networks';
+import { SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES } from '../../../../utils/constants/networks';
 import { FEATURES } from '../../../../utils/constants/features';
 import {
     DEFAULT_TORNADO_CONFIRMATION,
@@ -38,7 +38,9 @@ export default {
             rpcUrls: [`https://prealpha.scroll.io/l1`],
             blockExplorerUrls: ['https://l1scan.scroll.io/'],
             blockExplorerName: 'Scroll L1 Explorer',
-            actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
+            actionsTimeIntervals: {
+                ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES,
+            },
             tornadoIntervals: {
                 depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
                 derivationsForward: DERIVATIONS_FORWARD,
@@ -68,7 +70,9 @@ export default {
             rpcUrls: [`https://prealpha.scroll.io/l2`],
             blockExplorerUrls: ['https://l2scan.scroll.io/'],
             blockExplorerName: 'Scroll L2 Explorer',
-            actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
+            actionsTimeIntervals: {
+                ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES,
+            },
             tornadoIntervals: {
                 depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
                 derivationsForward: DERIVATIONS_FORWARD,

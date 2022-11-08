@@ -77,6 +77,7 @@ export interface EditNetworkUpdatesType {
     blockExplorerUrls?: string[];
     rpcUrls?: string[];
     name: string;
+    test: boolean;
 }
 
 export type EditNetworkOrderType = Pick<Network, 'chainId' | 'order'>;
@@ -123,6 +124,18 @@ export const TESTNET_TIME_INTERVALS_DEFAULT_VALUES = {
         transactionsStatusesUpdate: 19 * SECOND,
         providerSubscriptionsUpdate: 19 * SECOND,
         transactionWatcherUpdate: 1 * MINUTE,
+    },
+};
+
+export const SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES = {
+    ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+    ...{
+        blockNumberPull: 30 * SECOND,
+        balanceFetch: 1 * MINUTE,
+        gasPricesUpdate: 29 * SECOND,
+        transactionsStatusesUpdate: 29 * SECOND,
+        providerSubscriptionsUpdate: 29 * SECOND,
+        transactionWatcherUpdate: 2 * MINUTE,
     },
 };
 
@@ -582,7 +595,7 @@ export const INITIAL_NETWORKS: Networks = {
         rpcUrls: [`https://zksync2-testnet.zksync.dev`],
         blockExplorerUrls: ['https://explorer.zksync.io/'],
         blockExplorerName: 'zkSync Explorer',
-        actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
+        actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
             derivationsForward: DERIVATIONS_FORWARD,

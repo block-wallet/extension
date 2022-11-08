@@ -57,18 +57,12 @@ const SendPage = () => {
 
     const searchInputRef = useRef<HTMLInputElement>(null)
 
-    const displayAddToContacts = () => {
-        let foundInAddressBook = false
-        if (addressBookAccounts.length > 0) {
-            const test = addressBookAccounts.find(
-                (account) => account.address === searchString
-            )
-            if (test) {
-                foundInAddressBook = true
-            }
-        }
-        return isAddress && !foundInAddressBook
-    }
+    const displayAddToContacts =
+        isAddress &&
+        !(addressBookAccounts || []).some(
+            ({ address }) =>
+                address.toLowerCase() === searchString.toLowerCase()
+        )
 
     const {
         register,
@@ -207,7 +201,7 @@ const SendPage = () => {
                         }}
                         debounced
                     />
-                    {displayAddToContacts() && (
+                    {displayAddToContacts && (
                         <Checkbox
                             label="Add to contacts"
                             checked={addContact}
@@ -219,7 +213,7 @@ const SendPage = () => {
             <div
                 className={classnames(
                     "pt-28 pb-6 space-y-4",
-                    warning !== "" || displayAddToContacts() ? "mt-5" : "mt-1"
+                    warning !== "" || displayAddToContacts ? "mt-5" : "mt-1"
                 )}
             >
                 <AccountSearchResults

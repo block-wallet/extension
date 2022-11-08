@@ -106,22 +106,9 @@ export class TokenOperationsController extends TokenTransactionController {
         try {
             const contract = this.getContract(tokenAddress);
 
-            const namePromise = contract.name();
-            const symbolPromise = contract.symbol();
-            const decimalsPromise = contract.decimals();
-
-            const results = await Promise.all([
-                namePromise,
-                symbolPromise,
-                decimalsPromise,
-            ]).catch((error) => {
-                log.error(error);
-                throw tokenAddressInvalidError;
-            });
-
-            name = results[0] as string;
-            symbol = results[1] as string;
-            decimals = parseFloat(results[2] as string);
+            name = await contract.name();
+            symbol = await contract.symbol();
+            decimals = parseFloat((await contract.decimals()) as string);
         } catch (error) {
             log.error(error.message || error);
         }

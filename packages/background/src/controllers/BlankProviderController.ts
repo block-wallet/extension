@@ -340,6 +340,8 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 return this._accountsRequest(portId, true);
             case JSONRPCMethod.eth_chainId:
                 return this._getChainId();
+            case JSONRPCMethod.net_version:
+                return this._netVersion();
             case JSONRPCMethod.eth_getCode:
                 if (params) {
                     if (
@@ -464,6 +466,15 @@ export default class BlankProviderController extends BaseController<BlankProvide
         const { chainId } = this._networkController.network;
 
         return hexValue(chainId);
+    };
+
+    /**
+     * Returns network stored network version
+     */
+    private _netVersion = async (): Promise<string> => {
+        const { networkVersion } = this._networkController.network;
+
+        return networkVersion;
     };
 
     /**

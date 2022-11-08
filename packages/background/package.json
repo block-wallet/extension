@@ -1,6 +1,6 @@
 {
     "name": "@block-wallet/background",
-    "version": "0.7.4",
+    "version": "0.7.5",
     "private": true,
     "dependencies": {
         "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.17",

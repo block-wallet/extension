@@ -625,7 +625,7 @@ export const INITIAL_NETWORKS: Networks = {
         rpcUrls: [`https://prealpha.scroll.io/l1`],
         blockExplorerUrls: ['https://l1scan.scroll.io/'],
         blockExplorerName: 'Scroll L1 Explorer',
-        actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
+        actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
             derivationsForward: DERIVATIONS_FORWARD,
@@ -655,7 +655,7 @@ export const INITIAL_NETWORKS: Networks = {
         rpcUrls: [`https://prealpha.scroll.io/l2`],
         blockExplorerUrls: ['https://l2scan.scroll.io/'],
         blockExplorerName: 'Scroll L2 Explorer',
-        actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
+        actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
             derivationsForward: DERIVATIONS_FORWARD,

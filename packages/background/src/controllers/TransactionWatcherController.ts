@@ -33,6 +33,7 @@ import { TransactionArgument } from './transactions/ContractSignatureParser';
 import { showIncomingTransactionNotification } from '../utils/notifications';
 import { checkIfNotAllowedError } from '../utils/ethersError';
 import TransactionController from './transactions/TransactionController';
+import { runPromiseSafely } from '../utils/promises';
 
 export enum TransactionTypeEnum {
     Native = 'txlist',
@@ -103,8 +104,9 @@ const SIGNATURES: { [type in TransactionTypeEnum]: string } = {
     tokennfttx: '',
 };
 
-const MAX_REQUEST_RETRY = 10;
+const MAX_REQUEST_RETRY = 20;
 const EXPLORER_API_CALLS_DELAY = 2000 * MILISECOND;
+const DEFAULT_BATCH_MULTIPLIER = 20;
 
 export class TransactionWatcherController extends BaseController<TransactionWatcherControllerState> {
     private readonly _mutex: Mutex;
@@ -598,10 +600,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     currentBlock
                 );
 
-                const getLogsPromises: Promise<Log[]>[] = [];
-
                 // incoming
-                getLogsPromises.push(
+                const incoming = await runPromiseSafely(
                     this._getLogsFromChain(chainId, provider, {
                         fromBlock,
                         toBlock,
@@ -614,7 +614,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 );
 
                 // outgoing
-                getLogsPromises.push(
+                const outgoing = await runPromiseSafely(
                     this._getLogsFromChain(chainId, provider, {
                         fromBlock,
                         toBlock,
@@ -623,9 +623,12 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 );
 
                 // results
-                const results = await Promise.all(getLogsPromises);
-                logs.incoming = logs.incoming.concat(...results[0]);
-                logs.outgoing = logs.outgoing.concat(...results[1]);
+                if (incoming) {
+                    logs.incoming = logs.incoming.concat(...incoming);
+                }
+                if (outgoing) {
+                    logs.outgoing = logs.outgoing.concat(...outgoing);
+                }
             }
         }
 
@@ -643,12 +646,40 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         lastBlockQueried: number,
         currentBlock: number
     ): number => {
+        const batchMultiplier = Math.min(
+            DEFAULT_BATCH_MULTIPLIER,
+            this._getBatchMultiplier(chainId)
+        );
+
         const oldestSafeBlock = Math.max(
             this._getInitialBlock(chainId),
-            currentBlock - this._getMaxBlockBatchSize(chainId) * 20
+            currentBlock - this._getMaxBlockBatchSize(chainId) * batchMultiplier
         );
 
         return Math.max(lastBlockQueried, oldestSafeBlock);
+    };
+
+    /**
+     * Gets the multiplier for the max batch size
+     * @param chainId
+     * @returns
+     */
+    private _getBatchMultiplier = (chainId: number): number => {
+        switch (chainId) {
+            case 1:
+            case 5:
+            case 10:
+            case 42:
+            case 100:
+            case 137:
+            case 42161:
+            case 43114:
+            case 56:
+            case 250:
+                return DEFAULT_BATCH_MULTIPLIER;
+            default:
+                return 1;
+        }
     };
 
     /**
@@ -723,11 +754,10 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 return 10000;
             case 56:
                 return 5000;
-            case 280:
-                return 100;
             case 250:
-            default:
                 return 2000;
+            default: // all the custom networks will be caught by this default because we don't know the quality of the RPCs
+                return 100;
         }
     };
 
@@ -759,7 +789,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             }
 
             log.warn('getLogs', e.message || e);
-            await sleep(400 * MILISECOND);
+            await sleep(1 * SECOND);
 
             const toBlock = parseInt((filter.toBlock as string) || '0');
             const fromBlock = parseInt((filter.fromBlock as string) || '0');
@@ -1050,7 +1080,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                         log.warn('getBlock', e.message || e);
                         error = e;
                         retry++;
-                        await sleep(400 * MILISECOND);
+                        await sleep(1 * SECOND);
                     }
                 } while (error && retry < MAX_REQUEST_RETRY);
 

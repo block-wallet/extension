@@ -6,7 +6,7 @@ import {
     DEFAULT_TORNADO_CONFIRMATION,
     DERIVATIONS_FORWARD,
 } from '../../../../controllers/blank-deposit/types';
-import { normalizeNetworksOrder } from '@block-wallet/background/utils/networks';
+import { normalizeNetworksOrder } from '../../../../utils/networks';
 
 /**
  * This migration adds the zkSync alpha testnet network to the networks

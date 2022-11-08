@@ -20,8 +20,7 @@ import { classnames } from "../../styles"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { formatUnits, parseUnits } from "ethers/lib/utils"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import { useCallback } from "react"
-import { useForm } from "react-hook-form"
+import { useCallback, useRef } from "react"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useState, useEffect, FunctionComponent } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
@@ -145,6 +144,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         bigNumberAmount,
     } = bridgeDataState
 
+    const amountInputRef = useRef<HTMLInputElement>(null);
+
+    const focusAmountInput = () => {
+        amountInputRef.current!.focus();
+    };
     // Validation
     const schema = GetAmountYupSchema(selectedToken, selectedTokenBalance)
     const {
@@ -164,9 +168,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 amount:
                     (bridgeDataState?.bigNumberAmount
                         ? formatUnits(
-                              bridgeDataState?.bigNumberAmount?.toString(),
-                              bridgeDataState?.token?.decimals
-                          )
+                            bridgeDataState?.bigNumberAmount?.toString(),
+                            bridgeDataState?.token?.decimals
+                        )
                         : undefined) || historyAmount,
             },
         }
@@ -194,18 +198,18 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
     const formattedAmount =
         selectedToken && bigNumberAmount
             ? formatCurrency(
-                  toCurrencyAmount(
-                      bigNumberAmount,
-                      exchangeRates[selectedToken.symbol.toUpperCase()],
-                      selectedToken.decimals
-                  ),
-                  {
-                      currency: nativeCurrency,
-                      locale_info: localeInfo,
-                      returnNonBreakingSpace: false,
-                      showSymbol: true,
-                  }
-              )
+                toCurrencyAmount(
+                    bigNumberAmount,
+                    exchangeRates[selectedToken.symbol.toUpperCase()],
+                    selectedToken.decimals
+                ),
+                {
+                    currency: nativeCurrency,
+                    locale_info: localeInfo,
+                    returnNonBreakingSpace: false,
+                    showSymbol: true,
+                }
+            )
             : undefined
 
     //executes when the amount hex changes
@@ -422,9 +426,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         },
         quote
             ? getBlockWalletOriginalFee(
-                  "0",
-                  quote?.bridgeParams.params.fromToken
-              )
+                "0",
+                quote?.bridgeParams.params.fromToken
+            )
             : ""
     )
     return (
@@ -437,11 +441,11 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     onBack={() =>
                         fromAssetPage
                             ? history.push({
-                                  pathname: "/asset/details",
-                                  state: {
-                                      address: selectedToken?.address,
-                                  },
-                              })
+                                pathname: "/asset/details",
+                                state: {
+                                    address: selectedToken?.address,
+                                },
+                            })
                             : history.push("/home")
                     }
                 >
@@ -458,7 +462,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     <ButtonWithLoading
                         label={
                             quote?.allowance ===
-                            BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE
+                                BridgeAllowanceCheck.INSUFFICIENT_ALLOWANCE
                                 ? "Approve"
                                 : "Review"
                         }
@@ -496,9 +500,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             selectedAsset={
                                 selectedToken && selectedTokenBalance
                                     ? {
-                                          token: selectedToken,
-                                          balance: selectedTokenBalance,
-                                      }
+                                        token: selectedToken,
+                                        balance: selectedTokenBalance,
+                                    }
                                     : undefined
                             }
                             onAssetChange={(asset) => {
@@ -544,6 +548,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             </span>
                         </div>
                         <div
+                            onClick={focusAmountInput}
                             className={classnames(
                                 "flex flex-col items-stretch rounded-md p-4 h-[4.5rem] hover:bg-primary-200 w-full",
                                 inputFocus
@@ -556,6 +561,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         >
                             <input
                                 {...register("amount")}
+                                ref={amountInputRef}
                                 id="amount"
                                 name="amount"
                                 onChange={(e) => {
@@ -563,9 +569,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 }}
                                 maxLength={80}
                                 className="p-0 text-base bg-transparent border-none font-semibold -mt-0.5"
-                                placeholder={`0.0 ${
-                                    selectedToken ? selectedToken.symbol : ""
-                                }`}
+                                placeholder={`0.0 ${selectedToken ? selectedToken.symbol : ""
+                                    }`}
                                 autoComplete="off"
                                 autoFocus={true}
                                 onFocus={() => setInputFocus(true)}
@@ -615,7 +620,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     emptyText="Select network"
                     selectedNetwork={
                         selectedToNetwork &&
-                        availbleChainsId.includes(selectedToNetwork.id)
+                            availbleChainsId.includes(selectedToNetwork.id)
                             ? selectedToNetwork
                             : undefined
                     }

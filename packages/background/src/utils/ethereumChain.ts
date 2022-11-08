@@ -44,9 +44,6 @@ export const formatAndValidateRpcURL = (rpcUrl: string): string => {
     if (!rpcUrl) {
         throw new Error('No RPC endpoint provided');
     }
-    if (rpcUrl.indexOf('https://') === -1) {
-        throw new Error('RPC endpoint must be https');
-    }
     return getUrlWithoutTrailingSlash([rpcUrl]);
 };
 

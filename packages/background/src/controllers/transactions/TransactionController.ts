@@ -1571,33 +1571,34 @@ export class TransactionController extends BaseController<
         const transactions = [...this.store.getState().transactions];
         const { chainId } = this._networkController.network;
 
-        await runPromiseSafely(
-            Promise.all(
-                transactions.map(async (meta) => {
-                    const txBelongsToCurrentChain = meta.chainId === chainId;
+        for (let i = 0; i < transactions.length; i++) {
+            const meta = transactions[i];
+            const txBelongsToCurrentChain = meta.chainId === chainId;
 
-                    if (!meta.verifiedOnBlockchain && txBelongsToCurrentChain) {
-                        const [reconciledTx, updateRequired] =
-                            await this.blockchainTransactionStateReconciler(
-                                meta,
-                                currentBlockNumber
-                            );
-                        if (updateRequired) {
-                            const newTransactions = [
-                                ...this.store.getState().transactions,
-                            ];
-                            const tx = newTransactions.indexOf(meta);
-                            if (tx) {
-                                newTransactions[tx] = reconciledTx;
-                                this.store.updateState({
-                                    transactions: newTransactions,
-                                });
-                            }
+            if (!meta.verifiedOnBlockchain && txBelongsToCurrentChain) {
+                const result = await runPromiseSafely(
+                    this.blockchainTransactionStateReconciler(
+                        meta,
+                        currentBlockNumber
+                    )
+                );
+                if (result) {
+                    const [reconciledTx, updateRequired] = result;
+                    if (updateRequired) {
+                        const newTransactions = [
+                            ...this.store.getState().transactions,
+                        ];
+                        const tx = newTransactions.indexOf(meta);
+                        if (tx) {
+                            newTransactions[tx] = reconciledTx;
+                            this.store.updateState({
+                                transactions: newTransactions,
+                            });
                         }
                     }
-                })
-            )
-        );
+                }
+            }
+        }
     }
 
     /**

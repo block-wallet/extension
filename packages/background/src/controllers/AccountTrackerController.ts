@@ -46,6 +46,7 @@ import {
     TransactionWatcherController,
     TransactionWatcherControllerEvents,
 } from './TransactionWatcherController';
+import { isNativeTokenAddress } from '../utils/token';
 
 export interface AccountBalanceToken {
     token: Token;
@@ -768,7 +769,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 const balance = balances[tokenAddress];
 
                 // eth: always visible
-                if (this._tokenController.isNativeToken(tokenAddress)) {
+                if (isNativeTokenAddress(tokenAddress)) {
                     account.balances[chainId].nativeTokenBalance = balance;
                 } else {
                     if (balance.gt(zero) || userTokens.includes(tokenAddress)) {
@@ -958,7 +959,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             // Get all user's token balances
             const tokenBalances = await Promise.allSettled(
                 assetAddressToGetBalance.map((tokenAddress) => {
-                    if (this._tokenController.isNativeToken(tokenAddress)) {
+                    if (isNativeTokenAddress(tokenAddress)) {
                         return provider.getBalance(accountAddress);
                     }
                     return this._tokenOperationsController.balanceOf(

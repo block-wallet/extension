@@ -621,19 +621,6 @@ export class TokenController extends BaseController<TokenControllerState> {
     }
 
     /**
-     * Given an address it says if it is the network native currency or a token
-     * @param address to check if it is the network native currency or token
-     */
-    public isNativeToken(address: string): boolean {
-        if (!address) {
-            throw tokenAddressParamNotPresentError;
-        }
-        return ['0x0000000000000000000000000000000000000000', '0x0'].includes(
-            address
-        );
-    }
-
-    /**
      * Removes all activities from state
      *
      */

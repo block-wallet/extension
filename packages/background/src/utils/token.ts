@@ -3,6 +3,7 @@ import {
     isValidAddress,
     toChecksumAddress,
 } from 'ethereumjs-util';
+import { compareAddresses } from '../controllers/transactions/utils/utils';
 import {
     ProviderError,
     WatchAssetParameters,
@@ -89,4 +90,17 @@ export const isBase64 = (v: string): boolean => {
         /^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+/]{3}=)?$/gi;
 
     return base64RegEx.test(v.replace(/^[^,]+,/, ''));
+};
+
+export const isNativeTokenAddress = (address: string): boolean => {
+    if (!address) {
+        return false;
+    }
+
+    return (
+        compareAddresses(
+            address,
+            '0x0000000000000000000000000000000000000000'
+        ) || compareAddresses(address, '0x0')
+    );
 };

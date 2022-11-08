@@ -217,6 +217,7 @@ import { Network } from '../utils/constants/networks';
 
 import { generateOnDemandReleaseNotes } from '../utils/userPreferences';
 import { TransactionWatcherController } from './TransactionWatcherController';
+import { isNativeTokenAddress } from '../utils/token';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -2226,7 +2227,7 @@ export default class BlankController extends EventEmitter {
         value,
         feeData,
     }: RequestAddAsNewSendTransaction): Promise<TransactionMeta> {
-        if (this.tokenController.isNativeToken(address)) {
+        if (isNativeTokenAddress(address)) {
             const { transactionMeta, result } =
                 await this.transactionController.addTransaction({
                     transaction: {
@@ -2423,7 +2424,7 @@ export default class BlankController extends EventEmitter {
         to,
         value,
     }: RequestCalculateSendTransactionGasLimit): Promise<TransactionGasEstimation> {
-        const isNativeToken = this.tokenController.isNativeToken(address);
+        const isNativeToken = isNativeTokenAddress(address);
         const isCustomNetwork = this.networkController.network.isCustomNetwork;
         const isZeroValue = BigNumber.from(value).eq(BigNumber.from('0x00'));
 

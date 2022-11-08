@@ -104,7 +104,7 @@ const SIGNATURES: { [type in TransactionTypeEnum]: string } = {
     tokennfttx: '',
 };
 
-const MAX_REQUEST_RETRY = 10;
+const MAX_REQUEST_RETRY = 20;
 const EXPLORER_API_CALLS_DELAY = 2000 * MILISECOND;
 const DEFAULT_BATCH_MULTIPLIER = 20;
 
@@ -1080,7 +1080,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                         log.warn('getBlock', e.message || e);
                         error = e;
                         retry++;
-                        await sleep(400 * MILISECOND);
+                        await sleep(1 * SECOND);
                     }
                 } while (error && retry < MAX_REQUEST_RETRY);
 

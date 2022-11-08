@@ -6,6 +6,7 @@ import {
     DEFAULT_TORNADO_CONFIRMATION,
     DERIVATIONS_FORWARD,
 } from '../../../../controllers/blank-deposit/types';
+import { normalizeNetworksOrder } from '@block-wallet/background/utils/networks';
 
 /**
  * This migration adds the zkSync alpha testnet network to the networks
@@ -84,11 +85,15 @@ export default {
             ...updatedNetworks.LOCALHOST,
             order: 10,
         };
+
+
+        const orderedNetworks = normalizeNetworksOrder(updatedNetworks);
+
         return {
             ...persistedState,
             NetworkController: {
                 ...persistedState.NetworkController,
-                availableNetworks: { ...updatedNetworks },
+                availableNetworks: { ...orderedNetworks },
             },
         };
     },

@@ -41,7 +41,7 @@ const WarningTip: FunctionComponent<{
             </div>
             <p
                 className={classnames(
-                    "font-bold text-yellow-400 break-words ml-3",
+                    "text-yellow-500 break-words ml-3",
                     fontSize ?? "text-lg"
                 )}
             >

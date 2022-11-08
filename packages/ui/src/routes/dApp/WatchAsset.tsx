@@ -339,12 +339,12 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                         </span>
                         <WarningTip
                             text={
-                                <span className="font-normal">
+                                <span>
                                     <span className="font-bold">
                                         Attention!{" "}
                                     </span>
                                     Your IP address will be exposed to this
-                                    domain if you choose to save the image URL
+                                    domain if you choose to save the image URL.
                                 </span>
                             }
                             fontSize="text-xs"

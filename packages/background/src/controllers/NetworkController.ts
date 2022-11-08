@@ -24,6 +24,7 @@ import {
     validateNetworkChainId,
 } from '../utils/ethereumChain';
 import { normalizeNetworksOrder } from '../utils/networks';
+import log from 'loglevel';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -488,10 +489,13 @@ export default class NetworkController extends BaseController<NetworkControllerS
         const network = this.searchNetworkByName(networkName);
         return this._overloadProviderMethods(
             network,
-            new ethers.providers.StaticJsonRpcProvider({
-                url: network.rpcUrls[0],
-                allowGzip: network.rpcUrls[0].endsWith('.blockwallet.io'),
-            })
+            new ethers.providers.StaticJsonRpcProvider(
+                {
+                    url: network.rpcUrls[0],
+                    allowGzip: network.rpcUrls[0].endsWith('.blockwallet.io'),
+                },
+                network.chainId // network?: Networkish
+            )
         );
     };
 
@@ -781,6 +785,18 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 break;
             }
         }
+
+        provider.on('debug', (...args: Array<any>) => {
+            const argsObj = args[0];
+            const { action, request, response } = argsObj;
+            const { method, params } = request;
+
+            if (response) {
+                log.trace(action, method, ...params, response);
+            } else {
+                log.trace(action, method, ...params);
+            }
+        });
 
         return provider;
     };

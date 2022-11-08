@@ -86,7 +86,6 @@ export default {
             order: 10,
         };
 
-
         const orderedNetworks = normalizeNetworksOrder(updatedNetworks);
 
         return {

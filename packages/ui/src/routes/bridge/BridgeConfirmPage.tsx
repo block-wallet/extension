@@ -501,26 +501,18 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         >
             <LoadingDialog
                 open={!!inProgressAllowanceTransaction}
-                title={"Waiting for pending transactions..."}
+                title={"Waiting for allowance transaction..."}
                 message={
                     <div className="flex flex-col space-y-2 items-center">
-                        <span>
-                            You will not be able to initiate the bridge until
-                            the allowance transaction is mined.
-                        </span>
+                        <span>Your bridge is being prepared, please wait.</span>
                         <Divider />
                         <span className="text-xs">
-                            You can wait here until it is done
-                        </span>
-                        <div className="mt-1 text-xs">
-                            <span>
-                                <i>OR</i>
-                            </span>
-                            <br />
+                            {"You can wait here until it is done or "}
                             <ClickableText onClick={() => history.push("/")}>
-                                Return to the home page
+                                bridge later
                             </ClickableText>
-                        </div>
+                            {" when the token approval is completed."}
+                        </span>
                     </div>
                 }
             />

@@ -1,7 +1,6 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { parseUnits } from 'ethers/lib/utils';
 import { BaseController } from '../infrastructure/BaseController';
-import { BridgeStatus } from '../utils/bridgeApi';
 import { Network } from '../utils/constants/networks';
 import { transactionToIncomingBridgeTransactionPlaceholder } from '../utils/incomingBridgePlaceholder';
 import {
@@ -9,7 +8,7 @@ import {
     PendingWithdrawal,
     PendingWithdrawalStatus,
 } from './blank-deposit/BlankDepositController';
-import BridgeController from './BridgeController';
+import BridgeController, { BRIDGE_PENDING_STATUSES } from './BridgeController';
 import NetworkController from './NetworkController';
 import { PreferencesController } from './PreferencesController';
 import { TransactionController } from './transactions/TransactionController';
@@ -395,10 +394,8 @@ export class ActivityListController extends BaseController<IActivityListState> {
                             Number(this._networkController.network.chainId) &&
                         //There is no receiving hash YET
                         !bridgeParams.receivingTxHash &&
-                        // Bridge is in PENDING or NOT FOUND (considered PENDING) status.
-                        [BridgeStatus.PENDING, BridgeStatus.NOT_FOUND].includes(
-                            bridgeParams.status
-                        ) &&
+                        // Bridge is in a pending status
+                        BRIDGE_PENDING_STATUSES.includes(bridgeParams.status) &&
                         // Sending transaction is submitted or confirmed
                         [
                             TransactionStatus.SUBMITTED,

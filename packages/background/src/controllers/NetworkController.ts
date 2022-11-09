@@ -24,6 +24,7 @@ import {
     validateNetworkChainId,
 } from '../utils/ethereumChain';
 import { normalizeNetworksOrder } from '../utils/networks';
+import log from 'loglevel';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -298,6 +299,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         newNetworks[networkKey].desc = updates.name;
         newNetworks[networkKey].rpcUrls = [rpcUrl];
         newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
+        newNetworks[networkKey].test = updates.test;
         this.networks = newNetworks;
         return;
     }
@@ -485,7 +487,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         networkName: string
     ): ethers.providers.StaticJsonRpcProvider => {
         const network = this.searchNetworkByName(networkName);
-        return this._getProviderForNework(network.chainId, network.rpcUrls[0]);
+        return this._getProviderForNetwork(network.chainId, network.rpcUrls[0]);
     };
 
     /**
@@ -510,7 +512,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         );
 
         if (userNetwork) {
-            return this._getProviderForNework(
+            return this._getProviderForNetwork(
                 userNetwork.chainId,
                 userNetwork.rpcUrls[0]
             );
@@ -522,17 +524,20 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         const chain = getChainListItem(chainId);
         if (chain && chain.rpc && chain.rpc[0]) {
-            return this._getProviderForNework(chainId, chain.rpc[0]);
+            return this._getProviderForNetwork(chainId, chain.rpc[0]);
         }
     };
 
-    private _getProviderForNework(chainId: number, rpcUrl: string) {
+    private _getProviderForNetwork(chainId: number, rpcUrl: string) {
         return this._overloadProviderMethods(
             { chainId },
-            new ethers.providers.StaticJsonRpcProvider({
-                url: rpcUrl,
-                allowGzip: rpcUrl.endsWith('.blockwallet.io'),
-            })
+            new ethers.providers.StaticJsonRpcProvider(
+                {
+                    url: rpcUrl,
+                    allowGzip: rpcUrl.endsWith('.blockwallet.io'),
+                },
+                chainId
+            )
         );
     }
 
@@ -828,6 +833,18 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 break;
             }
         }
+
+        provider.on('debug', (...args: Array<any>) => {
+            const argsObj = args[0];
+            const { action, request, response } = argsObj;
+            const { method, params } = request;
+
+            if (response) {
+                log.trace(action, method, ...params, response);
+            } else {
+                log.trace(action, method, ...params);
+            }
+        });
 
         return provider;
     };

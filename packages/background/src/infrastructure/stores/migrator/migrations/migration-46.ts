@@ -1,23 +1,46 @@
-import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
+import { TransactionTypeEnum } from '../../../../controllers/TransactionWatcherController';
+import { BigNumber } from 'ethers';
+import { BlankAppState } from '../../../../utils/constants/initialState';
 import { IMigration } from '../IMigration';
 
 /**
- * This migration fixes the symbol and RPC url of BSC Testnet
+ * Fixes incoming transactions statuses and values
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
+        const transactionsByChain =
+            persistedState.TransactionWatcherControllerState.transactions;
+
+        for (const chainId in transactionsByChain) {
+            const transactionsByAccount = transactionsByChain[chainId] || {};
+            for (const account in transactionsByAccount) {
+                const transactionsByType = transactionsByAccount[account] || {};
+                for (const type in transactionsByType) {
+                    const transactions =
+                        transactionsByType[type as TransactionTypeEnum];
+                    if (
+                        type !== TransactionTypeEnum.Native &&
+                        transactions &&
+                        transactions.transactions
+                    ) {
+                        for (const hash in transactions.transactions) {
+                            const tx = transactions.transactions[hash];
+                            if (tx && tx.transactionParams) {
+                                tx.transactionParams.value = BigNumber.from(0);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         return {
             ...persistedState,
-            PreferencesController: {
-                ...persistedState.PreferencesController,
-                settings: {
-                    ...persistedState.PreferencesController.settings,
-                    hideBridgeInsufficientNativeTokenWarning:
-                        persistedState.PreferencesController.settings
-                            .hideBridgeInsufficientNativeTokenWarning ?? false,
-                },
+            TransactionWatcherControllerState: {
+                ...persistedState.TransactionWatcherControllerState,
+                transactions: transactionsByChain,
             },
         };
     },
-    version: '0.8.0',
+    version: '0.7.4',
 } as IMigration;

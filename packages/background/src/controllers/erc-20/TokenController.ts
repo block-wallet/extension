@@ -441,9 +441,9 @@ export class TokenController extends BaseController<TokenControllerState> {
     public async getCachedPopulatedTokens(
         chainId: number = this.getSelectedNetworkChainId()
     ): Promise<ITokens> {
-        const tokens = this.store.getState();
-        if (chainId in tokens.cachedPopulatedTokens) {
-            return tokens.cachedPopulatedTokens[chainId];
+        const { cachedPopulatedTokens } = this.store.getState();
+        if (chainId in cachedPopulatedTokens) {
+            return cachedPopulatedTokens[chainId];
         }
         return {} as ITokens;
     }

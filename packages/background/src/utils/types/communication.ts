@@ -818,6 +818,7 @@ export interface RequestEditNetwork {
         rpcUrl: string;
         blockExplorerUrl?: string;
         name: string;
+        test: boolean;
     };
 }
 

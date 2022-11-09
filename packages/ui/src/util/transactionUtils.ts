@@ -130,3 +130,13 @@ export const canUserSubmitTransaction = (
 ): boolean => {
     return [TransactionStatus.UNAPPROVED].includes(status)
 }
+
+export const resolveTransactionTo = (tx: TransactionMeta): string => {
+    let to: string | undefined
+    if (
+        tx.transactionCategory === TransactionCategories.TOKEN_METHOD_TRANSFER
+    ) {
+        to = tx.transferType?.to
+    }
+    return to ?? tx.transactionParams.to ?? ""
+}

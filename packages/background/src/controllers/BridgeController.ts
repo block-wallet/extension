@@ -51,7 +51,10 @@ const STATUS_API_CALLS_DELAY = 30 * SECOND;
 const BRIDGE_STATUS_INVALID_MAX_COUNT = 10;
 const GET_TX_RECEIPT_DELAY = 2 * SECOND;
 
-const BRIDGE_PENDING_STATUSES = [BridgeStatus.NOT_FOUND, BridgeStatus.PENDING];
+export const BRIDGE_PENDING_STATUSES = [
+    BridgeStatus.NOT_FOUND,
+    BridgeStatus.PENDING,
+];
 
 export interface BridgeControllerMemState {
     availableBridgeChains: IChain[];

@@ -23,6 +23,8 @@ import isNil from "../../util/isNil"
 import TransactionDetailsList from "./TransactionDetailsList"
 import { bnOr0 } from "../../util/numberUtils"
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
+import { resolveTransactionTo } from "../../util/transactionUtils"
+import { useMultipleCopyToClipboard } from "../../util/hooks/useCopyToClipboard"
 
 export const TransactionDetailsBasic: FunctionComponent<
     TransactionDetailsTabProps & { nonce?: number }
@@ -32,6 +34,7 @@ export const TransactionDetailsBasic: FunctionComponent<
     const accounts = useSortedAccounts()
     const addressBook = useAddressBook()
     const transaction = _transaction as TransactionMeta
+    const { onCopy, copied } = useMultipleCopyToClipboard()
 
     const details = useMemo(() => {
         const isConfirmed = transaction.status === TransactionStatus.CONFIRMED
@@ -261,16 +264,8 @@ export const TransactionDetailsBasic: FunctionComponent<
         // eslint-disable-next-line
     }, [transaction, _nonce])
 
-    const [copied, setCopied] = useState(-1)
-
-    const copy = (value: string, i: number) => async () => {
-        await navigator.clipboard.writeText(value)
-        setCopied(i)
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        setCopied(-1)
-    }
-
-    const { from, to } = transaction.transactionParams
+    const { from } = transaction.transactionParams
+    const transactionTo = resolveTransactionTo(transaction)
 
     let fromName
     if (from) {
@@ -287,15 +282,16 @@ export const TransactionDetailsBasic: FunctionComponent<
     }
 
     let toName
-    if (to) {
+    if (transactionTo) {
         toName = accounts.find(
-            (account) => account.address.toLowerCase() === to.toLowerCase()
+            (account) =>
+                account.address.toLowerCase() === transactionTo.toLowerCase()
         )?.name
 
         //If to was not found in accounts, then we look into the address book.
         if (!toName) {
             toName = Object.values(addressBook).find(
-                (address) => address.address.toLowerCase() === to
+                (address) => address.address.toLowerCase() === transactionTo
             )?.name
         }
     }
@@ -310,26 +306,21 @@ export const TransactionDetailsBasic: FunctionComponent<
             <div className="flex flex-row items-center justify-between w-full py-4 relative">
                 <div
                     className="flex flex-row items-center w-1/2 justify-start group relative cursor-pointer"
-                    onClick={copy(transaction.transactionParams.from ?? "", 0)}
+                    onClick={() => onCopy(from ?? "", 0)}
                 >
                     <div>
                         <AccountIcon
                             className="h-6 w-6"
-                            fill={getAccountColor(
-                                transaction.transactionParams.from!
-                            )}
+                            fill={getAccountColor(from!)}
                         />
                     </div>
                     <span
-                        title={transaction.transactionParams.from}
+                        title={from}
                         className="pl-2 font-bold text-sm truncate"
                     >
                         {fromName
                             ? formatName(fromName, 12)
-                            : formatHash(
-                                  transaction.transactionParams.from!,
-                                  2
-                              )}
+                            : formatHash(from!, 2)}
                     </span>
                     <CopyTooltip copied={copied === 0} text="Copy address" />
                 </div>
@@ -347,28 +338,21 @@ export const TransactionDetailsBasic: FunctionComponent<
                 ></div>
                 <div
                     className="relative flex flex-row items-center cursor-pointer group w-1/2 pl-6"
-                    onClick={copy(
-                        transaction.transferType?.to ??
-                            transaction.transactionParams.to ??
-                            "",
-                        1
-                    )}
+                    onClick={() => onCopy(transactionTo, 1)}
                 >
                     <div>
                         <AccountIcon
                             className="h-6 w-6"
-                            fill={getAccountColor(
-                                transaction.transactionParams.to!
-                            )}
+                            fill={getAccountColor(transactionTo!)}
                         />
                     </div>
                     <span
-                        title={transaction.transactionParams.to}
+                        title={transactionTo}
                         className="pl-2 font-bold text-sm truncate"
                     >
                         {toName
                             ? formatName(toName, 12)
-                            : formatHash(transaction.transactionParams.to!, 2)}
+                            : formatHash(transactionTo!, 2)}
                     </span>
                     <CopyTooltip copied={copied === 1} text="Copy address" />
                 </div>

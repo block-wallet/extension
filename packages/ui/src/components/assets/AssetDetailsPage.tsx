@@ -83,7 +83,10 @@ const AssetDetailsPage = () => {
             header={
                 <PopupHeader
                     onBack={() => history.push("/home")}
-                    title={`${formatName(account.name, 18)} - ${token.symbol}`}
+                    title={`${formatName(account.name, 14)} - ${formatName(
+                        token.name,
+                        12
+                    )}`}
                     close={false}
                     disabled={isRemoving}
                     actions={
@@ -174,7 +177,7 @@ const AssetDetailsPage = () => {
                                 className="truncate w-full max-w-xs"
                                 style={{ maxWidth: "18rem" }}
                             >
-                                {roundedTokenBalance}
+                                {`${roundedTokenBalance} ${token.symbol}`}
                             </span>
                         </TokenSummary.TokenBalance>
                         <TokenSummary.ExchangeRateBalance>

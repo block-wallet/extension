@@ -3,12 +3,19 @@ import checkmarkMiniIcon from "../../assets/images/icons/checkmark_mini.svg"
 import classnames from "classnames"
 import { TokenResponse } from "../../routes/settings/AddTokensPage"
 import { useState, FunctionComponent } from "react"
+import { formatName } from "../../util/formatAccount"
+import { BigNumber } from "ethers"
+import { formatRounded } from "../../util/formatRounded"
+import { formatUnits } from "ethers/lib/utils"
 
 type TokenDisplayType = {
     data: TokenResponse
     clickable?: boolean
     active?: boolean | false
     hoverable?: boolean | false
+    textSize?: "base" | "sm"
+    isSmall?: boolean | false
+    balance?: BigNumber | undefined
 }
 
 /**
@@ -21,15 +28,21 @@ type TokenDisplayType = {
  * @param clickable - Determines if you can click element to show selected style.
  * @param active - Determines if the element is already showing selected style.
  * @param hoverable - Determines if the element shows a hover style.
+ * @param isSmall - small font size, to fit into popup for example
+ * @param balance - Contains the asset balance in case it exists. e.g. if it is a New Asset there is no balance
  */
 const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
     data,
     clickable,
     active,
     hoverable,
+    textSize = "base",
+    isSmall,
+    balance,
 }) => {
     const [selected, setSelected] = useState<boolean>(active ? active : false)
 
+    // Render
     return (
         <div
             className={classnames(
@@ -40,10 +53,20 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
             )}
             onClick={() => (clickable ? setSelected(!selected) : null)}
         >
-            <TokenLogo bigLogo logo={data.logo} name={data.name} />
-            <p className={"text-sm text-black font-semibold ml-4 truncate"}>
-                {data.name}
-            </p>
+            <TokenLogo logo={data.logo} name={data.name} />
+            <div className="flex flex-col ml-4 truncate">
+                <span className={"text-sm text-black font-semibold"}>
+                    {formatName(data.name, 22)}
+                </span>
+                {balance && (
+                    <span
+                        className={"text-xs text-gray-600 mt-1"}
+                        title={formatUnits(balance, data.decimals)}
+                    >
+                        {formatRounded(formatUnits(balance, data.decimals), 6)}
+                    </span>
+                )}
+            </div>
             <p className={"text-sm text-gray-400 ml-auto pl-1 pr-6"}>
                 {data.symbol}
             </p>

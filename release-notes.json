@@ -308,6 +308,53 @@
                 }
             ],
             "version": "0.4.1"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added support for Sroll L1 and L2 Testnets."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Now you can change network display order with drag & drop."
+                        },
+                        {
+                            "type": "success",
+                            "message": "For our ETH/USD pair, we now retrieve price from Chainlink mainnet data feed contract."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added current network indicator on Sends, Swaps, and Custom Tokens flows."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Asset selector now displays current balance."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Improvements on balance fetching and validations for custom tokens."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Added warnings and complete display of DApp origin URL on relevant screens."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Minor visual improvements and other small bug fixes."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.4.2"
         }
     ]
 }

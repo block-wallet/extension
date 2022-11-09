@@ -22,7 +22,7 @@ const AssetList: FC<{
     register,
 }) => {
     return (
-        <div>
+        <div className="pb-6">
             <input
                 readOnly
                 name="asset"
@@ -44,13 +44,14 @@ const AssetList: FC<{
                             clickable={false}
                             active={selectedAddress === asset.token.address}
                             hoverable={true}
+                            balance={asset.balance}
                         />
                     </div>
                 )
             })}
             {searchValue && assets.length === 0 && (
-                <div className="p-3">
-                    <p className="text-xs text-black text-center pb-3">
+                <div className="px-3">
+                    <p className="text-xs text-black text-center p-4">
                         The asset couldn&#8217;t be found, try adding it
                         manually.
                     </p>

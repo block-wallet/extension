@@ -20,8 +20,7 @@ import { classnames } from "../../styles"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { formatUnits, parseUnits } from "ethers/lib/utils"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import { useCallback } from "react"
-import { useForm } from "react-hook-form"
+import { useCallback, useRef } from "react"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useState, useEffect, FunctionComponent } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
@@ -151,6 +150,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         register,
         setValue,
         clearErrors,
+        setFocus,
         trigger: triggerAmountValidation,
         watch,
         formState: { errors },
@@ -174,6 +174,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
     const watchedAmount = watch("amount")
 
+    const focusAmountInput = () => {
+        setFocus("amount")
+    }
     const currentNetwork = availableNetworks[selectedNetwork.toUpperCase()]
     const isUsingNetworkNativeCurrency =
         selectedToken?.address === nativeToken.token.address
@@ -544,6 +547,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             </span>
                         </div>
                         <div
+                            onClick={focusAmountInput}
                             className={classnames(
                                 "flex flex-col items-stretch rounded-md p-4 h-[4.5rem] hover:bg-primary-200 w-full",
                                 inputFocus

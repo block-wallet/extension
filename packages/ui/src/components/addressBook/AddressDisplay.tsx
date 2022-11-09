@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect, useState } from "react"
+import { FunctionComponent, useState } from "react"
 import { formatHash, formatName } from "../../util/formatAccount"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
 import CheckmarkCircle from "../icons/CheckmarkCircle"
@@ -7,32 +7,22 @@ export const AddressDisplay: FunctionComponent<{
     receivingAddress: string
     selectedAccountName: string | undefined
 }> = ({ receivingAddress, selectedAccountName }) => {
+    const native_address_message =
+        "This address is not owned by any user, is often associated with token burn & mint/genesis events and used as a generic null address. Please, make sure the information is correct otherwise your assets will be permanently lost."
     const [showingTheWholeAddress, setShowingTheWholeAddress] = useState(false)
-    const [addressToDisplay, setAddressToDisplay] = useState(
-        formatHash(receivingAddress)
-    )
     const isNativeToken = isNativeTokenAddress(receivingAddress)
 
     let titleMessage = receivingAddress
     if (isNativeToken) {
-        titleMessage =
-            "This address is not owned by any user, is often associated with token burn & mint/genesis events and used as a generic null address. Please, make sure the information is correct otherwise your assets will be permanently lost."
+        titleMessage = native_address_message
     }
 
-    useEffect(() => {
-        if (
-            showingTheWholeAddress &&
-            !(accountNameToDisplay !== addressToDisplay || isNativeToken)
-        ) {
-            setAddressToDisplay(
-                formatHash(receivingAddress, receivingAddress.length)
-            )
-        } else {
-            setAddressToDisplay(formatHash(receivingAddress))
-        }
-    }, [showingTheWholeAddress])
-
-    const accountNameToDisplay = selectedAccountName
+    const addressToDisplay = formatHash(receivingAddress)
+    const fullAddressToDisplay = formatHash(
+        receivingAddress,
+        receivingAddress.length
+    )
+    let accountNameToDisplay = selectedAccountName
         ? formatName(selectedAccountName, 20)
         : addressToDisplay
 
@@ -58,7 +48,12 @@ export const AddressDisplay: FunctionComponent<{
                     }
                     title={titleMessage}
                 >
-                    {isNativeToken ? "Null Address" : accountNameToDisplay}
+                    {isNativeToken
+                        ? "Null Address"
+                        : showingTheWholeAddress &&
+                          !(accountNameToDisplay !== addressToDisplay)
+                        ? fullAddressToDisplay
+                        : accountNameToDisplay}
                 </span>
                 {displayAddressSpan && (
                     <span className="text-gray truncate ml-1">

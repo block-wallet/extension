@@ -1,4 +1,4 @@
-import { FunctionComponent, useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { useForm } from "react-hook-form"
 
@@ -20,7 +20,6 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import { InferType } from "yup"
 import { utils, BigNumber, constants } from "ethers"
-import { formatHash, formatName } from "../../util/formatAccount"
 import { formatUnits } from "ethers/lib/utils"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { DEFAULT_DECIMALS, SEND_GAS_COST } from "../../util/constants"
@@ -55,9 +54,6 @@ import { AdvancedSettings } from "../../components/transactions/AdvancedSettings
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
-import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
-import { useAddressBook } from "../../context/hooks/useAddressBook"
-import CheckmarkCircle from "../../components/icons/CheckmarkCircle"
 import { useLocationRecovery } from "../../util/hooks/useLocationRecovery"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
@@ -69,7 +65,7 @@ import { useInProgressInternalTransaction } from "../../context/hooks/useInProgr
 import { rejectTransaction } from "../../context/commActions"
 import { getValueByKey } from "../../util/objectUtils"
 import { AddressDisplay } from "../../components/addressBook/AddressDisplay"
-import { getAccountNameByAddress } from "../../context/util/getAccountNameByAddress"
+import { useAccountNameByAddress } from "../../context/hooks/useAccountNameByAddress"
 
 // Schema
 const GetAmountYupSchema = (
@@ -754,7 +750,7 @@ const SendConfirmPage = () => {
                         receivingAddress={history.location.state.address}
                         selectedAccountName={
                             history.location.state.name ??
-                            getAccountNameByAddress(receivingAddress)
+                            useAccountNameByAddress(receivingAddress)
                         }
                     />
 

@@ -954,11 +954,13 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         assetAddressToGetBalance: string[]
     ): Promise<BalanceMap> {
         try {
+            const filteredAssetAddressToGetBalance =
+                assetAddressToGetBalance.filter(Boolean);
             const balances: BalanceMap = {};
 
             // Get all user's token balances
             const tokenBalances = await Promise.allSettled(
-                assetAddressToGetBalance.map((tokenAddress) => {
+                filteredAssetAddressToGetBalance.map((tokenAddress) => {
                     if (isNativeTokenAddress(tokenAddress)) {
                         return provider.getBalance(accountAddress);
                     }
@@ -972,7 +974,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             tokenBalances.map((balance, i) => {
                 if (balance.status === 'fulfilled') {
                     const tokenAddress: string = checksummedAddress(
-                        assetAddressToGetBalance[i]
+                        filteredAssetAddressToGetBalance[i]
                     );
 
                     balances[tokenAddress] = balance.value;

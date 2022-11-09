@@ -1,7 +1,7 @@
 import { useBlankState } from "../background/backgroundHooks"
-import { useAddressBook } from "../hooks/useAddressBook"
+import { useAddressBook } from "./useAddressBook"
 
-export const getAccountNameByAddress = (
+export const useAccountNameByAddress = (
     address: string
 ): string | undefined => {
     const { accounts } = useBlankState()!

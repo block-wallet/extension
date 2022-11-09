@@ -53,10 +53,6 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
             )}
             onClick={() => (clickable ? setSelected(!selected) : null)}
         >
-            <TokenLogo bigLogo logo={data.logo} name={data.name} />
-            <p className={"text-sm text-black font-semibold ml-4 truncate"}>
-                {data.name}
-            </p>
             <TokenLogo logo={data.logo} name={data.name} />
             <div className="flex flex-col ml-4 truncate">
                 <span className={"text-sm text-black font-semibold"}>

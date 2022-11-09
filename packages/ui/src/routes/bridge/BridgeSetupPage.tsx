@@ -144,17 +144,13 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         bigNumberAmount,
     } = bridgeDataState
 
-    const amountInputRef = useRef<HTMLInputElement>(null)
-
-    const focusAmountInput = () => {
-        amountInputRef.current!.focus()
-    }
     // Validation
     const schema = GetAmountYupSchema(selectedToken, selectedTokenBalance)
     const {
         register,
         setValue,
         clearErrors,
+        setFocus,
         trigger: triggerAmountValidation,
         watch,
         formState: { errors },
@@ -178,6 +174,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
 
     const watchedAmount = watch("amount")
 
+    const focusAmountInput = () => {
+        setFocus("amount")
+    }
     const currentNetwork = availableNetworks[selectedNetwork.toUpperCase()]
     const isUsingNetworkNativeCurrency =
         selectedToken?.address === nativeToken.token.address
@@ -561,7 +560,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         >
                             <input
                                 {...register("amount")}
-                                ref={amountInputRef}
                                 id="amount"
                                 name="amount"
                                 onChange={(e) => {

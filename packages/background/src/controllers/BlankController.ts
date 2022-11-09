@@ -2021,6 +2021,7 @@ export default class BlankController extends EventEmitter {
             blockExplorerUrls: [request.updates.blockExplorerUrl || ''],
             rpcUrls: [request.updates.rpcUrl],
             name: request.updates.name,
+            test: request.updates.test,
         });
     }
 

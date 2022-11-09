@@ -959,27 +959,22 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             const balances: BalanceMap = {};
 
             // Get all user's token balances
-            const tokenBalances = await Promise.allSettled(
-                filteredAssetAddressToGetBalance.map((tokenAddress) => {
-                    if (isNativeTokenAddress(tokenAddress)) {
-                        return provider.getBalance(accountAddress);
-                    }
-                    return this._tokenOperationsController.balanceOf(
-                        tokenAddress,
+            for (let i = 0; i < filteredAssetAddressToGetBalance.length; i++) {
+                const tokenAddress = checksummedAddress(
+                    filteredAssetAddressToGetBalance[i]
+                );
+                if (isNativeTokenAddress(tokenAddress)) {
+                    balances[tokenAddress] = await provider.getBalance(
                         accountAddress
                     );
-                })
-            );
-
-            tokenBalances.map((balance, i) => {
-                if (balance.status === 'fulfilled') {
-                    const tokenAddress: string = checksummedAddress(
-                        filteredAssetAddressToGetBalance[i]
-                    );
-
-                    balances[tokenAddress] = balance.value;
+                } else {
+                    balances[tokenAddress] =
+                        await this._tokenOperationsController.balanceOf(
+                            tokenAddress,
+                            accountAddress
+                        );
                 }
-            });
+            }
 
             return balances;
         } catch (error) {

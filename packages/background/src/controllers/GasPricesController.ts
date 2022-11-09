@@ -234,26 +234,24 @@ export class GasPricesController extends BaseController<GasPricesControllerState
         if (
             this._isEth_feeHistorySupportedByChain(chainId, isEIP1559Compatible)
         ) {
-            const networkCalls = await Promise.all([
-                // Get blockBaseFee of the last block
-                this._networkController.getLatestBlock(provider),
-                // Get eth_feeHistory
-                // gets 10%, 25% and 65% percentile fee history of txs included in last 5 blocks
-                provider.send('eth_feeHistory', [
-                    '0x5',
-                    'latest',
-                    [10, 25, 65],
-                ]),
-            ]);
+            const latestBlock = await this._networkController.getLatestBlock();
 
+            // Get gasLimit of the last block
             const blockGasLimit: BigNumber = BigNumber.from(
-                networkCalls[0].gasLimit
+                latestBlock.gasLimit
             );
 
+            // Get blockBaseFee of the last block
             const blockBaseFee: BigNumber = BigNumber.from(
-                networkCalls[0].baseFeePerGas
+                latestBlock.baseFeePerGas
             );
-            const feeHistory: FeeHistory = networkCalls[1];
+
+            // Get eth_feeHistory
+            // gets 10%, 25% and 50% percentile fee history of txs included in last 5 blocks
+            const feeHistory: FeeHistory = await provider.send(
+                'eth_feeHistory',
+                ['0x5', 'latest', [10, 25, 65]]
+            );
 
             // last element in array is the next block after the latest (estimated)
             let estimatedBaseFee = blockBaseFee;
@@ -332,13 +330,15 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                 },
             };
         } else {
-            const networkCalls = await Promise.all([
-                provider.getGasPrice(),
-                this._networkController.getLatestBlock(provider),
-            ]);
+            const latestBlock = await this._networkController.getLatestBlock();
 
-            const gasPrice: BigNumber = BigNumber.from(networkCalls[0]);
-            const { gasLimit: blockGasLimit } = networkCalls[1];
+            // Get gasLimit of the last block
+            const blockGasLimit = latestBlock.gasLimit;
+
+            // Get current gas price
+            const gasPrice: BigNumber = BigNumber.from(
+                await provider.getGasPrice()
+            );
 
             const gasPriceSlow = gasPrice.mul(85).div(100);
             const gasPriceAverage = gasPrice;

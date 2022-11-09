@@ -239,7 +239,10 @@ export const buildBridgeDetailedItems = (
         details.push({
             label: isConfirmed ? "Received" : "Receiving",
             value: formatUnits(
-                bnOr0(bridgeParams.toTokenAmount),
+                bnOr0(
+                    bridgeParams.effectiveToTokenAmount ||
+                        bridgeParams.toTokenAmount
+                ),
                 bridgeParams.toToken.decimals
             ),
             decimals: 10,

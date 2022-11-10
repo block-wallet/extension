@@ -1,5 +1,6 @@
 import { BridgeTransaction } from '@block-wallet/background/controllers/BridgeController';
 import {
+    BridgeTransactionParams,
     MetaType,
     TransactionCategories,
     TransactionMeta,
@@ -87,8 +88,9 @@ const BASE_SENDING_TRANSACTION = {
         tool: 'hop',
         fromChainId: 137,
         toChainId: 1,
+        estimatedDurationInSeconds: 200,
         role: 'SENDING' as 'SENDING' | 'RECEIVING',
-    },
+    } as BridgeTransactionParams,
     time: 1656527769648,
     transactionCategory: TransactionCategories.BRIDGE,
     transactionParams: {
@@ -108,7 +110,7 @@ const BASE_SENDING_TRANSACTION = {
         value: BigNumber.from('0x021e19e0c9bab2400000'),
     },
     verifiedOnBlockchain: true,
-};
+} as TransactionMeta;
 
 const RECEIVING_TX_BY_HASH = {
     hash: '0xa86600048ec06e339e3690f76caf1c1f404b83d410205a95b85ca842082c8c23',
@@ -188,6 +190,7 @@ export default {
                     value: '0x021e19e0c9bab2400000',
                 },
                 feeCosts: [],
+                estimatedDurationInSeconds: 200,
             },
             customNonce: 5,
             gasPrice: BigNumber.from('0'),

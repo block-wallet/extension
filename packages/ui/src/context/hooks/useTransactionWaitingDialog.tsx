@@ -14,6 +14,7 @@ import ClickableText from "../../components/button/ClickableText"
 import { isHardwareWallet } from "../../util/account"
 import { useBlankState } from "../background/backgroundHooks"
 import useCountdown from "../../util/hooks/useCountdown"
+import { secondsToMMSS } from "../../util/time"
 
 const messages: {
     [key in HardwareWalletOpTypes]: {
@@ -83,12 +84,6 @@ const messages: {
     },
 }
 
-const twoDigits = (value: number) => {
-    return value.toLocaleString("en-US", {
-        minimumIntegerDigits: 2,
-        useGrouping: false,
-    })
-}
 const Timer = ({
     seconds,
     operation,
@@ -96,11 +91,6 @@ const Timer = ({
     seconds: number
     operation: HardwareWalletOpTypes
 }) => {
-    const minutes = Math.floor(seconds / 60)
-    let remainingSeconds = seconds
-    if (minutes > 0) {
-        remainingSeconds = Math.floor(seconds % 60)
-    }
     const names = {
         [HardwareWalletOpTypes.APPROVE_ALLOWANCE]: "token allowance request",
         [HardwareWalletOpTypes.SIGN_CANCEL]: "cancel transaction request",
@@ -109,9 +99,7 @@ const Timer = ({
         [HardwareWalletOpTypes.SIGN_MESSAGE]: "sign message request",
     }
     const initialCaption = `Your ${names[operation]} will be automatically cancelled in `
-    let timeData = `${minutes ? twoDigits(minutes).concat(":") : ""}${twoDigits(
-        Number(remainingSeconds.toLocaleString().split(".")[0])
-    )} ${minutes > 0 ? "minutes" : "seconds"}.`
+    let timeData = secondsToMMSS(seconds)
     return (
         <span>
             {initialCaption} <span className="font-bold">{timeData}</span>

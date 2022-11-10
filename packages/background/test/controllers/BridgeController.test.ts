@@ -461,6 +461,7 @@ describe('Bridge Controller', () => {
                                 value: '1',
                             },
                             tool: 'custom_tool',
+                            estimatedDurationInSeconds: 200,
                         })
                     );
             });

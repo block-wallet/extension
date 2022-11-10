@@ -137,6 +137,7 @@ interface Estimate {
     fromAmount: string;
     toAmount: string;
     feeCosts: LifiFeeCost[];
+    executionDuration: number; //in seconds
 }
 
 interface Connection {

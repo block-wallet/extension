@@ -1,4 +1,7 @@
-import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
+import {
+    BridgeTransactionParams,
+    TransactionMeta,
+} from "@block-wallet/background/controllers/transactions/utils/types"
 
 import { FC, useMemo } from "react"
 import {
@@ -8,12 +11,12 @@ import {
 } from "../../context/commTypes"
 import { buildBridgeDetailedItems } from "../../util/bridgeUtils"
 import { BridgeTransactionsData } from "../../util/hooks/useGetBridgeTransactionsData"
-import Divider from "../Divider"
 import TransactionDetailsList, {
     DetailedItem,
 } from "../transactions/TransactionDetailsList"
 import BridgeDetailsStatus from "./BridgeDetailsStatus"
 import openIcon from "../../assets/images/icons/open_external.svg"
+import { secondsToEstimatedMinutes, secondsToMMSS } from "../../util/time"
 
 interface BridgeDetailsSummaryProps {
     transaction: Partial<TransactionMeta>
@@ -45,6 +48,16 @@ const Explorer = ({
     )
 }
 
+const getBridgeFinalDurationInSeconds = (
+    bridgeParams?: BridgeTransactionParams
+): number | null => {
+    if (!bridgeParams || !bridgeParams.startTime || !bridgeParams.endTime) {
+        return null
+    }
+
+    return (bridgeParams.endTime - bridgeParams.startTime) / 1000
+}
+
 const BridgeDetailsSummary: FC<BridgeDetailsSummaryProps> = ({
     transaction,
     bridgeTransactionsData,
@@ -65,6 +78,32 @@ const BridgeDetailsSummary: FC<BridgeDetailsSummaryProps> = ({
     const statusDetail: DetailedItem = {
         label: "Status",
         value: <BridgeDetailsStatus transaction={transaction} />,
+    }
+
+    const durationDetails: DetailedItem[] = []
+
+    if (
+        transaction.bridgeParams?.estimatedDurationInSeconds &&
+        ![BridgeStatus.DONE, BridgeStatus.FAILED].includes(
+            transaction.bridgeParams?.status! || ""
+        )
+    ) {
+        durationDetails.push({
+            label: "Estimated duration",
+            value: secondsToEstimatedMinutes(
+                transaction.bridgeParams?.estimatedDurationInSeconds
+            ),
+        })
+    } else {
+        const durationInSeconds = getBridgeFinalDurationInSeconds(
+            transaction.bridgeParams
+        )
+        if (durationInSeconds) {
+            durationDetails.push({
+                label: "Duration",
+                value: secondsToMMSS(durationInSeconds),
+            })
+        }
     }
 
     const explorerDetails: DetailedItem[] = []
@@ -125,7 +164,12 @@ const BridgeDetailsSummary: FC<BridgeDetailsSummaryProps> = ({
                 </>
             )}
             <TransactionDetailsList
-                details={[statusDetail, ...details, ...explorerDetails]}
+                details={[
+                    statusDetail,
+                    ...durationDetails,
+                    ...details,
+                    ...explorerDetails,
+                ]}
             />
         </div>
     )

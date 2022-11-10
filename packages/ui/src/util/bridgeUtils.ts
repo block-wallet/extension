@@ -94,6 +94,8 @@ export const populateBridgeTransaction = (
             role: "SENDING",
             feeCosts: bridgeQuote.bridgeParams.params.feeCosts,
             slippage: bridgeQuote.bridgeParams.params.slippage,
+            estimatedDurationInSeconds:
+                bridgeQuote.bridgeParams.params.estimatedDurationInSeconds,
         },
     }
 }
@@ -167,8 +169,7 @@ export const buildBridgeDetailedItems = (
     birdgeTransactionsData: BridgeTransactionsData | null
 ): DetailedItem[] => {
     let details: DetailedItem[] = []
-    const { bridgeParams, transactionParams, transactionCategory, status } =
-        transaction
+    const { bridgeParams, status } = transaction
     if (!bridgeParams) {
         return []
     }

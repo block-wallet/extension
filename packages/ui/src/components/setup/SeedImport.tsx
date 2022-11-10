@@ -212,8 +212,6 @@ const SeedImport: FunctionComponent<{
                                             if (newSP.trim().match(/\s/u)) {
                                                 e.preventDefault()
                                                 onSeedPhrasePaste(newSP)
-                                            } else {
-                                                onSeedPhraseWordChange(i, newSP)
                                             }
                                         }}
                                     />

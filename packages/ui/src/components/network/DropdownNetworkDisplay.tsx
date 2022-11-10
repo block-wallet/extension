@@ -32,10 +32,10 @@ const DropdownNetworkDisplay: FunctionComponent<
             <NetworkLogo
                 logo={network.logo}
                 name={network.name}
-                bigLogo={true}
+                bigLogo={false}
             />
             <div
-                className="text-base truncate font-semibold ml-4"
+                className="text-sm truncate font-semibold ml-4"
                 title={network.name}
             >
                 {network.name}

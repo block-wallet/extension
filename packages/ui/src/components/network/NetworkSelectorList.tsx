@@ -1,10 +1,9 @@
 import { IChain } from "@block-wallet/background/utils/types/chain"
 import { Dispatch, FC, SetStateAction } from "react"
-import { number } from "yup/lib/locale"
 import DropdownNetworkDisplay from "./DropdownNetworkDisplay"
 
 interface NetworkSelectorListProps {
-    onAssetClick: (
+    onSelectNetwork: (
         network: IChain,
         setActive?: Dispatch<SetStateAction<boolean>>
     ) => void
@@ -17,23 +16,26 @@ const NetworkSelectorList: FC<NetworkSelectorListProps> = ({
     setActive,
     networks,
     selectedNetwork,
-    onAssetClick,
+    onSelectNetwork,
 }) => {
     return (
         <>
+            <span className="text-xxs text-gray-500 p-3">
+                {networks.length} available networks
+            </span>
             <input
                 readOnly
                 name="network"
                 className="hidden"
                 value={selectedNetwork}
             />
-            {Object.values(networks).map((network, index) => {
+            {Object.values(networks).map((network) => {
                 return (
                     <DropdownNetworkDisplay
-                        key={index.toString()}
+                        key={network.id}
                         network={network}
                         active={selectedNetwork === network.id}
-                        onClick={() => onAssetClick(network, setActive)}
+                        onClick={() => onSelectNetwork(network, setActive)}
                     />
                 )
             })}

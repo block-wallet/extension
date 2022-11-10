@@ -73,7 +73,7 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search, networkList])
 
-    const onAssetClick = async (
+    const onSelectNetwork = async (
         network: IChain,
         setActive?: Dispatch<SetStateAction<boolean>>
     ) => {
@@ -129,7 +129,7 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
             ) : (
                 <NetworkSelectorList
                     networks={searchResult}
-                    onAssetClick={onAssetClick}
+                    onSelectNetwork={onSelectNetwork}
                     selectedNetwork={selectedNetwork?.id}
                 />
             )}

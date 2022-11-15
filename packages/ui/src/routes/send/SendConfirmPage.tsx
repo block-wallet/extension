@@ -275,6 +275,8 @@ const SendConfirmPage = () => {
     // is being restored from a popup close
     const isEIP1559Compatible = network.isEIP1559Compatible
     const receivingAddress = history.location.state.address
+    const selectedAccountName =
+        history.location.state.name ?? useAccountNameByAddress(receivingAddress)
     const preSelectedAsset = persistedData?.asset
         ? persistedData.asset
         : (history.location.state.asset as TokenWithBalance)
@@ -748,10 +750,7 @@ const SendConfirmPage = () => {
                 >
                     <AddressDisplay
                         receivingAddress={history.location.state.address}
-                        selectedAccountName={
-                            history.location.state.name ??
-                            useAccountNameByAddress(receivingAddress)
-                        }
+                        selectedAccountName={selectedAccountName}
                     />
 
                     <div

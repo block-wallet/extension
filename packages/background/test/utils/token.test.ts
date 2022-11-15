@@ -2,13 +2,6 @@ import { isNativeTokenAddress } from '@block-wallet/background/utils/token';
 import { expect } from 'chai';
 
 describe('isNativeToken', function () {
-    // it('Should fail - address not present', async () => {
-    //     try {
-    //         isNativeTokenAddress('');
-    //     } catch (e: any) {
-    //         expect(e).equal(tokenAddressParamNotPresentError);
-    //     }
-    // });
     it('false - empty address is not native', () => {
         expect(isNativeTokenAddress('')).to.be.false;
     });

@@ -3,18 +3,19 @@ import { formatHash, formatName } from "../../util/formatAccount"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
 import CheckmarkCircle from "../icons/CheckmarkCircle"
 
+const NATIVE_ADDRESS_MESSAGE =
+    "This address is not owned by any user, is often associated with token burn & mint/genesis events and used as a generic null address. Please, make sure the information is correct otherwise your assets will be permanently lost."
+
 export const AddressDisplay: FunctionComponent<{
     receivingAddress: string
     selectedAccountName: string | undefined
 }> = ({ receivingAddress, selectedAccountName }) => {
-    const native_address_message =
-        "This address is not owned by any user, is often associated with token burn & mint/genesis events and used as a generic null address. Please, make sure the information is correct otherwise your assets will be permanently lost."
     const [showingTheWholeAddress, setShowingTheWholeAddress] = useState(false)
     const isNativeToken = isNativeTokenAddress(receivingAddress)
 
     let titleMessage = receivingAddress
     if (isNativeToken) {
-        titleMessage = native_address_message
+        titleMessage = NATIVE_ADDRESS_MESSAGE
     }
 
     const addressToDisplay = formatHash(receivingAddress)

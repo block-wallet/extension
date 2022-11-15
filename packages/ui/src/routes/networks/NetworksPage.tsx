@@ -102,6 +102,7 @@ const NetworksPage = () => {
                     if (!current.enable) {
                         return acc
                     }
+                    console.log(current.name || current.desc)
                     const color = getAccountColor(
                         ethers.utils.keccak256(
                             ethers.utils.toUtf8Bytes(

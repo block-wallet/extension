@@ -1,5 +1,9 @@
 import { Network } from "@block-wallet/background/utils/constants/networks"
+import { ethers } from "ethers"
+import { useEffect } from "react"
+import { RiContactsBookLine } from "react-icons/ri"
 import { classnames } from "../../styles"
+import { getAccountColor } from "../../util/getAccountColor"
 import GenericTooltip from "../label/GenericTooltip"
 
 const NetworkDisplayBadge = ({
@@ -16,6 +20,21 @@ const NetworkDisplayBadge = ({
     className?: string
 }) => {
     const networkName = typeof network === "string" ? network : network.desc
+    console.log(
+        "formatenetwork name: " +
+            networkName.toLowerCase().replace("ethereum ", "").replace(" ", "_")
+    )
+    const networkColor = getAccountColor(
+        ethers.utils.keccak256(
+            ethers.utils.toUtf8Bytes(
+                networkName
+                    .toLowerCase()
+                    .replace("ethereum", "")
+                    .replace(" ", "_")
+            )
+        )
+    )
+    console.log(networkColor)
 
     // We limit the string chars here regardless of the truncate flag
     // and the truncate class to prevent issues with the animated bullet size
@@ -35,7 +54,8 @@ const NetworkDisplayBadge = ({
             )}
         >
             <span
-                className={`rounded-full h-2 w-2  animate-pulse ${iconColor} pointer-events-none`}
+                className={"h-2 w-2 rounded-xl mr-2"}
+                style={{ backgroundColor: networkColor }}
             />
             <span
                 className={classnames(

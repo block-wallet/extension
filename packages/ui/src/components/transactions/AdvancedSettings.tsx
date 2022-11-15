@@ -159,7 +159,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
         }
 
         if (
-            slippage &&
+            slippage !== undefined &&
             display.slippage &&
             advancedSettings.slippage !== parseFloat(slippage)
         ) {
@@ -260,7 +260,8 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             setAdvancedSettings({
                 customNonce: nonce ? parseInt(nonce) : undefined,
                 flashbots: isFlashbotsEnabled,
-                slippage: slippage ? parseFloat(slippage) : undefined,
+                slippage:
+                    slippage !== undefined ? parseFloat(slippage) : undefined,
             })
 
             setIsOpen(false)
@@ -309,8 +310,9 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             )
             setValue(
                 "slippage",
-                (
-                    advancedSettings.slippage || defaultSettings.slippage
+                (advancedSettings.slippage !== undefined
+                    ? advancedSettings.slippage
+                    : defaultSettings.slippage
                 ).toString(),
                 {
                     shouldValidate: true,
@@ -318,8 +320,9 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             )
 
             validateSlippage(
-                (
-                    advancedSettings.slippage || defaultSettings.slippage
+                (advancedSettings.slippage !== undefined
+                    ? advancedSettings.slippage
+                    : defaultSettings.slippage
                 ).toString()
             )
 

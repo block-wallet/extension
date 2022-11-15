@@ -17,6 +17,7 @@ import AccountIcon from "../components/icons/AccountIcon"
 import ActivityAssetsView from "../components/ActivityAssetsView"
 import GenericTooltip from "../components/label/GenericTooltip"
 import Tooltip from "../components/label/Tooltip"
+import AnimatedIcon, { AnimatedIconName } from "../components/AnimatedIcon"
 
 // Utils
 import { formatHash, formatName } from "../util/formatAccount"
@@ -150,6 +151,9 @@ const PopupPage = () => {
     const swapsEnabled = network.isSwapEnabled
 
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
+
+    const isLoading =
+        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
 
     return (
         <PageLayout screen className="max-h-screen popup-layout">
@@ -298,7 +302,19 @@ const PopupPage = () => {
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
-                                    <ArrowHoverAnimation />
+                                    {isLoading ? (
+                                        <div className="flex flex-row items-center justify-center w-full h-full">
+                                            <AnimatedIcon
+                                                icon={
+                                                    AnimatedIconName.BlueCircleLoadingSkeleton
+                                                }
+                                                className="w-4 h-4 pointer-events-none"
+                                                loop
+                                            />
+                                        </div>
+                                    ) : (
+                                        <ArrowHoverAnimation />
+                                    )}
                                 </div>
                                 <span className="text-xs font-medium">
                                     Send
@@ -325,7 +341,19 @@ const PopupPage = () => {
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
-                                        <DoubleArrowHoverAnimation />
+                                        {isLoading ? (
+                                            <div className="flex flex-row items-center justify-center w-full h-full">
+                                                <AnimatedIcon
+                                                    icon={
+                                                        AnimatedIconName.BlueCircleLoadingSkeleton
+                                                    }
+                                                    className="w-4 h-4 pointer-events-none rotate-180"
+                                                    loop
+                                                />
+                                            </div>
+                                        ) : (
+                                            <DoubleArrowHoverAnimation />
+                                        )}
                                     </div>
                                     <span className="text-xs font-medium">
                                         Swap

@@ -6,6 +6,7 @@ import { useOnMountHistory } from "../context/hooks/useOnMount"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { TokenList, useTokensList } from "../context/hooks/useTokensList"
 import { formatUnits } from "@ethersproject/units"
+import AnimatedIcon, { AnimatedIconName } from "./AnimatedIcon"
 
 import { Classes } from "../styles/classes"
 import plus from "../assets/images/icons/plus.svg"
@@ -15,6 +16,7 @@ import { formatRounded } from "../util/formatRounded"
 import { formatCurrency, toCurrencyAmount } from "../util/formatCurrency"
 import { ActionButton } from "./button/ActionButton"
 import { getValueByKey } from "../util/objectUtils"
+import classnames from "classnames"
 export type AssetItem = {
     token: Token
     balance: BigNumber
@@ -133,20 +135,39 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
     }
 
     const assetsLoadingSkeleton = [...Array(2)].map((x, index) => (
-        <>
+        <div key={index}>
             {index > 0 ? <hr /> : null}
 
-            <div className="flex items-center justify-between animate-pulse py-5">
+            <div className="flex items-center justify-between py-5">
                 <div className="flex items-center space-x-2">
-                    <div className="h-9 w-9 rounded-full bg-primary-100 dark:bg-primary-200"></div>
+                    <div className="flex justify-center items-center h-9 w-9 rounded-full border">
+                        <AnimatedIcon
+                            icon={AnimatedIconName.GreyCircleLoadingSkeleton}
+                            className={classnames(
+                                "w-4 h-4 pointer-events-none",
+                                index % 2 === 1 && "rotate-180"
+                            )}
+                            loop
+                        />
+                    </div>
                     <div>
-                        <div className="mb-2 h-2.5 w-20 rounded-full bg-primary-100 dark:bg-primary-300"></div>
-                        <div className="h-2 w-16 rounded-full bg-primary-100 dark:bg-primary-200"></div>
+                        <AnimatedIcon
+                            icon={AnimatedIconName.GreyLineLoadingSkeleton}
+                            className="mb-2 h-3 w-16 rotate-180"
+                            svgClassName="rounded-md"
+                            loop
+                        />
+                        <AnimatedIcon
+                            icon={AnimatedIconName.GreyLineLoadingSkeleton}
+                            className="h-3 w-24"
+                            svgClassName="rounded-md"
+                            loop
+                        />
                     </div>
                 </div>
                 <ChevronRightIcon />
             </div>
-        </>
+        </div>
     ))
 
     return (

@@ -5,11 +5,19 @@ import Lottie from "react-lottie"
 import successAnim from "../assets/images/icons/checkmark_notes.json"
 import confirmationCheck from "../assets/images/icons/confirmation_check.json"
 import deviceInteraction from "../assets/images/icons/device_interaction.json"
+import blueLineLoadingSkeleton from "../assets/images/icons/blueline_skeleton.json"
+import greyLineLoadingSkeleton from "../assets/images/icons/greyline_skeleton.json"
+import greyCircleLoadingSkeleton from "../assets/images/icons/greycircle_skeleton.json"
+import blueCircleLoadingSkeleton from "../assets/images/icons/bluecircle_skeleton.json"
 
 export enum AnimatedIconName {
     Success,
     ConfirmationCheck,
     DeviceInteraction,
+    BlueLineLoadingSkeleton,
+    GreyLineLoadingSkeleton,
+    GreyCircleLoadingSkeleton,
+    BlueCircleLoadingSkeleton,
 }
 
 type IconType = { anim: any }
@@ -21,13 +29,26 @@ const icons: { [icon: number]: IconType } = {
     [AnimatedIconName.DeviceInteraction]: {
         anim: deviceInteraction,
     },
+    [AnimatedIconName.BlueLineLoadingSkeleton]: {
+        anim: blueLineLoadingSkeleton,
+    },
+    [AnimatedIconName.GreyLineLoadingSkeleton]: {
+        anim: greyLineLoadingSkeleton,
+    },
+    [AnimatedIconName.GreyCircleLoadingSkeleton]: {
+        anim: greyCircleLoadingSkeleton,
+    },
+    [AnimatedIconName.BlueCircleLoadingSkeleton]: {
+        anim: blueCircleLoadingSkeleton,
+    },
 }
 
 const AnimatedIcon: FunctionComponent<{
     icon: AnimatedIconName
     className?: string
     loop?: boolean
-}> = ({ icon, className, loop }) => (
+    svgClassName?: string
+}> = ({ icon, className, loop, svgClassName }) => (
     <div className={className}>
         <Lottie
             options={{
@@ -35,6 +56,7 @@ const AnimatedIcon: FunctionComponent<{
                 autoplay: true,
                 rendererSettings: {
                     preserveAspectRatio: "xMidYMid slice",
+                    className: svgClassName,
                 },
                 loop: loop ?? false,
             }}

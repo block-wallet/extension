@@ -19,7 +19,10 @@ import { SEND_GAS_COST } from "../util/constants"
 import { getTransactionFees } from "../util/gasPrice"
 import { EnoughNativeTokensToSend } from "../context/hooks/useSelectedAccountHasEnoughNativeTokensToSend"
 import { Network } from "@block-wallet/background/utils/constants/networks"
-import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
+import {
+    BridgeTransactionParams,
+    TransactionMeta,
+} from "@block-wallet/background/controllers/transactions/utils/types"
 import { DetailedItem } from "../components/transactions/TransactionDetailsList"
 import { BridgeTransactionsData } from "./hooks/useGetBridgeTransactionsData"
 import isNil from "./isNil"
@@ -87,7 +90,6 @@ export const populateBridgeTransaction = (
             toToken: bridgeQuote.bridgeParams.params.toToken,
             fromTokenAmount: bridgeQuote.bridgeParams.params.fromAmount,
             toTokenAmount: bridgeQuote.bridgeParams.params.toAmount,
-            blockWalletFee: bridgeQuote.bridgeParams.params.blockWalletFee,
             fromChainId: bridgeQuote.bridgeParams.params.fromChainId,
             toChainId: bridgeQuote.bridgeParams.params.toChainId,
             tool: bridgeQuote.bridgeParams.params.tool,
@@ -262,4 +264,42 @@ export const buildBridgeDetailedItems = (
     })
 
     return details
+}
+
+export const getBridgePendingMessage = (
+    bridgeParams: BridgeTransactionParams,
+    destinationNetworkName?: string
+): { label: string; info?: string } | null => {
+    if (bridgeParams.status === BridgeStatus.NOT_FOUND) {
+        return {
+            label: "Processing bridge",
+        }
+    }
+    if (bridgeParams.status === BridgeStatus.PENDING) {
+        switch (bridgeParams.substatus) {
+            case BridgeSubstatus.NOT_PROCESSABLE_REFUND_NEEDED:
+            case BridgeSubstatus.REFUND_IN_PROGRESS:
+                return {
+                    label: "Refund in progress",
+                    info: "The bridge has failed and there in course as a refund of the amount sent.",
+                }
+            case BridgeSubstatus.CHAIN_NOT_AVAILABLE:
+            case BridgeSubstatus.BRIDGE_NOT_AVAILABLE:
+            case BridgeSubstatus.UNKNOWN_ERROR:
+            case BridgeSubstatus.WAIT_SOURCE_CONFIRMATIONS: {
+                return {
+                    label: "Processing bridge",
+                }
+            }
+            case BridgeSubstatus.WAIT_DESTINATION_TRANSACTION: {
+                return {
+                    label: `Waiting for ${
+                        destinationNetworkName || "destination network"
+                    } transaction`,
+                    info: `The sending transaction is mined and we're awaiting for the ${destinationNetworkName} transaction to be processed.`,
+                }
+            }
+        }
+    }
+    return null
 }

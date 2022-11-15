@@ -27,7 +27,7 @@ const FeeTokenSummaryDisplay = ({
                             <FeeItem
                                 detail={fee}
                                 token={feeDetail.token}
-                                expandable={expandable}
+                                expandable={!!fee.description}
                             />
                         </React.Fragment>
                     )

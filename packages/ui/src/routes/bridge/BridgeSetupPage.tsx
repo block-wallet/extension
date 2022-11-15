@@ -40,7 +40,6 @@ import {
     isANotFoundQuote,
 } from "../../util/bridgeUtils"
 import {
-    BridgeQuote,
     BridgeQuoteRequest,
     GetBridgeQuoteResponse,
     GetBridgeQuoteNotFoundResponse,
@@ -53,7 +52,6 @@ import { formatRounded } from "../../util/formatRounded"
 import FeeDetails from "../../components/FeeDetails"
 import ClickableText from "../../components/button/ClickableText"
 import BridgeDetails from "../../components/bridge/BridgeDetails"
-import { getBlockWalletOriginalFee } from "../../util/bridgeTransactionUtils"
 import { populateBridgeTransaction } from "../../util/bridgeUtils"
 import BridgeErrorMessage, { BridgeErrorType } from "./BridgeErrorMessage"
 import usePersistedLocalStorageForm from "../../util/hooks/usePersistedLocalStorageForm"
@@ -424,12 +422,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 ${fee.token.symbol}`
             )
         },
-        quote
-            ? getBlockWalletOriginalFee(
-                  "0",
-                  quote?.bridgeParams.params.fromToken
-              )
-            : ""
+        ""
     )
     return (
         <PopupLayout
@@ -653,24 +646,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         <div className="flex flex-row items-center justify-between">
                             <FeeDetails
                                 summary={`Bridge fees: ${bridgeFeeSummary}`}
-                                details={
-                                    <div className="p-1 text-left !break-word !whitespace-normal">
-                                        <p className="pb-0.5">
-                                            BlockWallet is not charging fees for
-                                            this brdige!
-                                        </p>
-                                        <br />
-                                        <p>
-                                            <b>Original fee:</b>{" "}
-                                            {getBlockWalletOriginalFee(
-                                                quote.bridgeParams.params
-                                                    .fromAmount,
-                                                quote.bridgeParams.params
-                                                    .fromToken
-                                            )}
-                                        </p>
-                                    </div>
-                                }
                             />
                         </div>
                         {!bridgeQuoteError ? (

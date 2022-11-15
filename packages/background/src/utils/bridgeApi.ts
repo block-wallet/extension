@@ -2,6 +2,7 @@ import axios from 'axios';
 import { IToken } from '../controllers/erc-20/Token';
 import { IChain } from './types/chain';
 import {
+    BASE_BRIDGE_FEE,
     GetLifiChainsResponse,
     GetLifiConnectionsResponse,
     GetLiFiQuoteResponse,
@@ -77,6 +78,7 @@ export interface getBridgeRoutesRequest {
 
 export interface IBridgeFeeCost {
     token: IToken;
+    chainId: number;
     details: {
         name: string;
         description: string;
@@ -228,6 +230,7 @@ const LiFiBridge: IBridge = {
                     referrer: r.referrer,
                     integrator: 'blockwallet.io',
                     slippage: r.slippage || 0.5,
+                    fee: BASE_BRIDGE_FEE,
                 },
             });
             const responseData = response.data as GetLiFiQuoteResponse;

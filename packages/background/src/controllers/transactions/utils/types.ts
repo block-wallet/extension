@@ -104,7 +104,6 @@ export interface BridgeTransactionParams {
     toToken: IToken;
     fromTokenAmount: string;
     toTokenAmount: string;
-    blockWalletFee: BigNumber;
     fromChainId: number;
     toChainId: number;
     tool: string; //tool used to perform the bridging.

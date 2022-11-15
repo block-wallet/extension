@@ -822,6 +822,12 @@ export default class BlankProviderController extends BaseController<BlankProvide
                         test: parsedAndValidatedData.isTestnet,
                     });
 
+                    // Trigger switch request to the newly added network 
+                    this._handleSwitchEthereumChain(
+                        params as [SwitchEthereumChainParameters],
+                        portId
+                    );
+
                     // By EIP-3085, the method MUST return null if the request was successful
                     return null;
                 } else {

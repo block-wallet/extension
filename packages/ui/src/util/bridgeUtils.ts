@@ -257,7 +257,7 @@ export const buildBridgeDetailedItems = (
 
     details.push({
         label: "Slippage",
-        value: bridgeParams.slippage || 0.5,
+        value: bridgeParams.slippage * 100 + "%" || "unknown",
     })
 
     return details

@@ -226,7 +226,7 @@ const LiFiBridge: IBridge = {
                     fromAddress: r.fromAddress,
                     referrer: r.referrer,
                     integrator: 'blockwallet.io',
-                    slippage: r.slippage || 0.5,
+                    slippage: r.slippage,
                 },
             });
             const responseData = response.data as GetLiFiQuoteResponse;

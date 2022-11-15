@@ -74,9 +74,6 @@ import {
     GetBridgeQuoteResponse,
     GetBridgeQuoteNotFoundResponse,
 } from "@block-wallet/background/controllers/BridgeController"
-import { capitalize } from "../../util/capitalize"
-import TransactionDetails from "../../components/transactions/TransactionDetails"
-import { WithRequired } from "@block-wallet/background/utils/types/helpers"
 import CollapsableWarning from "../../components/CollapsableWarning"
 import { AiOutlineWarning } from "react-icons/ai"
 import BridgeDetails from "../../components/bridge/BridgeDetails"
@@ -85,7 +82,7 @@ import BridgeErrorMessage, { BridgeErrorType } from "./BridgeErrorMessage"
 import BridgeNotFoundQuoteDetails from "../../components/transactions/BridgeNotFoundQuoteDetails"
 import { useSelectedAccountHasEnoughNativeTokensToSend } from "../../context/hooks/useSelectedAccountHasEnoughNativeTokensToSend"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
-
+import { WithRequired } from "@block-wallet/background/utils/types/helpers"
 export interface BridgeConfirmPageLocalState {
     amount: string
     bridgeQuote: GetBridgeQuoteResponse
@@ -95,8 +92,9 @@ export interface BridgeConfirmPageLocalState {
     fromAssetPage?: boolean
 }
 
-// 15s
+// 20s
 const QUOTE_REFRESH_TIMEOUT = 1000 * 20
+const DEFAULT_BRIDGE_SLIPPAGE = 3
 
 const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const history = useOnMountHistory()
@@ -188,10 +186,18 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         isOpen: false,
         tab: "summary",
     })
-
-    const [advancedSettings, setAdvancedSettings] = useState<
+    const initialBridgeSlippage =
+        bridgeQuote?.bridgeParams?.params?.slippage !== undefined
+            ? bridgeQuote?.bridgeParams?.params?.slippage * 100
+            : DEFAULT_BRIDGE_SLIPPAGE
+    const [advancedSettings, setAdvancedSettings] = useLocalStorageState<
         WithRequired<TransactionAdvancedData, "slippage">
-    >(defaultAdvancedSettings)
+    >("bridge.advancedSettings", {
+        initialValue: {
+            ...defaultAdvancedSettings,
+            slippage: initialBridgeSlippage,
+        },
+    })
     const [quote, setQuote] = useState<GetBridgeQuoteResponse | undefined>(
         bridgeQuote
     )
@@ -381,7 +387,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
 
     useEffect(() => {
         let isValidFetch = true
-        let timeoutRef: NodeJS.Timeout | null = null
+        let timeoutRef: NodeJS.Timeout
         if (!shouldFetchBridgeParams || inProgressAllowanceTransaction?.id) {
             setTimeoutStart(undefined)
             return
@@ -396,7 +402,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 toTokenAddress: toToken.address,
                 fromAmount: fromAmount,
                 fromAddress: selectedAccount.address,
-                slippage: advancedSettings.slippage,
+                slippage: advancedSettings.slippage / 100,
             }
 
             setIsFetchingParams(true)
@@ -435,7 +441,6 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 }
             }
         }
-
         //first render, run function manually
         async function fetchParams() {
             await fetchQuoteParams()
@@ -443,11 +448,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         }
 
         fetchParams()
-
         // Cleanup timer
         return () => {
             isValidFetch = false
-            timeoutRef && clearTimeout(timeoutRef)
+            clearTimeout(timeoutRef)
         }
     }, [
         advancedSettings.slippage,
@@ -666,6 +670,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     <AdvancedSettings
                         address={selectedAccount.address}
                         advancedSettings={advancedSettings}
+                        defaultSettings={{
+                            ...defaultAdvancedSettings,
+                            slippage: initialBridgeSlippage,
+                        }}
                         display={{
                             nonce: true,
                             flashbots: true,
@@ -677,8 +685,9 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                             setAdvancedSettings({
                                 ...newSettings,
                                 slippage:
-                                    newSettings.slippage ||
-                                    defaultAdvancedSettings.slippage,
+                                    newSettings.slippage !== undefined
+                                        ? newSettings.slippage
+                                        : initialBridgeSlippage,
                             })
                         }}
                         label={"Settings"}

@@ -175,7 +175,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
 
         const parsedSlippage = parseFloat(v)
 
-        if (!isFlashbotsEnabled && parsedSlippage > 2) {
+        if (!isFlashbotsEnabled && parsedSlippage > 3) {
             setSlippageWarning("The transaction may be frontrun")
             return
         }
@@ -283,7 +283,10 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             setAdvancedSettings({
                 customNonce: nextNonce.current,
                 flashbots: isFlashbotsEnabled,
-                slippage: defaultSettings.slippage,
+                slippage:
+                    advancedSettings.slippage !== undefined
+                        ? advancedSettings.slippage
+                        : defaultSettings.slippage,
             })
         }
 

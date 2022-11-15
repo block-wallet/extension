@@ -109,6 +109,7 @@ export interface BridgeTransactionParams {
     toChainId: number;
     tool: string; //tool used to perform the bridging.
     slippage: number;
+    estimatedDurationInSeconds: number;
     receivingTxLink?: string;
     receivingTxHash?: string;
     sendingTxHash?: string;
@@ -121,6 +122,8 @@ export interface BridgeTransactionParams {
     effectiveToToken?: IToken;
     effectiveToTokenAmount?: string;
     effectiveToChainId?: number;
+    startTime?: number;
+    endTime?: number;
 }
 
 export interface uiTransactionParams extends TransactionParams {

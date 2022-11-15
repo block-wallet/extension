@@ -20,7 +20,7 @@ import { classnames } from "../../styles"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { formatUnits, parseUnits } from "ethers/lib/utils"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import { useCallback, useRef } from "react"
+import { useCallback } from "react"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useState, useEffect, FunctionComponent } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
@@ -57,6 +57,7 @@ import { getBlockWalletOriginalFee } from "../../util/bridgeTransactionUtils"
 import { populateBridgeTransaction } from "../../util/bridgeUtils"
 import BridgeErrorMessage, { BridgeErrorType } from "./BridgeErrorMessage"
 import usePersistedLocalStorageForm from "../../util/hooks/usePersistedLocalStorageForm"
+import { secondsToEstimatedMinutes } from "../../util/time"
 
 interface SetupBridgePageLocalState {
     amount?: string
@@ -645,31 +646,60 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         />
                     </div>
                 )}
-                {/* Bridge fee */}
-                {quote && (
-                    <div className="flex flex-row items-center justify-between">
-                        <FeeDetails
-                            summary={`Bridge fees: ${bridgeFeeSummary}`}
-                            details={
-                                <div className="p-1 text-left !break-word !whitespace-normal">
-                                    <p className="pb-0.5">
-                                        BlockWallet is not charging fees for
-                                        this brdige!
-                                    </p>
-                                    <br />
-                                    <p>
-                                        <b>Original fee:</b>{" "}
-                                        {getBlockWalletOriginalFee(
-                                            quote.bridgeParams.params
-                                                .fromAmount,
-                                            quote.bridgeParams.params.fromToken
-                                        )}
-                                    </p>
+                {/* Bridge fees, details and estimated duration */}
+                {quote ? (
+                    <>
+                        <div className="flex flex-row items-center justify-between">
+                            <FeeDetails
+                                summary={`Bridge fees: ${bridgeFeeSummary}`}
+                                details={
+                                    <div className="p-1 text-left !break-word !whitespace-normal">
+                                        <p className="pb-0.5">
+                                            BlockWallet is not charging fees for
+                                            this brdige!
+                                        </p>
+                                        <br />
+                                        <p>
+                                            <b>Original fee:</b>{" "}
+                                            {getBlockWalletOriginalFee(
+                                                quote.bridgeParams.params
+                                                    .fromAmount,
+                                                quote.bridgeParams.params
+                                                    .fromToken
+                                            )}
+                                        </p>
+                                    </div>
+                                }
+                            />
+                        </div>
+                        {!bridgeQuoteError ? (
+                            <div className="flex flex-col mt-2">
+                                <div className="text-gray-600 flex flex-row space-x-2 items-center">
+                                    <span>
+                                        Estimated duration:{" "}
+                                        <span className="font-bold">
+                                            {secondsToEstimatedMinutes(
+                                                quote.bridgeParams.params
+                                                    .estimatedDurationInSeconds
+                                            )}
+                                        </span>
+                                    </span>
                                 </div>
-                            }
-                        />
-                    </div>
-                )}
+                                <ClickableText
+                                    className="flex mt-2"
+                                    onClick={() =>
+                                        setBridgeDetails({
+                                            isOpen: true,
+                                            tab: "summary",
+                                        })
+                                    }
+                                >
+                                    View details
+                                </ClickableText>
+                            </div>
+                        ) : null}
+                    </>
+                ) : null}
                 {bridgeQuoteError && (
                     <div>
                         <br />
@@ -702,19 +732,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 )}
                 {routesError && !bridgeQuoteError && (
                     <ErrorMessage className="mt-4">{routesError}</ErrorMessage>
-                )}
-                {quote && !bridgeQuoteError && (
-                    <ClickableText
-                        className="pt-2 flex"
-                        onClick={() =>
-                            setBridgeDetails({
-                                isOpen: true,
-                                tab: "summary",
-                            })
-                        }
-                    >
-                        View details
-                    </ClickableText>
                 )}
             </div>
         </PopupLayout>

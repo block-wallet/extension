@@ -554,6 +554,7 @@ export default class BridgeController extends BaseController<
                 tool,
                 feeCosts,
                 slippage,
+                estimatedDurationInSeconds,
             },
         }: BridgeTransaction
     ): Promise<string> => {
@@ -614,6 +615,7 @@ export default class BridgeController extends BaseController<
 
             newTransactionMeta.bridgeParams = {
                 bridgeImplementation: aggregator,
+                estimatedDurationInSeconds,
                 fromToken,
                 toToken,
                 fromTokenAmount: fromAmount,
@@ -626,6 +628,7 @@ export default class BridgeController extends BaseController<
                 role: 'SENDING',
                 sendingTxHash: newTransactionMeta.transactionParams.hash,
                 feeCosts,
+                startTime: newTransactionMeta.submittedTime || Date.now(),
             };
 
             this._transactionController.updateTransaction(newTransactionMeta);
@@ -645,7 +648,7 @@ export default class BridgeController extends BaseController<
         }
     };
 
-    private _updateStateTransaction(
+    private _updateReceivingTransaction(
         chainId: number,
         address: string,
         txHash: string,
@@ -782,7 +785,7 @@ export default class BridgeController extends BaseController<
                     bridgeStatus?.receiveTransaction?.chainId;
 
                 //update bridge status, substatus and recevingTxHash in the state.
-                sendingTx = this._updateTransactionBridgeParams(
+                sendingTx = this._updateSendingTransactionBridgeParams(
                     sendingTransactionId,
                     {
                         substatus: bridgeStatus.substatus,
@@ -937,7 +940,7 @@ export default class BridgeController extends BaseController<
             role: 'RECEIVING',
         };
 
-        this._updateStateTransaction(
+        this._updateReceivingTransaction(
             toChainId,
             accountAddress,
             receivingTxHash,
@@ -972,7 +975,8 @@ export default class BridgeController extends BaseController<
         const toAmount =
             sendingTransaction.bridgeParams?.effectiveToTokenAmount ||
             sendingTransaction.bridgeParams?.toTokenAmount;
-        let txTime: number | undefined;
+
+        let txConfirmationTime: number | undefined;
 
         //If the transaction was mined and we have its block number, the fetch timestamp
         if (isSuccess && !isNil(txReceipt.blockNumber)) {
@@ -982,7 +986,7 @@ export default class BridgeController extends BaseController<
             );
             if (block) {
                 //transform to miliseconds
-                txTime = block.timestamp * 1000;
+                txConfirmationTime = block.timestamp * 1000;
             }
         }
 
@@ -1003,15 +1007,27 @@ export default class BridgeController extends BaseController<
             toChainId
         );
 
-        this._updateStateTransaction(
+        //update sending transaction in the transaction controller
+        if (txConfirmationTime) {
+            this._updateSendingTransactionBridgeParams(sendingTransaction.id, {
+                endTime: txConfirmationTime,
+            });
+        }
+
+        //uodate receiving
+        this._updateReceivingTransaction(
             toChainId,
             accountAddress,
             receivingTxHash,
             {
-                confirmationTime: txTime,
+                confirmationTime: txConfirmationTime,
                 methodSignature,
                 transactionReceipt: {
                     ...txReceipt,
+                },
+                bridgeParams: {
+                    ...transactionMeta.bridgeParams!,
+                    endTime: txConfirmationTime,
                 },
                 transferType: transactionToken
                     ? {
@@ -1149,7 +1165,13 @@ export default class BridgeController extends BaseController<
         };
     }
 
-    private _updateTransactionBridgeParams(
+    /**
+     * Updates the sending transanction bridge parameters.
+     * @param txId transaction ID to update
+     * @param brideParams bridge params updates.
+     * @returns
+     */
+    private _updateSendingTransactionBridgeParams(
         txId: string,
         brideParams: Partial<BridgeTransactionParams>
     ): TransactionMeta {

@@ -119,6 +119,7 @@ export interface IBridgeQuote {
     tool: string;
     feeCosts: IBridgeFeeCost[];
     slippage: number;
+    estimatedDurationInSeconds: number;
 }
 
 export interface IBridgeRoute {
@@ -244,6 +245,8 @@ const LiFiBridge: IBridge = {
                 feeCosts: lifiFeeCostsToIBridgeFeeCosts(
                     responseData.estimate.feeCosts
                 ),
+                estimatedDurationInSeconds:
+                    responseData.estimate.executionDuration,
             };
         } catch (e) {
             if (e.response.status === 400) {

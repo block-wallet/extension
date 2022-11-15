@@ -29,7 +29,7 @@ const MessageDialog: FunctionComponent<messageDialogProps> = ({
         <DialogComponent
             open={open}
             onClickOutside={onClickOutside}
-            horizontalPadding={wideMargins ? "px-6" : "px-3"}
+            className={wideMargins ? "px-6" : "px-3"}
         >
             <>
                 {header}

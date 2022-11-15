@@ -1,7 +1,6 @@
-import React, { FC, useEffect, useState } from "react"
+import { FC, useEffect, useState } from "react"
 import classnames from "classnames"
 import Dialog from "../dialog/Dialog"
-import Divider from "../Divider"
 import CloseIcon from "../icons/CloseIcon"
 import HorizontalSelect from "../input/HorizontalSelect"
 import GenericTooltip from "../label/GenericTooltip"
@@ -12,6 +11,18 @@ import BridgeDetailsSummary from "./BridgeDetailsSummary"
 import useGetBridgeTransactionsData from "../../util/hooks/useGetBridgeTransactionsData"
 import TransactionDetailsBasic from "../transactions/TransactionDetailsBasic"
 import isNil from "../../util/isNil"
+import Divider from "../Divider"
+import { TransactionDetailsTabProps } from "../transactions/TransactionDetails"
+
+const BridgeTransactionDetails = (
+    props: TransactionDetailsTabProps & { nonce?: number }
+) => {
+    return (
+        <div className="pt-3">
+            <TransactionDetailsBasic {...props} />
+        </div>
+    )
+}
 
 const BridgeDetails: FC<{
     onClose: () => void
@@ -38,7 +49,7 @@ const BridgeDetails: FC<{
         {
             id: "transaction",
             label: "Transaction",
-            component: TransactionDetailsBasic,
+            component: BridgeTransactionDetails,
             disabled: isNil(_nonce),
         },
     ]
@@ -109,7 +120,7 @@ const BridgeDetails: FC<{
                     }}
                 />
                 <div
-                    className="flex flex-col h-[17rem] overflow-hidden overflow-y-auto py-2 -ml-3 px-3"
+                    className="flex flex-col h-[17rem] overflow-hidden overflow-y-auto py-1 -ml-3 px-3"
                     style={{ width: "calc(100% + 1.5rem)" }}
                 >
                     <TabComponent

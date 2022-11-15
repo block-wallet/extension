@@ -344,13 +344,14 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                                         Attention!{" "}
                                     </span>
                                     Your IP address will be exposed to this
-                                    domain if you choose to save the image URL
+                                    domain if you choose to save the image URL.
                                 </span>
                             }
                             fontSize="text-xs"
                         />
                         <div className="pt-2 flex flex-row items-center">
                             <input
+                                id="save_asset_image_checkbox"
                                 type="checkbox"
                                 checked={isImageSaved}
                                 className={Classes.checkbox}
@@ -358,7 +359,12 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                                     setIsImageSaved(!isImageSaved)
                                 }}
                             />
-                            <span className="text-xs pl-2">Save image URL</span>
+                            <label
+                                className="text-xs pl-2"
+                                htmlFor="save_asset_image_checkbox"
+                            >
+                                Save image URL
+                            </label>
                         </div>
                     </div>
                 ) : null}

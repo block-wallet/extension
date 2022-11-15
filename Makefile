@@ -64,7 +64,7 @@ build/prod:
 	@rm -Rf dist/
 	@$(MAKE) ENVIRONMENT=prod build/background --no-print-directory
 	@$(MAKE) ENVIRONMENT=prod build/provider --no-print-directory
-	@$(MAKE) build/ui --no-print-directory
+	@$(MAKE) GENERATE_SOURCEMAP=false build/ui --no-print-directory
 	@$(MAKE) cp/snarks --no-print-directory
 	@$(MAKE) cp/release-notes --no-print-directory
 

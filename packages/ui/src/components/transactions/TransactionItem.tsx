@@ -119,7 +119,7 @@ const getTransactionItemStyles = (
     let formattedLabel = label
 
     // We're letting both containers to grow based on content but with a limit to keep them inside the container
-    let typeCss: CSSProperties = { maxWidth: "206px" }
+    let typeCss: CSSProperties = { maxWidth: "170px" }
     let amountCss: CSSProperties = { maxWidth: "118px" }
 
     // If label and value are both long, we crop the label prioritizing the value.

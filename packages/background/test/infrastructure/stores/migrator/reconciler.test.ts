@@ -235,6 +235,7 @@ const initialState: BlankAppState & {
             // Default Coingecko id for ETH rates
             coingeckoPlatformId: 'ethereum',
         },
+        isRatesChangingAfterNetworkChange: false,
     },
     GasPricesController: {
         gasPriceData: {
@@ -331,6 +332,7 @@ describe('State reconciler', () => {
                     // Default Coingecko id for ETH rates
                     coingeckoCurrencyId: 'ethereum',
                 },
+                isRatesChangingAfterNetworkChange: false,
             },
             GasPricesController: {
                 gasPriceData: {

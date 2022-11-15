@@ -111,6 +111,11 @@ const Asset: FunctionComponent<{
 }
 
 const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
+    const state = useBlankState()!
+
+    const isLoading =
+        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+
     const [deletedTokens, setDeletedTokens] = useState([] as string[])
     const pushDeleteTokens = (deleteToken: string) => {
         setDeletedTokens([...deletedTokens, deleteToken])
@@ -127,20 +132,42 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
         setDeletedTokens(newDeleted)
     }
 
+    const assetsLoadingSkeleton = [...Array(2)].map((x, index) => (
+        <>
+            {index > 0 ? <hr /> : null}
+
+            <div className="flex items-center justify-between animate-pulse py-5">
+                <div className="flex items-center space-x-2">
+                    <div className="h-9 w-9 rounded-full bg-primary-100 dark:bg-primary-200"></div>
+                    <div>
+                        <div className="mb-2 h-2.5 w-20 rounded-full bg-primary-100 dark:bg-primary-300"></div>
+                        <div className="h-2 w-16 rounded-full bg-primary-100 dark:bg-primary-200"></div>
+                    </div>
+                </div>
+                <ChevronRightIcon />
+            </div>
+        </>
+    ))
+
     return (
         <div
             className="flex flex-col flex-1 w-full space-y-0"
             role="list"
             aria-label="assets"
         >
-            {assets
-                .filter((t) => !deletedTokens.includes(t.token.address))
-                .map((a, i) => (
-                    <Fragment key={i}>
-                        {i > 0 ? <hr /> : null}
-                        <Asset asset={a} pushDeleteTokens={pushDeleteTokens} />
-                    </Fragment>
-                ))}
+            {isLoading
+                ? assetsLoadingSkeleton
+                : assets
+                      .filter((t) => !deletedTokens.includes(t.token.address))
+                      .map((a, i) => (
+                          <Fragment key={i}>
+                              {i > 0 ? <hr /> : null}
+                              <Asset
+                                  asset={a}
+                                  pushDeleteTokens={pushDeleteTokens}
+                              />
+                          </Fragment>
+                      ))}
         </div>
     )
 }

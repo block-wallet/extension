@@ -386,6 +386,7 @@ export const initBackgroundState: BackgroundStateType = {
             // Default Coingecko id for ETH rates
             coingeckoPlatformId: "ethereum",
         },
+        isRatesChangingAfterNetworkChange: false,
         isEIP1559Compatible: { 5: true },
         gasPriceData: {
             5: {

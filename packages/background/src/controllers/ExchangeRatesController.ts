@@ -32,6 +32,7 @@ export interface ExchangeRatesControllerState {
         symbol: string;
         coingeckoPlatformId: string;
     };
+    isRatesChangingAfterNetworkChange: boolean;
 }
 
 export interface Rates {
@@ -83,9 +84,17 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
 
         this._networkController.on(
             NetworkEvents.NETWORK_CHANGE,
-            (network: Network) => {
-                this.updateNetworkNativeCurrencyId(network);
-                this.updateExchangeRates();
+            async (network: Network) => {
+                this.store.updateState({
+                    isRatesChangingAfterNetworkChange: true,
+                });
+
+                await this.updateNetworkNativeCurrencyId(network);
+                await this.updateExchangeRates();
+
+                this.store.updateState({
+                    isRatesChangingAfterNetworkChange: false,
+                });
             }
         );
 
@@ -107,6 +116,13 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
                 );
             }
         );
+    }
+
+    /**
+     * Indicates whether the exchange rates is being changed after a network change
+     */
+    public get isRatesChangingAfterNetworkChange(): boolean {
+        return this.store.getState().isRatesChangingAfterNetworkChange;
     }
 
     private updateNetworkNativeCurrencyId = ({

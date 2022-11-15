@@ -572,7 +572,6 @@ describe('Bridge Controller', () => {
                     );
                     const { params: quote } = quoteResponse.bridgeParams;
                     expect(quote).not.to.be.undefined;
-                    expect(quote.blockWalletFee.toNumber()).to.be.equal(0);
                     expect(quote.fromAmount).to.be.equal('10000000000000000');
                     expect(quote.toAmount).to.be.equal('10000000000000000');
                     expect(quote.transactionRequest.from).to.be.equal(
@@ -649,7 +648,6 @@ describe('Bridge Controller', () => {
                     );
                     const { params: quote } = quoteResponse.bridgeParams;
                     expect(quote).not.to.be.undefined;
-                    expect(quote.blockWalletFee.toNumber()).to.be.equal(0);
                     expect(quote.fromAmount).to.be.equal('10000000000000000');
                     expect(quote.toAmount).to.be.equal('10000000000000000');
                     expect(quote.tool).to.be.equal('custom_tool');
@@ -692,7 +690,6 @@ describe('Bridge Controller', () => {
                     );
                     const { params: quote } = quoteResponse.bridgeParams;
                     expect(quote).not.to.be.undefined;
-                    expect(quote.blockWalletFee.toNumber()).to.be.equal(0);
                     expect(quote.fromAmount).to.be.equal('10000000000000000');
                     expect(quote.toAmount).to.be.equal('10000000000000000');
                     expect(quote.tool).to.be.equal('custom_tool');

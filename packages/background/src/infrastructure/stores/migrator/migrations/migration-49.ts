@@ -1,27 +1,23 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
-import { SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES } from '../../../../utils/constants/networks';
 
 /**
- * This migration fixes zksync block explorer
+ * This migration adds a default configuration related to bridges
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
-        const { availableNetworks } = persistedState.NetworkController;
-        const updatedNetworks = { ...availableNetworks };
-
-        updatedNetworks.ZKSYNC_ALPHA_TESTNET = {
-            ...updatedNetworks.ZKSYNC_ALPHA_TESTNET,
-            blockExplorerUrls: ['https://goerli.explorer.zksync.io'],
-        };
-
         return {
             ...persistedState,
-            NetworkController: {
-                ...persistedState.NetworkController,
-                availableNetworks: { ...updatedNetworks },
+            PreferencesController: {
+                ...persistedState.PreferencesController,
+                settings: {
+                    ...persistedState.PreferencesController.settings,
+                    hideBridgeInsufficientNativeTokenWarning:
+                        persistedState.PreferencesController.settings
+                            .hideBridgeInsufficientNativeTokenWarning ?? false,
+                },
             },
         };
     },
-    version: '0.7.7',
+    version: '0.8.0',
 } as IMigration;

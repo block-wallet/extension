@@ -2,7 +2,7 @@ import { BlankAppState } from '@block-wallet/background/utils/constants/initialS
 import { IMigration } from '../IMigration';
 
 /**
- * This migration fixes the symbol and RPC url of BSC Testnet
+ * This migration adds a default configuration related to bridges
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {

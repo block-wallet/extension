@@ -3,7 +3,7 @@ import { IMigration } from '../IMigration';
 
 /**
  * This migration deletes the swaps feature flag
- * Now it is being calculated dinmaically depending on the 1inch supported networks.
+ * Now it is being calculated dinamically depending on the 1inch supported networks.
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {

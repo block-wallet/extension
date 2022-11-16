@@ -7,6 +7,8 @@
  */
 import { INITIAL_NETWORKS } from '../constants/networks';
 
+const KLAYTN_MAINNET_CHAIN_ID = 8217;
+
 // List of supported networks chain IDs
 export const ONEINCH_SWAPS_NETWORKS: number[] = [
     INITIAL_NETWORKS.MAINNET.chainId,
@@ -16,6 +18,8 @@ export const ONEINCH_SWAPS_NETWORKS: number[] = [
     INITIAL_NETWORKS.ARBITRUM.chainId,
     INITIAL_NETWORKS.AVALANCHEC.chainId,
     INITIAL_NETWORKS.FANTOM.chainId,
+    INITIAL_NETWORKS.XDAI.chainId,
+    KLAYTN_MAINNET_CHAIN_ID,
 ];
 
 /**

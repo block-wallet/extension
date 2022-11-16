@@ -69,44 +69,46 @@ export const getNextAccountFilterValue = (
     return [newFilter, ...filteredFilters]
 }
 
-const matchByTerm = (term?: string) => (account: AccountInfo): boolean => {
-    if (!term) return true
-    return (
-        account.name.toLowerCase().includes(term) ||
-        account.address.toLowerCase().includes(term)
-    )
-}
+const matchByTerm =
+    (term?: string) =>
+    (account: AccountInfo): boolean => {
+        if (!term) return true
+        return (
+            account.name.toLowerCase().includes(term) ||
+            account.address.toLowerCase().includes(term)
+        )
+    }
 
-const filterByAccountFilter = (accountFilters?: AccountFilter[]) => (
-    account: AccountInfo
-): boolean => {
-    const safeFilters = getAccountFilterValue(accountFilters as string[])
+const filterByAccountFilter =
+    (accountFilters?: AccountFilter[]) =>
+    (account: AccountInfo): boolean => {
+        const safeFilters = getAccountFilterValue(accountFilters as string[])
 
-    //Hidden accounts cannot be hardware/external
-    if (safeFilters.includes(AccountFilter.HIDDEN)) {
-        if (isHiddenAccount(account)) {
+        //Hidden accounts cannot be hardware/external
+        if (safeFilters.includes(AccountFilter.HIDDEN)) {
+            if (isHiddenAccount(account)) {
+                return true
+            }
+        } else if (isHiddenAccount(account)) {
+            return false
+        }
+
+        if (
+            safeFilters.includes(AccountFilter.HARDWARE) &&
+            isHardwareWallet(account.accountType)
+        ) {
             return true
         }
-    } else if (isHiddenAccount(account)) {
-        return false
-    }
 
-    if (
-        safeFilters.includes(AccountFilter.HARDWARE) &&
-        isHardwareWallet(account.accountType)
-    ) {
-        return true
-    }
+        if (
+            safeFilters.includes(AccountFilter.EXTERNAL) &&
+            isExternalAccount(account.accountType)
+        ) {
+            return true
+        }
 
-    if (
-        safeFilters.includes(AccountFilter.EXTERNAL) &&
-        isExternalAccount(account.accountType)
-    ) {
-        return true
+        return safeFilters.includes(AccountFilter.ALL)
     }
-
-    return safeFilters.includes(AccountFilter.ALL)
-}
 
 /**
  * Util to filter an account list by name or address.

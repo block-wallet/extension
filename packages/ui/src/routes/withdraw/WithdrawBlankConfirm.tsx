@@ -259,7 +259,6 @@ const WithdrawBlankConfirm = () => {
                             </a>
                             <GenericTooltip
                                 className="w-52 p-2"
-                                centerX
                                 content={
                                     <div className="flex flex-col font-normal items-start text-xs text-white-500">
                                         <div className="flex flex-row items-end space-x-7">
@@ -488,7 +487,7 @@ const WithdrawBlankConfirm = () => {
                             </span>
                         </div>
                     </div>
-                    <ErrorMessage error={error} />
+                    <ErrorMessage>{error}</ErrorMessage>
                 </div>
             </div>
         </PopupLayout>

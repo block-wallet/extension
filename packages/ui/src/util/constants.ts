@@ -54,5 +54,6 @@ export const LINKS = {
             "https://help.blockwallet.io/hc/en-us/articles/7786071253649-How-to-Add-a-Custom-Network-RPC",
         MALICIOUS_DAPPS:
             "https://help.blockwallet.io/hc/en-us/articles/10374731466769",
+        BRIDGES: "https://help.blockwallet.io/hc/en-us/articles/10669678195473",
     },
 }

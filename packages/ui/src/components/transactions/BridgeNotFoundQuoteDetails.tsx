@@ -7,6 +7,7 @@ import BridgeErrorDisplay from "../../components/bridge/BridgeQuoteNotFoundError
 import { GetBridgeQuoteNotFoundResponse } from "@block-wallet/background/controllers/BridgeController"
 import openIcon from "../../assets/images/icons/open_external.svg"
 import download from "../../assets/images/icons/download.svg"
+import { LINKS } from "../../util/constants"
 
 export type BridgeNotFoundQuoteErrorsProps = {
     open: boolean
@@ -107,7 +108,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
 
                     <div className="flex w-full items-center justify-between mt-2">
                         <a
-                            href="https://blockwallet.io/terms-of-use-of-block-wallet.html"
+                            href={LINKS.ARTICLES.BRIDGES}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-300"

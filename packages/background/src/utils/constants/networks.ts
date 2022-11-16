@@ -593,7 +593,7 @@ export const INITIAL_NETWORKS: Networks = {
         ens: false,
         showGasLevels: true,
         rpcUrls: [`https://zksync2-testnet.zksync.dev`],
-        blockExplorerUrls: ['https://explorer.zksync.io/'],
+        blockExplorerUrls: ['https://goerli.explorer.zksync.io'],
         blockExplorerName: 'zkSync Explorer',
         actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {

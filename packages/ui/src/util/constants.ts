@@ -33,7 +33,7 @@ export const BASE_SWAP_FEE = 0.5
 /**
  * Default bridge fee for users without fee discount
  */
-export const BASE_BRIDGE_FEE = 0.5
+export const BASE_BRIDGE_FEE = 0.005
 
 /**
  * Time ellapsed before refreshing the swap quote

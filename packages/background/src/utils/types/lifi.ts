@@ -5,7 +5,7 @@ import { BridgeStatus, BridgeSubstatus, IBridgeFeeCost } from '../bridgeApi';
 /**
  * Fees Config
  */
-export const BASE_BRIDGE_FEE = 0;
+export const BASE_BRIDGE_FEE = 0.005;
 export const BRIDGE_REFERRER_ADDRESS =
     '0x3110a855333bfb922aeCB1B3542ba2fdE28d204F';
 
@@ -175,6 +175,13 @@ export const lifiBridgeSubstatusToBridgeSubstatus = (
     return BridgeSubstatus[lifiSubstatus];
 };
 
+const getFeeName = (fee: LifiFeeCost): string => {
+    if (fee.name.match(/integrator fee/i)) {
+        return 'BlockWallet + LI.FI fee';
+    }
+    return fee.name;
+};
+
 export const lifiFeeCostsToIBridgeFeeCosts = (
     lifiFees: LifiFeeCost[]
 ): IBridgeFeeCost[] => {
@@ -187,6 +194,7 @@ export const lifiFeeCostsToIBridgeFeeCosts = (
                 ...acc,
                 [fee.token.address]: {
                     ...tokenInfo,
+                    chainId: fee.token.chainId,
                     token: lifiTokenToIToken(fee.token),
                     total: BigNumber.from(tokenInfoTotal)
                         .add(BigNumber.from(fee.amount))
@@ -194,7 +202,7 @@ export const lifiFeeCostsToIBridgeFeeCosts = (
                     details: [
                         ...tokenInfoDetails,
                         {
-                            name: fee.name,
+                            name: getFeeName(fee),
                             description: fee.description,
                             amount: fee.amount,
                             percentage: fee.percentage,

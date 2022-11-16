@@ -27,7 +27,6 @@ import BridgeAPI, {
     isQuoteNotFoundError,
 } from '../utils/bridgeApi';
 import {
-    BASE_BRIDGE_FEE,
     BRIDGE_REFERRER_ADDRESS,
     LiFiErrorResponse,
     LIFI_NATIVE_ADDRESS,
@@ -93,10 +92,7 @@ export enum QuoteFeeStatus {
     INSUFFICIENT_BALANCE_TO_COVER_FEES = 'INSUFFICIENT_BALANCE_TO_COVER_FEES',
 }
 
-export interface BridgeQuote extends IBridgeQuote {
-    // BlockWallet fee in spender token units
-    blockWalletFee: BigNumber;
-}
+export type BridgeQuote = IBridgeQuote;
 
 interface BridgeParameters {
     params: BridgeQuote;
@@ -506,7 +502,7 @@ export default class BridgeController extends BaseController<
         request: BridgeQuoteRequest
     ): Promise<BridgeQuote> => {
         const { network } = this._networkController;
-        const res = await retryHandling<IBridgeQuote>(
+        const quote = await retryHandling<IBridgeQuote>(
             () =>
                 this._getAPIImplementation(agg).getQuote({
                     ...request,
@@ -520,12 +516,7 @@ export default class BridgeController extends BaseController<
             }
         );
 
-        return {
-            ...res,
-            blockWalletFee: BigNumber.from(res.fromAmount)
-                .mul(BASE_BRIDGE_FEE * 10)
-                .div(1000),
-        };
+        return quote;
     };
 
     /**
@@ -548,7 +539,6 @@ export default class BridgeController extends BaseController<
                 toToken,
                 toAmount,
                 fromAmount,
-                blockWalletFee,
                 fromChainId,
                 toChainId,
                 tool,
@@ -620,7 +610,6 @@ export default class BridgeController extends BaseController<
                 toToken,
                 fromTokenAmount: fromAmount,
                 toTokenAmount: toAmount,
-                blockWalletFee,
                 fromChainId,
                 toChainId,
                 slippage,

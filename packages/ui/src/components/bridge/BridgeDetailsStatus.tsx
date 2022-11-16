@@ -1,8 +1,10 @@
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 import { FC, ReactNode } from "react"
 import { BridgeStatus, BridgeSubstatus } from "../../context/commTypes"
-import { getBridgePendingMessage } from "../../util/bridgeTransactionUtils"
-import { BRIDGE_PENDING_STATUS } from "../../util/bridgeUtils"
+import {
+    BRIDGE_PENDING_STATUS,
+    getBridgePendingMessage,
+} from "../../util/bridgeUtils"
 import useGetBridgeTransactionsData from "../../util/hooks/useGetBridgeTransactionsData"
 import GenericTooltip from "../label/GenericTooltip"
 import Spinner from "../spinner/ThinSpinner"

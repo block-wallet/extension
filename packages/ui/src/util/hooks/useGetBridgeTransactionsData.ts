@@ -9,6 +9,7 @@ interface ChainExplorerData {
     networkName: string
     blockExplorerUrl?: string
     explorerName?: string
+    chainId: number
 }
 
 const BRIDGE_TX_CATEGORIES = [
@@ -19,6 +20,7 @@ const BRIDGE_TX_CATEGORIES = [
 
 interface BridgeTxDetails {
     networkName: string
+    chainId: number
     explorerLink?: string
     explorerName?: string
 }
@@ -47,6 +49,7 @@ const useGetBridgeTransactionsData = (
                 chainData = {
                     networkName: network.desc!,
                     explorerName: network.blockExplorerName,
+                    chainId,
                     blockExplorerUrl:
                         network.blockExplorerUrls &&
                         network.blockExplorerUrls.length > 0
@@ -61,6 +64,7 @@ const useGetBridgeTransactionsData = (
                             ? chain.explorers[0]
                             : undefined
                     chainData = {
+                        chainId,
                         networkName: chain.name!,
                         explorerName: explorer?.name,
                         blockExplorerUrl: undefined, //Use txLink in this case.
@@ -77,6 +81,7 @@ const useGetBridgeTransactionsData = (
         ): BridgeTxDetails {
             return {
                 networkName: chainData.networkName,
+                chainId: chainData.chainId,
                 explorerLink:
                     chainData.blockExplorerUrl && txHash
                         ? createCustomExplorerLink(

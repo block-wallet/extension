@@ -46,11 +46,13 @@ import { formatName } from "../../util/formatAccount"
 import { RichedTransactionMeta } from "../../util/transactionUtils"
 import Dots from "../loading/LoadingDots"
 import useContextMenu from "../../util/hooks/useContextMenu"
-import { getBridgePendingMessage } from "../../util/bridgeTransactionUtils"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetBridgeTransactionsData from "../../util/hooks/useGetBridgeTransactionsData"
 import BridgeDetails from "../bridge/BridgeDetails"
-import { BRIDGE_PENDING_STATUS } from "../../util/bridgeUtils"
+import {
+    BRIDGE_PENDING_STATUS,
+    getBridgePendingMessage,
+} from "../../util/bridgeUtils"
 
 const transactionMessages = {
     [TransactionCategories.BLANK_DEPOSIT]: "Privacy Pool Deposit",

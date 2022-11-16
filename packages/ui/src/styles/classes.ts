@@ -106,6 +106,11 @@ export class Classes {
     static blueSection = classnames(
         "p-4 border-opacity-0 border-transparent flex justify-between items-center flex-row w-full rounded-md bg-primary-100 border cursor-pointer hover:bg-primary-200"
     )
+
+    static blueSelectionDisabled = classnames(
+        "cursor-not-allowed hover:bg-primary-100"
+    )
+
     static blueSectionActive = classnames("bg-primary-200")
     static blueSectionInput = classnames(
         "bg-transparent p-0 mb-1 border-none font-bold"

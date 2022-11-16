@@ -33,6 +33,8 @@ import { TransactionArgument } from './transactions/ContractSignatureParser';
 import { showIncomingTransactionNotification } from '../utils/notifications';
 import { checkIfNotAllowedError } from '../utils/ethersError';
 import TransactionController from './transactions/TransactionController';
+import { fetchBlockWithRetries } from '../utils/blockFetch';
+import { isNil } from 'lodash';
 import { runPromiseSafely } from '../utils/promises';
 
 export enum TransactionTypeEnum {
@@ -1069,22 +1071,13 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             const blockNumbersOrdered = blockNumbers.sort((a, b) => b - a);
             for (let i = 0; i < blockNumbers.length; i++) {
                 const blockNumber = blockNumbersOrdered[i];
-                let block: Block = {} as Block;
-                let error = undefined;
-                let retry = 0;
-                do {
-                    try {
-                        block = await provider.getBlock(blockNumber);
-                        error = undefined;
-                    } catch (e) {
-                        log.warn('getBlock', e.message || e);
-                        error = e;
-                        retry++;
-                        await sleep(1 * SECOND);
-                    }
-                } while (error && retry < MAX_REQUEST_RETRY);
+                const block = await fetchBlockWithRetries(
+                    blockNumber,
+                    provider,
+                    MAX_REQUEST_RETRY
+                );
 
-                if (!error && block.number) {
+                if (block && !isNil(block.number)) {
                     this._updateTransactionsTimestampsFromChain(chainId, block);
                 }
             }

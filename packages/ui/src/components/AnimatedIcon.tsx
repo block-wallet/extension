@@ -1,49 +1,92 @@
-import { FunctionComponent } from "react"
-
-import Lottie from "react-lottie"
-
-import successAnim from "../assets/images/icons/checkmark_notes.json"
+import bridgeIcon from "../assets/images/icons/bridge.json"
 import confirmationCheck from "../assets/images/icons/confirmation_check.json"
 import deviceInteraction from "../assets/images/icons/device_interaction.json"
+import lottie, { AnimationItem } from "lottie-web"
+import successAnim from "../assets/images/icons/checkmark_notes.json"
+import { useEffect, useRef, FunctionComponent } from "react"
+import classNames from "classnames"
 
 export enum AnimatedIconName {
-    Success,
+    Bridge,
     ConfirmationCheck,
     DeviceInteraction,
+    Success,
 }
 
-type IconType = { anim: any }
-const icons: { [icon: number]: IconType } = {
-    [AnimatedIconName.Success]: { anim: successAnim },
+type AnimationType = {
+    data: any
+    autoplay?: boolean
+    hover?: boolean
+    loop?: boolean
+}
+
+const Animations: { [anim: number]: AnimationType } = {
+    [AnimatedIconName.Bridge]: {
+        autoplay: false,
+        data: bridgeIcon,
+        hover: true,
+    },
     [AnimatedIconName.ConfirmationCheck]: {
-        anim: confirmationCheck,
+        data: confirmationCheck,
     },
     [AnimatedIconName.DeviceInteraction]: {
-        anim: deviceInteraction,
+        data: deviceInteraction,
+        loop: true,
+    },
+    [AnimatedIconName.Success]: {
+        data: successAnim,
     },
 }
 
-const AnimatedIcon: FunctionComponent<{
+interface AnimationProps {
     icon: AnimatedIconName
     className?: string
-    loop?: boolean
-}> = ({ icon, className, loop }) => (
-    <div className={className}>
-        <Lottie
-            options={{
-                animationData: icons[icon].anim,
-                autoplay: true,
+}
+
+const AnimatedIcon: FunctionComponent<AnimationProps> = ({
+    icon,
+    className,
+}: AnimationProps) => {
+    const element = useRef<HTMLDivElement>(null)
+    const lottieInstance = useRef<AnimationItem>()
+
+    const animationData = Animations[icon]
+
+    useEffect(() => {
+        if (element.current) {
+            const instance = lottie.loadAnimation({
+                animationData: animationData.data,
+                autoplay: animationData.autoplay ?? true,
                 rendererSettings: {
                     preserveAspectRatio: "xMidYMid slice",
                 },
-                loop: loop ?? false,
+                loop: animationData.loop ?? false,
+                container: element.current,
+            })
+
+            instance.addEventListener("complete", () => {
+                if (animationData.hover && !animationData.loop) {
+                    instance.stop()
+                }
+            })
+
+            lottieInstance.current = instance
+        }
+
+        return () => lottieInstance.current && lottieInstance.current.destroy()
+    }, [animationData])
+
+    return (
+        <div
+            className={classNames(className, "w-full h-full")}
+            onMouseEnter={() => {
+                if (animationData.hover) {
+                    lottieInstance.current?.play()
+                }
             }}
-            width="100%"
-            height="100%"
-            style={{ cursor: "default" }}
-            isClickToPauseDisabled={true}
-        />
-    </div>
-)
+            ref={element}
+        ></div>
+    )
+}
 
 export default AnimatedIcon

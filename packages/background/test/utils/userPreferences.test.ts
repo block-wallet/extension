@@ -56,6 +56,7 @@ describe('userPreferences tests', () => {
                             defaultBrowserWallet: true,
                             hideEstimatedGasExceedsThresholdWarning: false,
                             hideDepositsExternalAccountsWarning: false,
+                            hideBridgeInsufficientNativeTokenWarning: false,
                         },
                     },
                     '2.0.0'
@@ -78,6 +79,7 @@ describe('userPreferences tests', () => {
                             defaultBrowserWallet: true,
                             hideEstimatedGasExceedsThresholdWarning: false,
                             hideDepositsExternalAccountsWarning: false,
+                            hideBridgeInsufficientNativeTokenWarning: false,
                         },
                         releaseNotesSettings: {
                             lastVersionUserSawNews: '2.0.0',
@@ -104,6 +106,7 @@ describe('userPreferences tests', () => {
                             defaultBrowserWallet: true,
                             hideEstimatedGasExceedsThresholdWarning: false,
                             hideDepositsExternalAccountsWarning: false,
+                            hideBridgeInsufficientNativeTokenWarning: false,
                         },
                         releaseNotesSettings: {
                             lastVersionUserSawNews: '1.0.0',

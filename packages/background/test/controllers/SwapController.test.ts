@@ -1,8 +1,8 @@
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
-import ExchangeController, {
+import SwapController, {
     ExchangeType,
-} from '@block-wallet/background/controllers/ExchangeController';
+} from '@block-wallet/background/controllers/SwapController';
 import NetworkController from '../../src/controllers/NetworkController';
 import PermissionsController from '@block-wallet/background/controllers/PermissionsController';
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
@@ -32,10 +32,11 @@ import {
     TokenControllerProps,
 } from '../../src/controllers/erc-20/TokenController';
 import { BASE_SWAP_FEE } from '../../src/utils/types/1inch';
+import TokenAllowanceController from '@block-wallet/background/controllers/erc-20/transactions/TokenAllowanceController';
 
 const BLANK_TOKEN_ADDRESS = '0x41a3dba3d677e573636ba691a70ff2d606c29666';
 
-describe('Exchange Controller', function () {
+describe('Swap Controller', function () {
     const accounts = {
         goerli: [
             {
@@ -57,7 +58,8 @@ describe('Exchange Controller', function () {
     let gasPricesController: GasPricesController;
     let permissionsController: PermissionsController;
     let transactionController: TransactionController;
-    let exchangeControlller: ExchangeController;
+    let swapController: SwapController;
+    let tokenAllowanceController: TokenAllowanceController;
 
     this.beforeAll(() => {
         // Instantiate objects
@@ -116,12 +118,18 @@ describe('Exchange Controller', function () {
             { txHistoryLimit: 40 }
         );
 
-        exchangeControlller = new ExchangeController(
+        tokenAllowanceController = new TokenAllowanceController(
             networkController,
             preferencesController,
             tokenOperationsController,
+            transactionController
+        );
+
+        swapController = new SwapController(
+            networkController,
             transactionController,
-            tokenController
+            tokenController,
+            tokenAllowanceController
         );
     });
 
@@ -132,7 +140,7 @@ describe('Exchange Controller', function () {
     describe('Exchange compatibility', function () {
         it('Should fail for bad exchange type on allowance', async function () {
             const error = await expectThrowsAsync(async () => {
-                await exchangeControlller.checkExchangeAllowance(
+                await swapController.checkSwapAllowance(
                     accounts.goerli[0].address,
                     BigNumber.from('500000000000000000'),
                     'Not an exchange type' as ExchangeType,
@@ -146,7 +154,7 @@ describe('Exchange Controller', function () {
 
         it('Should fail for bad exchange type on quote', async function () {
             const error = await expectThrowsAsync(async () => {
-                await exchangeControlller.getExchangeQuote(
+                await swapController.getExchangeQuote(
                     'Not an exchange type' as ExchangeType,
                     {
                         fromTokenAddress:
@@ -164,7 +172,7 @@ describe('Exchange Controller', function () {
 
         it('Should fail for bad exchange type on swap params', async function () {
             const error = await expectThrowsAsync(async () => {
-                await exchangeControlller.getExchangeParameters(
+                await swapController.getExchangeParameters(
                     'Not an exchange type' as ExchangeType,
                     {
                         fromTokenAddress:
@@ -183,7 +191,7 @@ describe('Exchange Controller', function () {
 
         it('Should fail for bad exchange type on execute exchange', async function () {
             const error = await expectThrowsAsync(async () => {
-                await exchangeControlller.executeExchange(
+                await swapController.executeExchange(
                     'Not an exchange type' as ExchangeType,
                     {
                         fromToken: {
@@ -256,7 +264,7 @@ describe('Exchange Controller', function () {
             );
 
             const error = await expectThrowsAsync(async () => {
-                await exchangeControlller.checkExchangeAllowance(
+                await swapController.checkSwapAllowance(
                     accounts.goerli[0].address,
                     BigNumber.from('500000000000000000'),
                     ExchangeType.SWAP_1INCH,
@@ -284,7 +292,7 @@ describe('Exchange Controller', function () {
 
             let hasAllowance: boolean;
 
-            hasAllowance = await exchangeControlller.checkExchangeAllowance(
+            hasAllowance = await swapController.checkSwapAllowance(
                 accounts.goerli[0].address,
                 BigNumber.from('500000000000000000'),
                 ExchangeType.SWAP_1INCH,
@@ -293,7 +301,7 @@ describe('Exchange Controller', function () {
 
             expect(hasAllowance).to.be.true;
 
-            hasAllowance = await exchangeControlller.checkExchangeAllowance(
+            hasAllowance = await swapController.checkSwapAllowance(
                 accounts.goerli[0].address,
                 BigNumber.from('1500000000000000000'),
                 ExchangeType.SWAP_1INCH,
@@ -316,7 +324,7 @@ describe('Exchange Controller', function () {
             let error: string | undefined;
 
             error = await expectThrowsAsync(async () => {
-                await exchangeControlller.approveExchange(
+                await swapController.approveSwapExchange(
                     BigNumber.from('500000000000000000'),
                     BigNumber.from('1000000000000000000'),
                     ExchangeType.SWAP_1INCH,
@@ -335,7 +343,7 @@ describe('Exchange Controller', function () {
             );
 
             error = await expectThrowsAsync(async () => {
-                await exchangeControlller.approveExchange(
+                await swapController.approveSwapExchange(
                     BigNumber.from('1500000000000000000'),
                     BigNumber.from('1000000000000000000'),
                     ExchangeType.SWAP_1INCH,
@@ -363,7 +371,7 @@ describe('Exchange Controller', function () {
                 .stub(ApproveTransaction.prototype, 'do')
                 .returns(Promise.resolve(true));
 
-            const result = await exchangeControlller.approveExchange(
+            const result = await swapController.approveSwapExchange(
                 BigNumber.from('1500000000000000000'),
                 BigNumber.from('1000000000000000000'),
                 ExchangeType.SWAP_1INCH,
@@ -399,16 +407,13 @@ describe('Exchange Controller', function () {
             let error: string | undefined;
 
             error = await expectThrowsAsync(async () => {
-                await exchangeControlller.getExchangeQuote(
-                    ExchangeType.SWAP_1INCH,
-                    {
-                        fromTokenAddress:
-                            '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                        toTokenAddress:
-                            '0x41a3dba3d677e573636ba691a70ff2d606c29666',
-                        amount: '10000000000000000',
-                    }
-                );
+                await swapController.getExchangeQuote(ExchangeType.SWAP_1INCH, {
+                    fromTokenAddress:
+                        '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                    toTokenAddress:
+                        '0x41a3dba3d677e573636ba691a70ff2d606c29666',
+                    amount: '10000000000000000',
+                });
             });
 
             expect(error).not.to.be.undefined;
@@ -456,7 +461,7 @@ describe('Exchange Controller', function () {
                 })
             );
 
-            const res = await exchangeControlller.getExchangeQuote(
+            const res = await swapController.getExchangeQuote(
                 ExchangeType.SWAP_1INCH,
                 {
                     fromTokenAddress:
@@ -506,7 +511,7 @@ describe('Exchange Controller', function () {
             let error: string | undefined;
 
             error = await expectThrowsAsync(async () => {
-                await exchangeControlller.getExchangeParameters(
+                await swapController.getExchangeParameters(
                     ExchangeType.SWAP_1INCH,
                     {
                         fromTokenAddress:
@@ -614,7 +619,7 @@ describe('Exchange Controller', function () {
                     })
                 );
 
-            const res = await exchangeControlller.getExchangeParameters(
+            const res = await swapController.getExchangeParameters(
                 ExchangeType.SWAP_1INCH,
                 {
                     fromTokenAddress:
@@ -790,56 +795,51 @@ describe('Exchange Controller', function () {
             );
 
             const error = await expectThrowsAsync(async () => {
-                await exchangeControlller.executeExchange(
-                    ExchangeType.SWAP_1INCH,
-                    {
-                        fromToken: {
-                            symbol: 'ETH',
-                            name: 'Ethereum',
-                            decimals: 18,
-                            address:
-                                '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                            logoURI:
-                                'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
-                            tags: ['native'],
-                        },
-                        toToken: {
-                            symbol: 'BLANK',
-                            name: 'GoBlank Token',
-                            decimals: 18,
-                            address:
-                                '0x41a3dba3d677e573636ba691a70ff2d606c29666',
-                            logoURI:
-                                'https://tokens.1inch.io/0xaec7e1f531bb09115103c53ba76829910ec48966.png',
-                            tags: ['tokens'],
-                        },
-                        toTokenAmount: '200000000000000000000',
-                        fromTokenAmount: '10000000000000000',
-                        protocols: [
+                await swapController.executeExchange(ExchangeType.SWAP_1INCH, {
+                    fromToken: {
+                        symbol: 'ETH',
+                        name: 'Ethereum',
+                        decimals: 18,
+                        address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                        logoURI:
+                            'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
+                        tags: ['native'],
+                    },
+                    toToken: {
+                        symbol: 'BLANK',
+                        name: 'GoBlank Token',
+                        decimals: 18,
+                        address: '0x41a3dba3d677e573636ba691a70ff2d606c29666',
+                        logoURI:
+                            'https://tokens.1inch.io/0xaec7e1f531bb09115103c53ba76829910ec48966.png',
+                        tags: ['tokens'],
+                    },
+                    toTokenAmount: '200000000000000000000',
+                    fromTokenAmount: '10000000000000000',
+                    protocols: [
+                        [
                             [
-                                [
-                                    {
-                                        name: 'UNISWAP_V2',
-                                        part: 100,
-                                        fromTokenAddress:
-                                            '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-                                        toTokenAddress:
-                                            '0x41a3dba3d677e573636ba691a70ff2d606c29666',
-                                    },
-                                ],
+                                {
+                                    name: 'UNISWAP_V2',
+                                    part: 100,
+                                    fromTokenAddress:
+                                        '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+                                    toTokenAddress:
+                                        '0x41a3dba3d677e573636ba691a70ff2d606c29666',
+                                },
                             ],
                         ],
-                        tx: {
-                            from: accounts.goerli[0].address,
-                            to: '0x1111111254fb6c44bac0bed2854e76f90643097d',
-                            data: '0x2e95b6c80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002386f26fc1000000000000000000000000000000000000000000000000000baa32066e89877da40000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000180000000000000003b6d0340d8a07e9fe071106bf29536b93e8c9a26527af787cfee7c08',
-                            value: '10000000000000000',
-                            gas: 200000,
-                            gasPrice: '20000000000',
-                        },
-                        blockWalletFee: BigNumber.from('50000000000000'),
-                    }
-                );
+                    ],
+                    tx: {
+                        from: accounts.goerli[0].address,
+                        to: '0x1111111254fb6c44bac0bed2854e76f90643097d',
+                        data: '0x2e95b6c80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002386f26fc1000000000000000000000000000000000000000000000000000baa32066e89877da40000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000180000000000000003b6d0340d8a07e9fe071106bf29536b93e8c9a26527af787cfee7c08',
+                        value: '10000000000000000',
+                        gas: 200000,
+                        gasPrice: '20000000000',
+                    },
+                    blockWalletFee: BigNumber.from('50000000000000'),
+                });
             });
 
             expect(error).not.to.be.undefined;
@@ -986,7 +986,7 @@ describe('Exchange Controller', function () {
                 })
             );
 
-            const result = await exchangeControlller.executeExchange(
+            const result = await swapController.executeExchange(
                 ExchangeType.SWAP_1INCH,
                 {
                     fromToken: {

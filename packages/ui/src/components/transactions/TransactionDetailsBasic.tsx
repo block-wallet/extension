@@ -1,13 +1,9 @@
 import { BigNumber } from "ethers"
 import { formatUnits } from "ethers/lib/utils"
 import { FunctionComponent, useMemo, useState } from "react"
-import { formatNumberLength } from "../../util/formatNumberLength"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
-import { classnames } from "../../styles"
-import { capitalize } from "../../util/capitalize"
 import { getAccountColor } from "../../util/getAccountColor"
 import Divider from "../Divider"
-import ExpandableText from "../ExpandableText"
 import AccountIcon from "../icons/AccountIcon"
 import { TransactionDetailsTabProps } from "./TransactionDetails"
 import arrowRight from "../../assets/images/icons/arrow_right_black.svg"
@@ -24,20 +20,20 @@ import {
 } from "../../context/commTypes"
 import { calcExchangeRate } from "../../util/exchangeUtils"
 import isNil from "../../util/isNil"
+import TransactionDetailsList from "./TransactionDetailsList"
+import { bnOr0 } from "../../util/numberUtils"
+import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 import { resolveTransactionTo } from "../../util/transactionUtils"
-import useCopyToClipboard, {
-    useMultipleCopyToClipboard,
-} from "../../util/hooks/useCopyToClipboard"
+import { useMultipleCopyToClipboard } from "../../util/hooks/useCopyToClipboard"
 
-const bnOr0 = (value: any = 0) => BigNumber.from(value)
-
-export const TransactionDetails: FunctionComponent<
+export const TransactionDetailsBasic: FunctionComponent<
     TransactionDetailsTabProps & { nonce?: number }
-> = ({ transaction, nonce: _nonce }) => {
+> = ({ transaction: _transaction, nonce: _nonce }) => {
     const state = useBlankState()!
     const { nativeCurrency } = useSelectedNetwork()
     const accounts = useSortedAccounts()
     const addressBook = useAddressBook()
+    const transaction = _transaction as TransactionMeta
     const { onCopy, copied } = useMultipleCopyToClipboard()
 
     const details = useMemo(() => {
@@ -370,87 +366,34 @@ export const TransactionDetails: FunctionComponent<
                 <Divider />
             </div>
             <main>
-                {details.map((detail, i) =>
-                    detail ? (
-                        <div
-                            key={i.toString()}
-                            className={classnames(
-                                "w-full",
-                                detail.noSpace ? "" : "mt-3",
-                                detail.expandable
-                                    ? ""
-                                    : "flex justify-between items-center"
-                            )}
-                        >
-                            <p className="text-sm font-semibold">
-                                {capitalize(detail.label)}
-                            </p>
-                            {detail.expandable ? (
-                                <ExpandableText className="text-gray-600 mt-1 w-fulltext-sm allow-select">
-                                    {detail.value ?? "N/A"}
-                                </ExpandableText>
-                            ) : (
-                                <span
-                                    className={classnames(
-                                        "text-gray-600 text-sm allow-select max-w-[160px] truncate",
-                                        detail.expandable ? "w-11/12 mt-1" : ""
-                                    )}
-                                    title={`${detail.value ?? "N/A"} ${
-                                        detail.unitName ?? ""
-                                    }`}
-                                >
-                                    {detail.value
-                                        ? detail.decimals
-                                            ? `${formatNumberLength(
-                                                  detail.value,
-                                                  detail.decimals,
-                                                  false
-                                              )} ${detail.unitName ?? ""}`
-                                            : `${detail.value} ${
-                                                  detail.unitName ?? ""
-                                              }`
-                                        : "N/A"}
-                                </span>
-                            )}
-                        </div>
-                    ) : (
-                        <div
-                            className="py-3"
-                            style={{
-                                width: "calc(100% + 1.5rem)",
-                                marginLeft: "-0.75rem",
-                            }}
-                            key={i.toString()}
-                        >
-                            <Divider />
-                        </div>
-                    )
-                )}
+                <TransactionDetailsList details={details} />
             </main>
             {!!transaction.transactionParams.hash && (
-                <div className="flex w-full items-center justify-start mt-3">
-                    <a
-                        href={generateExplorerLink(
-                            state.availableNetworks,
-                            state.selectedNetwork,
-                            transaction.transactionParams.hash,
-                            "tx"
-                        )}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex flex-row items-center space-x-2 text-sm font-bold text-primary-300"
-                    >
-                        <span>View on {explorerName}</span>
-                        <img
-                            src={openIcon}
-                            alt="Open icon"
-                            className="w-3 h-3"
-                        />
-                    </a>
+                <div className="flex flex-col">
+                    <div className="flex w-full items-center justify-start mt-3">
+                        <a
+                            href={generateExplorerLink(
+                                state.availableNetworks,
+                                state.selectedNetwork,
+                                transaction.transactionParams.hash,
+                                "tx"
+                            )}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex flex-row items-center space-x-2 text-sm font-bold text-primary-300"
+                        >
+                            <span>View on {explorerName}</span>
+                            <img
+                                src={openIcon}
+                                alt="Open icon"
+                                className="w-3 h-3"
+                            />
+                        </a>
+                    </div>
                 </div>
             )}
         </div>
     )
 }
 
-export default TransactionDetails
+export default TransactionDetailsBasic

@@ -3,6 +3,8 @@ import { Rates } from "@block-wallet/background/controllers/ExchangeRatesControl
 import { BigNumber, utils } from "ethers"
 import { DEFAULT_TRANSACTION_GAS_PERCENTAGE_THRESHOLD } from "./constants"
 import { formatCurrency, toCurrencyAmount } from "./formatCurrency"
+import { FeeData } from "@ethersproject/abstract-provider"
+import { DisplayGasPricesData } from "../components/gas/GasPricesInfo"
 
 interface GasFeesCalculation {
     minValue: BigNumber
@@ -143,6 +145,36 @@ const gasToGweiString = (gas: BigNumber | null) => {
     }
 }
 
+const getTransactionFees = (
+    isEIP1559Compatible: boolean,
+    gasPrice: FeeData,
+    estimatedBaseFee: BigNumber,
+    gasLimit: BigNumber
+): DisplayGasPricesData => {
+    if (isEIP1559Compatible && estimatedBaseFee) {
+        const baseFee = BigNumber.from(estimatedBaseFee)
+        const priority = BigNumber.from(gasPrice?.maxPriorityFeePerGas ?? 0)
+        const baseFeePlusTip = baseFee.add(priority)
+        return {
+            baseFee: gasToGweiString(baseFee),
+            priority: gasToGweiString(priority),
+            totalGwei: gasToGweiString(BigNumber.from(baseFeePlusTip)),
+            totalTransactionCost: calculateTransactionGas(
+                gasLimit,
+                BigNumber.from(baseFeePlusTip)
+            ),
+        }
+    } else {
+        return {
+            totalGwei: gasToGweiString(gasPrice?.gasPrice),
+            totalTransactionCost: calculateTransactionGas(
+                gasLimit,
+                BigNumber.from(gasPrice?.gasPrice ?? 1)
+            ),
+        }
+    }
+}
+
 export {
     calculateGasPricesFromTransactionFees,
     estimatedGasExceedsBaseLowerThreshold,
@@ -150,4 +182,5 @@ export {
     calculateTransactionGas,
     gasPriceToNativeCurrency,
     gasToGweiString,
+    getTransactionFees,
 }

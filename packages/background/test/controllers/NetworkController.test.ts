@@ -258,7 +258,6 @@ describe('Network controller', function () {
         expect(Object.keys(networkController.networks)).to.includes(
             'CHAIN-19999'
         );
-        console.log(networkController.networks['CHAIN-19999']);
     });
 
     // TODO: Add more tests for addNetwork flow

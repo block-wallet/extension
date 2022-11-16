@@ -31,6 +31,11 @@ export const SIGN_TRANSACTION_TIMEOUT = 180000
 export const BASE_SWAP_FEE = 0.5
 
 /**
+ * Default bridge fee for users without fee discount
+ */
+export const BASE_BRIDGE_FEE = 0.005
+
+/**
  * Time ellapsed before refreshing the swap quote
  */
 export const SWAP_QUOTE_REFRESH_TIMEOUT = 1000 * 15
@@ -49,5 +54,6 @@ export const LINKS = {
             "https://help.blockwallet.io/hc/en-us/articles/7786071253649-How-to-Add-a-Custom-Network-RPC",
         MALICIOUS_DAPPS:
             "https://help.blockwallet.io/hc/en-us/articles/10374731466769",
+        BRIDGES: "https://help.blockwallet.io/hc/en-us/articles/10669678195473",
     },
 }

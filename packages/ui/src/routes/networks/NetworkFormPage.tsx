@@ -226,8 +226,6 @@ const NetworkFormPage = ({
                     )
                 } catch (e) {
                     //Invalid URL if we were not able to fetch the chainId using the rpcUrl.
-                    console.log(watchRPCUrl)
-                    console.log(e)
                     setRpcValidationStatus(RPCUrlValidation.INVALID_ENDPOINT)
                 }
             } finally {

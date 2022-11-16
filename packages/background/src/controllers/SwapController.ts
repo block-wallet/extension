@@ -12,15 +12,13 @@ import {
     REFERRER_ADDRESS,
     BasicToken,
     GAS_LIMIT_INCREASE,
+    ONEINCH_SWAPS_NETWORKS,
 } from '../utils/types/1inch';
 import {
     ContractMethodSignature,
     ContractSignatureParser,
 } from './transactions/ContractSignatureParser';
-import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import { BigNumber } from 'ethers';
-import { PreferencesController } from './PreferencesController';
-import { TokenOperationsController } from './erc-20/transactions/Transaction';
 import { TransactionCategories } from './transactions/utils/types';
 import { TransactionController } from './transactions/TransactionController';
 import { TransactionFeeData } from './erc-20/transactions/SignedTransaction';
@@ -30,11 +28,17 @@ import {
     get1InchErrorMessageFromAxiosResponse,
     map1InchErrorMessage,
 } from '../utils/1inchError';
+import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
+import { BaseController } from '../infrastructure/BaseController';
 
 export enum ExchangeType {
     SWAP_1INCH = 'SWAP_1INCH',
     SWAP_COWSWAP = 'SWAP_COWSWAP',
     LIMIT_1INCH = 'LIMIT_1INCH',
+}
+
+export interface SwapControllerMemState {
+    availableSwapChainIds: number[];
 }
 
 export interface SwapQuote extends OneInchSwapQuoteResponse {
@@ -73,42 +77,42 @@ export interface ExchangeParams {
  * Provides functionality to approve an asset transfer, fetch quotes for exchanges
  * depending on the exchange type, and execute the transactions.
  */
-export default class ExchangeController {
+export default class SwapController extends BaseController<
+    undefined,
+    SwapControllerMemState
+> {
     constructor(
         private readonly _networkController: NetworkController,
-        private readonly _preferencesController: PreferencesController,
-        private readonly _tokenOperationsController: TokenOperationsController,
         private readonly _transactionController: TransactionController,
-        private readonly _tokenController: TokenController
-    ) {}
+        private readonly _tokenController: TokenController,
+        private readonly _tokenAllowanceController: TokenAllowanceController
+    ) {
+        super(undefined, {
+            availableSwapChainIds: ONEINCH_SWAPS_NETWORKS,
+        });
+    }
 
     /**
-     * Checks if the given account has enough allowance to make the exchange
+     * Checks if the given account has enough allowance to make the swap
      *
      * @param account User account
      * @param amount Amount to be spended
      * @param exchangeType Exchange type
      * @param tokenAddress Asset to be spended address
      */
-    public checkExchangeAllowance = async (
+    public checkSwapAllowance = async (
         account: string,
         amount: BigNumber,
         exchangeType: ExchangeType,
         tokenAddress: string
     ): Promise<boolean> => {
         const spender = await this._getSpender(exchangeType);
-
-        try {
-            const allowance = await this._tokenOperationsController.allowance(
-                tokenAddress,
-                account,
-                spender
-            );
-
-            return BigNumber.from(amount).lte(allowance);
-        } catch (error) {
-            throw new Error('Error checking asset allowance');
-        }
+        return this._tokenAllowanceController.checkTokenAllowance(
+            account,
+            amount,
+            spender,
+            tokenAddress
+        );
     };
 
     /**
@@ -121,7 +125,7 @@ export default class ExchangeController {
      * @param tokenAddress Spended asset token address
      * @param customNonce Custom transaction nonce
      */
-    public approveExchange = async (
+    public approveSwapExchange = async (
         allowance: BigNumber,
         amount: BigNumber,
         exchangeType: ExchangeType,
@@ -130,34 +134,14 @@ export default class ExchangeController {
         customNonce?: number
     ): Promise<boolean> => {
         const spender = await this._getSpender(exchangeType);
-
-        if (allowance.lt(amount)) {
-            throw new Error(
-                'Specified allowance is less than the exchange amount'
-            );
-        }
-
-        const approveTransaction = new ApproveTransaction({
-            networkController: this._networkController,
-            transactionController: this._transactionController,
-            preferencesController: this._preferencesController,
-        });
-
-        const hasApproved = await approveTransaction.do({
-            tokenAddress,
+        return this._tokenAllowanceController.approveAllowance(
+            allowance,
+            amount,
             spender,
-            amount: allowance,
             feeData,
-            customNonce,
-        });
-
-        if (!hasApproved) {
-            throw new Error(
-                'Error submitting approval transaction to setup asset allowance'
-            );
-        }
-
-        return true;
+            tokenAddress,
+            customNonce
+        );
     };
 
     /**
@@ -206,7 +190,9 @@ export default class ExchangeController {
     ): Promise<string> => {
         if (exchangeType === ExchangeType.SWAP_1INCH) {
             const swapPromise = this._execute1InchSwap(exchangeParams);
-            this._tokenController.attemptAddToken(exchangeParams.toToken);
+            this._tokenController.attemptAddToken(
+                exchangeParams.toToken.address
+            );
             return swapPromise;
         } else {
             throw new Error('Exchange type not supported');

@@ -8,13 +8,19 @@ const useCurrencyFromatter = () => {
     const format = (
         balance: BigNumber,
         tokenSymbol: string,
-        decimals: number
+        decimals: number,
+        isNativeCurrency = false
     ) => {
         const currencyAmount = toCurrencyAmount(
             balance || BigNumber.from(0),
-            getValueByKey(state.exchangeRates, tokenSymbol, 0),
+            getValueByKey(
+                state.exchangeRates,
+                isNativeCurrency ? tokenSymbol.toUpperCase() : tokenSymbol,
+                0
+            ),
             decimals
         )
+
         return formatCurrency(currencyAmount, {
             currency: state.nativeCurrency,
             locale_info: state.localeInfo,

@@ -7,9 +7,9 @@ import { classnames } from "../../styles"
 const Dialog: FunctionComponent<{
     children: React.ReactNode
     open: boolean
-    horizontalPadding?: string
+    className?: string
     onClickOutside?: () => void
-}> = ({ open, children, horizontalPadding = "px-3", onClickOutside }) => {
+}> = ({ open, children, className = "px-3", onClickOutside }) => {
     const nodeRef = useRef(null)
     const ref = useRef(null)
     useOnClickOutside(ref, () => onClickOutside?.())
@@ -38,7 +38,7 @@ const Dialog: FunctionComponent<{
                     ref={ref}
                     className={classnames(
                         "relative py-6 opacity-100 w-full bg-white shadow-md rounded-md flex-col flex",
-                        horizontalPadding
+                        className
                     )}
                 >
                     {children}

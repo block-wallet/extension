@@ -12,7 +12,10 @@ const initialNetworkControllerState: NetworkControllerState = {
     isEIP1559Compatible: {},
 };
 
-const getNetworkControllerInstance = () =>
-    new NetworkController(initialNetworkControllerState);
+const getNetworkControllerInstance = (selectedNetwork: string = 'goerli') =>
+    new NetworkController({
+        ...initialNetworkControllerState,
+        selectedNetwork,
+    });
 
 export { getNetworkControllerInstance, initialNetworkControllerState };

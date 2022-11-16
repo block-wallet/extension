@@ -3,7 +3,8 @@ import log from 'loglevel';
 export const retryHandling = async <T>(
     callback: () => Promise<T>,
     delay = 400,
-    retries = 3
+    retries = 3,
+    shouldRetryCb: (error: Error) => boolean = () => true
 ): Promise<T> => {
     let attempt = 0;
 
@@ -13,7 +14,9 @@ export const retryHandling = async <T>(
         } catch (error) {
             attempt++;
 
-            if (attempt > retries) throw error;
+            const shouldRetry = shouldRetryCb(error);
+
+            if (!shouldRetry || attempt > retries) throw error;
 
             log.warn('Retrying request...', error);
 

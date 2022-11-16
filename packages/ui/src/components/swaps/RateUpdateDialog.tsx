@@ -5,7 +5,7 @@ import { Classes } from "../../styles"
 import { BigNumber } from "ethers"
 import { formatUnits } from "ethers/lib/utils"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
-import { defaultSwapSettings } from "./SwapSettings"
+import { defaultAdvancedSettings } from "../transactions/AdvancedSettings"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { formatNumberLength } from "../../util/formatNumberLength"
 
@@ -27,7 +27,7 @@ const RateUpdateDialog: FC<RateUpdateDialogProps> = ({
     const [isOpen, setIsOpen] = useState<boolean>(false)
 
     useEffect(() => {
-        const th = threshold || defaultSwapSettings.slippage
+        const th = threshold || defaultAdvancedSettings.slippage
 
         // P is a difference ratio between 0..10000
         // The extra 100 in the multiplication is to have two more precision digits

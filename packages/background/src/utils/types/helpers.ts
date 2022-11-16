@@ -36,3 +36,8 @@ export type Full<T> = {
 export type DeepPartial<T> = {
     [P in keyof T]?: DeepPartial<T[P]>;
 };
+
+/**
+ * Requires the given prop of an object
+ */
+export type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };

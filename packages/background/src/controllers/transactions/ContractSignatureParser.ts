@@ -107,11 +107,14 @@ type FourByteResponse = {
 export class ContractSignatureParser {
     private signatureRegistry: Contract;
 
-    constructor(private readonly _networkController: NetworkController) {
+    constructor(
+        private readonly _networkController: NetworkController,
+        private readonly customChainId?: number
+    ) {
         this.signatureRegistry = new Contract(
             SIGNATURE_REGISTRY_CONTRACT.address,
             SIGNATURE_REGISTRY_CONTRACT.abi,
-            _networkController.getProviderFromName('mainnet')
+            this._networkController.getProviderFromName('mainnet')
         );
     }
 
@@ -126,13 +129,17 @@ export class ContractSignatureParser {
         data: string,
         contractAddress: string
     ): Promise<ContractMethodSignature | undefined> {
+        let contractABI: string | undefined;
         try {
             // Try to fetch contract's ABI from Etherscan
-            const contractABI = await this.fetchABIFromEtherscan(
-                contractAddress
-            );
+            contractABI = await this.fetchABIFromEtherscan(contractAddress);
+        } catch (e) {
+            log.warn('getMethodSignature', 'fetchABIFromEtherscan', e);
+        }
 
-            if (contractABI) {
+        //try to parse it using contract ABI
+        if (contractABI) {
+            try {
                 const contractInterface = new Interface(contractABI);
 
                 const parsedTransaction = contractInterface.parseTransaction({
@@ -142,29 +149,43 @@ export class ContractSignatureParser {
                 if (parsedTransaction) {
                     return this.parseTransactionDescription(parsedTransaction);
                 }
-            } else {
-                // If couldn't be fetched from Etherscan, fallback to 4bytes/Signature Registry contract
-                const bytesSignature = data.slice(0, 10);
+            } catch (e) {
+                log.warn('Error parsing transaction from contractABI');
+            }
+        }
 
-                // Lookup on signature registry contract
-                const unparsedSignatures = await this.lookup(bytesSignature);
+        try {
+            // If couldn't be fetched from Etherscan, fallback to 4bytes/Signature Registry contract
+            const bytesSignature = data.slice(0, 10);
 
-                if (unparsedSignatures && unparsedSignatures.length) {
-                    for (let n = 0; n < unparsedSignatures.length; n++) {
-                        const parsed = this.parseFunctionFragment(
-                            data,
-                            unparsedSignatures[n]
-                        );
+            // Lookup on signature registry contract
+            const unparsedSignatures = await this.lookup(bytesSignature);
 
-                        if (parsed) {
-                            return this.parseTransactionDescription(parsed);
-                        }
+            if (unparsedSignatures && unparsedSignatures.length) {
+                for (let n = 0; n < unparsedSignatures.length; n++) {
+                    const parsed = this.parseFunctionFragment(
+                        data,
+                        unparsedSignatures[n]
+                    );
+
+                    if (parsed) {
+                        return this.parseTransactionDescription(parsed);
                     }
                 }
             }
         } catch (error) {
             log.warn(error);
         }
+    }
+
+    private _getEtherscanApiUrl(): string | undefined {
+        const defaultNetwork = this._networkController.network;
+        const network = this.customChainId
+            ? this._networkController.getNetworkFromChainId(
+                  this.customChainId
+              ) || defaultNetwork
+            : defaultNetwork;
+        return network.etherscanApiUrl;
     }
 
     /**
@@ -177,7 +198,7 @@ export class ContractSignatureParser {
     public async fetchABIFromEtherscan(
         address: string
     ): Promise<string | undefined> {
-        const etherscanAPI = this._networkController.network.etherscanApiUrl;
+        const etherscanAPI = this._getEtherscanApiUrl();
         if (!etherscanAPI) {
             return undefined;
         }

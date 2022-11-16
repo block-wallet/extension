@@ -117,7 +117,6 @@ const AddTokenListView = ({
                                             clickable={false}
                                             active={true}
                                             hoverable={true}
-                                            textSize="sm"
                                         />
                                     </div>
                                 )
@@ -167,7 +166,6 @@ const AddTokenListView = ({
                                                             clickable={false}
                                                             active={false}
                                                             hoverable={true}
-                                                            textSize="sm"
                                                         />
                                                     </div>
                                                 )}

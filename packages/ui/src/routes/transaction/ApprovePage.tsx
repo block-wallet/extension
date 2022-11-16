@@ -15,6 +15,7 @@ import {
     useCallback,
 } from "react"
 import {
+    approveBridgeAllowance,
     approveExchange,
     blankDepositAllowance,
     getApproveTransactionGasLimit,
@@ -29,7 +30,6 @@ import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes, classnames } from "../../styles/classes"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import { InferType } from "yup"
-import { capitalize } from "../../util/capitalize"
 import { formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
 import { formatUnits, parseUnits } from "ethers/lib/utils"
@@ -53,8 +53,46 @@ import { rejectTransaction } from "../../context/commActions"
 import { DepositConfirmLocalState } from "../deposit/DepositConfirmPage"
 import { SwapConfirmPageLocalState } from "../swap/SwapConfirmPage"
 import { ExchangeType } from "../../context/commTypes"
+import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
+import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
+import NetworkDisplayBadge from "../../components/chain/NetworkDisplayBadge"
+import { useBlankState } from "../../context/background/backgroundHooks"
 
 const UNLIMITED_ALLOWANCE = ethers.constants.MaxUint256
+
+export enum ApproveOperation {
+    BRIDGE,
+    DEPOSIT,
+    SWAP,
+}
+
+const getLabels = (
+    operation: ApproveOperation,
+    assetName: string
+): Record<
+    "mainSectionTitle" | "mainSectionText" | "editAllowanceText",
+    string
+> => {
+    if (operation === ApproveOperation.BRIDGE) {
+        return {
+            mainSectionTitle: `Approve BlockWallet to bridge your ${assetName}`,
+            mainSectionText: `Allow BlockWallet Bridge to withdraw your ${assetName} and automate transactions for you.`,
+            editAllowanceText: `Allow the BlockWallet Bridge to the following amount of ${assetName}:`,
+        }
+    } else if (operation === ApproveOperation.DEPOSIT) {
+        return {
+            mainSectionTitle: "Allow the Privacy Pool to:",
+            mainSectionText: `Transfer ${assetName} from your account to the Privacy Pool to make the deposit.`,
+            editAllowanceText: `Allow the Privacy Pool to deposit up to the following amount of ${assetName}:`,
+        }
+    } else {
+        return {
+            mainSectionTitle: `Approve BlockWallet to swap your ${assetName}`,
+            mainSectionText: `Allow BlockWallet Swaps to withdraw your ${assetName} and automate transactions for you.`,
+            editAllowanceText: `Allow BlockWallet Swaps to swap up to the following amount of ${assetName}:`,
+        }
+    }
+}
 
 interface ApprovePageState {
     assetAllowance: BigNumber
@@ -136,8 +174,11 @@ const GetAllowanceYupSchema = (
 export interface ApprovePageLocalState {
     assetAddress: string
     minAllowance?: BigNumber
-    isSwap?: boolean
-    nextLocationState: SwapConfirmPageLocalState | DepositConfirmLocalState
+    approveOperation: ApproveOperation
+    nextLocationState:
+        | BridgeConfirmPageLocalState
+        | DepositConfirmLocalState
+        | SwapConfirmPageLocalState
 }
 
 const ApprovePage: FunctionComponent<{}> = () => {
@@ -147,7 +188,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const {
         assetAddress,
         minAllowance,
-        isSwap = false,
+        approveOperation = ApproveOperation.DEPOSIT,
         nextLocationState,
     } = useMemo(
         () => history.location.state as ApprovePageLocalState,
@@ -175,7 +216,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
     }, [])
 
     const selectedAccount = useSelectedAccount()
-    const { chainId, isEIP1559Compatible, name } = useSelectedNetwork()
+    const { chainId, isEIP1559Compatible } = useSelectedNetwork()
+    const { availableNetworks, selectedNetwork } = useBlankState()!
     const { nativeToken } = useTokensList()
     const { gasPricesLevels } = useGasPriceData()
 
@@ -219,10 +261,14 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const [customNonce, setCustomNonce] = useState<number | undefined>()
 
     // Set data
-    const networkName = capitalize(name)
+    const network = availableNetworks[selectedNetwork.toUpperCase()]
     const isApproving = status === "loading" && isOpen
     const minimumAllowance = BigNumber.from(minAllowance || 0)
     const hasMinAllowance = minimumAllowance.gt(BigNumber.from(0))
+    const labels = getLabels(
+        approveOperation,
+        selectedAccount.balances[chainId].tokens[assetAddress].token.symbol
+    )
 
     // Get asset object
     const localAsset = selectedAccount.balances[chainId].tokens[assetAddress]
@@ -328,7 +374,9 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         (
                             await getApproveTransactionGasLimit(
                                 localAsset.token.address,
-                                isSwap ? selectedAccount.address : "deposit"
+                                approveOperation === ApproveOperation.DEPOSIT
+                                    ? "deposit"
+                                    : selectedAccount.address
                             )
                         ).gasLimit
                     ),
@@ -405,7 +453,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
         try {
             let res: boolean = false
 
-            if (isSwap) {
+            if (approveOperation === ApproveOperation.SWAP) {
                 const nextState = nextLocationState as SwapConfirmPageLocalState
 
                 res = await approveExchange(
@@ -427,7 +475,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     nextState.swapQuote.fromToken.address,
                     customNonce
                 )
-            } else {
+            } else if (approveOperation === ApproveOperation.DEPOSIT) {
                 const nextState = nextLocationState as DepositConfirmLocalState
 
                 res = await blankDepositAllowance(
@@ -448,6 +496,31 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         currency: nextState.selectedCurrency,
                         amount: nextState.amount as any,
                     },
+                    customNonce
+                )
+            } else {
+                const nextState =
+                    nextLocationState as BridgeConfirmPageLocalState
+
+                res = await approveBridgeAllowance(
+                    assetAllowance,
+                    BigNumber.from(
+                        nextState.bridgeQuote.bridgeParams.params.fromAmount
+                    ),
+                    nextState.bridgeQuote.bridgeParams.params.spender,
+                    {
+                        gasPrice: !isEIP1559Compatible
+                            ? selectedGasPrice
+                            : undefined,
+                        gasLimit: selectedGasLimit,
+                        maxFeePerGas: isEIP1559Compatible
+                            ? selectedFees.maxFeePerGas
+                            : undefined,
+                        maxPriorityFeePerGas: isEIP1559Compatible
+                            ? selectedFees.maxPriorityFeePerGas
+                            : undefined,
+                    },
+                    nextState.bridgeQuote.bridgeParams.params.fromToken.address,
                     customNonce
                 )
             }
@@ -479,8 +552,15 @@ const ApprovePage: FunctionComponent<{}> = () => {
             return
         }
 
+        const pathname =
+            approveOperation === ApproveOperation.SWAP
+                ? "/swap/confirm"
+                : approveOperation === ApproveOperation.BRIDGE
+                ? "/bridge/confirm"
+                : "/"
+
         history.push({
-            pathname: isSwap ? "/swap/confirm" : "/",
+            pathname,
             state: nextLocationState,
         })
     }
@@ -493,10 +573,20 @@ const ApprovePage: FunctionComponent<{}> = () => {
             }
         }
 
-        if (isSwap) {
+        if (approveOperation === ApproveOperation.SWAP) {
             return () => {
                 history.push({
                     pathname: "/swap",
+                    state: {
+                        ...nextLocationState,
+                        transitionDirection: "right",
+                    },
+                })
+            }
+        } else if (approveOperation === ApproveOperation.BRIDGE) {
+            return () => {
+                history.push({
+                    pathname: "/bridge",
                     state: {
                         ...nextLocationState,
                         transitionDirection: "right",
@@ -509,15 +599,9 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const mainSection = (
         <>
             <div className="flex flex-col space-y-3 px-6 py-4">
-                <p className="text-sm font-bold">
-                    {isSwap
-                        ? `Approve BlockWallet to swap your ${assetName}`
-                        : "Allow the Privacy Pool to:"}
-                </p>
+                <p className="text-sm font-bold">{labels.mainSectionTitle}</p>
                 <p className="text-sm text-gray-500">
-                    {isSwap
-                        ? `Allow BlockWallet Swaps to withdraw your ${assetName} and automate transactions for you.`
-                        : `Transfer ${assetName} from your account to the Privacy Pool to make the deposit.`}
+                    {labels.mainSectionText}
                 </p>
             </div>
             <Divider />
@@ -556,16 +640,17 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     />
                 )}
                 <AdvancedSettings
-                    config={{
-                        showCustomNonce: true,
-                        showFlashbots: false,
-                        address: selectedAccount.address,
-                    }}
-                    data={{
+                    address={selectedAccount.address}
+                    advancedSettings={{ customNonce }}
+                    display={{
+                        nonce: true,
                         flashbots: false,
+                        slippage: false,
                     }}
-                    setData={(data) => {
-                        setCustomNonce(data.customNonce)
+                    setAdvancedSettings={(
+                        newSettings: TransactionAdvancedData
+                    ) => {
+                        setCustomNonce(newSettings.customNonce)
                     }}
                 />
                 <div
@@ -574,12 +659,9 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 >
                     Set custom allowance
                 </div>
-                <ErrorMessage
-                    error={
-                        // texts?.error ||
-                        hasBalance ? undefined : "Insufficient funds"
-                    }
-                />
+                <ErrorMessage>
+                    {hasBalance ? undefined : "Insufficient funds"}
+                </ErrorMessage>
             </div>
         </>
     )
@@ -587,11 +669,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const editAllowanceSection = (
         <div className="flex flex-col space-y-3 px-6 pt-4">
             <p className="text-gray-500 text-sm pb-1">
-                {`Allow ${
-                    isSwap ? "BlockWallet Swaps" : "the Privacy Pool"
-                } to ${
-                    isSwap ? "swap" : "deposit"
-                } up to the following amount of ${assetName}:`}
+                {labels.editAllowanceText}
             </p>
             <div
                 className="relative flex flex-col p-3 rounded-md border border-gray-200 cursor-pointer"
@@ -664,7 +742,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     onInput={handleChangeAllowance}
                     placeholder="Enter custom allowance"
                 />
-                <ErrorMessage error={errors.customAllowance?.message} />
+                <ErrorMessage>{errors.customAllowance?.message}</ErrorMessage>
             </div>
         </div>
     )
@@ -673,15 +751,15 @@ const ApprovePage: FunctionComponent<{}> = () => {
         <PopupLayout
             header={
                 <PopupHeader
-                    title={
-                        isEditAllowanceSection
-                            ? "Custom Allowance"
-                            : "Allowance"
-                    }
+                    title={"Allowance"}
                     disabled={isApproving}
                     onBack={onBack()}
                     keepState
-                />
+                >
+                    <div className="flex grow justify-end pr-1">
+                        <NetworkDisplayBadge network={network} truncate />
+                    </div>
+                </PopupHeader>
             }
             footer={
                 <PopupFooter>
@@ -736,12 +814,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     </span>
                     <span className="text-xs text-gray-600">
                         {formatRounded(
-                            formatUnits(assetBalance || "0", assetDecimals)
-                        )}
-                        {` ${assetName}`}
-                    </span>
-                    <span className="text-xs text-gray-600">
-                        {formatRounded(
                             formatUnits(
                                 nativeToken.balance || "0",
                                 nativeToken.token.decimals
@@ -750,12 +822,12 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         {` ${nativeToken.token.symbol}`}
                     </span>
                 </div>
-                <div className="flex flex-row items-center ml-auto p-1 px-2 pr-1 text-gray-600 rounded-md border border-primary-200 text-xs bg-green-100">
-                    <span className="inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-green-400 pointer-events-none" />
-                    <span className="mr-1 pointer-events-none text-green-600">
-                        {networkName}
-                    </span>
-                </div>
+                <p className="ml-auto text-sm text-gray-600">
+                    {formatRounded(
+                        formatUnits(assetBalance || "0", assetDecimals)
+                    )}
+                    {` ${assetName}`}
+                </p>
             </div>
             <Divider />
             {isEditAllowanceSection ? editAllowanceSection : mainSection}

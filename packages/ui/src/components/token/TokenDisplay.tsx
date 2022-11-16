@@ -1,12 +1,8 @@
-import { useState, FunctionComponent } from "react"
-import classnames from "classnames"
-
-// Assets
-import checkmarkMiniIcon from "../../assets/images/icons/checkmark_mini.svg"
-
-// Types
-import { TokenResponse } from "../../routes/settings/AddTokensPage"
 import TokenLogo from "./TokenLogo"
+import checkmarkMiniIcon from "../../assets/images/icons/checkmark_mini.svg"
+import classnames from "classnames"
+import { TokenResponse } from "../../routes/settings/AddTokensPage"
+import { useState, FunctionComponent } from "react"
 import { formatName } from "../../util/formatAccount"
 import { BigNumber } from "ethers"
 import { formatRounded } from "../../util/formatRounded"
@@ -24,14 +20,14 @@ type TokenDisplayType = {
 
 /**
  * TokenDisplay:
- * Creates a display element to show token informations.
+ * Creates a display element to show token information.
  * Can or cannot be clicked to show a selected style.
  * Can show a selected style.
  *
  * @param data - Object containing token to display's informations.
  * @param clickable - Determines if you can click element to show selected style.
  * @param active - Determines if the element is already showing selected style.
- * @param hoverable - Determines if the element shows an hover style.
+ * @param hoverable - Determines if the element shows a hover style.
  * @param isSmall - small font size, to fit into popup for example
  * @param balance - Contains the asset balance in case it exists. e.g. if it is a New Asset there is no balance
  */
@@ -44,7 +40,6 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
     isSmall,
     balance,
 }) => {
-    // State
     const [selected, setSelected] = useState<boolean>(active ? active : false)
 
     // Render

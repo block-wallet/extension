@@ -159,7 +159,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
         }
 
         if (
-            slippage &&
+            slippage !== undefined &&
             display.slippage &&
             advancedSettings.slippage !== parseFloat(slippage)
         ) {
@@ -175,7 +175,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
 
         const parsedSlippage = parseFloat(v)
 
-        if (!isFlashbotsEnabled && parsedSlippage > 2) {
+        if (!isFlashbotsEnabled && parsedSlippage > 3) {
             setSlippageWarning("The transaction may be frontrun")
             return
         }
@@ -260,7 +260,8 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             setAdvancedSettings({
                 customNonce: nonce ? parseInt(nonce) : undefined,
                 flashbots: isFlashbotsEnabled,
-                slippage: slippage ? parseFloat(slippage) : undefined,
+                slippage:
+                    slippage !== undefined ? parseFloat(slippage) : undefined,
             })
 
             setIsOpen(false)
@@ -283,7 +284,10 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             setAdvancedSettings({
                 customNonce: nextNonce.current,
                 flashbots: isFlashbotsEnabled,
-                slippage: defaultSettings.slippage,
+                slippage:
+                    advancedSettings.slippage !== undefined
+                        ? advancedSettings.slippage
+                        : defaultSettings.slippage,
             })
         }
 
@@ -306,8 +310,9 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             )
             setValue(
                 "slippage",
-                (
-                    advancedSettings.slippage || defaultSettings.slippage
+                (advancedSettings.slippage !== undefined
+                    ? advancedSettings.slippage
+                    : defaultSettings.slippage
                 ).toString(),
                 {
                     shouldValidate: true,
@@ -315,8 +320,9 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             )
 
             validateSlippage(
-                (
-                    advancedSettings.slippage || defaultSettings.slippage
+                (advancedSettings.slippage !== undefined
+                    ? advancedSettings.slippage
+                    : defaultSettings.slippage
                 ).toString()
             )
 

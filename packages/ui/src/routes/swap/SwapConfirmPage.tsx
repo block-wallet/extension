@@ -283,7 +283,6 @@ const SwapPageConfirm: FC<{}> = () => {
             amount: swapQuote.fromTokenAmount,
             slippage: advancedSettings.slippage,
         }
-
         setIsFetchingSwaps(true)
         try {
             const swapParams = await getExchangeParameters(
@@ -588,8 +587,9 @@ const SwapPageConfirm: FC<{}> = () => {
                             setAdvancedSettings({
                                 ...newSettings,
                                 slippage:
-                                    newSettings.slippage ||
-                                    defaultAdvancedSettings.slippage,
+                                    newSettings.slippage !== undefined
+                                        ? newSettings.slippage
+                                        : defaultAdvancedSettings.slippage,
                             })
                         }}
                         label={"Settings"}

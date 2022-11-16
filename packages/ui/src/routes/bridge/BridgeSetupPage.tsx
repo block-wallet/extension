@@ -361,7 +361,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     toTokenAddress: selectedRoute!.toTokens[0].address,
                     fromAmount: bigNumberAmount!.toString(),
                     fromAddress: selectedAddress,
-                    slippage: defaultAdvancedSettings.slippage,
                 }
 
                 const fetchedQuote = await getBridgeQuote(params, true)

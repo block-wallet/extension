@@ -229,7 +229,7 @@ const LiFiBridge: IBridge = {
                     fromAddress: r.fromAddress,
                     referrer: r.referrer,
                     integrator: 'blockwallet.io',
-                    slippage: r.slippage || 0.5,
+                    slippage: r.slippage,
                     fee: BASE_BRIDGE_FEE,
                 },
             });

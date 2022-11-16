@@ -174,7 +174,6 @@ export default {
                 },
                 tool: 'hop',
                 slippage: 0.5,
-                blockWalletFee: BigNumber.from(0),
                 fromAmount: '10000000000000000000000',
                 toAmount: '9985390803817199636125',
                 fromChainId: 137,

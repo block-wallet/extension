@@ -1,8 +1,6 @@
 import { BigNumber } from "ethers"
 import { formatUnits } from "ethers/lib/utils"
 import { FunctionComponent, useMemo } from "react"
-import { formatNumberLength } from "../../util/formatNumberLength"
-import { FunctionComponent, useMemo, useState } from "react"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { getAccountColor } from "../../util/getAccountColor"
 import Divider from "../Divider"

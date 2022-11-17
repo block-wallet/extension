@@ -20,7 +20,7 @@ import { PreferencesController } from '../PreferencesController';
 import { Mutex } from 'async-mutex';
 import initialState from '../../utils/constants/initialState';
 import { TokenOperationsController } from './transactions/Transaction';
-import { fillTokenData, isNativeTokenAddress } from '../../utils/token';
+import { fillTokenData } from '../../utils/token';
 
 const tokenAddressParamNotPresentError = new Error('token address is required');
 const tokenAddressInvalidError = new Error(

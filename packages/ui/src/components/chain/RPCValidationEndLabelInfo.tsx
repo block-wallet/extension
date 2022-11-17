@@ -204,7 +204,7 @@ const RPCValidationEndLabelInfo = ({
                     <CheckmarkCircle classes="w-4 h-4 z-20" />
                     <Tooltip
                         className={classnames(
-                            "!-translate-x-3/4 !border !border-gray-200 !w-40 !break-word !whitespace-normal",
+                            "!-translate-x-3/5 !border !border-gray-200 !w-40 !break-word !whitespace-normal",
                             toolTipClassName
                         )}
                         content="Verified network."

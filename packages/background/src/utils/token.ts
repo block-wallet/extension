@@ -3,6 +3,7 @@ import {
     isValidAddress,
     toChecksumAddress,
 } from 'ethereumjs-util';
+import { IToken } from '../controllers/erc-20/Token';
 import {
     ProviderError,
     WatchAssetParameters,
@@ -89,4 +90,35 @@ export const isBase64 = (v: string): boolean => {
         /^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+/]{3}=)?$/gi;
 
     return base64RegEx.test(v.replace(/^[^,]+,/, ''));
+};
+
+export const isNativeTokenAddress = (address: string): boolean => {
+    return ['0x0000000000000000000000000000000000000000', '0x0'].includes(
+        address
+    );
+};
+
+/**
+ * This function fills every empty information we have about a token.
+ * @param token The original token
+ * @param defaultValues the default values to fill.
+ * @returns normalized token;
+ */
+export const fillTokenData = (
+    token: IToken,
+    defaultValues?: IToken
+): IToken => {
+    if (!defaultValues) {
+        return token;
+    }
+
+    return {
+        address: token.address || defaultValues.address,
+        decimals: token.decimals || defaultValues.decimals,
+        logo: token.logo || defaultValues.logo,
+        symbol: token.symbol || defaultValues.symbol,
+        name: token.name || defaultValues.name,
+        type: token.type || defaultValues.type,
+        l1Bridge: token.l1Bridge || defaultValues.l1Bridge,
+    };
 };

@@ -301,7 +301,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                                         ? ChainIdValidation.KNOWN_CHAIN_ID
                                         : ChainIdValidation.UNKNOWN_CHAIN_ID
                                 }
-                                toolTipClassName="!translate-x-0"
+                                toolTipClassName="!translate-x-6"
                                 wrapperClassName="z-0"
                             />
                         </div>

@@ -127,28 +127,6 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
             >
                 {title}
             </span>
-            <div className="ml-auto flex space-x-1">
-                {networkIndicator && <NetworkDisplayBadge network={network} />}
-                {close && (
-                    <button
-                        onClick={(e) => {
-                            if (onClose) return onClose(e)
-                            history.push(
-                                typeof close === "string" ? close : "/home"
-                            )
-                        }}
-                        disabled={disabled}
-                        className={classnames(
-                            "p-2 -mr-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300",
-                            disabled && "pointer-events-none text-gray-300"
-                        )}
-                        type="button"
-                    >
-                        <CloseIcon />
-                    </button>
-                )}
-            </div>
-
             {actions && (
                 <div className="ml-auto">
                     <Dropdown>
@@ -165,6 +143,24 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                 </div>
             )}
             {children}
+            {close && (
+                <button
+                    onClick={(e) => {
+                        if (onClose) return onClose(e)
+                        history.push(
+                            typeof close === "string" ? close : "/home"
+                        )
+                    }}
+                    disabled={disabled}
+                    className={classnames(
+                        "p-2 ml-auto -mr-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300",
+                        disabled && "pointer-events-none text-gray-300"
+                    )}
+                    type="button"
+                >
+                    <CloseIcon />
+                </button>
+            )}
         </div>
     )
 }

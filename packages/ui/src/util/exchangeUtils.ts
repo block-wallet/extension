@@ -4,7 +4,7 @@ import {
     TransactionCategories,
     TransactionStatus,
 } from "../context/commTypes"
-import { SwapParameters } from "@block-wallet/background/controllers/ExchangeController"
+import { SwapParameters } from "@block-wallet/background/controllers/SwapController"
 import { BigNumber } from "ethers"
 import { formatUnits } from "ethers/lib/utils"
 import { RichedTransactionMeta } from "./transactionUtils"

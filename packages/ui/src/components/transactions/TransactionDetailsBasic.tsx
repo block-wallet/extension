@@ -1,6 +1,6 @@
 import { BigNumber } from "ethers"
 import { formatUnits } from "ethers/lib/utils"
-import { FunctionComponent, useMemo, useState } from "react"
+import { FunctionComponent, useMemo } from "react"
 import { formatNumberLength } from "../../util/formatNumberLength"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { classnames } from "../../styles"
@@ -25,9 +25,8 @@ import {
 import { calcExchangeRate } from "../../util/exchangeUtils"
 import isNil from "../../util/isNil"
 import { resolveTransactionTo } from "../../util/transactionUtils"
-import useCopyToClipboard, {
-    useMultipleCopyToClipboard,
-} from "../../util/hooks/useCopyToClipboard"
+import { useMultipleCopyToClipboard } from "../../util/hooks/useCopyToClipboard"
+import { isNativeTokenAddress } from "../../util/tokenUtils"
 
 const bnOr0 = (value: any = 0) => BigNumber.from(value)
 
@@ -287,16 +286,21 @@ export const TransactionDetails: FunctionComponent<
 
     let toName
     if (transactionTo) {
-        toName = accounts.find(
-            (account) =>
-                account.address.toLowerCase() === transactionTo.toLowerCase()
-        )?.name
-
-        //If to was not found in accounts, then we look into the address book.
-        if (!toName) {
-            toName = Object.values(addressBook).find(
-                (address) => address.address.toLowerCase() === transactionTo
+        if (isNativeTokenAddress(transactionTo)) {
+            toName = "Null Address"
+        } else {
+            toName = accounts.find(
+                (account) =>
+                    account.address.toLowerCase() ===
+                    transactionTo.toLowerCase()
             )?.name
+
+            //If to was not found in accounts, then we look into the address book.
+            if (!toName) {
+                toName = Object.values(addressBook).find(
+                    (address) => address.address.toLowerCase() === transactionTo
+                )?.name
+            }
         }
     }
 

@@ -96,17 +96,6 @@ describe('AppState Controller', function () {
         );
     });
 
-    it('should update the last user active time', async function () {
-        const initialTime =
-            appStateController.UIStore.getState().lastActiveTime;
-        expect(initialTime).to.be.greaterThan(0);
-        const promise = await sleep(600);
-        appStateController.setLastActiveTime();
-        expect(
-            appStateController.UIStore.getState().lastActiveTime
-        ).to.be.greaterThan(initialTime);
-    });
-
     it('should lock and unlock properly', async function () {
         await mockKeyringController.createNewVaultAndKeychain('testPassword');
         await appStateController.lock();

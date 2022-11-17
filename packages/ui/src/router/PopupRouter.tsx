@@ -22,9 +22,6 @@ import ProviderDownDialog from "../components/dialog/ProviderDownDialog"
 import useClearStickyStorage from "../context/hooks/useClearStickyStorage"
 import { getNonSubmittedTransactions } from "../util/getNonSubmittedTransactions"
 
-//10 minutes
-const LOCAL_STORAGE_DATA_TTL = 60000 * 10
-
 /**  Purpose of this component is to check in Blank State if there is any pending connect to site or transaction confirm
  *  in order to show that page always, whenever the extension is loaded and unlocked.
  */
@@ -35,7 +32,7 @@ const PopupComponent = () => {
         permissionRequests,
         dappRequests,
         transactions,
-        lastActiveTime,
+        expiredStickyStorage,
     } = useBlankState()!
     const unapprovedTransactions = getNonSubmittedTransactions(
         transactions,
@@ -59,12 +56,7 @@ const PopupComponent = () => {
     )
 
     useLayoutEffect(() => {
-        if (
-            showPage ||
-            showUnlock ||
-            (lastActiveTime &&
-                timeExceedsTTL(lastActiveTime, LOCAL_STORAGE_DATA_TTL))
-        ) {
+        if (showPage || showUnlock || expiredStickyStorage) {
             // If the wallet is locked or if we're in a dApp request
             // We should get rid of all the localSotrage stuff.
             clearStickyStorage()

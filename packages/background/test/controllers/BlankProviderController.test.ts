@@ -402,7 +402,7 @@ describe('Blank Provider Controller', function () {
 
             sinon.stub(appStateController.UIStore, 'getState').returns({
                 isAppUnlocked: true,
-                lastActiveTime: 0,
+                expiredStickyStorage: false,
                 lockedByTimeout: false,
             });
             sinon.stub(permissionsController.store, 'getState').returns({

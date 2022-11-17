@@ -1,5 +1,5 @@
-const native_token_address = "0x0"
-const null_address = "0x0000000000000000000000000000000000000000"
+const native_token_address_reduced = "0x0"
+const native_token_address = "0x0000000000000000000000000000000000000000"
 
 /**
  * compareAddresses
@@ -26,7 +26,7 @@ export const isNativeTokenAddress = (address: string) => {
         return false
     }
     return (
-        compareAddresses(address, null_address) ||
+        compareAddresses(address, native_token_address_reduced) ||
         compareAddresses(address, native_token_address)
     )
 }

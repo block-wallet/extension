@@ -4,6 +4,7 @@ import {
     toChecksumAddress,
 } from 'ethereumjs-util';
 import { compareAddresses } from '../controllers/transactions/utils/utils';
+import { IToken } from '../controllers/erc-20/Token';
 import {
     ProviderError,
     WatchAssetParameters,
@@ -103,4 +104,29 @@ export const isNativeTokenAddress = (address: string): boolean => {
             '0x0000000000000000000000000000000000000000'
         ) || compareAddresses(address, '0x0')
     );
+};
+
+/**
+ * This function fills every empty information we have about a token.
+ * @param token The original token
+ * @param defaultValues the default values to fill.
+ * @returns normalized token;
+ */
+export const fillTokenData = (
+    token: IToken,
+    defaultValues?: IToken
+): IToken => {
+    if (!defaultValues) {
+        return token;
+    }
+
+    return {
+        address: token.address || defaultValues.address,
+        decimals: token.decimals || defaultValues.decimals,
+        logo: token.logo || defaultValues.logo,
+        symbol: token.symbol || defaultValues.symbol,
+        name: token.name || defaultValues.name,
+        type: token.type || defaultValues.type,
+        l1Bridge: token.l1Bridge || defaultValues.l1Bridge,
+    };
 };

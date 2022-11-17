@@ -114,6 +114,10 @@ import type {
     RequestRemoveHardwareWallet,
     RequestGenerateOnDemandReleaseNotes,
     RequestEditNetwork,
+    RequestExecuteBridge,
+    RequestGetBridgeQuote,
+    RequestApproveBridgeAllowance,
+    RequestGetBridgeRoutes,
     RequestEditNetworksOrder,
 } from '../utils/types/communication';
 
@@ -143,6 +147,7 @@ import TransactionController, {
     GasPriceValue,
     FeeMarketEIP1559Values,
 } from './transactions/TransactionController';
+import { GasPriceData } from './GasPricesController';
 import { PreferencesController, ReleaseNote } from './PreferencesController';
 import { ExchangeRatesController } from './ExchangeRatesController';
 import {
@@ -158,11 +163,8 @@ import {
     TokenController,
     TokenControllerProps,
 } from './erc-20/TokenController';
-import ExchangeController, {
-    SwapParameters,
-    SwapQuote,
-} from './ExchangeController';
-import { ITokens, Token } from './erc-20/Token';
+import SwapController, { SwapParameters, SwapQuote } from './SwapController';
+import { IToken, ITokens, Token } from './erc-20/Token';
 import { ImportStrategy, getAccountJson } from '../utils/account';
 import { ActivityListController } from './ActivityListController';
 import {
@@ -218,6 +220,14 @@ import { Network } from '../utils/constants/networks';
 import { generateOnDemandReleaseNotes } from '../utils/userPreferences';
 import { TransactionWatcherController } from './TransactionWatcherController';
 import { isNativeTokenAddress } from '../utils/token';
+import BridgeController, {
+    GetBridgeAvailableRoutesResponse,
+    GetBridgeQuoteNotFoundResponse,
+    GetBridgeQuoteResponse,
+} from './BridgeController';
+import { IChain } from '../utils/types/chain';
+import { BridgeImplementation } from '../utils/bridgeApi';
+import TokenAllowanceController from './erc-20/transactions/TokenAllowanceController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -248,7 +258,8 @@ export default class BlankController extends EventEmitter {
     private readonly blankStateStore: BlankStorageStore;
     private readonly tokenOperationsController: TokenOperationsController;
     private readonly tokenController: TokenController;
-    private readonly exchangeController: ExchangeController;
+    private readonly swapController: SwapController;
+    private readonly bridgeController: BridgeController;
     private readonly blankProviderController: BlankProviderController;
     private readonly activityListController: ActivityListController;
     private readonly permissionsController: PermissionsController;
@@ -256,6 +267,7 @@ export default class BlankController extends EventEmitter {
     private readonly blockFetchController: BlockFetchController;
     private readonly blockUpdatesController: BlockUpdatesController;
     private readonly transactionWatcherController: TransactionWatcherController;
+    private readonly tokenAllowanceController: TokenAllowanceController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -404,14 +416,6 @@ export default class BlankController extends EventEmitter {
             initState.AccountTrackerController
         );
 
-        this.activityListController = new ActivityListController(
-            this.transactionController,
-            this.blankDepositController,
-            this.preferencesController,
-            this.networkController,
-            this.transactionWatcherController
-        );
-
         this.blankProviderController = new BlankProviderController(
             this.networkController,
             this.transactionController,
@@ -422,20 +426,44 @@ export default class BlankController extends EventEmitter {
             this.blockUpdatesController
         );
 
+        this.tokenAllowanceController = new TokenAllowanceController(
+            this.networkController,
+            this.preferencesController,
+            this.tokenOperationsController,
+            this.transactionController
+        );
+
+        this.swapController = new SwapController(
+            this.networkController,
+            this.transactionController,
+            this.tokenController,
+            this.tokenAllowanceController
+        );
+
+        this.bridgeController = new BridgeController(
+            this.networkController,
+            this.transactionController,
+            this.tokenController,
+            this.tokenAllowanceController,
+            this.accountTrackerController,
+            initState.BridgeController
+        );
+
+        this.activityListController = new ActivityListController(
+            this.transactionController,
+            this.blankDepositController,
+            this.preferencesController,
+            this.networkController,
+            this.transactionWatcherController,
+            this.bridgeController
+        );
+
         this.addressBookController = new AddressBookController({
             initialState: initState.AddressBookController,
             networkController: this.networkController,
             activityListController: this.activityListController,
             preferencesController: this.preferencesController,
         });
-
-        this.exchangeController = new ExchangeController(
-            this.networkController,
-            this.preferencesController,
-            this.tokenOperationsController,
-            this.transactionController,
-            this.tokenController
-        );
 
         this.store = new ComposedStore<BlankAppState>({
             NetworkController: this.networkController.store,
@@ -455,6 +483,7 @@ export default class BlankController extends EventEmitter {
             BlockFetchController: this.blockFetchController.store,
             TransactionWatcherControllerState:
                 this.transactionWatcherController.store,
+            BridgeController: this.bridgeController.store,
         });
 
         this.UIStore = new ComposedStore<BlankAppUIState>({
@@ -474,6 +503,8 @@ export default class BlankController extends EventEmitter {
             AddressBookController: this.addressBookController.store,
             BlankProviderController: this.blankProviderController.store,
             BlockUpdatesController: this.blockUpdatesController.store,
+            SwapController: this.swapController.UIStore,
+            BridgeController: this.bridgeController.UIStore,
         });
 
         // Check controllers on app lock/unlock
@@ -706,6 +737,10 @@ export default class BlankController extends EventEmitter {
                 return this.accountSelect(request as RequestAccountSelect);
             case Messages.ACCOUNT.GET_BALANCE:
                 return this.getAccountBalance(request as string);
+            case Messages.ACCOUNT.GET_NATIVE_TOKEN_BALANCE:
+                return this.getAccountNativeTokenBalanceForChain(
+                    request as number
+                );
             case Messages.APP.GET_IDLE_TIMEOUT:
                 return this.getIdleTimeout();
             case Messages.APP.SET_IDLE_TIMEOUT:
@@ -808,6 +843,20 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.EXCHANGE.EXECUTE:
                 return this.executeExchange(request as RequestExecuteExchange);
+            case Messages.BRIDGE.GET_BRIDGE_TOKENS:
+                return this.getBridgeTokens();
+            case Messages.BRIDGE.GET_BRIDGE_AVAILABLE_CHAINS:
+                return this.getBridgeAvailableChains();
+            case Messages.BRIDGE.APPROVE_BRIDGE_ALLOWANCE:
+                return this.approveBridgeAllowance(
+                    request as RequestApproveBridgeAllowance
+                );
+            case Messages.BRIDGE.GET_BRIDGE_ROUTES:
+                return this.getBridgeRoutes(request as RequestGetBridgeRoutes);
+            case Messages.BRIDGE.GET_BRIDGE_QUOTE:
+                return this.getBridgeQuote(request as RequestGetBridgeQuote);
+            case Messages.BRIDGE.EXECUTE_BRIDGE:
+                return this.executeBridge(request as RequestExecuteBridge);
             case Messages.EXTERNAL.REQUEST:
                 return this.externalRequestHandle(
                     request as RequestExternalRequest,
@@ -885,6 +934,8 @@ export default class BlankController extends EventEmitter {
                 return this.udResolve(request as RequestUDResolve);
             case Messages.TRANSACTION.GET_LATEST_GAS_PRICE:
                 return this.getLatestGasPrice();
+            case Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE:
+                return this.fetchLatestGasPriceForChain(request as number);
             case Messages.TRANSACTION.SEND_ETHER:
                 return this.sendEther(request as RequestSendEther);
             case Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION:
@@ -1113,6 +1164,21 @@ export default class BlankController extends EventEmitter {
         return this.networkController.getProvider().getBalance(account);
     }
 
+    /**
+     * getAccountNativeTokenBalanceForChain
+     *
+     * It gets the native token balance from the selected account in the specified network.
+     *
+     * @param chainId the chain id
+     * @returns The native token balance.
+     */
+    public async getAccountNativeTokenBalanceForChain(
+        chainId: number
+    ): Promise<BigNumber | undefined> {
+        return this.accountTrackerController.getAccountNativeTokenBalanceForChain(
+            chainId
+        );
+    }
     /**
      * It triggers the deposits tree update for the current network
      * (used to update the deposits tree and calculate the subsequent deposits accurately)
@@ -1815,7 +1881,7 @@ export default class BlankController extends EventEmitter {
         exchangeType,
         tokenAddress,
     }: RequestCheckExchangeAllowance): Promise<boolean> {
-        return this.exchangeController.checkExchangeAllowance(
+        return this.swapController.checkSwapAllowance(
             account,
             BigNumber.from(amount),
             exchangeType,
@@ -1841,7 +1907,7 @@ export default class BlankController extends EventEmitter {
         tokenAddress,
         customNonce,
     }: RequestApproveExchange): Promise<boolean> {
-        return this.exchangeController.approveExchange(
+        return this.swapController.approveSwapExchange(
             BigNumber.from(allowance),
             BigNumber.from(amount),
             exchangeType,
@@ -1861,10 +1927,7 @@ export default class BlankController extends EventEmitter {
         exchangeType,
         quoteParams,
     }: RequestGetExchangeQuote): Promise<SwapQuote> {
-        return this.exchangeController.getExchangeQuote(
-            exchangeType,
-            quoteParams
-        );
+        return this.swapController.getExchangeQuote(exchangeType, quoteParams);
     }
 
     /**
@@ -1877,7 +1940,7 @@ export default class BlankController extends EventEmitter {
         exchangeType,
         exchangeParams,
     }: RequestGetExchange): Promise<SwapParameters> {
-        return this.exchangeController.getExchangeParameters(
+        return this.swapController.getExchangeParameters(
             exchangeType,
             exchangeParams
         );
@@ -1893,9 +1956,98 @@ export default class BlankController extends EventEmitter {
         exchangeType,
         exchangeParams,
     }: RequestExecuteExchange): Promise<string> {
-        return this.exchangeController.executeExchange(
+        return this.swapController.executeExchange(
             exchangeType,
             exchangeParams
+        );
+    }
+
+    /**
+     * Submits an approval transaction to setup asset allowance
+     *
+     * @param allowance User selected allowance
+     * @param amount Exchange amount
+     * @param spenderAddress The spender address
+     * @param feeData Transaction gas fee data
+     * @param tokenAddress Spended asset token address
+     * @param customNonce Custom transaction nonce
+     */
+    private async approveBridgeAllowance({
+        allowance,
+        amount,
+        spenderAddress,
+        feeData,
+        tokenAddress,
+        customNonce,
+    }: RequestApproveBridgeAllowance): Promise<boolean> {
+        return this.tokenAllowanceController.approveAllowance(
+            BigNumber.from(allowance),
+            BigNumber.from(amount),
+            spenderAddress,
+            feeData,
+            tokenAddress,
+            customNonce
+        );
+    }
+
+    /**
+     * Gets all the available tokens to bridge in the current network
+     */
+    private async getBridgeTokens(): Promise<IToken[]> {
+        return this.bridgeController.getTokens();
+    }
+
+    /**
+     * Gets all the available chains to execute a bridge
+     */
+    private async getBridgeAvailableChains(): Promise<IChain[]> {
+        return this.bridgeController.getAvailableChains();
+    }
+
+    /**
+     * Gets all the available routes for executing a bridging
+     *
+     * @param routesRequest Parameters that the routes should match
+     */
+    private async getBridgeRoutes({
+        routesRequest,
+    }: RequestGetBridgeRoutes): Promise<GetBridgeAvailableRoutesResponse> {
+        return this.bridgeController.getAvailableRoutes(
+            BridgeImplementation.LIFI_BRIDGE,
+            routesRequest
+        );
+    }
+
+    /**
+     * Gets a quote for the specified bridge parameters
+     *
+     * @param checkAllowance Whether check or not the approval address allowance of the final user
+     * @param quoteRequest Quote request parameters.
+     */
+    private async getBridgeQuote({
+        checkAllowance,
+        quoteRequest,
+    }: RequestGetBridgeQuote): Promise<
+        GetBridgeQuoteResponse | GetBridgeQuoteNotFoundResponse
+    > {
+        return this.bridgeController.getQuote(
+            BridgeImplementation.LIFI_BRIDGE,
+            quoteRequest,
+            checkAllowance
+        );
+    }
+
+    /**
+     * Executes the bridge transaction based on the given parameters.
+     *
+     * @param bridgeTransaction Bridging transaction data
+     */
+    private async executeBridge({
+        bridgeTransaction,
+    }: RequestExecuteBridge): Promise<string> {
+        return this.bridgeController.executeBridge(
+            BridgeImplementation.LIFI_BRIDGE,
+            bridgeTransaction
         );
     }
 
@@ -2320,6 +2472,15 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * It returns the current network latest gas price by fetching it from the Fee service or network
+     */
+    private async fetchLatestGasPriceForChain(
+        chainId: number
+    ): Promise<GasPriceData | undefined> {
+        return this.gasPricesController.fetchGasPriceData(chainId);
+    }
+
+    /**
      * Calculate the gas limit for an approve transaction
      */
     private async calculateApproveTransactionGasLimit({
@@ -2605,7 +2766,6 @@ export default class BlankController extends EventEmitter {
         await this.networkController.setNetwork(network);
 
         await this.blankDepositController.initialize();
-
         // reconstruct past erc20 transfers
         this.transactionWatcherController.fetchTransactions();
 

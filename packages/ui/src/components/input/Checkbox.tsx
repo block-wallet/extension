@@ -34,7 +34,7 @@ const Checkbox = ({
             type="checkbox"
             checked={checked}
             className={classnames(
-                "w-4 h-4 border-1 border-gray-200 rounded-md focus:ring-0",
+                " cursor-pointer w-4 h-4 border-1 border-gray-200 rounded-md focus:ring-0",
                 className && className
             )}
             onChange={() => {
@@ -43,7 +43,7 @@ const Checkbox = ({
             id="checkbox"
             disabled={disabled}
         />
-        <label htmlFor="checkbox" className="text-xs pl-2">
+        <label htmlFor="checkbox" className=" cursor-pointer text-xs pl-2">
             {label}
         </label>
     </div>

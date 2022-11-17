@@ -1,4 +1,5 @@
 import { FunctionComponent, useCallback, useEffect, useState } from "react"
+import { toChecksumAddress } from "ethereumjs-util"
 
 import { useForm } from "react-hook-form"
 
@@ -181,7 +182,7 @@ const AddressDisplay: FunctionComponent<{
     setShowingTheWholeAddress: React.Dispatch<React.SetStateAction<boolean>>
 }> = ({ showingTheWholeAddress, setShowingTheWholeAddress }) => {
     const history = useOnMountHistory()
-    const receivingAddress = history.location.state.address
+    const receivingAddress = toChecksumAddress(history.location.state.address)
     const selectedAccountName = history.location.state.name
 
     const { accounts } = useBlankState()!

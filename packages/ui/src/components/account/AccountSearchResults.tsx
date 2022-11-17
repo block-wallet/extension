@@ -137,7 +137,10 @@ const AccountSearchResults = ({
                             <AccountDisplay
                                 key={account.address}
                                 account={account}
-                                selected={filter === account.address}
+                                selected={
+                                    filter.toLowerCase() ===
+                                    account.address.toLowerCase()
+                                }
                                 showAddress={true}
                                 onClickAccount={() => onSelect(account)}
                             />

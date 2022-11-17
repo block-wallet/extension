@@ -59,6 +59,7 @@ const SendPage = () => {
 
     const displayAddToContacts =
         isAddress &&
+        searchString.toLowerCase() !== currentAccount.address.toLowerCase() &&
         !(addressBookAccounts || []).some(
             ({ address }) =>
                 address.toLowerCase() === searchString.toLowerCase()
@@ -92,7 +93,7 @@ const SendPage = () => {
         if (addContact) {
             await addressBookSet(
                 data.address,
-                `Contact ${Object.keys(addressBook).length + 1}`,
+                `Account (...${data.address.slice(data.address.length - 4)})`,
                 ""
             )
         }

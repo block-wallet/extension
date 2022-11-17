@@ -48,6 +48,18 @@ describe('Preferences Controller', function () {
 
         preferencesController.settings.hideAddressWarning = false;
         expect(preferencesController.settings.hideAddressWarning).to.be.false;
+        preferencesController.settings.hideEstimatedGasExceedsThresholdWarning =
+            false;
+        expect(
+            preferencesController.settings
+                .hideEstimatedGasExceedsThresholdWarning
+        ).to.be.false;
+        preferencesController.settings.hideBridgeInsufficientNativeTokenWarning =
+            false;
+        expect(
+            preferencesController.settings
+                .hideBridgeInsufficientNativeTokenWarning
+        ).to.be.false;
     });
 
     it('get and set show welcome message', async function () {

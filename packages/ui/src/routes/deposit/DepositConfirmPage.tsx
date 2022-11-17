@@ -50,6 +50,7 @@ import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 import { isHardwareWallet } from "../../util/account"
 import { HardwareWalletOpTypes } from "../../context/commTypes"
 import { rejectTransaction } from "../../context/commActions"
+import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 
 let freezedAmounts = {
     amountInNativeCurrency: 0,
@@ -477,16 +478,17 @@ const DepositConfirmPage = () => {
                     </div>
                 </div>
                 <AdvancedSettings
-                    config={{
-                        showCustomNonce: true,
-                        showFlashbots: false,
-                        address: selectedAccount.address,
-                    }}
-                    data={{
+                    address={selectedAccount.address}
+                    advancedSettings={{ customNonce }}
+                    display={{
+                        nonce: true,
                         flashbots: false,
+                        slippage: false,
                     }}
-                    setData={(data) => {
-                        setCustomNonce(data.customNonce)
+                    setAdvancedSettings={(
+                        newSettings: TransactionAdvancedData
+                    ) => {
+                        setCustomNonce(newSettings.customNonce)
                     }}
                 />
                 <div>

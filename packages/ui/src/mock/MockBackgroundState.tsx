@@ -308,7 +308,7 @@ export const initBackgroundState: BackgroundStateType = {
         txSignTimeout: 0,
         unapprovedTransactions: {},
         previousWithdrawals: [],
-        lastActiveTime: 0,
+        expiredStickyStorage: false,
 
         depositsCount: {
             eth: [
@@ -366,7 +366,6 @@ export const initBackgroundState: BackgroundStateType = {
                 },
             ],
         },
-        blockData: { 5: { blockNumber: -1 } },
         areDepositsPending: false,
         areWithdrawalsPending: false,
         pendingDeposits: {

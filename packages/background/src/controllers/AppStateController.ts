@@ -3,6 +3,8 @@ import { BlankDepositController } from './blank-deposit/BlankDepositController';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 import TransactionController from './transactions/TransactionController';
 
+const STICKY_STORAGE_DATA_TTL = 60000 * 10;
+
 export interface AppStateControllerState {
     idleTimeout: number; // Minutes until auto-lock - Zero if disabled
 }
@@ -10,7 +12,7 @@ export interface AppStateControllerState {
 export interface AppStateControllerMemState {
     isAppUnlocked: boolean;
     lockedByTimeout: boolean;
-    lastActiveTime: number;
+    expiredStickyStorage: boolean;
 }
 
 export default class AppStateController extends BaseController<
@@ -18,6 +20,8 @@ export default class AppStateController extends BaseController<
     AppStateControllerMemState
 > {
     private _timer: ReturnType<typeof setTimeout> | null;
+    private _stickyStorageTimer: ReturnType<typeof setTimeout> | undefined;
+
     private isLoadingDeposits = false;
 
     constructor(
@@ -28,8 +32,8 @@ export default class AppStateController extends BaseController<
     ) {
         super(initState, {
             isAppUnlocked: false,
-            lastActiveTime: new Date().getTime(),
             lockedByTimeout: false,
+            expiredStickyStorage: false,
         });
 
         this._timer = null;
@@ -54,13 +58,9 @@ export default class AppStateController extends BaseController<
      *
      */
     public setLastActiveTime = (): void => {
-        this.UIStore.updateState({ lastActiveTime: new Date().getTime() });
         this._resetTimer();
+        this._resetStickyStorageTimer();
     };
-
-    public get lastActiveTime(): number {
-        return this.lastActiveTime;
-    }
 
     /**
      * Set a custom time in minutes for the extension auto block
@@ -141,6 +141,20 @@ export default class AppStateController extends BaseController<
         } catch (error) {
             throw new Error(error.message || error);
         }
+    };
+
+    private _resetStickyStorageTimer = () => {
+        if (this._stickyStorageTimer) {
+            clearTimeout(this._stickyStorageTimer);
+        }
+        //only update UIStore when it is necessary.
+        if (this.UIStore.getState().expiredStickyStorage) {
+            this.UIStore.updateState({ expiredStickyStorage: false });
+        }
+
+        this._stickyStorageTimer = setTimeout(() => {
+            this.UIStore.updateState({ expiredStickyStorage: true });
+        }, STICKY_STORAGE_DATA_TTL);
     };
 
     /**

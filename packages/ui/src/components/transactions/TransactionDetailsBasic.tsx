@@ -1,6 +1,6 @@
 import { BigNumber } from "ethers"
 import { formatUnits } from "ethers/lib/utils"
-import { FunctionComponent, useMemo, useState } from "react"
+import { FunctionComponent, useMemo } from "react"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { getAccountColor } from "../../util/getAccountColor"
 import Divider from "../Divider"
@@ -25,6 +25,7 @@ import { bnOr0 } from "../../util/numberUtils"
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 import { resolveTransactionTo } from "../../util/transactionUtils"
 import { useMultipleCopyToClipboard } from "../../util/hooks/useCopyToClipboard"
+import { isNativeTokenAddress } from "../../util/tokenUtils"
 
 export const TransactionDetailsBasic: FunctionComponent<
     TransactionDetailsTabProps & { nonce?: number }
@@ -283,16 +284,21 @@ export const TransactionDetailsBasic: FunctionComponent<
 
     let toName
     if (transactionTo) {
-        toName = accounts.find(
-            (account) =>
-                account.address.toLowerCase() === transactionTo.toLowerCase()
-        )?.name
-
-        //If to was not found in accounts, then we look into the address book.
-        if (!toName) {
-            toName = Object.values(addressBook).find(
-                (address) => address.address.toLowerCase() === transactionTo
+        if (isNativeTokenAddress(transactionTo)) {
+            toName = "Null Address"
+        } else {
+            toName = accounts.find(
+                (account) =>
+                    account.address.toLowerCase() ===
+                    transactionTo.toLowerCase()
             )?.name
+
+            //If to was not found in accounts, then we look into the address book.
+            if (!toName) {
+                toName = Object.values(addressBook).find(
+                    (address) => address.address.toLowerCase() === transactionTo
+                )?.name
+            }
         }
     }
 

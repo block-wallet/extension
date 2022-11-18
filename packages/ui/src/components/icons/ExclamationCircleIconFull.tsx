@@ -3,6 +3,7 @@ import { FC } from "react"
 interface IconProps {
     profile?: "normal" | "outlined" | "info"
     size?: string
+    className?: string
 }
 
 interface ColorsDef {

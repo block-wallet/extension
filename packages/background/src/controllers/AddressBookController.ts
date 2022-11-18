@@ -8,6 +8,7 @@ import {
     TransactionMeta,
 } from './transactions/utils/types';
 import { PreferencesController } from './PreferencesController';
+import { isNativeTokenAddress } from '../utils/token';
 
 /**
  * @type AddressBookControllerProps
@@ -303,7 +304,7 @@ export class AddressBookController extends BaseController<AddressBookControllerM
                     continue;
             }
 
-            if (!address) {
+            if (!address || isNativeTokenAddress(address)) {
                 continue;
             }
 

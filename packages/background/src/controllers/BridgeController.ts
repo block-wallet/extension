@@ -326,7 +326,7 @@ export default class BridgeController extends BaseController<
         token: IToken,
         chainId: number = this._networkController.network.chainId
     ): Promise<IToken> {
-        if (this._tokenController.isNativeToken(token.address)) {
+        if (isNativeTokenAddress(token.address)) {
             const targetNetwork =
                 this._networkController.getNetworkFromChainId(chainId);
 

@@ -3,6 +3,7 @@ import {
     isValidAddress,
     toChecksumAddress,
 } from 'ethereumjs-util';
+import { compareAddresses } from '../controllers/transactions/utils/utils';
 import { IToken } from '../controllers/erc-20/Token';
 import {
     ProviderError,
@@ -93,8 +94,15 @@ export const isBase64 = (v: string): boolean => {
 };
 
 export const isNativeTokenAddress = (address: string): boolean => {
-    return ['0x0000000000000000000000000000000000000000', '0x0'].includes(
-        address
+    if (!address) {
+        return false;
+    }
+
+    return (
+        compareAddresses(
+            address,
+            '0x0000000000000000000000000000000000000000'
+        ) || compareAddresses(address, '0x0')
     );
 };
 

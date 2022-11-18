@@ -15,6 +15,7 @@ import { mergeReducer } from "../../util/reducerUtils"
 interface State {
     hideAddressWarning: boolean
     hideEstimatedGasExceedsThresholdWarning: boolean
+    hideBridgeInsufficientNativeTokenWarning: boolean
 }
 
 const WarningsPreferencesPage = () => {
@@ -26,6 +27,8 @@ const WarningsPreferencesPage = () => {
         hideAddressWarning: settings.hideAddressWarning,
         hideEstimatedGasExceedsThresholdWarning:
             settings.hideEstimatedGasExceedsThresholdWarning,
+        hideBridgeInsufficientNativeTokenWarning:
+            settings.hideBridgeInsufficientNativeTokenWarning,
     })
 
     const [warningsConfig, setWarningsConfig] = useReducer(
@@ -40,6 +43,8 @@ const WarningsPreferencesPage = () => {
                 hideAddressWarning: warningsConfig.hideAddressWarning,
                 hideEstimatedGasExceedsThresholdWarning:
                     warningsConfig.hideEstimatedGasExceedsThresholdWarning,
+                hideBridgeInsufficientNativeTokenWarning:
+                    warningsConfig.hideBridgeInsufficientNativeTokenWarning,
             })
         )
     }
@@ -95,6 +100,24 @@ const WarningsPreferencesPage = () => {
                     onToggle={(value) =>
                         setWarningsConfig({
                             hideEstimatedGasExceedsThresholdWarning: !value,
+                        })
+                    }
+                />
+
+                <hr />
+                <span className="text-sm text-gray-500">
+                    Warn me when I haven't enough funds in the destination
+                    network of a bridge
+                </span>
+                <ToggleButton
+                    id="bridgeNativeTokenWarning"
+                    label="Show Bridging Warning"
+                    defaultChecked={
+                        !warningsConfig.hideBridgeInsufficientNativeTokenWarning
+                    }
+                    onToggle={(value) =>
+                        setWarningsConfig({
+                            hideBridgeInsufficientNativeTokenWarning: !value,
                         })
                     }
                 />

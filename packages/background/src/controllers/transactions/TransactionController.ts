@@ -2179,7 +2179,7 @@ export class TransactionController extends BaseController<
             typeof value === 'undefined' ? constants.Zero : value;
 
         // If fallback is present, use it instead of block gasLimit
-        if (fallbackGasLimit && BigNumber.from(fallbackGasLimit)) {
+        if (!isCustomNetwork && BigNumber.isBigNumber(fallbackGasLimit)) {
             estimatedTransaction.gasLimit = BigNumber.from(fallbackGasLimit);
         } else {
             // We take a part of the block gasLimit (95% of it)
@@ -2218,7 +2218,7 @@ export class TransactionController extends BaseController<
             }
 
             // If estimatedGasLimit is above upperGasLimit, dont modify it
-            if (estimatedGasLimit.gt(upperGasLimit) || isCustomNetwork) {
+            if (estimatedGasLimit.gt(upperGasLimit)) {
                 return {
                     gasLimit: estimatedGasLimit,
                     estimationSucceeded: true,
@@ -2232,10 +2232,12 @@ export class TransactionController extends BaseController<
                     estimationSucceeded: true,
                 };
             }
+
             return { gasLimit: upperGasLimit, estimationSucceeded: true };
         } catch (error) {
             log.warn(
-                'Error estimating the transaction gas. Fallbacking to block gasLimit'
+                'Error estimating the transaction gas. Fallbacking to block gasLimit',
+                error
             );
 
             // Return TX type associated default fallback gasLimit or block gas limit

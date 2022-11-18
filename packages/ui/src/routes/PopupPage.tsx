@@ -18,7 +18,6 @@ import ActivityAssetsView from "../components/ActivityAssetsView"
 import GenericTooltip from "../components/label/GenericTooltip"
 import AnimatedIcon, { AnimatedIconName } from "../components/AnimatedIcon"
 import Tooltip from "../components/label/Tooltip"
-import AnimatedIcon, { AnimatedIconName } from "../components/AnimatedIcon"
 
 // Utils
 import { formatHash, formatName } from "../util/formatAccount"
@@ -308,7 +307,6 @@ const PopupPage = () => {
                                                     AnimatedIconName.BlueCircleLoadingSkeleton
                                                 }
                                                 className="w-4 h-4 pointer-events-none"
-                                                loop
                                             />
                                         </div>
                                     ) : (
@@ -347,7 +345,6 @@ const PopupPage = () => {
                                                         AnimatedIconName.BlueCircleLoadingSkeleton
                                                     }
                                                     className="w-4 h-4 pointer-events-none rotate-180"
-                                                    loop
                                                 />
                                             </div>
                                         ) : (

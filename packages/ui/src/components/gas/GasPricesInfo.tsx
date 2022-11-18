@@ -162,7 +162,6 @@ const GasPricesInfo: FC = () => {
                         icon={AnimatedIconName.GreyLineLoadingSkeleton}
                         className="h-4 w-6 rotate-180"
                         svgClassName="rounded-md"
-                        loop
                     />
                 ) : (
                     <span className="text-sm font-bold">

@@ -1,5 +1,5 @@
 import classnames from "classnames"
-import { FunctionComponent } from "react"
+import { FunctionComponent, useLayoutEffect, useRef, useState } from "react"
 
 /**
  * Generic tooltip component.
@@ -20,10 +20,11 @@ const GenericTooltip: FunctionComponent<{
     right?: boolean
     bottom?: boolean
     left?: boolean
-    centerX?: boolean
-    centerY?: boolean
     className?: string
     divFull?: boolean
+    autoPositioning?: {
+        paddingFromRight: number
+    }
     children?: React.ReactNode
 }> = ({
     children,
@@ -33,17 +34,35 @@ const GenericTooltip: FunctionComponent<{
     right,
     bottom,
     left,
-    centerX,
-    centerY,
     className,
     divFull,
+    autoPositioning = {
+        paddingFromRight: 40,
+    },
 }) => {
-    return disabled ? (
+    const ref = useRef<HTMLDivElement | null>(null)
+
+    useLayoutEffect(() => {
+        let paddingRight = autoPositioning.paddingFromRight ?? 14
+        if (ref.current) {
+            const placeholderRect = ref.current.getBoundingClientRect()
+            const { innerWidth } = window
+            const placeholderRightX = placeholderRect.x + placeholderRect.width
+            if (placeholderRightX > innerWidth) {
+                ref.current.style.transform = `translateX(${
+                    innerWidth - placeholderRightX - paddingRight
+                }px)`
+            }
+        }
+    }, [autoPositioning.paddingFromRight])
+
+    return disabled || !content ? (
         <>{children}</>
     ) : (
         <div className={classnames("group relative", divFull && "w-full")}>
             {children}
             <div
+                ref={ref}
                 className={classnames(
                     "absolute transform inline-block z-40",
                     "invisible opacity-0 group-hover:visible group-hover:opacity-95",
@@ -54,8 +73,6 @@ const GenericTooltip: FunctionComponent<{
                     right && "left-full mr-1.5",
                     bottom && "top-full mt-1.5",
                     left && "right-full mr-1.5",
-                    centerX && "-translate-x-2/4",
-                    centerY && "-translate-y-2/4",
                     className && className
                 )}
             >

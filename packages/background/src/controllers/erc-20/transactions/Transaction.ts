@@ -6,7 +6,6 @@ import {
     ownerParamNotPresentError,
     spenderParamNotPresentError,
     tokenAddressParamNotPresentError,
-    tokenAddressInvalidError,
 } from '../TokenController';
 import { Token } from '../Token';
 import { Interface } from 'ethers/lib/utils';
@@ -28,15 +27,14 @@ export class TokenTransactionController {
      * @param {string} tokenAddress
      * @returns ethers.Contract
      */
-    protected getContract(tokenAddress: string): ethers.Contract {
+    protected getContract(
+        tokenAddress: string,
+        provider: ethers.providers.StaticJsonRpcProvider = this._networkController.getProvider()
+    ): ethers.Contract {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
         }
-        return new ethers.Contract(
-            tokenAddress,
-            erc20Abi,
-            this._networkController.getProvider()
-        );
+        return new ethers.Contract(tokenAddress, erc20Abi, provider);
     }
 }
 
@@ -54,7 +52,8 @@ export class TokenOperationsController extends TokenTransactionController {
      */
     public async balanceOf(
         tokenAddress: string,
-        account: string
+        account: string,
+        provider: ethers.providers.StaticJsonRpcProvider = this._networkController.getProvider()
     ): Promise<BigNumber> {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
@@ -62,7 +61,7 @@ export class TokenOperationsController extends TokenTransactionController {
         if (!account) {
             throw accountParamNotPresentError;
         }
-        const contract = this.getContract(tokenAddress);
+        const contract = this.getContract(tokenAddress, provider);
         return contract.balanceOf(account);
     }
 

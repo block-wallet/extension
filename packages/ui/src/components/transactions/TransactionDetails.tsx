@@ -6,18 +6,18 @@ import HorizontalSelect from "../input/HorizontalSelect"
 import CloseIcon from "../icons/CloseIcon"
 import Divider from "../Divider"
 import { Classes, classnames } from "../../styles"
-import { RichedTransactionMeta } from "../../util/transactionUtils"
 import GenericTooltip from "../label/GenericTooltip"
+import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 
 export type TransactionDetailsProps = {
     open: boolean
     onClose: () => void
-    transaction: RichedTransactionMeta
+    transaction: Partial<TransactionMeta>
     nonce?: number
 }
 
 export type TransactionDetailsTabProps = {
-    transaction: RichedTransactionMeta
+    transaction: TransactionMeta | Partial<TransactionMeta>
 }
 
 export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({

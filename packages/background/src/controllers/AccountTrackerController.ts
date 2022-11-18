@@ -46,6 +46,7 @@ import {
     TransactionWatcherController,
     TransactionWatcherControllerEvents,
 } from './TransactionWatcherController';
+import { isNativeTokenAddress } from '../utils/token';
 
 export interface AccountBalanceToken {
     token: Token;
@@ -187,19 +188,25 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 try {
                     // If array tokenAddresses contains at least 1 value, we update that asset balance, else we update all account balances
                     if (tokenAddresses.length > 0) {
-                        await this.updateAccounts({
-                            addresses: [accountAddress],
-                            assetAddresses: tokenAddresses,
-                        });
+                        await this.updateAccounts(
+                            {
+                                addresses: [accountAddress],
+                                assetAddresses: tokenAddresses,
+                            },
+                            chainId
+                        );
                     } else {
-                        await this.updateAccounts({
-                            addresses: [accountAddress],
-                            assetAddresses:
-                                await this._tokenController.getUserTokenContractAddresses(
-                                    accountAddress,
-                                    chainId
-                                ),
-                        });
+                        await this.updateAccounts(
+                            {
+                                addresses: [accountAddress],
+                                assetAddresses:
+                                    await this._tokenController.getUserTokenContractAddresses(
+                                        accountAddress,
+                                        chainId
+                                    ),
+                            },
+                            chainId
+                        );
                     }
                 } catch (err) {
                     log.warn(
@@ -654,7 +661,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      * @param {string[]?} addresses
      */
     public async updateAccounts(
-        updateAccountsOptions: UpdateAccountsOptions
+        updateAccountsOptions: UpdateAccountsOptions,
+        chainId: number = this._networkController.network.chainId
     ): Promise<void> {
         const release = !updateAccountsOptions.addresses
             ? await this._mutex.acquire()
@@ -668,15 +676,13 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 updateAccountsOptions.addresses ||
                 Object.keys(this.store.getState().accounts);
 
-            // Get network chainId
-            const { chainId } = this._networkController.network;
-
             // Provider is immutable, so reference won't be lost
-            const provider = this._networkController.getProvider();
+            const provider =
+                this._networkController.getProviderForChainId(chainId);
 
-            for (let i = 0; i < _addresses.length; i++) {
-                // If the chain changed we abort these operations
-                if (chainId == this._networkController.network.chainId) {
+            if (provider) {
+                for (let i = 0; i < _addresses.length; i++) {
+                    // If the chain changed we abort these operations
                     // Set $BLANK as visible on network change if available
                     await this._tokenController.setBlankToken(
                         _addresses[i],
@@ -768,7 +774,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 const balance = balances[tokenAddress];
 
                 // eth: always visible
-                if (this._tokenController.isNativeToken(tokenAddress)) {
+                if (isNativeTokenAddress(tokenAddress)) {
                     account.balances[chainId].nativeTokenBalance = balance;
                 } else {
                     if (balance.gt(zero) || userTokens.includes(tokenAddress)) {
@@ -953,14 +959,16 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         assetAddressToGetBalance: string[]
     ): Promise<BalanceMap> {
         try {
+            const filteredAssetAddressToGetBalance =
+                assetAddressToGetBalance.filter(Boolean);
             const balances: BalanceMap = {};
 
             // Get all user's token balances
-            for (let i = 0; i < assetAddressToGetBalance.length; i++) {
+            for (let i = 0; i < filteredAssetAddressToGetBalance.length; i++) {
                 const tokenAddress = checksummedAddress(
-                    assetAddressToGetBalance[i]
+                    filteredAssetAddressToGetBalance[i]
                 );
-                if (this._tokenController.isNativeToken(tokenAddress)) {
+                if (isNativeTokenAddress(tokenAddress)) {
                     balances[tokenAddress] = await provider.getBalance(
                         accountAddress
                     );
@@ -968,7 +976,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     balances[tokenAddress] =
                         await this._tokenOperationsController.balanceOf(
                             tokenAddress,
-                            accountAddress
+                            accountAddress,
+                            provider
                         );
                 }
             }
@@ -1036,7 +1045,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      * @returns The list of the specified address tokens
      */
     public getAccountTokens(
-        accountAddress: string,
+        accountAddress: string = this._preferencesController.getSelectedAddress(),
         chainId: number = this._networkController.network.chainId
     ): AccountBalanceTokens {
         if (accountAddress in this.store.getState().accounts) {
@@ -1051,6 +1060,30 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
         }
         return {} as AccountBalanceTokens;
+    }
+
+    /**
+     * getAccountNativeToken
+     *
+     * @param accountAddress The account address
+     * @returns The account native token
+     */
+    public getAccountNativeTokenBalance(
+        accountAddress: string = this._preferencesController.getSelectedAddress(),
+        chainId: number = this._networkController.network.chainId
+    ): BigNumber {
+        if (accountAddress in this.store.getState().accounts) {
+            if (
+                this.store.getState().accounts[accountAddress].balances &&
+                chainId in
+                    this.store.getState().accounts[accountAddress].balances
+            ) {
+                return this.store.getState().accounts[accountAddress].balances[
+                    chainId
+                ].nativeTokenBalance;
+            }
+        }
+        return BigNumber.from('0');
     }
 
     /**
@@ -1155,5 +1188,30 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
             return [];
         });
+    }
+
+    public async getAccountNativeTokenBalanceForChain(
+        chainId: number
+    ): Promise<BigNumber | undefined> {
+        const selectedAddress =
+            this._preferencesController.getSelectedAddress();
+
+        const provider = this._networkController.getProviderForChainId(chainId);
+
+        if (provider === undefined) {
+            return undefined;
+        }
+        try {
+            const balances = await this._getAddressBalances(
+                chainId,
+                provider,
+                selectedAddress,
+                [NATIVE_TOKEN_ADDRESS]
+            );
+
+            return balances[NATIVE_TOKEN_ADDRESS];
+        } catch {
+            return undefined;
+        }
     }
 }

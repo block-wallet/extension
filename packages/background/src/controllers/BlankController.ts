@@ -2601,17 +2601,13 @@ export default class BlankController extends EventEmitter {
             // Native token of a custom network, estimets gas with fallback price.
 
             const { chainId } = this.networkController.network;
-            return this.transactionController.estimateGas(
-                {
-                    transactionParams: {
-                        to,
-                        from: this.preferencesController.getSelectedAddress(),
-                    },
-                    chainId,
-                } as TransactionMeta,
-                //On L2 networks (Arbitrum for now), added fallback gas limit value to 1,200,000 to use in case estimation fails.
-                BigNumber.from('0x0c3500')
-            );
+            return this.transactionController.estimateGas({
+                transactionParams: {
+                    to,
+                    from: this.preferencesController.getSelectedAddress(),
+                },
+                chainId,
+            } as TransactionMeta);
         }
 
         // Not native token, calculate transaction's gas limit.

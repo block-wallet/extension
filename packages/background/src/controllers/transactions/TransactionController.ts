@@ -38,7 +38,7 @@ import {
     validateTransaction,
 } from './utils/utils';
 import { toError } from '../../utils/toError';
-import { BnMultiplyByFraction } from '../../utils/bnUtils';
+import { bnGreaterThanZero, BnMultiplyByFraction } from '../../utils/bnUtils';
 import { ProviderError } from '../../utils/types/ethereum';
 import { runPromiseSafely } from '../../utils/promises';
 import { PreferencesController } from '../PreferencesController';
@@ -2163,7 +2163,12 @@ export class TransactionController extends BaseController<
             return { gasLimit: providedGasLimit, estimationSucceeded: true };
         }
 
-        const { blockGasLimit } = this._gasPricesController.getState();
+        let { blockGasLimit } = this._gasPricesController.getState();
+        if (!bnGreaterThanZero(blockGasLimit)) {
+            // London block size 30 millon gas units
+            // https://ethereum.org/en/developers/docs/gas/#block-size
+            blockGasLimit = BigNumber.from(30_000_000);
+        }
 
         // Check if it's a custom chainId
         const txOrCurrentChainId =
@@ -2189,6 +2194,20 @@ export class TransactionController extends BaseController<
 
         // Estimate Gas
         try {
+            /**
+            Arbitrum: https://developer.offchainlabs.com/faqs/how-fees
+                Calling an Arbitrum node's eth_estimateGas RPC returns a value sufficient to cover both the L1 and L2 components
+                of the fee for the current gas price; this is the value that, e.g., will appear in users' wallets.
+
+
+            Optimism: https://community.optimism.io/docs/developers/build/transaction-fees/#sending-transactions
+                The process of sending a transaction on Optimism is identical to the process of sending a transaction on Ethereum.
+                When sending a transaction, you should provide a gas price greater than or equal to the current L2 gas price.
+                Like on Ethereum, you can query this gas price with the eth_gasPrice RPC method. Similarly,
+                you should set your transaction gas limit in the same way that you would set your transaction gas limit on Ethereum (e.g. via eth_estimateGas).
+
+
+             */
             const estimatedGasLimit = await provider.estimateGas({
                 chainId: txOrCurrentChainId,
                 data: estimatedTransaction.data,
@@ -2210,7 +2229,7 @@ export class TransactionController extends BaseController<
             );
 
             // If it is a non-custom network, don't add buffer to send gas limit
-            if (estimatedGasLimit.eq(SEND_GAS_COST) && !isCustomNetwork) {
+            if (estimatedGasLimit.eq(SEND_GAS_COST)) {
                 return {
                     gasLimit: estimatedGasLimit,
                     estimationSucceeded: true,

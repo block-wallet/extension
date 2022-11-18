@@ -65,13 +65,7 @@ export const AddressDisplay: FunctionComponent<{
                 <CollapsableWarning
                     dialog={{
                         title: "Warning",
-                        message: (
-                            <span className="text-xs">
-                                <span className="font-bold">
-                                    {NATIVE_ADDRESS_MESSAGE}
-                                </span>
-                            </span>
-                        ),
+                        message: <span>{NATIVE_ADDRESS_MESSAGE}</span>,
                     }}
                     isCollapsedByDefault
                     collapsedMessage={

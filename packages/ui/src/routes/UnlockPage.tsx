@@ -109,7 +109,7 @@ const UnlockPage = () => {
                     close={false}
                     backButton={false}
                 >
-                    {true && (
+                    {lockedByTimeout && (
                         <div className="group relative">
                             <a
                                 href={LINKS.ARTICLES.LOCK_TIMEOUT}

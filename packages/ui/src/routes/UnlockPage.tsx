@@ -109,7 +109,7 @@ const UnlockPage = () => {
                     close={false}
                     backButton={false}
                 >
-                    {lockedByTimeout && (
+                    {true && (
                         <div className="group relative">
                             <a
                                 href={LINKS.ARTICLES.LOCK_TIMEOUT}
@@ -121,7 +121,7 @@ const UnlockPage = () => {
                                     className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
                                 />
                                 <Tooltip
-                                    className="!w-52 !break-word !whitespace-normal !-translate-x-44 border boder-gray-300"
+                                    className="!w-52 !break-word !whitespace-normal  border boder-gray-300"
                                     content="Locked too soon? Click to learn how to increase the lock timeout."
                                 />
                             </a>

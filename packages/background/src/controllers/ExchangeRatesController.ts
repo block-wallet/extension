@@ -89,7 +89,7 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
                     isRatesChangingAfterNetworkChange: true,
                 });
 
-                await this.updateNetworkNativeCurrencyId(network);
+                this.updateNetworkNativeCurrencyId(network);
                 await this.updateExchangeRates();
 
                 this.store.updateState({

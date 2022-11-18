@@ -20,7 +20,6 @@ const AssetsLoadingSkeleton = () => {
                                         "w-4 h-4 pointer-events-none",
                                         index % 2 === 1 && "rotate-180"
                                     )}
-                                    loop
                                 />
                             </div>
                             <div>
@@ -30,7 +29,6 @@ const AssetsLoadingSkeleton = () => {
                                     }
                                     className="mb-2 h-3 w-16 rotate-180"
                                     svgClassName="rounded-md"
-                                    loop
                                 />
                                 <AnimatedIcon
                                     icon={
@@ -38,7 +36,6 @@ const AssetsLoadingSkeleton = () => {
                                     }
                                     className="h-3 w-24"
                                     svgClassName="rounded-md"
-                                    loop
                                 />
                             </div>
                         </div>

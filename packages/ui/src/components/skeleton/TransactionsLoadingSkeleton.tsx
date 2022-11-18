@@ -18,7 +18,6 @@ const TransactionsLoadingSkeleton = () => {
                                         "w-4 h-4 pointer-events-none",
                                         index % 2 === 1 && "rotate-180"
                                     )}
-                                    loop
                                 />
                             </div>
                             <div>
@@ -28,7 +27,6 @@ const TransactionsLoadingSkeleton = () => {
                                     }
                                     className="mb-2 h-3 w-16 rotate-180"
                                     svgClassName="rounded-md"
-                                    loop
                                 />
                                 <AnimatedIcon
                                     icon={
@@ -36,7 +34,6 @@ const TransactionsLoadingSkeleton = () => {
                                     }
                                     className="h-3 w-24"
                                     svgClassName="rounded-md"
-                                    loop
                                 />
                             </div>
                         </div>
@@ -45,13 +42,11 @@ const TransactionsLoadingSkeleton = () => {
                                 icon={AnimatedIconName.GreyLineLoadingSkeleton}
                                 className="mb-2 h-3 w-10"
                                 svgClassName="rounded-md"
-                                loop
                             />
                             <AnimatedIcon
                                 icon={AnimatedIconName.GreyLineLoadingSkeleton}
                                 className="h-3 w-16 rotate-180"
                                 svgClassName="rounded-md"
-                                loop
                             />
                         </div>
                     </div>

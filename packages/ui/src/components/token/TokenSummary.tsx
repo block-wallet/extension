@@ -1,7 +1,7 @@
 import { FC } from "react"
 import classnames from "classnames"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import AnimatedIcon, { AnimatedIconName } from "../AnimatedIcon"
+import BalanceLoadingSkeleton from "../skeleton/BalanceLoadingSkeleton"
 
 interface TokenSummaryMembers {
     Balances: FC<{ children: React.ReactNode }>
@@ -35,27 +35,10 @@ const Balances = ({ children }: { children: React.ReactNode }) => {
     const isLoading =
         state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
 
-    const balancesLoadingSkeleton = (
-        <div className="flex flex-col items-center space-y-2">
-            <AnimatedIcon
-                icon={AnimatedIconName.BlueLineLoadingSkeleton}
-                className="w-32 h-4 pointer-events-none"
-                svgClassName="rounded-md"
-                loop
-            />
-            <AnimatedIcon
-                icon={AnimatedIconName.BlueLineLoadingSkeleton}
-                className="w-16 h-4 pointer-events-none rotate-180"
-                svgClassName="rounded-md"
-                loop
-            />
-        </div>
-    )
-
     return (
         <>
             {isLoading ? (
-                balancesLoadingSkeleton
+                <BalanceLoadingSkeleton />
             ) : (
                 <div className="flex flex-col items-center space-y-1">
                     {children}

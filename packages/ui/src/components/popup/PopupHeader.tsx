@@ -1,5 +1,12 @@
 import classnames from "classnames"
-import React, { FunctionComponent, useEffect, useState } from "react"
+import { FunctionComponent, useEffect, useState } from "react"
+
+import {
+    useOnMountHistory,
+    useOnMountLastLocation,
+} from "../../context/hooks/useOnMount"
+import NetworkDisplayBadge from "../chain/NetworkDisplayBadge"
+
 import AppIcon from "../icons/AppIcon"
 
 import CloseIcon from "../icons/CloseIcon"
@@ -16,6 +23,7 @@ export interface PopupHeaderProps {
     title: string
     backButton?: boolean
     keepState?: boolean // if true, keeps the previous state while going back using the back button
+    networkIndicator?: boolean
     close?: string | boolean
     icon?: string | null
     disabled?: boolean // used to disable back or close buttons
@@ -30,6 +38,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     title,
     backButton = true,
     keepState = false,
+    networkIndicator = false,
     close = "/home",
     icon,
     children,
@@ -43,7 +52,6 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
 
     const history = useOnMountHistory()
     const lastLocation = useOnMountLastLocation()
-
     const [fromAction, setFromAction] = useState(false)
 
     useEffect(() => {
@@ -127,19 +135,6 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
             >
                 {title}
             </span>
-            {close && (
-                <button
-                    onClick={onCloseAction}
-                    disabled={disabled}
-                    className={classnames(
-                        "p-2 ml-auto -mr-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300",
-                        disabled && "pointer-events-none text-gray-300"
-                    )}
-                    type="button"
-                >
-                    <CloseIcon />
-                </button>
-            )}
             {actions && (
                 <div className="ml-auto">
                     <Dropdown>
@@ -156,6 +151,19 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                 </div>
             )}
             {children}
+            {close && (
+                <button
+                    onClick={onCloseAction}
+                    disabled={disabled}
+                    className={classnames(
+                        "p-2 ml-auto -mr-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300",
+                        disabled && "pointer-events-none text-gray-300"
+                    )}
+                    type="button"
+                >
+                    <CloseIcon />
+                </button>
+            )}
         </div>
     )
 }

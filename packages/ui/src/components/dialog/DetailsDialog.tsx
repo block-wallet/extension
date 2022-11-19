@@ -68,14 +68,14 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                         >
                             {title}
                         </h2>
-                        <div className="-mx-6">
+                        <div className="-mx-3">
                             <Divider />
                         </div>
                     </div>
                 )}
                 <div
                     className={classnames(
-                        "grow mb-auto overflow-auto",
+                        "grow mb-auto overflow-auto -mr-3",
                         fixedTitle && "px-3"
                     )}
                 >

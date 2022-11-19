@@ -7,6 +7,8 @@
  */
 import { INITIAL_NETWORKS } from '../constants/networks';
 
+const KLAYTN_MAINNET_CHAIN_ID = 8217;
+
 // List of supported networks chain IDs
 export const ONEINCH_SWAPS_NETWORKS: number[] = [
     INITIAL_NETWORKS.MAINNET.chainId,
@@ -16,12 +18,14 @@ export const ONEINCH_SWAPS_NETWORKS: number[] = [
     INITIAL_NETWORKS.ARBITRUM.chainId,
     INITIAL_NETWORKS.AVALANCHEC.chainId,
     INITIAL_NETWORKS.FANTOM.chainId,
+    INITIAL_NETWORKS.XDAI.chainId,
+    KLAYTN_MAINNET_CHAIN_ID,
 ];
 
 /**
  * Swap Fees Config
  */
-export const BASE_SWAP_FEE = 0;
+export const BASE_SWAP_FEE = 0.5;
 export const REFERRER_ADDRESS = '0x3110a855333bfb922aeCB1B3542ba2fdE28d204F';
 
 // API Recommended gas limit increase

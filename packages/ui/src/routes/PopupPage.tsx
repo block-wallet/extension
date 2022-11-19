@@ -15,6 +15,8 @@ import ErrorDialog from "../components/dialog/ErrorDialog"
 import AccountIcon from "../components/icons/AccountIcon"
 import ActivityAssetsView from "../components/ActivityAssetsView"
 import GenericTooltip from "../components/label/GenericTooltip"
+import AnimatedIcon, { AnimatedIconName } from "../components/AnimatedIcon"
+import Tooltip from "../components/label/Tooltip"
 
 // Utils
 import { formatHash, formatName } from "../util/formatAccount"
@@ -145,16 +147,29 @@ const PopupPage = () => {
     const history = useHistory()
     const account = useSelectedAccount()
     const { nativeToken } = useTokensList()
-    const network = useSelectedNetwork()
+    const { nativeCurrency, isSendEnabled, isSwapEnabled, isBridgeEnabled } =
+        useSelectedNetwork()
 
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
 
     return (
-        <PopupLayout
-            header={
-                <PopupHeader title="" close={false} backButton={false}>
-                    <div className="flex flex-row items-center justify-between w-full">
-                        <div className="flex flex-row items-center space-x-3">
+        <PageLayout screen className="max-h-screen popup-layout">
+            <ErrorDialog
+                title="Error!"
+                message={error}
+                open={hasErrorDialog}
+                onClickOutside={() => {
+                    setHasErrorDialog(false)
+                }}
+                onDone={() => setHasErrorDialog(false)}
+            />
+            <div
+                className="absolute top-0 left-0 z-10 flex flex-col items-start w-full p-6 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
+                style={{ backdropFilter: "blur(4px)" }}
+            >
+                <div className="flex flex-row items-center justify-between w-full">
+                    <div className="flex flex-row items-center space-x-3">
+                        <div className="relative flex flex-col items-start group">
                             <Link
                                 to="/accounts"
                                 className="transition duration-300"
@@ -166,24 +181,18 @@ const PopupPage = () => {
                                     fill={getAccountColor(account?.address)}
                                 />
                             </Link>
-                            <div className="flex flex-row items-center space-x-1">
-                                <AccountDisplay />
-                                <Link
-                                    to="/accounts/menu/receive"
-                                    draggable={false}
-                                    onClick={(e) => {
-                                        e.preventDefault()
-
-                                        history.push("/accounts/menu/receive")
-                                    }}
-                                    className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
-                                >
-                                    <QRIcon />
-                                </Link>
-                            </div>
+                            <Tooltip
+                                className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-bold bg-gray-900 text-white"
+                                content={
+                                    <>
+                                        <div className="border-t-4 border-r-4 border-gray-900 absolute top-0 left-2 w-2 h-2 -mt-2.5 transform -rotate-45 -translate-x-1/2" />
+                                        <span>My Accounts</span>
+                                    </>
+                                }
+                            />
                         </div>
-                        <div className="flex flex-row items-center -mr-1 space-x-2">
-                            <GasPricesInfo />
+                        <div className="flex flex-row items-center space-x-1">
+                            <AccountDisplay />
                             <Link
                                 to="/settings"
                                 draggable={false}
@@ -234,18 +243,18 @@ const PopupPage = () => {
                                 title={
                                     formatUnits(
                                         nativeToken.balance || "0",
-                                        network.nativeCurrency.decimals
-                                    ) + ` ${network.nativeCurrency.symbol}`
+                                        nativeCurrency.decimals
+                                    ) + ` ${nativeCurrency.symbol}`
                                 }
                             >
                                 {formatRounded(
                                     formatUnits(
                                         nativeToken.balance || "0",
-                                        network.nativeCurrency.decimals
+                                        nativeCurrency.decimals
                                     ),
                                     5
                                 )}{" "}
-                                {network.nativeCurrency.symbol}
+                                {nativeCurrency.symbol}
                             </TokenSummary.TokenBalance>
                             <TokenSummary.ExchangeRateBalance>
                                 {formatCurrency(
@@ -255,7 +264,7 @@ const PopupPage = () => {
                                         state.exchangeRates[
                                             state.networkNativeCurrency.symbol
                                         ],
-                                        network.nativeCurrency.decimals
+                                        nativeCurrency.decimals
                                     ),
                                     {
                                         currency: state.nativeCurrency,
@@ -272,14 +281,13 @@ const PopupPage = () => {
                                 draggable={false}
                                 className={classnames(
                                     "flex flex-col items-center space-y-2 group",
-                                    !network.isSendEnabled &&
-                                        "pointer-events-none"
+                                    !isSendEnabled && "pointer-events-none"
                                 )}
                             >
                                 <div
                                     className={classnames(
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        !network.isSendEnabled
+                                        !isSendEnabled
                                             ? "bg-gray-300"
                                             : "bg-primary-300"
                                     )}
@@ -291,21 +299,62 @@ const PopupPage = () => {
                                     Send
                                 </span>
                             </Link>
-                            {network.isTornadoEnabled && (
+                            {isSwapEnabled && (
                                 <Link
                                     to="/privacy"
                                     draggable={false}
-                                    className="flex flex-col items-center space-y-2 group"
+                                    className={classnames(
+                                        "flex flex-col items-center space-y-2 group",
+                                        (!isSendEnabled ||
+                                            !state.isUserNetworkOnline) &&
+                                            "pointer-events-none"
+                                    )}
                                 >
-                                    <div className="group w-8 h-8 flex items-center overflow-hidden transition duration-300 rounded-full bg-primary-300 group-hover:opacity-75">
-                                        <img
-                                            alt="Privacy"
-                                            src={eye}
-                                            className="w-full h-3 group-hover:animate-privacy-rotate select-none"
-                                        />
+                                    <div
+                                        className={classnames(
+                                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                            !isSendEnabled ||
+                                                !state.isUserNetworkOnline
+                                                ? "bg-gray-300"
+                                                : "bg-primary-300"
+                                        )}
+                                        style={{ transform: "scaleY(-1)" }}
+                                    >
+                                        <DoubleArrowHoverAnimation />
                                     </div>
                                     <span className="text-xs font-medium">
                                         Privacy
+                                    </span>
+                                </Link>
+                            )}
+                            {isBridgeEnabled && (
+                                <Link
+                                    to="/bridge"
+                                    draggable={false}
+                                    className={classnames(
+                                        "flex flex-col items-center space-y-2 group",
+                                        (!isSendEnabled ||
+                                            !state.isUserNetworkOnline) &&
+                                            "pointer-events-none"
+                                    )}
+                                >
+                                    <div
+                                        className={classnames(
+                                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                            !isSendEnabled ||
+                                                !state.isUserNetworkOnline
+                                                ? "bg-gray-300"
+                                                : "bg-primary-300"
+                                        )}
+                                        style={{ transform: "scaleY(-1)" }}
+                                    >
+                                        <AnimatedIcon
+                                            icon={AnimatedIconName.Bridge}
+                                            className="cursor-pointer"
+                                        />
+                                    </div>
+                                    <span className="text-xs font-medium">
+                                        Bridge
                                     </span>
                                 </Link>
                             )}

@@ -198,13 +198,14 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                                         return (
                                             <Dropdown.MenuItem
                                                 key={`${menuItem.optionType}_${indx}`}
+                                                className="p-2"
+                                                onClick={() =>
+                                                    handleOptionClick(
+                                                        optionMenuMetadata
+                                                    )
+                                                }
                                             >
                                                 <optionMenuMetadata.Component
-                                                    onClick={() =>
-                                                        handleOptionClick(
-                                                            optionMenuMetadata
-                                                        )
-                                                    }
                                                     key={menuItem.optionType}
                                                     disabled={menuItem.disabled}
                                                 />

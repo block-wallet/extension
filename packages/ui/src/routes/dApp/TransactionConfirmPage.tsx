@@ -384,7 +384,7 @@ const TransactionConfirm: React.FC<{
         return (
             <GenericTooltip
                 top
-                className="w-60 p-2 ml-8"
+                className="w-60 p-2 ml-8 break-all"
                 content={
                     <div>
                         <p>
@@ -752,21 +752,16 @@ const TransactionConfirm: React.FC<{
                         </div>
                     </div>
                 </div>
-
                 <AdvancedSettings
-                    config={{
-                        showCustomNonce: true,
-                        showFlashbots: network.chainId === 1,
-                        address: checksumFromAddress,
-                        gasLimit: transactionGas.gasLimit,
-                    }}
-                    data={{
-                        flashbots: false,
-                    }}
-                    setData={(data) => {
+                    address={checksumFromAddress}
+                    transactionGasLimit={transactionGas.gasLimit}
+                    advancedSettings={transactionAdvancedData}
+                    setAdvancedSettings={(
+                        newSettings: TransactionAdvancedData
+                    ) => {
                         setTransactionAdvancedData({
-                            customNonce: data.customNonce,
-                            flashbots: data.flashbots,
+                            customNonce: newSettings.customNonce,
+                            flashbots: newSettings.flashbots,
                         })
                     }}
                 />

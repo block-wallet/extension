@@ -1571,33 +1571,34 @@ export class TransactionController extends BaseController<
         const transactions = [...this.store.getState().transactions];
         const { chainId } = this._networkController.network;
 
-        await runPromiseSafely(
-            Promise.all(
-                transactions.map(async (meta) => {
-                    const txBelongsToCurrentChain = meta.chainId === chainId;
+        for (let i = 0; i < transactions.length; i++) {
+            const meta = transactions[i];
+            const txBelongsToCurrentChain = meta.chainId === chainId;
 
-                    if (!meta.verifiedOnBlockchain && txBelongsToCurrentChain) {
-                        const [reconciledTx, updateRequired] =
-                            await this.blockchainTransactionStateReconciler(
-                                meta,
-                                currentBlockNumber
-                            );
-                        if (updateRequired) {
-                            const newTransactions = [
-                                ...this.store.getState().transactions,
-                            ];
-                            const tx = newTransactions.indexOf(meta);
-                            if (tx) {
-                                newTransactions[tx] = reconciledTx;
-                                this.store.updateState({
-                                    transactions: newTransactions,
-                                });
-                            }
+            if (!meta.verifiedOnBlockchain && txBelongsToCurrentChain) {
+                const result = await runPromiseSafely(
+                    this.blockchainTransactionStateReconciler(
+                        meta,
+                        currentBlockNumber
+                    )
+                );
+                if (result) {
+                    const [reconciledTx, updateRequired] = result;
+                    if (updateRequired) {
+                        const newTransactions = [
+                            ...this.store.getState().transactions,
+                        ];
+                        const tx = newTransactions.indexOf(meta);
+                        if (tx) {
+                            newTransactions[tx] = reconciledTx;
+                            this.store.updateState({
+                                transactions: newTransactions,
+                            });
                         }
                     }
-                })
-            )
-        );
+                }
+            }
+        }
     }
 
     /**
@@ -2125,7 +2126,7 @@ export class TransactionController extends BaseController<
      * @param txHash - The transaction hash.
      * @returns A tuple with the receipt and an indicator of transaction success.
      */
-    private async checkTransactionReceiptStatus(
+    public async checkTransactionReceiptStatus(
         txHash: string | undefined,
         provider: StaticJsonRpcProvider
     ): Promise<[TransactionReceipt | null, boolean | undefined]> {
@@ -2341,7 +2342,7 @@ export class TransactionController extends BaseController<
      * @param txId The transaction id
      * @param updates The updates to be applied
      */
-    private updateTransactionPartially = (
+    public updateTransactionPartially = (
         txId: string,
         updates: Partial<TransactionMeta>
     ): void => {
@@ -2376,9 +2377,12 @@ export class TransactionController extends BaseController<
         const { transactionCategory, transactionParams } = transactionMeta;
 
         if (
-            (transactionCategory ===
-                TransactionCategories.CONTRACT_INTERACTION ||
-                transactionCategory === TransactionCategories.EXCHANGE) &&
+            transactionCategory &&
+            [
+                TransactionCategories.CONTRACT_INTERACTION,
+                TransactionCategories.EXCHANGE,
+                TransactionCategories.BRIDGE,
+            ].includes(transactionCategory) &&
             transactionParams.data &&
             transactionParams.to
         ) {
@@ -2425,6 +2429,25 @@ export class TransactionController extends BaseController<
 
     public getTxSignTimeout(): number {
         return this.store.getState().txSignTimeout;
+    }
+
+    public getTransactions(
+        filters: {
+            transactionCategory?: TransactionCategories;
+        } = {}
+    ): TransactionMeta[] {
+        const txs = this.store.getState().transactions || [];
+        return txs.filter((tx) => {
+            let matched = true;
+
+            //prepared for future filters
+            if (filters.transactionCategory) {
+                matched =
+                    matched &&
+                    filters.transactionCategory === tx.transactionCategory;
+            }
+            return matched;
+        });
     }
 }
 

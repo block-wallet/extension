@@ -2,11 +2,13 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { parseUnits } from 'ethers/lib/utils';
 import { BaseController } from '../infrastructure/BaseController';
 import { Network } from '../utils/constants/networks';
+import { transactionToIncomingBridgeTransactionPlaceholder } from '../utils/incomingBridgePlaceholder';
 import {
     BlankDepositController,
     PendingWithdrawal,
     PendingWithdrawalStatus,
 } from './blank-deposit/BlankDepositController';
+import BridgeController, { BRIDGE_PENDING_STATUSES } from './BridgeController';
 import NetworkController from './NetworkController';
 import { PreferencesController } from './PreferencesController';
 import { TransactionController } from './transactions/TransactionController';
@@ -36,7 +38,8 @@ export class ActivityListController extends BaseController<IActivityListState> {
         private readonly _blankDepositsController: BlankDepositController,
         private readonly _preferencesController: PreferencesController,
         private readonly _networkController: NetworkController,
-        private readonly _transactionWatcherController: TransactionWatcherController
+        private readonly _transactionWatcherController: TransactionWatcherController,
+        private readonly _bridgeController: BridgeController
     ) {
         super();
 
@@ -46,6 +49,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
         this._preferencesController.store.subscribe(this.onStoreUpdate);
         this._networkController.store.subscribe(this.onStoreUpdate);
         this._transactionWatcherController.store.subscribe(this.onStoreUpdate);
+        this._bridgeController.store.subscribe(this.onStoreUpdate);
         this.onStoreUpdate();
     }
 
@@ -86,6 +90,16 @@ export class ActivityListController extends BaseController<IActivityListState> {
             selectedAddress
         );
 
+        //Pending bridges placeholders for the current network
+        const pendingIncomingBridgePlaceholders =
+            this._parsePendingIncomingBridgePlaceholders();
+
+        const confirmedIncomingBridgeTransactions =
+            this.parseBridgeReceivingTransactions(
+                network.chainId,
+                selectedAddress
+            );
+
         // Get parsed withdrawals
         const { confirmed: confirmedWithdrawals, pending: pendingWithdrawals } =
             this.parseWithdrawalTransactions(selectedAddress, network);
@@ -93,6 +107,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
         // Concat all and order by time
         const confirmedConcated = confirmedTransactions
             .concat(confirmedWithdrawals)
+            .concat(confirmedIncomingBridgeTransactions)
             .concat(watchedTransactions)
             .filter(
                 (t1, index, self) =>
@@ -145,6 +160,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
         // Pendings ordered by time descending
         const pending = pendingWithdrawals
             .concat(pendingTransactions)
+            .concat(pendingIncomingBridgePlaceholders)
             .sort((a, b) => a.time - b.time)
             .map((c: TransactionMeta) => {
                 return this.transactionSymbolTransformation(c);
@@ -224,6 +240,31 @@ export class ActivityListController extends BaseController<IActivityListState> {
         }
 
         return watchedTransactions;
+    }
+
+    /**
+     * parseBridgeReceivingTransactions
+     *
+     * @returns The incoming bridge transactions
+     */
+    private parseBridgeReceivingTransactions(
+        chainId: number,
+        selectedAddress: string
+    ): TransactionMeta[] {
+        const { bridgeReceivingTransactions } =
+            this._bridgeController.store.getState();
+
+        if (chainId in (bridgeReceivingTransactions || {})) {
+            if (selectedAddress in bridgeReceivingTransactions[chainId]) {
+                return (
+                    Object.values(
+                        bridgeReceivingTransactions[chainId][selectedAddress]
+                    ) || []
+                );
+            }
+        }
+
+        return [];
     }
 
     /**
@@ -324,6 +365,52 @@ export class ActivityListController extends BaseController<IActivityListState> {
             .map(mapFc);
 
         return { confirmed, pending };
+    }
+
+    /**
+     * _parsePendingIncomingBridgePlaceholders
+     *
+     *  Incoming bridges that may or may not be converted into an incoming transaction for this network and account.
+     *  - If the bridge is completed successfully, then it will appear as a trasnaction gathered by the BridgingController.
+     *  - If the bridge failed, it will be filtered by the  tx.bridgeParams.status === BridgeStatus.PENDING condition
+     *
+     * @returns pending bridges placeholders for the destination network
+     */
+    private _parsePendingIncomingBridgePlaceholders(): TransactionMeta[] {
+        const pendingIncomingBridgePlaceholders =
+            this._transactionsController.store
+                .getState()
+                .transactions.filter((tx) => {
+                    const { bridgeParams, transactionCategory, status } = tx;
+                    if (!bridgeParams || !bridgeParams.status) {
+                        return false;
+                    }
+
+                    return (
+                        // Sending tx category is Bridge
+                        transactionCategory === TransactionCategories.BRIDGE &&
+                        // Destination chain transaction is the selected one
+                        Number(tx.bridgeParams?.toChainId) ===
+                            Number(this._networkController.network.chainId) &&
+                        //There is no receiving hash YET
+                        !bridgeParams.receivingTxHash &&
+                        // Bridge is in a pending status
+                        BRIDGE_PENDING_STATUSES.includes(bridgeParams.status) &&
+                        // Sending transaction is submitted or confirmed
+                        [
+                            TransactionStatus.SUBMITTED,
+                            TransactionStatus.CONFIRMED,
+                        ].includes(status)
+                    );
+                })
+                .map((tx) =>
+                    transactionToIncomingBridgeTransactionPlaceholder(
+                        tx,
+                        this._networkController.network.chainId
+                    )
+                );
+
+        return pendingIncomingBridgePlaceholders;
     }
 
     /**

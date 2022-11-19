@@ -92,7 +92,7 @@ const AddTokenManualView = ({
                 address: data.tokenAddress,
                 decimals: data.tokenDecimals,
                 logo: values.tokenLogo,
-                name: values.tokenName ?? values.tokenSymbol.toUpperCase(),
+                name: data.tokenName ?? data.tokenSymbol.toUpperCase(),
                 symbol: data.tokenSymbol,
                 type: values.tokenType,
             }
@@ -149,7 +149,11 @@ const AddTokenManualView = ({
             setIsLoading(true)
             const tokenSearchResponse = await searchTokenInAssetsList(value)
             setIsLoading(false)
-            if (tokenSearchResponse && tokenSearchResponse.length) {
+            if (
+                tokenSearchResponse &&
+                tokenSearchResponse.length > 0 &&
+                tokenSearchResponse[0].symbol !== ""
+            ) {
                 setValue("tokenAddress", tokenSearchResponse[0].address)
                 setValue(
                     "tokenDecimals",
@@ -161,6 +165,12 @@ const AddTokenManualView = ({
                 setValue("tokenType", tokenSearchResponse[0].type)
 
                 setSubmitEnabled(true)
+            } else {
+                reset()
+                setError("tokenAddress", {
+                    message: `Invalid token contract address for this network`,
+                })
+                setValue("tokenAddress", value)
             }
         } else {
             reset()
@@ -180,21 +190,21 @@ const AddTokenManualView = ({
             {/* Add Manual token form */}
             <form
                 id="manualViewForm"
-                className="flex flex-col justify-between h-full mt-20"
+                className="flex flex-col justify-between h-4/5 mt-20"
                 onSubmit={onSubmit}
             >
-                <div className="text-base font-bold text-black w-full text-center px-6">
+                <div className="text-base font-bold text-black w-full text-center px-6 pb-3">
                     Custom Token
                 </div>
                 <div className="h-full">
                     {isLoading ? (
-                        <div className="w-full h-full flex justify-center items-center">
+                        <div className="w-full h-4/5 flex justify-center items-center">
                             <Spinner size="24px" />
                         </div>
                     ) : (
                         <>
                             {/* ADDRESS */}
-                            <div className="flex flex-col flex-1 p-6 pb-0 space-y-1">
+                            <div className="flex flex-col flex-1 p-6 pt-0 pb-3 space-y-1">
                                 <TextInput
                                     appearance="outline"
                                     label="Token Contract Address"
@@ -210,11 +220,24 @@ const AddTokenManualView = ({
                                     autoFocus={true}
                                     maxLength={42}
                                     defaultValue={values.tokenAddress}
+                                    spellCheck={false}
+                                />
+                            </div>
+
+                            {/* NAME */}
+                            <div className="flex flex-col flex-1 p-6 pt-0 pb-3 space-y-1">
+                                <TextInput
+                                    appearance="outline"
+                                    label="Token Name"
+                                    placeholder={values.tokenName || "Ether"}
+                                    defaultValue={values.tokenName}
+                                    error={errors.tokenName?.message}
+                                    {...register("tokenName")}
                                 />
                             </div>
 
                             {/* SYMBOL */}
-                            <div className="flex flex-col flex-1 p-6 pb-0 space-y-1">
+                            <div className="flex flex-col flex-1 p-6 pt-0 pb-3 space-y-1">
                                 <TextInput
                                     appearance="outline"
                                     label="Token Symbol"
@@ -222,11 +245,12 @@ const AddTokenManualView = ({
                                     defaultValue={values.tokenSymbol}
                                     error={errors.tokenSymbol?.message}
                                     {...register("tokenSymbol")}
+                                    disabled={true}
                                 />
                             </div>
 
                             {/* DECIMALS */}
-                            <div className="flex flex-col flex-1 p-6 pb-0 space-y-1">
+                            <div className="flex flex-col flex-1 p-6 pt-0 pb-3 space-y-1">
                                 <TextInput
                                     appearance="outline"
                                     label="Decimals of Precision"

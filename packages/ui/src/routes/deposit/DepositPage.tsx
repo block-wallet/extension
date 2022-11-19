@@ -39,6 +39,7 @@ import { isHardwareWallet, isInternalAccount } from "../../util/account"
 import { AccountType } from "../../context/commTypes"
 import { AiOutlineWarning } from "react-icons/ai"
 import { useBlankState } from "../../context/background/backgroundHooks"
+import { ApproveOperation } from "../transaction/ApprovePage"
 
 const getWarningMessage = (accountType: AccountType) => {
     let hardwareMessage = undefined
@@ -202,6 +203,7 @@ const DepositPage = () => {
                             amount,
                             selectedToken.token.decimals
                         ),
+                        approveOperation: ApproveOperation.DEPOSIT,
                         nextLocationState: depositConfirmState,
                     },
                 })

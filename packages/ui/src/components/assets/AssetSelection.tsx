@@ -1,8 +1,6 @@
 import DropDownSelector from "../input/DropDownSelector"
 import SearchInput from "../input/SearchInput"
-import TokenDisplay from "../token/TokenDisplay"
-import plusIcon from "../../assets/images/icons/plus.svg"
-import React, {
+import {
     ChangeEvent,
     Dispatch,
     FC,
@@ -14,17 +12,15 @@ import {
     TokenWithBalance,
     useTokensList,
 } from "../../context/hooks/useTokensList"
-import { ActionButton } from "../button/ActionButton"
 import { BigNumber } from "ethers"
-import { formatNumberLength } from "../../util/formatNumberLength"
 import { formatRounded } from "../../util/formatRounded"
 import { formatUnits } from "ethers/lib/utils"
 import { searchTokenInAssetsList } from "../../context/commActions"
 import { useCustomCompareEffect } from "use-custom-compare"
 import { useDepositTokens } from "../../context/hooks/useDepositTokens"
 import { useSwappedTokenList } from "../../context/hooks/useSwappedTokenList"
-import classnames from "classnames"
-import TokenLogo from "../token/TokenLogo"
+import AssetDropdownDisplay from "./AssetDropdownDisplay"
+import AssetList from "./AssetList"
 
 export enum AssetListType {
     ALL = "ALL",
@@ -270,121 +266,17 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
           )
         : undefined
 
-    // List
-    const AssetList = ({
-        setActive,
-    }: {
-        setActive?: Dispatch<SetStateAction<boolean>>
-    }) => {
-        return (
-            <div className="pb-6">
-                <input
-                    readOnly
-                    name="asset"
-                    ref={register ? register.ref : null}
-                    className="hidden"
-                    value={selectedAsset?.token.address}
-                />
-                {searchResult.map((asset, index) => {
-                    return (
-                        <div
-                            className="cursor-pointer"
-                            key={index.toString()}
-                            onClick={() => onAssetClick(asset, setActive)}
-                        >
-                            <TokenDisplay
-                                data={{
-                                    ...asset.token,
-                                }}
-                                clickable={false}
-                                active={
-                                    selectedAsset?.token.address ===
-                                    asset.token.address
-                                }
-                                hoverable={true}
-                            />
-                        </div>
-                    )
-                })}
-                {search &&
-                    searchResult.length === 0 &&
-                    selectedAssetList !== AssetListType.DEPOSIT && (
-                        <div className="px-3">
-                            <p className="text-xs text-black text-center p-4">
-                                The asset couldn’t be found, try adding it
-                                manually.
-                            </p>
-                            <ActionButton
-                                icon={plusIcon}
-                                label="Add Token"
-                                to="/settings/tokens/add"
-                                state={{
-                                    addTokenState,
-                                    searchValue: search,
-                                }}
-                            />
-                        </div>
-                    )}
-            </div>
-        )
-    }
-
-    const dropdownDisplay = selectedAsset ? (
-        <div className="flex flex-row flex-grow justify-between items-center">
-            {displayIcon && (
-                <div className="flex items-center justify-center w-6 h-6 rounded-full mr-2">
-                    <TokenLogo
-                        src={selectedAsset.token.logo}
-                        alt={selectedAsset.token.name}
-                    />
-                </div>
-            )}
-            <div className="flex flex-grow justify-between space-x-1">
-                <div className="flex flex-col justify-center">
-                    <span className="text-base font-semibold">
-                        {selectedAsset.token.symbol}
-                    </span>
-                    {!customAmount && (
-                        <span
-                            title={assetBalance}
-                            className={classnames(
-                                "text-xs text-gray-600 mt-1 truncate",
-                                assetBalanceClassName
-                            )}
-                        >
-                            {assetBalance}
-                        </span>
-                    )}
-                </div>
-                {customAmount && (
-                    <span
-                        className="text-base font-semibold ml-auto mr-2 truncate max-w-lg"
-                        title={customAmount?.toString()}
-                        style={{ maxWidth: "8.5rem" }}
-                    >
-                        {formatNumberLength(
-                            formatRounded(
-                                formatUnits(
-                                    customAmount,
-                                    selectedAsset.token.decimals
-                                ),
-                                9
-                            ),
-                            12
-                        )}
-                    </span>
-                )}
-            </div>
-        </div>
-    ) : (
-        <div className="flex flex-col justify-center w-full">
-            <div className="text-base font-semibold">Select...</div>
-        </div>
-    )
-
     return (
         <DropDownSelector
-            display={dropdownDisplay}
+            display={
+                <AssetDropdownDisplay
+                    selectedAsset={selectedAsset}
+                    displayIcon={displayIcon}
+                    customAmount={customAmount}
+                    assetBalance={assetBalance}
+                    assetBalanceClassName={assetBalanceClassName}
+                />
+            }
             error={error}
             topMargin={topMargin || 0}
             bottomMargin={bottomMargin || 0}
@@ -394,13 +286,21 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
             <div className="w-full p-3">
                 <SearchInput
                     name="tokenName"
-                    placeholder="Search Tokens by name or fill in Address"
+                    placeholder="Search tokens by name or address"
                     disabled={false}
                     autoFocus={true}
                     onChange={onSearchInputChange}
+                    defaultValue={search ?? ""}
                 />
             </div>
-            <AssetList />
+            <AssetList
+                addTokenState={addTokenState}
+                assets={searchResult}
+                onAssetClick={onAssetClick}
+                register={register}
+                searchValue={search}
+                selectedAddress={selectedAsset?.token.address}
+            />
         </DropDownSelector>
     )
 }

@@ -14,7 +14,7 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
 import { AssetIcon } from "../AssetsList"
 import RoundedIconButton from "../button/RoundedIconButton"
-
+import AnimatedIcon, { AnimatedIconName } from "../../components/AnimatedIcon"
 import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
 import openExternal from "../../assets/images/icons/open_external.svg"
 import PopupHeader from "../popup/PopupHeader"
@@ -39,7 +39,8 @@ const AssetDetailsPage = () => {
 
     const account = useSelectedAccount()
     const currencyFormatter = useCurrencyFromatter()
-    const { isSendEnabled, isSwapEnabled } = useSelectedNetwork()
+    const { isSendEnabled, isSwapEnabled, isBridgeEnabled } =
+        useSelectedNetwork()
     const asset = useGetAssetByTokenAddress(address)
     const isNative = isNativeTokenAddress(address)
     const tokenTransactions = useTokenTransactions(asset?.token?.symbol)
@@ -82,7 +83,10 @@ const AssetDetailsPage = () => {
             header={
                 <PopupHeader
                     onBack={() => history.push("/home")}
-                    title={`${formatName(account.name, 18)} - ${token.symbol}`}
+                    title={`${formatName(account.name, 14)} - ${formatName(
+                        token.name,
+                        12
+                    )}`}
                     close={false}
                     disabled={isRemoving}
                     actions={
@@ -101,7 +105,7 @@ const AssetDetailsPage = () => {
                                   >
                                       <div
                                           className={classnames(
-                                              "text-grey-900 cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-t-md",
+                                              "text-grey-900 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 rounded-t-md",
                                               optionsWidth
                                           )}
                                       >
@@ -122,7 +126,7 @@ const AssetDetailsPage = () => {
                                           setConfirmOpen(true)
                                       }}
                                       className={classnames(
-                                          "text-red-500 cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-b-md w-40",
+                                          "text-red-500 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 rounded-b-md w-40",
                                           optionsWidth
                                       )}
                                   >
@@ -173,14 +177,15 @@ const AssetDetailsPage = () => {
                                 className="truncate w-full max-w-xs"
                                 style={{ maxWidth: "18rem" }}
                             >
-                                {roundedTokenBalance}
+                                {`${roundedTokenBalance} ${token.symbol}`}
                             </span>
                         </TokenSummary.TokenBalance>
                         <TokenSummary.ExchangeRateBalance>
                             {currencyFormatter.format(
                                 balance,
                                 token.symbol,
-                                token.decimals
+                                token.decimals,
+                                isNative
                             )}
                         </TokenSummary.ExchangeRateBalance>
                     </TokenSummary.Balances>
@@ -236,6 +241,44 @@ const AssetDetailsPage = () => {
                                 </div>
                                 <span className="text-xs font-medium">
                                     Swap
+                                </span>
+                            </Link>
+                        )}
+                        {isBridgeEnabled && (
+                            <Link
+                                to={{
+                                    pathname: "/bridge",
+                                    state: {
+                                        token: asset.token,
+                                        fromAssetPage: true,
+                                        transitionDirection: "left",
+                                    },
+                                }}
+                                draggable={false}
+                                className={classnames(
+                                    "flex flex-col items-center space-y-2 group",
+                                    (!isSendEnabled ||
+                                        !state.isUserNetworkOnline) &&
+                                        "pointer-events-none"
+                                )}
+                            >
+                                <div
+                                    className={classnames(
+                                        "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                        !isSendEnabled ||
+                                            !state.isUserNetworkOnline
+                                            ? "bg-gray-300"
+                                            : "bg-primary-300"
+                                    )}
+                                    style={{ transform: "scaleY(-1)" }}
+                                >
+                                    <AnimatedIcon
+                                        icon={AnimatedIconName.Bridge}
+                                        className="cursor-pointer"
+                                    />
+                                </div>
+                                <span className="text-xs font-medium">
+                                    Bridge
                                 </span>
                             </Link>
                         )}

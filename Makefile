@@ -1,15 +1,4 @@
-include .make/Makefile.inc
-#include packages/background/Makefile
-#include packages/ui/Makefile
-BRANCH					:= $(shell git symbolic-ref --short -q HEAD | sed 's/[\.\/]/-/g')
-MODULES_DIR 			:= packages
-MODULES					:= $(shell ls $(MODULES_DIR))
-INLINE_RUNTIME_CHUNK	:= false
-GENERATE_SOURCEMAP		:= false
-TS_NODE_PROJECT			:= tsconfig.json
 ENVIRONMENT				?= dev
-
-
 
 depcheck:
 	@cd packages/background && npx depcheck
@@ -75,7 +64,7 @@ build/prod:
 	@rm -Rf dist/
 	@$(MAKE) ENVIRONMENT=prod build/background --no-print-directory
 	@$(MAKE) ENVIRONMENT=prod build/provider --no-print-directory
-	@$(MAKE) build/ui --no-print-directory
+	@$(MAKE) GENERATE_SOURCEMAP=false build/ui --no-print-directory
 	@$(MAKE) cp/snarks --no-print-directory
 	@$(MAKE) cp/release-notes --no-print-directory
 

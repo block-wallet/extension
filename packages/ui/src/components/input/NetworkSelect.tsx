@@ -12,34 +12,42 @@ import LoadingOverlay from "../loading/LoadingOverlay"
 import { Network } from "@block-wallet/background/utils/constants/networks"
 import classNames from "classnames"
 import { sortNetworksByOrder } from "../../util/networkUtils"
+import { getNetworkColor } from "../../util/getNetworkColor"
 
 const NetworkOption: FunctionComponent<{
     option: Network
     selectedNetwork: string
     handleNetworkChange: (option: any) => Promise<void>
     disabled?: boolean
-}> = ({ option, selectedNetwork, handleNetworkChange, disabled = false }) => (
-    <li
-        title={option.desc}
-        className={classnames(
-            "cursor-pointer flex flex-row justify-between pl-2 pr-2 pt-1 pb-1 items-center hover:bg-gray-100",
-            !option.enable && "bg-gray-200 pointer-events-none",
-            disabled && "opacity-50 pointer-events-none",
-            option.name === selectedNetwork && "pointer-events-none"
-        )}
-        onClick={async () => await handleNetworkChange(option.name)}
-    >
-        <span
+}> = ({ option, selectedNetwork, handleNetworkChange, disabled = false }) => {
+    const networkColor = getNetworkColor(option)
+    return (
+        <li
+            title={option.desc}
             className={classnames(
-                "leading-loose text-ellipsis overflow-hidden whitespace-nowrap",
-                selectedNetwork === option.name && "font-bold"
+                "cursor-pointer flex flex-row pl-2 pr-2 pt-1 pb-1 items-center hover:bg-gray-100",
+                !option.enable && "bg-gray-200 pointer-events-none",
+                disabled && "opacity-50 pointer-events-none",
+                option.name === selectedNetwork && "pointer-events-none"
             )}
+            onClick={async () => await handleNetworkChange(option.name)}
         >
-            {option.desc}
-        </span>
-        {selectedNetwork === option.name && <BsCheck size={16} />}
-    </li>
-)
+            <span
+                className={"h-2 w-2 rounded-xl mr-2"}
+                style={{ backgroundColor: networkColor }}
+            />
+            <span
+                className={classnames(
+                    "leading-loose text-ellipsis overflow-hidden whitespace-nowrap",
+                    selectedNetwork === option.name && "font-bold"
+                )}
+            >
+                {option.desc}
+            </span>
+            {selectedNetwork === option.name && <BsCheck size={16} />}
+        </li>
+    )
+}
 
 const NetworkSelect: FunctionComponent<{
     className?: string
@@ -67,9 +75,10 @@ const NetworkSelect: FunctionComponent<{
         setNetworkChanging(false)
     }
 
-    const getNetworkDesc = (): string => {
-        const networkName = selectedNetwork.toUpperCase()
-        return availableNetworks[networkName].desc
+    const getNetworkData = (): { color: string; desc: string } => {
+        const network = availableNetworks[selectedNetwork.toUpperCase()]
+        const color = getNetworkColor(network)
+        return { color: color, desc: network.desc }
     }
 
     return (
@@ -89,7 +98,7 @@ const NetworkSelect: FunctionComponent<{
                     }
                 }}
                 className={classNames(
-                    "relative flex flex-row justify-between items-center p-1 px-2 pr-1 text-gray-600 border rounded-md group border-primary-200 w-40 text-xs hover:border-primary-300",
+                    "relative flex flex-row items-center p-1 px-2 pr-1 text-gray-600 border rounded-md group border-primary-200 w-44 text-xs hover:border-primary-300",
                     !isImportingDeposits
                         ? "cursor-pointer select-none"
                         : "disabled:pointer-events-none opacity-50",
@@ -97,10 +106,14 @@ const NetworkSelect: FunctionComponent<{
                 )}
             >
                 <span
+                    className={"h-2 w-2 rounded-xl mr-2"}
+                    style={{ backgroundColor: getNetworkData().color }}
+                />
+                <span
                     data-testid="selected-network"
                     className="select-none w-36 text-ellipsis overflow-hidden whitespace-nowrap"
                 >
-                    {getNetworkDesc()}
+                    {getNetworkData().desc}
                 </span>
                 {networkList ? (
                     <RiArrowUpSLine size={16} />

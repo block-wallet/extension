@@ -17,7 +17,7 @@ import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
 
-import { getNetworkNameFromChainId } from "../../util/getExplorer"
+import { getNetworkFromChainId } from "../../util/getExplorer"
 import { Classes } from "../../styles"
 import { DappRequest, DappRequestProps } from "./DappRequest"
 import { DAPP_FEEDBACK_WINDOW_TIMEOUT } from "../../util/constants"
@@ -51,15 +51,11 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
     const { chainId: newNetworkChainId } =
         dappReqData as DappRequestParams[DappReq.SWITCH_NETWORK]
 
-    const [currentNetworkName, setCurrentNetworkName] = useState(
-        getNetworkNameFromChainId(
-            availableNetworks,
-            currentNetworkChainId,
-            "desc"
-        )
+    const [currentNetwork, setCurrentNetwork] = useState(
+        getNetworkFromChainId(availableNetworks, currentNetworkChainId)
     )
-    const [newNetworkName, setNewNetworkName] = useState(
-        getNetworkNameFromChainId(availableNetworks, newNetworkChainId, "desc")
+    const [newNetwork, setNewNetwork] = useState(
+        getNetworkFromChainId(availableNetworks, newNetworkChainId)
     )
 
     const [currentSiteMetadata, setSiteMetadata] = useState(siteMetadata)
@@ -67,19 +63,11 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
     useEffect(() => {
         // Check that this wasn't the last request and popup is still open to prevent
         // displaying same network on both labels
-        setCurrentNetworkName(
-            getNetworkNameFromChainId(
-                availableNetworks,
-                currentNetworkChainId,
-                "desc"
-            )
+        setCurrentNetwork(
+            getNetworkFromChainId(availableNetworks, currentNetworkChainId)
         )
-        setNewNetworkName(
-            getNetworkNameFromChainId(
-                availableNetworks,
-                newNetworkChainId,
-                "desc"
-            )
+        setNewNetwork(
+            getNetworkFromChainId(availableNetworks, newNetworkChainId)
         )
         setSiteMetadata(siteMetadata)
     }, [
@@ -192,13 +180,14 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
 
                 <div className="flex flex-col space-y-6">
                     {/* Current network */}
-                    <NetworkDisplayBadge
-                        iconColor="bg-green-500"
-                        className="min-w-[50%] max-w-[80%] py-1 m-auto"
-                        network={currentNetworkName}
-                        truncate={true}
-                        fill={false}
-                    />
+                    {currentNetwork && (
+                        <NetworkDisplayBadge
+                            className="min-w-[50%] py-1 m-auto"
+                            network={currentNetwork}
+                            truncate={true}
+                            fill={false}
+                        />
+                    )}
 
                     {/* Switch Line */}
                     <div className="flex flex-row items-center justify-center">
@@ -213,13 +202,14 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
                     </div>
 
                     {/* New network */}
-                    <NetworkDisplayBadge
-                        iconColor="bg-blue-500"
-                        className="min-w-[50%] max-w-[80%] py-1 m-auto"
-                        network={newNetworkName}
-                        truncate={true}
-                        fill={false}
-                    />
+                    {newNetwork && (
+                        <NetworkDisplayBadge
+                            className="min-w-[50%] py-1 m-auto"
+                            network={newNetwork}
+                            truncate={true}
+                            fill={false}
+                        />
+                    )}
                 </div>
                 {/* Info component */}
                 <InfoComponent className="mt-12">

@@ -1,4 +1,5 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
+import { BigNumber } from 'ethers';
 import { IMigration } from '../IMigration';
 
 /**
@@ -12,6 +13,9 @@ export default {
         updatedNetworks.OPTIMISM = {
             ...updatedNetworks.OPTIMISM,
             enable: true,
+            gasLowerCap: {
+                gasPrice: BigNumber.from('1000000'),
+            },
         };
         updatedNetworks.XDAI = {
             ...updatedNetworks.XDAI,

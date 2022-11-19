@@ -215,6 +215,9 @@ export const INITIAL_NETWORKS: Networks = {
             decimals: 18,
         },
         isCustomNetwork: true,
+        gasLowerCap: {
+            gasPrice: BigNumber.from('1000000'),
+        },
         enable: true,
         test: false,
         order: 3,

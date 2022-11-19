@@ -355,6 +355,37 @@
                 }
             ],
             "version": "0.4.2"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Introducing BlockWallet Bridges: now you can bridge assets directly inside BlockWallet."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Users can now immediately switch networks after adding a new one from DApps."
+                        },
+                        {
+                            "type": "success",
+                            "message": "We added a warning when users try sending funds to a Null Address (0x0...0000)."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Minor visual improvements."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.5.0"
         }
     ]
 }

@@ -24,6 +24,8 @@ import AccountSearchResults, {
     AccountResult,
 } from "../../components/account/AccountSearchResults"
 import Checkbox from "../../components/input/Checkbox"
+import { toChecksumAddress } from "ethereumjs-util"
+import { formatHashLastChars } from "../../util/formatAccount"
 
 // Schema
 const schema = yup.object().shape({
@@ -59,7 +61,7 @@ const SendPage = () => {
 
     const displayAddToContacts =
         isAddress &&
-        searchString.toLowerCase() !== currentAccount.address.toLowerCase() &&
+        toChecksumAddress(searchString) !== currentAccount.address &&
         !(addressBookAccounts || []).some(
             ({ address }) =>
                 address.toLowerCase() === searchString.toLowerCase()
@@ -93,7 +95,7 @@ const SendPage = () => {
         if (addContact) {
             await addressBookSet(
                 data.address,
-                `Account (...${data.address.slice(data.address.length - 4)})`,
+                `Account ${formatHashLastChars(data.address)}`,
                 ""
             )
         }

@@ -114,6 +114,7 @@ const SendPage = () => {
         const value = event.target.value
         setValue("address", value)
         setSearchString(value)
+        setAddContact(false)
     }
 
     useEffect(() => {

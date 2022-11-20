@@ -6,7 +6,6 @@ import {
     ownerParamNotPresentError,
     spenderParamNotPresentError,
     tokenAddressParamNotPresentError,
-    tokenAddressInvalidError,
 } from '../TokenController';
 import { Token } from '../Token';
 import { Interface } from 'ethers/lib/utils';

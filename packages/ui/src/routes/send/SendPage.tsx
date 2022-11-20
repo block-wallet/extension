@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react"
 import { useMergeRefs } from "../../context/hooks/useMergeRefs"
-import { useAddressBook } from "../../context/hooks/useAddressBook"
 import { addressBookSet } from "../../context/commActions"
 
 import PopupFooter from "../../components/popup/PopupFooter"
@@ -45,7 +44,6 @@ const SendPage = () => {
     const fromAssetPage = defaultAsset ?? false
     const currentAccount = useSelectedAccount()
 
-    const addressBook = useAddressBook()
     const addressBookAccounts = useAddressBookAccounts()
 
     // State
@@ -61,7 +59,7 @@ const SendPage = () => {
 
     const displayAddToContacts =
         isAddress &&
-        toChecksumAddress(searchString) !== currentAccount.address &&
+        searchString.toLowerCase() !== currentAccount.address.toLowerCase() &&
         !(addressBookAccounts || []).some(
             ({ address }) =>
                 address.toLowerCase() === searchString.toLowerCase()
@@ -102,7 +100,7 @@ const SendPage = () => {
         history.push({
             pathname: "/send/confirm",
             state: {
-                address: data.address,
+                address: toChecksumAddress(data.address),
                 asset: preSelectedAsset,
                 name: selectedAccount?.name,
                 fromAssetPage: fromAssetPage,

@@ -20,7 +20,7 @@ import { PreferencesController } from '../PreferencesController';
 import { Mutex } from 'async-mutex';
 import initialState from '../../utils/constants/initialState';
 import { TokenOperationsController } from './transactions/Transaction';
-import { fillTokenData, isNativeTokenAddress } from '../../utils/token';
+import { fillTokenData } from '../../utils/token';
 
 const tokenAddressParamNotPresentError = new Error('token address is required');
 const tokenAddressInvalidError = new Error(
@@ -634,17 +634,6 @@ export class TokenController extends BaseController<TokenControllerState> {
         chainId: number = this._networkController.network.chainId
     ): Promise<ITokens> {
         return NETWORK_TOKENS_LIST[chainId] || ({} as ITokens);
-    }
-
-    /**
-     * Given an address it says if it is the network native currency or a token
-     * @param address to check if it is the network native currency or token
-     */
-    public isNativeToken(address: string): boolean {
-        if (!address) {
-            throw tokenAddressParamNotPresentError;
-        }
-        return isNativeTokenAddress(address);
     }
 
     /**

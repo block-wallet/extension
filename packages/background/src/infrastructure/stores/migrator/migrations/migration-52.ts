@@ -3,7 +3,7 @@ import { BigNumber } from 'ethers';
 import { IMigration } from '../IMigration';
 
 /**
- * This migration fixes zksync block explorer
+ * This migration updates some properties on the L2 networks.
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {

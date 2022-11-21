@@ -4,6 +4,8 @@ import classnames from "classnames"
 import { GasPriceLevels } from "@block-wallet/background/controllers/GasPricesController"
 import Dialog from "../dialog/Dialog"
 
+import AnimatedIcon, { AnimatedIconName } from "../AnimatedIcon"
+
 // icons
 import CloseIcon from "../icons/CloseIcon"
 import GasIcon from "../icons/GasIcon"
@@ -111,8 +113,14 @@ const INFO_BY_LEVEL = {
 const GasPricesInfo: FC = () => {
     const [active, setActive] = useState(false)
     const [calculateGasCost] = useState<"SEND">("SEND")
-    const { exchangeRates, nativeCurrency, localeInfo, networkNativeCurrency } =
-        useBlankState()!
+    const {
+        exchangeRates,
+        nativeCurrency,
+        localeInfo,
+        networkNativeCurrency,
+        isNetworkChanging,
+        isRatesChangingAfterNetworkChange,
+    } = useBlankState()!
 
     const {
         showGasLevels,
@@ -131,7 +139,10 @@ const GasPricesInfo: FC = () => {
         GAS_LIMITS[calculateGasCost]
     )
 
-    if (!displayGasPrices) return null
+    const isLoading =
+        isNetworkChanging ||
+        isRatesChangingAfterNetworkChange ||
+        !displayGasPrices
 
     return (
         <>
@@ -146,9 +157,17 @@ const GasPricesInfo: FC = () => {
                     if (showGasLevels) setActive(!active)
                 }}
             >
-                <span className="text-sm font-bold">
-                    {displayGasPrices.average.totalGwei}
-                </span>
+                {isLoading ? (
+                    <AnimatedIcon
+                        icon={AnimatedIconName.GreyLineLoadingSkeleton}
+                        className="h-4 w-6 rotate-180"
+                        svgClassName="rounded-md"
+                    />
+                ) : (
+                    <span className="text-sm font-bold">
+                        {displayGasPrices.average.totalGwei}
+                    </span>
+                )}
                 <GasIcon />
             </div>
 
@@ -201,79 +220,83 @@ const GasPricesInfo: FC = () => {
                         </div>
                         <div>
                             <div className="flex flex-col px-4 space-y-4">
-                                {Object.entries(displayGasPrices).map(
-                                    ([level, gasPriceData]) => {
-                                        const info =
-                                            INFO_BY_LEVEL[
-                                                level as keyof DisplayGasPricesLevels
-                                            ]
-                                        return (
-                                            <div
-                                                className="flex flex-col border border-gray-200 rounded-lg space-y-1"
-                                                key={level}
-                                            >
+                                {displayGasPrices &&
+                                    Object.entries(displayGasPrices).map(
+                                        ([level, gasPriceData]) => {
+                                            const info =
+                                                INFO_BY_LEVEL[
+                                                    level as keyof DisplayGasPricesLevels
+                                                ]
+                                            return (
                                                 <div
-                                                    className={classnames(
-                                                        "flex flex-row  items-center space-x-1 p-3",
-                                                        isEIP1559Compatible &&
-                                                            "border-b border-gray-200"
-                                                    )}
+                                                    className="flex flex-col border border-gray-200 rounded-lg space-y-1"
+                                                    key={level}
                                                 >
-                                                    <img
-                                                        src={info.icon}
-                                                        alt={`gas-prices-${info.title}`}
-                                                        className="mr-1"
-                                                    />
-                                                    <span className="font-semibold text-xs">
-                                                        {info.title} /
-                                                    </span>
-                                                    <span
+                                                    <div
                                                         className={classnames(
-                                                            "font-semibold text-xs ml-6 flex-1"
+                                                            "flex flex-row  items-center space-x-1 p-3",
+                                                            isEIP1559Compatible &&
+                                                                "border-b border-gray-200"
                                                         )}
                                                     >
-                                                        {gasPriceData.totalGwei}{" "}
-                                                        GWEI
-                                                    </span>
-                                                    <span className="text-gray-500 text-xs">
-                                                        ~
-                                                        {gasPriceToNativeCurrency(
-                                                            gasPriceData.totalTransactionCost,
+                                                        <img
+                                                            src={info.icon}
+                                                            alt={`gas-prices-${info.title}`}
+                                                            className="mr-1"
+                                                        />
+                                                        <span className="font-semibold text-xs">
+                                                            {info.title} /
+                                                        </span>
+                                                        <span
+                                                            className={classnames(
+                                                                "font-semibold text-xs ml-6 flex-1"
+                                                            )}
+                                                        >
                                                             {
-                                                                exchangeRates,
-                                                                localeInfo: {
-                                                                    currency:
-                                                                        nativeCurrency,
-                                                                    language:
-                                                                        localeInfo,
-                                                                },
-                                                                minValue: 0.01,
-                                                                networkNativeCurrency:
-                                                                    {
-                                                                        symbol: networkNativeCurrency.symbol,
-                                                                        decimals:
-                                                                            nativeCurrencyDecimals,
-                                                                    },
-                                                            }
-                                                        )}
-                                                    </span>
+                                                                gasPriceData.totalGwei
+                                                            }{" "}
+                                                            GWEI
+                                                        </span>
+                                                        <span className="text-gray-500 text-xs">
+                                                            ~
+                                                            {gasPriceToNativeCurrency(
+                                                                gasPriceData.totalTransactionCost,
+                                                                {
+                                                                    exchangeRates,
+                                                                    localeInfo:
+                                                                        {
+                                                                            currency:
+                                                                                nativeCurrency,
+                                                                            language:
+                                                                                localeInfo,
+                                                                        },
+                                                                    minValue: 0.01,
+                                                                    networkNativeCurrency:
+                                                                        {
+                                                                            symbol: networkNativeCurrency.symbol,
+                                                                            decimals:
+                                                                                nativeCurrencyDecimals,
+                                                                        },
+                                                                }
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                    {isEIP1559Compatible && (
+                                                        <GasData>
+                                                            <GasDataInfo
+                                                                label="Base Fee"
+                                                                value={`${gasPriceData.baseFee} GWEI`}
+                                                            />
+                                                            <GasDataInfo
+                                                                label="Tip"
+                                                                value={`${gasPriceData.priority} GWEI`}
+                                                            />
+                                                        </GasData>
+                                                    )}
                                                 </div>
-                                                {isEIP1559Compatible && (
-                                                    <GasData>
-                                                        <GasDataInfo
-                                                            label="Base Fee"
-                                                            value={`${gasPriceData.baseFee} GWEI`}
-                                                        />
-                                                        <GasDataInfo
-                                                            label="Tip"
-                                                            value={`${gasPriceData.priority} GWEI`}
-                                                        />
-                                                    </GasData>
-                                                )}
-                                            </div>
-                                        )
-                                    }
-                                )}
+                                            )
+                                        }
+                                    )}
                             </div>
                         </div>
                     </div>

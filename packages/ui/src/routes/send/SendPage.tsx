@@ -54,16 +54,9 @@ const SendPage = () => {
     const [isAddress, setIsAddress] = useState<boolean>(false)
 
     const [addContact, setAddContact] = useState(false)
+    const [canAddContact, setCanAddContact] = useState(false)
 
     const searchInputRef = useRef<HTMLInputElement>(null)
-
-    const displayAddToContacts =
-        isAddress &&
-        searchString.toLowerCase() !== currentAccount.address.toLowerCase() &&
-        !(addressBookAccounts || []).some(
-            ({ address }) =>
-                address.toLowerCase() === searchString.toLowerCase()
-        )
 
     const {
         register,
@@ -80,13 +73,6 @@ const SendPage = () => {
         defaultAsset && setPreSelectedAsset(defaultAsset)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
-
-    // Functions
-    const checkSameAddress = (value: string) => {
-        if (value.toLowerCase() === currentAccount.address.toLowerCase()) {
-            setWarning("Warning: You are trying to send to your own address.")
-        } else setWarning("")
-    }
 
     // Handlers
     const onSubmit = handleSubmit(async (data: AddressFormData) => {
@@ -119,15 +105,32 @@ const SendPage = () => {
 
     useEffect(() => {
         const checkAddress = () => {
-            // Check Address
-            setIsAddress(utils.isAddress(searchString))
+            const isValidAddress = utils.isAddress(searchString)
 
-            // Warning
-            checkSameAddress(searchString)
+            setIsAddress(isValidAddress)
+            setCanAddContact(false)
+            setWarning("")
+
+            if (isValidAddress) {
+                const normalizedAddress = toChecksumAddress(searchString)
+
+                const isCurrentAccount =
+                    normalizedAddress === currentAccount.address
+
+                if (isCurrentAccount) {
+                    setWarning(
+                        "Warning: You are trying to send to your own address."
+                    )
+                }
+
+                const isInAddressBook = (addressBookAccounts || []).some(
+                    ({ address }) => address === normalizedAddress
+                )
+                setCanAddContact(!isCurrentAccount && !isInAddressBook)
+            }
         }
 
         checkAddress()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchString])
 
     const onAccountSelect = (account: any) => {
@@ -203,7 +206,7 @@ const SendPage = () => {
                         }}
                         debounced
                     />
-                    {displayAddToContacts && (
+                    {canAddContact && (
                         <Checkbox
                             label="Add to contacts"
                             checked={addContact}
@@ -215,7 +218,7 @@ const SendPage = () => {
             <div
                 className={classnames(
                     "pt-28 pb-6 space-y-4",
-                    warning !== "" || displayAddToContacts ? "mt-5" : "mt-1"
+                    warning !== "" || canAddContact ? "mt-5" : "mt-1"
                 )}
             >
                 <AccountSearchResults

@@ -1,5 +1,7 @@
 import { FC } from "react"
 import classnames from "classnames"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import BalanceLoadingSkeleton from "../skeleton/BalanceLoadingSkeleton"
 
 interface TokenSummaryMembers {
     Balances: FC<{ children: React.ReactNode }>
@@ -28,8 +30,21 @@ const TokenSummary: FC<{
 }
 
 const Balances = ({ children }: { children: React.ReactNode }) => {
+    const state = useBlankState()!
+
+    const isLoading =
+        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+
     return (
-        <div className="flex flex-col items-center space-y-1">{children}</div>
+        <>
+            {isLoading ? (
+                <BalanceLoadingSkeleton />
+            ) : (
+                <div className="flex flex-col items-center space-y-1">
+                    {children}
+                </div>
+            )}
+        </>
     )
 }
 

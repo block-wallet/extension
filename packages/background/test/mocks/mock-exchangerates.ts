@@ -30,6 +30,7 @@ exchangeRatesControllerETH = {
         // Default Coingecko id for ETH rates
         coingeckoPlatformId: 'ethereum',
     },
+    isRatesChangingAfterNetworkChange: false,
 };
 
 const mockedNetworkController = getNetworkControllerInstance();

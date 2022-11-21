@@ -1,6 +1,10 @@
 import bridgeIcon from "../assets/images/icons/bridge.json"
 import confirmationCheck from "../assets/images/icons/confirmation_check.json"
 import deviceInteraction from "../assets/images/icons/device_interaction.json"
+import blueLineLoadingSkeleton from "../assets/images/icons/blueline_skeleton.json"
+import greyLineLoadingSkeleton from "../assets/images/icons/greyline_skeleton.json"
+import greyCircleLoadingSkeleton from "../assets/images/icons/greycircle_skeleton.json"
+import blueCircleLoadingSkeleton from "../assets/images/icons/bluecircle_skeleton.json"
 import lottie, { AnimationItem } from "lottie-web"
 import successAnim from "../assets/images/icons/checkmark_notes.json"
 import { useEffect, useRef, FunctionComponent } from "react"
@@ -11,6 +15,10 @@ export enum AnimatedIconName {
     ConfirmationCheck,
     DeviceInteraction,
     Success,
+    BlueLineLoadingSkeleton,
+    GreyLineLoadingSkeleton,
+    GreyCircleLoadingSkeleton,
+    BlueCircleLoadingSkeleton,
 }
 
 type AnimationType = {
@@ -36,16 +44,34 @@ const Animations: { [anim: number]: AnimationType } = {
     [AnimatedIconName.Success]: {
         data: successAnim,
     },
+    [AnimatedIconName.BlueLineLoadingSkeleton]: {
+        data: blueLineLoadingSkeleton,
+        loop: true,
+    },
+    [AnimatedIconName.GreyLineLoadingSkeleton]: {
+        data: greyLineLoadingSkeleton,
+        loop: true,
+    },
+    [AnimatedIconName.GreyCircleLoadingSkeleton]: {
+        data: greyCircleLoadingSkeleton,
+        loop: true,
+    },
+    [AnimatedIconName.BlueCircleLoadingSkeleton]: {
+        data: blueCircleLoadingSkeleton,
+        loop: true,
+    },
 }
 
 interface AnimationProps {
     icon: AnimatedIconName
     className?: string
+    svgClassName?: string
 }
 
 const AnimatedIcon: FunctionComponent<AnimationProps> = ({
     icon,
     className,
+    svgClassName,
 }: AnimationProps) => {
     const element = useRef<HTMLDivElement>(null)
     const lottieInstance = useRef<AnimationItem>()
@@ -59,6 +85,7 @@ const AnimatedIcon: FunctionComponent<AnimationProps> = ({
                 autoplay: animationData.autoplay ?? true,
                 rendererSettings: {
                     preserveAspectRatio: "xMidYMid slice",
+                    className: svgClassName,
                 },
                 loop: animationData.loop ?? false,
                 container: element.current,

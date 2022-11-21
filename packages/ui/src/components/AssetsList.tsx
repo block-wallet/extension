@@ -11,8 +11,10 @@ import unknownTokenIcon from "../assets/images/unknown_token.svg"
 import ChevronRightIcon from "./icons/ChevronRightIcon"
 import { formatRounded } from "../util/formatRounded"
 import { ActionButton } from "./button/ActionButton"
+import AssetsLoadingSkeleton from "./skeleton/AssetsLoadingSkeleton"
 import useCurrencyFromatter from "../util/hooks/useCurrencyFormatter"
 import { isNativeTokenAddress } from "../util/tokenUtils"
+import { useBlankState } from "../context/background/backgroundHooks"
 export type AssetItem = {
     token: Token
     balance: BigNumber
@@ -100,6 +102,11 @@ const Asset: FunctionComponent<{
 }
 
 const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
+    const state = useBlankState()!
+
+    const isLoading =
+        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+
     const [deletedTokens, setDeletedTokens] = useState([] as string[])
     const pushDeleteTokens = (deleteToken: string) => {
         setDeletedTokens([...deletedTokens, deleteToken])
@@ -122,14 +129,21 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
             role="list"
             aria-label="assets"
         >
-            {assets
-                .filter((t) => !deletedTokens.includes(t.token.address))
-                .map((a, i) => (
-                    <Fragment key={i}>
-                        {i > 0 ? <hr /> : null}
-                        <Asset asset={a} pushDeleteTokens={pushDeleteTokens} />
-                    </Fragment>
-                ))}
+            {isLoading ? (
+                <AssetsLoadingSkeleton />
+            ) : (
+                assets
+                    .filter((t) => !deletedTokens.includes(t.token.address))
+                    .map((a, i) => (
+                        <Fragment key={i}>
+                            {i > 0 ? <hr /> : null}
+                            <Asset
+                                asset={a}
+                                pushDeleteTokens={pushDeleteTokens}
+                            />
+                        </Fragment>
+                    ))
+            )}
         </div>
     )
 }

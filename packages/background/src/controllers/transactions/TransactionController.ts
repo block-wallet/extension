@@ -2173,8 +2173,6 @@ export class TransactionController extends BaseController<
         // Check if it's a custom chainId
         const txOrCurrentChainId =
             transactionMeta.chainId ?? this._networkController.network.chainId;
-        const isCustomNetwork =
-            this._networkController.isChainIdCustomNetwork(txOrCurrentChainId);
 
         // if data, should be hex string format
         estimatedTransaction.data = !data ? data : addHexPrefix(data);
@@ -2182,15 +2180,6 @@ export class TransactionController extends BaseController<
         // 2. If this is a contract address, safely estimate gas using RPC
         estimatedTransaction.value =
             typeof value === 'undefined' ? constants.Zero : value;
-
-        // If fallback is present, use it instead of block gasLimit
-        if (!isCustomNetwork && BigNumber.isBigNumber(fallbackGasLimit)) {
-            estimatedTransaction.gasLimit = BigNumber.from(fallbackGasLimit);
-        } else {
-            // We take a part of the block gasLimit (95% of it)
-            const saferGasLimitBN = BnMultiplyByFraction(blockGasLimit, 19, 20);
-            estimatedTransaction.gasLimit = saferGasLimitBN;
-        }
 
         // Estimate Gas
         try {
@@ -2205,8 +2194,6 @@ export class TransactionController extends BaseController<
                 When sending a transaction, you should provide a gas price greater than or equal to the current L2 gas price.
                 Like on Ethereum, you can query this gas price with the eth_gasPrice RPC method. Similarly,
                 you should set your transaction gas limit in the same way that you would set your transaction gas limit on Ethereum (e.g. via eth_estimateGas).
-
-
              */
             const estimatedGasLimit = await provider.estimateGas({
                 chainId: txOrCurrentChainId,
@@ -2215,8 +2202,6 @@ export class TransactionController extends BaseController<
                 to: estimatedTransaction.to,
                 value: estimatedTransaction.value,
             });
-            // 3. Pad estimated gas without exceeding the most recent block gasLimit. If the network is a
-            // a custom network then return the eth_estimateGas value.
 
             // 90% of the block gasLimit
             const upperGasLimit = BnMultiplyByFraction(blockGasLimit, 9, 10);
@@ -2259,9 +2244,23 @@ export class TransactionController extends BaseController<
                 error
             );
 
+            const isCustomNetwork =
+                this._networkController.isChainIdCustomNetwork(
+                    txOrCurrentChainId
+                );
+
+            // If fallback is present, use it instead of block gasLimit
+            let gasLimit = BigNumber.from('0');
+            if (!isCustomNetwork && BigNumber.isBigNumber(fallbackGasLimit)) {
+                gasLimit = BigNumber.from(fallbackGasLimit);
+            } else {
+                // We take a part of the block gasLimit (95% of it)
+                gasLimit = BnMultiplyByFraction(blockGasLimit, 19, 20);
+            }
+
             // Return TX type associated default fallback gasLimit or block gas limit
             return {
-                gasLimit: estimatedTransaction.gasLimit,
+                gasLimit,
                 estimationSucceeded: false,
             };
         }

@@ -1,8 +1,8 @@
 import { createContext } from "react"
-import type { ResponseGetState } from "@block-wallet/background/utils/types/communication"
+import type { ResponseGetAppState } from "@block-wallet/background/utils/types/communication"
 
 export type BackgroundStateType = {
-    blankState?: ResponseGetState
+    blankState?: ResponseGetAppState
 }
 
 export const initBackgroundState: BackgroundStateType = {}

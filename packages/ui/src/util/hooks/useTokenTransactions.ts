@@ -1,7 +1,7 @@
-import useTransactions from "./useTransactions"
+import useActivtyListTransactions from "./useActivtyListTransactions"
 
 const useTokenTransactions = (tokenSymbol: string | undefined) => {
-    const { transactions } = useTransactions()
+    const { transactions } = useActivtyListTransactions()
     return transactions.filter(({ transferType }) => {
         return tokenSymbol ? transferType?.currency === tokenSymbol : false
     })

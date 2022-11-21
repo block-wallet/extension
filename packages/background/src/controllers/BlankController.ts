@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 // Explicitly disabled no-empty-pattern on this file as some actions need generic param typing but receive empty objects.
 /* eslint-disable no-empty-pattern */
-import type {
+import {
     ExternalEventSubscription,
     MessageTypes,
     RequestAccountCreate,
@@ -119,17 +119,23 @@ import type {
     RequestApproveBridgeAllowance,
     RequestGetBridgeRoutes,
     RequestEditNetworksOrder,
+    RequestSubscribeState,
+    StateType,
+    RequestGetState,
+    ResponseGetState,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
 import { BigNumber, utils } from 'ethers';
 import BlankStorageStore from '../infrastructure/stores/BlankStorageStore';
-import { Flatten } from '../utils/types/helpers';
 import { Messages } from '../utils/types/communication';
 import { TransactionMeta } from './transactions/utils/types';
-import {
+import initialState, {
+    ActivityListUIState,
     BlankAppState,
     BlankAppUIState,
+    ExchangeRatesUIState,
+    GasPricesUIState,
 } from '../utils/constants/initialState';
 import AppStateController from './AppStateController';
 import OnboardingController from './OnboardingController';
@@ -227,6 +233,7 @@ import BridgeController, {
 import { IChain } from '../utils/types/chain';
 import { BridgeImplementation } from '../utils/bridgeApi';
 import TokenAllowanceController from './erc-20/transactions/TokenAllowanceController';
+import { isEqual, omit } from 'lodash';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -271,6 +278,10 @@ export default class BlankController extends EventEmitter {
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
     private readonly UIStore: ComposedStore<BlankAppUIState>;
+    private readonly exchangeRatesStore: ComposedStore<ExchangeRatesUIState>;
+    private readonly gasPricesStore: ComposedStore<GasPricesUIState>;
+    private readonly activityListStore: ComposedStore<ActivityListUIState>;
+    private readonly STORES: Record<StateType, ComposedStore<any>>;
 
     private readonly _devTools: any;
 
@@ -464,47 +475,68 @@ export default class BlankController extends EventEmitter {
             preferencesController: this.preferencesController,
         });
 
-        this.store = new ComposedStore<BlankAppState>({
-            NetworkController: this.networkController.store,
-            AppStateController: this.appStateController.store,
-            OnboardingController: this.onboardingController.store,
-            KeyringController: this.keyringController.store,
-            AccountTrackerController: this.accountTrackerController.store,
-            PreferencesController: this.preferencesController.store,
-            TransactionController: this.transactionController.store,
+        this.store = new ComposedStore<BlankAppState>(
+            {
+                NetworkController: this.networkController.store,
+                AppStateController: this.appStateController.store,
+                OnboardingController: this.onboardingController.store,
+                KeyringController: this.keyringController.store,
+                AccountTrackerController: this.accountTrackerController.store,
+                PreferencesController: this.preferencesController.store,
+                TransactionController: this.transactionController.store,
+                ExchangeRatesController: this.exchangeRatesController.store,
+                GasPricesController: this.gasPricesController.store,
+                BlankDepositController: this.blankDepositController.store,
+                TokenController: this.tokenController.store,
+                PermissionsController: this.permissionsController.store,
+                AddressBookController: this.addressBookController.store,
+                BlockUpdatesController: this.blockUpdatesController.store,
+                BlockFetchController: this.blockFetchController.store,
+                TransactionWatcherControllerState:
+                    this.transactionWatcherController.store,
+                BridgeController: this.bridgeController.store,
+            },
+            true
+        );
+
+        this.exchangeRatesStore = new ComposedStore<ExchangeRatesUIState>({
             ExchangeRatesController: this.exchangeRatesController.store,
-            GasPricesController: this.gasPricesController.store,
-            BlankDepositController: this.blankDepositController.store,
-            TokenController: this.tokenController.store,
-            PermissionsController: this.permissionsController.store,
-            AddressBookController: this.addressBookController.store,
-            BlockUpdatesController: this.blockUpdatesController.store,
-            BlockFetchController: this.blockFetchController.store,
-            TransactionWatcherControllerState:
-                this.transactionWatcherController.store,
-            BridgeController: this.bridgeController.store,
         });
 
-        this.UIStore = new ComposedStore<BlankAppUIState>({
-            NetworkController: this.networkController.store,
-            AppStateController: this.appStateController.UIStore,
-            OnboardingController: this.onboardingController.store,
-            KeyringController: this.keyringController.memStore,
-            AccountTrackerController: this.accountTrackerController.store,
-            PreferencesController: this.preferencesController.store,
-            TransactionController: this.transactionController.UIStore,
-            ExchangeRatesController: this.exchangeRatesController.store,
+        this.gasPricesStore = new ComposedStore<GasPricesUIState>({
             GasPricesController: this.gasPricesController.store,
-            BlankDepositController: this.blankDepositController.UIStore,
-            TokenController: this.tokenController.store,
-            ActivityListController: this.activityListController.store,
-            PermissionsController: this.permissionsController.store,
-            AddressBookController: this.addressBookController.store,
-            BlankProviderController: this.blankProviderController.store,
-            BlockUpdatesController: this.blockUpdatesController.store,
-            SwapController: this.swapController.UIStore,
-            BridgeController: this.bridgeController.UIStore,
         });
+
+        this.activityListStore = new ComposedStore<ActivityListUIState>({
+            ActivityListController: this.activityListController.store,
+        });
+
+        this.UIStore = new ComposedStore<BlankAppUIState>(
+            {
+                NetworkController: this.networkController.store,
+                AppStateController: this.appStateController.UIStore,
+                OnboardingController: this.onboardingController.store,
+                KeyringController: this.keyringController.memStore,
+                AccountTrackerController: this.accountTrackerController.store,
+                PreferencesController: this.preferencesController.store,
+                TransactionController: this.transactionController.UIStore,
+                BlankDepositController: this.blankDepositController.UIStore,
+                TokenController: this.tokenController.store,
+                PermissionsController: this.permissionsController.store,
+                AddressBookController: this.addressBookController.store,
+                BlankProviderController: this.blankProviderController.store,
+                SwapController: this.swapController.UIStore,
+                BridgeController: this.bridgeController.UIStore,
+            },
+            true
+        );
+
+        this.STORES = {
+            [StateType.APP_STATE]: this.UIStore,
+            [StateType.EXCHANGE_RATES]: this.exchangeRatesStore,
+            [StateType.GAS_PRICES]: this.gasPricesStore,
+            [StateType.ACTIVITY_LIST]: this.activityListStore,
+        };
 
         // Check controllers on app lock/unlock
         this.appStateController.UIStore.subscribe(() => {
@@ -912,7 +944,13 @@ export default class BlankController extends EventEmitter {
                     request as RequestUpdateSitePermissions
                 );
             case Messages.STATE.GET:
-                return this.getState();
+                return this.getState(request as RequestGetState);
+            case Messages.STATE.SUBSCRIBE:
+                return this.subscribeState(
+                    id,
+                    port,
+                    (request as RequestSubscribeState).stateType
+                );
             case Messages.TRANSACTION.CONFIRM:
                 return this.confirmTransaction(
                     request as RequestConfirmTransaction
@@ -995,8 +1033,6 @@ export default class BlankController extends EventEmitter {
                 return this.completeSetup(request as RequestCompleteSetup);
             case Messages.WALLET.REQUEST_SEED_PHRASE:
                 return this.getSeedPhrase(request as RequestSeedPhrase);
-            case Messages.STATE.SUBSCRIBE:
-                return this.stateSubscribe(id, port);
             case Messages.TOKEN.GET_BALANCE:
                 return this.getTokenBalance(request as RequestGetTokenBalance);
             case Messages.TOKEN.GET_TOKENS:
@@ -2276,8 +2312,8 @@ export default class BlankController extends EventEmitter {
      * Get UI State
      *
      */
-    private getState(): Flatten<BlankAppUIState> {
-        return this.UIStore.flatState;
+    private getState(r: RequestGetState): ResponseGetState {
+        return this.STORES[r.stateType].flatState;
     }
 
     /**
@@ -2856,22 +2892,28 @@ export default class BlankController extends EventEmitter {
      * State subscription method
      *
      */
-    private stateSubscribe(id: string, port: chrome.runtime.Port): boolean {
+    private subscribeState(
+        id: string,
+        port: chrome.runtime.Port,
+        stateType: StateType
+    ): boolean {
+        const store = this.STORES[stateType];
+
         const cb = this.createSubscription<typeof Messages.STATE.SUBSCRIBE>(
             id,
             port
         );
 
         const sendState = () => {
-            const flatState = this.UIStore.flatState;
+            const flatState = store.flatState;
             cb(flatState);
         };
 
-        this.UIStore.subscribe(sendState);
+        store.subscribe(sendState);
 
         port.onDisconnect.addListener((): void => {
             this.unsubscribe(id);
-            this.UIStore.unsubscribe(sendState);
+            store.unsubscribe(sendState);
         });
 
         return true;

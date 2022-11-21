@@ -48,6 +48,7 @@ import { TokenWithBalance } from "../../context/hooks/useTokensList"
 import { useDepositTokens } from "../../context/hooks/useDepositTokens"
 import { useLocationRecovery } from "../../util/hooks/useLocationRecovery"
 import { getValueByKey } from "../../util/objectUtils"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 const WITHDRAWAL_ERROR =
     "There was an error.\nCould not initiate the withdrawal."
@@ -104,11 +105,14 @@ const WithdrawBlankConfirm = () => {
     }, [])
 
     const state = useBlankState()!
+    const {
+        state: { exchangeRates, networkNativeCurrency },
+    } = useExchangeRatesState()
     const network = useSelectedNetwork()
     const { gasPricesLevels } = useGasPriceData()
     const amountInNativeCurrency = toCurrencyAmount(
         utils.parseUnits(pair.amount, network.nativeCurrency.decimals),
-        getValueByKey(state.exchangeRates, pair.currency.toUpperCase(), 0),
+        getValueByKey(exchangeRates, pair.currency.toUpperCase(), 0),
         network.nativeCurrency.decimals
     )
 
@@ -148,7 +152,7 @@ const WithdrawBlankConfirm = () => {
 
         // If no exchange rate available, display zero
         const symbol = pair.currency.toUpperCase()
-        const exchangeRate = getValueByKey(state.exchangeRates, symbol, 0)
+        const exchangeRate = getValueByKey(exchangeRates, symbol, 0)
 
         if (BigNumber.from(totalFee).gt(parseUnits(pair.amount, decimals))) {
             setError("Fees are higher than the amount to withdraw")

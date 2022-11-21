@@ -23,6 +23,7 @@ import { SEND_GAS_COST } from "../../util/constants"
 import car from "../../assets/images/icons/car.svg"
 import scooter from "../../assets/images/icons/scooter.svg"
 import plane from "../../assets/images/icons/plane.svg"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 export type DisplayGasPricesData = {
     baseFee?: string
@@ -111,8 +112,10 @@ const INFO_BY_LEVEL = {
 const GasPricesInfo: FC = () => {
     const [active, setActive] = useState(false)
     const [calculateGasCost] = useState<"SEND">("SEND")
-    const { exchangeRates, nativeCurrency, localeInfo, networkNativeCurrency } =
-        useBlankState()!
+    const {
+        state: { exchangeRates, networkNativeCurrency },
+    } = useExchangeRatesState()
+    const { nativeCurrency, localeInfo } = useBlankState()!
 
     const {
         showGasLevels,
@@ -240,7 +243,8 @@ const GasPricesInfo: FC = () => {
                                                         {gasPriceToNativeCurrency(
                                                             gasPriceData.totalTransactionCost,
                                                             {
-                                                                exchangeRates,
+                                                                exchangeRates:
+                                                                    exchangeRates,
                                                                 localeInfo: {
                                                                     currency:
                                                                         nativeCurrency,

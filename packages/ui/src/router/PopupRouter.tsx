@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from "react"
-
 import { HashRouter, Redirect, Route, useHistory } from "react-router-dom"
 import { useBlankState } from "../context/background/backgroundHooks"
 import PendingSetupPage from "../routes/setup/PendingSetupPage"
@@ -17,10 +16,12 @@ import IdleComponent from "../components/IdleComponent"
 import WalletNews from "../components/news/WalletNews"
 import LocationHolder from "./LocationHolder"
 import { useLocationRecovery } from "../util/hooks/useLocationRecovery"
-import { timeExceedsTTL } from "../util/time"
 import ProviderDownDialog from "../components/dialog/ProviderDownDialog"
 import useClearStickyStorage from "../context/hooks/useClearStickyStorage"
 import { getNonSubmittedTransactions } from "../util/getNonSubmittedTransactions"
+import { ExchangeRatesStateProvider } from "../context/background/useExchangeRatesState"
+import { GasPricesStateProvider } from "../context/background/useGasPricesState"
+import { ActivityListStateProvider } from "../context/background/useActivityListState"
 
 /**  Purpose of this component is to check in Blank State if there is any pending connect to site or transaction confirm
  *  in order to show that page always, whenever the extension is loaded and unlocked.
@@ -112,34 +113,42 @@ const PopupRouter = ({
 
     return (
         <HashRouter>
-            <LastLocationProvider>
-                <ErrorBoundary
-                    FallbackComponent={ErrorFallbackPage}
-                    onReset={resetHandler}
-                    resetKeys={[state.isAppUnlocked]}
-                >
-                    {isOnboarded ? (
-                        <>
-                            <ProviderDownDialog />
-                            <ErrorDialog
-                                onClickOutside={() =>
-                                    setShouldShowDialog(false)
-                                }
-                                title="No connection"
-                                message="Please check your internet connection. Some features of the wallet will remain disabled while you’re offline."
-                                open={shouldShowDialog}
-                                onDone={() => setShouldShowDialog(false)}
-                            />
-                            <IdleComponent>
-                                <PopupComponent />
-                            </IdleComponent>
-                        </>
-                    ) : (
-                        <PendingSetupPage />
-                    )}
-                    {children}
-                </ErrorBoundary>
-            </LastLocationProvider>
+            <ExchangeRatesStateProvider>
+                <GasPricesStateProvider>
+                    <ActivityListStateProvider>
+                        <LastLocationProvider>
+                            <ErrorBoundary
+                                FallbackComponent={ErrorFallbackPage}
+                                onReset={resetHandler}
+                                resetKeys={[state.isAppUnlocked]}
+                            >
+                                {isOnboarded ? (
+                                    <>
+                                        <ProviderDownDialog />
+                                        <ErrorDialog
+                                            onClickOutside={() =>
+                                                setShouldShowDialog(false)
+                                            }
+                                            title="No connection"
+                                            message="Please check your internet connection. Some features of the wallet will remain disabled while you’re offline."
+                                            open={shouldShowDialog}
+                                            onDone={() =>
+                                                setShouldShowDialog(false)
+                                            }
+                                        />
+                                        <IdleComponent>
+                                            <PopupComponent />
+                                        </IdleComponent>
+                                    </>
+                                ) : (
+                                    <PendingSetupPage />
+                                )}
+                                {children}
+                            </ErrorBoundary>
+                        </LastLocationProvider>
+                    </ActivityListStateProvider>
+                </GasPricesStateProvider>
+            </ExchangeRatesStateProvider>
         </HashRouter>
     )
 }

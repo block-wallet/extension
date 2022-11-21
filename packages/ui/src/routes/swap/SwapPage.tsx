@@ -30,8 +30,6 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { yupResolver } from "@hookform/resolvers/yup"
 import useCountdown from "../../util/hooks/useCountdown"
-import GenericTooltip from "../../components/label/GenericTooltip"
-import { AiFillInfoCircle } from "react-icons/ai"
 import { formatNumberLength } from "../../util/formatNumberLength"
 import RefreshLabel from "../../components/swaps/RefreshLabel"
 import { capitalize } from "../../util/capitalize"
@@ -40,6 +38,7 @@ import { useCallback } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
 import { GetAmountYupSchema } from "../../util/yup/GetAmountSchema"
 import { ApproveOperation } from "../transaction/ApprovePage"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 interface SwapPageLocalState {
     fromToken?: Token
@@ -72,8 +71,10 @@ const SwapPage = () => {
         SWAP_QUOTE_REFRESH_TIMEOUT
     )
 
-    const { selectedAddress, nativeCurrency, localeInfo, exchangeRates } =
-        useBlankState()!
+    const { selectedAddress, nativeCurrency, localeInfo } = useBlankState()!
+    const {
+        state: { exchangeRates, networkNativeCurrency },
+    } = useExchangeRatesState()
 
     const { nativeToken } = useTokensList()
 

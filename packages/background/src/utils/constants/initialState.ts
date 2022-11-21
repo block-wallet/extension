@@ -92,6 +92,20 @@ export type BlankAppUIState = {
     BlankProviderController: BlankProviderControllerState;
 };
 
+export type ExchangeRatesUIState = {
+    ExchangeRatesController: ExchangeRatesControllerState;
+};
+
+export type GasPricesUIState = {
+    GasPricesController: GasPricesControllerState;
+};
+
+export type ActivityListUIState = {
+    ActivityListController: IActivityListState;
+};
+
+export type UIState = BlankAppUIState | ExchangeRatesUIState | GasPricesUIState;
+
 export type BlankAppStoreConfig<S> = {
     [controller in keyof Partial<S>]: IObservableStore<ValuesOf<S>>;
 };

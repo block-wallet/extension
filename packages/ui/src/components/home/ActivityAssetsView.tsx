@@ -1,9 +1,9 @@
 import { FunctionComponent, useState } from "react"
 import { PopupTabs } from "@block-wallet/background/controllers/PreferencesController"
-import { updatePopupTab } from "../context/commActions"
+import { updatePopupTab } from "../../context/commActions"
 import ActivityList from "./ActivityList"
-import AssetsList from "./AssetsList"
-import HorizontalSelect from "./input/HorizontalSelect"
+import AssetsList from "../AssetsList"
+import HorizontalSelect from "../input/HorizontalSelect"
 
 const tabs = [
     {

@@ -51,6 +51,7 @@ import { isHardwareWallet } from "../../util/account"
 import { HardwareWalletOpTypes } from "../../context/commTypes"
 import { rejectTransaction } from "../../context/commActions"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 let freezedAmounts = {
     amountInNativeCurrency: 0,
@@ -104,8 +105,11 @@ const DepositConfirmPage = () => {
     const [isUpdating, setIsUpdating] = useState(false)
     const [customNonce, setCustomNonce] = useState<number | undefined>()
 
-    const { exchangeRates, nativeCurrency, localeInfo, networkNativeCurrency } =
-        useBlankState()!
+    const { nativeCurrency, localeInfo } = useBlankState()!
+    const {
+        state: { exchangeRates, networkNativeCurrency },
+    } = useExchangeRatesState()
+
     const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
         useCheckAccountDeviceLinked()
     const { isEIP1559Compatible } = useSelectedNetwork()

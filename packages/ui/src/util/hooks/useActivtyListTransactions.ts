@@ -1,5 +1,6 @@
 import { BigNumber } from "ethers"
 import { useBlankState } from "../../context/background/backgroundHooks"
+import { useActivityListState } from "../../context/background/useActivityListState"
 import {
     MetaType,
     TransactionCategories,
@@ -15,12 +16,14 @@ const failedStatuses = [
     TransactionStatus.REJECTED,
 ]
 
-const useTransactions = () => {
-    const { confirmed, pending } = useBlankState()!.activityList
+const useActivtyListTransactions = () => {
     const {
-        nativeCurrency: networkNativeCurrency,
-        defaultNetworkLogo,
-    } = useSelectedNetwork()
+        state: {
+            activityList: { confirmed, pending },
+        },
+    } = useActivityListState()
+    const { nativeCurrency: networkNativeCurrency, defaultNetworkLogo } =
+        useSelectedNetwork()
 
     const allTransactions = pending
         .concat(confirmed)
@@ -142,4 +145,4 @@ const useTransactions = () => {
     }
 }
 
-export default useTransactions
+export default useActivtyListTransactions

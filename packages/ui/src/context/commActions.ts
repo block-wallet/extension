@@ -12,15 +12,22 @@ import {
     MessageTypes,
     RequestTypes,
     ResponseTypes,
-    ResponseGetState,
     StateSubscription,
     SubscriptionMessageTypes,
     ResponseBlankCurrencyDepositsCount,
     RequestAddNetwork,
     RequestEditNetwork,
     RequestEditNetworksOrder,
+    ExchangeRatesStateSubscription,
+    ResponseGetExchangeRatesState,
+    GasPricesStateSubscription,
+    AppStateSubscription,
+    ResponseGetGasPricesState,
+    ResponseGetAppState,
+    ResponseGetActivityListState,
+    ActivityListStateSubscription,
 } from "@block-wallet/background/utils/types/communication"
-import { Devices, ExchangeType, Messages } from "./commTypes"
+import { Devices, ExchangeType, Messages, StateType } from "./commTypes"
 import {
     IToken,
     ITokens,
@@ -378,10 +385,47 @@ export const verifyPassword = async (password: string): Promise<boolean> => {
  *
  * @returns Background state
  */
-export const getState = async (): Promise<ResponseGetState> => {
-    return sendMessage(Messages.STATE.GET)
+export const getAppState = async (): Promise<ResponseGetAppState> => {
+    return sendMessage(Messages.STATE.GET, {
+        stateType: StateType.APP_STATE,
+    }) as Promise<ResponseGetAppState>
 }
 
+/**
+ * Gets the exchange rates state
+ *
+ * @returns Exchange rates state
+ */
+export const getExchangeRatesState =
+    async (): Promise<ResponseGetExchangeRatesState> => {
+        return sendMessage(Messages.STATE.GET, {
+            stateType: StateType.EXCHANGE_RATES,
+        }) as Promise<ResponseGetExchangeRatesState>
+    }
+
+/**
+ * Gets the gas prices state
+ *
+ * @returns Gas prices state
+ */
+export const getGasPricesState =
+    async (): Promise<ResponseGetGasPricesState> => {
+        return sendMessage(Messages.STATE.GET, {
+            stateType: StateType.GAS_PRICES,
+        }) as Promise<ResponseGetGasPricesState>
+    }
+
+/**
+ * Gets the activity list state
+ *
+ * @returns Activity List state
+ */
+export const getActivityListState =
+    async (): Promise<ResponseGetActivityListState> => {
+        return sendMessage(Messages.STATE.GET, {
+            stateType: StateType.ACTIVITY_LIST,
+        }) as Promise<ResponseGetActivityListState>
+    }
 /**
  * Resolves the address of an ENS name
  *
@@ -1022,14 +1066,71 @@ export const getDepositTransactionGasLimit = async (
 }
 
 /**
- * Subscribes to state updates
+ * Subscribes to exchange rates state updates
  *
  * @param cb state update handler
  */
-export const subscribeState = async (
-    cb: (state: StateSubscription) => void
+export const subscribeExchangeRatesState = async (
+    cb: (state: ExchangeRatesStateSubscription) => void
 ): Promise<boolean> => {
-    return sendMessage(Messages.STATE.SUBSCRIBE, undefined, cb)
+    return sendMessage(
+        Messages.STATE.SUBSCRIBE,
+        {
+            stateType: StateType.EXCHANGE_RATES,
+        },
+        cb as (data: StateSubscription) => void
+    )
+}
+
+/**
+ * Subscribes to gas prices state updates
+ *
+ * @param cb state update handler
+ */
+export const subscribeGasPricesState = async (
+    cb: (state: GasPricesStateSubscription) => void
+): Promise<boolean> => {
+    return sendMessage(
+        Messages.STATE.SUBSCRIBE,
+        {
+            stateType: StateType.GAS_PRICES,
+        },
+        cb as (data: StateSubscription) => void
+    )
+}
+
+/**
+ * Subscribes to activty list state updates
+ *
+ * @param cb state update handler
+ */
+export const subscribeActivityListState = async (
+    cb: (state: ActivityListStateSubscription) => void
+): Promise<boolean> => {
+    return sendMessage(
+        Messages.STATE.SUBSCRIBE,
+        {
+            stateType: StateType.ACTIVITY_LIST,
+        },
+        cb as (data: StateSubscription) => void
+    )
+}
+
+/**
+ * Subscribes to the app state updates
+ *
+ * @param cb state update handler
+ */
+export const subscribeAppState = async (
+    cb: (state: AppStateSubscription) => void
+): Promise<boolean> => {
+    return sendMessage(
+        Messages.STATE.SUBSCRIBE,
+        {
+            stateType: StateType.APP_STATE,
+        },
+        cb as (data: StateSubscription) => void
+    )
 }
 
 /**

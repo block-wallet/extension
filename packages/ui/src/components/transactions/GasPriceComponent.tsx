@@ -42,6 +42,7 @@ import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import WarningDialog from "../dialog/WarningDialog"
 import { calculateGasPricesFromTransactionFees } from "../../util/gasPrice"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 interface GasComponentProps {
     symbol: string
@@ -552,8 +553,10 @@ const GasPriceComponent: FunctionComponent<{
     useOnClickOutside(ref, () => setActive(false))
 
     //State
-    const { exchangeRates, nativeCurrency, localeInfo, networkNativeCurrency } =
-        useBlankState()!
+    const { nativeCurrency, localeInfo } = useBlankState()!
+    const {
+        state: { exchangeRates, networkNativeCurrency },
+    } = useExchangeRatesState()
 
     const { estimatedBaseFee: baseFeePerGas, gasPricesLevels } =
         useGasPriceData()

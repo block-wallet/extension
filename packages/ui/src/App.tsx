@@ -7,8 +7,10 @@ import { isPopup } from "./context/util/isPopup"
 import PopupRouter from "./router/PopupRouter"
 import TabRouter from "./router/TabRouter"
 import { WindowIdProvider } from "./context/hooks/useWindowId"
+import { Profiler } from "react"
+import useMetricCollector from "./util/useMetricCollector"
 
-const AppLoading = () => {
+export const AppLoading = () => {
     return (
         <div className="w-full h-full flex flex-row items-center justify-center bg-primary-100">
             <Spinner />
@@ -30,10 +32,15 @@ const App = () => {
     )
 }
 
-const WrappedApp = () => (
-    <BackgroundState>
-        <App />
-    </BackgroundState>
-)
+const WrappedApp = () => {
+    const collect = useMetricCollector()
+    return (
+        <BackgroundState>
+            <Profiler id="app" onRender={collect}>
+                <App />
+            </Profiler>
+        </BackgroundState>
+    )
+}
 
 export default WrappedApp

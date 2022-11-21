@@ -68,6 +68,7 @@ import { HardwareWalletOpTypes } from "../../context/commTypes"
 import { useInProgressInternalTransaction } from "../../context/hooks/useInProgressInternalTransaction"
 import { rejectTransaction } from "../../context/commActions"
 import { getValueByKey } from "../../util/objectUtils"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 // Schema
 const GetAmountYupSchema = (
@@ -299,6 +300,9 @@ const SendConfirmPage = () => {
     // Blank Hooks
     const { clear: clearLocationRecovery } = useLocationRecovery()
     const blankState = useBlankState()!
+    const {
+        state: { exchangeRates, networkNativeCurrency },
+    } = useExchangeRatesState()
     const network = useSelectedNetwork()
     const history: any = useOnMountHistory()
     const balance = useSelectedAccountBalance()
@@ -419,7 +423,7 @@ const SendConfirmPage = () => {
             setNativeCurrency(
                 toCurrencyAmount(
                     txAmount,
-                    getValueByKey(blankState.exchangeRates, symbol, 0),
+                    getValueByKey(exchangeRates, symbol, 0),
                     decimals
                 )
             )

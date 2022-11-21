@@ -23,6 +23,7 @@ import { compareAddresses } from './transactions/utils/utils';
 import {
     TransactionTypeEnum,
     TransactionWatcherController,
+    TransactionWatcherControllerState,
 } from './TransactionWatcherController';
 
 export interface IActivityListState {
@@ -46,9 +47,52 @@ export class ActivityListController extends BaseController<IActivityListState> {
         // If any of the following stores were updated trigger the ActivityList update
         this._transactionsController.UIStore.subscribe(this.onStoreUpdate);
         this._blankDepositsController.UIStore.subscribe(this.onStoreUpdate);
-        this._preferencesController.store.subscribe(this.onStoreUpdate);
-        this._networkController.store.subscribe(this.onStoreUpdate);
-        this._transactionWatcherController.store.subscribe(this.onStoreUpdate);
+        this._preferencesController.store.subscribe((newState, oldState) => {
+            if (
+                !compareAddresses(
+                    newState.selectedAddress,
+                    oldState?.selectedAddress
+                )
+            ) {
+                return this.onStoreUpdate();
+            }
+        });
+        this._networkController.store.subscribe((newState, oldState) => {
+            if (newState.selectedNetwork !== oldState?.selectedNetwork) {
+                this.onStoreUpdate();
+            }
+        });
+        this._transactionWatcherController.store.subscribe(
+            (newState, oldState) => {
+                const { selectedAddress } =
+                    this._preferencesController.store.getState();
+
+                const safeGetTxsHashes = (
+                    txWatcherState:
+                        | TransactionWatcherControllerState
+                        | undefined
+                ) => {
+                    if (!txWatcherState) {
+                        return [];
+                    }
+                    return this.parseWatchedTransactions(
+                        this._networkController.network.chainId,
+                        selectedAddress,
+                        txWatcherState.transactions
+                    )
+                        .map((tx) => tx.transactionParams.hash!)
+                        .filter(Boolean);
+                };
+
+                const oldTxs = safeGetTxsHashes(oldState);
+                const newTxs = safeGetTxsHashes(newState);
+
+                //If hashes length has changed, then update the activity list.
+                if (oldTxs.length !== newTxs.length) {
+                    this.onStoreUpdate();
+                }
+            }
+        );
         this._bridgeController.store.subscribe(this.onStoreUpdate);
         this.onStoreUpdate();
     }
@@ -212,11 +256,10 @@ export class ActivityListController extends BaseController<IActivityListState> {
      */
     private parseWatchedTransactions(
         chainId: number,
-        selectedAddress: string
+        selectedAddress: string,
+        transactions: TransactionWatcherControllerState['transactions'] = this._transactionWatcherController.store.getState()
+            .transactions
     ): TransactionMeta[] {
-        const { transactions } =
-            this._transactionWatcherController.store.getState();
-
         const watchedTransactions: TransactionMeta[] = [];
 
         if (chainId in transactions) {

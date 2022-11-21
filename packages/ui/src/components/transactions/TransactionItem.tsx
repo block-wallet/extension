@@ -20,9 +20,7 @@ import Tooltip from "../../components/label/Tooltip"
 import eth from "../../assets/images/icons/ETH.svg"
 import blankLogo from "../../assets/images/logo.svg"
 import flashbotsLogo from "../../assets/images/flashbots.png"
-
 import {
-    BridgeStatus,
     BridgeSubstatus,
     MetaType,
     TransactionCategories,

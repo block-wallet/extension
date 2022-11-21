@@ -46,7 +46,6 @@ import {
 } from "@block-wallet/background/controllers/BridgeController"
 import { ApproveOperation } from "../transaction/ApprovePage"
 import { BridgeAllowanceCheck, QuoteFeeStatus } from "../../context/commTypes"
-import { defaultAdvancedSettings } from "../../components/transactions/AdvancedSettings"
 import { BridgeNotFoundQuoteDetails } from "../../components/transactions/BridgeNotFoundQuoteDetails"
 import { formatRounded } from "../../util/formatRounded"
 import FeeDetails from "../../components/FeeDetails"
@@ -56,6 +55,7 @@ import { populateBridgeTransaction } from "../../util/bridgeUtils"
 import BridgeErrorMessage, { BridgeErrorType } from "./BridgeErrorMessage"
 import usePersistedLocalStorageForm from "../../util/hooks/usePersistedLocalStorageForm"
 import { secondsToEstimatedMinutes } from "../../util/time"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 interface SetupBridgePageLocalState {
     amount?: string
@@ -86,11 +86,13 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         selectedAddress,
         nativeCurrency,
         localeInfo,
-        exchangeRates,
         availableNetworks,
         selectedNetwork,
         availableBridgeChains,
     } = useBlankState()!
+    const {
+        state: { exchangeRates, networkNativeCurrency },
+    } = useExchangeRatesState()
     const { nativeToken } = useTokensList()
 
     const [bridgeDetails, setBridgeDetails] = useState<{

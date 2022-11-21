@@ -8,6 +8,7 @@ import formatTransactionValue from "../../util/formatTransactionValue"
 // Hooks
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { getValueByKey } from "../../util/objectUtils"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 const Price: FunctionComponent<{
     title: string
@@ -16,6 +17,9 @@ const Price: FunctionComponent<{
     decimals: number
 }> = ({ title, amount, symbol, decimals }) => {
     const state = useBlankState()!
+    const {
+        state: { exchangeRates, networkNativeCurrency },
+    } = useExchangeRatesState()
 
     const txValue = formatTransactionValue(
         {
@@ -29,7 +33,7 @@ const Price: FunctionComponent<{
 
     const currencyAmount = toCurrencyAmount(
         amount,
-        getValueByKey(state.exchangeRates, symbol.toUpperCase(), 0),
+        getValueByKey(exchangeRates, symbol.toUpperCase(), 0),
         decimals
     )
 

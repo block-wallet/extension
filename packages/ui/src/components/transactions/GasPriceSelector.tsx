@@ -41,6 +41,7 @@ import { formatRounded } from "../../util/formatRounded"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 export type TransactionSpeed = {
     [key: string]: BigNumber
@@ -444,8 +445,11 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
     )
 
     // State variables
-    const { nativeCurrency, localeInfo, exchangeRates, networkNativeCurrency } =
-        useBlankState()!
+    const { nativeCurrency, localeInfo } = useBlankState()!
+
+    const {
+        state: { exchangeRates, networkNativeCurrency },
+    } = useExchangeRatesState()
 
     const { gasPricesLevels } = useGasPriceData()
 

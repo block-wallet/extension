@@ -1,9 +1,11 @@
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
-import { useBlankState } from "../background/backgroundHooks"
+import { useGasPricesState } from "../background/useGasPricesState"
 import { useSelectedNetwork } from "./useSelectedNetwork"
 
 export const useGasPriceData = () => {
-    const { gasPriceData } = useBlankState()!
+    const {
+        state: { gasPriceData },
+    } = useGasPricesState()
     const { chainId } = useSelectedNetwork()
     if (chainId in gasPriceData) {
         return gasPriceData[chainId]

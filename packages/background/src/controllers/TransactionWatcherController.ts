@@ -34,7 +34,7 @@ import { showIncomingTransactionNotification } from '../utils/notifications';
 import { checkIfNotAllowedError } from '../utils/ethersError';
 import TransactionController from './transactions/TransactionController';
 import { fetchBlockWithRetries } from '../utils/blockFetch';
-import { isNil } from 'lodash';
+import { cloneDeep, isNil } from 'lodash';
 import { runPromiseSafely } from '../utils/promises';
 
 export enum TransactionTypeEnum {
@@ -240,7 +240,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         address: string = this._preferencesController.getSelectedAddress(),
         transactionsWatched: TransactionsWatched
     ): void {
-        const state = this.store.getState() || {};
+        const state = cloneDeep(this.store.getState()) || {};
 
         if (!state.transactions) {
             state.transactions = {};

@@ -1,10 +1,15 @@
 import { useDrag, useDrop, DragSourceMonitor } from "react-dnd"
 import { useEffect, useRef, useState } from "react"
 import classnames from "classnames"
-import { RiArrowRightSLine } from "react-icons/ri"
 import { HiDotsVertical } from "react-icons/hi"
+import { MdOutlineChangeCircle, MdOutlineCheckCircle } from "react-icons/md"
+import editIcon from "../../assets/images/icons/pencil.svg"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import { changeNetwork } from "../../context/commActions"
 
 import { Network } from "@block-wallet/background/utils/constants/networks"
+import ConfirmDialog from "../dialog/ConfirmDialog"
+import SuccessDialog from "../dialog/SuccessDialog"
 
 interface NetworkInfo extends Network {
     color: string
@@ -41,6 +46,12 @@ const NetworkDisplay = ({
     isTestnet?: boolean
     onSuccessfulDrop: () => void
 }) => {
+    const { selectedNetwork } = useBlankState()!
+    const isSelectedNetwork = selectedNetwork === networkInfo.name
+
+    const [confirmSwitchNetwork, setConfirmSwitchNetwork] = useState(false)
+    const [switchNetworkSuccess, setSwitchNetworkSuccess] = useState(false)
+
     const [dropAnimation, setDropAnimation] = useState(false)
     const dropRef = useRef<HTMLDivElement>(null)
     const dragRef = useRef<HTMLDivElement>(null)
@@ -126,19 +137,38 @@ const NetworkDisplay = ({
 
     return (
         <div
-            onClick={onClick}
             className={classnames(
                 "rounded-md",
                 dropAnimation &&
                     "bg-blue-100 transition-colors animate-[pulse_0.8s]",
-                !dropAnimation && "hover:bg-gray-100 hover:cursor-pointer"
+                !dropAnimation && "hover:bg-gray-100"
             )}
             ref={dropRef}
             style={{ opacity }}
         >
+            <ConfirmDialog
+                title="Switch Network"
+                message={`Are you sure you want to switch to ${networkInfo.desc} network?`}
+                open={confirmSwitchNetwork}
+                onClose={() => setConfirmSwitchNetwork(false)}
+                onConfirm={async () => {
+                    await changeNetwork(networkInfo.name)
+                    setSwitchNetworkSuccess(true)
+                    setConfirmSwitchNetwork(false)
+                }}
+            />
+            <SuccessDialog
+                open={switchNetworkSuccess}
+                title={"Network Switched"}
+                message={`Switch to ${networkInfo.desc} network was successful.`}
+                onDone={() => {
+                    setSwitchNetworkSuccess(false)
+                }}
+                timeout={1000}
+            />
             <>
-                <div className="flex flex-row justify-between items-center p-2 pl-0">
-                    <div className="flex flex-row group items-center">
+                <div className="flex flex-row justify-between items-center pr-2 pl-0 h-full">
+                    <div className="flex flex-row group items-center py-2">
                         <div
                             className="flex flex-row items-center cursor-move"
                             title="Drag to sort"
@@ -159,8 +189,31 @@ const NetworkDisplay = ({
                             {networkInfo.desc}
                         </span>
                     </div>
-
-                    <RiArrowRightSLine size={20} />
+                    <div className="flex flex-row items-center h-full">
+                        {isSelectedNetwork ? (
+                            <div className="px-2" title="Current network">
+                                <MdOutlineCheckCircle
+                                    size={20}
+                                    className="text-green-600"
+                                />
+                            </div>
+                        ) : (
+                            <div
+                                className="px-2 hover:cursor-pointer"
+                                title="Change to current network"
+                                onClick={() => setConfirmSwitchNetwork(true)}
+                            >
+                                <MdOutlineChangeCircle size={20} />
+                            </div>
+                        )}
+                        <div
+                            className="px-2 hover:cursor-pointer"
+                            title="Edit network"
+                            onClick={onClick}
+                        >
+                            <img src={editIcon} alt="Edit" className="w-3" />
+                        </div>
+                    </div>
                 </div>
             </>
         </div>

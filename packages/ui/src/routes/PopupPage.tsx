@@ -151,6 +151,9 @@ const PopupPage = () => {
 
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
 
+    const isLoading =
+        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+
     return (
         <PageLayout screen className="max-h-screen popup-layout">
             <ErrorDialog
@@ -297,7 +300,18 @@ const PopupPage = () => {
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
-                                    <ArrowHoverAnimation />
+                                    {isLoading ? (
+                                        <div className="flex flex-row items-center justify-center w-full h-full">
+                                            <AnimatedIcon
+                                                icon={
+                                                    AnimatedIconName.BlueCircleLoadingSkeleton
+                                                }
+                                                className="w-4 h-4 pointer-events-none"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <ArrowHoverAnimation />
+                                    )}
                                 </div>
                                 <span className="text-xs font-medium">
                                     Send
@@ -324,7 +338,18 @@ const PopupPage = () => {
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
-                                        <DoubleArrowHoverAnimation />
+                                        {isLoading ? (
+                                            <div className="flex flex-row items-center justify-center w-full h-full">
+                                                <AnimatedIcon
+                                                    icon={
+                                                        AnimatedIconName.BlueCircleLoadingSkeleton
+                                                    }
+                                                    className="w-4 h-4 pointer-events-none rotate-180"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <DoubleArrowHoverAnimation />
+                                        )}
                                     </div>
                                     <span className="text-xs font-medium">
                                         Swap
@@ -352,10 +377,21 @@ const PopupPage = () => {
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
-                                        <AnimatedIcon
-                                            icon={AnimatedIconName.Bridge}
-                                            className="cursor-pointer"
-                                        />
+                                        {isLoading ? (
+                                            <div className="flex flex-row items-center justify-center w-full h-full">
+                                                <AnimatedIcon
+                                                    icon={
+                                                        AnimatedIconName.BlueCircleLoadingSkeleton
+                                                    }
+                                                    className="w-4 h-4 pointer-events-none"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <AnimatedIcon
+                                                icon={AnimatedIconName.Bridge}
+                                                className="cursor-pointer"
+                                            />
+                                        )}
                                     </div>
                                     <span className="text-xs font-medium">
                                         Bridge

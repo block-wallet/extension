@@ -147,7 +147,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * @param chainId The network chain id
      * @returns if the chain is a custom network with no fixed gas cost for sends
      */
-    public isChainIdCustomNetwork(
+    public hasChainFixedGasCost(
         chainId: number | undefined
     ): boolean | undefined {
         if (!chainId) {
@@ -158,7 +158,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             (i) => i.chainId === chainId
         );
 
-        return network?.isCustomNetwork ?? false;
+        return network?.hasFixedGasCost ?? false;
     }
 
     /**
@@ -428,7 +428,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                         .sort((a, b) => b - a)[0] + 1,
                 iconUrls: nativeCurrencyIcon ? [nativeCurrencyIcon] : undefined,
                 nativelySupported: false,
-                isCustomNetwork: true,
+                hasFixedGasCost: false,
                 etherscanApiUrl: chainDataFromList?.scanApi,
             };
         }

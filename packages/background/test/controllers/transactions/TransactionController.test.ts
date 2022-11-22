@@ -334,8 +334,8 @@ describe('Transactions Controller', () => {
 
         it('Should estimate gas cost of a send in a custom network', async () => {
             sinon
-                .stub(networkController, 'isChainIdCustomNetwork')
-                .returns(true);
+                .stub(networkController, 'hasChainFixedGasCost')
+                .returns(false);
 
             sinon.stub(networkController, 'getProvider').returns({
                 ...providerMock,

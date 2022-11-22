@@ -44,7 +44,7 @@ export default {
                 derivationsForward: DERIVATIONS_FORWARD,
             },
             nativelySupported: true,
-        };
+        } as any;
 
         updatedNetworks.LOCALHOST = {
             ...updatedNetworks.LOCALHOST,

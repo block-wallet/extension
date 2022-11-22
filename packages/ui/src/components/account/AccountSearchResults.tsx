@@ -1,4 +1,5 @@
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
+import { toChecksumAddress } from "ethereumjs-util"
 import { utils } from "ethers"
 import { useRef, useEffect, useReducer } from "react"
 import { useAddressBookAccounts } from "../../context/hooks/useAddressBookAccounts"
@@ -137,7 +138,11 @@ const AccountSearchResults = ({
                             <AccountDisplay
                                 key={account.address}
                                 account={account}
-                                selected={filter === account.address}
+                                selected={
+                                    utils.isAddress(filter) &&
+                                    toChecksumAddress(filter) ===
+                                        account.address
+                                }
                                 showAddress={true}
                                 onClickAccount={() => onSelect(account)}
                             />

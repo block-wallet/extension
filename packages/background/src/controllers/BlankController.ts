@@ -2587,12 +2587,14 @@ export default class BlankController extends EventEmitter {
         value,
     }: RequestCalculateSendTransactionGasLimit): Promise<TransactionGasEstimation> {
         const isNativeToken = isNativeTokenAddress(address);
-        const isCustomNetwork = this.networkController.network.isCustomNetwork;
+        const { chainId } = this.networkController.network;
+        const hasFixedGasCost =
+            this.networkController.hasChainFixedGasCost(chainId);
         const isZeroValue = BigNumber.from(value).eq(BigNumber.from('0x00'));
 
         if (isNativeToken) {
             // Native Token and Not a custom network, returns SEND_GAS_COST const.
-            if (!isCustomNetwork) {
+            if (hasFixedGasCost) {
                 return {
                     gasLimit: BigNumber.from(SEND_GAS_COST),
                     estimationSucceeded: true,
@@ -2600,8 +2602,6 @@ export default class BlankController extends EventEmitter {
             }
 
             // Native token of a custom network, estimets gas with fallback price.
-
-            const { chainId } = this.networkController.network;
             return this.transactionController.estimateGas({
                 transactionParams: {
                     to,

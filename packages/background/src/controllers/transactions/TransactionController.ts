@@ -2244,14 +2244,14 @@ export class TransactionController extends BaseController<
                 error
             );
 
-            const isCustomNetwork =
-                this._networkController.isChainIdCustomNetwork(
+            const hasFixedGasCost =
+                this._networkController.hasChainFixedGasCost(
                     txOrCurrentChainId
                 );
 
             // If fallback is present, use it instead of block gasLimit
             let gasLimit = BigNumber.from('0');
-            if (!isCustomNetwork && BigNumber.isBigNumber(fallbackGasLimit)) {
+            if (hasFixedGasCost && BigNumber.isBigNumber(fallbackGasLimit)) {
                 gasLimit = BigNumber.from(fallbackGasLimit);
             } else {
                 // We take a part of the block gasLimit (95% of it)

@@ -21,7 +21,7 @@ export type Network = {
         symbol: string;
         decimals: number;
     };
-    isCustomNetwork?: boolean;
+    hasFixedGasCost?: boolean;
     iconUrls?: string[];
     enable: boolean;
     features: BlankSupportedFeatures[];
@@ -154,7 +154,7 @@ export const INITIAL_NETWORKS: Networks = {
             symbol: 'ETH',
             decimals: 18,
         },
-        isCustomNetwork: false,
+        hasFixedGasCost: true,
         enable: true,
         test: false,
         order: 1,
@@ -184,7 +184,7 @@ export const INITIAL_NETWORKS: Networks = {
             symbol: 'ETH',
             decimals: 18,
         },
-        isCustomNetwork: true,
+        hasFixedGasCost: false,
         enable: true,
         test: false,
         order: 2,
@@ -214,7 +214,7 @@ export const INITIAL_NETWORKS: Networks = {
             symbol: 'ETH',
             decimals: 18,
         },
-        isCustomNetwork: true,
+        hasFixedGasCost: false,
         gasLowerCap: {
             gasPrice: BigNumber.from('1000000'),
         },
@@ -245,7 +245,7 @@ export const INITIAL_NETWORKS: Networks = {
             symbol: 'BNB',
             decimals: 18,
         },
-        isCustomNetwork: false,
+        hasFixedGasCost: true,
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/smartchain/info/logo.png',
         ],
@@ -281,7 +281,7 @@ export const INITIAL_NETWORKS: Networks = {
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/polygon/info/logo.png',
         ],
-        isCustomNetwork: false,
+        hasFixedGasCost: true,
         gasLowerCap: {
             maxPriorityFeePerGas: BigNumber.from('0x6fc23ac00'), // 30 GWEI,
         },
@@ -317,7 +317,7 @@ export const INITIAL_NETWORKS: Networks = {
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/avalanchec/info/logo.png',
         ],
-        isCustomNetwork: false,
+        hasFixedGasCost: true,
         gasLowerCap: {
             baseFee: BigNumber.from('0x5d21dba00'), // 25 GWEI,
         },
@@ -353,7 +353,7 @@ export const INITIAL_NETWORKS: Networks = {
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/fantom/info/logo.png',
         ],
-        isCustomNetwork: false,
+        hasFixedGasCost: true,
         enable: true,
         test: false,
         order: 7,
@@ -381,7 +381,7 @@ export const INITIAL_NETWORKS: Networks = {
             symbol: 'xDAI',
             decimals: 18,
         },
-        isCustomNetwork: true,
+        hasFixedGasCost: false,
         enable: true,
         test: false,
         order: 8,
@@ -412,7 +412,7 @@ export const INITIAL_NETWORKS: Networks = {
             symbol: 'ETH',
             decimals: 18,
         },
-        isCustomNetwork: false,
+        hasFixedGasCost: true,
         enable: true,
         test: true,
         order: 1,
@@ -430,90 +430,6 @@ export const INITIAL_NETWORKS: Networks = {
         },
         nativelySupported: true,
     },
-    ROPSTEN: {
-        name: 'ropsten',
-        desc: 'Ropsten Testnet',
-        chainId: 3,
-        networkVersion: '3',
-        nativeCurrency: {
-            name: 'Ether',
-            symbol: 'ETH',
-            decimals: 18,
-        },
-        isCustomNetwork: false,
-        enable: false,
-        test: true,
-        order: 2,
-        features: [FEATURES.SENDS],
-        ens: true,
-        showGasLevels: true,
-        rpcUrls: [`https://ropsten-node.blockwallet.io`],
-        blockExplorerUrls: ['https://ropsten.etherscan.io'],
-        blockExplorerName: 'Etherscan',
-        etherscanApiUrl: 'https://api-ropsten.etherscan.io',
-        actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
-        tornadoIntervals: {
-            depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
-            derivationsForward: DERIVATIONS_FORWARD,
-        },
-        nativelySupported: true,
-    },
-    KOVAN: {
-        name: 'kovan',
-        desc: 'Kovan Testnet',
-        chainId: 42,
-        networkVersion: '42',
-        nativeCurrency: {
-            name: 'Ether',
-            symbol: 'ETH',
-            decimals: 18,
-        },
-        isCustomNetwork: false,
-        enable: false,
-        test: true,
-        order: 3,
-        features: [FEATURES.SENDS],
-        ens: false,
-        showGasLevels: true,
-        rpcUrls: [`https://kovan-node.blockwallet.io`],
-        blockExplorerUrls: ['https://kovan.etherscan.io'],
-        blockExplorerName: 'Etherscan',
-        etherscanApiUrl: 'https://api-kovan.etherscan.io',
-        actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
-        tornadoIntervals: {
-            depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
-            derivationsForward: DERIVATIONS_FORWARD,
-        },
-        nativelySupported: true,
-    },
-    RINKEBY: {
-        name: 'rinkeby',
-        desc: 'Rinkeby Testnet',
-        chainId: 4,
-        networkVersion: '4',
-        nativeCurrency: {
-            name: 'Ether',
-            symbol: 'ETH',
-            decimals: 18,
-        },
-        isCustomNetwork: false,
-        enable: false,
-        test: true,
-        order: 4,
-        features: [FEATURES.SENDS],
-        ens: true,
-        showGasLevels: true,
-        rpcUrls: [`https://rinkeby-node.blockwallet.io`],
-        blockExplorerUrls: ['https://rinkeby.etherscan.io'],
-        blockExplorerName: 'Etherscan',
-        etherscanApiUrl: 'https://api-rinkeby.etherscan.io',
-        actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
-        tornadoIntervals: {
-            depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
-            derivationsForward: DERIVATIONS_FORWARD,
-        },
-        nativelySupported: true,
-    },
     BSC_TESTNET: {
         name: 'bsc_testnet',
         desc: 'BNB Chain Testnet',
@@ -524,7 +440,7 @@ export const INITIAL_NETWORKS: Networks = {
             symbol: 'tBNB',
             decimals: 18,
         },
-        isCustomNetwork: false,
+        hasFixedGasCost: true,
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/smartchain/info/logo.png',
         ],
@@ -557,7 +473,7 @@ export const INITIAL_NETWORKS: Networks = {
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/polygon/info/logo.png',
         ],
-        isCustomNetwork: false,
+        hasFixedGasCost: true,
         enable: true,
         test: true,
         order: 6,
@@ -588,7 +504,7 @@ export const INITIAL_NETWORKS: Networks = {
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zksync/info/logo.png',
         ],
-        isCustomNetwork: true,
+        hasFixedGasCost: false,
         enable: true,
         test: true,
         order: 7,
@@ -618,7 +534,7 @@ export const INITIAL_NETWORKS: Networks = {
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/scroll/info/logo.png',
         ],
-        isCustomNetwork: true,
+        hasFixedGasCost: false,
         enable: true,
         test: true,
         order: 8,
@@ -648,7 +564,7 @@ export const INITIAL_NETWORKS: Networks = {
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/scroll/info/logo.png',
         ],
-        isCustomNetwork: true,
+        hasFixedGasCost: false,
         enable: true,
         test: true,
         order: 9,
@@ -675,7 +591,7 @@ export const INITIAL_NETWORKS: Networks = {
             symbol: 'ETH',
             decimals: 18,
         },
-        isCustomNetwork: true,
+        hasFixedGasCost: false,
         enable: true,
         test: true,
         order: 10,

@@ -3,13 +3,22 @@ import { BigNumber } from 'ethers';
 import { IMigration } from '../IMigration';
 
 /**
- * This migration updates some properties on the L2 networks.
+ * This migration updates the network list including:
+ *   - remove deprecated networks
+ *   - update l2 networks properties
+ *   - renaming/refactor 'isCustomNetwork'
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
         const { availableNetworks } = persistedState.NetworkController;
         const updatedNetworks = { ...availableNetworks };
 
+        // remove deprecated networks
+        delete updatedNetworks['ROPSTEN'];
+        delete updatedNetworks['KOVAN'];
+        delete updatedNetworks['RINKEBY'];
+
+        // update l2 networks properties
         updatedNetworks.OPTIMISM = {
             ...updatedNetworks.OPTIMISM,
             enable: true,
@@ -33,6 +42,19 @@ export default {
             ...updatedNetworks.SCROLL_L2_TESTNET,
             showGasLevels: false,
         };
+
+        // renaming/refactor 'isCustomNetwork'
+        for (const networkName in updatedNetworks) {
+            const isCustomNetwork =
+                ((updatedNetworks[networkName] as any)[
+                    'isCustomNetwork'
+                ] as boolean) ?? true;
+
+            updatedNetworks[networkName] = {
+                ...updatedNetworks[networkName],
+                hasFixedGasCost: !isCustomNetwork,
+            };
+        }
 
         return {
             ...persistedState,

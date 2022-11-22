@@ -13,6 +13,7 @@ type DropDownSelectorProps = {
     error?: string
     disabled?: boolean
     customWidth?: string
+    className?: string
 }
 
 /**
@@ -32,6 +33,7 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
     display,
     topMargin,
     bottomMargin,
+    className,
     popupMargin,
     error,
     disabled,
@@ -100,9 +102,11 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
                     "h-[4.5rem]",
                     "space-x-1",
                     active && Classes.blueSectionActive,
+                    disabled && Classes.blueSelectionDisabled,
                     error
                         ? "border-red-400"
-                        : "border-opacity-0 border-transparent"
+                        : "border-opacity-0 border-transparent",
+                    className
                 )}
                 onClick={() => !disabled && setActive(!active)}
                 ref={displayRef}
@@ -123,7 +127,7 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
             {/* Popup */}
             <div
                 className={classNames(
-                    "absolute shadow-lg bg-white rounded-md z-30 my-2 overflow-y-auto select-none",
+                    "absolute shadow-lg bg-white rounded-md z-30 my-2 overflow-y-auto select-none border-[0.5px] border-gray-200",
                     customWidth || "w-full",
                     active ? "opacity-1" : "opacity-0 pointer-events-none", // Avoid reading size problem when not display
                     midToTopDistance < viewHeight ? "top-full" : "bottom-full" // Determine if Popup should appear on top or on bottom of the Display element
@@ -141,8 +145,8 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
                 {active &&
                     Children.map(children, (child) => {
                         return child.type !== "div"
-                            ? cloneElement(child, { setActive })
-                            : cloneElement(child)
+                            ? cloneElement(child, { setActive, ...child.props })
+                            : cloneElement(child, { ...child.props })
                     })}
             </div>
         </div>

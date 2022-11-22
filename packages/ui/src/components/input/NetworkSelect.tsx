@@ -88,9 +88,6 @@ const NetworkSelect: FunctionComponent<{
             role="menu"
             data-testid="network-selector"
         >
-            {(networkChanging ||
-                isAccountTrackerLoading ||
-                isNetworkChanging) && <LoadingOverlay />}
             <div
                 onClick={() => {
                     if (!isImportingDeposits) {

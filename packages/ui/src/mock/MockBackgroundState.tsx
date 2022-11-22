@@ -20,6 +20,7 @@ export const initBackgroundState: BackgroundStateType = {
         filters: {
             account: [],
         },
+        availableSwapChainIds: [1],
         addressBook: {
             GOERLI: {
                 "0x5621C68f21852811E1fd6208fDDD0FC13A844fD1": {
@@ -386,6 +387,7 @@ export const initBackgroundState: BackgroundStateType = {
             // Default Coingecko id for ETH rates
             coingeckoPlatformId: "ethereum",
         },
+        isRatesChangingAfterNetworkChange: false,
         isEIP1559Compatible: { 5: true },
         gasPriceData: {
             5: {
@@ -422,6 +424,7 @@ export const initBackgroundState: BackgroundStateType = {
             defaultBrowserWallet: true,
             hideEstimatedGasExceedsThresholdWarning: false,
             hideDepositsExternalAccountsWarning: false,
+            hideBridgeInsufficientNativeTokenWarning: false,
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: "0.1.1",
@@ -662,6 +665,7 @@ export const initBackgroundState: BackgroundStateType = {
             //    },
             //},
         },
+        availableBridgeChains: [],
     },
 }
 

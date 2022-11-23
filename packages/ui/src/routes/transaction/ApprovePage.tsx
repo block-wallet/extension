@@ -55,7 +55,6 @@ import { SwapConfirmPageLocalState } from "../swap/SwapConfirmPage"
 import { ExchangeType } from "../../context/commTypes"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
-import NetworkDisplayBadge from "../../components/chain/NetworkDisplayBadge"
 import { useBlankState } from "../../context/background/backgroundHooks"
 
 const UNLIMITED_ALLOWANCE = ethers.constants.MaxUint256
@@ -754,12 +753,9 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     title={"Allowance"}
                     disabled={isApproving}
                     onBack={onBack()}
+                    networkIndicator
                     keepState
-                >
-                    <div className="flex grow justify-end pr-1">
-                        <NetworkDisplayBadge network={network} truncate />
-                    </div>
-                </PopupHeader>
+                />
             }
             footer={
                 <PopupFooter>

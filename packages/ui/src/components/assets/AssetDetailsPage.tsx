@@ -165,126 +165,131 @@ const AssetDetailsPage = () => {
                 timeout={1000}
             />
 
-            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 space-y-6 overflow-auto hide-scroll">
-                <TokenSummary minHeight="13rem">
-                    <TokenSummary.Balances>
-                        <AssetIcon filled asset={token} />
-                        <TokenSummary.TokenBalance
-                            className="flex flex-row space-x-1"
-                            title={`${formattedTokenBalance} ${token.symbol}`}
-                        >
-                            <span
-                                className="truncate w-full max-w-xs"
-                                style={{ maxWidth: "18rem" }}
+            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen pt-3 space-y-6 overflow-auto hide-scroll">
+                <div className="px-3 w-full">
+                    <TokenSummary minHeight="13rem">
+                        <TokenSummary.Balances>
+                            <AssetIcon filled asset={token} />
+                            <TokenSummary.TokenBalance
+                                className="flex flex-row space-x-1"
+                                title={`${formattedTokenBalance} ${token.symbol}`}
                             >
-                                {`${roundedTokenBalance} ${token.symbol}`}
-                            </span>
-                        </TokenSummary.TokenBalance>
-                        <TokenSummary.ExchangeRateBalance>
-                            {currencyFormatter.format(
-                                balance,
-                                token.symbol,
-                                token.decimals,
-                                isNative
-                            )}
-                        </TokenSummary.ExchangeRateBalance>
-                    </TokenSummary.Balances>
-                    <TokenSummary.Actions>
-                        <Link
-                            to={{
-                                pathname: "/send",
-                                state: { asset, transitionDirection: "left" },
-                            }}
-                            draggable={false}
-                            className={classnames(
-                                "flex flex-col items-center space-y-2 group",
-                                !isSendEnabled && "pointer-events-none"
-                            )}
-                        >
-                            <RoundedIconButton
-                                Icon={ArrowHoverAnimation}
-                                disabled={!isSendEnabled}
-                            >
-                                Send
-                            </RoundedIconButton>
-                        </Link>
-                        {isSwapEnabled && (
+                                <span
+                                    className="truncate w-full max-w-xs"
+                                    style={{ maxWidth: "18rem" }}
+                                >
+                                    {`${roundedTokenBalance} ${token.symbol}`}
+                                </span>
+                            </TokenSummary.TokenBalance>
+                            <TokenSummary.ExchangeRateBalance>
+                                {currencyFormatter.format(
+                                    balance,
+                                    token.symbol,
+                                    token.decimals,
+                                    isNative
+                                )}
+                            </TokenSummary.ExchangeRateBalance>
+                        </TokenSummary.Balances>
+                        <TokenSummary.Actions>
                             <Link
                                 to={{
-                                    pathname: "/swap",
+                                    pathname: "/send",
                                     state: {
-                                        fromToken: asset.token,
-                                        fromTokenBalance: asset.balance,
-                                        fromAssetPage: true,
+                                        asset,
                                         transitionDirection: "left",
                                     },
                                 }}
                                 draggable={false}
                                 className={classnames(
                                     "flex flex-col items-center space-y-2 group",
-                                    (!isSendEnabled ||
-                                        !state.isUserNetworkOnline) &&
-                                        "pointer-events-none"
+                                    !isSendEnabled && "pointer-events-none"
                                 )}
                             >
-                                <div
-                                    className={classnames(
-                                        "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        !isSendEnabled ||
-                                            !state.isUserNetworkOnline
-                                            ? "bg-gray-300"
-                                            : "bg-primary-300"
-                                    )}
-                                    style={{ transform: "scaleY(-1)" }}
+                                <RoundedIconButton
+                                    Icon={ArrowHoverAnimation}
+                                    disabled={!isSendEnabled}
                                 >
-                                    <DoubleArrowHoverAnimation />
-                                </div>
-                                <span className="text-xs font-medium">
-                                    Swap
-                                </span>
+                                    Send
+                                </RoundedIconButton>
                             </Link>
-                        )}
-                        {isBridgeEnabled && (
-                            <Link
-                                to={{
-                                    pathname: "/bridge",
-                                    state: {
-                                        token: asset.token,
-                                        fromAssetPage: true,
-                                        transitionDirection: "left",
-                                    },
-                                }}
-                                draggable={false}
-                                className={classnames(
-                                    "flex flex-col items-center space-y-2 group",
-                                    (!isSendEnabled ||
-                                        !state.isUserNetworkOnline) &&
-                                        "pointer-events-none"
-                                )}
-                            >
-                                <div
+                            {isSwapEnabled && (
+                                <Link
+                                    to={{
+                                        pathname: "/swap",
+                                        state: {
+                                            fromToken: asset.token,
+                                            fromTokenBalance: asset.balance,
+                                            fromAssetPage: true,
+                                            transitionDirection: "left",
+                                        },
+                                    }}
+                                    draggable={false}
                                     className={classnames(
-                                        "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        !isSendEnabled ||
-                                            !state.isUserNetworkOnline
-                                            ? "bg-gray-300"
-                                            : "bg-primary-300"
+                                        "flex flex-col items-center space-y-2 group",
+                                        (!isSendEnabled ||
+                                            !state.isUserNetworkOnline) &&
+                                            "pointer-events-none"
                                     )}
-                                    style={{ transform: "scaleY(-1)" }}
                                 >
-                                    <AnimatedIcon
-                                        icon={AnimatedIconName.Bridge}
-                                        className="cursor-pointer"
-                                    />
-                                </div>
-                                <span className="text-xs font-medium">
-                                    Bridge
-                                </span>
-                            </Link>
-                        )}
-                    </TokenSummary.Actions>
-                </TokenSummary>
-                <div className="flex flex-col flex-1 w-full space-y-0 border-t border-gray-200">
+                                    <div
+                                        className={classnames(
+                                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                            !isSendEnabled ||
+                                                !state.isUserNetworkOnline
+                                                ? "bg-gray-300"
+                                                : "bg-primary-300"
+                                        )}
+                                        style={{ transform: "scaleY(-1)" }}
+                                    >
+                                        <DoubleArrowHoverAnimation />
+                                    </div>
+                                    <span className="text-xs font-medium">
+                                        Swap
+                                    </span>
+                                </Link>
+                            )}
+                            {isBridgeEnabled && (
+                                <Link
+                                    to={{
+                                        pathname: "/bridge",
+                                        state: {
+                                            token: asset.token,
+                                            fromAssetPage: true,
+                                            transitionDirection: "left",
+                                        },
+                                    }}
+                                    draggable={false}
+                                    className={classnames(
+                                        "flex flex-col items-center space-y-2 group",
+                                        (!isSendEnabled ||
+                                            !state.isUserNetworkOnline) &&
+                                            "pointer-events-none"
+                                    )}
+                                >
+                                    <div
+                                        className={classnames(
+                                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                            !isSendEnabled ||
+                                                !state.isUserNetworkOnline
+                                                ? "bg-gray-300"
+                                                : "bg-primary-300"
+                                        )}
+                                        style={{ transform: "scaleY(-1)" }}
+                                    >
+                                        <AnimatedIcon
+                                            icon={AnimatedIconName.Bridge}
+                                            className="cursor-pointer"
+                                        />
+                                    </div>
+                                    <span className="text-xs font-medium">
+                                        Bridge
+                                    </span>
+                                </Link>
+                            )}
+                        </TokenSummary.Actions>
+                    </TokenSummary>
+                </div>
+                <div className="flex flex-col flex-1 w-full h-full space-y-0 border-t border-gray-200">
                     {tokenTransactions.length > 0 ? (
                         <TransactionsList transactions={tokenTransactions} />
                     ) : (

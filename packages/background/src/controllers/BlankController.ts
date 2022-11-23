@@ -130,7 +130,7 @@ import { BigNumber, utils } from 'ethers';
 import BlankStorageStore from '../infrastructure/stores/BlankStorageStore';
 import { Messages } from '../utils/types/communication';
 import { TransactionMeta } from './transactions/utils/types';
-import initialState, {
+import {
     ActivityListUIState,
     BlankAppState,
     BlankAppUIState,
@@ -475,29 +475,26 @@ export default class BlankController extends EventEmitter {
             preferencesController: this.preferencesController,
         });
 
-        this.store = new ComposedStore<BlankAppState>(
-            {
-                NetworkController: this.networkController.store,
-                AppStateController: this.appStateController.store,
-                OnboardingController: this.onboardingController.store,
-                KeyringController: this.keyringController.store,
-                AccountTrackerController: this.accountTrackerController.store,
-                PreferencesController: this.preferencesController.store,
-                TransactionController: this.transactionController.store,
-                ExchangeRatesController: this.exchangeRatesController.store,
-                GasPricesController: this.gasPricesController.store,
-                BlankDepositController: this.blankDepositController.store,
-                TokenController: this.tokenController.store,
-                PermissionsController: this.permissionsController.store,
-                AddressBookController: this.addressBookController.store,
-                BlockUpdatesController: this.blockUpdatesController.store,
-                BlockFetchController: this.blockFetchController.store,
-                TransactionWatcherControllerState:
-                    this.transactionWatcherController.store,
-                BridgeController: this.bridgeController.store,
-            },
-            true
-        );
+        this.store = new ComposedStore<BlankAppState>({
+            NetworkController: this.networkController.store,
+            AppStateController: this.appStateController.store,
+            OnboardingController: this.onboardingController.store,
+            KeyringController: this.keyringController.store,
+            AccountTrackerController: this.accountTrackerController.store,
+            PreferencesController: this.preferencesController.store,
+            TransactionController: this.transactionController.store,
+            ExchangeRatesController: this.exchangeRatesController.store,
+            GasPricesController: this.gasPricesController.store,
+            BlankDepositController: this.blankDepositController.store,
+            TokenController: this.tokenController.store,
+            PermissionsController: this.permissionsController.store,
+            AddressBookController: this.addressBookController.store,
+            BlockUpdatesController: this.blockUpdatesController.store,
+            BlockFetchController: this.blockFetchController.store,
+            TransactionWatcherControllerState:
+                this.transactionWatcherController.store,
+            BridgeController: this.bridgeController.store,
+        });
 
         this.exchangeRatesStore = new ComposedStore<ExchangeRatesUIState>({
             ExchangeRatesController: this.exchangeRatesController.store,
@@ -511,25 +508,22 @@ export default class BlankController extends EventEmitter {
             ActivityListController: this.activityListController.store,
         });
 
-        this.UIStore = new ComposedStore<BlankAppUIState>(
-            {
-                NetworkController: this.networkController.store,
-                AppStateController: this.appStateController.UIStore,
-                OnboardingController: this.onboardingController.store,
-                KeyringController: this.keyringController.memStore,
-                AccountTrackerController: this.accountTrackerController.store,
-                PreferencesController: this.preferencesController.store,
-                TransactionController: this.transactionController.UIStore,
-                BlankDepositController: this.blankDepositController.UIStore,
-                TokenController: this.tokenController.store,
-                PermissionsController: this.permissionsController.store,
-                AddressBookController: this.addressBookController.store,
-                BlankProviderController: this.blankProviderController.store,
-                SwapController: this.swapController.UIStore,
-                BridgeController: this.bridgeController.UIStore,
-            },
-            true
-        );
+        this.UIStore = new ComposedStore<BlankAppUIState>({
+            NetworkController: this.networkController.store,
+            AppStateController: this.appStateController.UIStore,
+            OnboardingController: this.onboardingController.store,
+            KeyringController: this.keyringController.memStore,
+            AccountTrackerController: this.accountTrackerController.store,
+            PreferencesController: this.preferencesController.store,
+            TransactionController: this.transactionController.UIStore,
+            BlankDepositController: this.blankDepositController.UIStore,
+            TokenController: this.tokenController.store,
+            PermissionsController: this.permissionsController.store,
+            AddressBookController: this.addressBookController.store,
+            BlankProviderController: this.blankProviderController.store,
+            SwapController: this.swapController.UIStore,
+            BridgeController: this.bridgeController.UIStore,
+        });
 
         this.STORES = {
             [StateType.APP_STATE]: this.UIStore,

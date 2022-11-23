@@ -29,12 +29,12 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
     }
 
     return (
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col w-full h-full">
             <HorizontalSelect
                 options={tabs}
                 value={tab}
                 onChange={onTabChange}
-                display={(t) => t.label}
+                display={({ label }) => label}
                 disableStyles
                 optionClassName={(value) =>
                     `flex-1 flex flex-row items-center justify-center p-3 text-sm hover:text-primary-300 ${
@@ -43,10 +43,8 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
                             : "border-gray-200 text-gray-500 border-b hover:text-primary-300 hover:font-medium"
                     }`
                 }
-                containerClassName="flex flex-row -ml-6"
-                containerStyle={{ width: "calc(100% + 2 * 1.5rem)" }}
             />
-            <div className="flex flex-col w-full">
+            <div className="flex flex-col w-full h-full">
                 <TabComponent />
             </div>
         </div>

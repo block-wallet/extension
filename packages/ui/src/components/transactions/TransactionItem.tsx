@@ -410,7 +410,9 @@ const getTransactionTimeOrStatus = (
 const TransactionItem: React.FC<{
     transaction: RichedTransactionMeta
     index: number
-}> = ({ index, transaction }) => {
+    itemHeight: number
+    onClick: () => void
+}> = ({ index, transaction, onClick, itemHeight }) => {
     const {
         transactionParams: { value, hash },
         transactionCategory,
@@ -506,36 +508,19 @@ const TransactionItem: React.FC<{
         transactionCategory !==
             TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER &&
         !isBlankWithdraw
-
-    const OperationDetails =
-        transactionCategory &&
-        [
-            TransactionCategories.BRIDGE,
-            TransactionCategories.INCOMING_BRIDGE_REFUND,
-            TransactionCategories.INCOMING_BRIDGE,
-        ].includes(transactionCategory)
-            ? BridgeDetails
-            : TransactionDetails
-
     return (
         <>
-            <OperationDetails
-                transaction={transaction}
-                open={hasDetails}
-                onClose={() => setHasDetails(false)}
-            />
-
             <div
-                className={`flex flex-col px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 ${
+                className={`flex flex-col pl-12 pr-12 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 ${
                     !(txHash && transaction.transactionParams.from) &&
                     "cursor-default"
                 }`}
-                style={{ width: "calc(100% + 3rem)" }}
+                style={{ width: "calc(100% + 3rem)", height: itemHeight }}
                 role="button"
                 data-txid={txHash}
                 onClick={() => {
                     if (txHash && transaction.transactionParams.from) {
-                        setHasDetails(true)
+                        onClick()
                     }
                 }}
                 ref={contextMenuRef}

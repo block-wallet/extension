@@ -118,7 +118,7 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
 
     return (
         <div
-            className="flex flex-col flex-1 w-full space-y-0"
+            className="flex flex-col flex-1 w-full space-y-0 hide-scroll"
             role="list"
             aria-label="assets"
         >
@@ -134,38 +134,37 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
     )
 }
 
+const AddTokenButton = () => {
+    return (
+        <div className="flex flex-col w-full space-y-1 py-2 flex px-6">
+            <ActionButton
+                icon={plus}
+                label="Add Token"
+                to="/settings/tokens/add"
+            />
+        </div>
+    )
+}
+
 const AssetsList = () => {
     const { currentNetworkTokens, nativeToken } = useTokensList()
 
     const tokens = [nativeToken].concat(currentNetworkTokens)
 
-    // Top spacing for network labels: "pt-6"
+    const addTokenTop = tokens.length > 5
+
     return (
         <div
-            className="flex flex-col w-full space-y-4"
+            className="flex flex-col w-full space-y-4 justify-between h-full"
             data-testid="assets-list"
+            style={{ height: 450 }}
         >
-            {tokens.length > 9 && (
-                <div className="flex flex-col w-full mt-4">
-                    <ActionButton
-                        icon={plus}
-                        label="Add Token"
-                        to="/settings/tokens/add"
-                    />
-                </div>
-            )}
-            <div className="flex flex-col w-full space-y-1">
+            {addTokenTop && <AddTokenButton />}
+            <div className="flex flex-col w-full space-y-1 h-full overflow-x-hidden overflow-y-auto hide-scroll px-6">
                 {/* Network label */}
-                {/* <span className="text-xs text-gray-500">ETHEREUM</span> */}
                 <SubAssetList assets={tokens} />
             </div>
-            <div className="flex flex-col w-full space-y-1">
-                <ActionButton
-                    icon={plus}
-                    label="Add Token"
-                    to="/settings/tokens/add"
-                />
-            </div>
+            {!addTokenTop && <AddTokenButton />}
         </div>
     )
 }

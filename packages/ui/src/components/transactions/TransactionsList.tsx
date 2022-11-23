@@ -1,9 +1,34 @@
-import { Fragment, useRef, useState } from "react"
+import { useRef, useState } from "react"
+import AutoSizer from "react-virtualized-auto-sizer"
+import { VariableSizeList as List } from "react-window"
 import useDOMElementObserver from "../../util/hooks/useDOMElementObserver"
 import { RichedTransactionMeta } from "../../util/transactionUtils"
-import dotLoading from "../../assets/images/icons/dot_loading.svg"
-import { classnames } from "../../styles"
 import TransactionItem from "./TransactionItem"
+import {
+    TransactionCategories,
+    TransactionStatus,
+} from "../../context/commTypes"
+import BridgeDetails from "../bridge/BridgeDetails"
+import TransactionDetails from "./TransactionDetails"
+import { BRIDGE_PENDING_STATUS } from "../../util/bridgeUtils"
+import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
+const DEFAULT_TX_HEIGHT_IN_PX = 76
+const getItemHeightInPx = (tx: TransactionMeta) => {
+    if (tx.id) {
+        if (tx.status === TransactionStatus.SUBMITTED) {
+            return 110
+        } else if (tx.transactionCategory === TransactionCategories.BRIDGE) {
+            return BRIDGE_PENDING_STATUS.includes(tx.bridgeParams!.status!)
+                ? 95
+                : DEFAULT_TX_HEIGHT_IN_PX
+        }
+    }
+    return DEFAULT_TX_HEIGHT_IN_PX
+}
+
+interface watchDetailsType {
+    transaction: TransactionMeta
+}
 
 const getInitialCount = (transactions: RichedTransactionMeta[]) =>
     transactions.length > 10 ? 10 : transactions.length
@@ -11,6 +36,10 @@ const getInitialCount = (transactions: RichedTransactionMeta[]) =>
 const TransactionsList: React.FC<{
     transactions: RichedTransactionMeta[]
 }> = ({ transactions }) => {
+    const [watchDetails, setWatchDetails] = useState<
+        watchDetailsType | undefined
+    >()
+
     const [transactionCount, setTransactionCount] = useState(() =>
         getInitialCount(transactions)
     )
@@ -32,27 +61,62 @@ const TransactionsList: React.FC<{
         [transactionCount, transactions]
     )
 
+    const OperationDetails = watchDetails
+        ? watchDetails.transaction.transactionCategory
+            ? [
+                  TransactionCategories.BRIDGE,
+                  TransactionCategories.INCOMING_BRIDGE_REFUND,
+                  TransactionCategories.INCOMING_BRIDGE,
+              ].includes(watchDetails.transaction.transactionCategory)
+                ? BridgeDetails
+                : TransactionDetails
+            : undefined
+        : undefined
+
     return (
-        <>
-            {transactions.slice(0, transactionCount).map((t, i) => (
-                <Fragment key={i}>
-                    {i > 0 ? <hr /> : null}
-                    <TransactionItem transaction={t} index={i} />
-                </Fragment>
-            ))}
-            <img
-                ref={loaderRef}
-                src={dotLoading}
-                alt="Loader"
-                aria-label="loading"
-                role="alert"
-                aria-busy="true"
-                className={classnames(
-                    "m-auto w-8 mt-4",
-                    isLoading ? "opacity-100" : "opacity-0"
+        <div className="w-full h-full">
+            {OperationDetails && watchDetails?.transaction && (
+                <OperationDetails
+                    transaction={watchDetails?.transaction}
+                    open={true}
+                    onClose={() => setWatchDetails(undefined)}
+                />
+            )}
+            <AutoSizer className="hide-scroll">
+                {({ width, height }) => (
+                    <List
+                        height={height}
+                        width={width}
+                        style={{ overflowX: "hidden" }}
+                        itemCount={transactions.length}
+                        estimatedItemSize={DEFAULT_TX_HEIGHT_IN_PX}
+                        overscanCount={5}
+                        itemSize={(index) => {
+                            const tx = transactions[index]
+                            return getItemHeightInPx(tx)
+                        }} // height in px
+                        itemData={transactions}
+                        className="hide-scroll"
+                    >
+                        {({ style, data, index }) => (
+                            <div style={style} key={data[index].id || index}>
+                                {index > 0 ? <hr /> : null}
+                                <TransactionItem
+                                    onClick={() =>
+                                        setWatchDetails({
+                                            transaction: data[index],
+                                        })
+                                    }
+                                    itemHeight={getItemHeightInPx(data[index])}
+                                    transaction={data[index]}
+                                    index={index}
+                                />
+                            </div>
+                        )}
+                    </List>
                 )}
-            />
-        </>
+            </AutoSizer>
+        </div>
     )
 }
 

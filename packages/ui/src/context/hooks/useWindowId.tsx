@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState } from "react"
-import { AppLoading } from "../../App"
 import { getWindowId } from "../commActions"
 
 export const WindowIdContext = createContext({
@@ -23,7 +22,7 @@ const WindowIdProvider = ({
 
     return (
         <WindowIdContext.Provider value={{ windowId }}>
-            {!windowId ? <AppLoading /> : children}
+            {children}
         </WindowIdContext.Provider>
     )
 }

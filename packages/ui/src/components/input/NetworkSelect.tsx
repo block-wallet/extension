@@ -8,7 +8,7 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import classnames from "classnames"
 import { useOnClickOutside } from "../../util/useOnClickOutside"
 import { changeNetwork, setShowTestNetworks } from "../../context/commActions"
-import LoadingOverlay from "../loading/LoadingOverlay"
+import TransparentOverlay from "../loading/TransparentOverlay"
 import { Network } from "@block-wallet/background/utils/constants/networks"
 import classNames from "classnames"
 import { sortNetworksByOrder } from "../../util/networkUtils"
@@ -17,7 +17,7 @@ import { getNetworkColor } from "../../util/getNetworkColor"
 const NetworkOption: FunctionComponent<{
     option: Network
     selectedNetwork: string
-    handleNetworkChange: (option: any) => Promise<void>
+    handleNetworkChange: (network: string) => void
     disabled?: boolean
 }> = ({ option, selectedNetwork, handleNetworkChange, disabled = false }) => {
     const networkColor = getNetworkColor(option)
@@ -55,24 +55,21 @@ const NetworkSelect: FunctionComponent<{
 }> = ({ className, optionsContainerClassName }) => {
     const history = useHistory()!
     const [networkList, setNetworkList] = useState(false)
-    const [networkChanging, setNetworkChanging] = useState(false)
     const {
         selectedNetwork,
         availableNetworks,
         showTestNetworks,
-        isAccountTrackerLoading,
         isNetworkChanging,
+        isRatesChangingAfterNetworkChange,
         isImportingDeposits,
         isUserNetworkOnline,
     } = useBlankState()!
     const ref = useRef(null)
     useOnClickOutside(ref, () => setNetworkList(false))
 
-    const handleNetworkChange = async (network: string) => {
-        setNetworkChanging(true)
+    const handleNetworkChange = (network: string) => {
         setNetworkList(false)
-        await changeNetwork(network)
-        setNetworkChanging(false)
+        changeNetwork(network)
     }
 
     const getNetworkData = (): { color: string; desc: string } => {
@@ -88,6 +85,9 @@ const NetworkSelect: FunctionComponent<{
             role="menu"
             data-testid="network-selector"
         >
+            {(isNetworkChanging || isRatesChangingAfterNetworkChange) && (
+                <TransparentOverlay />
+            )}
             <div
                 onClick={() => {
                     if (!isImportingDeposits) {

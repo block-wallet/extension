@@ -409,7 +409,7 @@ export const INITIAL_NETWORKS: Networks = {
             symbol: 'RBTC',
             decimals: 18,
         },
-        isCustomNetwork: true,
+        hasFixedGasCost: false,
         enable: true,
         test: false,
         order: 9,

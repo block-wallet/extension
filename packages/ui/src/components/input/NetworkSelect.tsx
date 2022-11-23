@@ -16,7 +16,7 @@ import { sortNetworksByOrder } from "../../util/networkUtils"
 const NetworkOption: FunctionComponent<{
     option: Network
     selectedNetwork: string
-    handleNetworkChange: (option: any) => Promise<void>
+    handleNetworkChange: (network: string) => void
     disabled?: boolean
 }> = ({ option, selectedNetwork, handleNetworkChange, disabled = false }) => (
     <li

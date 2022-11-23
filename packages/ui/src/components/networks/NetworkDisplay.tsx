@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from "react"
 import classnames from "classnames"
 import { HiDotsVertical } from "react-icons/hi"
 import { MdOutlineChangeCircle, MdOutlineCheckCircle } from "react-icons/md"
-import editIcon from "../../assets/images/icons/pencil.svg"
+import { RiPencilFill } from "react-icons/ri"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { changeNetwork } from "../../context/commActions"
+import useIsHovering from "../../util/hooks/useIsHovering"
 
 import { Network } from "@block-wallet/background/utils/constants/networks"
 import ConfirmDialog from "../dialog/ConfirmDialog"
@@ -48,6 +49,8 @@ const NetworkDisplay = ({
 }) => {
     const { selectedNetwork } = useBlankState()!
     const isSelectedNetwork = selectedNetwork === networkInfo.name
+
+    const { isHovering: isHoveringIcons, getIsHoveringProps } = useIsHovering()
 
     const [confirmSwitchNetwork, setConfirmSwitchNetwork] = useState(false)
     const [switchNetworkSuccess, setSwitchNetworkSuccess] = useState(false)
@@ -135,13 +138,15 @@ const NetworkDisplay = ({
 
     const opacity = isDragging ? 0 : 1
 
+    const cardHoverStyle = !dropAnimation && !isHoveringIcons
+
     return (
         <div
             className={classnames(
                 "rounded-md",
                 dropAnimation &&
                     "bg-blue-100 transition-colors animate-[pulse_0.8s]",
-                !dropAnimation && "hover:bg-gray-100"
+                cardHoverStyle && "hover:bg-primary-100"
             )}
             ref={dropRef}
             style={{ opacity }}
@@ -168,11 +173,13 @@ const NetworkDisplay = ({
             />
             <>
                 <div className="flex flex-row justify-between items-center pr-2 pl-0 h-full">
-                    <div className="flex flex-row group items-center py-2">
+                    <div
+                        className="flex flex-row group items-center py-2 cursor-move"
+                        ref={dragRef}
+                    >
                         <div
-                            className="flex flex-row items-center cursor-move"
+                            className="flex flex-row items-center"
                             title="Drag to sort"
-                            ref={dragRef}
                         >
                             <HiDotsVertical
                                 className="text-gray-500 mr-2"
@@ -199,7 +206,8 @@ const NetworkDisplay = ({
                             </div>
                         ) : (
                             <div
-                                className="px-2 hover:cursor-pointer"
+                                {...getIsHoveringProps()}
+                                className="p-2 hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
                                 title="Change to current network"
                                 onClick={() => setConfirmSwitchNetwork(true)}
                             >
@@ -207,11 +215,12 @@ const NetworkDisplay = ({
                             </div>
                         )}
                         <div
-                            className="px-2 hover:cursor-pointer"
+                            {...getIsHoveringProps()}
+                            className="p-2 hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
                             title="Edit network"
                             onClick={onClick}
                         >
-                            <img src={editIcon} alt="Edit" className="w-3" />
+                            <RiPencilFill size={18} />
                         </div>
                     </div>
                 </div>

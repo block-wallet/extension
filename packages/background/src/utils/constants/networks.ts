@@ -702,7 +702,7 @@ export const INITIAL_NETWORKS: Networks = {
             symbol: 'tRBTC',
             decimals: 18,
         },
-        isCustomNetwork: true,
+        hasFixedGasCost: false,
         enable: true,
         test: true,
         order: 10,

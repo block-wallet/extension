@@ -1,4 +1,5 @@
-import { Networks } from './constants/networks';
+import NetworkController from '@block-wallet/background/controllers/NetworkController';
+import { Network, Networks } from './constants/networks';
 
 /**
  * normalizeNetworksOrder
@@ -38,4 +39,35 @@ export const normalizeNetworksOrder = (networks: Networks): Networks => {
     });
 
     return orderedNetworks;
+};
+
+/**
+ * addNetworkWithPreviousUserValues
+ *
+ * Adds a new network and in case it already existed some previous values defined by the user will be added
+ *
+ * @param networkName - The new network name to be added
+ * @param newNetwork - The new network
+ * @param networks - All the network the user has
+ * @param networkController - The network controller
+ *
+ * @returns The networks updated
+ */
+export const addNetworkWithPreviousUserValues = (
+    networkName: string,
+    newNetwork: Network,
+    networks: Networks,
+    networkController: NetworkController
+): Networks => {
+    const key = networkController.getNonNativeNetworkKey(newNetwork.chainId);
+    const oldNetwork = networks[key];
+    networks[networkName] = {
+        ...newNetwork,
+        desc: oldNetwork?.desc || newNetwork.desc,
+        order: oldNetwork?.order || newNetwork.order,
+        blockExplorerUrls:
+            oldNetwork?.blockExplorerUrls || newNetwork.blockExplorerUrls,
+    };
+    delete networks[key];
+    return networks;
 };

@@ -1,6 +1,6 @@
 {
     "name": "@block-wallet/background",
-    "version": "0.8.3",
+    "version": "0.8.4",
     "private": true,
     "dependencies": {
         "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.20",
@@ -70,7 +70,7 @@
         "sinon-chrome": "^3.0.1",
         "ts-loader": "^8.0.14",
         "ts-mocha": "^8.0.0",
-        "ts-node": "^10.9.1",
+        "ts-node": "10.8.0",
         "ts-pnp": "1.2.0",
         "typescript": "^4.0.3",
         "webpack": "4.44.2",

@@ -1,6 +1,6 @@
 import { addHexPrefix, isHexString, isValidAddress } from 'ethereumjs-util';
 import { BigNumber } from 'ethers';
-import { TransactionParams, TransactionType } from './types';
+import { TransactionMeta, TransactionParams, TransactionType } from './types';
 import ensNamehash from 'eth-ens-namehash';
 import {
     FeeMarketEIP1559Values,
@@ -356,4 +356,17 @@ export function normalizeEnsName(ensName: string): string | null {
         }
     }
     return null;
+}
+
+export function pruneTransaction(tx: TransactionMeta): TransactionMeta {
+    if (tx.transactionReceipt) {
+        return {
+            ...tx,
+            transactionReceipt: {
+                ...tx.transactionReceipt,
+                logs: [],
+            },
+        };
+    }
+    return tx;
 }

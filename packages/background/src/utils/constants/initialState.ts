@@ -80,9 +80,6 @@ export type BlankAppUIState = {
     PreferencesController: PreferencesControllerState;
     TransactionController: TransactionVolatileControllerState;
     BlankDepositController: BlankDepositControllerUIStoreState;
-    ExchangeRatesController: ExchangeRatesControllerState;
-    GasPricesController: GasPricesControllerState;
-    ActivityListController: IActivityListState;
     TokenController: TokenControllerState;
     PermissionsController: PermissionsControllerState;
     NetworkController: NetworkControllerState;

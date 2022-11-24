@@ -654,7 +654,7 @@ export const INITIAL_NETWORKS: Networks = {
         hasFixedGasCost: false,
         enable: true,
         test: true,
-        order: 10,
+        order: 11,
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,

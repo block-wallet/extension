@@ -1,6 +1,6 @@
-import axios from 'axios';
 import { IToken } from '../controllers/erc-20/Token';
 import { IChain } from './types/chain';
+import httpClient, { RequestError } from './http';
 import {
     BASE_BRIDGE_FEE,
     GetLifiChainsResponse,
@@ -174,17 +174,17 @@ const LiFiBridge: IBridge = {
     getSupportedTokensForChain: async function (
         chainId: number
     ): Promise<IToken[]> {
-        const response = await axios.get<GetLifiTokensResponse>(
+        const response = await httpClient.get<GetLifiTokensResponse>(
             `${LIFI_BRIDGE_ENDPOINT}/tokens`
         );
-        const chainTokens = response.data.tokens[chainId] || [];
+        const chainTokens = response.tokens[chainId] || [];
         return chainTokens.map(lifiTokenToIToken);
     },
     getSupportedChains: async function (): Promise<IChain[]> {
-        const response = await axios.get<GetLifiChainsResponse>(
+        const response = await httpClient.get<GetLifiChainsResponse>(
             `${LIFI_BRIDGE_ENDPOINT}/chains`
         );
-        const chains = response.data.chains || [];
+        const chains = response.chains || [];
         return chains.map((chain) => ({
             id: chain.id,
             logo: chain.logoURI,
@@ -195,7 +195,7 @@ const LiFiBridge: IBridge = {
     getRoutes: async function (
         request: getBridgeRoutesRequest
     ): Promise<IBridgeRoute[]> {
-        const response = await axios.get<GetLifiConnectionsResponse>(
+        const response = await httpClient.get<GetLifiConnectionsResponse>(
             `${LIFI_BRIDGE_ENDPOINT}/connections`,
             {
                 params: {
@@ -207,7 +207,7 @@ const LiFiBridge: IBridge = {
                 },
             }
         );
-        const result = response.data.connections;
+        const result = response.connections;
         return result.map((connection) => ({
             fromChainId: connection.fromChainId,
             toChainId: connection.toChainId,
@@ -217,7 +217,7 @@ const LiFiBridge: IBridge = {
     },
     getQuote: async function (r: getBridgeQuoteRequest): Promise<IBridgeQuote> {
         try {
-            const response = await axios.get<
+            const response = await httpClient.get<
                 GetLiFiQuoteResponse | LiFiErrorResponse
             >(`${LIFI_BRIDGE_ENDPOINT}/quote`, {
                 params: {
@@ -233,7 +233,7 @@ const LiFiBridge: IBridge = {
                     fee: BASE_BRIDGE_FEE,
                 },
             });
-            const responseData = response.data as GetLiFiQuoteResponse;
+            const responseData = response as GetLiFiQuoteResponse;
             return {
                 spender: responseData.estimate.approvalAddress,
                 transactionRequest: responseData.transactionRequest,
@@ -251,22 +251,23 @@ const LiFiBridge: IBridge = {
                 estimatedDurationInSeconds:
                     responseData.estimate.executionDuration,
             };
-        } catch (e) {
-            if (e.response.status === 400) {
+        } catch (error) {
+            const e = error as RequestError;
+            if (e.status === 400) {
                 throw new Error('Request parameters are invalid.');
-            } else if (e.response.status === 404) {
-                const err = e.response.data as LiFiErrorResponse;
-                const errorCode = err.errors?.length
-                    ? err.errors[0].code
+            } else if (e.status === 404) {
+                const quoteError = e.response as LiFiErrorResponse;
+                const errorCode = quoteError.errors?.length
+                    ? quoteError.errors[0].code
                     : 'QUOTE_NOT_FOUND';
                 const message = getMessageFromLiFiError(errorCode);
-                throw new QuoteNotFoundError(message, err);
+                throw new QuoteNotFoundError(message, quoteError);
             }
             throw e;
         }
     },
     getStatus: async function (r: getStatusRequest): Promise<IBridgeStatus> {
-        const response = await axios.get<
+        const response = await httpClient.get<
             GetLiFiStatusResponse | LiFiErrorResponse
         >(`${LIFI_BRIDGE_ENDPOINT}/status`, {
             params: {
@@ -279,10 +280,7 @@ const LiFiBridge: IBridge = {
                 'Cache-Control': 'no-cache',
             },
         });
-        if (response.status === 400) {
-            throw new Error('Request parameters are invalid.');
-        }
-        const responseData = response.data as GetLiFiStatusResponse;
+        const responseData = response as GetLiFiStatusResponse;
 
         return {
             status: lifiBridgeStatusToBridgeStatus(responseData.status),

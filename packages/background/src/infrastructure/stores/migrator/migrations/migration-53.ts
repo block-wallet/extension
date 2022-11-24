@@ -1,18 +1,10 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
-import NetworkController from '@block-wallet/background/controllers/NetworkController';
+import NetworkController from '../../../../controllers/NetworkController';
 import { IMigration } from '../IMigration';
-import {
-    SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES,
-    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
-} from '../../../../utils/constants/networks';
-import { FEATURES } from '../../../../utils/constants/features';
-import {
-    DEFAULT_TORNADO_CONFIRMATION,
-    DERIVATIONS_FORWARD,
-} from '../../../../controllers/blank-deposit/types';
+import { INITIAL_NETWORKS } from '../../../../utils/constants/networks';
 import {
     normalizeNetworksOrder,
-    addNetworkWithPreviousUserValues,
+    addNetworkUsingValuesDefinedByTheUser,
 } from '../../../../utils/networks';
 
 /**
@@ -26,87 +18,29 @@ export default {
             persistedState.NetworkController
         );
 
-        const rsk = {
-            name: 'rsk',
-            desc: 'RSK Mainnet',
-            chainId: 30,
-            networkVersion: '30',
-            nativeCurrency: {
-                name: 'Smart Bitcoin',
-                symbol: 'RBTC',
-                decimals: 18,
-            },
-            hasFixedGasCost: false,
-            enable: true,
-            test: false,
-            order: 9,
-            features: [FEATURES.SENDS],
-            ens: false,
-            showGasLevels: false,
-            iconUrls: [
-                'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
-            ],
-            rpcUrls: ['https://did.rsk.co:4444'],
-            blockExplorerName: 'RSK Explorer',
-            blockExplorerUrls: ['https://explorer.rsk.co'],
-            actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
-            tornadoIntervals: {
-                depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
-                derivationsForward: DERIVATIONS_FORWARD,
-            },
-            nativelySupported: true,
-        };
-
-        updatedNetworks = addNetworkWithPreviousUserValues(
+        const rskNonNativeKey = networkController.getNonNativeNetworkKey(
+            INITIAL_NETWORKS.RSK.chainId
+        );
+        updatedNetworks = addNetworkUsingValuesDefinedByTheUser(
             'RSK',
-            rsk,
-            updatedNetworks,
-            networkController
+            rskNonNativeKey,
+            INITIAL_NETWORKS.RSK,
+            updatedNetworks
         );
 
-        const rskTestnet = {
-            name: 'rsk_testnet',
-            desc: 'RSK Testnet',
-            chainId: 31,
-            networkVersion: '31',
-            nativeCurrency: {
-                name: 'Testnet Smart Bitcoin',
-                symbol: 'tRBTC',
-                decimals: 18,
-            },
-            hasFixedGasCost: false,
-            enable: true,
-            test: true,
-            order: 10,
-            features: [FEATURES.SENDS],
-            ens: false,
-            showGasLevels: false,
-            iconUrls: [
-                'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
-            ],
-            rpcUrls: ['https://did.testnet.rsk.co:4444'],
-            blockExplorerName: 'RSK Testnet Explorer',
-            blockExplorerUrls: ['https://explorer.testnet.rsk.co'],
-            actionsTimeIntervals: {
-                ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES,
-            },
-            tornadoIntervals: {
-                depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
-                derivationsForward: DERIVATIONS_FORWARD,
-            },
-            nativelySupported: true,
-        };
-
-        updatedNetworks = addNetworkWithPreviousUserValues(
+        const rskTestnetNonNativeKey = networkController.getNonNativeNetworkKey(
+            INITIAL_NETWORKS.RSK_TESTNET.chainId
+        );
+        updatedNetworks = addNetworkUsingValuesDefinedByTheUser(
             'RSK_TESTNET',
-            rskTestnet,
-            updatedNetworks,
-            networkController
+            rskTestnetNonNativeKey,
+            INITIAL_NETWORKS.RSK_TESTNET,
+            updatedNetworks
         );
 
         updatedNetworks.LOCALHOST = {
             ...updatedNetworks.LOCALHOST,
-            order: updatedNetworks.LOCALHOST.order++,
+            order: updatedNetworks.LOCALHOST.order + 1,
         };
 
         const orderedNetworks = normalizeNetworksOrder(updatedNetworks);

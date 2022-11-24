@@ -1,4 +1,4 @@
-import { addNetworkWithPreviousUserValues } from '@block-wallet/background/utils/networks';
+import { addNetworkUsingValuesDefinedByTheUser } from '@block-wallet/background/utils/networks';
 import { INITIAL_NETWORKS } from '@block-wallet/background/utils/constants/networks';
 import initialState from '@block-wallet/background/utils/constants/initialState';
 import NetworkController from '@block-wallet/background/controllers/NetworkController';
@@ -19,11 +19,11 @@ describe('Add network with previous values', () => {
             INITIAL_NETWORKS.RSK.chainId
         );
 
-        const updatedNetworks = addNetworkWithPreviousUserValues(
+        const updatedNetworks = addNetworkUsingValuesDefinedByTheUser(
             networkName,
+            chainIdKey,
             newNetwork,
-            networks,
-            networkController
+            networks
         );
 
         expect(updatedNetworks[chainIdKey]).undefined;
@@ -51,11 +51,11 @@ describe('Add network with previous values', () => {
         networks[chainIdKey] = { ...networks.RSK, ...valuesUpdatedByTheUser };
         delete networks[networkName];
 
-        const updatedNetworks = addNetworkWithPreviousUserValues(
+        const updatedNetworks = addNetworkUsingValuesDefinedByTheUser(
             networkName,
+            chainIdKey,
             newNetwork,
-            { ...networks },
-            networkController
+            { ...networks }
         );
 
         expect(updatedNetworks[chainIdKey]).undefined;

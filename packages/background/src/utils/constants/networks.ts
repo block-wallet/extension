@@ -634,7 +634,7 @@ export const INITIAL_NETWORKS: Networks = {
         rpcUrls: ['https://did.testnet.rsk.co:4444'],
         blockExplorerName: 'RSK Testnet Explorer',
         blockExplorerUrls: ['https://explorer.testnet.rsk.co'],
-        actionsTimeIntervals: { ... SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
+        actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
             derivationsForward: DERIVATIONS_FORWARD,
@@ -654,7 +654,7 @@ export const INITIAL_NETWORKS: Networks = {
         hasFixedGasCost: false,
         enable: true,
         test: true,
-        order: 11,
+        order: 10,
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,

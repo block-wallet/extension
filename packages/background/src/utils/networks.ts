@@ -42,25 +42,24 @@ export const normalizeNetworksOrder = (networks: Networks): Networks => {
 };
 
 /**
- * addNetworkWithPreviousUserValues
+ * addNetworkUsingValuesDefinedByTheUser
  *
  * Adds a new network and in case it already existed some previous values defined by the user will be added
  *
  * @param networkName - The new network name to be added
+ * @param nonNativeNetworkKey - The key geenerated when the user added the network manually
  * @param newNetwork - The new network
  * @param networks - All the network the user has
- * @param networkController - The network controller
  *
  * @returns The networks updated
  */
-export const addNetworkWithPreviousUserValues = (
+export const addNetworkUsingValuesDefinedByTheUser = (
     networkName: string,
+    nonNativeNetworkKey: string,
     newNetwork: Network,
-    networks: Networks,
-    networkController: NetworkController
+    networks: Networks
 ): Networks => {
-    const key = networkController.getNonNativeNetworkKey(newNetwork.chainId);
-    const oldNetwork = networks[key];
+    const oldNetwork = networks[nonNativeNetworkKey];
     networks[networkName] = {
         ...newNetwork,
         desc: oldNetwork?.desc || newNetwork.desc,
@@ -68,6 +67,6 @@ export const addNetworkWithPreviousUserValues = (
         blockExplorerUrls:
             oldNetwork?.blockExplorerUrls || newNetwork.blockExplorerUrls,
     };
-    delete networks[key];
+    delete networks[nonNativeNetworkKey];
     return networks;
 };

@@ -62,10 +62,8 @@ export const coingekoService: RateService = {
             const response = await httpClient.get<
                 Record<string, Record<string, number>>
             >(query, {
-                params: {
-                    ids: currencyApiId,
-                    vs_currencies: currency,
-                },
+                ids: currencyApiId,
+                vs_currencies: currency,
             });
 
             return response[currencyApiId][currency];

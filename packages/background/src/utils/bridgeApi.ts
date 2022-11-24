@@ -198,13 +198,11 @@ const LiFiBridge: IBridge = {
         const response = await httpClient.get<GetLifiConnectionsResponse>(
             `${LIFI_BRIDGE_ENDPOINT}/connections`,
             {
-                params: {
-                    allowExchanges: '[]',
-                    fromChain: request.fromChainId,
-                    toChain: request.toChainId,
-                    fromToken: request.fromTokenAddress,
-                    toToken: request.toTokenAddress,
-                },
+                allowExchanges: '[]',
+                fromChain: request.fromChainId,
+                toChain: request.toChainId,
+                fromToken: request.fromTokenAddress,
+                toToken: request.toTokenAddress,
             }
         );
         const result = response.connections;
@@ -220,18 +218,16 @@ const LiFiBridge: IBridge = {
             const response = await httpClient.get<
                 GetLiFiQuoteResponse | LiFiErrorResponse
             >(`${LIFI_BRIDGE_ENDPOINT}/quote`, {
-                params: {
-                    fromToken: r.fromTokenAddress,
-                    toToken: r.toTokenAddress,
-                    fromChain: r.fromChainId,
-                    toChain: r.toChainId,
-                    fromAmount: r.fromAmount,
-                    fromAddress: r.fromAddress,
-                    referrer: r.referrer,
-                    integrator: 'blockwallet.io',
-                    slippage: r.slippage,
-                    fee: BASE_BRIDGE_FEE,
-                },
+                fromToken: r.fromTokenAddress,
+                toToken: r.toTokenAddress,
+                fromChain: r.fromChainId,
+                toChain: r.toChainId,
+                fromAmount: r.fromAmount,
+                fromAddress: r.fromAddress,
+                referrer: r.referrer,
+                integrator: 'blockwallet.io',
+                slippage: r.slippage,
+                fee: BASE_BRIDGE_FEE,
             });
             const responseData = response as GetLiFiQuoteResponse;
             return {
@@ -269,17 +265,17 @@ const LiFiBridge: IBridge = {
     getStatus: async function (r: getStatusRequest): Promise<IBridgeStatus> {
         const response = await httpClient.get<
             GetLiFiStatusResponse | LiFiErrorResponse
-        >(`${LIFI_BRIDGE_ENDPOINT}/status`, {
-            params: {
+        >(
+            `${LIFI_BRIDGE_ENDPOINT}/status`,
+            {
                 bridge: r.tool,
                 fromChain: r.fromChainId,
                 toChain: r.toChainId,
                 txHash: r.sendTxHash,
             },
-            headers: {
-                'Cache-Control': 'no-cache',
-            },
-        });
+            undefined,
+            'no-cache'
+        );
         const responseData = response as GetLiFiStatusResponse;
 
         return {

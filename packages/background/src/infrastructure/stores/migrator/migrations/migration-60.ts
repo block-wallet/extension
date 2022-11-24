@@ -52,12 +52,15 @@ export default {
             const gasPriceData = updatedGasPriceData[chainId];
             gasPriceData.gasPricesLevels.slow = {
                 ...gasPriceData.gasPricesLevels.slow,
+                lastBaseFeePerGas: null,
             };
             gasPriceData.gasPricesLevels.average = {
                 ...gasPriceData.gasPricesLevels.average,
+                lastBaseFeePerGas: null,
             };
             gasPriceData.gasPricesLevels.fast = {
                 ...gasPriceData.gasPricesLevels.fast,
+                lastBaseFeePerGas: null,
             };
 
             updatedGasPriceData[c] = {

@@ -32,9 +32,7 @@ const UnlockPage = () => {
     const {
         register,
         handleSubmit,
-        formState: {
-            errors,
-        },
+        formState: { errors },
         setError,
     } = useForm<PasswordFormData>({
         resolver: yupResolver(schema),
@@ -123,7 +121,7 @@ const UnlockPage = () => {
                                     className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
                                 />
                                 <Tooltip
-                                    className="!w-52 !break-word !whitespace-normal border boder-gray-300"
+                                    className="!w-52 !break-word !whitespace-normal  border boder-gray-300"
                                     content="Locked too soon? Click to learn how to increase the lock timeout."
                                 />
                             </a>

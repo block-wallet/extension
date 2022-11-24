@@ -10,6 +10,7 @@ export interface UserSettings {
     hideEstimatedGasExceedsThresholdWarning: boolean;
     //whether we should display the warning while making a deposit with an external/hardware account or not.
     hideDepositsExternalAccountsWarning: boolean;
+    hideBridgeInsufficientNativeTokenWarning: boolean;
 }
 
 export interface Note {

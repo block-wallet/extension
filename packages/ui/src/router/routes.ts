@@ -53,6 +53,9 @@ import NetworkDetailsPage from "../routes/networks/NetworkDetailsPage"
 import SearchNetworkPage from "../routes/networks/SearchNetworkPage"
 import SuggestedAddNetwork from "../routes/networks/SuggestedAddNetwork"
 import ManuallyAddNetwork from "../routes/networks/ManuallyAddNetwork"
+import SetupBridgePage from "../routes/bridge/BridgeSetupPage"
+import BridgeConfirmPage from "../routes/bridge/BridgeConfirmPage"
+import BridgeAfterAddTokenPage from "../routes/bridge/BridgeAfterAddTokenPage"
 
 export const ROUTES_DEFINITION = [
     /* Root */
@@ -112,6 +115,14 @@ export const ROUTES_DEFINITION = [
         path: "/swap/afterAddToken",
         exact: true,
         component: SwapAfterAddTokenPage,
+    },
+    /* Bridge */
+    { path: "/bridge", exact: true, component: SetupBridgePage },
+    { path: "/bridge/confirm", exact: true, component: BridgeConfirmPage },
+    {
+        path: "/bridge/afterAddToken",
+        exact: true,
+        component: BridgeAfterAddTokenPage,
     },
 
     /* Settings */

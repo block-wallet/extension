@@ -25,6 +25,10 @@ import TransactionController from '@block-wallet/background/controllers/transact
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
 import { PrivacyAsyncController } from '@block-wallet/background/controllers/privacy/PrivacyAsyncController';
+import BridgeController from '@block-wallet/background/controllers/BridgeController';
+import TokenAllowanceController from '@block-wallet/background/controllers/erc-20/transactions/TokenAllowanceController';
+import { AccountTrackerController } from '@block-wallet/background/controllers/AccountTrackerController';
+import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
 
 describe('Address book controller implementation', function () {
     const accounts = {
@@ -46,11 +50,14 @@ describe('Address book controller implementation', function () {
     let permissionsController: PermissionsController;
     let activityListController: ActivityListController;
     let privacyController: PrivacyAsyncController;
+    let bridgeController: BridgeController;
     let tokenOperationsController: TokenOperationsController;
     let tokenController: TokenController;
     let blockFetchController: BlockFetchController;
     let blockUpdatesController: BlockUpdatesController;
     let transactionWatcherController: TransactionWatcherController;
+    let tokenAllowanceController: TokenAllowanceController;
+    let accountTrackerController: AccountTrackerController;
 
     this.beforeAll(() => {
         networkController = getNetworkControllerInstance();
@@ -125,12 +132,42 @@ describe('Address book controller implementation', function () {
                 transactions: {},
             }
         );
+
+        tokenAllowanceController = new TokenAllowanceController(
+            networkController,
+            preferencesController,
+            tokenOperationsController,
+            transactionController
+        );
+
+        accountTrackerController = new AccountTrackerController(
+            mockKeyringController,
+            networkController,
+            tokenController,
+            tokenOperationsController,
+            preferencesController,
+            blockUpdatesController,
+            transactionWatcherController
+        );
+
+        bridgeController = new BridgeController(
+            networkController,
+            transactionController,
+            tokenController,
+            tokenAllowanceController,
+            accountTrackerController,
+            {
+                bridgeReceivingTransactions: {},
+                perndingBridgeReceivingTransactions: {},
+            }
+        );
         activityListController = new ActivityListController(
             transactionController,
             privacyController,
             preferencesController,
             networkController,
-            transactionWatcherController
+            transactionWatcherController,
+            bridgeController
         );
     });
     beforeEach(() => {

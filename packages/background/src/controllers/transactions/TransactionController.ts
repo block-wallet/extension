@@ -38,7 +38,7 @@ import {
     validateTransaction,
 } from './utils/utils';
 import { toError } from '../../utils/toError';
-import { BnMultiplyByFraction } from '../../utils/bnUtils';
+import { bnGreaterThanZero, BnMultiplyByFraction } from '../../utils/bnUtils';
 import { ProviderError } from '../../utils/types/ethereum';
 import { runPromiseSafely } from '../../utils/promises';
 import { PreferencesController } from '../PreferencesController';
@@ -1605,33 +1605,34 @@ export class TransactionController extends BaseController<
         const transactions = [...this.store.getState().transactions];
         const { chainId } = this._networkController.network;
 
-        await runPromiseSafely(
-            Promise.all(
-                transactions.map(async (meta) => {
-                    const txBelongsToCurrentChain = meta.chainId === chainId;
+        for (let i = 0; i < transactions.length; i++) {
+            const meta = transactions[i];
+            const txBelongsToCurrentChain = meta.chainId === chainId;
 
-                    if (!meta.verifiedOnBlockchain && txBelongsToCurrentChain) {
-                        const [reconciledTx, updateRequired] =
-                            await this.blockchainTransactionStateReconciler(
-                                meta,
-                                currentBlockNumber
-                            );
-                        if (updateRequired) {
-                            const newTransactions = [
-                                ...this.store.getState().transactions,
-                            ];
-                            const tx = newTransactions.indexOf(meta);
-                            if (tx) {
-                                newTransactions[tx] = reconciledTx;
-                                this.store.updateState({
-                                    transactions: newTransactions,
-                                });
-                            }
+            if (!meta.verifiedOnBlockchain && txBelongsToCurrentChain) {
+                const result = await runPromiseSafely(
+                    this.blockchainTransactionStateReconciler(
+                        meta,
+                        currentBlockNumber
+                    )
+                );
+                if (result) {
+                    const [reconciledTx, updateRequired] = result;
+                    if (updateRequired) {
+                        const newTransactions = [
+                            ...this.store.getState().transactions,
+                        ];
+                        const tx = newTransactions.indexOf(meta);
+                        if (tx) {
+                            newTransactions[tx] = reconciledTx;
+                            this.store.updateState({
+                                transactions: newTransactions,
+                            });
                         }
                     }
-                })
-            )
-        );
+                }
+            }
+        }
     }
 
     /**
@@ -2161,7 +2162,7 @@ export class TransactionController extends BaseController<
      * @param txHash - The transaction hash.
      * @returns A tuple with the receipt and an indicator of transaction success.
      */
-    private async checkTransactionReceiptStatus(
+    public async checkTransactionReceiptStatus(
         txHash: string | undefined,
         provider: StaticJsonRpcProvider
     ): Promise<[TransactionReceipt | null, boolean | undefined]> {
@@ -2198,13 +2199,16 @@ export class TransactionController extends BaseController<
             return { gasLimit: providedGasLimit, estimationSucceeded: true };
         }
 
-        const { blockGasLimit } = this._gasPricesController.getState();
+        let { blockGasLimit } = this._gasPricesController.getState();
+        if (!bnGreaterThanZero(blockGasLimit)) {
+            // London block size 30 millon gas units
+            // https://ethereum.org/en/developers/docs/gas/#block-size
+            blockGasLimit = BigNumber.from(30_000_000);
+        }
 
         // Check if it's a custom chainId
         const txOrCurrentChainId =
             transactionMeta.chainId ?? this._networkController.network.chainId;
-        const isCustomNetwork =
-            this._networkController.isChainIdCustomNetwork(txOrCurrentChainId);
 
         // if data, should be hex string format
         estimatedTransaction.data = !data ? data : addHexPrefix(data);
@@ -2213,17 +2217,20 @@ export class TransactionController extends BaseController<
         estimatedTransaction.value =
             typeof value === 'undefined' ? constants.Zero : value;
 
-        // If fallback is present, use it instead of block gasLimit
-        if (fallbackGasLimit && BigNumber.from(fallbackGasLimit)) {
-            estimatedTransaction.gasLimit = BigNumber.from(fallbackGasLimit);
-        } else {
-            // We take a part of the block gasLimit (95% of it)
-            const saferGasLimitBN = BnMultiplyByFraction(blockGasLimit, 19, 20);
-            estimatedTransaction.gasLimit = saferGasLimitBN;
-        }
-
         // Estimate Gas
         try {
+            /**
+            Arbitrum: https://developer.offchainlabs.com/faqs/how-fees
+                Calling an Arbitrum node's eth_estimateGas RPC returns a value sufficient to cover both the L1 and L2 components
+                of the fee for the current gas price; this is the value that, e.g., will appear in users' wallets.
+
+
+            Optimism: https://community.optimism.io/docs/developers/build/transaction-fees/#sending-transactions
+                The process of sending a transaction on Optimism is identical to the process of sending a transaction on Ethereum.
+                When sending a transaction, you should provide a gas price greater than or equal to the current L2 gas price.
+                Like on Ethereum, you can query this gas price with the eth_gasPrice RPC method. Similarly,
+                you should set your transaction gas limit in the same way that you would set your transaction gas limit on Ethereum (e.g. via eth_estimateGas).
+             */
             const estimatedGasLimit = await provider.estimateGas({
                 chainId: txOrCurrentChainId,
                 data: estimatedTransaction.data,
@@ -2231,8 +2238,6 @@ export class TransactionController extends BaseController<
                 to: estimatedTransaction.to,
                 value: estimatedTransaction.value,
             });
-            // 3. Pad estimated gas without exceeding the most recent block gasLimit. If the network is a
-            // a custom network then return the eth_estimateGas value.
 
             // 90% of the block gasLimit
             const upperGasLimit = BnMultiplyByFraction(blockGasLimit, 9, 10);
@@ -2245,7 +2250,7 @@ export class TransactionController extends BaseController<
             );
 
             // If it is a non-custom network, don't add buffer to send gas limit
-            if (estimatedGasLimit.eq(SEND_GAS_COST) && !isCustomNetwork) {
+            if (estimatedGasLimit.eq(SEND_GAS_COST)) {
                 return {
                     gasLimit: estimatedGasLimit,
                     estimationSucceeded: true,
@@ -2253,7 +2258,7 @@ export class TransactionController extends BaseController<
             }
 
             // If estimatedGasLimit is above upperGasLimit, dont modify it
-            if (estimatedGasLimit.gt(upperGasLimit) || isCustomNetwork) {
+            if (estimatedGasLimit.gt(upperGasLimit)) {
                 return {
                     gasLimit: estimatedGasLimit,
                     estimationSucceeded: true,
@@ -2267,15 +2272,31 @@ export class TransactionController extends BaseController<
                     estimationSucceeded: true,
                 };
             }
+
             return { gasLimit: upperGasLimit, estimationSucceeded: true };
         } catch (error) {
             log.warn(
-                'Error estimating the transaction gas. Fallbacking to block gasLimit'
+                'Error estimating the transaction gas. Fallbacking to block gasLimit',
+                error
             );
+
+            const hasFixedGasCost =
+                this._networkController.hasChainFixedGasCost(
+                    txOrCurrentChainId
+                );
+
+            // If fallback is present, use it instead of block gasLimit
+            let gasLimit = BigNumber.from('0');
+            if (hasFixedGasCost && BigNumber.isBigNumber(fallbackGasLimit)) {
+                gasLimit = BigNumber.from(fallbackGasLimit);
+            } else {
+                // We take a part of the block gasLimit (95% of it)
+                gasLimit = BnMultiplyByFraction(blockGasLimit, 19, 20);
+            }
 
             // Return TX type associated default fallback gasLimit or block gas limit
             return {
-                gasLimit: estimatedTransaction.gasLimit,
+                gasLimit,
                 estimationSucceeded: false,
             };
         }
@@ -2377,7 +2398,7 @@ export class TransactionController extends BaseController<
      * @param txId The transaction id
      * @param updates The updates to be applied
      */
-    private updateTransactionPartially = (
+    public updateTransactionPartially = (
         txId: string,
         updates: Partial<TransactionMeta>
     ): void => {
@@ -2412,9 +2433,12 @@ export class TransactionController extends BaseController<
         const { transactionCategory, transactionParams } = transactionMeta;
 
         if (
-            (transactionCategory ===
-                TransactionCategories.CONTRACT_INTERACTION ||
-                transactionCategory === TransactionCategories.EXCHANGE) &&
+            transactionCategory &&
+            [
+                TransactionCategories.CONTRACT_INTERACTION,
+                TransactionCategories.EXCHANGE,
+                TransactionCategories.BRIDGE,
+            ].includes(transactionCategory) &&
             transactionParams.data &&
             transactionParams.to
         ) {
@@ -2461,6 +2485,25 @@ export class TransactionController extends BaseController<
 
     public getTxSignTimeout(): number {
         return this.store.getState().txSignTimeout;
+    }
+
+    public getTransactions(
+        filters: {
+            transactionCategory?: TransactionCategories;
+        } = {}
+    ): TransactionMeta[] {
+        const txs = this.store.getState().transactions || [];
+        return txs.filter((tx) => {
+            let matched = true;
+
+            //prepared for future filters
+            if (filters.transactionCategory) {
+                matched =
+                    matched &&
+                    filters.transactionCategory === tx.transactionCategory;
+            }
+            return matched;
+        });
     }
 }
 

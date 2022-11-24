@@ -1,4 +1,4 @@
-import { FunctionComponent, useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { useForm } from "react-hook-form"
 
@@ -20,7 +20,6 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import { InferType } from "yup"
 import { utils, BigNumber, constants } from "ethers"
-import { formatHash, formatName } from "../../util/formatAccount"
 import { formatUnits } from "ethers/lib/utils"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { DEFAULT_DECIMALS, SEND_GAS_COST } from "../../util/constants"
@@ -55,9 +54,6 @@ import { AdvancedSettings } from "../../components/transactions/AdvancedSettings
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
-import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
-import { useAddressBook } from "../../context/hooks/useAddressBook"
-import CheckmarkCircle from "../../components/icons/CheckmarkCircle"
 import { useLocationRecovery } from "../../util/hooks/useLocationRecovery"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
@@ -68,6 +64,8 @@ import { HardwareWalletOpTypes } from "../../context/commTypes"
 import { useInProgressInternalTransaction } from "../../context/hooks/useInProgressInternalTransaction"
 import { rejectTransaction } from "../../context/commActions"
 import { getValueByKey } from "../../util/objectUtils"
+import { AddressDisplay } from "../../components/addressBook/AddressDisplay"
+import { useAccountNameByAddress } from "../../context/hooks/useAccountNameByAddress"
 
 // Schema
 const GetAmountYupSchema = (
@@ -175,64 +173,6 @@ const schema = GetAmountYupSchema(
 )
 type AmountFormData = InferType<typeof schema>
 
-// Subcomponent
-const AddressDisplay: FunctionComponent<{
-    showingTheWholeAddress: boolean
-    setShowingTheWholeAddress: React.Dispatch<React.SetStateAction<boolean>>
-}> = ({ showingTheWholeAddress, setShowingTheWholeAddress }) => {
-    const history = useOnMountHistory()
-    const receivingAddress = history.location.state.address
-    const selectedAccountName = history.location.state.name
-
-    const { accounts } = useBlankState()!
-    const addressBook = useAddressBook()
-
-    const account =
-        receivingAddress in accounts
-            ? (accounts[receivingAddress] as AccountInfo)
-            : receivingAddress in addressBook
-            ? ({
-                  name: addressBook[receivingAddress].name,
-                  address: addressBook[receivingAddress].address,
-              } as AccountInfo)
-            : undefined
-    return (
-        <>
-            <div
-                className="flex flex-row items-center w-full px-6 py-3 space-x-3"
-                style={{ maxWidth: "100vw" }}
-                title={formatHash(receivingAddress, receivingAddress.length)}
-                onClick={() =>
-                    setShowingTheWholeAddress(!showingTheWholeAddress)
-                }
-            >
-                <CheckmarkCircle classes="w-4 h-4" />
-                {selectedAccountName || account?.name ? (
-                    <div>
-                        <span className="font-bold text-green-500 mr-2">
-                            {selectedAccountName
-                                ? formatName(selectedAccountName, 20)
-                                : formatName(account?.name, 20)}
-                        </span>
-                        <span className="text-gray truncate">
-                            {formatHash(receivingAddress)}
-                        </span>
-                    </div>
-                ) : (
-                    <span className="font-bold text-green-500 truncate cursor-pointer">
-                        {showingTheWholeAddress
-                            ? formatHash(
-                                  receivingAddress,
-                                  receivingAddress.length
-                              )
-                            : formatHash(receivingAddress)}
-                    </span>
-                )}
-            </div>
-        </>
-    )
-}
-
 // Tools
 
 const BalanceValidation = (balance: BigNumber, amount: BigNumber): boolean => {
@@ -335,6 +275,8 @@ const SendConfirmPage = () => {
     // is being restored from a popup close
     const isEIP1559Compatible = network.isEIP1559Compatible
     const receivingAddress = history.location.state.address
+    const selectedAccountName =
+        history.location.state.name ?? useAccountNameByAddress(receivingAddress)
     const preSelectedAsset = persistedData?.asset
         ? persistedData.asset
         : (history.location.state.asset as TokenWithBalance)
@@ -350,7 +292,6 @@ const SendConfirmPage = () => {
     ] = useState(false)
 
     const [isGasLoading, setIsGasLoading] = useState(true)
-    const [showingTheWholeAddress, setShowingTheWholeAddress] = useState(false)
     const [usingMax, setUsingMax] = useState(false)
     const [nativeCurrencyAmt, setNativeCurrency] = useState(0)
 
@@ -736,7 +677,14 @@ const SendConfirmPage = () => {
     const [inputFocus, setInputFocus] = useState(false)
     return (
         <PopupLayout
-            header={<PopupHeader title="Send" disabled={isLoading} keepState />}
+            header={
+                <PopupHeader
+                    title="Send"
+                    disabled={isLoading}
+                    keepState
+                    networkIndicator
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
@@ -801,8 +749,8 @@ const SendConfirmPage = () => {
                     style={{ maxHeight: "452px" }}
                 >
                     <AddressDisplay
-                        showingTheWholeAddress={showingTheWholeAddress}
-                        setShowingTheWholeAddress={setShowingTheWholeAddress}
+                        receivingAddress={history.location.state.address}
+                        selectedAccountName={selectedAccountName}
                     />
 
                     <div
@@ -829,9 +777,9 @@ const SendConfirmPage = () => {
                             />
                             {errors.asset?.message && (
                                 <div className="pl-1 my-2">
-                                    <ErrorMessage
-                                        error={errors.asset?.message}
-                                    />
+                                    <ErrorMessage>
+                                        {errors.asset?.message}
+                                    </ErrorMessage>
                                 </div>
                             )}
                         </div>
@@ -932,7 +880,9 @@ const SendConfirmPage = () => {
                                     errors.amount?.message ? "pl-1 my-2" : null
                                 }`}
                             >
-                                <ErrorMessage error={errors.amount?.message} />
+                                <ErrorMessage>
+                                    {errors.amount?.message}
+                                </ErrorMessage>
                             </div>
                         </div>
 
@@ -970,22 +920,23 @@ const SendConfirmPage = () => {
                             />
                         )}
                         <div className={`${error ? "pl-1 my-2" : null}`}>
-                            <ErrorMessage error={error} />
+                            <ErrorMessage>{error}</ErrorMessage>
                         </div>
 
                         <div className="mt-3">
                             <AdvancedSettings
-                                config={{
-                                    showCustomNonce: true,
-                                    showFlashbots: false,
-                                    address,
+                                address={address}
+                                advancedSettings={transactionAdvancedData}
+                                display={{
+                                    nonce: true,
+                                    flashbots: false,
+                                    slippage: false,
                                 }}
-                                data={{}}
-                                setData={function (
-                                    data: TransactionAdvancedData
-                                ): void {
+                                setAdvancedSettings={(
+                                    newSettings: TransactionAdvancedData
+                                ) => {
                                     setTransactionAdvancedData({
-                                        customNonce: data.customNonce,
+                                        customNonce: newSettings.customNonce,
                                     })
                                 }}
                             />

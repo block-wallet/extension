@@ -43,6 +43,11 @@ import {
     PrivacyControllerStoreState,
     PrivacyControllerUIStoreState,
 } from '@block-wallet/background/controllers/privacy/types';
+import {
+    BridgeControllerMemState,
+    BridgeControllerState,
+} from '@block-wallet/background/controllers/BridgeController';
+import { SwapControllerMemState } from '@block-wallet/background/controllers/SwapController';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -61,6 +66,7 @@ export type BlankAppState = {
     AddressBookController: AddressBookControllerMemState;
     BlockFetchController: BlockFetchControllerState;
     TransactionWatcherControllerState: TransactionWatcherControllerState;
+    BridgeController: BridgeControllerState;
 };
 
 export type BlankAppUIState = {
@@ -79,6 +85,8 @@ export type BlankAppUIState = {
     PermissionsController: PermissionsControllerState;
     NetworkController: NetworkControllerState;
     AddressBookController: AddressBookControllerMemState;
+    BridgeController: BridgeControllerMemState;
+    SwapController: SwapControllerMemState;
     BlankProviderController: BlankProviderControllerState;
 };
 
@@ -141,6 +149,7 @@ const initialState: BlankAppState = {
             defaultBrowserWallet: true,
             hideEstimatedGasExceedsThresholdWarning: false, // Shown by default,
             hideDepositsExternalAccountsWarning: false,
+            hideBridgeInsufficientNativeTokenWarning: false, // Shown by default
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',
@@ -182,6 +191,7 @@ const initialState: BlankAppState = {
             // Default Coingecko id for ETH rates
             coingeckoPlatformId: 'ethereum',
         },
+        isRatesChangingAfterNetworkChange: false,
     },
     GasPricesController: {
         gasPriceData: {
@@ -192,19 +202,16 @@ const initialState: BlankAppState = {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
-                        lastBaseFeePerGas: null,
                     },
                     fast: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
-                        lastBaseFeePerGas: null,
                     },
                     slow: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
-                        lastBaseFeePerGas: null,
                     },
                 },
             },
@@ -218,6 +225,10 @@ const initialState: BlankAppState = {
     PermissionsController: {
         permissions: {},
         permissionRequests: {},
+    },
+    BridgeController: {
+        bridgeReceivingTransactions: {},
+        perndingBridgeReceivingTransactions: {},
     },
 };
 

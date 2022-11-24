@@ -140,6 +140,10 @@ const initialState: BlankAppState & {
     TransactionWatcherControllerState: {
         transactions: {},
     },
+    BridgeController: {
+        bridgeReceivingTransactions: {},
+        perndingBridgeReceivingTransactions: {},
+    },
     BlockFetchController: {
         blockFetchData: {
             1: {
@@ -208,6 +212,7 @@ const initialState: BlankAppState & {
             defaultBrowserWallet: true,
             hideEstimatedGasExceedsThresholdWarning: false,
             hideDepositsExternalAccountsWarning: false,
+            hideBridgeInsufficientNativeTokenWarning: false,
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',
@@ -241,6 +246,7 @@ const initialState: BlankAppState & {
             // Default Coingecko id for ETH rates
             coingeckoPlatformId: 'ethereum',
         },
+        isRatesChangingAfterNetworkChange: false,
     },
     GasPricesController: {
         gasPriceData: {
@@ -298,6 +304,10 @@ describe('State reconciler', () => {
                 addressBook: {} as AddressBook,
                 recentAddresses: {} as AddressBook,
             },
+            BridgeController: {
+                bridgeReceivingTransactions: {},
+                perndingBridgeReceivingTransactions: {},
+            },
             AccountTrackerController: {
                 isAccountTrackerLoading: false,
                 accounts: {
@@ -343,6 +353,7 @@ describe('State reconciler', () => {
                     // Default Coingecko id for ETH rates
                     coingeckoCurrencyId: 'ethereum',
                 },
+                isRatesChangingAfterNetworkChange: false,
             },
             GasPricesController: {
                 gasPriceData: {
@@ -418,6 +429,7 @@ describe('State reconciler', () => {
                     defaultBrowserWallet: true,
                     hideEstimatedGasExceedsThresholdWarning: false,
                     hideDepositsExternalAccountsWarning: false,
+                    hideBridgeInsufficientNativeTokenWarning: false,
                 },
                 releaseNotesSettings: {
                     lastVersionUserSawNews: '0.1.3',

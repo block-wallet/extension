@@ -1,7 +1,5 @@
 import { BigNumber } from "ethers"
 import { Fragment, FunctionComponent, useState } from "react"
-
-import { useBlankState } from "../context/background/backgroundHooks"
 import { useOnMountHistory } from "../context/hooks/useOnMount"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { TokenList, useTokensList } from "../context/hooks/useTokensList"
@@ -12,9 +10,11 @@ import plus from "../assets/images/icons/plus.svg"
 import unknownTokenIcon from "../assets/images/unknown_token.svg"
 import ChevronRightIcon from "./icons/ChevronRightIcon"
 import { formatRounded } from "../util/formatRounded"
-import { formatCurrency, toCurrencyAmount } from "../util/formatCurrency"
 import { ActionButton } from "./button/ActionButton"
-import { getValueByKey } from "../util/objectUtils"
+import AssetsLoadingSkeleton from "./skeleton/AssetsLoadingSkeleton"
+import useCurrencyFromatter from "../util/hooks/useCurrencyFormatter"
+import { isNativeTokenAddress } from "../util/tokenUtils"
+import { useBlankState } from "../context/background/backgroundHooks"
 export type AssetItem = {
     token: Token
     balance: BigNumber
@@ -42,12 +42,9 @@ export const AssetIcon: FunctionComponent<{
 const Asset: FunctionComponent<{
     asset: AssetItem
     pushDeleteTokens: Function
-}> = ({ asset, pushDeleteTokens }) => {
+}> = ({ asset }) => {
     const history: any = useOnMountHistory()
-    const { exchangeRates, nativeCurrency, localeInfo } = useBlankState()!
-
-    const tokenPrice = getValueByKey(exchangeRates, asset.token.symbol, 0)
-
+    const formatter = useCurrencyFromatter()
     return (
         <div
             onClick={() =>
@@ -88,17 +85,11 @@ const Asset: FunctionComponent<{
                                 `}
                     </span>
                     <span className="text-xs text-gray-600">
-                        {formatCurrency(
-                            toCurrencyAmount(
-                                asset.balance || BigNumber.from(0),
-                                tokenPrice,
-                                asset.token.decimals
-                            ),
-                            {
-                                currency: nativeCurrency,
-                                locale_info: localeInfo,
-                                showSymbol: true,
-                            }
+                        {formatter.format(
+                            asset.balance || BigNumber.from(0),
+                            asset.token.symbol,
+                            asset.token.decimals,
+                            isNativeTokenAddress(asset.token.address)
                         )}
                     </span>
                 </div>
@@ -111,6 +102,11 @@ const Asset: FunctionComponent<{
 }
 
 const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
+    const state = useBlankState()!
+
+    const isLoading =
+        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+
     const [deletedTokens, setDeletedTokens] = useState([] as string[])
     const pushDeleteTokens = (deleteToken: string) => {
         setDeletedTokens([...deletedTokens, deleteToken])
@@ -133,14 +129,21 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
             role="list"
             aria-label="assets"
         >
-            {assets
-                .filter((t) => !deletedTokens.includes(t.token.address))
-                .map((a, i) => (
-                    <Fragment key={i}>
-                        {i > 0 ? <hr /> : null}
-                        <Asset asset={a} pushDeleteTokens={pushDeleteTokens} />
-                    </Fragment>
-                ))}
+            {isLoading ? (
+                <AssetsLoadingSkeleton />
+            ) : (
+                assets
+                    .filter((t) => !deletedTokens.includes(t.token.address))
+                    .map((a, i) => (
+                        <Fragment key={i}>
+                            {i > 0 ? <hr /> : null}
+                            <Asset
+                                asset={a}
+                                pushDeleteTokens={pushDeleteTokens}
+                            />
+                        </Fragment>
+                    ))
+            )}
         </div>
     )
 }

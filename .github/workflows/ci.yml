@@ -1,7 +1,20 @@
 name: CI
 
 on:
-  push:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '**.js'
+      - '**.ts'
+      - '**.tsx'
+      - '**.css'
+      - '**.json'
+      - '**.html'
+      - '**.nvmrc'
+      - '!package.json'
+      - '!public/manifest.json'
+      - '!release-notes.json'
 
 env:
   BLOCK_WALLET_URL: url.txt
@@ -12,6 +25,7 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    if: startsWith(github.head_ref, 'dependabot/') == false
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v3
@@ -29,19 +43,19 @@ jobs:
       - name: Dependency UI cache
         uses: actions/cache@v3
         with:
-          path: "packages/ui/node_modules"
+          path: 'packages/ui/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Dependency Background cache
         uses: actions/cache@v3
         with:
-          path: "packages/background/node_modules"
+          path: 'packages/background/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Dependency Provider cache
         uses: actions/cache@v3
         with:
-          path: "packages/provider/node_modules"
+          path: 'packages/provider/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
@@ -51,20 +65,45 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT }}
           NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
-      - name: Check lint in un
+      - name: Check lint in all the packages
         run: |
+          echo "::group::UI"
           cd packages/ui/
-          yarn lint
+          if yarn lint; then
+            echo "::notice:: UI lint OK"
+            lint_ui=0
+          else
+            echo '::error:: UI lint failed. Run "yarn lint:fix" in the folder "packages/ui/" to fix it and commit your changes.'
+            lint_ui=1
+          fi
+          echo "::endgroup::"
 
-      - name: Check lint in background
-        run: |
-          cd packages/background/
-          yarn lint
+          echo "::group::Background"
+          cd ..
+          cd background/
+          if yarn lint; then
+            echo "::notice:: Background lint OK"
+            lint_background=0
+          else
+            echo '::error:: Background lint failed. Run "yarn lint:fix" in the folder "packages/background/" to fix it and commit your changes.'
+            lint_background=1
+          fi
+          echo "::endgroup::"
 
-      - name: Check lint in provider
-        run: |
-          cd packages/provider/
-          yarn lint
+          echo "::group::Provider"
+          cd ..
+          cd provider/
+          if yarn lint; then
+            echo "::notice:: Provider lint OK"
+            lint_provider=0
+          else
+            echo '::error:: Provider lint failed. Run "yarn lint:fix" in the folder "packages/provider/" to fix it and commit your changes.'
+            lint_provider=1
+          fi
+          echo "::endgroup::"
+          if [[ "$lint_ui" -ne "0" || "$lint_background" -ne "0" || "$lint_provider" -ne "0" ]]; then
+            exit 1
+          fi
 
   test:
     runs-on: ubuntu-latest
@@ -85,19 +124,19 @@ jobs:
       - name: Dependency UI cache
         uses: actions/cache@v3
         with:
-          path: "packages/ui/node_modules"
+          path: 'packages/ui/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Dependency Background cache
         uses: actions/cache@v3
         with:
-          path: "packages/background/node_modules"
+          path: 'packages/background/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Dependency Provider cache
         uses: actions/cache@v3
         with:
-          path: "packages/provider/node_modules"
+          path: 'packages/provider/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
@@ -131,6 +170,7 @@ jobs:
           make test/background
 
   build:
+    needs: [test, lint]
     env:
       ENVIRONMENT: prod
     runs-on: ubuntu-latest
@@ -151,19 +191,19 @@ jobs:
       - name: Dependency UI cache
         uses: actions/cache@v3
         with:
-          path: "packages/ui/node_modules"
+          path: 'packages/ui/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/ui/yarn.lock') }}
 
       - name: Dependency Background cache
         uses: actions/cache@v3
         with:
-          path: "packages/background/node_modules"
+          path: 'packages/background/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/background/yarn.lock') }}
 
       - name: Dependency Provider cache
         uses: actions/cache@v3
         with:
-          path: "packages/provider/node_modules"
+          path: 'packages/provider/node_modules'
           key: ${{ runner.os }}-modules-v1-${{ hashFiles('packages/provider/yarn.lock') }}
 
       - name: Install packages dependencies
@@ -180,7 +220,7 @@ jobs:
           make build/prod
 
       - name: Zip build
-        if: startsWith(github.ref_name, 'dependabot/') == false
+        if: startsWith(github.head_ref, 'dependabot/') == false
         id: zip
         run: |
           file=block-wallet-${GITHUB_SHA::7}
@@ -188,7 +228,7 @@ jobs:
           echo "::set-output name=file::$file.zip"
 
       - name: Configure AWS credentials
-        if: startsWith(github.ref_name, 'dependabot/') == false
+        if: startsWith(github.head_ref, 'dependabot/') == false
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_RELEASE_BUCKET }}
@@ -196,7 +236,7 @@ jobs:
           aws-region: us-east-2
 
       - name: Upload zip to S3
-        if: startsWith(github.ref_name, 'dependabot/') == false
+        if: startsWith(github.head_ref, 'dependabot/') == false
         run: |
           zip=${{ steps.zip.outputs.file }} 
           aws s3 cp $zip $S3_PATH
@@ -205,74 +245,9 @@ jobs:
           cat $BLOCK_WALLET_URL
 
       - name: Save extension url
-        if: startsWith(github.ref_name, 'dependabot/') == false
+        if: startsWith(github.head_ref, 'dependabot/') == false
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.BLOCK_WALLET_FOLDER }}
           if-no-files-found: error
           path: ${{ env.BLOCK_WALLET_URL }}
-
-  e2e:
-    needs: [build]
-    container: cypress/browsers:node16.16.0-chrome105-ff99-edge
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref_name, 'dependabot/') == false
-    steps:
-      - name: Checkout e2e repository
-        uses: actions/checkout@v2
-        with:
-          repository: block-wallet/e2e-tests
-          ref: refs/heads/main
-          token: ${{ secrets.PAT }}
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_RELEASE_BUCKET }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_RELEASE_BUCKET }}
-          aws-region: us-east-2
-
-      - name: Install node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
-
-      - name: Install yarn
-        run: |
-          npm install --global yarn
-          
-      - name: Cache e2e dependencies
-        id: cache-cypress
-        uses: actions/cache@v3
-        with:
-          path: |
-            node_modules
-            cypress/cache
-          key: ${{ runner.os }}-cypress-v1-${{ hashFiles('yarn.lock') }}
-
-      - name: Install e2e dependencies
-        run: |
-          yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
-
-      - name: Download the extension url
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ env.BLOCK_WALLET_FOLDER }}
-          path: ${{ env.BLOCK_WALLET_FOLDER }}
-
-      - name: Download extension
-        run: |
-          url=$(cat $BLOCK_WALLET_FOLDER/$BLOCK_WALLET_URL)
-          wget $url -O blockwallet-extension.zip
-          rm -rf blockwallet-extension
-          apt install -y unzip
-          unzip blockwallet-extension.zip
-          mv dist blockwallet-extension
-
-      - name: UI Tests - Chrome
-        run: |
-          DBUS_SESSION_BUS_ADDRESS=/dev/null yarn run test:e2e
-        env:
-          ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
-          GITHUB_TOKEN: ${{ secrets.PAT }}
-          TEST_TAGS: puppeteer,extension

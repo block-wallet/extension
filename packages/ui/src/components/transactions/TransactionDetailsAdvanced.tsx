@@ -118,9 +118,9 @@ const Argument = ({
     )
 }
 
-export const TransactionDetails: FunctionComponent<TransactionDetailsTabProps> = ({
-    transaction,
-}) => {
+export const TransactionDetails: FunctionComponent<
+    TransactionDetailsTabProps
+> = ({ transaction }) => {
     const signature = transaction.methodSignature
 
     if (!signature) {

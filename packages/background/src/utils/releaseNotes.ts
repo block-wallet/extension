@@ -8,7 +8,7 @@ interface Options {
 
 const defaultOptions: Options = {
     stackNotes: true,
-    currentVersionOnly: false
+    currentVersionOnly: false,
 };
 
 const generateReleaseNotesNews = (
@@ -23,7 +23,9 @@ const generateReleaseNotesNews = (
         ...defaultOptions,
         ...options,
     };
-    let sortedNotes = [...releasesNotes].sort((r1, r2) => compareVersions(r2.version, r1.version));
+    let sortedNotes = [...releasesNotes].sort((r1, r2) =>
+        compareVersions(r2.version, r1.version)
+    );
 
     if (safeOptions.lastVersionSeen) {
         sortedNotes = sortedNotes.filter(
@@ -32,15 +34,13 @@ const generateReleaseNotesNews = (
         );
     }
 
-    const filteredNotes = sortedNotes.filter(
-        ({ version }) => {
-            const result = compareVersions(userCurrentVersion, version)
-            if (safeOptions.currentVersionOnly) {
-                return result === 0
-            }
-            return result > -1
+    const filteredNotes = sortedNotes.filter(({ version }) => {
+        const result = compareVersions(userCurrentVersion, version);
+        if (safeOptions.currentVersionOnly) {
+            return result === 0;
         }
-    );
+        return result > -1;
+    });
 
     //keep last version only
     if (filteredNotes.length && !safeOptions.stackNotes) {

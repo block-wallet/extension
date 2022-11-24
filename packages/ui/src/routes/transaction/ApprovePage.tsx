@@ -75,12 +75,6 @@ const getLabels = (
             mainSectionText: `Allow BlockWallet Bridge to withdraw your ${assetName} and automate transactions for you.`,
             editAllowanceText: `Allow the BlockWallet Bridge to the following amount of ${assetName}:`,
         }
-    } else if (operation === ApproveOperation.DEPOSIT) {
-        return {
-            mainSectionTitle: "Allow the Privacy Pool to:",
-            mainSectionText: `Transfer ${assetName} from your account to the Privacy Pool to make the deposit.`,
-            editAllowanceText: `Allow the Privacy Pool to deposit up to the following amount of ${assetName}:`,
-        }
     } else {
         return {
             mainSectionTitle: `Approve BlockWallet to swap your ${assetName}`,

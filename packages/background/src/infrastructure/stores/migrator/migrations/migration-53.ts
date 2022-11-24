@@ -1,5 +1,5 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
-import NetworkController from '@block-wallet/background/controllers/NetworkController';
+import NetworkController from '../../../../controllers/NetworkController';
 import { IMigration } from '../IMigration';
 import {
     SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES,

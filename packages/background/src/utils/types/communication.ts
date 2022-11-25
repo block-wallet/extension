@@ -10,7 +10,7 @@ import {
     GasPriceValue,
     FeeMarketEIP1559Values,
 } from '../../controllers/transactions/TransactionController';
-import { ITokens, Token } from '../../controllers/erc-20/Token';
+import { IToken, ITokens, Token } from '../../controllers/erc-20/Token';
 import {
     TransactionAdvancedData,
     TransactionMeta,
@@ -21,7 +21,7 @@ import {
     ExchangeType,
     SwapQuote,
     SwapTransaction,
-} from '../../controllers/ExchangeController';
+} from '../../controllers/SwapController';
 import {
     ProviderEvents,
     SiteMetadata,
@@ -45,6 +45,15 @@ import { Currency } from '../currency';
 import { Devices } from './hardware';
 import { OneInchSwapQuoteParams, OneInchSwapRequestParams } from './1inch';
 import { ChainListItem } from '@block-wallet/chains-assets';
+import { IChain } from './chain';
+import {
+    BridgeQuoteRequest,
+    BridgeRoutesRequest,
+    BridgeTransaction,
+    GetBridgeAvailableRoutesResponse,
+    GetBridgeQuoteResponse,
+} from '@block-wallet/background/controllers/BridgeController';
+import { GasPriceData } from '@block-wallet/background/controllers/GasPricesController';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -58,6 +67,7 @@ enum ACCOUNT {
     GET_BALANCE = 'GET_ACCOUNT_BALANCE',
     HIDE = 'HIDE_ACCOUNT',
     UNHIDE = 'UNHIDE_ACCOUNT',
+    GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
 }
 
 enum APP {
@@ -94,6 +104,15 @@ enum EXCHANGE {
     EXECUTE = 'EXECUTE_EXCHANGE',
 }
 
+enum BRIDGE {
+    APPROVE_BRIDGE_ALLOWANCE = 'APPROVE_BRIDGE_ALLOWANCE',
+    GET_BRIDGE_AVAILABLE_CHAINS = 'GET_BRIDGE_AVAILABLE_CHAINS',
+    GET_BRIDGE_TOKENS = 'GET_BRIDGE_TOKENS',
+    GET_BRIDGE_QUOTE = 'GET_BRIDGE_QUOTE',
+    GET_BRIDGE_ROUTES = 'GET_BRIDGE_ROUTES',
+    EXECUTE_BRIDGE = 'EXECUTE_BRIDGE',
+}
+
 export enum EXTERNAL {
     EVENT_SUBSCRIPTION = 'EVENT_SUBSCRIPTION',
     REQUEST = 'EXTERNAL_REQUEST',
@@ -112,6 +131,7 @@ enum NETWORK {
     SET_SHOW_TEST_NETWORKS = 'SHOW_TEST_NETWORKS',
     ADD_NETWORK = 'ADD_NETWORK',
     EDIT_NETWORK = 'EDIT_NETWORK',
+    EDIT_NETWORKS_ORDER = 'EDIT_NETWORKS_ORDER',
     REMOVE_NETWORK = 'REMOVE_NETWORK',
     GET_SPECIFIC_CHAIN_DETAILS = 'GET_SPECIFIC_CHAIN_DETAILS',
     GET_RPC_CHAIN_ID = 'GET_RPC_CHAIN_ID',
@@ -155,6 +175,7 @@ enum TRANSACTION {
     CONFIRM = 'CONFIRM_TRANSACTION',
     REJECT = 'REJECT_TRANSACTION',
     GET_LATEST_GAS_PRICE = 'GET_LATEST_GAS_PRICE',
+    FETCH_LATEST_GAS_PRICE = 'FETCH_LATEST_GAS_PRICE',
     SEND_ETHER = 'SEND_ETHER',
     CANCEL_TRANSACTION = 'CANCEL_TRANSACTION',
     SPEED_UP_TRANSACTION = 'SPEED_UP_TRANSACTION',
@@ -240,6 +261,7 @@ export const Messages = {
     ADDRESS_BOOK,
     BROWSER,
     FILTERS,
+    BRIDGE,
 };
 
 // [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
@@ -259,6 +281,10 @@ export interface RequestSignatures {
     [Messages.ACCOUNT.RENAME]: [RequestAccountRename, boolean];
     [Messages.ACCOUNT.SELECT]: [RequestAccountSelect, boolean];
     [Messages.ACCOUNT.GET_BALANCE]: [string, BigNumber];
+    [Messages.ACCOUNT.GET_NATIVE_TOKEN_BALANCE]: [
+        number,
+        BigNumber | undefined
+    ];
     [Messages.APP.GET_IDLE_TIMEOUT]: [undefined, number];
     [Messages.APP.SET_IDLE_TIMEOUT]: [RequestSetIdleTimeout, void];
     [Messages.APP.SET_LAST_USER_ACTIVE_TIME]: [undefined, void];
@@ -289,6 +315,26 @@ export interface RequestSignatures {
     [Messages.EXTERNAL.SETUP_PROVIDER]: [undefined, ProviderSetupData];
     [Messages.EXTERNAL.SW_REINIT]: [void, void];
     [Messages.EXTERNAL.SET_ICON]: [RequestSetIcon, boolean];
+    [Messages.BRIDGE.GET_BRIDGE_TOKENS]: [RequestGetBridgeTokens, IToken[]];
+
+    [Messages.BRIDGE.APPROVE_BRIDGE_ALLOWANCE]: [
+        RequestApproveBridgeAllowance,
+        boolean
+    ];
+    [Messages.BRIDGE.GET_BRIDGE_AVAILABLE_CHAINS]: [
+        RequestGetBridgeAvailableChains,
+        IChain[]
+    ];
+    [Messages.BRIDGE.GET_BRIDGE_QUOTE]: [
+        RequestGetBridgeQuote,
+        GetBridgeQuoteResponse
+    ];
+    [Messages.BRIDGE.GET_BRIDGE_ROUTES]: [
+        RequestGetBridgeRoutes,
+        GetBridgeAvailableRoutesResponse
+    ];
+    [Messages.BRIDGE.EXECUTE_BRIDGE]: [RequestExecuteBridge, string];
+
     [Messages.NETWORK.CHANGE]: [RequestNetworkChange, boolean];
     [Messages.NETWORK.SET_SHOW_TEST_NETWORKS]: [
         RequestShowTestNetworks,
@@ -296,6 +342,7 @@ export interface RequestSignatures {
     ];
     [Messages.NETWORK.ADD_NETWORK]: [RequestAddNetwork, void];
     [Messages.NETWORK.EDIT_NETWORK]: [RequestEditNetwork, void];
+    [Messages.NETWORK.EDIT_NETWORKS_ORDER]: [RequestEditNetworksOrder, void];
     [Messages.NETWORK.REMOVE_NETWORK]: [RequestRemoveNetwork, void];
     [Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS]: [
         RequestGetChainData,
@@ -333,6 +380,7 @@ export interface RequestSignatures {
         boolean
     ];
     [Messages.TRANSACTION.GET_LATEST_GAS_PRICE]: [undefined, BigNumber];
+    [Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE]: [number, GasPriceData];
     [Messages.TRANSACTION.SEND_ETHER]: [RequestSendEther, string];
     [Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION]: [
         RequestAddAsNewSendTransaction,
@@ -567,6 +615,29 @@ export interface RequestExecuteExchange {
     exchangeParams: SwapTransaction;
 }
 
+export interface RequestApproveBridgeAllowance {
+    allowance: BigNumber;
+    amount: BigNumber;
+    spenderAddress: string;
+    feeData: TransactionFeeData;
+    tokenAddress: string;
+    customNonce?: number;
+}
+
+export interface RequestGetBridgeTokens {}
+export interface RequestGetBridgeAvailableChains {}
+export interface RequestGetBridgeQuote {
+    checkAllowance: boolean;
+    quoteRequest: BridgeQuoteRequest;
+}
+
+export interface RequestGetBridgeRoutes {
+    routesRequest: BridgeRoutesRequest;
+}
+export interface RequestExecuteBridge {
+    bridgeTransaction: BridgeTransaction;
+}
+
 export type RequestExternalRequest = RequestArguments;
 
 export interface RequestSetIcon {
@@ -595,7 +666,17 @@ export interface RequestEditNetwork {
         rpcUrl: string;
         blockExplorerUrl?: string;
         name: string;
+        test: boolean;
     };
+}
+
+export interface editNetworkOrder {
+    chainId: number;
+    order: number;
+}
+
+export interface RequestEditNetworksOrder {
+    networksOrder: editNetworkOrder[];
 }
 
 export interface RequestRemoveNetwork {
@@ -680,7 +761,9 @@ export interface RequestWalletCreate {
 export interface RequestSeedPhrase {
     password: string;
 }
-export interface RequestCompleteSetup {}
+export interface RequestCompleteSetup {
+    sendNotification: boolean;
+}
 
 export interface RequestWalletImport {
     password: string;

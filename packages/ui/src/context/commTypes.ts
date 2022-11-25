@@ -10,6 +10,7 @@ enum ACCOUNT {
     GET_BALANCE = "GET_ACCOUNT_BALANCE",
     HIDE = "HIDE_ACCOUNT",
     UNHIDE = "UNHIDE_ACCOUNT",
+    GET_NATIVE_TOKEN_BALANCE = "GET_NATIVE_TOKEN_BALANCE",
 }
 
 enum APP {
@@ -46,6 +47,15 @@ enum EXCHANGE {
     EXECUTE = "EXECUTE_EXCHANGE",
 }
 
+enum BRIDGE {
+    APPROVE_BRIDGE_ALLOWANCE = "APPROVE_BRIDGE_ALLOWANCE",
+    GET_BRIDGE_AVAILABLE_CHAINS = "GET_BRIDGE_AVAILABLE_CHAINS",
+    GET_BRIDGE_TOKENS = "GET_BRIDGE_TOKENS",
+    GET_BRIDGE_QUOTE = "GET_BRIDGE_QUOTE",
+    GET_BRIDGE_ROUTES = "GET_BRIDGE_ROUTES",
+    EXECUTE_BRIDGE = "EXECUTE_BRIDGE",
+}
+
 enum EXTERNAL {
     SET_SITE_DATA = "SET_SITE_DATA",
     REQUEST = "EXTERNAL_REQUEST",
@@ -57,6 +67,7 @@ enum NETWORK {
     SET_SHOW_TEST_NETWORKS = "SHOW_TEST_NETWORKS",
     ADD_NETWORK = "ADD_NETWORK",
     EDIT_NETWORK = "EDIT_NETWORK",
+    EDIT_NETWORKS_ORDER = "EDIT_NETWORKS_ORDER",
     REMOVE_NETWORK = "REMOVE_NETWORK",
     GET_SPECIFIC_CHAIN_DETAILS = "GET_SPECIFIC_CHAIN_DETAILS",
     GET_RPC_CHAIN_ID = "GET_RPC_CHAIN_ID",
@@ -99,6 +110,7 @@ enum TRANSACTION {
     CALCULATE_SEND_TRANSACTION_GAS_LIMIT = "CALCULATE_SEND_TRANSACTION_GAS_LIMIT",
     CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT = "CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT",
     GET_LATEST_GAS_PRICE = "GET_LATEST_GAS_PRICE",
+    FETCH_LATEST_GAS_PRICE = "FETCH_LATEST_GAS_PRICE",
     CONFIRM = "CONFIRM_TRANSACTION",
     REJECT = "REJECT_TRANSACTION",
     CANCEL_TRANSACTION = "CANCEL_TRANSACTION",
@@ -184,6 +196,7 @@ export const Messages = {
     ADDRESS_BOOK,
     BROWSER,
     FILTERS,
+    BRIDGE,
 }
 
 export enum TransactionStatus {
@@ -210,6 +223,11 @@ export enum TransactionCategories {
     TOKEN_METHOD_INCOMING_TRANSFER = "incoming_transfer",
     TOKEN_METHOD_TRANSFER_FROM = "transferfrom",
     EXCHANGE = "exchange",
+    BRIDGE = "bridge",
+    INCOMING_BRIDGE = "incoming_bridge",
+    INCOMING_BRIDGE_REFUND = "incoming_bridge_refund",
+    // Category that temporarely represents receiving transactions in a bridge operation:
+    INCOMING_BRIDGE_PLACEHOLDER = "incoming_bridge_placeholder",
 }
 
 export enum PendingWithdrawalStatus {
@@ -276,6 +294,22 @@ export enum ExchangeType {
 }
 
 /**
+ * Bridge implementation
+ */
+export enum BridgeImplementation {
+    LIFI_BRIDGE = "LIFI_BRIDGE",
+}
+
+/**
+ * Allowance status for the bridged asset
+ */
+export enum BridgeAllowanceCheck {
+    NOT_CHECKED = "NOT_CHECKED",
+    ENOUGH_ALLOWANCE = "ENOUGH_ALLOWANCE",
+    INSUFFICIENT_ALLOWANCE = "INSUFFICIENT_ALLOWANCE",
+}
+
+/**
  * Hardware Wallet Devices Vendors
  */
 export enum Devices {
@@ -325,4 +359,35 @@ export enum AccountType {
 export enum AccountStatus {
     ACTIVE = "ACTIVE",
     HIDDEN = "HIDDEN",
+}
+
+//So far this statuses has been done using Li.Fi convention.
+//To learn how do they work, please refer to their documentation: https://docs.li.fi/products/more-integration-options/li.fi-api/checking-the-status-of-a-transaction
+export enum BridgeStatus {
+    NOT_FOUND = "NOT_FOUND",
+    INVALID = "INVALID",
+    PENDING = "PENDING",
+    DONE = "DONE",
+    FAILED = "FAILED",
+}
+
+export enum BridgeSubstatus {
+    //Substatus of Pending state
+    WAIT_SOURCE_CONFIRMATIONS = "WAIT_SOURCE_CONFIRMATIONS",
+    WAIT_DESTINATION_TRANSACTION = "WAIT_DESTINATION_TRANSACTION",
+    BRIDGE_NOT_AVAILABLE = "BRIDGE_NOT_AVAILABLE",
+    CHAIN_NOT_AVAILABLE = "CHAIN_NOT_AVAILABLE",
+    UNKNOWN_ERROR = "UNKNOWN_ERROR",
+    NOT_PROCESSABLE_REFUND_NEEDED = "NOT_PROCESSABLE_REFUND_NEEDED",
+    REFUND_IN_PROGRESS = "REFUND_IN_PROGRESS",
+
+    //Substatus of Done state
+    COMPLETED = "COMPLETED",
+    PARTIAL = "PARTIAL",
+    REFUNDED = "REFUNDED",
+}
+
+export enum QuoteFeeStatus {
+    OK = "OK",
+    INSUFFICIENT_BALANCE_TO_COVER_FEES = "INSUFFICIENT_BALANCE_TO_COVER_FEES",
 }

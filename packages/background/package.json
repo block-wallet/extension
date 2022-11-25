@@ -1,12 +1,13 @@
 {
     "name": "@block-wallet/background",
-    "version": "0.8.0",
+    "version": "1.0.0",
     "private": true,
     "dependencies": {
-        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.14",
+        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.19",
         "@block-wallet/eth-ledger-bridge-keyring": "https://github.com/block-wallet/eth-ledger-bridge-keyring",
         "@block-wallet/explorer-link": "https://github.com/block-wallet/explorer-link#v2.2.2",
         "@ethereumjs/tx": "^3.5.2",
+        "@metamask/eth-sig-util": "^5.0.2",
         "@unstoppabledomains/resolution": "^8.3.3",
         "async-mutex": "^0.3.2",
         "banned-assets": "https://github.com/block-wallet/banned-assets#v0.0.1",
@@ -15,9 +16,8 @@
         "compare-versions": "^3.6.0",
         "eslint-webpack-plugin": "^3.2.0",
         "eth-ens-namehash": "^2.0.8",
-        "eth-keyring-controller": "MetaMask/KeyringController#671d0728e4817efdfb7a0a4f3cd25dccb513f20f",
-        "eth-sig-util": "^3.0.1",
-        "eth-trezor-keyring": "https://github.com/block-wallet/eth-trezor-keyring#v0.10.1",
+        "eth-keyring-controller": "^8.0.1",
+        "eth-trezor-keyring": "https://github.com/block-wallet/eth-trezor-keyring#v0.10.2",
         "ethereumjs-util": "^7.0.7",
         "ethereumjs-wallet": "^1.0.1",
         "ethers": "^5.4.0",
@@ -58,7 +58,7 @@
         "mock-require": "^3.0.3",
         "npm-run-all": "^4.1.5",
         "nyc": "^15.1.0",
-        "prettier": "^2.4.1",
+        "prettier": "^2.7.1",
         "semver": "^7.3.7",
         "sinon": "^9.2.3",
         "sinon-chrome": "^3.0.1",
@@ -81,6 +81,7 @@
         "test": "make test/background",
         "build": "make build/background",
         "eslint-report": "eslint src --ext .ts -o eslint-report.html -f html",
-        "lint": "eslint src --ext .ts --quiet"
+        "lint": "prettier --check src/ '!**/*.json'",
+        "lint:fix": "prettier --write src/ '!**/*.json'"
     }
 }

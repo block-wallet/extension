@@ -25,15 +25,13 @@ const useNewAccountHelper = () => {
             if (accountNameExists(accounts, accountName)) {
                 return {
                     isAvailable: false,
-                    error:
-                        "Account name is already in use, please use a different one.",
+                    error: "Account name is already in use, please use a different one.",
                 }
             }
             if (accountNameExists(hiddenAccounts, accountName)) {
                 return {
                     isAvailable: false,
-                    error:
-                        "Account name is already in use in hidden accounts, please use a different one.",
+                    error: "Account name is already in use in hidden accounts, please use a different one.",
                 }
             }
             return {

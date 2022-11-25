@@ -1,4 +1,4 @@
-import { typedSignatureHash } from 'eth-sig-util';
+import { typedSignatureHash } from '@metamask/eth-sig-util';
 import {
     bufferToHex,
     isValidAddress,
@@ -89,8 +89,6 @@ export const validateSignature = <TSignatureType extends SignatureMethods>(
         if (typeof nParams.data === 'string') {
             const typedData = JSON.parse(nParams.data);
             nParams.data = sanitizeTypedData(typedData);
-
-
         }
     }
 
@@ -203,15 +201,14 @@ export const hexToString = (hex: string): string => {
     return output;
 };
 
-
 const sanitizeTypedData = (typedData: TypedMessage<MessageSchema>): any => {
-
     try {
         // Check and remove null values from the typed data primary type.
-        const uint256Properties = typedData.types[typedData.primaryType].filter(t => t.type === 'uint256');
+        const uint256Properties = typedData.types[typedData.primaryType].filter(
+            (t) => t.type === 'uint256'
+        );
 
         if (!uint256Properties) return typedData;
-
 
         // Loop properties
         for (const k in uint256Properties) {
@@ -220,14 +217,10 @@ const sanitizeTypedData = (typedData: TypedMessage<MessageSchema>): any => {
             // If an uint256 property has null value, we replace it with a 0 to prevent errors.
             if (typedData.message[propertyName] === null)
                 typedData.message[propertyName] = 0;
-
         }
 
         return typedData;
     } catch (error) {
         return typedData;
     }
-
-
-}
-
+};

@@ -212,8 +212,6 @@ const SeedImport: FunctionComponent<{
                                             if (newSP.trim().match(/\s/u)) {
                                                 e.preventDefault()
                                                 onSeedPhrasePaste(newSP)
-                                            } else {
-                                                onSeedPhraseWordChange(i, newSP)
                                             }
                                         }}
                                     />
@@ -291,13 +289,13 @@ const SeedImport: FunctionComponent<{
                             errors.passwordConfirmation ||
                             errors.acceptTOU ||
                             isLoading) &&
-                        "opacity-50 pointer-events-none"
+                            "opacity-50 pointer-events-none"
                     )}
                     disabled={
                         seedPhraseError.length ||
-                            errors.password ||
-                            errors.passwordConfirmation ||
-                            errors.acceptTOU
+                        errors.password ||
+                        errors.passwordConfirmation ||
+                        errors.acceptTOU
                             ? true
                             : false
                     }

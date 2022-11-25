@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import {
     Callback,
     RequestArguments,
@@ -671,6 +672,11 @@ export default class BlankProvider
         request: RequestTypes[TMessageType] | undefined,
         id: string
     ): RequestTypes[EXTERNAL.REQUEST] | undefined {
+        if (!request) {
+            return undefined;
+        }
+
+        // @ts-ignore
         if (message === EXTERNAL.REQUEST && request && 'method' in request) {
             if (request.method === JSONRPCMethod.eth_subscribe) {
                 // Store request params for SW reinit

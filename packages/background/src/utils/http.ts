@@ -1,3 +1,5 @@
+import { isNil } from 'lodash';
+
 export class RequestError extends Error {
     public readonly status: number;
     public readonly response: any;
@@ -8,6 +10,9 @@ export class RequestError extends Error {
         this.response = response;
     }
 }
+
+const GET = 'GET';
+const POST = 'POST';
 
 const fetchWithTimeout = async (
     url: string,
@@ -28,17 +33,31 @@ const fetchWithTimeout = async (
 const request = async <T>(
     url: string,
     params: Record<string, any> | undefined,
-    method = 'GET',
-    timeout = 60000
+    method = GET,
+    timeout = 60000,
+    cache: RequestCache = 'default'
 ): Promise<T> => {
     const options: RequestInit & { timeout?: number } = {
         method,
         timeout,
+        cache,
     };
 
     // Check the method and set the options accordingly
-    if (method === 'GET') {
-        url += '?' + new URLSearchParams(params).toString();
+    if (method === GET) {
+        const safeParams = Object.entries(params || {}).reduce(
+            (acc, [key, value]) => {
+                if (isNil(value)) {
+                    return acc;
+                }
+                return {
+                    ...acc,
+                    [key]: value,
+                };
+            },
+            {}
+        );
+        url += '?' + new URLSearchParams(safeParams).toString();
     } else {
         options.body = JSON.stringify(params);
     }
@@ -76,8 +95,9 @@ const get = async <
 >(
     url: string,
     params?: P,
-    timeout?: number
-) => request<T>(url, params, 'GET', timeout);
+    timeout?: number,
+    cache?: RequestCache
+) => request<T>(url, params, GET, timeout, cache);
 
 const post = async <
     T,
@@ -85,8 +105,9 @@ const post = async <
 >(
     url: string,
     params?: P,
-    timeout?: number
-) => request<T>(url, params, 'POST', timeout);
+    timeout?: number,
+    cache?: RequestCache
+) => request<T>(url, params, POST, timeout, cache);
 
 interface HttpClient {
     /**
@@ -99,7 +120,8 @@ interface HttpClient {
     get<T, P extends Record<string, any> | undefined = Record<string, any>>(
         url: string,
         params?: P,
-        timeout?: number
+        timeout?: number,
+        cache?: RequestCache
     ): Promise<T>;
 
     /**
@@ -112,7 +134,8 @@ interface HttpClient {
     post<T, P extends Record<string, any> | undefined = Record<string, any>>(
         url: string,
         params?: P,
-        timeout?: number
+        timeout?: number,
+        cache?: RequestCache
     ): Promise<T>;
 }
 

@@ -32,6 +32,7 @@ testInitState = {
         defaultBrowserWallet: true,
         hideEstimatedGasExceedsThresholdWarning: false,
         hideDepositsExternalAccountsWarning: false,
+        hideBridgeInsufficientNativeTokenWarning: false,
     },
     releaseNotesSettings: {
         lastVersionUserSawNews: '0.1.3',
@@ -46,4 +47,8 @@ const mockPreferencesController = new PreferencesController({
     initState: testInitState,
 });
 
-export { mockPreferencesController };
+const mockPreferencesControllerARS = new PreferencesController({
+    initState: { ...testInitState, nativeCurrency: 'ars' },
+});
+
+export { mockPreferencesController, mockPreferencesControllerARS };

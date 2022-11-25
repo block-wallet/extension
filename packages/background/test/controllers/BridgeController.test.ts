@@ -256,7 +256,7 @@ describe('Bridge Controller', () => {
         methodSignatureSandox.restore();
     });
 
-    describe.only('Li.Fi Aggregator', () => {
+    describe('Li.Fi Aggregator', () => {
         describe('Available chains', () => {
             before(() => {
                 networkController.setNetwork('goerli');

@@ -167,7 +167,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * @param chainId The chain id of the network
      * @returns The networks object key for the given chain id
      */
-    private getNonNativeNetworkKey(chainId: number): string {
+    public getNonNativeNetworkKey(chainId: number): string {
         return `CHAIN-${chainId}`;
     }
 

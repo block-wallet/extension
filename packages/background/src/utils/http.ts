@@ -1,3 +1,5 @@
+import { isNil } from 'lodash';
+
 export class RequestError extends Error {
     public readonly status: number;
     public readonly response: any;
@@ -43,7 +45,19 @@ const request = async <T>(
 
     // Check the method and set the options accordingly
     if (method === GET) {
-        url += '?' + new URLSearchParams(params).toString();
+        const safeParams = Object.entries(params || {}).reduce(
+            (acc, [key, value]) => {
+                if (isNil(value)) {
+                    return acc;
+                }
+                return {
+                    ...acc,
+                    [key]: value,
+                };
+            },
+            {}
+        );
+        url += '?' + new URLSearchParams(safeParams).toString();
     } else {
         options.body = JSON.stringify(params);
     }

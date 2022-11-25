@@ -1,4 +1,3 @@
-import NetworkController from '@block-wallet/background/controllers/NetworkController';
 import { Network, Networks } from './constants/networks';
 
 /**

@@ -8,6 +8,7 @@
 import { INITIAL_NETWORKS } from '../constants/networks';
 
 const KLAYTN_MAINNET_CHAIN_ID = 8217;
+const AURORA_MAINNET_CHAIN_ID = 1313161554;
 
 // List of supported networks chain IDs
 export const ONEINCH_SWAPS_NETWORKS: number[] = [
@@ -20,6 +21,7 @@ export const ONEINCH_SWAPS_NETWORKS: number[] = [
     INITIAL_NETWORKS.FANTOM.chainId,
     INITIAL_NETWORKS.XDAI.chainId,
     KLAYTN_MAINNET_CHAIN_ID,
+    AURORA_MAINNET_CHAIN_ID,
 ];
 
 /**
@@ -32,7 +34,7 @@ export const REFERRER_ADDRESS = '0x3110a855333bfb922aeCB1B3542ba2fdE28d204F';
 export const GAS_LIMIT_INCREASE = 1.25;
 
 // Base endpoint
-export const ONEINCH_SWAPS_ENDPOINT = 'https://api.1inch.exchange/v4.0/';
+export const ONEINCH_SWAPS_ENDPOINT = 'https://api.1inch.exchange/v5.0/';
 
 // This address makes reference to the native asset
 export const ONEINCH_NATIVE_ADDRESS =

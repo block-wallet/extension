@@ -28,21 +28,21 @@ const NetworkDisplayBadge = ({
     return (
         <div
             className={classnames(
-                "flex flex-row items-center justify-center space-x-1 py-1.5 px-1.5 text-gray-600 rounded-md group border border-primary-200 text-xs",
+                "flex flex-row items-center py-1.5 px-1.5 text-gray-600 rounded-md group border border-primary-200 text-xs",
                 fill && "bg-green-100",
                 "w-auto",
                 className
             )}
         >
             <span
-                className={"h-2 w-2 rounded-xl mr-2"}
-                style={{ backgroundColor: networkColor }}
+                className={"justify-end h-2 rounded-xl mx-2"}
+                style={{ backgroundColor: networkColor, width: "8px" }}
             />
             <span
                 className={classnames(
                     truncate
-                        ? "truncate ..."
-                        : "whitespace-normal break-all flex-1"
+                        ? "justify-start truncate ..."
+                        : "justify-start whitespace-normal break-all flex-1"
                 )}
                 style={truncate ? { maxWidth: 130 } : {}}
             >

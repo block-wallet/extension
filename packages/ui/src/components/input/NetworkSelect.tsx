@@ -103,12 +103,15 @@ const NetworkSelect: FunctionComponent<{
                 )}
             >
                 <span
-                    className={"h-2 w-2 rounded-xl mr-2"}
-                    style={{ backgroundColor: getNetworkData().color }}
+                    className={"justify-end h-2 rounded-xl mx-2"}
+                    style={{
+                        backgroundColor: getNetworkData().color,
+                        width: "8px",
+                    }}
                 />
                 <span
                     data-testid="selected-network"
-                    className="select-none w-36 text-ellipsis overflow-hidden whitespace-nowrap"
+                    className="justify-start select-none w-36 text-ellipsis overflow-hidden whitespace-nowrap"
                 >
                     {getNetworkData().desc}
                 </span>

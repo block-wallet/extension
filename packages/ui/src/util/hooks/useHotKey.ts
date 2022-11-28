@@ -1,8 +1,7 @@
 import { useHotkeys } from "react-hotkeys-hook"
 import { lockApp } from "../../context/commActions"
-import { openHardwareConnect } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import { updatePopupTab } from "../../context/commActions"
+import { getActionByHotkeyAndPath, getHokeyByPath } from "../hotkeys"
 /**
  * Hook to handle the hotkeys for each page
  */
@@ -20,72 +19,53 @@ const useHotKey = (
     }
 ) => {
     const history = useOnMountHistory()
-    type Location = {
-        [key: string]: string | ((p?: any) => Promise<any>)
-    }
-
-    type Locations = {
-        [key: string]: Location
-    }
-
+    const currentLocation = history.location.pathname
+    const hotKeys = getHokeyByPath(currentLocation)
+    console.log("hotkeys to listen[" + currentLocation + "]: " + hotKeys)
     useHotkeys(
-        "ctrl+alt+l,alt+backspace,alt+s,alt+p,ctrl+alt+s,alt+1,alt+2,alt+3,alt+4,alt+5,alt+6,alt+d,alt+w,alt+q",
+        hotKeys + ",ctrl+alt+l,alt+backspace,alt+q",
         (e, handler) => {
-            //logout
-            if (handler.key === "ctrl+alt+l") {
-                console.log("Logging out")
+            if (!handler.keys || !handler.keys[0]) {
+                return
+            }
+            const keyPressed = handler.keys[0]
+
+            //logout --ctrl+alt+l
+            if (handler.ctrl && handler.alt && keyPressed === "l") {
                 lockApp()
                 return
             }
 
-            //Page back
-            if (handler.key === "alt+backspace") {
+            //Page back --alt + backspace
+            if (handler.alt && keyPressed === "backspace") {
                 if (onBack) return onBack(e)
                 return
             }
 
-            //Close extension
-            if (handler.key === "alt+q") {
+            //Close extension --alt+q
+            if (handler.alt && keyPressed === "q") {
                 if (onClose) return onClose(e)
                 return
             }
 
-            const currentLocation = history.location.pathname
-                .toUpperCase()
-                .replace("/", "")
+            const navigateTo = getActionByHotkeyAndPath(
+                currentLocation,
+                keyPressed,
+                handler.alt && handler.ctrl
+                    ? "CTRLALT"
+                    : handler.alt
+                    ? "ALT"
+                    : "CTRL"
+            )
 
-            const locations: Locations = {
-                HOME: {
-                    "alt+s": "/send",
-                    "alt+p": "/privacy",
-                    "ctrl+alt+s": "/settings",
-                    "alt+1": () => updatePopupTab("activity"),
-                    "alt+2": () => updatePopupTab("assets"),
-                },
-                SETTINGS: {
-                    "alt+1": "/accounts/menu",
-                    "alt+2": "/settings/networks",
-                    "alt+3": "/settings/addressBook",
-                    "alt+4": "/settings/preferences",
-                    "alt+5": openHardwareConnect,
-                    "alt+6": "/settings/about",
-                },
-                PRIVACY: {
-                    "alt+d": "/privacy/deposit",
-                    "alt+w": "/privacy/withdraw",
-                },
-            }
-
-            if (
-                currentLocation in locations &&
-                handler.key in locations[currentLocation]
-            ) {
-                const navigateTo = locations[currentLocation][handler.key]
+            if (navigateTo) {
+                console.log("Pasamos por aca!")
                 if (typeof navigateTo === "string") {
                     history.push({
                         pathname: navigateTo,
                         state: {
                             from: history.location.pathname,
+                            //Acordarse revisar el estado del state
                         },
                     })
 

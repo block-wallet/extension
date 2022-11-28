@@ -1,12 +1,6 @@
 import classnames from "classnames"
 import { FunctionComponent, useEffect, useState } from "react"
 
-import {
-    useOnMountHistory,
-    useOnMountLastLocation,
-} from "../../context/hooks/useOnMount"
-import NetworkDisplayBadge from "../chain/NetworkDisplayBadge"
-
 import AppIcon from "../icons/AppIcon"
 
 import CloseIcon from "../icons/CloseIcon"
@@ -91,12 +85,14 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
         history.push(typeof close === "string" ? close : "/home")
     }
 
+    //////// AGREGAR OPCION DE MOSTRAR LAS HOTKEYS CON UNA HOTKEY MAS POR CADA PANTALLA
     useHotKey({
         onClose: onCloseAction,
         onBack: onBackAction,
     } as UseHotKeyProps)
 
     useEffect(() => {
+        console.log("Montado!")
         setMounted(true)
 
         return () => setMounted(false)

@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import classnames from "classnames"
 import { Link, useHistory } from "react-router-dom"
 import { formatUnits } from "ethers/lib/utils"
@@ -34,11 +34,15 @@ import { useConnectedSite } from "../context/hooks/useConnectedSite"
 import { useTokensList } from "../context/hooks/useTokensList"
 
 // Assets
-import eye from "../assets/images/icons/eye.svg"
 import TokenSummary from "../components/token/TokenSummary"
 import GasPricesInfo from "../components/gas/GasPricesInfo"
+import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
 import PopupLayout from "../components/popup/PopupLayout"
 import PopupHeader from "../components/popup/PopupHeader"
+import { getHokeyByPath } from "../util/hotkeys"
+
+// change network (alt + 'c')
+// see gas (alt + 'g')
 
 const AccountDisplay = () => {
     const blankState = useBlankState()!
@@ -142,6 +146,7 @@ const DAppConnection = () => {
 }
 
 const PopupPage = () => {
+    getHokeyByPath("/home")
     const error = (useHistory().location.state as { error: string })?.error
     const state = useBlankState()!
     const history = useHistory()
@@ -156,46 +161,51 @@ const PopupPage = () => {
         state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
 
     return (
-        <PageLayout screen className="max-h-screen popup-layout">
-            <ErrorDialog
-                title="Error!"
-                message={error}
-                open={hasErrorDialog}
-                onClickOutside={() => {
-                    setHasErrorDialog(false)
-                }}
-                onDone={() => setHasErrorDialog(false)}
-            />
-            <div
-                className="absolute top-0 left-0 z-10 flex flex-col items-start w-full p-6 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
-                style={{ backdropFilter: "blur(4px)" }}
-            >
-                <div className="flex flex-row items-center justify-between w-full">
-                    <div className="flex flex-row items-center space-x-3">
-                        <div className="relative flex flex-col items-start group">
-                            <Link
-                                to="/accounts"
-                                className="transition duration-300"
-                                draggable={false}
-                                data-testid="navigate-account-link"
-                            >
-                                <AccountIcon
-                                    className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
-                                    fill={getAccountColor(account?.address)}
+        <PopupLayout
+            header={
+                <PopupHeader title="" close={false} backButton={false}>
+                    <div className="flex flex-row items-center justify-between w-full">
+                        <div className="flex flex-row items-center space-x-3">
+                            <div className="relative flex flex-col items-start group">
+                                <Link
+                                    to="/accounts"
+                                    className="transition duration-300"
+                                    draggable={false}
+                                    data-testid="navigate-account-link"
+                                >
+                                    <AccountIcon
+                                        className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
+                                        fill={getAccountColor(account?.address)}
+                                    />
+                                </Link>
+                                <Tooltip
+                                    className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-bold bg-gray-900 text-white"
+                                    content={
+                                        <>
+                                            <div className="border-t-4 border-r-4 border-gray-900 absolute top-0 left-2 w-2 h-2 -mt-2.5 transform -rotate-45 -translate-x-1/2" />
+                                            <span>My Accounts</span>
+                                        </>
+                                    }
                                 />
-                            </Link>
-                            <Tooltip
-                                className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-bold bg-gray-900 text-white"
-                                content={
-                                    <>
-                                        <div className="border-t-4 border-r-4 border-gray-900 absolute top-0 left-2 w-2 h-2 -mt-2.5 transform -rotate-45 -translate-x-1/2" />
-                                        <span>My Accounts</span>
-                                    </>
-                                }
-                            />
+                            </div>
+                            <div className="flex flex-row items-center space-x-1">
+                                <AccountDisplay />
+                                <Link
+                                    to="/accounts/menu/receive"
+                                    draggable={false}
+                                    onClick={(e) => {
+                                        e.preventDefault()
+
+                                        history.push("/accounts/menu/receive")
+                                    }}
+                                    className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                                >
+                                    <QRIcon />
+                                </Link>
+                            </div>
                         </div>
-                        <div className="flex flex-row items-center space-x-1">
-                            <AccountDisplay />
+                        <div className="flex flex-row items-center -mr-1 space-x-2">
+                            <GasPricesInfo />
                             <Link
                                 to="/settings"
                                 draggable={false}
@@ -315,7 +325,7 @@ const PopupPage = () => {
                             </Link>
                             {isSwapEnabled && (
                                 <Link
-                                    to="/privacy"
+                                    to="/swap"
                                     draggable={false}
                                     className={classnames(
                                         "flex flex-col items-center space-y-2 group",
@@ -348,7 +358,7 @@ const PopupPage = () => {
                                         )}
                                     </div>
                                     <span className="text-xs font-medium">
-                                        Privacy
+                                        Swap
                                     </span>
                                 </Link>
                             )}

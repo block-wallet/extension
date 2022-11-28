@@ -374,16 +374,18 @@ const SwapPage = () => {
                     close="/"
                     networkIndicator
                     keepState
-                    onBack={() =>
-                        fromAssetPage
-                            ? history.push({
-                                  pathname: "/asset/details",
-                                  state: {
-                                      address: fromToken?.address,
-                                  },
-                              })
-                            : history.push("/home")
-                    }
+                    onBack={() => {
+                        history.push(
+                            fromAssetPage
+                                ? {
+                                      pathname: "/asset/details",
+                                      state: {
+                                          address: fromToken?.address,
+                                      },
+                                  }
+                                : { pathname: "/home" }
+                        )
+                    }}
                 />
             }
             footer={

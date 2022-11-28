@@ -1,84 +1,57 @@
-import {
-    BlankSupportedFeatures,
-    FEATURES,
-} from '../../../../utils/constants/features';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
+import NetworkController from '../../../../controllers/NetworkController';
 import { IMigration } from '../IMigration';
+import { INITIAL_NETWORKS } from '../../../../utils/constants/networks';
+import {
+    normalizeNetworksOrder,
+    addNetworkUsingValuesDefinedByTheUser,
+} from '../../../../utils/networks';
 
 /**
- * This migration increases the block fetch intervals for all the networks and erases the FEATURES.TORNADO form the networks.
+ * This migration adds RSK Mainnet and RSK Testnet
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
         const { availableNetworks } = persistedState.NetworkController;
-        const updatedNetworks = { ...availableNetworks };
+        let updatedNetworks = { ...availableNetworks };
+        const networkController = new NetworkController(
+            persistedState.NetworkController
+        );
 
-        for (const key in updatedNetworks) {
-            const network = updatedNetworks[key];
-            if (network.nativelySupported) {
-                const currentInterval =
-                    network.actionsTimeIntervals.blockNumberPull;
+        const rskNonNativeKey = networkController.getNonNativeNetworkKey(
+            INITIAL_NETWORKS.RSK.chainId
+        );
+        updatedNetworks = addNetworkUsingValuesDefinedByTheUser(
+            'RSK',
+            rskNonNativeKey,
+            INITIAL_NETWORKS.RSK,
+            updatedNetworks
+        );
 
-                // increase the current interval by 50%
-                const newInterval = Math.trunc(
-                    currentInterval + currentInterval / 2
-                );
+        const rskTestnetNonNativeKey = networkController.getNonNativeNetworkKey(
+            INITIAL_NETWORKS.RSK_TESTNET.chainId
+        );
+        updatedNetworks = addNetworkUsingValuesDefinedByTheUser(
+            'RSK_TESTNET',
+            rskTestnetNonNativeKey,
+            INITIAL_NETWORKS.RSK_TESTNET,
+            updatedNetworks
+        );
 
-                const features: BlankSupportedFeatures[] = [];
-                for (const feature in updatedNetworks[key].features) {
-                    if (feature !== FEATURES.TORNADO) {
-                        features.push(feature as BlankSupportedFeatures);
-                    }
-                }
+        updatedNetworks.LOCALHOST = {
+            ...updatedNetworks.LOCALHOST,
+            order: updatedNetworks.LOCALHOST.order + 1,
+        };
 
-                // update the value
-                updatedNetworks[key] = {
-                    ...updatedNetworks[key],
-                    actionsTimeIntervals: {
-                        ...updatedNetworks[key].actionsTimeIntervals,
-                        blockNumberPull: newInterval,
-                    },
-                    features: features,
-                };
-            }
-        }
-
-        const { gasPriceData } = persistedState.GasPricesController;
-        const updatedGasPriceData = { ...gasPriceData };
-
-        for (const c in updatedGasPriceData) {
-            const chainId = parseInt(c);
-
-            const gasPriceData = updatedGasPriceData[chainId];
-            gasPriceData.gasPricesLevels.slow = {
-                ...gasPriceData.gasPricesLevels.slow,
-                lastBaseFeePerGas: null,
-            };
-            gasPriceData.gasPricesLevels.average = {
-                ...gasPriceData.gasPricesLevels.average,
-                lastBaseFeePerGas: null,
-            };
-            gasPriceData.gasPricesLevels.fast = {
-                ...gasPriceData.gasPricesLevels.fast,
-                lastBaseFeePerGas: null,
-            };
-
-            updatedGasPriceData[c] = {
-                ...gasPriceData,
-            };
-        }
+        const orderedNetworks = normalizeNetworksOrder(updatedNetworks);
 
         return {
             ...persistedState,
             NetworkController: {
                 ...persistedState.NetworkController,
-                availableNetworks: { ...updatedNetworks },
-            },
-            GasPricesController: {
-                ...persistedState.GasPricesController,
-                gasPriceData: { ...updatedGasPriceData },
+                availableNetworks: { ...orderedNetworks },
             },
         };
     },
-    version: '1.0.0',
+    version: '0.8.4',
 } as IMigration;

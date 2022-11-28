@@ -1,4 +1,4 @@
-import { Networks } from './constants/networks';
+import { Network, Networks } from './constants/networks';
 
 /**
  * normalizeNetworksOrder
@@ -38,4 +38,34 @@ export const normalizeNetworksOrder = (networks: Networks): Networks => {
     });
 
     return orderedNetworks;
+};
+
+/**
+ * addNetworkUsingValuesDefinedByTheUser
+ *
+ * Adds a new network and in case it already existed some previous values defined by the user will be added
+ *
+ * @param networkName - The new network name to be added
+ * @param nonNativeNetworkKey - The key geenerated when the user added the network manually
+ * @param newNetwork - The new network
+ * @param networks - All the network the user has
+ *
+ * @returns The networks updated
+ */
+export const addNetworkUsingValuesDefinedByTheUser = (
+    networkName: string,
+    nonNativeNetworkKey: string,
+    newNetwork: Network,
+    networks: Networks
+): Networks => {
+    const oldNetwork = networks[nonNativeNetworkKey];
+    networks[networkName] = {
+        ...newNetwork,
+        desc: oldNetwork?.desc || newNetwork.desc,
+        order: oldNetwork?.order || newNetwork.order,
+        blockExplorerUrls:
+            oldNetwork?.blockExplorerUrls || newNetwork.blockExplorerUrls,
+    };
+    delete networks[nonNativeNetworkKey];
+    return networks;
 };

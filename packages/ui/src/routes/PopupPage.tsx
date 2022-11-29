@@ -38,6 +38,7 @@ import { useTokensList } from "../context/hooks/useTokensList"
 import TokenSummary from "../components/token/TokenSummary"
 import GasPricesInfo from "../components/gas/GasPricesInfo"
 import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
+import TransparentOverlay from "../components/loading/TransparentOverlay"
 
 const AccountDisplay = () => {
     const blankState = useBlankState()!
@@ -165,6 +166,7 @@ const PopupPage = () => {
                 }}
                 onDone={() => setHasErrorDialog(false)}
             />
+            {isLoading && <TransparentOverlay />}
             <div
                 className="absolute top-0 left-0 z-10 flex flex-col items-start w-full p-6 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
                 style={{ backdropFilter: "blur(4px)" }}

@@ -121,19 +121,9 @@ declare module 'eth-keyring-controller' {
          *
          * @emits KeyringController#unlock
          * @param {string} password - The keyring controller password.
-         * @returns {Promise<string>} A Promise that resolves to the encryption key.
+         * @returns {Promise<Object>} A Promise that resolves to the state.
          */
-        submitPassword(password: string): Promise<string>;
-
-        /**
-         * Submit Encrypted Key
-         *
-         * Attempts to decrypt the current vault with a given encryption key
-         * and loads its keyrings into memory
-         *
-         * @param {string} encryptionKey
-         */
-        submitEncryptionKey(encryptionKey: string);
+        submitPassword(password: string): Promise<KeyringControllerState>;
 
         /**
          * Verify Password
@@ -382,7 +372,7 @@ declare module 'eth-keyring-controller' {
          * @param {string} password - The keyring controller password.
          * @returns {Promise<Array<Keyring>>} The keyrings.
          */
-        unlockKeyrings(password, encryptionKey): Promise<Array<any>>;
+        unlockKeyrings(password: string): Promise<Array<any>>;
 
         /**
          * Restore Keyring

@@ -59,12 +59,13 @@ export default class KeyringControllerDerivated extends KeyringController {
     ): Promise<KeyringControllerState> {
         const releaseLock = await this._mutex.acquire();
         try {
+            let vault;
             const currentAccounts = await super.getAccounts();
-            if (currentAccounts.length < 1) {
-                await super.createNewVaultAndKeychain(password);
+            if (currentAccounts.length > 0) {
+                vault = super.fullUpdate();
+            } else {
+                vault = await super.createNewVaultAndKeychain(password);
             }
-
-            const vault = super.fullUpdate();
 
             // Verify keyring
             await this.verifyAccounts();
@@ -116,23 +117,13 @@ export default class KeyringControllerDerivated extends KeyringController {
      *
      * @emits KeyringController#unlock
      * @param {string} password - The keyring controller password.
-     * @returns {Promise<string>} A Promise that resolves to the encryption key.
+     * @returns {Promise<Object>} A Promise that resolves to the state.
      */
     @Hasheable
-    public async submitPassword(@Hash password: string): Promise<string> {
+    public async submitPassword(
+        @Hash password: string
+    ): Promise<KeyringControllerState> {
         return super.submitPassword(password);
-    }
-
-    /**
-     * Submit Encrypted Key
-     *
-     * Attempts to decrypt the current vault with a given encryption key
-     * and loads its keyrings into memory
-     *
-     * @param {string} encryptionKey
-     */
-    async submitEncryptionKey(encryptionKey: string) {
-        return super.submitEncryptionKey(encryptionKey);
     }
 
     /**
@@ -144,7 +135,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @param {string} password
      */
     @Hasheable
-    public async hashAndVerifyPassword(@Hash password: string): Promise<void> {
+    public async verifyPassword(@Hash password: string): Promise<void> {
         return super.verifyPassword(password);
     }
 
@@ -163,7 +154,8 @@ export default class KeyringControllerDerivated extends KeyringController {
         const primaryKeyring = super.getKeyringsByType(
             KeyringTypes.HD_KEY_TREE
         )[0];
-        const seedPhrase = await this.getMnemonicFromKeyring(primaryKeyring);
+        const serialized = await primaryKeyring.serialize();
+        const seedPhrase = serialized.mnemonic;
 
         return seedPhrase;
     }
@@ -249,7 +241,8 @@ export default class KeyringControllerDerivated extends KeyringController {
             throw new Error(`No ${KeyringTypes.HD_KEY_TREE} found`);
         }
 
-        const seedPhrase = await this.getMnemonicFromKeyring(primaryKeyring);
+        const serialized = await primaryKeyring.serialize();
+        const seedPhrase = serialized.mnemonic;
 
         // Get current accounts
         const createdAccounts = await primaryKeyring.getAccounts();
@@ -628,17 +621,4 @@ export default class KeyringControllerDerivated extends KeyringController {
             });
         }
     }
-
-    private async getMnemonicFromKeyring(keyring: any): Promise<string> {
-        const serialized = await keyring.serialize();
-        return bin2String(serialized.mnemonic);
-    }
-}
-
-function bin2String(array: number[]) {
-    let result = '';
-    for (let i = 0; i < array.length; i++) {
-        result += String.fromCharCode(array[i]);
-    }
-    return result;
 }

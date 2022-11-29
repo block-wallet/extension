@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "private": true,
     "dependencies": {
-        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.19",
+        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.20",
         "@block-wallet/eth-ledger-bridge-keyring": "https://github.com/block-wallet/eth-ledger-bridge-keyring",
         "@block-wallet/explorer-link": "https://github.com/block-wallet/explorer-link#v2.2.2",
         "@ethereumjs/tx": "^3.5.2",
@@ -16,7 +16,7 @@
         "compare-versions": "^3.6.0",
         "eslint-webpack-plugin": "^3.2.0",
         "eth-ens-namehash": "^2.0.8",
-        "eth-keyring-controller": "^8.0.1",
+        "eth-keyring-controller": "^6.2.0",
         "eth-trezor-keyring": "https://github.com/block-wallet/eth-trezor-keyring#v0.10.2",
         "ethereumjs-util": "^7.0.7",
         "ethereumjs-wallet": "^1.0.1",

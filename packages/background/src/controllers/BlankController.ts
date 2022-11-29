@@ -1119,7 +1119,7 @@ export default class BlankController extends EventEmitter {
         encryptPassword,
     }: RequestAccountExportJson): Promise<string> {
         try {
-            await this.keyringController.hashAndVerifyPassword(password);
+            await this.keyringController.verifyPassword(password);
             const privateKey = await this.keyringController.exportAccount(
                 address
             );
@@ -1143,7 +1143,7 @@ export default class BlankController extends EventEmitter {
         password,
     }: RequestAccountExportPK): Promise<string> {
         try {
-            await this.keyringController.hashAndVerifyPassword(password);
+            await this.keyringController.verifyPassword(password);
             return await this.keyringController.exportAccount(address);
         } catch (error) {
             log.warn(error);
@@ -1861,7 +1861,7 @@ export default class BlankController extends EventEmitter {
         password,
     }: RequestPasswordVerify): Promise<boolean> {
         try {
-            await this.keyringController.hashAndVerifyPassword(password);
+            await this.keyringController.verifyPassword(password);
             return true;
         } catch {
             return false;

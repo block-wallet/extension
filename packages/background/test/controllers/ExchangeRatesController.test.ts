@@ -7,7 +7,6 @@ import { ExchangeRatesController } from '@block-wallet/background/controllers/Ex
 import sinon from 'sinon';
 
 describe('Exchange Rates Controller', function () {
-    // let networkController: NetworkController;
     let exchangeRatesController: ExchangeRatesController;
     let exchangeRatesControllerARS: ExchangeRatesController;
 
@@ -24,7 +23,6 @@ describe('Exchange Rates Controller', function () {
     });
 
     it('ETH-USD - it should feed the exchangeRates object', async function () {
-        //Obtener exchangeRates, it should be empty
         expect(exchangeRatesController.store.getState().exchangeRates).to.be
             .empty;
 
@@ -63,19 +61,6 @@ describe('Exchange Rates Controller', function () {
         //Run UpdateExchangeRates it should retrieve the object with values
         expect(
             exchangeRatesControllerARS.store.getState().exchangeRates['ETH']
-        ).equal(50000);
-    });
-
-    it('ETH-USD - it should feed the exchangeRates object 2', async function () {
-        sinon
-            .stub(exchangeRatesController['_exchangeRateService'], 'getRate')
-            .returns(Promise.resolve(50000));
-
-        await exchangeRatesController.updateExchangeRates();
-
-        //Run UpdateExchangeRates it should retrieve the object with values
-        expect(
-            exchangeRatesController.store.getState().exchangeRates['ETH']
         ).equal(50000);
     });
 

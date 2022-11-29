@@ -1,6 +1,5 @@
 import AssetAmountDisplay from "../../components/assets/AssetAmountDisplay"
 import ErrorMessage from "../../components/error/ErrorMessage"
-import NetworkDisplayBadge from "../../components/chain/NetworkDisplayBadge"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
@@ -432,6 +431,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     title="Bridge"
                     close="/"
                     keepState
+                    networkIndicator
                     onBack={() =>
                         fromAssetPage
                             ? history.push({
@@ -442,14 +442,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                               })
                             : history.push("/home")
                     }
-                >
-                    <div className="flex grow justify-end pr-1">
-                        <NetworkDisplayBadge
-                            network={currentNetwork}
-                            truncate
-                        />
-                    </div>
-                </PopupHeader>
+                />
             }
             footer={
                 <PopupFooter>

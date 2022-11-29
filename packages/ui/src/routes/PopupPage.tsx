@@ -1,7 +1,5 @@
 import { Profiler, useState } from "react"
 import { Link, useHistory } from "react-router-dom"
-
-// Components
 import PageLayout from "../components/PageLayout"
 import GearIcon from "../components/icons/GearIcon"
 import QRIcon from "../components/icons/QRIcon"
@@ -11,21 +9,14 @@ import AccountIcon from "../components/icons/AccountIcon"
 import ActivityAssetsView from "../components/home/ActivityAssetsView"
 import GenericTooltip from "../components/label/GenericTooltip"
 import Tooltip from "../components/label/Tooltip"
-
-// Utils
 import { getAccountColor } from "../util/getAccountColor"
-
-// Context
 import { useBlankState } from "../context/background/backgroundHooks"
 import { useSelectedAccount } from "../context/hooks/useSelectedAccount"
-
-// Assets
 import GasPricesInfo from "../components/home/GasPricesInfo"
 import useMetricCollector from "../util/useMetricCollector"
 import HomeBalancePanel from "../components/home/HomeBalancePanel"
 import DAppConnection from "../components/home/DAppConnection"
 import AccountAvatar from "../components/home/AccountAvatar"
-import { ActivityListStateProvider } from "../context/background/useActivityListState"
 
 const PopupPage = () => {
     const collect = useMetricCollector()

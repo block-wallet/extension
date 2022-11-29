@@ -12,6 +12,10 @@ import BridgeDetails from "../bridge/BridgeDetails"
 import TransactionDetails from "./TransactionDetails"
 import { BRIDGE_PENDING_STATUS } from "../../util/bridgeUtils"
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import TransactionsLoadingSkeleton from "../skeleton/TransactionsLoadingSkeleton"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
+
 const DEFAULT_TX_HEIGHT_IN_PX = 76
 const getItemHeightInPx = (tx: TransactionMeta) => {
     if (tx.id) {
@@ -39,11 +43,19 @@ const TransactionsList: React.FC<{
     const [watchDetails, setWatchDetails] = useState<
         watchDetailsType | undefined
     >()
+    const state = useBlankState()!
+    const {
+        state: { isRatesChangingAfterNetworkChange },
+    } = useExchangeRatesState()
+
+    const isLoading =
+        state.isNetworkChanging || isRatesChangingAfterNetworkChange
 
     const [transactionCount, setTransactionCount] = useState(() =>
         getInitialCount(transactions)
     )
-    const [isLoading, setIsLoading] = useState(false)
+    const [isLoadingMoreTransactions, setIsLoadingMoreTransactions] =
+        useState(false)
     const loaderRef = useRef<HTMLImageElement>(null)
 
     useDOMElementObserver(
@@ -51,12 +63,12 @@ const TransactionsList: React.FC<{
         async () => {
             const countToLoad = transactions.length - transactionCount
             if (countToLoad === 0) return
-            setIsLoading(true)
+            setIsLoadingMoreTransactions(true)
             await new Promise((resolve) => setTimeout(resolve, 300))
             setTransactionCount(
                 transactionCount + (countToLoad > 10 ? 10 : countToLoad)
             )
-            setIsLoading(false)
+            setIsLoadingMoreTransactions(false)
         },
         [transactionCount, transactions]
     )
@@ -72,6 +84,10 @@ const TransactionsList: React.FC<{
                 : TransactionDetails
             : undefined
         : undefined
+
+    if (isLoading) {
+        return <TransactionsLoadingSkeleton />
+    }
 
     return (
         <div className="w-full h-full">

@@ -5,7 +5,6 @@ import GasPriceComponent from "../../components/transactions/GasPriceComponent"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
 import LoadingDialog from "../../components/dialog/LoadingDialog"
 import NetworkDisplay from "../../components/network/NetworkDisplay"
-import NetworkDisplayBadge from "../../components/chain/NetworkDisplayBadge"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
@@ -470,6 +469,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 <PopupHeader
                     title="Bridge"
                     close="/"
+                    networkIndicator
                     onBack={() => {
                         // Avoid returning to the approve page.
                         history.push({
@@ -478,11 +478,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                         })
                     }}
                     disabled={isBridging}
-                >
-                    <div className="flex grow justify-end pr-1">
-                        <NetworkDisplayBadge network={networkLabel} truncate />
-                    </div>
-                </PopupHeader>
+                />
             }
             footer={
                 <PopupFooter>

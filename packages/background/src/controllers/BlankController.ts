@@ -225,6 +225,7 @@ import { Network } from '../utils/constants/networks';
 
 import { generateOnDemandReleaseNotes } from '../utils/userPreferences';
 import { TransactionWatcherController } from './TransactionWatcherController';
+import { isNativeTokenAddress } from '../utils/token';
 import BridgeController, {
     GetBridgeAvailableRoutesResponse,
     GetBridgeQuoteNotFoundResponse,
@@ -2409,7 +2410,7 @@ export default class BlankController extends EventEmitter {
         value,
         feeData,
     }: RequestAddAsNewSendTransaction): Promise<TransactionMeta> {
-        if (this.tokenController.isNativeToken(address)) {
+        if (isNativeTokenAddress(address)) {
             const { transactionMeta, result } =
                 await this.transactionController.addTransaction({
                     transaction: {
@@ -2615,13 +2616,15 @@ export default class BlankController extends EventEmitter {
         to,
         value,
     }: RequestCalculateSendTransactionGasLimit): Promise<TransactionGasEstimation> {
-        const isNativeToken = this.tokenController.isNativeToken(address);
-        const isCustomNetwork = this.networkController.network.isCustomNetwork;
+        const isNativeToken = isNativeTokenAddress(address);
+        const { chainId } = this.networkController.network;
+        const hasFixedGasCost =
+            this.networkController.hasChainFixedGasCost(chainId);
         const isZeroValue = BigNumber.from(value).eq(BigNumber.from('0x00'));
 
         if (isNativeToken) {
             // Native Token and Not a custom network, returns SEND_GAS_COST const.
-            if (!isCustomNetwork) {
+            if (hasFixedGasCost) {
                 return {
                     gasLimit: BigNumber.from(SEND_GAS_COST),
                     estimationSucceeded: true,
@@ -2629,19 +2632,13 @@ export default class BlankController extends EventEmitter {
             }
 
             // Native token of a custom network, estimets gas with fallback price.
-
-            const { chainId } = this.networkController.network;
-            return this.transactionController.estimateGas(
-                {
-                    transactionParams: {
-                        to,
-                        from: this.preferencesController.getSelectedAddress(),
-                    },
-                    chainId,
-                } as TransactionMeta,
-                //On L2 networks (Arbitrum for now), added fallback gas limit value to 1,200,000 to use in case estimation fails.
-                BigNumber.from('0x0c3500')
-            );
+            return this.transactionController.estimateGas({
+                transactionParams: {
+                    to,
+                    from: this.preferencesController.getSelectedAddress(),
+                },
+                chainId,
+            } as TransactionMeta);
         }
 
         // Not native token, calculate transaction's gas limit.

@@ -305,7 +305,6 @@ export const initBackgroundState: BackgroundStateType = {
         unapprovedTransactions: {},
         previousWithdrawals: [],
         expiredStickyStorage: false,
-
         depositsCount: {
             eth: [
                 {

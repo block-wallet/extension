@@ -12,6 +12,17 @@ import classnames from "classnames"
 import AnimatedIcon, { AnimatedIconName } from "../AnimatedIcon"
 import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
 import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
+
+const LoadingBlueIcon = () => {
+    return (
+        <div className="flex flex-row items-center justify-center w-full h-full">
+            <AnimatedIcon
+                icon={AnimatedIconName.BlueCircleLoadingSkeleton}
+                className="w-4 h-4 pointer-events-none rotate-180"
+            />
+        </div>
+    )
+}
 const HomeBalancePanel = () => {
     const state = useBlankState()!
     const {
@@ -20,6 +31,9 @@ const HomeBalancePanel = () => {
     const { nativeToken } = useTokensList()
     const { nativeCurrency, isSendEnabled, isSwapEnabled, isBridgeEnabled } =
         useSelectedNetwork()
+
+    const isLoading =
+        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
     return (
         <TokenSummary>
             <TokenSummary.Balances>
@@ -72,7 +86,11 @@ const HomeBalancePanel = () => {
                         )}
                         style={{ transform: "scaleY(-1)" }}
                     >
-                        <ArrowHoverAnimation />
+                        {isLoading ? (
+                            <LoadingBlueIcon />
+                        ) : (
+                            <ArrowHoverAnimation />
+                        )}
                     </div>
                     <span className="text-xs font-medium">Send</span>
                 </Link>
@@ -95,7 +113,11 @@ const HomeBalancePanel = () => {
                             )}
                             style={{ transform: "scaleY(-1)" }}
                         >
-                            <DoubleArrowHoverAnimation />
+                            {isLoading ? (
+                                <LoadingBlueIcon />
+                            ) : (
+                                <DoubleArrowHoverAnimation />
+                            )}
                         </div>
                         <span className="text-xs font-medium">Swap</span>
                     </Link>
@@ -106,23 +128,27 @@ const HomeBalancePanel = () => {
                         draggable={false}
                         className={classnames(
                             "flex flex-col items-center space-y-2 group",
-                            (!isSendEnabled || !state.isUserNetworkOnline) &&
+                            (!isBridgeEnabled || !state.isUserNetworkOnline) &&
                                 "pointer-events-none"
                         )}
                     >
                         <div
                             className={classnames(
                                 "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                !isSendEnabled || !state.isUserNetworkOnline
+                                !isBridgeEnabled || !state.isUserNetworkOnline
                                     ? "bg-gray-300"
                                     : "bg-primary-300"
                             )}
                             style={{ transform: "scaleY(-1)" }}
                         >
-                            <AnimatedIcon
-                                icon={AnimatedIconName.Bridge}
-                                className="cursor-pointer"
-                            />
+                            {isLoading ? (
+                                <LoadingBlueIcon />
+                            ) : (
+                                <AnimatedIcon
+                                    icon={AnimatedIconName.Bridge}
+                                    className="cursor-pointer"
+                                />
+                            )}
                         </div>
                         <span className="text-xs font-medium">Bridge</span>
                     </Link>

@@ -6,7 +6,7 @@ import KeyringControllerDerivated, {
 import KeyringController from 'eth-keyring-controller';
 import mockEncryptor from 'test/mocks/mock-encryptor';
 
-describe.skip('KeyringControllerDerivated', () => {
+describe('KeyringControllerDerivated', () => {
     const MOCK_PASSWORD = 'passoword';
     let keyringControllerDerivated: KeyringControllerDerivated;
 
@@ -345,10 +345,8 @@ describe.skip('KeyringControllerDerivated', () => {
             const primaryKeyring = keyringControllerDerivated.getKeyringsByType(
                 vault.keyrings[0].type
             )[0];
-
-            const seedPhraseToCheck = await (
-                keyringControllerDerivated as any
-            ).getMnemonicFromKeyring(primaryKeyring);
+            const serialized = await primaryKeyring.serialize();
+            const seedPhraseToCheck = serialized.mnemonic;
             expect(seedPhraseToCheck).not.equal('');
 
             expect(seedPhraseToCheck).equal(seedPhrase);

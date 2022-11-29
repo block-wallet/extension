@@ -30,6 +30,21 @@ describe('Exchange Rates Controller', function () {
                 .empty;
 
             sinon
+                .stub(exchangeRatesControllerARS as any, '_getTokenRates')
+                .returns(
+                    Promise.resolve(
+                        Promise.resolve({
+                            '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': {
+                                usd: 1.001,
+                            },
+                            '0xdac17f958d2ee523a2206206994597c13d831ec7': {
+                                usd: 1.001,
+                            },
+                        })
+                    )
+                );
+
+            sinon
                 .stub(
                     exchangeRatesController['_exchangeRateService'],
                     'getRate'

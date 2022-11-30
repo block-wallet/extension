@@ -6,6 +6,7 @@ import {
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     Network,
 } from '../../utils/constants/networks';
+import { MINUTE } from './../../utils/constants/time';
 
 export interface BlockUpdatesControllerState {
     blockData: {
@@ -40,18 +41,32 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
             NetworkEvents.NETWORK_CHANGE,
             async ({ chainId }: Network) => {
                 this.initBlockNumber(chainId);
-
-                this._blockFetchController.addNewOnBlockListener(
-                    chainId,
-                    this._blockUpdates
-                );
+                this.addNewOnBlockListener();
             }
         );
 
-        this._blockFetchController.addNewOnBlockListener(
-            this._networkController.network.chainId,
-            this._blockUpdates
-        );
+        this.addNewOnBlockListener();
+    }
+
+    /**
+     * addNewOnBlockListener
+     *
+     * It adds a new block listener considering the state of the app.
+     *
+     */
+    private addNewOnBlockListener() {
+        if (!this.activeSubscriptions) {
+            this._blockFetchController.addNewOnBlockListener(
+                this._networkController.network.chainId,
+                this._blockUpdates,
+                1 * MINUTE
+            );
+        } else {
+            this._blockFetchController.addNewOnBlockListener(
+                this._networkController.network.chainId,
+                this._blockUpdates
+            );
+        }
     }
 
     /**
@@ -92,7 +107,11 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
         isUnlocked: boolean,
         subscriptions: number
     ): void {
-        this.activeSubscriptions = isUnlocked && subscriptions > 0;
+        const prevActiveSubscriptions = this.activeSubscriptions;
+        this.activeSubscriptions = isUnlocked || subscriptions > 0;
+        if (this.activeSubscriptions != prevActiveSubscriptions) {
+            this.addNewOnBlockListener();
+        }
     }
 
     /**

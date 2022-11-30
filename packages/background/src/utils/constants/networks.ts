@@ -130,7 +130,7 @@ export const TESTNET_TIME_INTERVALS_DEFAULT_VALUES = {
 export const SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES = {
     ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     ...{
-        blockNumberPull: 30 * SECOND,
+        blockNumberPull: 40 * SECOND,
         balanceFetch: 1 * MINUTE,
         gasPricesUpdate: 29 * SECOND,
         transactionsStatusesUpdate: 29 * SECOND,

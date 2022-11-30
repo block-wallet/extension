@@ -367,7 +367,6 @@ export const initBackgroundState: BackgroundStateType = {
                 },
             ],
         },
-        blockData: { 5: { blockNumber: -1 } },
         areDepositsPending: false,
         areWithdrawalsPending: false,
         pendingDeposits: {

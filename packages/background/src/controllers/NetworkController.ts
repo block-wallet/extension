@@ -6,9 +6,9 @@ import {
     Networks,
     HARDFORKS,
     AddNetworkType,
-    FAST_TIME_INTERVALS_DEFAULT_VALUES,
     EditNetworkUpdatesType,
     EditNetworkOrderType,
+    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
 } from '../utils/constants/networks';
 import { constants, ethers } from 'ethers';
 import { poll } from '@ethersproject/web';
@@ -409,7 +409,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 showGasLevels: true,
                 blockExplorerUrls: [explorerUrl],
                 blockExplorerName: blockExplorerName || 'Explorer',
-                actionsTimeIntervals: FAST_TIME_INTERVALS_DEFAULT_VALUES,
+                actionsTimeIntervals: ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
                 test: !!network.test,
                 order:
                     Object.values(this.networks)

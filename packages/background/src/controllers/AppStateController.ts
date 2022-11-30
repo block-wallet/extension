@@ -12,6 +12,11 @@ export interface AppStateControllerState {
     lastActiveTime: number;
 }
 
+export enum AppStateEvents {
+    APP_LOCKED = 'APP_LOCKED',
+    APP_UNLOCKED = 'APP_UNLOCKED',
+}
+
 export default class AppStateController extends BaseController<AppStateControllerState> {
     private _timer: ReturnType<typeof setTimeout> | null;
 
@@ -92,6 +97,9 @@ export default class AppStateController extends BaseController<AppStateControlle
 
             // Update controller state
             this.store.updateState({ isAppUnlocked: false, lockedByTimeout });
+
+            // event emit
+            this.emit(AppStateEvents.APP_LOCKED);
         } catch (error) {
             throw new Error(error.message || error);
         }
@@ -161,6 +169,9 @@ export default class AppStateController extends BaseController<AppStateControlle
         });
 
         this._resetTimer();
+
+        // event emit
+        this.emit(AppStateEvents.APP_UNLOCKED);
     };
 
     /**

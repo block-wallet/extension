@@ -77,7 +77,6 @@ export type BlankAppUIState = {
     PreferencesController: PreferencesControllerState;
     TransactionController: TransactionVolatileControllerState;
     BlankDepositController: PrivacyControllerUIStoreState;
-    BlockUpdatesController: BlockUpdatesControllerState;
     ExchangeRatesController: ExchangeRatesControllerState;
     GasPricesController: GasPricesControllerState;
     ActivityListController: IActivityListState;

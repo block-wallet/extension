@@ -85,7 +85,11 @@ export default class BlockFetchController extends BaseController<BlockFetchContr
                     interval,
                     chainId,
                     this._getState(chainId).currentBlockNumber,
-                    this._getBlockNumberCallback(chainId, blockListener)
+                    this._getBlockNumberCallback(
+                        chainId,
+                        blockListener,
+                        interval
+                    )
                 );
             } else {
                 this._offChainBlockFetchService.unsetFetch();
@@ -93,7 +97,11 @@ export default class BlockFetchController extends BaseController<BlockFetchContr
                     interval;
 
                 this._networkController.addOnBlockListener(
-                    this._getBlockNumberCallback(chainId, blockListener)
+                    this._getBlockNumberCallback(
+                        chainId,
+                        blockListener,
+                        interval
+                    )
                 );
             }
         } finally {
@@ -120,7 +128,8 @@ export default class BlockFetchController extends BaseController<BlockFetchContr
      */
     private _getBlockNumberCallback(
         chainId: number = this._networkController.network.chainId,
-        blockListener: (blockNumber: number) => void | Promise<void>
+        blockListener: (blockNumber: number) => void | Promise<void>,
+        interval: number
     ): (blockNumber: number, error?: Error) => void | Promise<void> {
         return (blockNumber: number, error?: Error) => {
             // Check if in the middle of the execution the chain has changed
@@ -150,7 +159,8 @@ export default class BlockFetchController extends BaseController<BlockFetchContr
                                 if (r) {
                                     this.addNewOnBlockListener(
                                         chainId,
-                                        blockListener
+                                        blockListener,
+                                        interval
                                     );
                                 }
                             })
@@ -173,7 +183,11 @@ export default class BlockFetchController extends BaseController<BlockFetchContr
                         lastBlockOffChainChecked: currentBlockNumber,
                     });
 
-                    this.addNewOnBlockListener(chainId, blockListener);
+                    this.addNewOnBlockListener(
+                        chainId,
+                        blockListener,
+                        interval
+                    );
                 }
             }
         };
@@ -329,6 +343,7 @@ export class OffChainBlockFetchService {
         if (currentBlockNumber) {
             blockListener(currentBlockNumber);
         }
+        fetchPerform();
     }
 
     /**

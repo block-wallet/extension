@@ -4,6 +4,7 @@ import {
 } from '../../../../utils/constants/features';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
+import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES } from './../../../../utils/constants/networks';
 
 /**
  * This migration increases the block fetch intervals for all the networks and erases the FEATURES.TORNADO form the networks.
@@ -32,14 +33,23 @@ export default {
                 }
 
                 // update the value
-                updatedNetworks[key] = {
-                    ...updatedNetworks[key],
-                    actionsTimeIntervals: {
-                        ...updatedNetworks[key].actionsTimeIntervals,
-                        blockNumberPull: newInterval,
-                    },
-                    features: features,
-                };
+                if (updatedNetworks[key].nativelySupported) {
+                    updatedNetworks[key] = {
+                        ...updatedNetworks[key],
+                        actionsTimeIntervals: {
+                            ...updatedNetworks[key].actionsTimeIntervals,
+                            blockNumberPull: newInterval,
+                        },
+                        features: features,
+                    };
+                } else {
+                    updatedNetworks[key] = {
+                        ...updatedNetworks[key],
+                        actionsTimeIntervals:
+                            ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+                        features: features,
+                    };
+                }
             }
         }
 

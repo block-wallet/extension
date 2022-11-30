@@ -116,7 +116,7 @@ import {
     BlankAppState,
     BlankAppUIState,
 } from '../utils/constants/initialState';
-import AppStateController from './AppStateController';
+import AppStateController, { AppStateEvents } from './AppStateController';
 import OnboardingController from './OnboardingController';
 import BlankProviderController, {
     BlankProviderEvents,
@@ -470,13 +470,15 @@ export default class BlankController extends EventEmitter {
             PermissionsController: this.permissionsController.store,
             AddressBookController: this.addressBookController.store,
             BlankProviderController: this.blankProviderController.store,
-            BlockUpdatesController: this.blockUpdatesController.store,
             SwapController: this.swapController.UIStore,
             BridgeController: this.bridgeController.UIStore,
         });
 
         // Check controllers on app lock/unlock
-        this.appStateController.UIStore.subscribe(() => {
+        this.appStateController.on(AppStateEvents.APP_LOCKED, () => {
+            this.manageControllers();
+        });
+        this.appStateController.on(AppStateEvents.APP_UNLOCKED, () => {
             this.manageControllers();
         });
 

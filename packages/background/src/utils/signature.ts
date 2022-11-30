@@ -198,7 +198,7 @@ export const normalizeMessageData = (data: string): string => {
  * @param strHex hex string
  * @returns parsed string from hex
  */
-export function hexToString(strHex: string) {
+export function hexToString(strHex: string): string {
     const hex = stripHexPrefix(strHex);
     let str = '';
     for (let i = 0; i < hex.length; i += 2) {

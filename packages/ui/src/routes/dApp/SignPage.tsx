@@ -51,6 +51,7 @@ import { HardwareWalletOpTypes } from "../../context/commTypes"
 import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
 import DAppOrigin from "../../components/dApp/DAppOrigin"
 import { getNetworkNameFromChainId } from "../../util/getExplorer"
+import CodeBlock from "../../components/ui/CodeBlock"
 
 const SignPage = () => {
     return (
@@ -239,9 +240,9 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                         {`Make sure you trust ${origin}. Signing this could grant complete control of your assets`}
                     </div>
                     <span className="font-bold py-2">Message</span>
-                    <span className="text-gray-600 allow-select-all">
+                    <CodeBlock className="max-h-56">
                         <>{rawData ?? data}</>
-                    </span>
+                    </CodeBlock>
                 </>
             )
         }
@@ -250,9 +251,9 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
             return (
                 <>
                     <span className="font-bold py-2">Message</span>
-                    <span className="text-gray-600 allow-select-all whitespace-pre-line">
+                    <CodeBlock className="max-h-56">
                         <>{rawData ?? data}</>
-                    </span>
+                    </CodeBlock>
                 </>
             )
         }

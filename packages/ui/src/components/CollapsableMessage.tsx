@@ -1,24 +1,27 @@
 import { useState } from "react"
 import ErrorDialog from "./dialog/ErrorDialog"
+import MessageDialog from "./dialog/MessageDialog"
 import WarningDialog from "./dialog/WarningDialog"
 
-interface CollapsableWarningProps {
+interface CollapsableMessageProps {
     isCollapsedByDefault: boolean
-    type?: "warn" | "error"
+    type?: "warn" | "error" | "info"
     onDismiss?: () => void
     dialog: {
         title: string
         message: JSX.Element | string
     }
     collapsedMessage: JSX.Element | string
+    showCollapsedMessage?: boolean
 }
-const CollapsableWarning = ({
+const CollapsableMessage = ({
     isCollapsedByDefault,
     onDismiss,
     dialog,
     type = "warn",
     collapsedMessage,
-}: CollapsableWarningProps) => {
+    showCollapsedMessage = false,
+}: CollapsableMessageProps) => {
     const [isCollapsed, setIsCollapsed] = useState(isCollapsedByDefault)
 
     const onClose = () => {
@@ -28,7 +31,17 @@ const CollapsableWarning = ({
         }
     }
 
-    const Dialog = type === "warn" ? WarningDialog : ErrorDialog
+    let Dialog
+    switch (type) {
+        case "warn":
+            Dialog = WarningDialog
+            break
+        case "error":
+            Dialog = ErrorDialog
+            break
+        case "info":
+            Dialog = MessageDialog
+    }
 
     return (
         <>
@@ -38,7 +51,7 @@ const CollapsableWarning = ({
             >
                 {collapsedMessage}
             </div>
-            {!isCollapsed && (
+            {(!isCollapsed || showCollapsedMessage) && (
                 <Dialog
                     open={true}
                     title={dialog.title}
@@ -46,10 +59,11 @@ const CollapsableWarning = ({
                     buttonLabel="OK"
                     onCancel={onClose}
                     onDone={onClose}
+                    onClickOutside={onClose}
                 />
             )}
         </>
     )
 }
 
-export default CollapsableWarning
+export default CollapsableMessage

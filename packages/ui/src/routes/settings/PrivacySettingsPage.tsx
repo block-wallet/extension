@@ -13,7 +13,7 @@ import Alert from "../../components/ui/Alert"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import Spinner from "../../components/spinner/ThinSpinner"
 import LoadingDots from "../../components/loading/LoadingDots"
-import CollapsableWarning from "../../components/CollapsableWarning"
+import CollapsableMessage from "../../components/CollapsableMessage"
 import { CgDanger } from "react-icons/cg"
 
 const PrivacySettingsPage = () => {
@@ -60,7 +60,7 @@ const PrivacySettingsPage = () => {
                 }}
             />
             {showError && (
-                <CollapsableWarning
+                <CollapsableMessage
                     type="error"
                     isCollapsedByDefault={true}
                     dialog={{

@@ -34,7 +34,7 @@ import {
 } from "../../context/commActions"
 import log from "loglevel"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
-import CollapsableWarning from "../../components/CollapsableWarning"
+import CollapsableMessage from "../../components/CollapsableMessage"
 import { isHardwareWallet, isInternalAccount } from "../../util/account"
 import { AccountType } from "../../context/commTypes"
 import { AiOutlineWarning } from "react-icons/ai"
@@ -244,7 +244,7 @@ const DepositPage = () => {
             }
         >
             {!isInternalAccount(account.accountType) && (
-                <CollapsableWarning
+                <CollapsableMessage
                     dialog={{
                         title: "Warning",
                         message: getWarningMessage(account.accountType),

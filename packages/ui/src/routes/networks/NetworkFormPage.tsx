@@ -31,7 +31,7 @@ import Icon, { IconName } from "../../components/ui/Icon"
 import ConfirmDialog from "../../components/dialog/ConfirmDialog"
 import { ChainListItem } from "@block-wallet/background/utils/chainlist"
 import { parseChainId } from "../../util/networkUtils"
-import CollapsableWarning from "../../components/CollapsableWarning"
+import CollapsableMessage from "../../components/CollapsableMessage"
 import { AiOutlineWarning } from "react-icons/ai"
 import usePersistedLocalStorageForm from "../../util/hooks/usePersistedLocalStorageForm"
 
@@ -369,7 +369,7 @@ const NetworkFormPage = ({
             }
         >
             {!isNativelySupported && (
-                <CollapsableWarning
+                <CollapsableMessage
                     dialog={{
                         title: "Warning",
                         message: (

@@ -25,6 +25,7 @@ import { SEND_GAS_COST } from "../../util/constants"
 import car from "../../assets/images/icons/car.svg"
 import scooter from "../../assets/images/icons/scooter.svg"
 import plane from "../../assets/images/icons/plane.svg"
+import { useHotkeys } from "react-hotkeys-hook"
 
 export type DisplayGasPricesData = {
     baseFee?: string
@@ -143,6 +144,10 @@ const GasPricesInfo: FC = () => {
         isNetworkChanging ||
         isRatesChangingAfterNetworkChange ||
         !displayGasPrices
+
+    useHotkeys("alt+g", () => {
+        if (showGasLevels) setActive(!active)
+    })
 
     return (
         <>

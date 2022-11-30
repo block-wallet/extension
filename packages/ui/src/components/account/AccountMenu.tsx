@@ -17,6 +17,7 @@ import classnames from "classnames"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { HARDWARE_TYPES } from "../../util/account"
 import { openHardwareRemove } from "../../context/commActions"
+import { useHotkeys } from "react-hotkeys-hook"
 
 const AccountMenu = () => {
     const { availableNetworks, selectedNetwork } = useBlankState()!
@@ -58,6 +59,17 @@ const AccountMenu = () => {
             ),
         },
     ]
+
+    useHotkeys("alt+v", () => {
+        chrome.tabs.create({
+            url: generateExplorerLink(
+                availableNetworks,
+                selectedNetwork,
+                account.address,
+                "address"
+            ),
+        })
+    })
 
     const disabledOptions: { [k: string]: boolean } = {}
     const tooltipOptions: { [k: string]: string } = {}

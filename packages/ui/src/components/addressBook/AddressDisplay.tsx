@@ -1,7 +1,7 @@
 import { FunctionComponent, useState } from "react"
 import { formatHash, formatName } from "../../util/formatAccount"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
-import CollapsableWarning from "../CollapsableWarning"
+import CollapsableMessage from "../CollapsableMessage"
 import CheckmarkCircle from "../icons/CheckmarkCircle"
 import ExclamationCircleIconFull from "../icons/ExclamationCircleIconFull"
 
@@ -62,7 +62,7 @@ export const AddressDisplay: FunctionComponent<{
                     )}
                 </div>
             ) : (
-                <CollapsableWarning
+                <CollapsableMessage
                     dialog={{
                         title: "Warning",
                         message: <span>{NATIVE_ADDRESS_MESSAGE}</span>,

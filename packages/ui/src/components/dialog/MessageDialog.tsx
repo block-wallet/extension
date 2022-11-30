@@ -1,5 +1,5 @@
 import { FunctionComponent } from "react"
-import { classnames } from "../../styles"
+import { Classes, classnames } from "../../styles"
 import Dialog from "./Dialog"
 import FullScreenDialog from "./FullScreenDialog"
 
@@ -12,6 +12,8 @@ export type messageDialogProps = {
     onClickOutside?: () => void
     fullScreen?: boolean
     wideMargins?: boolean
+    onDone?: () => void
+    buttonLabel?: string
 }
 
 const MessageDialog: FunctionComponent<messageDialogProps> = ({
@@ -23,6 +25,8 @@ const MessageDialog: FunctionComponent<messageDialogProps> = ({
     onClickOutside,
     wideMargins = true,
     fullScreen = false,
+    onDone,
+    buttonLabel,
 }) => {
     const DialogComponent = fullScreen ? FullScreenDialog : Dialog
     return (
@@ -44,6 +48,20 @@ const MessageDialog: FunctionComponent<messageDialogProps> = ({
                         {message}
                     </span>
                 </div>
+                {buttonLabel && (
+                    <div className="p-1 w-full flex">
+                        <button
+                            className={classnames(
+                                Classes.liteButton,
+                                "mt-4",
+                                fullScreen && "mx-4"
+                            )}
+                            onClick={onDone}
+                        >
+                            {buttonLabel}
+                        </button>
+                    </div>
+                )}
                 {footer}
             </>
         </DialogComponent>

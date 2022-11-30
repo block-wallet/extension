@@ -39,7 +39,6 @@ import GasPricesInfo from "../components/gas/GasPricesInfo"
 import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
 import PopupLayout from "../components/popup/PopupLayout"
 import PopupHeader from "../components/popup/PopupHeader"
-import { getHokeyByPath } from "../util/hotkeys"
 
 // change network (alt + 'c')
 // see gas (alt + 'g')
@@ -146,7 +145,6 @@ const DAppConnection = () => {
 }
 
 const PopupPage = () => {
-    getHokeyByPath("/home")
     const error = (useHistory().location.state as { error: string })?.error
     const state = useBlankState()!
     const history = useHistory()

@@ -1,7 +1,9 @@
 import { PopupTabs } from "@block-wallet/background/controllers/PreferencesController"
 import { FunctionComponent, useEffect, useState } from "react"
+import { useHotkeys } from "react-hotkeys-hook"
 import { useBlankState } from "../context/background/backgroundHooks"
 import { updatePopupTab } from "../context/commActions"
+import { useOnMountHistory } from "../context/hooks/useOnMount"
 import ActivityList from "./ActivityList"
 import AssetsList from "./AssetsList"
 import HorizontalSelect from "./input/HorizontalSelect"
@@ -20,24 +22,47 @@ const tabs = [
 const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
     initialTab,
 }) => {
+    const history = useOnMountHistory()
     const state = useBlankState()!
     const initialTabIndex = initialTab === "activity" ? 0 : 1
     const [tab, setTab] = useState(tabs[initialTabIndex])
+    const [currentTabLabel, setCurrentTabLabel] = useState(tab.label)
     const TabComponent = tab.component
 
-    const onTabChange = async (value: any) => {
+    const onTabChange = (value: {
+        label: string
+        component: () => JSX.Element
+    }) => {
+        console.log("New value: " + value)
         setTab(value)
-        updatePopupTab(value.label.toLowerCase() as PopupTabs)
+        // updatePopupTab(value.label.toLowerCase() as PopupTabs)
     }
 
     //UseHotkeys changes state.popupTab, we do it to change the tab in real time, otherwise it will change only next time we open the extension
     useEffect(() => {
         if (state.popupTab !== tab.label.toLocaleLowerCase()) {
-            onTabChange(
-                tabs.find((l) => l.label.toLocaleLowerCase() === state.popupTab)
+            const newTab = tabs.find(
+                (l) => l.label.toLocaleLowerCase() === state.popupTab
             )
+            if (newTab) onTabChange(newTab)
         }
     }, [state.popupTab])
+
+    //Adding useHotkey to add new token, only on Assets View
+    useHotkeys("alt+n", () => {
+        console.log("Entra")
+        console.log(tab.label)
+        console.log(state.popupTab)
+        console.log(currentTabLabel)
+        if (currentTabLabel === "Assets") {
+            history.push({
+                pathname: "/settings/tokens/add",
+                state: {
+                    from: history.location.pathname,
+                },
+            })
+        }
+    })
 
     return (
         <div className="flex flex-col w-full">

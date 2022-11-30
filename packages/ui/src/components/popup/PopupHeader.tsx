@@ -1,6 +1,13 @@
 import classnames from "classnames"
 import { FunctionComponent, useEffect, useState } from "react"
 
+import {
+    useOnMountHistory,
+    useOnMountLastLocation,
+} from "../../context/hooks/useOnMount"
+import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
+import NetworkDisplayBadge from "../chain/NetworkDisplayBadge"
+
 import AppIcon from "../icons/AppIcon"
 
 import CloseIcon from "../icons/CloseIcon"
@@ -8,10 +15,6 @@ import ArrowIcon from "../icons/ArrowIcon"
 import Dropdown from "../ui/Dropdown/Dropdown"
 import { DropdownMenuItem } from "../ui/Dropdown/DropdownMenu"
 import useHotKey, { UseHotKeyProps } from "../../util/hooks/useHotKey"
-import {
-    useOnMountHistory,
-    useOnMountLastLocation,
-} from "../../context/hooks/useOnMount"
 
 export interface PopupHeaderProps {
     title: string
@@ -24,8 +27,9 @@ export interface PopupHeaderProps {
     onClose?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void
     onBack?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void // in case we want to replace default back behavior
     actions?: React.ReactNode[]
-    className?: string
     children?: React.ReactNode | undefined
+    className?: string
+    goBackState?: object
 }
 
 const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
@@ -41,18 +45,13 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     onBack,
     actions,
     className,
+    goBackState,
 }) => {
-    const [mounted, setMounted] = useState(false)
-
     const history = useOnMountHistory()
     const lastLocation = useOnMountLastLocation()
+    const network = useSelectedNetwork()
     const [fromAction, setFromAction] = useState(false)
-
-    useEffect(() => {
-        setFromAction(history.location.state?.fromAction)
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    const [mounted, setMounted] = useState(false)
 
     const onBackAction = (e: any) => {
         if (onBack) return onBack(e)
@@ -66,16 +65,26 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
             return history.replace("/")
         }
 
-        if (keepState)
+        if (keepState || goBackState) {
+            let newState = {}
+            if (keepState) {
+                newState = lastLocation?.state
+                    ? (lastLocation?.state as any & {
+                          keepState: true
+                      })
+                    : {}
+            }
+            if (goBackState) {
+                newState = {
+                    ...newState,
+                    ...goBackState,
+                }
+            }
             return history.replace({
                 pathname: lastLocation?.pathname,
-                state:
-                    lastLocation?.state &&
-                    (lastLocation?.state as any & {
-                        keepState: true
-                    }),
+                state: newState,
             })
-
+        }
         fromAction ? history.go(-3) : history.goBack()
     }
 
@@ -92,7 +101,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     } as UseHotKeyProps)
 
     useEffect(() => {
-        console.log("Montado!")
+        setFromAction(history.location.state?.fromAction)
         setMounted(true)
 
         return () => setMounted(false)
@@ -150,12 +159,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                 )}
                 {close && (
                     <button
-                        onClick={(e) => {
-                            if (onClose) return onClose(e)
-                            history.push(
-                                typeof close === "string" ? close : "/home"
-                            )
-                        }}
+                        onClick={onCloseAction}
                         disabled={disabled}
                         className={classnames(
                             "p-2 -mr-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300",
@@ -169,19 +173,6 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
             </div>
 
             {children}
-            {close && (
-                <button
-                    onClick={onCloseAction}
-                    disabled={disabled}
-                    className={classnames(
-                        "p-2 ml-auto -mr-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300",
-                        disabled && "pointer-events-none text-gray-300"
-                    )}
-                    type="button"
-                >
-                    <CloseIcon />
-                </button>
-            )}
         </div>
     )
 }

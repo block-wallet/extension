@@ -1,7 +1,7 @@
 import { useHotkeys } from "react-hotkeys-hook"
 import { lockApp } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import { getActionByHotkeyAndPath, getHokeyByPath } from "../hotkeys"
+import { getActionByHotkeyAndPath, getHotkeyByPath } from "../hotkeys"
 /**
  * Hook to handle the hotkeys for each page
  */
@@ -20,8 +20,7 @@ const useHotKey = (
 ) => {
     const history = useOnMountHistory()
     const currentLocation = history.location.pathname
-    const hotKeys = getHokeyByPath(currentLocation)
-    console.log("hotkeys to listen[" + currentLocation + "]: " + hotKeys)
+    const hotKeys = getHotkeyByPath(currentLocation)
     useHotkeys(
         hotKeys + ",ctrl+alt+l,alt+backspace,alt+q",
         (e, handler) => {
@@ -59,7 +58,6 @@ const useHotKey = (
             )
 
             if (navigateTo) {
-                console.log("Pasamos por aca!")
                 if (typeof navigateTo === "string") {
                     history.push({
                         pathname: navigateTo,

@@ -488,7 +488,8 @@ export class TokenController extends BaseController<TokenControllerState> {
         token = await this._tokenOperationsController.populateTokenData(
             tokenAddress
         );
-        if (token) {
+        // Cache the token data if the token data is all fetched correctly.
+        if (token && token.name && token.symbol && token.decimals !== -1) {
             const userTokens = await this.getUserTokens(
                 accountAddress,
                 chainId

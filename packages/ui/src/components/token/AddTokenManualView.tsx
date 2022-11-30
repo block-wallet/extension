@@ -18,6 +18,8 @@ import { searchTokenInAssetsList } from "../../context/commActions"
 import { utils } from "ethers/lib/ethers"
 import { useForm } from "react-hook-form"
 import { useAccountTokens } from "../../context/hooks/useAccountTokens"
+import { MdRefresh } from "react-icons/md"
+import classNames from "classnames"
 
 export interface addTokenManualViewProps {
     manualTokenAddress?: string
@@ -35,13 +37,10 @@ const AddTokenManualView = ({
             .test("invalid-contract", "Token contract is not valid", (s) => {
                 return !(!s || s.length !== 42 || s.substring(0, 2) !== "0x")
             }),
-        tokenSymbol: yup
-            .string()
-            .required("Please enter a token symbol")
-            .matches(/^[a-zA-Z0-9_.$-]*$/, "Please enter a valid symbol."),
+        tokenSymbol: yup.string().required("Please enter a token symbol"),
         tokenDecimals: yup
             .string()
-            .required("Please enter token decimals")
+            .required("Could not fetch token decimals. Please refresh.")
             .test("not-valid-decimals", "Please enter valid decimals", (s) => {
                 return !(!s || isNaN(parseInt(s)) || s.length > 2)
             }),
@@ -83,6 +82,9 @@ const AddTokenManualView = ({
     ).current
     const [message, setMessage] = useState("")
     const [isLoading, setIsLoading] = useState(false)
+
+    const [refetchOption, setRefetchOption] = useState(false)
+    const [refetchAnimation, setRefetchAnimation] = useState(false)
 
     const onSubmit = handleSubmit(async (data: addManualTokenFormData) => {
         try {
@@ -141,24 +143,52 @@ const AddTokenManualView = ({
     }, [values.tokenSymbol, values.tokenAddress, setMessage])
 
     const onAddressChange = async (value: string) => {
+        fetchTokenData(value)
+    }
+
+    const fetchTokenData = async (tokenAddress: string) => {
         if (!setSubmitEnabled) return
 
         setSubmitEnabled(false)
-        if (utils.isAddress(value)) {
+        if (utils.isAddress(tokenAddress)) {
             setError("tokenAddress", { message: undefined })
             setIsLoading(true)
-            const tokenSearchResponse = await searchTokenInAssetsList(value)
+            const tokenSearchResponse = await searchTokenInAssetsList(
+                tokenAddress
+            )
+
             setIsLoading(false)
             if (
                 tokenSearchResponse &&
                 tokenSearchResponse.length > 0 &&
                 tokenSearchResponse[0].symbol !== ""
             ) {
+                if (
+                    tokenSearchResponse[0].decimals === -1 ||
+                    !tokenSearchResponse[0].name
+                ) {
+                    setRefetchOption(true)
+
+                    setTimeout(() => {
+                        setRefetchAnimation(true)
+                    }, 500)
+                } else {
+                    setRefetchOption(false)
+                }
+
                 setValue("tokenAddress", tokenSearchResponse[0].address)
-                setValue(
-                    "tokenDecimals",
-                    tokenSearchResponse[0].decimals.toString()
-                )
+
+                if (tokenSearchResponse[0].decimals !== -1) {
+                    setValue(
+                        "tokenDecimals",
+                        tokenSearchResponse[0].decimals.toString()
+                    )
+                } else {
+                    setError("tokenDecimals", {
+                        message:
+                            "Could not fetch token decimals. Please refresh.",
+                    })
+                }
                 setValue("tokenLogo", tokenSearchResponse[0].logo)
                 setValue("tokenName", tokenSearchResponse[0].name)
                 setValue("tokenSymbol", tokenSearchResponse[0].symbol)
@@ -170,12 +200,12 @@ const AddTokenManualView = ({
                 setError("tokenAddress", {
                     message: `Invalid token contract address for this network`,
                 })
-                setValue("tokenAddress", value)
+                setValue("tokenAddress", tokenAddress)
             }
         } else {
             reset()
             setError("tokenAddress", { message: "Invalid contract address" })
-            setValue("tokenAddress", value)
+            setValue("tokenAddress", tokenAddress)
         }
     }
 
@@ -185,6 +215,14 @@ const AddTokenManualView = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [manualTokenAddress])
 
+    useEffect(() => {
+        if (refetchAnimation) {
+            setTimeout(() => {
+                setRefetchAnimation(false)
+            }, 1500)
+        }
+    }, [refetchAnimation])
+
     return (
         <>
             {/* Add Manual token form */}
@@ -193,8 +231,24 @@ const AddTokenManualView = ({
                 className="flex flex-col justify-between h-4/5 mt-20"
                 onSubmit={onSubmit}
             >
-                <div className="text-base font-bold text-black w-full text-center px-6 pb-3">
-                    Custom Token
+                <div className="flex justify-center items-center space-x-2 pb-3">
+                    <div className="text-base font-bold text-black text-center">
+                        Custom Token
+                    </div>
+
+                    <MdRefresh
+                        size={18}
+                        className={classNames(
+                            "hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300",
+                            refetchAnimation &&
+                                "bg-primary-100 text-primary-300 animate-[bounce_1.5s]",
+                            (!refetchOption || isLoading) && "invisible"
+                        )}
+                        onClick={() => {
+                            fetchTokenData(values.tokenAddress)
+                        }}
+                        title="Refetch token data"
+                    />
                 </div>
                 <div className="h-full">
                     {isLoading ? (
@@ -257,12 +311,12 @@ const AddTokenManualView = ({
                                     placeholder={
                                         values.tokenDecimals
                                             ? values.tokenDecimals.toString()
-                                            : "18"
+                                            : ""
                                     }
                                     defaultValue={values.tokenDecimals || ""}
-                                    readOnly={values.tokenDecimals !== "0"}
                                     error={errors.tokenDecimals?.message}
                                     {...register("tokenDecimals")}
+                                    disabled={true}
                                 />
                             </div>
 

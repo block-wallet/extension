@@ -32,8 +32,7 @@ const TokenSummary: FC<{
 const Balances = ({ children }: { children: React.ReactNode }) => {
     const state = useBlankState()!
 
-    const isLoading =
-        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+    const isLoading = state.isNetworkChanging
 
     return (
         <>

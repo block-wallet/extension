@@ -52,7 +52,6 @@ const NetworkSelect: FunctionComponent<{
         availableNetworks,
         showTestNetworks,
         isNetworkChanging,
-        isRatesChangingAfterNetworkChange,
         isImportingDeposits,
         isUserNetworkOnline,
     } = useBlankState()!
@@ -76,9 +75,7 @@ const NetworkSelect: FunctionComponent<{
             role="menu"
             data-testid="network-selector"
         >
-            {(isNetworkChanging || isRatesChangingAfterNetworkChange) && (
-                <TransparentOverlay />
-            )}
+            {isNetworkChanging && <TransparentOverlay />}
             <div
                 onClick={() => {
                     if (!isImportingDeposits) {

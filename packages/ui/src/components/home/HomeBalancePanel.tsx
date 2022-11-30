@@ -26,14 +26,18 @@ const LoadingBlueIcon = () => {
 const HomeBalancePanel = () => {
     const state = useBlankState()!
     const {
-        state: { exchangeRates, networkNativeCurrency },
+        state: {
+            exchangeRates,
+            networkNativeCurrency,
+            isRatesChangingAfterNetworkChange,
+        },
     } = useExchangeRatesState()
     const { nativeToken } = useTokensList()
     const { nativeCurrency, isSendEnabled, isSwapEnabled, isBridgeEnabled } =
         useSelectedNetwork()
 
     const isLoading =
-        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+        state.isNetworkChanging || isRatesChangingAfterNetworkChange
     return (
         <TokenSummary>
             <TokenSummary.Balances>

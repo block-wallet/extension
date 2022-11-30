@@ -16,6 +16,7 @@ const defualtState = {
         // Default Coingecko id for ETH rates
         coingeckoPlatformId: "ethereum",
     },
+    isRatesChangingAfterNetworkChange: false,
 }
 
 const ExchangeRatesContext = createContext<ExchangeRatesContextType>({

@@ -15,6 +15,7 @@ import AssetsLoadingSkeleton from "./skeleton/AssetsLoadingSkeleton"
 import useCurrencyFromatter from "../util/hooks/useCurrencyFormatter"
 import { isNativeTokenAddress } from "../util/tokenUtils"
 import { useBlankState } from "../context/background/backgroundHooks"
+import { useExchangeRatesState } from "../context/background/useExchangeRatesState"
 export type AssetItem = {
     token: Token
     balance: BigNumber
@@ -103,9 +104,11 @@ const Asset: FunctionComponent<{
 
 const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
     const state = useBlankState()!
-
+    const {
+        state: { isRatesChangingAfterNetworkChange },
+    } = useExchangeRatesState()
     const isLoading =
-        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+        state.isNetworkChanging || isRatesChangingAfterNetworkChange
 
     const [deletedTokens, setDeletedTokens] = useState([] as string[])
     const pushDeleteTokens = (deleteToken: string) => {

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import AutoSizer from "react-virtualized-auto-sizer"
 import { VariableSizeList as List } from "react-window"
 import useDOMElementObserver from "../../util/hooks/useDOMElementObserver"
@@ -14,7 +14,6 @@ import { BRIDGE_PENDING_STATUS } from "../../util/bridgeUtils"
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import TransactionsLoadingSkeleton from "../skeleton/TransactionsLoadingSkeleton"
-import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 const DEFAULT_TX_HEIGHT_IN_PX = 76
 const getItemHeightInPx = (tx: TransactionMeta) => {
@@ -34,44 +33,13 @@ interface watchDetailsType {
     transaction: TransactionMeta
 }
 
-const getInitialCount = (transactions: RichedTransactionMeta[]) =>
-    transactions.length > 10 ? 10 : transactions.length
-
 const TransactionsList: React.FC<{
     transactions: RichedTransactionMeta[]
 }> = ({ transactions }) => {
     const [watchDetails, setWatchDetails] = useState<
         watchDetailsType | undefined
     >()
-    const state = useBlankState()!
-    const {
-        state: { isRatesChangingAfterNetworkChange },
-    } = useExchangeRatesState()
-
-    const isLoading =
-        state.isNetworkChanging || isRatesChangingAfterNetworkChange
-
-    const [transactionCount, setTransactionCount] = useState(() =>
-        getInitialCount(transactions)
-    )
-    const [isLoadingMoreTransactions, setIsLoadingMoreTransactions] =
-        useState(false)
-    const loaderRef = useRef<HTMLImageElement>(null)
-
-    useDOMElementObserver(
-        loaderRef,
-        async () => {
-            const countToLoad = transactions.length - transactionCount
-            if (countToLoad === 0) return
-            setIsLoadingMoreTransactions(true)
-            await new Promise((resolve) => setTimeout(resolve, 300))
-            setTransactionCount(
-                transactionCount + (countToLoad > 10 ? 10 : countToLoad)
-            )
-            setIsLoadingMoreTransactions(false)
-        },
-        [transactionCount, transactions]
-    )
+    const { isNetworkChanging } = useBlankState()!
 
     const OperationDetails = watchDetails
         ? watchDetails.transaction.transactionCategory
@@ -85,8 +53,12 @@ const TransactionsList: React.FC<{
             : undefined
         : undefined
 
-    if (isLoading) {
-        return <TransactionsLoadingSkeleton />
+    if (isNetworkChanging) {
+        return (
+            <div className="w-full h-full">
+                <TransactionsLoadingSkeleton />
+            </div>
+        )
     }
 
     return (
@@ -98,12 +70,14 @@ const TransactionsList: React.FC<{
                     onClose={() => setWatchDetails(undefined)}
                 />
             )}
-            <AutoSizer className="hide-scroll">
+            <AutoSizer className="hide-scroll snap-y">
                 {({ width, height }) => (
                     <List
                         height={height}
                         width={width}
-                        style={{ overflowX: "hidden" }}
+                        style={{
+                            overflowX: "hidden",
+                        }}
                         itemCount={transactions.length}
                         estimatedItemSize={DEFAULT_TX_HEIGHT_IN_PX}
                         overscanCount={5}

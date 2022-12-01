@@ -20,7 +20,7 @@ import { useCustomCompareEffect } from "use-custom-compare"
 import { useDepositTokens } from "../../context/hooks/useDepositTokens"
 import { useSwappedTokenList } from "../../context/hooks/useSwappedTokenList"
 import AssetDropdownDisplay from "./AssetDropdownDisplay"
-import AssetList from "./AssetList"
+import AssetsDropdownList from "./AssetsDropdownList"
 
 export enum AssetListType {
     ALL = "ALL",
@@ -293,7 +293,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
                     defaultValue={search ?? ""}
                 />
             </div>
-            <AssetList
+            <AssetsDropdownList
                 addTokenState={addTokenState}
                 assets={searchResult}
                 onAssetClick={onAssetClick}

@@ -9,7 +9,7 @@ const AssetsLoadingSkeleton = () => {
                 <div key={index}>
                     {index > 0 ? <hr /> : null}
 
-                    <div className="flex items-center justify-between py-5">
+                    <div className="flex items-center justify-between py-5 px-6">
                         <div className="flex items-center space-x-2">
                             <div className="flex justify-center items-center h-9 w-9 rounded-full border">
                                 <AnimatedIcon
@@ -27,14 +27,14 @@ const AssetsLoadingSkeleton = () => {
                                     icon={
                                         AnimatedIconName.GreyLineLoadingSkeleton
                                     }
-                                    className="mb-2 h-3 w-16 rotate-180"
+                                    className="mb-2 h-3 w-24 rotate-180"
                                     svgClassName="rounded-md"
                                 />
                                 <AnimatedIcon
                                     icon={
                                         AnimatedIconName.GreyLineLoadingSkeleton
                                     }
-                                    className="h-3 w-24"
+                                    className="h-3 w-16"
                                     svgClassName="rounded-md"
                                 />
                             </div>

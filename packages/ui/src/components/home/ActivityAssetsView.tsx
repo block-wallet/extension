@@ -2,8 +2,8 @@ import { FunctionComponent, useState } from "react"
 import { PopupTabs } from "@block-wallet/background/controllers/PreferencesController"
 import { updatePopupTab } from "../../context/commActions"
 import ActivityList from "./ActivityList"
-import AssetsList from "../AssetsList"
 import HorizontalSelect from "../input/HorizontalSelect"
+import AssetsOverview from "./AssetsOverview"
 
 const tabs = [
     {
@@ -12,7 +12,7 @@ const tabs = [
     },
     {
         label: "Assets",
-        component: AssetsList,
+        component: AssetsOverview,
     },
 ]
 
@@ -29,13 +29,14 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
     }
 
     return (
-        <div className="flex flex-col w-full h-full">
+        <>
             <HorizontalSelect
                 options={tabs}
                 value={tab}
                 onChange={onTabChange}
                 display={({ label }) => label}
                 disableStyles
+                containerClassName="sticky flex-row flex"
                 optionClassName={(value) =>
                     `flex-1 flex flex-row items-center justify-center p-3 text-sm hover:text-primary-300 ${
                         tab === value
@@ -44,10 +45,8 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
                     }`
                 }
             />
-            <div className="flex flex-col w-full h-full">
-                <TabComponent />
-            </div>
-        </div>
+            <TabComponent />
+        </>
     )
 }
 

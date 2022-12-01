@@ -4,7 +4,7 @@ import TokenDisplay from "../token/TokenDisplay"
 import plusIcon from "../../assets/images/icons/plus.svg"
 import { ActionButton } from "../button/ActionButton"
 
-const AssetList: FC<{
+const AssetsDropdownList: FC<{
     setActive?: () => void
     onAssetClick: (asset: TokenWithBalance, setActive?: () => void) => void
     selectedAddress?: string
@@ -70,4 +70,4 @@ const AssetList: FC<{
     )
 }
 
-export default AssetList
+export default AssetsDropdownList

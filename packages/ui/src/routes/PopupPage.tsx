@@ -118,9 +118,7 @@ const PopupPage = () => {
                             </GenericTooltip>
                             <DAppConnection />
                         </div>
-                        <div className="px-6">
-                            <HomeBalancePanel />
-                        </div>
+                        <HomeBalancePanel />
                         <ActivityAssetsView initialTab={state.popupTab} />
                     </div>
                 </div>

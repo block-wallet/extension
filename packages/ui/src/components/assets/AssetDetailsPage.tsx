@@ -5,14 +5,13 @@ import { deleteCustomToken } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
-import { classnames } from "../../styles"
+import { Classes, classnames } from "../../styles"
 import { formatRounded } from "../../util/formatRounded"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetAssetByTokenAddress from "../../util/hooks/useGetAssetByTokenAddress"
 import useTokenTransactions from "../../util/hooks/useTokenTransactions"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
-import { AssetIcon } from "../AssetsList"
 import RoundedIconButton from "../button/RoundedIconButton"
 import AnimatedIcon, { AnimatedIconName } from "../../components/AnimatedIcon"
 import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
@@ -21,7 +20,6 @@ import PopupHeader from "../popup/PopupHeader"
 import PopupLayout from "../popup/PopupLayout"
 import TokenSummary from "../token/TokenSummary"
 import TransactionsList from "../transactions/TransactionsList"
-
 import log from "loglevel"
 import ConfirmDialog from "../dialog/ConfirmDialog"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
@@ -29,6 +27,7 @@ import SuccessDialog from "../dialog/SuccessDialog"
 import { formatName } from "../../util/formatAccount"
 import Icon, { IconName } from "../ui/Icon"
 import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
+import TokenLogo from "../token/TokenLogo"
 
 const AssetDetailsPage = () => {
     const state = useBlankState()!
@@ -169,7 +168,11 @@ const AssetDetailsPage = () => {
                 <div className="px-3 w-full">
                     <TokenSummary minHeight="13rem">
                         <TokenSummary.Balances>
-                            <AssetIcon filled asset={token} />
+                            <TokenLogo
+                                name={token.symbol}
+                                logo={token.logo}
+                                className={Classes.roundedFilledIcon}
+                            />
                             <TokenSummary.TokenBalance
                                 className="flex flex-row space-x-1"
                                 title={`${formattedTokenBalance} ${token.symbol}`}

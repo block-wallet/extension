@@ -7,7 +7,7 @@ import { getValueByKey } from "../objectUtils"
 const useCurrencyFromatter = () => {
     const state = useBlankState()!
     const {
-        state: { exchangeRates, networkNativeCurrency },
+        state: { exchangeRates },
     } = useExchangeRatesState()
     const format = (
         balance: BigNumber,

@@ -1,16 +1,18 @@
 import { FC } from "react"
 import classnames from "classnames"
-import { useBlankState } from "../../context/background/backgroundHooks"
-import BalanceLoadingSkeleton from "../skeleton/BalanceLoadingSkeleton"
+import AnimatedIcon, { AnimatedIconName } from "../AnimatedIcon"
+
+interface TokenSummaryMembersProps {
+    title?: string
+    className?: string
+    children: React.ReactNode
+    isLoading?: boolean
+}
 
 interface TokenSummaryMembers {
     Balances: FC<{ children: React.ReactNode }>
-    TokenBalance: FC<{
-        title?: string
-        children: React.ReactNode
-        className?: string
-    }>
-    ExchangeRateBalance: FC<{ title?: string; children: React.ReactNode }>
+    TokenBalance: FC<TokenSummaryMembersProps>
+    ExchangeRateBalance: FC<TokenSummaryMembersProps>
     Actions: FC<{ children: React.ReactNode }>
 }
 
@@ -30,28 +32,26 @@ const TokenSummary: FC<{
 }
 
 const Balances = ({ children }: { children: React.ReactNode }) => {
-    const state = useBlankState()!
-
-    const isLoading = state.isNetworkChanging
-
     return (
-        <>
-            {isLoading ? (
-                <BalanceLoadingSkeleton />
-            ) : (
-                <div className="flex flex-col items-center space-y-1">
-                    {children}
-                </div>
-            )}
-        </>
+        <div className="flex flex-col items-center space-y-1">{children}</div>
     )
 }
 
-const TokenBalance: FC<{
-    title?: string
-    className?: string
-    children: React.ReactNode
-}> = ({ children, title, className }) => {
+const TokenBalance: FC<TokenSummaryMembersProps> = ({
+    children,
+    title,
+    className,
+    isLoading,
+}) => {
+    if (isLoading) {
+        return (
+            <AnimatedIcon
+                icon={AnimatedIconName.BlueLineLoadingSkeleton}
+                className="w-32 h-4 pointer-events-none"
+                svgClassName="rounded-md"
+            />
+        )
+    }
     return (
         <span
             className={classnames("text-2xl font-bold", className)}
@@ -62,10 +62,20 @@ const TokenBalance: FC<{
     )
 }
 
-const ExchangeRateBalance: FC<{
-    title?: string
-    children: React.ReactNode
-}> = ({ children, title }) => {
+const ExchangeRateBalance: FC<TokenSummaryMembersProps> = ({
+    children,
+    title,
+    isLoading,
+}) => {
+    if (isLoading) {
+        return (
+            <AnimatedIcon
+                icon={AnimatedIconName.BlueLineLoadingSkeleton}
+                className="w-16 h-4 pointer-events-none rotate-180"
+                svgClassName="rounded-md"
+            />
+        )
+    }
     return (
         <span className="text-sm text-gray-600" title={title}>
             {children}

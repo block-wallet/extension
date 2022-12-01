@@ -1,9 +1,7 @@
-import { BigNumber } from "ethers"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useTokensList } from "../../context/hooks/useTokensList"
-import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { formatRounded } from "../../util/formatRounded"
 import TokenSummary from "../token/TokenSummary"
 import { formatUnits } from "ethers/lib/utils"
@@ -12,6 +10,7 @@ import classnames from "classnames"
 import AnimatedIcon, { AnimatedIconName } from "../AnimatedIcon"
 import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
 import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
+import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 
 const LoadingBlueIcon = () => {
     return (
@@ -24,141 +23,139 @@ const LoadingBlueIcon = () => {
     )
 }
 const HomeBalancePanel = () => {
-    const state = useBlankState()!
+    const { isNetworkChanging, isUserNetworkOnline } = useBlankState()!
+    const formatter = useCurrencyFromatter()
     const {
-        state: {
-            exchangeRates,
-            networkNativeCurrency,
-            isRatesChangingAfterNetworkChange,
-        },
+        state: { networkNativeCurrency, isRatesChangingAfterNetworkChange },
     } = useExchangeRatesState()
     const { nativeToken } = useTokensList()
     const { nativeCurrency, isSendEnabled, isSwapEnabled, isBridgeEnabled } =
         useSelectedNetwork()
 
-    const isLoading =
-        state.isNetworkChanging || isRatesChangingAfterNetworkChange
     return (
-        <TokenSummary>
-            <TokenSummary.Balances>
-                <TokenSummary.TokenBalance
-                    title={
-                        formatUnits(
-                            nativeToken.balance || "0",
-                            nativeCurrency.decimals
-                        ) + ` ${nativeCurrency.symbol}`
-                    }
-                >
-                    {formatRounded(
-                        formatUnits(
-                            nativeToken.balance || "0",
-                            nativeCurrency.decimals
-                        ),
-                        5
-                    )}{" "}
-                    {nativeCurrency.symbol}
-                </TokenSummary.TokenBalance>
-                <TokenSummary.ExchangeRateBalance>
-                    {formatCurrency(
-                        toCurrencyAmount(
-                            nativeToken.balance || BigNumber.from(0),
-                            exchangeRates[networkNativeCurrency.symbol],
-                            nativeCurrency.decimals
-                        ),
-                        {
-                            currency: state.nativeCurrency,
-                            locale_info: state.localeInfo,
-                            returnNonBreakingSpace: true,
-                            showSymbol: true,
+        <div className="px-6">
+            <TokenSummary>
+                <TokenSummary.Balances>
+                    <TokenSummary.TokenBalance
+                        isLoading={isNetworkChanging}
+                        title={
+                            formatUnits(
+                                nativeToken.balance || "0",
+                                nativeCurrency.decimals
+                            ) + ` ${nativeCurrency.symbol}`
                         }
-                    )}
-                </TokenSummary.ExchangeRateBalance>
-            </TokenSummary.Balances>
-            <TokenSummary.Actions>
-                <Link
-                    to="/send"
-                    draggable={false}
-                    className={classnames(
-                        "flex flex-col items-center space-y-2 group",
-                        !isSendEnabled && "pointer-events-none"
-                    )}
-                >
-                    <div
-                        className={classnames(
-                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                            !isSendEnabled ? "bg-gray-300" : "bg-primary-300"
-                        )}
-                        style={{ transform: "scaleY(-1)" }}
                     >
-                        {isLoading ? (
-                            <LoadingBlueIcon />
-                        ) : (
-                            <ArrowHoverAnimation />
+                        {formatRounded(
+                            formatUnits(
+                                nativeToken.balance || "0",
+                                nativeCurrency.decimals
+                            ),
+                            5
+                        )}{" "}
+                        {nativeCurrency.symbol}
+                    </TokenSummary.TokenBalance>
+                    <TokenSummary.ExchangeRateBalance
+                        isLoading={
+                            isNetworkChanging ||
+                            isRatesChangingAfterNetworkChange
+                        }
+                    >
+                        {formatter.format(
+                            nativeToken.balance,
+                            networkNativeCurrency.symbol,
+                            nativeCurrency.decimals,
+                            true
                         )}
-                    </div>
-                    <span className="text-xs font-medium">Send</span>
-                </Link>
-                {isSwapEnabled && (
+                    </TokenSummary.ExchangeRateBalance>
+                </TokenSummary.Balances>
+                <TokenSummary.Actions>
                     <Link
-                        to="/swap"
+                        to="/send"
                         draggable={false}
                         className={classnames(
                             "flex flex-col items-center space-y-2 group",
-                            (!isSendEnabled || !state.isUserNetworkOnline) &&
-                                "pointer-events-none"
+                            !isSendEnabled && "pointer-events-none"
                         )}
                     >
                         <div
                             className={classnames(
                                 "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                !isSendEnabled || !state.isUserNetworkOnline
+                                !isSendEnabled
                                     ? "bg-gray-300"
                                     : "bg-primary-300"
                             )}
                             style={{ transform: "scaleY(-1)" }}
                         >
-                            {isLoading ? (
+                            {isNetworkChanging ? (
                                 <LoadingBlueIcon />
                             ) : (
-                                <DoubleArrowHoverAnimation />
+                                <ArrowHoverAnimation />
                             )}
                         </div>
-                        <span className="text-xs font-medium">Swap</span>
+                        <span className="text-xs font-medium">Send</span>
                     </Link>
-                )}
-                {isBridgeEnabled && (
-                    <Link
-                        to="/bridge"
-                        draggable={false}
-                        className={classnames(
-                            "flex flex-col items-center space-y-2 group",
-                            (!isBridgeEnabled || !state.isUserNetworkOnline) &&
-                                "pointer-events-none"
-                        )}
-                    >
-                        <div
+                    {isSwapEnabled && (
+                        <Link
+                            to="/swap"
+                            draggable={false}
                             className={classnames(
-                                "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                !isBridgeEnabled || !state.isUserNetworkOnline
-                                    ? "bg-gray-300"
-                                    : "bg-primary-300"
+                                "flex flex-col items-center space-y-2 group",
+                                (!isSendEnabled || !isUserNetworkOnline) &&
+                                    "pointer-events-none"
                             )}
-                            style={{ transform: "scaleY(-1)" }}
                         >
-                            {isLoading ? (
-                                <LoadingBlueIcon />
-                            ) : (
-                                <AnimatedIcon
-                                    icon={AnimatedIconName.Bridge}
-                                    className="cursor-pointer"
-                                />
+                            <div
+                                className={classnames(
+                                    "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                    !isSendEnabled || !isUserNetworkOnline
+                                        ? "bg-gray-300"
+                                        : "bg-primary-300"
+                                )}
+                                style={{ transform: "scaleY(-1)" }}
+                            >
+                                {isNetworkChanging ? (
+                                    <LoadingBlueIcon />
+                                ) : (
+                                    <DoubleArrowHoverAnimation />
+                                )}
+                            </div>
+                            <span className="text-xs font-medium">Swap</span>
+                        </Link>
+                    )}
+                    {isBridgeEnabled && (
+                        <Link
+                            to="/bridge"
+                            draggable={false}
+                            className={classnames(
+                                "flex flex-col items-center space-y-2 group",
+                                (!isBridgeEnabled || !isUserNetworkOnline) &&
+                                    "pointer-events-none"
                             )}
-                        </div>
-                        <span className="text-xs font-medium">Bridge</span>
-                    </Link>
-                )}
-            </TokenSummary.Actions>
-        </TokenSummary>
+                        >
+                            <div
+                                className={classnames(
+                                    "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                    !isBridgeEnabled || !isUserNetworkOnline
+                                        ? "bg-gray-300"
+                                        : "bg-primary-300"
+                                )}
+                                style={{ transform: "scaleY(-1)" }}
+                            >
+                                {isNetworkChanging ? (
+                                    <LoadingBlueIcon />
+                                ) : (
+                                    <AnimatedIcon
+                                        icon={AnimatedIconName.Bridge}
+                                        className="cursor-pointer"
+                                    />
+                                )}
+                            </div>
+                            <span className="text-xs font-medium">Bridge</span>
+                        </Link>
+                    )}
+                </TokenSummary.Actions>
+            </TokenSummary>
+        </div>
     )
 }
 

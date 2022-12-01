@@ -1,4 +1,4 @@
-import { CSSProperties, useRef, useState } from "react"
+import { CSSProperties, useRef } from "react"
 import { FaExchangeAlt } from "react-icons/fa"
 import { FiUpload } from "react-icons/fi"
 import { RiCopperCoinFill } from "react-icons/ri"
@@ -13,7 +13,6 @@ import { Classes, classnames } from "../../styles"
 
 // Components
 import ComplianceMenu from "../privacy/ComplianceMenu"
-import { AssetIcon } from "./../AssetsList"
 import Tooltip from "../../components/label/Tooltip"
 
 // Asset
@@ -46,11 +45,13 @@ import Dots from "../loading/LoadingDots"
 import useContextMenu from "../../util/hooks/useContextMenu"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetBridgeTransactionsData from "../../util/hooks/useGetBridgeTransactionsData"
-import BridgeDetails from "../bridge/BridgeDetails"
 import {
     BRIDGE_PENDING_STATUS,
     getBridgePendingMessage,
 } from "../../util/bridgeUtils"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
+import AnimatedIcon, { AnimatedIconName } from "../AnimatedIcon"
+import TokenLogo from "../token/TokenLogo"
 
 const transactionMessages = {
     [TransactionCategories.BLANK_DEPOSIT]: "Privacy Pool Deposit",
@@ -140,7 +141,7 @@ const getTransactionItemStyles = (
     return { formattedLabel, typeCss, amountCss }
 }
 
-const transactionIcons = {
+const transactionIcons: Record<TransactionCategories, any> = {
     [TransactionCategories.BLANK_DEPOSIT]: <img src={blankLogo} alt="blank" />,
     [TransactionCategories.BLANK_WITHDRAWAL]: (
         <img src={blankLogo} alt="BlockWallet" />
@@ -200,11 +201,10 @@ const TransactionIcon: React.FC<{
     <div className="align-start">
         {transactionStatus !== TransactionStatus.SUBMITTED ? (
             transactionIcon ? (
-                <AssetIcon
-                    asset={{
-                        logo: transactionIcon,
-                        symbol: "",
-                    }}
+                <TokenLogo
+                    name=""
+                    logo={transactionIcon}
+                    className={Classes.roundedIcon}
                 />
             ) : category ? (
                 <div className={Classes.roundedIcon}>
@@ -433,11 +433,12 @@ const TransactionItem: React.FC<{
 
     const history: any = useOnMountHistory()
     const formatter = useCurrencyFromatter()
+    const {
+        state: { isRatesChangingAfterNetworkChange },
+    } = useExchangeRatesState()
 
     const { nativeCurrency: networkNativeCurrency, defaultNetworkLogo } =
         useSelectedNetwork()
-
-    const [hasDetails, setHasDetails] = useState(false)
 
     const txHash = hash
     const transfer = transferType ?? {
@@ -525,7 +526,6 @@ const TransactionItem: React.FC<{
                 }}
                 ref={contextMenuRef}
             >
-                {/* Type */}
                 <div className="flex flex-row items-center w-full justify-between">
                     <TransactionIcon
                         transaction={{
@@ -664,12 +664,22 @@ const TransactionItem: React.FC<{
                                 </span>
                             </div>
                             <div className="w-full flex justify-end">
-                                <span
-                                    className="text-xs text-gray-600 truncate"
-                                    title={transferCurrencyAmount}
-                                >
-                                    {transferCurrencyAmount}
-                                </span>
+                                {isRatesChangingAfterNetworkChange ? (
+                                    <AnimatedIcon
+                                        icon={
+                                            AnimatedIconName.BlueLineLoadingSkeleton
+                                        }
+                                        className="w-8 h-4 pointer-events-none rotate-180"
+                                        svgClassName="rounded-md"
+                                    />
+                                ) : (
+                                    <span
+                                        className="text-xs text-gray-600 truncate"
+                                        title={transferCurrencyAmount}
+                                    >
+                                        {transferCurrencyAmount}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     )}

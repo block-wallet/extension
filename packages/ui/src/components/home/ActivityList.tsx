@@ -13,7 +13,7 @@ const ActivityList = () => {
     return (
         <Profiler id="transactions" onRender={collect}>
             <div
-                className="flex flex-col flex-1 w-full space-y-0"
+                className="flex flex-col flex-1 w-full space-y-0 h-full max-h-[470px] min-h-[266px]"
                 data-testid="activity-list"
             >
                 <TransactionsList

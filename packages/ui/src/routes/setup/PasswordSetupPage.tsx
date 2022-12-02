@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Classes } from "../../styles/classes"
 
@@ -46,7 +46,7 @@ const PasswordSetupPage = () => {
     const history = useOnMountHistory()
     const [passwordScore, setPasswordScore] = useState<number>(0)
     const [isCreating, setIsCreating] = useState<boolean>(false)
-
+    const [isSubmitDisabled, setIsSubmitDisabled] = useState(true)
     // if the onboarding is ready the user shoulnd't set the password again.
     useCheckUserIsOnboarded()
 
@@ -54,7 +54,7 @@ const PasswordSetupPage = () => {
         register,
         handleSubmit,
         setError,
-
+        watch,
         formState: { errors },
     } = useForm<PasswordSetupFormData>({
         resolver: yupResolver(schema),
@@ -96,6 +96,21 @@ const PasswordSetupPage = () => {
             })
     })
 
+    const passwordValues = watch()
+    useEffect(() => {
+        if (
+            passwordValues.password &&
+            passwordValues.passwordConfirmation &&
+            passwordValues.password === passwordValues.passwordConfirmation &&
+            passwordValues.acceptTOU &&
+            !errors.password
+        ) {
+            setIsSubmitDisabled(false)
+        }
+        else {
+            setIsSubmitDisabled(true)
+        }
+    }, [passwordValues, errors.password])
     return (
         <PageLayout header maxWidth="max-w-md">
             <span className="my-6 text-lg font-bold font-title">
@@ -161,6 +176,7 @@ const PasswordSetupPage = () => {
                         isLoading={isCreating}
                         onClick={onSubmit}
                         buttonClass={Classes.button}
+                        disabled={isCreating || isSubmitDisabled}
                     ></ButtonWithLoading>
                 </div>
             </form>

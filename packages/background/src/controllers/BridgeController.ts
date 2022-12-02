@@ -1,5 +1,8 @@
 import log from 'loglevel';
-import NetworkController, { NetworkControllerState } from './NetworkController';
+import NetworkController, {
+    NetworkControllerState,
+    NetworkEvents,
+} from './NetworkController';
 import {
     ContractMethodSignature,
     ContractSignatureParser,
@@ -151,6 +154,10 @@ export default class BridgeController extends BaseController<
 
         this.getAvailableChains();
 
+        this._networkController.on(NetworkEvents.NETWORK_CHANGE, () => {
+            this.getAvailableChains();
+        });
+
         this._networkController.store.subscribe(
             (
                 state: NetworkControllerState,
@@ -250,34 +257,43 @@ export default class BridgeController extends BaseController<
     ): Promise<IChain[]> {
         const implementor = this._getAPIImplementation(aggregator);
         try {
-            const availableBridgeChains: IChain[] = (
-                await implementor.getSupportedChains()
-            ).map((chain) => {
-                const userNetwork = Object.values(
-                    this._networkController.networks
-                ).find((network) => network.chainId === chain.id);
+            const supportedChains = await retryHandling<IChain[]>(
+                () => implementor.getSupportedChains(),
+                400,
+                3
+            );
 
-                if (userNetwork) {
+            const availableBridgeChains: IChain[] = supportedChains.map(
+                (chain) => {
+                    const userNetwork = Object.values(
+                        this._networkController.networks
+                    ).find((network) => network.chainId === chain.id);
+
+                    if (userNetwork) {
+                        return {
+                            ...chain,
+                            name: userNetwork.desc
+                                ? userNetwork.desc
+                                : chain.name,
+                            logo: userNetwork.iconUrls?.length
+                                ? userNetwork.iconUrls[0]
+                                : chain.logo,
+                        };
+                    }
+
+                    const knownChain = getChainListItem(chain.id);
                     return {
                         ...chain,
-                        name: userNetwork.desc ? userNetwork.desc : chain.name,
-                        logo: userNetwork.iconUrls?.length
-                            ? userNetwork.iconUrls[0]
-                            : chain.logo,
+                        name: knownChain?.name ? knownChain.name : chain.name,
+                        logo: knownChain?.logo ? knownChain.logo : chain.logo,
                     };
                 }
-
-                const knownChain = getChainListItem(chain.id);
-                return {
-                    ...chain,
-                    name: knownChain?.name ? knownChain.name : chain.name,
-                    logo: knownChain?.logo ? knownChain.logo : chain.logo,
-                };
-            });
+            );
             this.UIStore.updateState({ availableBridgeChains });
             return availableBridgeChains;
         } catch (e) {
-            throw new Error('Unable to fetch chains.');
+            log.error('Error fetching bridge chains', e);
+            return [];
         }
     }
 

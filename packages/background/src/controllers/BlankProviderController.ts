@@ -1083,6 +1083,8 @@ export default class BlankProviderController extends BaseController<BlankProvide
                     error: parsedError,
                 });
                 callback.reject(parsedError);
+            } else {
+                throw e;
             }
         } finally {
             __clearTimeouts();

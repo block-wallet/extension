@@ -106,8 +106,7 @@ const PasswordSetupPage = () => {
             !errors.password
         ) {
             setIsSubmitDisabled(false)
-        }
-        else {
+        } else {
             setIsSubmitDisabled(true)
         }
     }, [passwordValues, errors.password])

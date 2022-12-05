@@ -26,7 +26,7 @@ import {
 } from '@block-wallet/background/utils/types/communication';
 import SafeEventEmitter from '@metamask/safe-event-emitter';
 import { ethErrors } from 'eth-rpc-errors';
-import { getIconData, isCompatible } from '../utils/site';
+import { getIconData, isBlockWalletCompatible } from '../utils/site';
 import { JSONRPCMethod } from '@block-wallet/background/utils/types/ethereum';
 import { validateError } from '../utils/errors';
 import log from 'loglevel';
@@ -46,8 +46,8 @@ export default class BlankProvider
     extends SafeEventEmitter
     implements EthereumProvider
 {
-    public readonly isBlockWallet: boolean;
-    public readonly isMetaMask: boolean;
+    public isBlockWallet = true;
+    public isMetaMask = false;
     public chainId: string | null;
     public selectedAddress: string | null;
     public networkVersion: string | null;
@@ -73,13 +73,11 @@ export default class BlankProvider
         this.selectedAddress = null;
         this.networkVersion = null;
 
-        this.isBlockWallet = isCompatible();
+        this._checkSiteCompatibility();
 
         this._handlers = {};
         this._requestId = 0;
 
-        // Metamask compatibility
-        this.isMetaMask = !this.isBlockWallet;
         this.autoRefreshOnNetworkChange = false;
         this._metamask = {
             isEnabled: () => true,
@@ -102,6 +100,16 @@ export default class BlankProvider
 
         // Set site icon
         this._setIcon();
+    }
+
+    /**
+     * This method checks whether the current page is compatible with BlockWallet.
+     * If the site is not compatible, the isBlockWallet flag will be set to false when injecting the provider and isMetamask will be true.
+     */
+    private async _checkSiteCompatibility() {
+        this.isBlockWallet = await isBlockWalletCompatible();
+        this.isMetaMask = !this.isBlockWallet;
+        return;
     }
 
     /**

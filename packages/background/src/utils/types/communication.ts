@@ -1218,6 +1218,11 @@ export interface Handler {
     subscriber?: (data: any) => void;
 }
 
+export interface UnlockHandler extends Handler {
+    //port that is handling the unlock
+    portId: string;
+}
+
 export type Handlers = Record<string, Handler>;
 
 export enum BackgroundActions {

@@ -228,6 +228,7 @@ import BridgeController, {
 import { IChain } from '../utils/types/chain';
 import { BridgeImplementation } from '../utils/bridgeApi';
 import TokenAllowanceController from './erc-20/transactions/TokenAllowanceController';
+import { isOnboardingTabUrl } from '../utils/window';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -1448,8 +1449,8 @@ export default class BlankController extends EventEmitter {
         // Check if there is any open onboarding tab
         for (const instance in extensionInstances) {
             if (
-                extensionInstances[instance].port.sender?.url?.includes(
-                    'tab.html'
+                isOnboardingTabUrl(
+                    extensionInstances[instance].port.sender?.url
                 )
             ) {
                 onboardingInstance = instance;
@@ -1474,10 +1475,10 @@ export default class BlankController extends EventEmitter {
         // Close every other extension instance tab
         for (const instance in extensionInstances) {
             if (
-                extensionInstances[instance].port.sender?.url?.includes(
-                    'tab.html'
-                ) &&
-                instance
+                instance &&
+                isOnboardingTabUrl(
+                    extensionInstances[instance].port.sender?.url
+                )
             ) {
                 const tab = extensionInstances[instance].port.sender?.tab;
                 if (tab && tab.id && tab.windowId) {

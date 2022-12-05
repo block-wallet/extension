@@ -1,4 +1,4 @@
-import { FunctionComponent, useCallback, useState } from "react"
+import { FunctionComponent, useCallback, useEffect, useState } from "react"
 import { Classes, classnames } from "../../styles"
 import LinkButton from "../button/LinkButton"
 import Divider from "../Divider"
@@ -54,6 +54,7 @@ const SeedImport: FunctionComponent<{
     )
     const [seedPhraseError, setSeedPhraseError] = useState("")
     const [isLoading, setIsLoading] = useState(false)
+    const [isImportDisabled, setIsImportDisabled] = useState(true)
     const {
         register,
         handleSubmit,
@@ -109,7 +110,6 @@ const SeedImport: FunctionComponent<{
                     setSeedPhraseError("")
                 }
             }
-
             setSeedPhrase(newSP)
         },
         [setSeedPhrase, setSeedPhraseError]
@@ -152,6 +152,24 @@ const SeedImport: FunctionComponent<{
         },
         [numberOfWords, onSeedPhraseChange]
     )
+
+    const passwordValues = watch()
+    useEffect(() => {
+        if (
+            seedPhrase &&
+            !seedPhraseError &&
+            !errors.password &&
+            seedPhrase.filter((s) => s !== "").length === numberOfWords &&
+            passwordValues.password &&
+            passwordValues.passwordConfirmation &&
+            passwordValues.password === passwordValues.passwordConfirmation &&
+            passwordValues.acceptTOU
+        ) {
+            setIsImportDisabled(false)
+        } else {
+            setIsImportDisabled(true)
+        }
+    }, [seedPhrase, passwordValues, seedPhraseError, errors.password])
 
     return (
         <form
@@ -284,21 +302,10 @@ const SeedImport: FunctionComponent<{
                     className={classnames(
                         Classes.button,
                         "w-1/2 font-bold border-2 border-primary-300",
-                        (seedPhraseError.length ||
-                            errors.password ||
-                            errors.passwordConfirmation ||
-                            errors.acceptTOU ||
-                            isLoading) &&
+                        (isLoading || isImportDisabled) &&
                             "opacity-50 pointer-events-none"
                     )}
-                    disabled={
-                        seedPhraseError.length ||
-                        errors.password ||
-                        errors.passwordConfirmation ||
-                        errors.acceptTOU
-                            ? true
-                            : false
-                    }
+                    disabled={isImportDisabled || isLoading}
                 >
                     {!isLoading ? buttonLabel : <Spinner />}
                 </button>

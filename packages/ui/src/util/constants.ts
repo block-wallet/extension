@@ -43,6 +43,8 @@ export const LINKS = {
     GITHUB: "https://github.com/block-wallet/",
     TWITTER: "https://twitter.com/BlockWallet",
     WEBSITE_BUG_REPORT: "https://blockwallet.io/bug-report.html",
+    GITHUB_BUG_REPORT:
+        "https://github.com/block-wallet/extension/issues/new?assignees=&labels=&template=bug_report.md&title=",
     ARTICLES: {
         HD_PATH:
             "https://help.blockwallet.io/hc/en-us/articles/6670471581841-What-is-an-HD-Path-",

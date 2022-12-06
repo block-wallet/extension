@@ -208,7 +208,7 @@ const NetworkDisplay = ({
                             <div
                                 {...getIsHoveringProps()}
                                 className="p-2 hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
-                                title="Change to current network"
+                                title="Switch network"
                                 onClick={() => setConfirmSwitchNetwork(true)}
                             >
                                 <MdOutlineChangeCircle size={20} />

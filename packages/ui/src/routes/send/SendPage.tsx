@@ -18,6 +18,8 @@ import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { TokenWithBalance } from "../../context/hooks/useTokensList"
 import { useAddressBookAccounts } from "../../context/hooks/useAddressBookAccounts"
+import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
+
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import AccountSearchResults, {
     AccountResult,
@@ -43,6 +45,10 @@ const SendPage = () => {
     const defaultAsset = history.location.state?.asset
     const fromAssetPage = defaultAsset ?? false
     const currentAccount = useSelectedAccount()
+
+    const myAccounts = useSortedAccounts({
+        filterCurrentAccount: true,
+    })
 
     const addressBookAccounts = useAddressBookAccounts()
 
@@ -126,7 +132,14 @@ const SendPage = () => {
                 const isInAddressBook = (addressBookAccounts || []).some(
                     ({ address }) => address === normalizedAddress
                 )
-                setCanAddContact(!isCurrentAccount && !isInAddressBook)
+
+                const isInMyAccounts = (myAccounts || []).some(
+                    ({ address }) => address === normalizedAddress
+                )
+
+                setCanAddContact(
+                    !isCurrentAccount && !isInAddressBook && !isInMyAccounts
+                )
             }
         }
 

@@ -15,26 +15,27 @@ describe("Account helpers tests", () => {
             expect(getDefaultAccountName(2)).toStrictEqual("Account 2")
             expect(getDefaultAccountName(2000)).toStrictEqual("Account 2000")
         })
-        it("Should retrun that the account name exists", () => {
+        it("Should return that the account name exists", () => {
             const account = { name: "Account 1" } as any
             const accounts = {
                 a_dummy_address: account,
             } as Accounts
             expect(accountNameExists(accounts, "Account 1")).toBeTruthy()
-            expect(accountNameExists(accounts, "account 1")).toBeTruthy()
-            expect(accountNameExists(accounts, "    account 1")).toBeTruthy()
             expect(accountNameExists(accounts, "Account      1")).toBeTruthy()
             expect(accountNameExists(accounts, "Account1")).toBeTruthy()
             expect(accountNameExists(accounts, "Ac c o un t 1")).toBeTruthy()
+            // Case sensitive
+            expect(accountNameExists(accounts, "account 1")).toBeFalsy()
+            expect(accountNameExists(accounts, "    account 1")).toBeFalsy()
         })
-        it("Should retrun that the account doesn't exist", () => {
+        it("Should return that the account doesn't exist", () => {
             const account = { name: "Account 2" } as any
             const accounts = {
                 a_dummy_address: account,
             } as Accounts
             expect(accountNameExists(accounts, "Account 1")).toBeFalsy()
         })
-        it("Should retrun the next account name based on the current existing accounts and the start number", () => {
+        it("Should return the next account name based on the current existing accounts and the start number", () => {
             const accountA = { name: "Account 2" } as any
             const accountB = { name: "Account 9" } as any
             const accounts = {

@@ -8,7 +8,6 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import classnames from "classnames"
 import { useOnClickOutside } from "../../util/useOnClickOutside"
 import { changeNetwork, setShowTestNetworks } from "../../context/commActions"
-import TransparentOverlay from "../loading/TransparentOverlay"
 import { Network } from "@block-wallet/background/utils/constants/networks"
 import classNames from "classnames"
 import { sortNetworksByOrder } from "../../util/networkUtils"
@@ -59,8 +58,6 @@ const NetworkSelect: FunctionComponent<{
         selectedNetwork,
         availableNetworks,
         showTestNetworks,
-        isNetworkChanging,
-        isRatesChangingAfterNetworkChange,
         isImportingDeposits,
         isUserNetworkOnline,
     } = useBlankState()!
@@ -85,9 +82,6 @@ const NetworkSelect: FunctionComponent<{
             role="menu"
             data-testid="network-selector"
         >
-            {(isNetworkChanging || isRatesChangingAfterNetworkChange) && (
-                <TransparentOverlay />
-            )}
             <div
                 onClick={() => {
                     if (!isImportingDeposits) {

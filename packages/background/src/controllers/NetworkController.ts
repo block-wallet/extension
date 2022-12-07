@@ -10,6 +10,10 @@ import {
     EditNetworkOrderType,
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
 } from '../utils/constants/networks';
+import {
+    isABlockWalletNode,
+    customHeadersForBlockWalletNode,
+} from '../utils/nodes';
 import { constants, ethers } from 'ethers';
 import { poll } from '@ethersproject/web';
 import { ErrorCode } from '@ethersproject/logger';
@@ -519,12 +523,16 @@ export default class NetworkController extends BaseController<NetworkControllerS
     };
 
     private _getProviderForNetwork(chainId: number, rpcUrl: string) {
+        const blockWalletNode = isABlockWalletNode(rpcUrl);
         return this._overloadProviderMethods(
             { chainId },
             new ethers.providers.StaticJsonRpcProvider(
                 {
                     url: rpcUrl,
-                    allowGzip: rpcUrl.endsWith('.blockwallet.io'),
+                    allowGzip: blockWalletNode,
+                    headers: blockWalletNode
+                        ? customHeadersForBlockWalletNode
+                        : undefined,
                 },
                 chainId
             )

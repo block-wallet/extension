@@ -246,7 +246,7 @@ const PopupPage = () => {
                         </GenericTooltip>
                         <DAppConnection />
                     </div>
-                    <TokenSummary>
+                    <TokenSummary className="p-4">
                         <TokenSummary.Balances>
                             <TokenSummary.TokenBalance
                                 title={

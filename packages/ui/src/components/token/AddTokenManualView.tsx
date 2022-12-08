@@ -20,6 +20,7 @@ import { useForm } from "react-hook-form"
 import { useAccountTokens } from "../../context/hooks/useAccountTokens"
 import { MdRefresh } from "react-icons/md"
 import classNames from "classnames"
+import WarningDialog from "../dialog/WarningDialog"
 
 export interface addTokenManualViewProps {
     manualTokenAddress?: string
@@ -85,11 +86,11 @@ const AddTokenManualView = ({
 
     const [refetchOption, setRefetchOption] = useState(false)
     const [refetchAnimation, setRefetchAnimation] = useState(false)
+    const [shouldShowWarningDialog, setShouldShowWarningDialog] =
+        useState(false)
 
     const onSubmit = handleSubmit(async (data: addManualTokenFormData) => {
         try {
-            // Valid form data
-
             const tokenToAdd = {
                 address: data.tokenAddress,
                 decimals: data.tokenDecimals,
@@ -98,28 +99,13 @@ const AddTokenManualView = ({
                 symbol: data.tokenSymbol,
                 type: values.tokenType,
             }
-
-            // populate symbol logo for manual token
-            const res = await searchTokenInAssetsList(
-                tokenToAdd.symbol.toUpperCase()
-            )
-            if (res) {
-                const exactMatch = res.filter(
-                    (r) =>
-                        r.symbol.toLowerCase() ===
-                        tokenToAdd.symbol.toLowerCase()
-                )[0]
-
-                tokenToAdd.logo = exactMatch ? exactMatch.logo : ""
-
-                history.push({
-                    pathname: "/settings/tokens/add/confirm",
-                    state: {
-                        tokens: [tokenToAdd],
-                        ...(history.location.state || {}),
-                    },
-                })
-            }
+            history.push({
+                pathname: "/settings/tokens/add/confirm",
+                state: {
+                    tokens: [tokenToAdd],
+                    ...(history.location.state || {}),
+                },
+            })
         } catch (event) {
             // Invalid form data
             setError("tokenAddress", event.toString())
@@ -128,15 +114,16 @@ const AddTokenManualView = ({
 
     useEffect(() => {
         let msg = ""
-        if (
-            tokenAddresses.includes(values.tokenAddress.toLowerCase()) ||
-            tokenSymbols.includes(values.tokenSymbol.toLowerCase())
-        ) {
+        if (tokenAddresses.includes(values.tokenAddress.toLowerCase())) {
             msg = "You've already added this token"
         }
 
+        if (tokenSymbols.includes(values.tokenSymbol.toLowerCase())) {
+            setShouldShowWarningDialog(true)
+        }
+
         setMessage(msg)
-        if (setSubmitEnabled && msg !== "") {
+        if (setSubmitEnabled && (msg !== "" || shouldShowWarningDialog)) {
             setSubmitEnabled(false)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -332,6 +319,13 @@ const AddTokenManualView = ({
                     )}
                 </div>
             </form>
+            <WarningDialog
+                useClickOutside={true}
+                title="Duplicated symbol"
+                message="You've already added a token with the same symbol. You should be aware this can be an scam situation. Click OK to continue adding this token."
+                open={shouldShowWarningDialog}
+                onDone={() => setShouldShowWarningDialog(false)}
+            />
         </>
     )
 }

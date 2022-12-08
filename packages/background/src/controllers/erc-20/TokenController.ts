@@ -328,33 +328,15 @@ export class TokenController extends BaseController<TokenControllerState> {
             chainId
         );
 
-        // Preventing to have a token with the same symbol than another one
-        const userSymbols = Object.keys(userTokens).map((key) =>
-            userTokens[key].symbol.toLowerCase()
-        );
-
-        const cleanedTokens = tokens
-            .filter((token) => {
-                if (userSymbols.includes(token.symbol.toLowerCase())) {
-                    const tokenAddress = toChecksumAddress(token.address);
-
-                    // Check if it's a token update
-                    if (userTokens[tokenAddress].address !== tokenAddress) {
-                        return false;
-                    }
-                }
-
-                return true;
-            })
-            .map((token) => {
-                if (!token.name) {
-                    return {
-                        ...token,
-                        name: token.symbol,
-                    };
-                }
-                return token;
-            });
+        const cleanedTokens = tokens.map((token) => {
+            if (!token.name) {
+                return {
+                    ...token,
+                    name: token.symbol,
+                };
+            }
+            return token;
+        });
 
         for (let i = 0; i < cleanedTokens.length; i++) {
             cleanedTokens[i].address = toChecksumAddress(

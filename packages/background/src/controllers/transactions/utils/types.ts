@@ -5,7 +5,8 @@ import {
     IBridgeFeeCost,
 } from '@block-wallet/background/utils/bridgeApi';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
-import { BigNumber, Transaction } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { Transaction } from '@ethersproject/transactions';
 import { CurrencyAmountPair } from '../../blank-deposit/types';
 import { IToken } from '../../erc-20/Token';
 import { ExchangeParams } from '../../SwapController';

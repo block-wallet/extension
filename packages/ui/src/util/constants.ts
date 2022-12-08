@@ -1,4 +1,4 @@
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 
 export const SEND_GAS_COST = BigNumber.from("0x5208") // Hex for 21000, cost of a simple send.
 export const DEPOSIT_GAS_COST = BigNumber.from("0x124f80") // Hex for 12e5, cost of deposit.

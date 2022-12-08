@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react"
-import { BigNumber } from "ethers"
-import { parseUnits } from "ethers/lib/utils"
+import { BigNumber } from "@ethersproject/bignumber"
+import { parseUnits } from "@ethersproject/units"
 
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"

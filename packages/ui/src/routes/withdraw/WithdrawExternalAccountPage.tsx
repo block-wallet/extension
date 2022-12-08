@@ -9,9 +9,10 @@ import SearchInput from "../../components/input/SearchInput"
 
 import classnames from "classnames"
 
+import { isAddress as ethersIsAddress } from "@ethersproject/address"
+
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
-import { utils } from "ethers"
 
 import { CurrencyAmountPair } from "@block-wallet/background/controllers/blank-deposit/types"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
@@ -27,7 +28,7 @@ const schema = yup.object().shape({
         .string()
         .required("No address provided.")
         .test("is-correct", "Address is incorrect", (address) => {
-            return utils.isAddress(address || "")
+            return ethersIsAddress(address || "")
         }),
 })
 type AddressFormData = { address: string }
@@ -76,7 +77,7 @@ const WithdrawExternalPage = () => {
     useEffect(() => {
         const checkAddress = async () => {
             // Check Address
-            setIsAddress(utils.isAddress(searchString))
+            setIsAddress(ethersIsAddress(searchString))
 
             // Warning
             checkSameAddress(searchString)

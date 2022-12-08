@@ -15,7 +15,7 @@ import { InferType } from "yup"
 import { searchTokenInAssetsList } from "../../context/commActions"
 
 // Assets
-import { utils } from "ethers/lib/ethers"
+import { isValidAddress } from "ethereumjs-util"
 import { useForm } from "react-hook-form"
 import { useAccountTokens } from "../../context/hooks/useAccountTokens"
 
@@ -144,7 +144,7 @@ const AddTokenManualView = ({
         if (!setSubmitEnabled) return
 
         setSubmitEnabled(false)
-        if (utils.isAddress(value)) {
+        if (isValidAddress(value)) {
             setError("tokenAddress", { message: undefined })
             setIsLoading(true)
             const tokenSearchResponse = await searchTokenInAssetsList(value)

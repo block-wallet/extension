@@ -1,9 +1,9 @@
 import axios from 'axios';
 import sinon from 'sinon';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
+import { Interface } from '@ethersproject/abi';
 import { ContractSignatureParser } from '../../../src/controllers/transactions/ContractSignatureParser';
-import { Interface } from 'ethers/lib/utils';
 import { expect } from 'chai';
 import { getNetworkControllerInstance } from '../../mocks/mock-network-instance';
 

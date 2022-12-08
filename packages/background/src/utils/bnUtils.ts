@@ -1,6 +1,6 @@
 import BN from 'bn.js';
 import { addHexPrefix } from 'ethereumjs-util';
-import { BigNumber, BigNumberish } from 'ethers';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 
 /**
  * Used to multiply a BN by a fraction

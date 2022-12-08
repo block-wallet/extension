@@ -8,7 +8,8 @@ import axios, { AxiosResponse } from 'axios';
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
 import { getNetworkControllerInstance } from '../../../mocks/mock-network-instance';
 import NetworkController from '@block-wallet/background/controllers/NetworkController';
-import { BigNumber, Contract, Event } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 
 describe('TornadoEventsService', () => {

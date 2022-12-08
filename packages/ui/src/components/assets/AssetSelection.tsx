@@ -12,9 +12,9 @@ import {
     TokenWithBalance,
     useTokensList,
 } from "../../context/hooks/useTokensList"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { formatRounded } from "../../util/formatRounded"
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import { searchTokenInAssetsList } from "../../context/commActions"
 import { useCustomCompareEffect } from "use-custom-compare"
 import { useDepositTokens } from "../../context/hooks/useDepositTokens"

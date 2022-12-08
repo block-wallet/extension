@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
-import { BigNumber, ethers } from 'ethers';
+import { ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { EventEmitter } from 'events';
 import { INITIAL_NETWORKS } from '../../src/utils/constants/networks';
 import {

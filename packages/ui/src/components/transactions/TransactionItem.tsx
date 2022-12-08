@@ -5,7 +5,7 @@ import { RiCopperCoinFill } from "react-icons/ri"
 import { AiFillInfoCircle } from "react-icons/ai"
 import { GiSuspensionBridge } from "react-icons/gi"
 import { ImSpinner } from "react-icons/im"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import classNames from "classnames"
 
 // Styles

@@ -1,4 +1,5 @@
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { PopulatedTransaction } from '@ethersproject/contracts';
 import { CurrencyAmountPair } from '../types';
 import { IBlankDeposit } from '../BlankDeposit';
 import { TransactionMeta } from '../../transactions/utils/types';
@@ -14,7 +15,7 @@ export interface IDeposit {
         currencyAmountPair: CurrencyAmountPair,
         chainId?: number
     ): Promise<{
-        populatedTransaction: ethers.PopulatedTransaction;
+        populatedTransaction: PopulatedTransaction;
         nextDeposit: NextDepositResult['nextDeposit'];
     }>;
 
@@ -26,7 +27,7 @@ export interface IDeposit {
      */
     addAsNewDepositTransaction(
         currencyAmountPair: CurrencyAmountPair,
-        populatedTransaction: ethers.PopulatedTransaction,
+        populatedTransaction: PopulatedTransaction,
         feeData: TransactionFeeData
     ): Promise<TransactionMeta>;
 

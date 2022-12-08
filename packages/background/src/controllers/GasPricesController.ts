@@ -1,6 +1,8 @@
 import { BaseController } from '../infrastructure/BaseController';
 import NetworkController, { NetworkEvents } from './NetworkController';
-import { BigNumber, ethers, utils } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { formatEther } from '@ethersproject/units';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import log from 'loglevel';
 import { Mutex } from 'async-mutex';
 import {
@@ -174,20 +176,18 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                                     .maxPriorityFeePerGas || '0';
 
                             newValue = Number(
-                                utils.formatEther(
-                                    feeData.maxPriorityFeePerGas || '0'
-                                )
+                                formatEther(feeData.maxPriorityFeePerGas || '0')
                             );
-                            oldValue = Number(utils.formatEther(oldGasPrice));
+                            oldValue = Number(formatEther(oldGasPrice));
                         } else {
                             const oldGasPrice =
                                 oldGasPriceLevels[level as keyof GasPriceLevels]
                                     .gasPrice || '0';
 
                             newValue = Number(
-                                utils.formatEther(feeData.gasPrice || '0')
+                                formatEther(feeData.gasPrice || '0')
                             );
-                            oldValue = Number(utils.formatEther(oldGasPrice));
+                            oldValue = Number(formatEther(oldGasPrice));
                         }
 
                         /* oldValue will be 0, if previous stored gas is incompatible with
@@ -227,7 +227,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
         isEIP1559Compatible: boolean,
         //required by parameter to avoid returning undefined if the user hasn't added the chain
         //previous check should be done before invoking this method.
-        provider: ethers.providers.StaticJsonRpcProvider = this._networkController.getProvider()
+        provider: StaticJsonRpcProvider = this._networkController.getProvider()
     ): Promise<GasPriceData> {
         let gasPriceData: GasPriceData = {} as GasPriceData;
 

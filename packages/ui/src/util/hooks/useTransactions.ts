@@ -1,4 +1,4 @@
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import {
     MetaType,
@@ -17,10 +17,8 @@ const failedStatuses = [
 
 const useTransactions = () => {
     const { confirmed, pending } = useBlankState()!.activityList
-    const {
-        nativeCurrency: networkNativeCurrency,
-        defaultNetworkLogo,
-    } = useSelectedNetwork()
+    const { nativeCurrency: networkNativeCurrency, defaultNetworkLogo } =
+        useSelectedNetwork()
 
     const allTransactions = pending
         .concat(confirmed)

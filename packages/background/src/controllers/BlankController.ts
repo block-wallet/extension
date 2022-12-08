@@ -122,7 +122,7 @@ import type {
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
-import { BigNumber, utils } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import BlankStorageStore from '../infrastructure/stores/BlankStorageStore';
 import { Flatten } from '../utils/types/helpers';
 import { Messages } from '../utils/types/communication';
@@ -228,6 +228,7 @@ import BridgeController, {
 import { IChain } from '../utils/types/chain';
 import { BridgeImplementation } from '../utils/bridgeApi';
 import TokenAllowanceController from './erc-20/transactions/TokenAllowanceController';
+import { isValidAddress } from 'ethereumjs-util';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -1721,7 +1722,7 @@ export default class BlankController extends EventEmitter {
         let address = undefined;
         if (typeof accountAddressOrIndex === 'string') {
             // If it is an address, check if it's valid
-            if (!utils.isAddress(accountAddressOrIndex)) {
+            if (!isValidAddress(accountAddressOrIndex)) {
                 throw new Error('Invalid address');
             }
             address = accountAddressOrIndex;

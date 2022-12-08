@@ -10,8 +10,8 @@ import classnames from "classnames"
 
 import { useBlankState } from "../../context/background/backgroundHooks"
 
-import { BigNumber } from "ethers"
-import { formatUnits, parseUnits } from "ethers/lib/utils"
+import { BigNumber } from "@ethersproject/bignumber"
+import { formatUnits, parseUnits } from "@ethersproject/units"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 
 import { KnownCurrencies } from "@block-wallet/background/controllers/blank-deposit/types"

@@ -1,6 +1,5 @@
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
-import { toChecksumAddress } from "ethereumjs-util"
-import { utils } from "ethers"
+import { toChecksumAddress, isValidAddress } from "ethereumjs-util"
 import { useRef, useEffect, useReducer } from "react"
 import { useAddressBookAccounts } from "../../context/hooks/useAddressBookAccounts"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
@@ -73,7 +72,7 @@ const AccountSearchResults = ({
             noAddressBookResults &&
             noEnsResults &&
             noUDResults &&
-            !utils.isAddress(filter) &&
+            !isValidAddress(filter) &&
             filter !== ""
         )
     }
@@ -139,7 +138,7 @@ const AccountSearchResults = ({
                                 key={account.address}
                                 account={account}
                                 selected={
-                                    utils.isAddress(filter) &&
+                                    isValidAddress(filter) &&
                                     toChecksumAddress(filter) ===
                                         account.address
                                 }

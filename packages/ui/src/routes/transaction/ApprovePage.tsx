@@ -25,14 +25,14 @@ import WaitingDialog from "../../components/dialog/WaitingDialog"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { APPROVE_GAS_COST } from "../../util/constants"
 import { AdvancedSettings } from "../../components/transactions/AdvancedSettings"
-import { BigNumber, ethers } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes, classnames } from "../../styles/classes"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import { InferType } from "yup"
 import { formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
-import { formatUnits, parseUnits } from "ethers/lib/utils"
+import { formatUnits, parseUnits } from "@ethersproject/units"
 import { getAccountColor } from "../../util/getAccountColor"
 import { useForm } from "react-hook-form"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
@@ -56,8 +56,9 @@ import { ExchangeType } from "../../context/commTypes"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
 import { useBlankState } from "../../context/background/backgroundHooks"
+import { MaxUint256 } from "@ethersproject/constants"
 
-const UNLIMITED_ALLOWANCE = ethers.constants.MaxUint256
+const UNLIMITED_ALLOWANCE = MaxUint256
 
 export enum ApproveOperation {
     BRIDGE,

@@ -1,6 +1,8 @@
 import NetworkController, { NetworkEvents } from './NetworkController';
 import { BaseController } from '../infrastructure/BaseController';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { StaticJsonRpcProvider } from '@ethersproject/providers/';
+import { Zero } from '@ethersproject/constants';
 import {
     ImportStrategy,
     ImportArguments,
@@ -713,7 +715,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      */
     private async _updateAccountBalance(
         chainId: number,
-        provider: ethers.providers.StaticJsonRpcProvider,
+        provider: StaticJsonRpcProvider,
         accountAddress: string,
         assetAddressToGetBalance: string[]
     ) {
@@ -846,7 +848,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             : accountAddress in stateAccounts &&
               chainId in stateAccounts[accountAddress].balances
             ? stateAccounts[accountAddress].balances[chainId].nativeTokenBalance
-            : ethers.constants.Zero;
+            : Zero;
 
         let finalTokens: AccountBalanceTokens = {};
         if (
@@ -900,7 +902,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      */
     private async _getAddressBalances(
         chainId: number,
-        provider: ethers.providers.StaticJsonRpcProvider,
+        provider: StaticJsonRpcProvider,
         accountAddress: string,
         assetAddressToGetBalance: string[]
     ): Promise<BalanceMap> {
@@ -954,7 +956,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      * @returns {BalanceMap} A object with all the balances
      */
     private async _getAddressBalancesFromMultipleCallBalances(
-        provider: ethers.providers.StaticJsonRpcProvider,
+        provider: StaticJsonRpcProvider,
         accountAddress: string,
         assetAddressToGetBalance: string[]
     ): Promise<BalanceMap> {

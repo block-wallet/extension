@@ -10,7 +10,8 @@ import TransactionController from '@block-wallet/background/controllers/transact
 import initialState from '@block-wallet/background/utils/constants/initialState';
 import sinon from 'sinon';
 import { AccountTrackerController } from '../../src/controllers/AccountTrackerController';
-import { BigNumber, ethers } from 'ethers';
+import { ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { GasPricesController } from '@block-wallet/background/controllers/GasPricesController';
 import {
     JSONRPCMethod,
@@ -26,7 +27,7 @@ import { TokenOperationsController } from '@block-wallet/background/controllers/
 import { TypedTransaction } from '@ethereumjs/tx';
 import { expect } from 'chai';
 import { getNetworkControllerInstance } from '../mocks/mock-network-instance';
-import { hexValue } from 'ethers/lib/utils';
+import { hexValue } from '@ethersproject/bytes';
 import { mockKeyringController } from '../mocks/mock-keyring-controller';
 import { mockPreferencesController } from '../mocks/mock-preferences';
 import { mockedPermissionsController } from '../mocks/mock-permissions';

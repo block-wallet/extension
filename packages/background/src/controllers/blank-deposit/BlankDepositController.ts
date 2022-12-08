@@ -1,5 +1,6 @@
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { TransactionReceipt } from '@ethersproject/providers';
+import { PopulatedTransaction } from '@ethersproject/contracts';
 import { BaseController } from '../../infrastructure/BaseController';
 import NetworkController, { NetworkEvents } from '../NetworkController';
 import { PreferencesController } from '../PreferencesController';
@@ -719,7 +720,7 @@ export class BlankDepositController extends BaseController<
     public async populateDepositTransaction(
         currencyAmountPair: CurrencyAmountPair
     ): Promise<{
-        populatedTransaction: ethers.PopulatedTransaction;
+        populatedTransaction: PopulatedTransaction;
         nextDeposit: NextDepositResult['nextDeposit'];
     }> {
         return this._blankDepositService.populateDepositTransaction(

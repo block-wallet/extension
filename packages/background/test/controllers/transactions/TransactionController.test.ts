@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import { BigNumber, providers } from 'ethers';
+import { providers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import sinon from 'sinon';
 import { TypedTransaction } from '@ethereumjs/tx';
 import {

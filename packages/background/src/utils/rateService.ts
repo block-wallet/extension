@@ -1,11 +1,13 @@
-import { BigNumber, Contract, ethers } from 'ethers';
-import { formatUnits } from 'ethers/lib/utils';
+import { BigNumber } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
+import { formatUnits } from '@ethersproject/units';
 import { RATES_IDS_LIST } from '@block-wallet/chains-assets';
 import axios from 'axios';
 import CHAINLINK_DATAFEEDS_CONTRACTS from './chain-link/dataFeeds';
 
 interface getRateOptions {
-    networkProvider?: ethers.providers.StaticJsonRpcProvider;
+    networkProvider?: StaticJsonRpcProvider;
 }
 
 export interface RateService {

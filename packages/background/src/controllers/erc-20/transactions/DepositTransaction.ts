@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber } from '@ethersproject/bignumber';
-import { ethers } from 'ethers';
-import {
-    parseEther,
-    parseUnits,
-    TransactionDescription,
-} from 'ethers/lib/utils';
+import { PopulatedTransaction } from '@ethersproject/contracts';
+import { parseEther, parseUnits } from '@ethersproject/units';
+import { TransactionDescription } from '@ethersproject/abi';
 import log from 'loglevel';
 import { v4 as uuid } from 'uuid';
 import { INoteDeposit } from '../../blank-deposit/notes/INoteDeposit';
@@ -96,7 +93,7 @@ export class DepositTransaction extends SignedTransaction {
      */
     public async populateTransaction(
         populateTransasctionParams: DepositTransactionPopulatedTransactionParams
-    ): Promise<ethers.PopulatedTransaction> {
+    ): Promise<PopulatedTransaction> {
         if (!populateTransasctionParams.currencyAmountPair) {
             throw tokenAddressParamNotPresentError;
         }
@@ -203,7 +200,7 @@ export class DepositTransaction extends SignedTransaction {
      */
     public async addAsNewDepositTransaction(
         currencyAmountPair: CurrencyAmountPair,
-        populatedTransaction: ethers.PopulatedTransaction,
+        populatedTransaction: PopulatedTransaction,
         feeData: TransactionFeeData
     ): Promise<TransactionMeta> {
         // Get Tornado contract
@@ -368,7 +365,7 @@ export class DepositTransaction extends SignedTransaction {
      * @param {FeeData} feeData an object with gas fee data.
      */
     public async addAsNewTransaction(
-        populatedTransaction: ethers.PopulatedTransaction,
+        populatedTransaction: PopulatedTransaction,
         feeData: TransactionFeeData
     ): Promise<TransactionMeta> {
         feeData.gasLimit =

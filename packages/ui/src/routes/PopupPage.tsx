@@ -1,8 +1,8 @@
 import { useState } from "react"
 import classnames from "classnames"
 import { Link, useHistory } from "react-router-dom"
-import { formatUnits } from "ethers/lib/utils"
-import { BigNumber } from "ethers"
+import { formatUnits } from "@ethersproject/units"
+import { BigNumber } from "@ethersproject/bignumber"
 import { BiCircle } from "react-icons/bi"
 
 // Components

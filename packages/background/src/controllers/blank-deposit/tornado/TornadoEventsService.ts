@@ -1,4 +1,5 @@
-import { BigNumber, Contract, Event } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { Contract, Event } from '@ethersproject/contracts';
 import axios from 'axios';
 import { addHexPrefix } from 'ethereumjs-util';
 import log from 'loglevel';

@@ -18,7 +18,7 @@ import {
     ContractMethodSignature,
     ContractSignatureParser,
 } from './transactions/ContractSignatureParser';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { TransactionCategories } from './transactions/utils/types';
 import { TransactionController } from './transactions/TransactionController';
 import { TransactionFeeData } from './erc-20/transactions/SignedTransaction';

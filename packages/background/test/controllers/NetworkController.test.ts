@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import NetworkController from '../../src/controllers/NetworkController';
-import { BigNumber, ethers } from 'ethers';
+import { ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { getNetworkControllerInstance } from '../mocks/mock-network-instance';
 import sinon from 'sinon';
 import { Block } from '@ethersproject/abstract-provider';

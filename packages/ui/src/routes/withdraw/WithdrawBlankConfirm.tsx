@@ -18,13 +18,12 @@ import { CurrencyAmountPair } from "@block-wallet/background/controllers/blank-d
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import Spinner from "../../components/spinner/Spinner"
-import { utils } from "ethers"
 import { formatHash, formatName } from "../../util/formatAccount"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import ErrorMessage from "../../components/error/ErrorMessage"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useAsync } from "../../util/hooks/useAsync"
-import { formatUnits, parseUnits } from "ethers/lib/utils"
+import { formatUnits, parseUnits } from "@ethersproject/units"
 import { formatRounded } from "../../util/formatRounded"
 
 import infoIcon from "../../assets/images/icons/info_circle.svg"
@@ -36,7 +35,7 @@ import { Link } from "react-router-dom"
 import CloseIcon from "../../components/icons/CloseIcon"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { DEFAULT_DECIMALS } from "../../util/constants"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import WaitingDialog, {
@@ -107,7 +106,7 @@ const WithdrawBlankConfirm = () => {
     const network = useSelectedNetwork()
     const { gasPricesLevels } = useGasPriceData()
     const amountInNativeCurrency = toCurrencyAmount(
-        utils.parseUnits(pair.amount, network.nativeCurrency.decimals),
+        parseUnits(pair.amount, network.nativeCurrency.decimals),
         getValueByKey(state.exchangeRates, pair.currency.toUpperCase(), 0),
         network.nativeCurrency.decimals
     )

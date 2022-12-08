@@ -2,8 +2,8 @@ import NetworkController from '../NetworkController';
 import axios from 'axios';
 import log from 'loglevel';
 import { Contract } from '@ethersproject/contracts';
-import { Interface } from 'ethers/lib/utils';
-import { ethers } from 'ethers';
+import { Interface, Fragment } from '@ethersproject/abi';
+import { TransactionDescription } from '@ethersproject/abi';
 
 const SIGNATURE_REGISTRY_CONTRACT = {
     address: '0x44691B39d1a75dC4E0A0346CBB15E310e6ED1E86',
@@ -221,7 +221,7 @@ export class ContractSignatureParser {
      * Parses transaction data using the transaction description
      */
     public parseTransactionDescription(
-        parsedTransaction: ethers.utils.TransactionDescription
+        parsedTransaction: TransactionDescription
     ): ContractMethodSignature {
         const args = parsedTransaction.functionFragment.inputs.map(
             (i, index) => {
@@ -321,11 +321,9 @@ export class ContractSignatureParser {
     public parseFunctionFragment(
         data: string,
         methodSignature: string
-    ): ethers.utils.TransactionDescription | undefined {
+    ): TransactionDescription | undefined {
         try {
-            const fragment = ethers.utils.Fragment.from(
-                'function ' + methodSignature
-            );
+            const fragment = Fragment.from('function ' + methodSignature);
 
             const contractInterface = new Interface([fragment]);
 

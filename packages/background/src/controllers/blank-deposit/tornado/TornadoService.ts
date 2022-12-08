@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Mutex } from 'async-mutex';
-import { BigNumber, Contract, ethers, Event, utils } from 'ethers';
+import {
+    Contract,
+    Event,
+    PopulatedTransaction,
+} from '@ethersproject/contracts';
+import { BigNumber } from '@ethersproject/bignumber';
+import { formatUnits, parseUnits } from '@ethersproject/units';
 import { Encryptor } from 'browser-passworder';
 import { v4 as uuid } from 'uuid';
 
@@ -436,7 +442,7 @@ export class TornadoService
             to: withdrawEv.to,
             transactionHash: withdrawEv.transactionHash,
             timestamp: new Date(timestamp * 1000),
-            fee: utils.formatUnits(
+            fee: formatUnits(
                 BigNumber.from(withdrawEv.fee),
                 getTornadoTokenDecimals(chainId, deposit.pair)
             ),
@@ -1625,7 +1631,7 @@ export class TornadoService
                 ? 0
                 : relayerServiceFee.toString().split('.')[1].length;
 
-        const relayerServiceFeeBN = utils.parseUnits(
+        const relayerServiceFeeBN = parseUnits(
             relayerServiceFee.toString(),
             decimalsPoint
         );
@@ -1640,7 +1646,7 @@ export class TornadoService
             if (currencyAmountPair.currency !== KnownCurrencies.BNB) {
                 // Gas bump based on Tornado cli fee calculation
                 let fivePercent = BnMultiplyByFraction(gasPriceFast, 5, 100);
-                const minValue = utils.parseUnits('3', 'gwei');
+                const minValue = parseUnits('3', 'gwei');
                 fivePercent = fivePercent.lt(minValue) ? minValue : fivePercent;
 
                 // Set bumped gas price
@@ -1660,7 +1666,7 @@ export class TornadoService
         const expense = BigNumber.from(fastPrice).mul(
             BigNumber.from(WITHDRAWAL_GAS_LIMIT)
         );
-        const total = utils.parseUnits(currencyAmountPair.amount, decimals);
+        const total = parseUnits(currencyAmountPair.amount, decimals);
 
         // fee to add to the total gas cost
         const feePercent = total
@@ -1694,7 +1700,7 @@ export class TornadoService
         chainId?: number,
         customNonce?: number
     ): Promise<{
-        populatedTransaction: ethers.PopulatedTransaction;
+        populatedTransaction: PopulatedTransaction;
         nextDeposit: NextDepositResult['nextDeposit'];
     }> {
         // Get next free deposit & possible recovered ones
@@ -1729,7 +1735,7 @@ export class TornadoService
 
     public async addAsNewDepositTransaction(
         currencyAmountPair: CurrencyAmountPair,
-        populatedTransaction: ethers.PopulatedTransaction,
+        populatedTransaction: PopulatedTransaction,
         feeData: TransactionFeeData
     ): Promise<TransactionMeta> {
         const depositTransaction = this.getDepositTransaction();

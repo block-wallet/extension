@@ -1,5 +1,5 @@
 import sinon from 'sinon';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { BlankAppState } from '../../../../src/utils/constants/initialState';
 import { migrator } from '../../../../src/infrastructure/stores/migrator/migrator';
 import { DeepPartial } from '../../../../src/utils/types/helpers';

@@ -42,7 +42,6 @@ import NetworkController, {
     NetworkControllerState,
     NetworkEvents,
 } from './NetworkController';
-import { ethers } from 'ethers';
 import {
     ExternalEventSubscription,
     Handler,
@@ -61,7 +60,9 @@ import {
     providerInstances,
 } from '../infrastructure/connection';
 import { validateSignature } from '../utils/signature';
-import { hexValue } from 'ethers/lib/utils';
+import { keccak256 } from '@ethersproject/keccak256';
+import { toUtf8Bytes } from '@ethersproject/strings';
+import { hexValue } from '@ethersproject/bytes';
 import {
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     Network,
@@ -449,7 +450,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
         params: readonly unknown[] | Record<string, unknown> | undefined
     ) => {
         if (params && Array.isArray(params) && typeof params[0] === 'string') {
-            return ethers.utils.keccak256(ethers.utils.toUtf8Bytes(params[0]));
+            return keccak256(toUtf8Bytes(params[0]));
         } else {
             throw new Error(
                 `Wrong input data for web3_sha3: ${params}. See https://eth.wiki/json-rpc/API#web3_sha3`

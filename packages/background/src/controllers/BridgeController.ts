@@ -7,7 +7,8 @@ import {
     ContractMethodSignature,
     ContractSignatureParser,
 } from './transactions/ContractSignatureParser';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { TransactionResponse } from '@ethersproject/providers';
 import {
     BridgeTransactionParams,
     MetaType,
@@ -909,17 +910,13 @@ export default class BridgeController extends BaseController<
             toToken
         );
 
-        let transactionByHash: ethers.providers.TransactionResponse;
+        let transactionByHash: TransactionResponse;
         try {
-            transactionByHash =
-                await retryHandling<ethers.providers.TransactionResponse>(
-                    () =>
-                        receivingChainIdProvider.getTransaction(
-                            receivingTxHash
-                        ),
-                    MILISECOND * 500,
-                    3
-                );
+            transactionByHash = await retryHandling<TransactionResponse>(
+                () => receivingChainIdProvider.getTransaction(receivingTxHash),
+                MILISECOND * 500,
+                3
+            );
         } catch (e) {
             log.error('_waitForReceivingTx', 'getTransaction', e);
             return false;
@@ -1135,7 +1132,7 @@ export default class BridgeController extends BaseController<
     }
 
     private _transactionByHashToTransactionMeta(
-        transaction: ethers.providers.TransactionResponse,
+        transaction: TransactionResponse,
         isRefund: boolean
     ): Partial<TransactionMeta> {
         return {

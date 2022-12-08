@@ -16,7 +16,7 @@ import {
     DepositEventsMock,
     WithdrawalEventsMock,
 } from './mocks/EventsMock.mock';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { TornadoEventsDB } from '../../../../src/controllers/blank-deposit/tornado/stores/TornadoEventsDB';
 import { TornadoEvents } from '../../../../src/controllers/blank-deposit/tornado/config/ITornadoContract';
 import mockIndexedDB from './mocks/mockIndexedDB';
@@ -63,23 +63,23 @@ describe('TornadoNotesService', () => {
                 const events =
                     type === TornadoEvents.DEPOSIT
                         ? {
-                            type,
-                            events: DepositEventsMock.events.map((e) => ({
-                                blockNumber: e.blockNumber,
-                                transactionHash: e.transactionHash,
-                                ...e.args,
-                            })),
-                        }
+                              type,
+                              events: DepositEventsMock.events.map((e) => ({
+                                  blockNumber: e.blockNumber,
+                                  transactionHash: e.transactionHash,
+                                  ...e.args,
+                              })),
+                          }
                         : {
-                            type,
-                            events: WithdrawalEventsMock.events.map((e) => ({
-                                blockNumber: e.blockNumber,
-                                transactionHash: e.transactionHash,
-                                nullifierHex: e.args.nullifierHash,
-                                fee: e.args.fee as unknown as BigNumber,
-                                to: e.args.to,
-                            })),
-                        };
+                              type,
+                              events: WithdrawalEventsMock.events.map((e) => ({
+                                  blockNumber: e.blockNumber,
+                                  transactionHash: e.transactionHash,
+                                  nullifierHex: e.args.nullifierHash,
+                                  fee: e.args.fee as unknown as BigNumber,
+                                  to: e.args.to,
+                              })),
+                          };
 
                 await tornadoEventsDb.updateEvents(
                     AvailableNetworks.GOERLI,

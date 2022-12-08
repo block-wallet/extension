@@ -28,6 +28,7 @@ import { isInternalAccount } from "../../util/account"
 import useCopyToClipboard from "../../util/hooks/useCopyToClipboard"
 import Dropdown from "../ui/Dropdown/Dropdown"
 import { toChecksumAddress } from "ethereumjs-util"
+import { useAddressWithChainIdChecksum } from "../../util/hooks/useSelectedAddressWithChainIdChecksum"
 
 interface ConfirmDialogState {
     isOpen: boolean
@@ -63,7 +64,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
         useState<ConfirmDialogState>({ isOpen: false })
     const { isHovering: isHoveringMenu, getIsHoveringProps } = useIsHovering()
     const { chainId, nativeCurrency } = useSelectedNetwork()
-    const checksumAddress = toChecksumAddress(account?.address, chainId)
+    const checksumAddress = useAddressWithChainIdChecksum(account?.address)
 
     const { copied, onCopy } = useCopyToClipboard(checksumAddress)
 

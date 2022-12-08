@@ -27,6 +27,7 @@ import Tag from "../ui/Tag"
 import { isInternalAccount } from "../../util/account"
 import useCopyToClipboard from "../../util/hooks/useCopyToClipboard"
 import Dropdown from "../ui/Dropdown/Dropdown"
+import { toChecksumAddress } from "ethereumjs-util"
 
 interface ConfirmDialogState {
     isOpen: boolean
@@ -61,15 +62,17 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
     const [confirmationDialog, setConfirmationDialog] =
         useState<ConfirmDialogState>({ isOpen: false })
     const { isHovering: isHoveringMenu, getIsHoveringProps } = useIsHovering()
-    const { copied, onCopy } = useCopyToClipboard(account?.address)
     const { chainId, nativeCurrency } = useSelectedNetwork()
+    const checksumAddress = toChecksumAddress(account?.address, chainId)
+
+    const { copied, onCopy } = useCopyToClipboard(checksumAddress)
 
     const handleOptionClick = (optionMetadata: AccountMenuOptionMetadata) => {
         if (!optionMetadata.requiresConfirmation) {
-            return optionMetadata.handler!(account?.address)
+            return optionMetadata.handler!(checksumAddress)
         }
         setConfirmationDialog({
-            onConfirm: () => optionMetadata.handler!(account?.address),
+            onConfirm: () => optionMetadata.handler!(checksumAddress),
             isOpen: true,
             title: optionMetadata.confirmationTitle,
             message: optionMetadata.confirmationMessage,
@@ -104,7 +107,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                 >
                     <AccountIcon
                         className="w-10 h-10"
-                        fill={getAccountColor(account?.address)}
+                        fill={getAccountColor(checksumAddress)}
                     />
                     <div className="flex flex-col">
                         <div
@@ -121,16 +124,16 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                                         hoverStyle && "cursor-pointer"
                                     )}
                                     title={account.name}
-                                    htmlFor={`check-account-${account.address}`}
+                                    htmlFor={`check-account-${checksumAddress}`}
                                 >
                                     {accountName}
                                 </label>
                                 {!showAddress && (
                                     <span
                                         className="font-bold"
-                                        title={account.address}
+                                        title={checksumAddress}
                                     >
-                                        {formatHashLastChars(account.address)}
+                                        {formatHashLastChars(checksumAddress)}
                                     </span>
                                 )}
                             </div>
@@ -149,7 +152,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                                 </span>
                             ) : (
                                 <span className="text-gray-500">
-                                    {formatHash(account?.address)}
+                                    {formatHash(checksumAddress)}
                                 </span>
                             )}
                             {copyAddressToClipboard && (

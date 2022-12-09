@@ -8,7 +8,7 @@
         "@block-wallet/eth-ledger-bridge-keyring": "https://github.com/block-wallet/eth-ledger-bridge-keyring",
         "@block-wallet/explorer-link": "https://github.com/block-wallet/explorer-link#v2.2.2",
         "@block-wallet/fixed-merkle-tree": "^0.6.1",
-        "@block-wallet/remote-configs": "https://github.com/block-wallet/remote-configs#main",
+        "@block-wallet/remote-configs": "https://github.com/block-wallet/remote-configs#v1.0.0",
         "@block-wallet/snarkjs": "^0.1.20",
         "@block-wallet/websnark": "^0.0.5",
         "@ethereumjs/tx": "^3.2.1",

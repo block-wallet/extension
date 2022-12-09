@@ -208,7 +208,7 @@
     "@babel/helper-validator-identifier" "^7.14.9"
     to-fast-properties "^2.0.0"
 
-"@block-wallet/remote-configs@https://github.com/block-wallet/remote-configs#main":
+"@block-wallet/remote-configs@https://github.com/block-wallet/remote-configs#v1.0.0":
   version "0.0.0"
   resolved "https://github.com/block-wallet/remote-configs#e69c5966e00725c319ecbbaf06b1616ba4db5bb5"
 

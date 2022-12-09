@@ -446,6 +446,11 @@ describe('State reconciler', () => {
                 permissions: {},
                 permissionRequests: {},
             },
+            RemoteConfigsController: {
+                provider: {
+                    incompatibleSites: [],
+                },
+            },
         });
     });
 });

@@ -1,6 +1,3 @@
-import log from 'loglevel';
-import { getIncompatibleSites } from './incompatibleSites';
-
 /**
  * Check if the site is on the list of incompatibleSites
  */
@@ -135,18 +132,3 @@ const isValidImage = async (url: string): Promise<boolean> => {
 
     return isValid;
 };
-
-/**
- * isBlockWalletCompatible fetches the incompatible sites from a github respository
- * and checks whether the current site is compatible with BlockWallet or not.
- * @returns Whether blockwallet is compatible with the current site or not.
- */
-export async function isBlockWalletCompatible(): Promise<boolean> {
-    let incompatibleSites: string[] = [];
-    try {
-        incompatibleSites = await getIncompatibleSites();
-    } catch (e) {
-        log.warn('Error fetching incompatible sites', e);
-    }
-    return isCompatible(incompatibleSites);
-}

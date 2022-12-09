@@ -1,10 +1,8 @@
 import {
     checkScriptLoad,
-    isBlockWalletCompatible,
+    isCompatible,
 } from '@block-wallet/provider/utils/site';
 import { expect } from 'chai';
-import sinon from 'sinon';
-import * as incompatibleSites from '../src/utils/incompatibleSites';
 
 const INCOMPATIBLE_SITES_MOCK = ['opensea.io'];
 
@@ -14,13 +12,6 @@ describe('Provider Setup', function () {
 
     afterEach(function () {
         cleanup();
-        sinon.restore();
-    });
-
-    beforeEach(() => {
-        sinon
-            .stub(incompatibleSites, 'getIncompatibleSites')
-            .returns(Promise.resolve(INCOMPATIBLE_SITES_MOCK));
     });
 
     it('Should detect compatible site', async function () {
@@ -28,19 +19,19 @@ describe('Provider Setup', function () {
             url: 'https://uniswap.org/',
         });
 
-        expect(await isBlockWalletCompatible()).to.be.true;
+        expect(await isCompatible(INCOMPATIBLE_SITES_MOCK)).to.be.true;
 
         cleanup = require('jsdom-global')(``, {
             url: 'https://blockwallet-opensea.io/',
         });
 
-        expect(await isBlockWalletCompatible()).to.be.true;
+        expect(await isCompatible(INCOMPATIBLE_SITES_MOCK)).to.be.true;
 
         cleanup = require('jsdom-global')(``, {
             url: 'https://opensea.io.blockwallet.io',
         });
 
-        expect(await isBlockWalletCompatible()).to.be.true;
+        expect(await isCompatible(INCOMPATIBLE_SITES_MOCK)).to.be.true;
     });
 
     it('Should detect incompatible site', async function () {
@@ -48,7 +39,7 @@ describe('Provider Setup', function () {
             url: 'https://opensea.io/',
         });
 
-        expect(await isBlockWalletCompatible()).to.be.false;
+        expect(await isCompatible(INCOMPATIBLE_SITES_MOCK)).to.be.false;
     });
 
     it('Should allow the script to be injected', function () {

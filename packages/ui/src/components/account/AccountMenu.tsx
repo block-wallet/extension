@@ -1,4 +1,5 @@
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
+import { useSelectedAddressWithChainIdChecksum } from "../../util/hooks/useSelectedAddressWithChainIdChecksum"
 import VerticalSelect from "../input/VerticalSelect"
 import PopupHeader from "../popup/PopupHeader"
 import PopupLayout from "../popup/PopupLayout"
@@ -21,6 +22,7 @@ import { openHardwareRemove } from "../../context/commActions"
 const AccountMenu = () => {
     const { availableNetworks, selectedNetwork } = useBlankState()!
     const account = useSelectedAccount()
+    const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const history = useOnMountHistory()
     const fromAccountList = history.location.state?.fromAccountList
     const explorerName = getExplorerTitle(availableNetworks, selectedNetwork)
@@ -53,7 +55,7 @@ const AccountMenu = () => {
             to: generateExplorerLink(
                 availableNetworks,
                 selectedNetwork,
-                account.address,
+                checksumAddress,
                 "address"
             ),
         },

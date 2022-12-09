@@ -34,6 +34,9 @@ import { session } from "../context/setup"
 import { useConnectedSite } from "../context/hooks/useConnectedSite"
 import { useTokensList } from "../context/hooks/useTokensList"
 
+// Utils
+import { useSelectedAddressWithChainIdChecksum } from "../util/hooks/useSelectedAddressWithChainIdChecksum"
+
 // Assets
 import TokenSummary from "../components/token/TokenSummary"
 import GasPricesInfo from "../components/gas/GasPricesInfo"
@@ -41,8 +44,7 @@ import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnima
 import TransparentOverlay from "../components/loading/TransparentOverlay"
 
 const AccountDisplay = () => {
-    const blankState = useBlankState()!
-    const accountAddress = blankState.selectedAddress
+    const accountAddress = useSelectedAddressWithChainIdChecksum()
     const account = useSelectedAccount()
     const [copied, setCopied] = useState(false)
     const copy = async () => {
@@ -145,11 +147,10 @@ const PopupPage = () => {
     const error = (useHistory().location.state as { error: string })?.error
     const state = useBlankState()!
     const history = useHistory()
-    const account = useSelectedAccount()
     const { nativeToken } = useTokensList()
     const { nativeCurrency, isSendEnabled, isSwapEnabled, isBridgeEnabled } =
         useSelectedNetwork()
-
+    const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
 
     const isLoading =
@@ -182,7 +183,7 @@ const PopupPage = () => {
                             >
                                 <AccountIcon
                                     className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
-                                    fill={getAccountColor(account?.address)}
+                                    fill={getAccountColor(checksumAddress)}
                                 />
                             </Link>
                             <Tooltip

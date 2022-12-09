@@ -2,7 +2,6 @@ import { useDrag, useDrop, DragSourceMonitor } from "react-dnd"
 import { useEffect, useRef, useState } from "react"
 import classnames from "classnames"
 import { HiDotsVertical } from "react-icons/hi"
-import { MdOutlineChangeCircle, MdOutlineCheckCircle } from "react-icons/md"
 import { RiPencilFill } from "react-icons/ri"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { changeNetwork } from "../../context/commActions"
@@ -10,7 +9,8 @@ import useIsHovering from "../../util/hooks/useIsHovering"
 
 import { Network } from "@block-wallet/background/utils/constants/networks"
 import ConfirmDialog from "../dialog/ConfirmDialog"
-import SuccessDialog from "../dialog/SuccessDialog"
+import Icon, { IconName } from "../ui/Icon"
+import WaitingDialog, { useWaitingDialog } from "../dialog/WaitingDialog"
 
 interface NetworkInfo extends Network {
     color: string
@@ -52,8 +52,9 @@ const NetworkDisplay = ({
 
     const { isHovering: isHoveringIcons, getIsHoveringProps } = useIsHovering()
 
+    const { isOpen, status, dispatch } = useWaitingDialog()
+
     const [confirmSwitchNetwork, setConfirmSwitchNetwork] = useState(false)
-    const [switchNetworkSuccess, setSwitchNetworkSuccess] = useState(false)
 
     const [dropAnimation, setDropAnimation] = useState(false)
     const dropRef = useRef<HTMLDivElement>(null)
@@ -151,25 +152,42 @@ const NetworkDisplay = ({
             ref={dropRef}
             style={{ opacity }}
         >
+            <WaitingDialog
+                status={status}
+                open={isOpen}
+                titles={{
+                    loading: "Switching network...",
+                    error: "Error",
+                    success: "Success!",
+                }}
+                texts={{
+                    loading:
+                        "Please wait while the network is being switched...",
+                    error: "There was an error while switching the network",
+                    success: `Switch to ${networkInfo.desc} network was successful.`,
+                }}
+                onDone={() => {
+                    dispatch({ type: "close" })
+                }}
+                timeout={1100}
+            />
+
             <ConfirmDialog
                 title="Switch Network"
                 message={`Are you sure you want to switch to ${networkInfo.desc} network?`}
                 open={confirmSwitchNetwork}
                 onClose={() => setConfirmSwitchNetwork(false)}
                 onConfirm={async () => {
+                    dispatch({
+                        type: "open",
+                        payload: { status: "loading" },
+                    })
                     await changeNetwork(networkInfo.name)
-                    setSwitchNetworkSuccess(true)
-                    setConfirmSwitchNetwork(false)
+                    dispatch({
+                        type: "setStatus",
+                        payload: { status: "success" },
+                    })
                 }}
-            />
-            <SuccessDialog
-                open={switchNetworkSuccess}
-                title={"Network Switched"}
-                message={`Switch to ${networkInfo.desc} network was successful.`}
-                onDone={() => {
-                    setSwitchNetworkSuccess(false)
-                }}
-                timeout={1000}
             />
             <>
                 <div className="flex flex-row justify-between items-center pr-2 pl-0 h-full">
@@ -198,10 +216,13 @@ const NetworkDisplay = ({
                     </div>
                     <div className="flex flex-row items-center h-full">
                         {isSelectedNetwork ? (
-                            <div className="px-2" title="Current network">
-                                <MdOutlineCheckCircle
-                                    size={20}
-                                    className="text-green-600"
+                            <div
+                                className="px-2 text-green-600"
+                                title="Current network"
+                            >
+                                <Icon
+                                    name={IconName.CHECKMARK}
+                                    className="fill-green-600"
                                 />
                             </div>
                         ) : (
@@ -211,7 +232,7 @@ const NetworkDisplay = ({
                                 title="Switch network"
                                 onClick={() => setConfirmSwitchNetwork(true)}
                             >
-                                <MdOutlineChangeCircle size={20} />
+                                <Icon name={IconName.SWITCH} />
                             </div>
                         )}
                         <div

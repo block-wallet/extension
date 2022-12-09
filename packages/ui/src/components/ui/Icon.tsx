@@ -14,6 +14,7 @@ import UsbIcon from "../icons/UsbIcon"
 import { RightChevronIcon } from "../icons/RightChevronIcon"
 import ImportIcon from "../icons/ImportIcon"
 import ClockIcon from "../icons/ClockIcon"
+import SwitchIcon from "../icons/SwitchIcon"
 export enum IconName {
     PENCIL = "PENCIL",
     GROUP = "GROUP",
@@ -30,6 +31,7 @@ export enum IconName {
     RIGHT_CHEVRON = "RIGHT_CHEVRON",
     IMPORT = "IMPORT",
     CLOCK = "CLOCK",
+    SWITCH = "SWITCH",
 }
 
 type ProfileType = "default" | "selected" | "danger" | "disabled"
@@ -57,6 +59,7 @@ const ICONS = {
     [IconName.IMPORT]: ImportIcon,
     [IconName.RIGHT_CHEVRON]: RightChevronIcon,
     [IconName.CLOCK]: ClockIcon,
+    [IconName.SWITCH]: SwitchIcon,
 }
 
 const STROKED_ICONS = [IconName.RIGHT_CHEVRON]

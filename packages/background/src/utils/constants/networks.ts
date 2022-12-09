@@ -422,7 +422,7 @@ export const INITIAL_NETWORKS: Networks = {
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
         ],
-        rpcUrls: ['https://did.rsk.co:4444'],
+        rpcUrls: ['https://rsk-node.blockwallet.io'],
         blockExplorerName: 'RSK Explorer',
         blockExplorerUrls: ['https://explorer.rsk.co'],
         actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
@@ -541,7 +541,7 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,
-        rpcUrls: [`https://zksync2-testnet.zksync.dev`],
+        rpcUrls: [`https://zksync-testnet-node.blockwallet.io`],
         blockExplorerUrls: ['https://goerli.explorer.zksync.io'],
         blockExplorerName: 'zkSync Explorer',
         actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },

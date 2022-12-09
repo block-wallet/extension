@@ -29,7 +29,6 @@ import BlockUpdatesController from '@block-wallet/background/controllers/block-u
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TokenController } from '@block-wallet/background/controllers/erc-20/TokenController';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
-import { reject } from 'lodash';
 
 // TODO: Test gas override
 
@@ -334,8 +333,8 @@ describe('Transactions Controller', () => {
 
         it('Should estimate gas cost of a send in a custom network', async () => {
             sinon
-                .stub(networkController, 'isChainIdCustomNetwork')
-                .returns(true);
+                .stub(networkController, 'hasChainFixedGasCost')
+                .returns(false);
 
             sinon.stub(networkController, 'getProvider').returns({
                 ...providerMock,
@@ -1050,6 +1049,9 @@ describe('Transactions Controller', () => {
                     gasLimit: BigNumber.from(SEND_GAS_COST),
                 })
             );
+            sinon
+                .stub(networkController, 'getEIP1559Compatibility')
+                .returns(Promise.resolve(true));
 
             let {
                 transactionMeta: { transactionParams },
@@ -1081,6 +1083,9 @@ describe('Transactions Controller', () => {
                     gasLimit: BigNumber.from(SEND_GAS_COST),
                 })
             );
+            sinon
+                .stub(networkController, 'getEIP1559Compatibility')
+                .returns(Promise.resolve(true));
 
             mockedProvider.restore();
             mockedProvider = sinon
@@ -1640,6 +1645,9 @@ describe('Transactions Controller', () => {
                     gasLimit: BigNumber.from(SEND_GAS_COST),
                 })
             );
+            sinon
+                .stub(networkController, 'getEIP1559Compatibility')
+                .returns(Promise.resolve(true));
 
             transactionController.config = {
                 txHistoryLimit: 1,

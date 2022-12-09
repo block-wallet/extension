@@ -302,6 +302,7 @@ export interface DappSignatureReq<T extends SignatureMethods> {
 export interface NormalizedSignatureParams<T extends SignatureMethods> {
     address: string;
     data: NormalizedSignatureData[T];
+    rawData?: string;
 }
 
 export type TypedSignatureMethods = Exclude<

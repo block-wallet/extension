@@ -19,19 +19,19 @@ describe('Provider Setup', function () {
             url: 'https://uniswap.org/',
         });
 
-        expect(await isCompatible(INCOMPATIBLE_SITES_MOCK)).to.be.true;
+        expect(isCompatible(INCOMPATIBLE_SITES_MOCK)).to.be.true;
 
         cleanup = require('jsdom-global')(``, {
             url: 'https://blockwallet-opensea.io/',
         });
 
-        expect(await isCompatible(INCOMPATIBLE_SITES_MOCK)).to.be.true;
+        expect(isCompatible(INCOMPATIBLE_SITES_MOCK)).to.be.true;
 
         cleanup = require('jsdom-global')(``, {
             url: 'https://opensea.io.blockwallet.io',
         });
 
-        expect(await isCompatible(INCOMPATIBLE_SITES_MOCK)).to.be.true;
+        expect(isCompatible(INCOMPATIBLE_SITES_MOCK)).to.be.true;
     });
 
     it('Should detect incompatible site', async function () {
@@ -39,7 +39,7 @@ describe('Provider Setup', function () {
             url: 'https://opensea.io/',
         });
 
-        expect(await isCompatible(INCOMPATIBLE_SITES_MOCK)).to.be.false;
+        expect(isCompatible(INCOMPATIBLE_SITES_MOCK)).to.be.false;
     });
 
     it('Should allow the script to be injected', function () {

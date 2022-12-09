@@ -181,7 +181,13 @@ initBlockWallet().catch((error) => {
 // On install, open onboarding tab
 chrome.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === 'install') {
+        chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
         openExtensionInBrowser();
+    }
+
+    // For existing users, when the extension gets updated we also set the uninstall form.
+    if (reason === 'update') {
+        chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
     }
 });
 

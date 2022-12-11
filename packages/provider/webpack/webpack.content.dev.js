@@ -1,5 +1,5 @@
 const { merge } = require('webpack-merge');
-const common = require('./webpack.config.js');
+const common = require('./webpack.content.js');
 
 process.env.BABEL_ENV = 'development';
 process.env.NODE_ENV = 'development';

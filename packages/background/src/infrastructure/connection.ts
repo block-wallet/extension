@@ -4,6 +4,7 @@ import {
     ProviderInstances,
 } from '../utils/types/communication';
 import { closeExtensionInstance } from '../utils/popup';
+import { isOnboardingTabUrl } from '../utils/window';
 import { v4 as uuid } from 'uuid';
 import BlankController from '../controllers/BlankController';
 import log from 'loglevel';
@@ -39,8 +40,8 @@ export const setupConnection = (
         for (const instance in extensionInstances) {
             // Ignore if it is an onboarding tab
             if (
-                !extensionInstances[instance].port.sender?.url?.includes(
-                    'tab.html'
+                !isOnboardingTabUrl(
+                    extensionInstances[instance].port.sender?.url
                 )
             ) {
                 closeExtensionInstance(instance);

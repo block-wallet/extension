@@ -2,6 +2,7 @@ import BlankProvider from '@block-wallet/provider/provider/BlankProvider';
 import { Handlers } from '@block-wallet/background/utils/types/communication';
 import { JSONRPCMethod } from '@block-wallet/background/utils/types/ethereum';
 import { expect } from 'chai';
+import LocalStorageMock from './LocalStorageMock';
 
 // Create test interface to test private properties
 // Temporary workaround for JSDOM not being able to trigger on message callbacks,
@@ -18,14 +19,30 @@ interface TestProvider extends BlankProvider {
 
 describe('Blank Provider', function () {
     let provider: TestProvider;
+    let windowLocalStorage: any;
 
-    this.beforeAll(function () {
+    this.beforeAll(() => {
+        //Prevent the following error: "SecurityError: localStorage is not available for opaque origins"
+        require('jsdom-global')(undefined, {
+            url: 'http://localhost',
+        });
+        windowLocalStorage = window.localStorage;
         // @ts-ignore
         provider = new BlankProvider() as TestProvider;
     });
 
-    beforeEach(function () {
+    beforeEach(() => {
         provider._handlers = {};
+        Object.defineProperty(window, 'localStorage', {
+            value: LocalStorageMock,
+        });
+        window.localStorage.clear();
+    });
+
+    this.afterAll(() => {
+        Object.defineProperty(window, 'localStorage', {
+            value: windowLocalStorage,
+        });
     });
 
     describe('Request', function () {

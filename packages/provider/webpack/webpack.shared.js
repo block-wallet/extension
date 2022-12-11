@@ -21,6 +21,10 @@ module.exports = (entry) => ({
                     },
                 },
             },
+            {
+                resourceQuery: /raw/,
+                type: 'asset/source',
+            },
         ],
     },
     resolve: {

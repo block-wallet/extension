@@ -1,9 +1,7 @@
-import { incompatibleSites } from './constants/incompatibleSites';
-
 /**
  * Check if the site is on the list of incompatibleSites
  */
-export const isCompatible = (): boolean => {
+export const isCompatible = (incompatibleSites: string[]): boolean => {
     for (let i = 0; i < incompatibleSites.length; i++) {
         if (
             window.location.hostname === incompatibleSites[i] ||

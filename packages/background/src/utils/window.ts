@@ -1,3 +1,5 @@
+import { ONBOARDING_TAB_NAME } from './constants/tab';
+
 /**
  * Checks for runtime error
  *
@@ -154,7 +156,7 @@ export const openExtensionInBrowser = (
     route: string | null = null,
     queryString = null
 ): void => {
-    let extensionURL = chrome.runtime.getURL('tab.html');
+    let extensionURL = chrome.runtime.getURL(ONBOARDING_TAB_NAME);
 
     if (queryString) {
         extensionURL += `?${queryString}`;
@@ -256,3 +258,10 @@ export const getPlatformInfo = (): Promise<chrome.runtime.PlatformInfo> => {
         });
     });
 };
+
+export function isOnboardingTabUrl(tabUrl: string | undefined): boolean {
+    if (!tabUrl) {
+        return false;
+    }
+    return tabUrl.includes(ONBOARDING_TAB_NAME);
+}

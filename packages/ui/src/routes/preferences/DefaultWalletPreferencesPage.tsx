@@ -100,9 +100,10 @@ const DefaultWalletPreferencesPage: FC<DefaultWalletPreferencesProps> = ({
                     {wasDefaultBrowserWallet ? (
                         <span>
                             Turning this off will make BlockWallet unable to
-                            connect to DApps. Turn it off if you want a
-                            different browser wallet to connect to the DApps you
-                            are visiting.
+                            connect to DApps in case you have more than one
+                            wallet installed in your browser. Turn it off if you
+                            want a different browser wallet to connect to the
+                            DApps you are visiting.
                         </span>
                     ) : (
                         <span>

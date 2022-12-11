@@ -271,6 +271,11 @@ const initialState: BlankAppState & {
         deletedUserTokens: {} as any,
         cachedPopulatedTokens: {} as any,
     },
+    RemoteConfigsController: {
+        provider: {
+            incompatibleSites: [],
+        },
+    },
 };
 
 describe('State reconciler', () => {
@@ -440,6 +445,11 @@ describe('State reconciler', () => {
             PermissionsController: {
                 permissions: {},
                 permissionRequests: {},
+            },
+            RemoteConfigsController: {
+                provider: {
+                    incompatibleSites: [],
+                },
             },
         });
     });

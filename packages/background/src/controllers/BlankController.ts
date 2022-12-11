@@ -228,6 +228,10 @@ import BridgeController, {
 import { IChain } from '../utils/types/chain';
 import { BridgeImplementation } from '../utils/bridgeApi';
 import TokenAllowanceController from './erc-20/transactions/TokenAllowanceController';
+import { isOnboardingTabUrl } from '../utils/window';
+import RemoteConfigsController, {
+    RemoteConfigsControllerState,
+} from './RemoteConfigsController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -268,6 +272,7 @@ export default class BlankController extends EventEmitter {
     private readonly blockUpdatesController: BlockUpdatesController;
     private readonly transactionWatcherController: TransactionWatcherController;
     private readonly tokenAllowanceController: TokenAllowanceController;
+    private readonly remoteConfigsController: RemoteConfigsController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -298,6 +303,10 @@ export default class BlankController extends EventEmitter {
 
         this.networkController = new NetworkController(
             initState.NetworkController
+        );
+
+        this.remoteConfigsController = new RemoteConfigsController(
+            initState.RemoteConfigsController
         );
 
         this.blockFetchController = new BlockFetchController(
@@ -481,6 +490,7 @@ export default class BlankController extends EventEmitter {
             AddressBookController: this.addressBookController.store,
             BlockUpdatesController: this.blockUpdatesController.store,
             BlockFetchController: this.blockFetchController.store,
+            RemoteConfigsController: this.remoteConfigsController.store,
             TransactionWatcherControllerState:
                 this.transactionWatcherController.store,
             BridgeController: this.bridgeController.store,
@@ -866,6 +876,8 @@ export default class BlankController extends EventEmitter {
                 return this.setupProvider(portId);
             case Messages.EXTERNAL.SET_ICON:
                 return this.setProviderIcon(request as RequestSetIcon, portId);
+            case Messages.EXTERNAL.GET_PROVIDER_CONFIG:
+                return this.getProviderRemoteConfig();
             case Messages.NETWORK.CHANGE:
                 return this.networkChange(request as RequestNetworkChange);
             case Messages.NETWORK.SET_SHOW_TEST_NETWORKS:
@@ -912,6 +924,8 @@ export default class BlankController extends EventEmitter {
                 return this.updateSitePermissions(
                     request as RequestUpdateSitePermissions
                 );
+            case Messages.STATE.GET_REMOTE_CONFIG:
+                return this.getRemoteConifg();
             case Messages.STATE.GET:
                 return this.getState();
             case Messages.TRANSACTION.CONFIRM:
@@ -1448,8 +1462,8 @@ export default class BlankController extends EventEmitter {
         // Check if there is any open onboarding tab
         for (const instance in extensionInstances) {
             if (
-                extensionInstances[instance].port.sender?.url?.includes(
-                    'tab.html'
+                isOnboardingTabUrl(
+                    extensionInstances[instance].port.sender?.url
                 )
             ) {
                 onboardingInstance = instance;
@@ -1474,10 +1488,10 @@ export default class BlankController extends EventEmitter {
         // Close every other extension instance tab
         for (const instance in extensionInstances) {
             if (
-                extensionInstances[instance].port.sender?.url?.includes(
-                    'tab.html'
-                ) &&
-                instance
+                instance &&
+                isOnboardingTabUrl(
+                    extensionInstances[instance].port.sender?.url
+                )
             ) {
                 const tab = extensionInstances[instance].port.sender?.tab;
                 if (tab && tab.id && tab.windowId) {
@@ -2279,6 +2293,14 @@ export default class BlankController extends EventEmitter {
      */
     private getState(): Flatten<BlankAppUIState> {
         return this.UIStore.flatState;
+    }
+
+    private getRemoteConifg(): RemoteConfigsControllerState {
+        return this.remoteConfigsController.config;
+    }
+
+    private getProviderRemoteConfig(): RemoteConfigsControllerState['provider'] {
+        return this.remoteConfigsController.providerConfig;
     }
 
     /**

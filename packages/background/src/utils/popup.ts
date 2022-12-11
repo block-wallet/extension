@@ -5,6 +5,7 @@ import {
     switchToTab,
     getPlatformInfo,
     updateWindow,
+    isOnboardingTabUrl,
 } from './window';
 import { extensionInstances } from '../infrastructure/connection';
 import { Mutex } from 'async-mutex';
@@ -15,6 +16,7 @@ import {
     TransportResponseMessage,
 } from './types/communication';
 import log from 'loglevel';
+import { POPUP_TAB_NAME } from './constants/tab';
 
 // Define window size for each os
 const windowSize: { [os in PlatformOS]: { height: number; width: number } } = {
@@ -44,20 +46,14 @@ export const openPopup = async (): Promise<void> => {
         if (openTab) {
             focusWindow(openTab.windowId);
             switchToTab(openTab.tabId);
-        } else if (!isExtensionOpen()) {
-            // Open a new window if the extension is not open
-            await openExtensionWindow();
+            return;
         }
+
+        // Open a new window if the extension is not open
+        await openExtensionWindow();
     } finally {
         setTimeout(() => release(), 1000);
     }
-};
-
-/**
- * Checks if the extension is open
- */
-const isExtensionOpen = (): boolean => {
-    return extensionInstances && Object.keys(extensionInstances).length !== 0;
 };
 
 /**
@@ -67,8 +63,9 @@ const isExtensionOpen = (): boolean => {
 const getOpenTab = (): { tabId: number; windowId: number } | null => {
     for (const instance in extensionInstances) {
         const tab = extensionInstances[instance].port.sender?.tab;
-        const isOnboardingTab =
-            extensionInstances[instance].port.sender?.url?.includes('tab.html');
+        const isOnboardingTab = isOnboardingTabUrl(
+            extensionInstances[instance].port.sender?.url
+        );
 
         if (tab && tab.id && tab.windowId && !isOnboardingTab) {
             return {
@@ -113,7 +110,7 @@ const openExtensionWindow = async () => {
 
     // Create new notification popup
     const newWindow = await openWindow({
-        url: 'popup.html',
+        url: POPUP_TAB_NAME,
         type: 'popup',
         state: 'normal',
         width,

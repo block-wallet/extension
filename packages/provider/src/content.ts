@@ -1,11 +1,43 @@
 import {
-    CONTENT,
     EXTERNAL,
+    CONTENT,
     Origin,
     WindowTransportRequestMessage,
 } from '@block-wallet/background/utils/types/communication';
-import log from 'loglevel';
 import { checkScriptLoad } from './utils/site';
+import log from 'loglevel';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-ignore
+import blankProvider from '../../../dist/blankProvider.js?raw';
+
+let providerOverridden = false;
+
+function injectProvider() {
+    const injectableScript = blankProvider;
+    const injectableScriptSourceMapURL = `//# sourceURL=${chrome.runtime.getURL(
+        'blankProvider.js'
+    )}\n`;
+    const BUNDLE = injectableScript + injectableScriptSourceMapURL;
+
+    const container = document.head || document.documentElement;
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.textContent = BUNDLE;
+    script.setAttribute('async', 'false');
+    container.insertBefore(script, container.children[0]);
+    container.removeChild(script);
+}
+
+window.addEventListener('ethereum#initialized', (e: Event) => {
+    const customEvent = e as CustomEvent;
+    if (customEvent.detail !== 'isBlockWallet') {
+        providerOverridden = true;
+    } else {
+        providerOverridden = false;
+    }
+});
+
+injectProvider();
 
 // Check background settings for script load
 chrome.runtime.sendMessage(
@@ -13,22 +45,16 @@ chrome.runtime.sendMessage(
     (response: { shouldInject: boolean }): void => {
         const error = chrome.runtime.lastError;
         const shouldLoad = checkScriptLoad();
-
-        if (response.shouldInject !== true || shouldLoad !== true || error) {
+        if (
+            (response.shouldInject !== true || shouldLoad !== true || error) &&
+            //If provider has been overridden by another wallet, then remove connection.
+            providerOverridden
+        ) {
             port.disconnect();
             window.removeEventListener('message', windowListenter);
             log.warn('BlockWallet: Provider not injected due to user setting.');
-        } else {
-            const container = document.head || document.documentElement;
-            const script = document.createElement('script');
-
-            script.type = 'text/javascript';
-            script.src = chrome.runtime.getURL('blankProvider.js');
-            script.setAttribute('async', 'false');
-            script.onload = () => {
-                container.removeChild(script);
-            };
-            container.insertBefore(script, container.children[0]);
+        } else if (providerOverridden) {
+            injectProvider();
         }
     }
 );

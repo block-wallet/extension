@@ -39,7 +39,7 @@ export const getNetworkNameFromChainId = (
     const networkName = network !== undefined ? network[nameOrDesc] : undefined
 
     if (networkName) {
-        return capitalize(networkName)
+        return networkName
     } else {
         return "Unknown"
     }

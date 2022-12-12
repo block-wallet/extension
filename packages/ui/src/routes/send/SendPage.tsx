@@ -24,7 +24,7 @@ import AccountSearchResults, {
     AccountResult,
 } from "../../components/account/AccountSearchResults"
 import Checkbox from "../../components/input/Checkbox"
-import { toChecksumAddress, isValidAddress } from "ethereumjs-util"
+import { isValidAddress, toChecksumAddress } from "ethereumjs-util"
 import { formatHashLastChars } from "../../util/formatAccount"
 
 // Schema
@@ -110,13 +110,13 @@ const SendPage = () => {
 
     useEffect(() => {
         const checkAddress = () => {
-            const _isValidAddress = isValidAddress(searchString)
+            const validAddress = isValidAddress(searchString)
 
-            setIsAddress(_isValidAddress)
+            setIsAddress(validAddress)
             setCanAddContact(false)
             setWarning("")
 
-            if (_isValidAddress) {
+            if (validAddress) {
                 const normalizedAddress = toChecksumAddress(searchString)
 
                 const isCurrentAccount =

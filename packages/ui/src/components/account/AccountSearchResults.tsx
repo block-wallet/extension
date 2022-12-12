@@ -1,5 +1,5 @@
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
-import { toChecksumAddress, isValidAddress } from "ethereumjs-util"
+import { isValidAddress, toChecksumAddress } from "ethereumjs-util"
 import { useRef, useEffect, useReducer } from "react"
 import { useAddressBookAccounts } from "../../context/hooks/useAddressBookAccounts"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
@@ -64,6 +64,7 @@ const AccountSearchResults = ({
         !resultsToDisplay.wallet || results.wallet.length === 0
     const noAddressBookResults =
         !resultsToDisplay.addressBook || results.addressBook.length === 0
+
     const noEnsResults = !resultsToDisplay.ens || !results.ens
     const noUDResults = !resultsToDisplay.ud || !results.ud
     const displayEmptyResultsMessage = (): boolean => {

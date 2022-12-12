@@ -213,6 +213,10 @@
   version "2.2.2"
   resolved "https://github.com/block-wallet/explorer-link#06beadc0eed8b3aed7c3b3813288ac85b5e99a19"
 
+"@block-wallet/remote-configs@https://github.com/block-wallet/remote-configs#v1.0.0":
+  version "0.0.0"
+  resolved "https://github.com/block-wallet/remote-configs#e69c5966e00725c319ecbbaf06b1616ba4db5bb5"
+
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz#00629c35a688e05a88b1cda684fb9d5e73f000a1"

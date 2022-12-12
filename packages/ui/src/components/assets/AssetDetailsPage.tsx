@@ -43,7 +43,7 @@ const AssetDetailsPage = () => {
         useSelectedNetwork()
     const asset = useGetAssetByTokenAddress(address)
     const isNative = isNativeTokenAddress(address)
-    const tokenTransactions = useTokenTransactions(asset?.token?.symbol)
+    const tokenTransactions = useTokenTransactions(asset?.token.address)
 
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [isRemoving, setIsRemoving] = useState(false)
@@ -84,7 +84,7 @@ const AssetDetailsPage = () => {
                 <PopupHeader
                     onBack={() => history.push("/home")}
                     title={`${formatName(account.name, 14)} - ${formatName(
-                        token.name,
+                        token.symbol,
                         12
                     )}`}
                     close={false}
@@ -166,9 +166,12 @@ const AssetDetailsPage = () => {
             />
 
             <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 space-y-6 overflow-auto hide-scroll">
-                <TokenSummary minHeight="13rem">
+                <TokenSummary minHeight="13rem" className="mt-2">
                     <TokenSummary.Balances>
                         <AssetIcon filled asset={token} />
+                        <TokenSummary.TokenName>
+                            {token.name}
+                        </TokenSummary.TokenName>
                         <TokenSummary.TokenBalance
                             className="flex flex-row space-x-1"
                             title={`${formattedTokenBalance} ${token.symbol}`}
@@ -189,7 +192,7 @@ const AssetDetailsPage = () => {
                             )}
                         </TokenSummary.ExchangeRateBalance>
                     </TokenSummary.Balances>
-                    <TokenSummary.Actions>
+                    <TokenSummary.Actions className="mb-4">
                         <Link
                             to={{
                                 pathname: "/send",

@@ -89,7 +89,7 @@ const NetworkSelect: FunctionComponent<{
                     }
                 }}
                 className={classNames(
-                    "relative flex flex-row items-center p-1 px-2 pr-1 text-gray-600 border rounded-md group border-primary-200 w-44 text-xs hover:border-primary-300",
+                    "relative flex flex-row items-center justify-start p-1 text-gray-600 border rounded-md group border-primary-200 w-44 text-xs hover:border-primary-300",
                     !isImportingDeposits
                         ? "cursor-pointer select-none"
                         : "disabled:pointer-events-none opacity-50",
@@ -97,7 +97,7 @@ const NetworkSelect: FunctionComponent<{
                 )}
             >
                 <span
-                    className={"justify-end h-2 rounded-xl mx-2"}
+                    className={"justify-start h-2 rounded-xl ml-1 mr-2"}
                     style={{
                         backgroundColor: getNetworkData().color,
                         width: "8px",

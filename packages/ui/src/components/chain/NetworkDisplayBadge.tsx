@@ -35,14 +35,16 @@ const NetworkDisplayBadge = ({
             )}
         >
             <span
-                className={"justify-end h-2 rounded-xl mx-2"}
+                className={
+                    "justify-end h-2 rounded-xl mr-2 ml-1 animate-pulse pointer-events-none"
+                }
                 style={{ backgroundColor: networkColor, width: "8px" }}
             />
             <span
                 className={classnames(
                     truncate
-                        ? "justify-start truncate ..."
-                        : "justify-start whitespace-normal break-all flex-1"
+                        ? "flex justify-center truncate ..."
+                        : "flex justify-center whitespace-normal break-all flex-1"
                 )}
                 style={truncate ? { maxWidth: 130 } : {}}
             >

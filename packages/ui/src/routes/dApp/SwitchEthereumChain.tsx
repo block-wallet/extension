@@ -51,33 +51,14 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
     const { chainId: newNetworkChainId } =
         dappReqData as DappRequestParams[DappReq.SWITCH_NETWORK]
 
-    const [currentNetwork, setCurrentNetwork] = useState(
+    const [currentNetwork] = useState(
         getNetworkFromChainId(availableNetworks, currentNetworkChainId)
     )
-    const [newNetwork, setNewNetwork] = useState(
+    const [newNetwork] = useState(
         getNetworkFromChainId(availableNetworks, newNetworkChainId)
     )
 
-    const [currentSiteMetadata, setSiteMetadata] = useState(siteMetadata)
-
-    useEffect(() => {
-        // Check that this wasn't the last request and popup is still open to prevent
-        // displaying same network on both labels
-        setCurrentNetwork(
-            getNetworkFromChainId(availableNetworks, currentNetworkChainId)
-        )
-        setNewNetwork(
-            getNetworkFromChainId(availableNetworks, newNetworkChainId)
-        )
-        setSiteMetadata(siteMetadata)
-    }, [
-        newNetworkChainId,
-        currentNetworkChainId,
-        siteMetadata,
-        availableNetworks,
-        requestId,
-        currentSiteMetadata,
-    ])
+    const [currentSiteMetadata] = useState(siteMetadata)
 
     const approve = async () => {
         try {
@@ -184,7 +165,7 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
                         <NetworkDisplayBadge
                             className="min-w-[50%] py-1 m-auto"
                             network={currentNetwork}
-                            truncate={true}
+                            truncate={false}
                             fill={false}
                         />
                     )}
@@ -206,7 +187,7 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
                         <NetworkDisplayBadge
                             className="min-w-[50%] py-1 m-auto"
                             network={newNetwork}
-                            truncate={true}
+                            truncate={false}
                             fill={false}
                         />
                     )}

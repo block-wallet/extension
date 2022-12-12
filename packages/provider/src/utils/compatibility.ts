@@ -1,8 +1,6 @@
 import { isCompatible } from './site';
 import CACHED_INCOMPATIBLE_SITES from '@block-wallet/remote-configs/provider/incompatible_sites.json';
 
-const BANNED = ['looksrare.org'];
-
 interface CompatibilityCache {
     isBlockWallet: boolean;
 }
@@ -35,9 +33,7 @@ export function getBlockWalletCompatibility(): CompatibilityCache {
 export function updateBlockWalletCompatibility(
     incompatibleSites: string[] = CACHED_INCOMPATIBLE_SITES
 ): CompatibilityCache {
-    const isBlockWallet = isCompatible(
-        incompatibleSites.filter((site) => !BANNED.includes(site))
-    );
+    const isBlockWallet = isCompatible(incompatibleSites);
     setCompatibility(isBlockWallet);
     return { isBlockWallet };
 }

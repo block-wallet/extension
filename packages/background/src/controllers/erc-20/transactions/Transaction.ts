@@ -100,7 +100,7 @@ export class TokenOperationsController extends TokenTransactionController {
 
         let name = '';
         let symbol = '';
-        let decimals = 0;
+        let decimals = -1;
 
         try {
             const contract = this.getContract(tokenAddress);

@@ -1,6 +1,8 @@
 import { expect } from 'chai';
-import { ethers, utils } from 'ethers';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
+import { Zero } from '@ethersproject/constants';
 import { BigNumber } from '@ethersproject/bignumber';
+import { parseEther, parseUnits } from '@ethersproject/units';
 import sinon from 'sinon';
 import { babyJub, pedersenHash } from '@block-wallet/circomlib';
 
@@ -249,7 +251,7 @@ describe('TornadoService', () => {
             }
         );
 
-        expect(total.toString()).to.be.equal(utils.parseEther('1').toString());
+        expect(total.toString()).to.be.equal(parseEther('1').toString());
         expect(fee.toString()).to.be.equal('59017500000000000');
     }).timeout(60000);
 
@@ -284,9 +286,7 @@ describe('TornadoService', () => {
             }
         );
 
-        expect(total.toString()).to.be.equal(
-            utils.parseUnits('100', 18).toString()
-        );
+        expect(total.toString()).to.be.equal(parseUnits('100', 18).toString());
         expect(fee.toString()).to.be.equal('197904726495824626006');
     }).timeout(60000);
 
@@ -460,21 +460,21 @@ describe('TornadoService', () => {
                 resolve([
                     {
                         blockNumber: 1,
-                        fee: ethers.constants.Zero,
+                        fee: Zero,
                         nullifierHex: 'n1',
                         to: 't1',
                         transactionHash: 'h1',
                     },
                     {
                         blockNumber: 2,
-                        fee: ethers.constants.Zero,
+                        fee: Zero,
                         nullifierHex: 'n2',
                         to: 't2',
                         transactionHash: 'h2',
                     },
                     {
                         blockNumber: 3,
-                        fee: ethers.constants.Zero,
+                        fee: Zero,
                         nullifierHex: 'n3',
                         to: 't3',
                         transactionHash: 'h3',
@@ -762,11 +762,9 @@ describe('TornadoService', () => {
     }).timeout(60000);
 
     it('Should update pending deposits to its correspondent status correctly', async () => {
-        sinon
-            .stub(ethers.providers.StaticJsonRpcProvider.prototype, 'network')
-            .returns({
-                chainId: 5,
-            });
+        sinon.stub(StaticJsonRpcProvider.prototype, 'network').returns({
+            chainId: 5,
+        });
 
         await tornadoService.unlock(testPass, mnemonic);
         const deposits: IBlankDeposit[] = [
@@ -826,11 +824,9 @@ describe('TornadoService', () => {
     }).timeout(60000);
 
     it('Should process submitted but non confirmed deposits correctly', async () => {
-        sinon
-            .stub(ethers.providers.StaticJsonRpcProvider.prototype, 'network')
-            .get(() => ({
-                chainId: 5,
-            }));
+        sinon.stub(StaticJsonRpcProvider.prototype, 'network').get(() => ({
+            chainId: 5,
+        }));
 
         await tornadoService.unlock(testPass, mnemonic);
         const deposits: IBlankDeposit[] = [
@@ -1036,22 +1032,14 @@ describe('TornadoService', () => {
         sinon
             .stub(transactionController['_contractSignatureParser'], 'lookup')
             .returns(Promise.resolve(['multicall(uint256,bytes[])']));
+        sinon.stub(StaticJsonRpcProvider.prototype, 'getTransaction').returns(
+            Promise.resolve({
+                blockNumber: 1,
+                timestamp: new Date().getTime() / 1000,
+            } as any)
+        );
         sinon
-            .stub(
-                ethers.providers.StaticJsonRpcProvider.prototype,
-                'getTransaction'
-            )
-            .returns(
-                Promise.resolve({
-                    blockNumber: 1,
-                    timestamp: new Date().getTime() / 1000,
-                } as any)
-            );
-        sinon
-            .stub(
-                ethers.providers.StaticJsonRpcProvider.prototype,
-                'waitForTransaction'
-            )
+            .stub(StaticJsonRpcProvider.prototype, 'waitForTransaction')
             .returns(Promise.resolve({} as any));
 
         // Unlock vault
@@ -1202,23 +1190,18 @@ describe('TornadoService', () => {
 
     it('Should return compliance information correctly', async () => {
         sinon
-            .stub(
-                ethers.providers.StaticJsonRpcProvider.prototype,
-                'getTransactionReceipt'
-            )
+            .stub(StaticJsonRpcProvider.prototype, 'getTransactionReceipt')
             .returns(
                 Promise.resolve({
                     from: '0xe50002223413413',
                 } as any)
             );
 
-        sinon
-            .stub(ethers.providers.StaticJsonRpcProvider.prototype, 'getBlock')
-            .returns(
-                Promise.resolve({
-                    timestamp: 1439799168,
-                } as any)
-            );
+        sinon.stub(StaticJsonRpcProvider.prototype, 'getBlock').returns(
+            Promise.resolve({
+                timestamp: 1439799168,
+            } as any)
+        );
 
         // Add both events here for testing simplification sake
         sinon
@@ -1260,9 +1243,9 @@ describe('TornadoService', () => {
                                               nullifierHash:
                                                   '0x21315e4bfbfe7cff7a31e14546b96abdfacf2281cb938beddce4f89fc132ba60',
                                               to: '0xf98765337659907',
-                                              fee: utils
-                                                  .parseEther('0.07')
-                                                  .toHexString() as unknown as BigNumber,
+                                              fee: parseEther(
+                                                  '0.07'
+                                              ).toHexString() as unknown as BigNumber,
                                           },
                                           blockNumber: 29219,
                                           transactionHash: '0x333827262177432',

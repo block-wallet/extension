@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
-import { ethers } from 'ethers';
+import { Contract } from '@ethersproject/contracts';
 import { BigNumber } from '@ethersproject/bignumber';
 import { EventEmitter } from 'events';
 import { INITIAL_NETWORKS } from '../../src/utils/constants/networks';
@@ -995,7 +995,7 @@ describe('AccountTracker controller implementation', function () {
     describe('AccountTracker methods with mocked etherjs', () => {
         before(async () => {
             // Stub ethers methods
-            sinon.stub(ethers, 'Contract').returns({
+            sinon.stub(Contract.prototype, 'Contract').returns({
                 balances: (
                     addresses: string[],
                     _ethBalance: string[]

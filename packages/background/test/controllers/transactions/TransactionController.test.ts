@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { providers } from 'ethers';
 import { BigNumber } from '@ethersproject/bignumber';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import sinon from 'sinon';
 import { TypedTransaction } from '@ethereumjs/tx';
 import {
@@ -369,10 +369,7 @@ describe('Transactions Controller', () => {
     });
 
     describe('Transactions', () => {
-        let mockedProvider: sinon.SinonStub<
-            [],
-            providers.StaticJsonRpcProvider
-        >;
+        let mockedProvider: sinon.SinonStub<[], StaticJsonRpcProvider>;
 
         beforeEach(() => {
             networkController = getNetworkControllerInstance();

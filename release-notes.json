@@ -386,6 +386,32 @@
                 }
             ],
             "version": "0.5.0"
+        },
+        {
+            "sections": [
+                {
+                    "title": "v0.5.1",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Rootstock(RSK), Gnosis, and Optimism are now default networks."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improved gas estimation on Polygon and other L2 networks."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Swaps are now available on the Aurora network."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Your experience will now be even smoother thanks to many minor improvements to the UI/UX and bugs fixed."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.5.1"
         }
     ]
 }

@@ -57,5 +57,6 @@ export const LINKS = {
         MALICIOUS_DAPPS:
             "https://help.blockwallet.io/hc/en-us/articles/10374731466769",
         BRIDGES: "https://help.blockwallet.io/hc/en-us/articles/10669678195473",
+        CHANGELOG: "https://bit.ly/bw-release"
     },
 }

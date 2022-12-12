@@ -41,7 +41,7 @@ const AddTokensPage = () => {
 
     const isManualTokenView = utils.isAddress(searchedValue)
     useEffect(() => {
-        if (searchedValue) {
+        if (searchedValue && !isManualTokenView) {
             if (/^[a-zA-Z0-9_.-]{3,}$/.test(searchedValue)) {
                 // Accept only number, letters and - . _
                 searchTokenInAssetsList(searchedValue.toUpperCase())

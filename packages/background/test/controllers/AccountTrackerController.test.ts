@@ -995,7 +995,7 @@ describe('AccountTracker controller implementation', function () {
     describe('AccountTracker methods with mocked etherjs', () => {
         before(async () => {
             // Stub ethers methods
-            sinon.stub(Contract.prototype, 'Contract').returns({
+            sinon.stub(Contract, 'prototype').returns({
                 balances: (
                     addresses: string[],
                     _ethBalance: string[]

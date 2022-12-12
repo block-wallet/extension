@@ -269,7 +269,7 @@ describe('Blank Provider Controller', function () {
     describe('Provider requests', () => {
         before(async () => {
             // Stub ethers methods
-            sinon.stub(Contract.prototype, 'Contract').returns({
+            sinon.stub(Contract, 'prototype').returns({
                 balances: (
                     addresses: string[],
                     _ethBalance: string[]

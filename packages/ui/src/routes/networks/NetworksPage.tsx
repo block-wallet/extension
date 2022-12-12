@@ -14,10 +14,10 @@ import { ActionButton } from "../../components/button/ActionButton"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { editNetworksOrder } from "../../context/commActions"
 import { sortNetworksByOrder } from "../../util/networkUtils"
-import { getAccountColor } from "../../util/getAccountColor"
 import { Network } from "@block-wallet/background/utils/constants/networks"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { editNetworkOrder } from "@block-wallet/background/utils/types/communication"
+import { getNetworkColor } from "../../util/getNetworkColor"
 
 interface NetworkInfo extends Network {
     color: string
@@ -104,9 +104,7 @@ const NetworksPage = () => {
                     if (!current.enable) {
                         return acc
                     }
-                    const color = getAccountColor(
-                        keccak256(toUtf8Bytes(current.name || current.desc))
-                    )
+                    const color = getNetworkColor(current)
                     const netInfo: NetworkInfo = {
                         ...current,
                         color,

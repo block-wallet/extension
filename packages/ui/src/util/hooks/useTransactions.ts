@@ -17,10 +17,8 @@ const failedStatuses = [
 
 const useTransactions = () => {
     const { confirmed, pending } = useBlankState()!.activityList
-    const {
-        nativeCurrency: networkNativeCurrency,
-        defaultNetworkLogo,
-    } = useSelectedNetwork()
+    const { nativeCurrency: networkNativeCurrency, defaultNetworkLogo } =
+        useSelectedNetwork()
 
     const allTransactions = pending
         .concat(confirmed)

@@ -322,9 +322,10 @@ const AddTokenManualView = ({
             <WarningDialog
                 useClickOutside={true}
                 title="Duplicated symbol"
-                message="You've already added a token with the same symbol. You should be aware this can be an scam situation. Click OK to continue adding this token."
+                message="We detected a duplicate symbol that already exists in your account. You may be exposed to potential scams by adding this token. Would you still like to proceed?"
                 open={shouldShowWarningDialog}
                 onDone={() => setShouldShowWarningDialog(false)}
+                buttonLabel="Yes, I understand the risk"
             />
         </>
     )

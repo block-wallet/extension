@@ -34,7 +34,11 @@ export default class AppStateController extends BaseController<AppStateControlle
 
         if (isAppUnlocked) {
             const now = new Date().getTime();
-            if (lastActiveTime + idleTimeout * 60 * 1000 < now) {
+            if (
+                lastActiveTime + idleTimeout * 60 * 1000 < now ||
+                //Force locking on refresh if it is not MV3.
+                !isManifestV3()
+            ) {
                 this.lock(true);
             }
         }

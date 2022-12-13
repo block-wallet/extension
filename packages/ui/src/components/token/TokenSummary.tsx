@@ -4,7 +4,7 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import BalanceLoadingSkeleton from "../skeleton/BalanceLoadingSkeleton"
 
 interface TokenSummaryMembers {
-    Balances: FC<{ children: React.ReactNode }>
+    Balances: FC<{ children: React.ReactNode; className?: string }>
     TokenBalance: FC<{
         title?: string
         children: React.ReactNode
@@ -34,7 +34,13 @@ const TokenSummary: FC<{
     )
 }
 
-const Balances = ({ children }: { children: React.ReactNode }) => {
+const Balances = ({
+    children,
+    className,
+}: {
+    children: React.ReactNode
+    className?: string
+}) => {
     const state = useBlankState()!
 
     const isLoading =
@@ -45,7 +51,11 @@ const Balances = ({ children }: { children: React.ReactNode }) => {
             {isLoading ? (
                 <BalanceLoadingSkeleton />
             ) : (
-                <div className="flex flex-col items-center space-y-1 mt-2">
+                <div
+                    className={
+                        "flex flex-col items-center space-y-1 " + className
+                    }
+                >
                     {children}
                 </div>
             )}

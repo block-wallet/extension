@@ -167,7 +167,7 @@ const AssetDetailsPage = () => {
 
             <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 space-y-6 overflow-auto hide-scroll">
                 <TokenSummary minHeight="13rem" className="mt-2">
-                    <TokenSummary.Balances>
+                    <TokenSummary.Balances className="mt-2">
                         <AssetIcon filled asset={token} />
                         <TokenSummary.TokenName>
                             {token.name}

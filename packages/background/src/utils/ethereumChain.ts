@@ -86,9 +86,10 @@ export const getCustomRpcChainId = memoize(
         // Check that chainId matches with network's
         const tempProvider = new StaticJsonRpcProvider({
             url: rpcUrl,
-            headers: isABlockWalletNode(rpcUrl)
-                ? customHeadersForBlockWalletNode
-                : undefined,
+            // temporarily removed until cors issue is fixed
+            //headers: isABlockWalletNode(rpcUrl)
+            //    ? customHeadersForBlockWalletNode
+            //    : undefined,
         });
         const { chainId: rpcChainId } = await tempProvider.getNetwork();
 

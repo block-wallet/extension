@@ -239,9 +239,9 @@
     "@block-wallet/circomlib" "^0.0.21"
     "@block-wallet/snarkjs" "^0.1.20"
 
-"@block-wallet/remote-configs@https://github.com/block-wallet/remote-configs#v1.0.0":
+"@block-wallet/remote-configs@https://github.com/block-wallet/remote-configs#v1.1.0":
   version "0.0.0"
-  resolved "https://github.com/block-wallet/remote-configs#e69c5966e00725c319ecbbaf06b1616ba4db5bb5"
+  resolved "https://github.com/block-wallet/remote-configs#eca1a737090b224974ede7b47ec44224b31fe2d1"
 
 "@block-wallet/snarkjs@^0.1.20":
   version "0.1.20"

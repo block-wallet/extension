@@ -1,3 +1,5 @@
+import log from 'loglevel';
+
 import { PreferencesController } from './PreferencesController';
 import { BaseController } from '../infrastructure/BaseController';
 import { Token } from './erc-20/Token';
@@ -85,16 +87,20 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         this._networkController.on(
             NetworkEvents.NETWORK_CHANGE,
             async (network: Network) => {
-                this.store.updateState({
-                    isRatesChangingAfterNetworkChange: true,
-                });
+                try {
+                    this.store.updateState({
+                        isRatesChangingAfterNetworkChange: true,
+                    });
 
-                this.updateNetworkNativeCurrencyId(network);
-                await this.updateExchangeRates();
-
-                this.store.updateState({
-                    isRatesChangingAfterNetworkChange: false,
-                });
+                    this.updateNetworkNativeCurrencyId(network);
+                    await this.updateExchangeRates();
+                } catch (error) {
+                    log.error(error);
+                } finally {
+                    this.store.updateState({
+                        isRatesChangingAfterNetworkChange: false,
+                    });
+                }
             }
         );
 

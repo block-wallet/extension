@@ -167,7 +167,7 @@ const PopupPage = () => {
                 }}
                 onDone={() => setHasErrorDialog(false)}
             />
-            {isLoading && <TransparentOverlay />}
+            {state.isNetworkChanging && <TransparentOverlay />}
             <div
                 className="absolute top-0 left-0 z-10 flex flex-col items-start w-full p-6 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
                 style={{ backdropFilter: "blur(4px)" }}

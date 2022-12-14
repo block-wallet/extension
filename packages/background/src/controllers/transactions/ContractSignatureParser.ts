@@ -212,8 +212,6 @@ export class ContractSignatureParser {
                 module: 'contract',
                 action: 'getabi',
                 address,
-                //TODO: current .env API key is invalid, should we get a new one?
-                //apikey:
             },
             30000
         );

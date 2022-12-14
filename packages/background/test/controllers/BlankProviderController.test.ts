@@ -45,8 +45,7 @@ const TX_HASH =
 const TEXT_FOR_HASH = 'HASH ME';
 
 describe('Blank Provider Controller', function () {
-    const defaultIdleTimeout = 5;
-    const initialLastActiveTime = new Date().getTime();
+    const defaultIdleTimeout = 500000;
     const portId = '7e24f69d-c740-4eb3-9c6e-4d47df491005';
     const accounts = {
         goerli: [
@@ -405,6 +404,13 @@ describe('Blank Provider Controller', function () {
                 lastActiveTime: new Date().getTime(),
                 lockedByTimeout: false,
             });
+            sinon.stub(appStateController.store, 'getState').returns({
+                isAppUnlocked: true,
+                lastActiveTime: new Date().getTime(),
+                lockedByTimeout: false,
+                idleTimeout: defaultIdleTimeout,
+            });
+
             sinon.stub(permissionsController.store, 'getState').returns({
                 permissions: {
                     'https://app.uniswap.org': {

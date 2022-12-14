@@ -412,20 +412,6 @@
                 }
             ],
             "version": "0.5.1"
-        },
-        {
-            "sections": [
-                {
-                    "title": "v0.5.2",
-                    "notes": [
-                        {
-                            "type": "success",
-                            "message": "Bug fixes and minor improvements."
-                        }
-                    ]
-                }
-            ],
-            "version": "0.5.2"
         }
     ]
 }

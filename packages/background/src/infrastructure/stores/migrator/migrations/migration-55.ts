@@ -26,7 +26,7 @@ export default {
                 );
 
                 const features: BlankSupportedFeatures[] = [];
-                for (const feature in updatedNetworks[key].features) {
+                for (const feature of updatedNetworks[key].features) {
                     if (feature !== FEATURES.TORNADO) {
                         features.push(feature as BlankSupportedFeatures);
                     }

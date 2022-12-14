@@ -54,10 +54,11 @@ export const coingekoService: RateService = {
     async getRate(currency, symbol) {
         try {
             const query = `${BaseApiEndpoint}price`;
-            const currencyApiId =
+            const currencyApiId = overloadCurrencyApiId(
                 RATES_IDS_LIST[
                     symbol.toUpperCase() as keyof typeof RATES_IDS_LIST
-                ];
+                ]
+            );
 
             const response = await httpClient.get<
                 Record<string, Record<string, number>>
@@ -72,6 +73,15 @@ export const coingekoService: RateService = {
             return 0;
         }
     },
+};
+
+const overloadCurrencyApiId = (currencyApiId: string) => {
+    switch (currencyApiId) {
+        case 'ethereumpow':
+            return 'ethereum-pow-iou';
+        default:
+            return currencyApiId;
+    }
 };
 
 const rateProvider: Record<string, RateService> = {

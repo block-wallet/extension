@@ -196,9 +196,9 @@
     "@babel/helper-validator-identifier" "^7.19.1"
     to-fast-properties "^2.0.0"
 
-"@block-wallet/chains-assets@https://github.com/block-wallet/chains-assets#v0.0.21":
-  version "0.0.21"
-  resolved "https://github.com/block-wallet/chains-assets#9db07d496429a28f364fce1d3ea1378ac2ce2d63"
+"@block-wallet/chains-assets@https://github.com/block-wallet/chains-assets#v0.0.24":
+  version "0.0.24"
+  resolved "https://github.com/block-wallet/chains-assets#31a3aa34b7cd34d967fda8ea943f93ef0fe2fd0d"
 
 "@block-wallet/eth-ledger-bridge-keyring@https://github.com/block-wallet/eth-ledger-bridge-keyring":
   version "0.13.0"
@@ -213,9 +213,9 @@
   version "2.2.2"
   resolved "https://github.com/block-wallet/explorer-link#06beadc0eed8b3aed7c3b3813288ac85b5e99a19"
 
-"@block-wallet/remote-configs@https://github.com/block-wallet/remote-configs#v1.0.0":
+"@block-wallet/remote-configs@https://github.com/block-wallet/remote-configs#v1.1.0":
   version "0.0.0"
-  resolved "https://github.com/block-wallet/remote-configs#e69c5966e00725c319ecbbaf06b1616ba4db5bb5"
+  resolved "https://github.com/block-wallet/remote-configs#eca1a737090b224974ede7b47ec44224b31fe2d1"
 
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"

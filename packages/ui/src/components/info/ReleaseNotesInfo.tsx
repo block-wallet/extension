@@ -4,6 +4,7 @@ import {
 } from "@block-wallet/background/controllers/PreferencesController"
 import { FC } from "react"
 import { useHistory } from "react-router-dom"
+import { LINKS } from "../../util/constants"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
 import PopupFooter from "../popup/PopupFooter"
 import PopupLayout from "../popup/PopupLayout"
@@ -69,6 +70,17 @@ const ReleaseNotesInfo: FC<ReleaseNotesInfoProps> = ({
                                 </div>
                             )
                         })}
+                        <span className="text-sm text-slate-600">
+                            There's more.{" "}
+                            <a
+                                href={LINKS.ARTICLES.CHANGELOG}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-primary-300 hover:underline"
+                            >
+                                Find full release notes here.
+                            </a>
+                        </span>
                     </div>
                 </Info>
             </div>

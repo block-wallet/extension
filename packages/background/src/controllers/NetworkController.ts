@@ -530,9 +530,10 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 {
                     url: rpcUrl,
                     allowGzip: blockWalletNode,
-                    headers: blockWalletNode
-                        ? customHeadersForBlockWalletNode
-                        : undefined,
+                    // temporarily removed until cors issue is fixed
+                    //headers: blockWalletNode
+                    //    ? customHeadersForBlockWalletNode
+                    //    : undefined,
                 },
                 chainId
             )

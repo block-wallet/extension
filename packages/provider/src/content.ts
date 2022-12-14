@@ -12,6 +12,7 @@ import { checkScriptLoad } from './utils/site';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
 import blankProvider from '../../../dist/blankProvider.js?raw';
+import { isManifestV3 } from '@block-wallet/background/utils/manifest';
 
 let providerOverridden = false;
 
@@ -46,21 +47,25 @@ const SW_KEEP_ALIVE_INTERVAL = 10;
 let SW_ALIVE = false;
 let portReinitialized = false;
 
-setInterval(() => {
-    chrome.runtime.sendMessage({ message: CONTENT.SW_KEEP_ALIVE }, () => {
-        if (chrome.runtime.lastError) {
-            log.info(
-                'Error keeping alive:',
-                chrome.runtime.lastError.message || chrome.runtime.lastError
-            );
-            const err = chrome.runtime.lastError.message || '';
-            SW_ALIVE = !err.includes('Receiving end does not exist');
-            portReinitialized = SW_ALIVE;
-        } else {
-            SW_ALIVE = true;
-        }
-    });
-}, SW_KEEP_ALIVE_INTERVAL);
+if (isManifestV3()) {
+    setInterval(() => {
+        chrome.runtime.sendMessage({ message: CONTENT.SW_KEEP_ALIVE }, () => {
+            if (chrome.runtime.lastError) {
+                log.info(
+                    'Error keeping alive:',
+                    chrome.runtime.lastError.message || chrome.runtime.lastError
+                );
+                const err = chrome.runtime.lastError.message || '';
+                SW_ALIVE = !err.includes('Receiving end does not exist');
+                portReinitialized = SW_ALIVE;
+            } else {
+                SW_ALIVE = true;
+            }
+        });
+    }, SW_KEEP_ALIVE_INTERVAL);
+} else {
+    SW_ALIVE = true;
+}
 
 function sleep(ms: number): Promise<unknown> {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -141,34 +146,37 @@ const init = () => {
             window.location.href
         );
     });
-    port.onDisconnect.addListener(() => {
-        initMutex.runExclusive(async () => {
-            log.info('port disconnection');
-            SW_ALIVE = false; // If we've reached this point, we can't expect this to be false and wait until this has changed.
-            await sleep(200);
 
-            // Port has been disconnected, reinitialize once
-            while (SW_ALIVE === false) {
-                log.debug('waiting for SW to be restarted...');
-                await sleep(100);
-            }
+    if (isManifestV3()) {
+        port.onDisconnect.addListener(() => {
+            initMutex.runExclusive(async () => {
+                log.info('port disconnection');
+                SW_ALIVE = false; // If we've reached this point, we can't expect this to be false and wait until this has changed.
+                await sleep(200);
 
-            if (!portReinitialized) {
-                log.info('reinitializing port...');
+                // Port has been disconnected, reinitialize once
+                while (SW_ALIVE === false) {
+                    log.debug('waiting for SW to be restarted...');
+                    await sleep(100);
+                }
 
-                init();
+                if (!portReinitialized) {
+                    log.info('reinitializing port...');
 
-                // Signal SW_REINIT in case there were active subscriptions
-                window.postMessage(
-                    {
-                        signal: Signals.SW_REINIT,
-                        origin: Origin.BACKGROUND,
-                    } as SignalMessage,
-                    window.location.href
-                );
-            }
+                    init();
+
+                    // Signal SW_REINIT in case there were active subscriptions
+                    window.postMessage(
+                        {
+                            signal: Signals.SW_REINIT,
+                            origin: Origin.BACKGROUND,
+                        } as SignalMessage,
+                        window.location.href
+                    );
+                }
+            });
         });
-    });
+    }
     portReinitialized = true;
 };
 

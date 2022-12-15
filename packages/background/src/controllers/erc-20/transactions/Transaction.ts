@@ -7,7 +7,7 @@ import {
     spenderParamNotPresentError,
     tokenAddressParamNotPresentError,
 } from '../TokenController';
-import { Token, TokenResponse } from '../Token';
+import { FetchTokenResponse, Token } from '../Token';
 import { Interface } from 'ethers/lib/utils';
 import log from 'loglevel';
 
@@ -102,7 +102,7 @@ export class TokenOperationsController extends TokenTransactionController {
     public async fetchTokenDataFromChain(
         tokenAddress: string,
         chainId: number = this._networkController.network.chainId
-    ): Promise<TokenResponse> {
+    ): Promise<FetchTokenResponse> {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
         }
@@ -126,6 +126,6 @@ export class TokenOperationsController extends TokenTransactionController {
         }
 
         const token = new Token(tokenAddress, name, symbol, decimals);
-        return { ...token, fetchFailed };
+        return { token, fetchFailed };
     }
 }

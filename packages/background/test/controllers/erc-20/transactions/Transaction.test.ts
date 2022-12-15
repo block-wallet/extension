@@ -164,7 +164,8 @@ describe('Transaction', function () {
                     '0x336711444d1f4e823c1679e5368c874d2700ce51';
                 tokenOperationsController
                     .fetchTokenDataFromChain(tokenAddress)
-                    .then((token) => {
+                    .then((fetchTokenResult) => {
+                        const token = fetchTokenResult.token
                         expect(token).to.be.not.null;
                         expect(token.address).equal(tokenAddress);
                         expect(token.name).equal('USDC');
@@ -177,7 +178,8 @@ describe('Transaction', function () {
                     '0x6b175474e89094c44da98b954eedeac495271d0f';
                 tokenOperationsController
                     .fetchTokenDataFromChain(tokenAddress)
-                    .then((token) => {
+                    .then((fetchTokenResult) => {
+                        const token = fetchTokenResult.token
                         expect(token).to.be.not.null;
                         expect(token.address).equal(tokenAddress);
                         expect(token.name).equal('');

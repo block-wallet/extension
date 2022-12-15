@@ -96,7 +96,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
             }
 
             const input = search.toLowerCase()
-            let searchRes = await searchTokenInAssetsList(input)
+            let searchRes = (await searchTokenInAssetsList(input)).tokens
 
             searchRes = searchRes.filter((t) => !!t.symbol)
 

@@ -169,16 +169,16 @@ export class DepositTransaction extends SignedTransaction {
         // Ensure having the token address
         let erc20ContractAddress = tokenAddress;
         if (!erc20ContractAddress) {
-            const token = await this._tokenController.search(
+            const { tokens } = await this._tokenController.search(
                 currencyAmountPair.currency,
                 true
             );
-            if (!('address' in token[0])) {
+            if (!('address' in tokens[0])) {
                 throw new Error(
                     'Specified token has no address nor it has been found in the tokens list'
                 );
             }
-            erc20ContractAddress = token[0].address;
+            erc20ContractAddress = tokens[0].address;
         }
 
         // Check for allowance
@@ -224,16 +224,16 @@ export class DepositTransaction extends SignedTransaction {
             // Ensure having the token address
             let erc20ContractAddress = tokenAddress;
             if (!erc20ContractAddress) {
-                const token = await this._tokenController.search(
+                const { tokens } = await this._tokenController.search(
                     currencyAmountPair.currency,
                     true
                 );
-                if (!('address' in token[0])) {
+                if (!('address' in tokens[0])) {
                     throw new Error(
                         'Specified token has no address nor it has been found in the tokens list'
                     );
                 }
-                erc20ContractAddress = token[0].address;
+                erc20ContractAddress = tokens[0].address;
             }
 
             // Ensure having enough allowance to process the transaction
@@ -320,16 +320,16 @@ export class DepositTransaction extends SignedTransaction {
         // Ensure having the token address
         let erc20ContractAddress = tokenAddress;
         if (!erc20ContractAddress) {
-            const token = await this._tokenController.search(
+            const { tokens } = await this._tokenController.search(
                 pair.currency,
                 true
             );
-            if (!('address' in token[0])) {
+            if (!('address' in tokens[0])) {
                 throw new Error(
                     'Specified token has no address nor it has been found in the tokens list'
                 );
             }
-            erc20ContractAddress = token[0].address;
+            erc20ContractAddress = tokens[0].address;
         }
 
         // Check if allowance is less than deposit amount

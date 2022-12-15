@@ -46,12 +46,12 @@ const AddTokensPage = () => {
                 // Accept only number, letters and - . _
                 searchTokenInAssetsList(searchedValue.toUpperCase())
                     .then((res) => {
-                        const exacts = res.filter(
+                        const exacts = res.tokens.filter(
                             (r) =>
                                 r.symbol.toLowerCase() ===
                                 searchedValue.toLowerCase()
                         )
-                        const others = res.filter(
+                        const others = res.tokens.filter(
                             (r) =>
                                 r.symbol.toLowerCase() !==
                                 searchedValue.toLowerCase()

@@ -791,7 +791,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 } else {
                     if (balance.gt(zero) || userTokens.includes(tokenAddress)) {
                         // Ensure Token is added to accounts object
-                        const tokens = await this._tokenController.search(
+                        const { tokens } = await this._tokenController.search(
                             tokenAddress,
                             true,
                             accountAddress,

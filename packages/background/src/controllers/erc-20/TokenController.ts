@@ -472,6 +472,7 @@ export class TokenController extends BaseController<TokenControllerState> {
 
         token = await this._tokenOperationsController.populateTokenData(
             tokenAddress,
+            chainId,
             manualAddToken
         );
         // Cache the token data if the token data is all fetched correctly.

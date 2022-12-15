@@ -34,6 +34,11 @@ export class TokenTransactionController {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
         }
+        if (!provider) {
+            throw new Error(
+                'The provider is mandatory to execute a contract call'
+            );
+        }
         return new ethers.Contract(tokenAddress, erc20Abi, provider);
     }
 }
@@ -95,19 +100,22 @@ export class TokenOperationsController extends TokenTransactionController {
      */
     public async populateTokenData(
         tokenAddress: string,
+        chainId: number = this._networkController.network.chainId,
         manualAddToken = false
     ): Promise<Token> {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
         }
 
+        const networkProvider =
+            this._networkController.getProviderForChainId(chainId);
+
         let name = '';
         let symbol = '';
         let decimals = manualAddToken ? -1 : 18;
 
         try {
-            const contract = this.getContract(tokenAddress);
-
+            const contract = this.getContract(tokenAddress, networkProvider);
             name = await contract.name();
             symbol = await contract.symbol();
             decimals = parseFloat((await contract.decimals()) as string);

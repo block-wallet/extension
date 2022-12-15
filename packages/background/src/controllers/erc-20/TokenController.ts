@@ -468,7 +468,6 @@ export class TokenController extends BaseController<TokenControllerState> {
     ): Promise<FetchTokenResponse> {
         tokenAddress = toChecksumAddress(tokenAddress);
 
-
         // Check cached tokens
         const token = (await this.getCachedPopulatedTokens(chainId))[
             tokenAddress

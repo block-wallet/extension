@@ -4,6 +4,7 @@ import {
     IToken,
     ITokens,
     Token,
+    TokenResponse,
 } from './Token';
 import { BaseController } from '../../infrastructure/BaseController';
 import NetworkController from '../NetworkController';
@@ -206,30 +207,33 @@ export class TokenController extends BaseController<TokenControllerState> {
         exact = false,
         accountAddress?: string,
         chainId?: number,
-        isLocalSearch = false,
-        manualAddToken = false
-    ): Promise<Token[]> {
+        isLocalSearch = false
+    ): Promise<TokenResponse[]> {
         if (!search) {
             throw searchParamNotPresentError;
         }
 
+        // if it's searching for an address or a specific token
         if (isHexPrefixed(search)) {
             let token = await this.getToken(search, accountAddress, chainId);
 
             if (!token && !isLocalSearch) {
-                token = await this._populateTokenData(
+                const tokenResponse = await this._populateTokenData(
                     search,
                     accountAddress,
-                    chainId,
-                    manualAddToken
+                    chainId
                 );
+
+                // if the fetch failed, we return the token with the failed flag
+                if (tokenResponse.fetchFailed) {
+                    return [tokenResponse];
+                }
+
+                // if everything went good, normal Token object is returned
+                token = tokenResponse as Token;
             }
 
-            if (token) {
-                return [token];
-            }
-
-            return [];
+            return token ? [token] : [];
         }
 
         const tokensList = Object.values(await this.getTokens(chainId));
@@ -458,9 +462,8 @@ export class TokenController extends BaseController<TokenControllerState> {
     private async _populateTokenData(
         tokenAddress: string,
         accountAddress?: string,
-        chainId?: number,
-        manualAddToken = false
-    ): Promise<Token> {
+        chainId?: number
+    ): Promise<TokenResponse> {
         tokenAddress = toChecksumAddress(tokenAddress);
 
         let token = (await this.getCachedPopulatedTokens(chainId))[
@@ -470,13 +473,21 @@ export class TokenController extends BaseController<TokenControllerState> {
             return token;
         }
 
-        token = await this._tokenOperationsController.populateTokenData(
-            tokenAddress,
-            chainId,
-            manualAddToken
-        );
+        // Tries to fetch token data from chain
+        const tokenResponse =
+            await this._tokenOperationsController.fetchTokenDataFromChain(
+                tokenAddress,
+                chainId
+            );
+
         // Cache the token data if the token data is all fetched correctly.
-        if (token && token.name && token.symbol && token.decimals !== -1) {
+        if (
+            tokenResponse &&
+            tokenResponse.name &&
+            tokenResponse.symbol &&
+            !tokenResponse.fetchFailed
+        ) {
+            token = tokenResponse as Token;
             const userTokens = await this.getUserTokens(
                 accountAddress,
                 chainId
@@ -501,7 +512,7 @@ export class TokenController extends BaseController<TokenControllerState> {
             );
         }
 
-        return token;
+        return tokenResponse;
     }
 
     private async _updateState(

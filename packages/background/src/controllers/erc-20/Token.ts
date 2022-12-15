@@ -52,3 +52,7 @@ export class Token implements IToken {
         this.decimals = decimals;
     }
 }
+
+export interface TokenResponse extends IToken {
+    fetchFailed?: boolean;
+}

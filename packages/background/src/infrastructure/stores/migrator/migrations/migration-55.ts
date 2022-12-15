@@ -65,7 +65,7 @@ export default {
 
             //refetch token data
             const fetchedToken =
-                await tokenOperationsController.populateTokenData(
+                await tokenOperationsController.fetchTokenDataFromChain(
                     token.address,
                     chainId
                 );

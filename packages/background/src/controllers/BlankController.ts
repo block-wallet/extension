@@ -3008,15 +3008,13 @@ export default class BlankController extends EventEmitter {
         exact,
         accountAddress,
         chainId,
-        manualAddToken,
     }: RequestSearchToken): Promise<Token[]> {
         return this.tokenController.search(
             query,
             exact,
             accountAddress,
             chainId,
-            false,
-            manualAddToken
+            false
         );
     }
 
@@ -3116,7 +3114,9 @@ export default class BlankController extends EventEmitter {
     private async populateTokenData({
         tokenAddress,
     }: RequestPopulateTokenData): Promise<Token> {
-        return this.tokenOperationsController.populateTokenData(tokenAddress);
+        return this.tokenOperationsController.fetchTokenDataFromChain(
+            tokenAddress
+        );
     }
 
     /**

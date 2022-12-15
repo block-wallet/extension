@@ -7,7 +7,7 @@ import {
     spenderParamNotPresentError,
     tokenAddressParamNotPresentError,
 } from '../TokenController';
-import { Token } from '../Token';
+import { Token, TokenResponse } from '../Token';
 import { Interface } from 'ethers/lib/utils';
 import log from 'loglevel';
 
@@ -94,15 +94,15 @@ export class TokenOperationsController extends TokenTransactionController {
         return contract.allowance(owner, spender);
     }
     /**
-     * Search the token in the blockchain
+     * Searchs the token in the blockchain
      *
      * @param {string} tokenAddress erc20 token address
+     * @param {number} chainId network to search the token in
      */
-    public async populateTokenData(
+    public async fetchTokenDataFromChain(
         tokenAddress: string,
-        chainId: number = this._networkController.network.chainId,
-        manualAddToken = false
-    ): Promise<Token> {
+        chainId: number = this._networkController.network.chainId
+    ): Promise<TokenResponse> {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
         }
@@ -112,7 +112,8 @@ export class TokenOperationsController extends TokenTransactionController {
 
         let name = '';
         let symbol = '';
-        let decimals = manualAddToken ? -1 : 18;
+        let decimals = 18;
+        let fetchFailed = false;
 
         try {
             const contract = this.getContract(tokenAddress, networkProvider);
@@ -121,8 +122,10 @@ export class TokenOperationsController extends TokenTransactionController {
             decimals = parseFloat((await contract.decimals()) as string);
         } catch (error) {
             log.error(error.message || error);
+            fetchFailed = true;
         }
 
-        return new Token(tokenAddress, name, symbol, decimals);
+        const token = new Token(tokenAddress, name, symbol, decimals);
+        return { ...token, fetchFailed };
     }
 }

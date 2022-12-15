@@ -141,9 +141,7 @@ const AddTokenManualView = ({
             setError("tokenAddress", { message: undefined })
             setIsLoading(true)
             const tokenSearchResponse = await searchTokenInAssetsList(
-                tokenAddress,
-                undefined,
-                true
+                tokenAddress
             )
 
             setIsLoading(false)
@@ -153,7 +151,7 @@ const AddTokenManualView = ({
                 tokenSearchResponse[0].symbol !== ""
             ) {
                 if (
-                    tokenSearchResponse[0].decimals === -1 ||
+                    tokenSearchResponse[0].fetchFailed ||
                     !tokenSearchResponse[0].name
                 ) {
                     setRefetchOption(true)
@@ -167,7 +165,7 @@ const AddTokenManualView = ({
 
                 setValue("tokenAddress", tokenSearchResponse[0].address)
 
-                if (tokenSearchResponse[0].decimals !== -1) {
+                if (!tokenSearchResponse[0].fetchFailed) {
                     setValue(
                         "tokenDecimals",
                         tokenSearchResponse[0].decimals.toString()

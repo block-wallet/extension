@@ -9,6 +9,7 @@ import {
 import NetworkController from '../../../../controllers/NetworkController';
 import { TokenOperationsController } from '../../../../controllers/erc-20/transactions/Transaction';
 import { Accounts } from '@block-wallet/background/controllers/AccountTrackerController';
+import { toChecksumAddress } from 'ethereumjs-util';
 
 const hasRecords = (records: Record<any, any>): boolean => {
     return records && Object.keys(records).length > 0;
@@ -41,7 +42,8 @@ export default {
             if (!fetchedTokens[chainId]) {
                 fetchedTokens[chainId] = {};
             }
-            fetchedTokens[chainId][newToken.address.toLowerCase()] = newToken;
+            fetchedTokens[chainId][toChecksumAddress(newToken.address)] =
+                newToken;
         }
 
         async function regenerateTokenData(
@@ -55,7 +57,7 @@ export default {
 
             //token data is invalid
             const alreadyFetchedToken = (fetchedTokens[chainId] || {})[
-                token.address.toLowerCase()
+                toChecksumAddress(token.address)
             ];
             if (alreadyFetchedToken) {
                 return alreadyFetchedToken;

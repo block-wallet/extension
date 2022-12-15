@@ -244,7 +244,8 @@ describe('Blank Provider Controller', function () {
             appStateController,
             new KeyringControllerDerivated({}),
             tokenController,
-            blockUpdatesController
+            blockUpdatesController,
+            gasPricesController
         );
 
         accountTrackerController.addPrimaryAccount(

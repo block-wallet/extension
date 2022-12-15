@@ -432,7 +432,8 @@ export default class BlankController extends EventEmitter {
             this.appStateController,
             this.keyringController,
             this.tokenController,
-            this.blockUpdatesController
+            this.blockUpdatesController,
+            this.gasPricesController
         );
 
         this.tokenAllowanceController = new TokenAllowanceController(

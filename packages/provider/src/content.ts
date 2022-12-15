@@ -46,9 +46,10 @@ injectProvider();
 const SW_KEEP_ALIVE_INTERVAL = 10;
 let SW_ALIVE = false;
 let portReinitialized = false;
+let intervalRef: NodeJS.Timer;
 
 if (isManifestV3()) {
-    setInterval(() => {
+    intervalRef = setInterval(() => {
         chrome.runtime.sendMessage({ message: CONTENT.SW_KEEP_ALIVE }, () => {
             if (chrome.runtime.lastError) {
                 log.info(
@@ -86,6 +87,9 @@ chrome.runtime.sendMessage(
             //If provider has been overridden by another wallet, then remove connection.
             providerOverridden
         ) {
+            if (isManifestV3() && intervalRef) {
+                clearInterval(intervalRef);
+            }
             port.disconnect();
             window.removeEventListener('message', windowListener);
             log.warn('BlockWallet: Provider not injected due to user setting.');

@@ -93,14 +93,17 @@ export class TokenOperationsController extends TokenTransactionController {
      *
      * @param {string} tokenAddress erc20 token address
      */
-    public async populateTokenData(tokenAddress: string): Promise<Token> {
+    public async populateTokenData(
+        tokenAddress: string,
+        manualAddToken = false
+    ): Promise<Token> {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
         }
 
         let name = '';
         let symbol = '';
-        let decimals = -1;
+        let decimals = manualAddToken ? -1 : 18;
 
         try {
             const contract = this.getContract(tokenAddress);

@@ -141,7 +141,9 @@ const AddTokenManualView = ({
             setError("tokenAddress", { message: undefined })
             setIsLoading(true)
             const tokenSearchResponse = await searchTokenInAssetsList(
-                tokenAddress
+                tokenAddress,
+                undefined,
+                true
             )
 
             setIsLoading(false)

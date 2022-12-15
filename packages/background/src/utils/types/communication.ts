@@ -1057,6 +1057,7 @@ export interface RequestSearchToken {
     exact?: boolean;
     accountAddress?: string;
     chainId?: number;
+    manualAddToken?: boolean;
 }
 
 export interface RequestAntiPhishingImage {}

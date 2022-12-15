@@ -3007,12 +3007,15 @@ export default class BlankController extends EventEmitter {
         exact,
         accountAddress,
         chainId,
+        manualAddToken,
     }: RequestSearchToken): Promise<Token[]> {
         return this.tokenController.search(
             query,
             exact,
             accountAddress,
-            chainId
+            chainId,
+            false,
+            manualAddToken
         );
     }
 

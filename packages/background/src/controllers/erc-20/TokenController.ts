@@ -206,7 +206,8 @@ export class TokenController extends BaseController<TokenControllerState> {
         exact = false,
         accountAddress?: string,
         chainId?: number,
-        isLocalSearch = false
+        isLocalSearch = false,
+        manualAddToken = false
     ): Promise<Token[]> {
         if (!search) {
             throw searchParamNotPresentError;
@@ -219,7 +220,8 @@ export class TokenController extends BaseController<TokenControllerState> {
                 token = await this._populateTokenData(
                     search,
                     accountAddress,
-                    chainId
+                    chainId,
+                    manualAddToken
                 );
             }
 
@@ -456,7 +458,8 @@ export class TokenController extends BaseController<TokenControllerState> {
     private async _populateTokenData(
         tokenAddress: string,
         accountAddress?: string,
-        chainId?: number
+        chainId?: number,
+        manualAddToken = false
     ): Promise<Token> {
         tokenAddress = toChecksumAddress(tokenAddress);
 
@@ -468,7 +471,8 @@ export class TokenController extends BaseController<TokenControllerState> {
         }
 
         token = await this._tokenOperationsController.populateTokenData(
-            tokenAddress
+            tokenAddress,
+            manualAddToken
         );
         // Cache the token data if the token data is all fetched correctly.
         if (token && token.name && token.symbol && token.decimals !== -1) {

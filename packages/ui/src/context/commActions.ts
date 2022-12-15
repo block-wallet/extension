@@ -652,11 +652,13 @@ export const sendToken = async (
  */
 export const searchTokenInAssetsList = async (
     query: string,
-    exact?: boolean
+    exact?: boolean,
+    manualAddToken = false
 ): Promise<Token[]> => {
     return sendMessage(Messages.TOKEN.SEARCH_TOKEN, {
         query,
         exact,
+        manualAddToken,
     })
 }
 

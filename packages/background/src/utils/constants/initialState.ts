@@ -51,6 +51,8 @@ import {
     BridgeControllerState,
 } from '@block-wallet/background/controllers/BridgeController';
 import { SwapControllerMemState } from '@block-wallet/background/controllers/SwapController';
+import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
+import CACHED_INCOMPATIBLE_SITES from '@block-wallet/remote-configs/provider/incompatible_sites.json';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -70,6 +72,7 @@ export type BlankAppState = {
     BlockFetchController: BlockFetchControllerState;
     TransactionWatcherControllerState: TransactionWatcherControllerState;
     BridgeController: BridgeControllerState;
+    RemoteConfigsController: RemoteConfigsControllerState;
 };
 
 export type BlankAppUIState = {
@@ -239,6 +242,11 @@ const initialState: BlankAppState = {
     BridgeController: {
         bridgeReceivingTransactions: {},
         perndingBridgeReceivingTransactions: {},
+    },
+    RemoteConfigsController: {
+        provider: {
+            incompatibleSites: CACHED_INCOMPATIBLE_SITES,
+        },
     },
 };
 

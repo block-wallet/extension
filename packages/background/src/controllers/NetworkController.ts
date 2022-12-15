@@ -10,6 +10,10 @@ import {
     EditNetworkUpdatesType,
     EditNetworkOrderType,
 } from '../utils/constants/networks';
+import {
+    isABlockWalletNode,
+    customHeadersForBlockWalletNode,
+} from '../utils/nodes';
 import { constants, ethers } from 'ethers';
 import { poll } from '@ethersproject/web';
 import { ErrorCode } from '@ethersproject/logger';
@@ -529,12 +533,17 @@ export default class NetworkController extends BaseController<NetworkControllerS
     };
 
     private _getProviderForNetwork(chainId: number, rpcUrl: string) {
+        const blockWalletNode = isABlockWalletNode(rpcUrl);
         return this._overloadProviderMethods(
             { chainId },
             new ethers.providers.StaticJsonRpcProvider(
                 {
                     url: rpcUrl,
-                    allowGzip: rpcUrl.endsWith('.blockwallet.io'),
+                    allowGzip: blockWalletNode,
+                    // temporarily removed until cors issue is fixed
+                    //headers: blockWalletNode
+                    //    ? customHeadersForBlockWalletNode
+                    //    : undefined,
                 },
                 chainId
             )

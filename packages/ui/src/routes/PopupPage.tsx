@@ -11,20 +11,20 @@ import GenericTooltip from "../components/label/GenericTooltip"
 import Tooltip from "../components/label/Tooltip"
 import { getAccountColor } from "../util/getAccountColor"
 import { useBlankState } from "../context/background/backgroundHooks"
-import { useSelectedAccount } from "../context/hooks/useSelectedAccount"
 import GasPricesInfo from "../components/home/GasPricesInfo"
 import useMetricCollector from "../util/useMetricCollector"
 import HomeBalancePanel from "../components/home/HomeBalancePanel"
 import DAppConnection from "../components/home/DAppConnection"
 import AccountAvatar from "../components/home/AccountAvatar"
+import TransparentOverlay from "../components/loading/TransparentOverlay"
+import { useSelectedAddressWithChainIdChecksum } from "../util/hooks/useSelectedAddressWithChainIdChecksum"
 
 const PopupPage = () => {
     const collect = useMetricCollector()
     const error = (useHistory().location.state as { error: string })?.error
     const state = useBlankState()!
     const history = useHistory()
-    const account = useSelectedAccount()
-
+    const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
 
     return (
@@ -39,6 +39,7 @@ const PopupPage = () => {
                     }}
                     onDone={() => setHasErrorDialog(false)}
                 />
+                {state.isNetworkChanging && <TransparentOverlay />}
                 <div
                     className="sticky z-10 flex flex-col items-start w-full p-6 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
                     style={{ backdropFilter: "blur(4px)" }}
@@ -54,7 +55,7 @@ const PopupPage = () => {
                                 >
                                     <AccountIcon
                                         className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
-                                        fill={getAccountColor(account?.address)}
+                                        fill={getAccountColor(checksumAddress)}
                                     />
                                 </Link>
                                 <Tooltip

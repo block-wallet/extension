@@ -65,6 +65,7 @@ import {
     GetBridgeQuoteResponse,
 } from '@block-wallet/background/controllers/BridgeController';
 import { GasPriceData } from '@block-wallet/background/controllers/GasPricesController';
+import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -149,6 +150,7 @@ export enum EXTERNAL {
     REQUEST = 'EXTERNAL_REQUEST',
     SETUP_PROVIDER = 'SETUP_PROVIDER',
     SET_ICON = 'SET_ICON',
+    GET_PROVIDER_CONFIG = 'GET_PROVIDER_CONFIG',
 }
 
 export enum CONTENT {
@@ -183,6 +185,7 @@ enum PERMISSION {
 enum STATE {
     GET = 'GET_STATE',
     SUBSCRIBE = 'STATE_SUBSCRIBE',
+    GET_REMOTE_CONFIG = 'GET_REMOTE_CONFIG',
 }
 
 enum ENS {
@@ -392,6 +395,10 @@ export interface RequestSignatures {
     [Messages.EXTERNAL.REQUEST]: [RequestExternalRequest, unknown];
     [Messages.EXTERNAL.SETUP_PROVIDER]: [undefined, ProviderSetupData];
     [Messages.EXTERNAL.SET_ICON]: [RequestSetIcon, boolean];
+    [Messages.EXTERNAL.GET_PROVIDER_CONFIG]: [
+        undefined,
+        RemoteConfigsControllerState['provider']
+    ];
     [Messages.BRIDGE.GET_BRIDGE_TOKENS]: [RequestGetBridgeTokens, IToken[]];
 
     [Messages.BRIDGE.APPROVE_BRIDGE_ALLOWANCE]: [
@@ -451,6 +458,10 @@ export interface RequestSignatures {
         RequestSubscribeState,
         boolean,
         StateSubscription
+    ];
+    [Messages.STATE.GET_REMOTE_CONFIG]: [
+        undefined,
+        RemoteConfigsControllerState
     ];
     [Messages.ENS.RESOLVE_NAME]: [RequestEnsResolve, string | null];
     [Messages.ENS.LOOKUP_ADDRESS]: [RequestEnsLookup, string | null];
@@ -1237,6 +1248,11 @@ export interface Handler {
     resolve: (data: any) => void;
     reject: (error: Error) => void;
     subscriber?: (data: any) => void;
+}
+
+export interface UnlockHandler extends Handler {
+    //port that is handling the unlock
+    portId: string;
 }
 
 export type Handlers = Record<string, Handler>;

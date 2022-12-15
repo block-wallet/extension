@@ -581,6 +581,7 @@ const SwapPageConfirm: FC<{}> = () => {
                             flashbots: true,
                             slippage: true,
                         }}
+                        transactionGasLimit={selectedGasLimit}
                         setAdvancedSettings={(
                             newSettings: TransactionAdvancedData
                         ) => {

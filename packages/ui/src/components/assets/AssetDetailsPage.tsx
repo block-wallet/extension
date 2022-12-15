@@ -28,12 +28,15 @@ import { formatName } from "../../util/formatAccount"
 import Icon, { IconName } from "../ui/Icon"
 import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
 import TokenLogo from "../token/TokenLogo"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 const AssetDetailsPage = () => {
     const state = useBlankState()!
     const history: any = useOnMountHistory()
     const address = history.location.state.address
-
+    const {
+        state: { isRatesChangingAfterNetworkChange },
+    } = useExchangeRatesState()
     const { availableNetworks, selectedNetwork } = useBlankState()!
 
     const account = useSelectedAccount()
@@ -42,7 +45,7 @@ const AssetDetailsPage = () => {
         useSelectedNetwork()
     const asset = useGetAssetByTokenAddress(address)
     const isNative = isNativeTokenAddress(address)
-    const tokenTransactions = useTokenTransactions(asset?.token?.symbol)
+    const tokenTransactions = useTokenTransactions(asset?.token.address)
 
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [isRemoving, setIsRemoving] = useState(false)
@@ -83,7 +86,7 @@ const AssetDetailsPage = () => {
                 <PopupHeader
                     onBack={() => history.push("/home")}
                     title={`${formatName(account.name, 14)} - ${formatName(
-                        token.name,
+                        token.symbol,
                         12
                     )}`}
                     close={false}
@@ -163,19 +166,22 @@ const AssetDetailsPage = () => {
                 }}
                 timeout={1000}
             />
-
             <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen pt-3 space-y-6 overflow-auto hide-scroll">
                 <div className="px-3 w-full">
-                    <TokenSummary minHeight="13rem">
-                        <TokenSummary.Balances>
+                    <TokenSummary minHeight="13rem" className="mt-2">
+                        <TokenSummary.Balances className="mt-2">
                             <TokenLogo
                                 name={token.symbol}
                                 logo={token.logo}
                                 className={Classes.roundedFilledIcon}
                             />
+                            <TokenSummary.TokenName>
+                                {token.name}
+                            </TokenSummary.TokenName>
                             <TokenSummary.TokenBalance
                                 className="flex flex-row space-x-1"
                                 title={`${formattedTokenBalance} ${token.symbol}`}
+                                isLoading={state.isNetworkChanging}
                             >
                                 <span
                                     className="truncate w-full max-w-xs"
@@ -184,7 +190,9 @@ const AssetDetailsPage = () => {
                                     {`${roundedTokenBalance} ${token.symbol}`}
                                 </span>
                             </TokenSummary.TokenBalance>
-                            <TokenSummary.ExchangeRateBalance>
+                            <TokenSummary.ExchangeRateBalance
+                                isLoading={isRatesChangingAfterNetworkChange}
+                            >
                                 {currencyFormatter.format(
                                     balance,
                                     token.symbol,

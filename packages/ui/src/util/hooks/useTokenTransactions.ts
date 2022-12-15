@@ -1,9 +1,12 @@
 import useActivtyListTransactions from "./useActivtyListTransactions"
 
-const useTokenTransactions = (tokenSymbol: string | undefined) => {
+const useTokenTransactions = (tokenContract: string | undefined) => {
+    const contractToLower = tokenContract?.toLowerCase()
     const { transactions } = useActivtyListTransactions()
-    return transactions.filter(({ transferType }) => {
-        return tokenSymbol ? transferType?.currency === tokenSymbol : false
+    return transactions.filter(({ transactionParams }) => {
+        return contractToLower
+            ? transactionParams.to?.toLowerCase() === contractToLower
+            : false
     })
 }
 

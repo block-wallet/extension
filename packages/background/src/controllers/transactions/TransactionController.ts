@@ -1569,33 +1569,33 @@ export class TransactionController extends BaseController<
     public async queryTransactionStatuses(
         currentBlockNumber: number
     ): Promise<void> {
-        const transactions = [...this.store.getState().transactions];
         const { chainId } = this._networkController.network;
+        const transactions = this.store
+            .getState()
+            .transactions.filter((meta: TransactionMeta) => {
+                return meta.chainId === chainId && !meta.verifiedOnBlockchain;
+            });
 
         for (let i = 0; i < transactions.length; i++) {
             const meta = transactions[i];
-            const txBelongsToCurrentChain = meta.chainId === chainId;
-
-            if (!meta.verifiedOnBlockchain && txBelongsToCurrentChain) {
-                const result = await runPromiseSafely(
-                    this.blockchainTransactionStateReconciler(
-                        meta,
-                        currentBlockNumber
-                    )
-                );
-                if (result) {
-                    const [reconciledTx, updateRequired] = result;
-                    if (updateRequired) {
-                        const newTransactions = [
-                            ...this.store.getState().transactions,
-                        ];
-                        const tx = newTransactions.indexOf(meta);
-                        if (tx) {
-                            newTransactions[tx] = reconciledTx;
-                            this.store.updateState({
-                                transactions: newTransactions,
-                            });
-                        }
+            const result = await runPromiseSafely(
+                this.blockchainTransactionStateReconciler(
+                    meta,
+                    currentBlockNumber
+                )
+            );
+            if (result) {
+                const [reconciledTx, updateRequired] = result;
+                if (updateRequired) {
+                    const newTransactions = [
+                        ...this.store.getState().transactions,
+                    ];
+                    const tx = newTransactions.indexOf(meta);
+                    if (tx) {
+                        newTransactions[tx] = reconciledTx;
+                        this.store.updateState({
+                            transactions: newTransactions,
+                        });
                     }
                 }
             }

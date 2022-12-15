@@ -51,32 +51,43 @@ const ErrorFallbackPage: FunctionComponent<{
                     </div>
                 </div>
 
-                <div className="flex flex-col w-full space-y-4 p-4 items-center justify-center bg-primary-100 rounded-md">
-                    <p>Contact</p>
-                    <div className="flex flex-row items-center space-x-4">
+                <div className="flex flex-col w-full space-y-4 px-4 py-6 bg-primary-100 rounded-md">
+                    <div className="flex flex-col space-y-4 text-xs">
                         <a
                             href={LINKS.WEBSITE_BUG_REPORT}
                             target="_blank"
                             rel="noreferrer"
+                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
                         >
-                            <FaGlobe size={24} />
+                            <FaGlobe size={22} />
+                            <p>Report it using our Bug Report Form.</p>
+                        </a>
+                        <a
+                            href={LINKS.GITHUB_BUG_REPORT}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
+                        >
+                            <FaGithub size={22} />
+                            <p>Create an Issue in GitHub.</p>
                         </a>
                         <a
                             href={LINKS.TELEGRAM}
                             target="_blank"
                             rel="noreferrer"
+                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
                         >
-                            <FaTelegram size={24} />
-                        </a>
-                        <a href={LINKS.GITHUB} target="_blank" rel="noreferrer">
-                            <FaGithub size={24} />
+                            <FaTelegram size={22} />
+                            <p>Contact us on Telegram.</p>
                         </a>
                         <a
                             href={LINKS.TWITTER}
                             target="_blank"
                             rel="noreferrer"
+                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
                         >
-                            <FaTwitter size={24} />
+                            <FaTwitter size={22} />
+                            <p>Contact us on Twitter.</p>
                         </a>
                     </div>
                 </div>

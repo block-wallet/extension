@@ -1,11 +1,14 @@
 import { FunctionComponent } from "react"
+import { FiDownload } from "react-icons/fi"
+import classNames from "classnames"
+import { MdError } from "react-icons/md"
+import { FaGithub, FaTelegram, FaGlobe } from "react-icons/fa"
 import { Classes, classnames } from "../../styles"
 import PopupFooter from "../popup/PopupFooter"
 import PopupHeader from "../popup/PopupHeader"
 import PopupLayout from "../popup/PopupLayout"
-import { MdError } from "react-icons/md"
-import { FaGithub, FaTelegram, FaTwitter, FaGlobe } from "react-icons/fa"
 import { LINKS } from "../../util/constants"
+import useStateLogs from "../../util/hooks/useStateLogs"
 
 const ErrorFallbackPage: FunctionComponent<{
     error: Error
@@ -14,6 +17,8 @@ const ErrorFallbackPage: FunctionComponent<{
     error = Error("💣😎 ----ERROR FALLBACK---- 😎💣"),
     resetErrorBoundary,
 }) => {
+    const { downloadStateLogsHandler } = useStateLogs()
+
     return (
         <PopupLayout
             header={
@@ -31,7 +36,7 @@ const ErrorFallbackPage: FunctionComponent<{
                 </PopupFooter>
             }
         >
-            <div className="flex flex-col space-y-6 p-6 justify-center items-center">
+            <div className="flex flex-col space-y-4 p-6 py-4 justify-center items-center">
                 <div className="flex flex-col space-y-6 p-4 items-center justify-center bg-primary-100 rounded-md">
                     <div className="text-sm">
                         <p>
@@ -51,17 +56,8 @@ const ErrorFallbackPage: FunctionComponent<{
                     </div>
                 </div>
 
-                <div className="flex flex-col w-full space-y-4 px-4 py-6 bg-primary-100 rounded-md">
+                <div className="flex flex-col w-full space-y-4 px-4 py-4 bg-primary-100 rounded-md">
                     <div className="flex flex-col space-y-4 text-xs">
-                        <a
-                            href={LINKS.WEBSITE_BUG_REPORT}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
-                        >
-                            <FaGlobe size={22} />
-                            <p>Report it using our Bug Report Form.</p>
-                        </a>
                         <a
                             href={LINKS.GITHUB_BUG_REPORT}
                             target="_blank"
@@ -72,6 +68,15 @@ const ErrorFallbackPage: FunctionComponent<{
                             <p>Create an Issue in GitHub.</p>
                         </a>
                         <a
+                            href={LINKS.WEBSITE_BUG_REPORT}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
+                        >
+                            <FaGlobe size={22} />
+                            <p>Report it using our Bug Report Form.</p>
+                        </a>
+                        <a
                             href={LINKS.TELEGRAM}
                             target="_blank"
                             rel="noreferrer"
@@ -80,16 +85,18 @@ const ErrorFallbackPage: FunctionComponent<{
                             <FaTelegram size={22} />
                             <p>Contact us on Telegram.</p>
                         </a>
-                        <a
-                            href={LINKS.TWITTER}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
-                        >
-                            <FaTwitter size={22} />
-                            <p>Contact us on Twitter.</p>
-                        </a>
                     </div>
+                </div>
+                <div className="w-full border border-gray-200 rounded-md flex justify-between items-center p-4 py-2">
+                    <span className="text-xs mr-2">
+                        Download state logs for support
+                    </span>
+                    <button
+                        className={classNames(Classes.smallButton, "px-4")}
+                        onClick={downloadStateLogsHandler}
+                    >
+                        <FiDownload size={18} />
+                    </button>
                 </div>
             </div>
         </PopupLayout>

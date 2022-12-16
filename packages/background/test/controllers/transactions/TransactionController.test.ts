@@ -1326,10 +1326,10 @@ describe('Transactions Controller', () => {
             expect(transactions.length).to.be.equal(2);
             expect(
                 transactions[1].transactionParams.maxFeePerGas?.toString()
-            ).to.be.equal('220000000000');
+            ).to.be.equal('300000000000');
             expect(
                 transactions[1].transactionParams.maxPriorityFeePerGas?.toString()
-            ).to.be.equal('1100000000');
+            ).to.be.equal('1500000000');
         });
 
         it('Should speed up a legacy pre EIP-1559 transaction correctly', async () => {
@@ -1362,7 +1362,7 @@ describe('Transactions Controller', () => {
             expect(transactions.length).to.be.equal(2);
             expect(
                 transactions[1].transactionParams.gasPrice?.toString()
-            ).to.be.equal('1100000000');
+            ).to.be.equal('1500000000');
         });
 
         it('Should keep the transaction status as submitted while pending confirmation', async () => {

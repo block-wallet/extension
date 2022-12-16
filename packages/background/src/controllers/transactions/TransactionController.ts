@@ -207,8 +207,8 @@ export const CANCEL_RATE = {
  * Multiplier used to determine a transaction's increased gas fee during speed up
  */
 export const SPEED_UP_RATE = {
-    numerator: 11,
-    denominator: 10,
+    numerator: 3,
+    denominator: 2,
 };
 
 /**

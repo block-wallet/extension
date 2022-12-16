@@ -36,7 +36,6 @@ export default {
             persistedState.TokenController;
 
         const { bridgeReceivingTransactions } = persistedState.BridgeController;
-        const { accounts } = persistedState.AccountTrackerController;
 
         function _updateCache(newToken: IToken, chainId: number) {
             if (!fetchedTokens[chainId]) {
@@ -213,7 +212,9 @@ export default {
          * ACCOUNT TRACKER FIXES
          */
 
-        async function fixAccountBalances(): Promise<Accounts> {
+        async function fixAccountBalances(
+            accounts: Accounts
+        ): Promise<Accounts> {
             const fixedAccounts = { ...accounts };
             for (const accountAddress in fixedAccounts) {
                 const currentAccount = fixedAccounts[accountAddress];
@@ -258,7 +259,12 @@ export default {
             return fixedAccounts;
         }
 
-        const fixedAccouts = await fixAccountBalances();
+        const fixedAccouts = await fixAccountBalances(
+            persistedState.AccountTrackerController.accounts
+        );
+        const fixedHiddenAccouts = await fixAccountBalances(
+            persistedState.AccountTrackerController.hiddenAccounts
+        );
 
         return {
             ...persistedState,
@@ -274,6 +280,7 @@ export default {
             AccountTrackerController: {
                 ...persistedState.AccountTrackerController,
                 accounts: fixedAccouts,
+                hiddenAccounts: fixedHiddenAccouts,
             },
         };
     },

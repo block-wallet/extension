@@ -144,7 +144,6 @@ const AddTokenManualView = ({
 
         const tokenSearchResponse = await searchTokenInAssetsList(tokenAddress)
 
-        console.log(tokenSearchResponse)
         setIsLoading(false)
 
         if (

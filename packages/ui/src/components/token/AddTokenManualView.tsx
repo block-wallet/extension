@@ -151,7 +151,8 @@ const AddTokenManualView = ({
             !tokenSearchResponse ||
             !tokenSearchResponse.tokens ||
             tokenSearchResponse.tokens.length === 0 ||
-            tokenSearchResponse.fetchFailed
+            (!tokenSearchResponse.tokens[0].name &&
+                !tokenSearchResponse.tokens[0].symbol)
         ) {
             reset()
             setError("tokenAddress", {
@@ -163,7 +164,7 @@ const AddTokenManualView = ({
 
         const token = tokenSearchResponse.tokens[0]
 
-        if (!token.symbol || !token.name || !token.decimals) {
+        if (tokenSearchResponse.fetchFailed) {
             reset()
             setError("tokenAddress", {
                 message: "Could not fetch token data. Please try again.",

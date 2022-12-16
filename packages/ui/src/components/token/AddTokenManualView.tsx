@@ -116,9 +116,7 @@ const AddTokenManualView = ({
         let msg = ""
         if (tokenAddresses.includes(values.tokenAddress.toLowerCase())) {
             msg = "You've already added this token"
-        }
-
-        if (tokenSymbols.includes(values.tokenSymbol.toLowerCase())) {
+        } else if (tokenSymbols.includes(values.tokenSymbol.toLowerCase())) {
             setShouldShowWarningDialog(true)
         }
 
@@ -135,65 +133,56 @@ const AddTokenManualView = ({
 
     const fetchTokenData = async (tokenAddress: string) => {
         if (!setSubmitEnabled) return
+        if (!utils.isAddress(tokenAddress)) return
 
         setSubmitEnabled(false)
-        if (utils.isAddress(tokenAddress)) {
-            setError("tokenAddress", { message: undefined })
-            setIsLoading(true)
-            const tokenSearchResponse = await searchTokenInAssetsList(
-                tokenAddress
-            )
+        setRefetchOption(false)
+        setError("tokenAddress", { message: undefined })
+        setIsLoading(true)
 
-            setIsLoading(false)
-            if (
-                tokenSearchResponse &&
-                tokenSearchResponse.length > 0 &&
-                tokenSearchResponse[0].symbol !== ""
-            ) {
-                if (
-                    tokenSearchResponse[0].decimals === -1 ||
-                    !tokenSearchResponse[0].name
-                ) {
-                    setRefetchOption(true)
+        const tokenSearchResponse = await searchTokenInAssetsList(tokenAddress)
 
-                    setTimeout(() => {
-                        setRefetchAnimation(true)
-                    }, 500)
-                } else {
-                    setRefetchOption(false)
-                }
+        setIsLoading(false)
 
-                setValue("tokenAddress", tokenSearchResponse[0].address)
-
-                if (tokenSearchResponse[0].decimals !== -1) {
-                    setValue(
-                        "tokenDecimals",
-                        tokenSearchResponse[0].decimals.toString()
-                    )
-                } else {
-                    setError("tokenDecimals", {
-                        message:
-                            "Could not fetch token decimals. Please refresh.",
-                    })
-                }
-                setValue("tokenLogo", tokenSearchResponse[0].logo)
-                setValue("tokenName", tokenSearchResponse[0].name)
-                setValue("tokenSymbol", tokenSearchResponse[0].symbol)
-                setValue("tokenType", tokenSearchResponse[0].type)
-
-                setSubmitEnabled(true)
-            } else {
-                reset()
-                setError("tokenAddress", {
-                    message: `Invalid token contract address for this network`,
-                })
-                setValue("tokenAddress", tokenAddress)
-            }
-        } else {
+        if (
+            !tokenSearchResponse ||
+            !tokenSearchResponse.tokens ||
+            tokenSearchResponse.tokens.length === 0 ||
+            (!tokenSearchResponse.tokens[0].name &&
+                !tokenSearchResponse.tokens[0].symbol)
+        ) {
             reset()
-            setError("tokenAddress", { message: "Invalid contract address" })
+            setError("tokenAddress", {
+                message: "Invalid contract address for this network.",
+            })
             setValue("tokenAddress", tokenAddress)
+            return
         }
+
+        const token = tokenSearchResponse.tokens[0]
+
+        if (tokenSearchResponse.fetchFailed) {
+            reset()
+            setError("tokenAddress", {
+                message: "Could not fetch token data. Please try again.",
+            })
+            setValue("tokenAddress", tokenAddress)
+            setRefetchOption(true)
+            setTimeout(() => {
+                setRefetchAnimation(true)
+            }, 500)
+
+            return
+        }
+
+        setValue("tokenAddress", token.address)
+        setValue("tokenDecimals", token.decimals.toString())
+        setValue("tokenLogo", token.logo)
+        setValue("tokenName", token.name)
+        setValue("tokenSymbol", token.symbol)
+        setValue("tokenType", token.type)
+
+        setSubmitEnabled(true)
     }
 
     useEffect(() => {

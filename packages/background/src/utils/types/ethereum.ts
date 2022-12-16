@@ -263,6 +263,13 @@ export interface AddEthereumChainConfirmParams {
     saveImage: boolean;
 }
 
+export interface EstimateGasParams {
+    data: string;
+    from: string;
+    to: string;
+    value: string;
+}
+
 // EIP-712
 
 // Raw data for each method (Direct input from the provider)

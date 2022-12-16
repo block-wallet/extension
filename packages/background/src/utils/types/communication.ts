@@ -10,7 +10,12 @@ import {
     GasPriceValue,
     FeeMarketEIP1559Values,
 } from '../../controllers/transactions/TransactionController';
-import { IToken, ITokens, Token } from '../../controllers/erc-20/Token';
+import {
+    IToken,
+    ITokens,
+    SearchTokensResponse,
+    Token,
+} from '../../controllers/erc-20/Token';
 import {
     TransactionAdvancedData,
     TransactionMeta,
@@ -447,7 +452,7 @@ export interface RequestSignatures {
     [Messages.TOKEN.ADD_CUSTOM_TOKENS]: [RequestAddCustomTokens, void | void[]];
     [Messages.TOKEN.SEND_TOKEN]: [RequestSendToken, string];
     [Messages.TOKEN.POPULATE_TOKEN_DATA]: [RequestPopulateTokenData, Token];
-    [Messages.TOKEN.SEARCH_TOKEN]: [RequestSearchToken, Token[]];
+    [Messages.TOKEN.SEARCH_TOKEN]: [RequestSearchToken, SearchTokensResponse];
     [Messages.EXTERNAL.EVENT_SUBSCRIPTION]: [
         undefined,
         boolean,
@@ -907,6 +912,7 @@ export interface RequestSearchToken {
     exact?: boolean;
     accountAddress?: string;
     chainId?: number;
+    manualAddToken?: boolean;
 }
 
 export interface RequestAntiPhishingImage {

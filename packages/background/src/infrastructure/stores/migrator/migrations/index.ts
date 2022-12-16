@@ -54,6 +54,7 @@ import migration52 from './migration-52';
 import migration53 from './migration-53';
 import migration54 from './migration-54';
 import migration55 from './migration-55';
+import migration56 from './migration-56';
 
 const migrations: IMigration[] = [
     migration01,
@@ -110,6 +111,5 @@ const migrations: IMigration[] = [
     migration52,
     migration53,
     migration54,
-    migration55,
 ];
 export default (): IMigration[] => migrations;

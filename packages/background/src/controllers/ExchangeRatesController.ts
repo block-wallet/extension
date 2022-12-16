@@ -1,3 +1,5 @@
+import log from 'loglevel';
+
 import { PreferencesController } from './PreferencesController';
 import { BaseController } from '../infrastructure/BaseController';
 import { Token } from './erc-20/Token';
@@ -13,11 +15,11 @@ import {
     ASSET_PLATFORMS_IDS_LIST,
 } from '@block-wallet/chains-assets';
 
-import axios from 'axios';
 import { ActionIntervalController } from './block-updates/ActionIntervalController';
 import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
+import httpClient from '../utils/http';
 import {
     getRateService,
     RateService,
@@ -85,16 +87,20 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         this._networkController.on(
             NetworkEvents.NETWORK_CHANGE,
             async (network: Network) => {
-                this.store.updateState({
-                    isRatesChangingAfterNetworkChange: true,
-                });
+                try {
+                    this.store.updateState({
+                        isRatesChangingAfterNetworkChange: true,
+                    });
 
-                this.updateNetworkNativeCurrencyId(network);
-                await this.updateExchangeRates();
-
-                this.store.updateState({
-                    isRatesChangingAfterNetworkChange: false,
-                });
+                    this.updateNetworkNativeCurrencyId(network);
+                    await this.updateExchangeRates();
+                } catch (error) {
+                    log.error(error);
+                } finally {
+                    this.store.updateState({
+                        isRatesChangingAfterNetworkChange: false,
+                    });
+                }
             }
         );
 
@@ -224,18 +230,10 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
 
         const query = `${BaseApiEndpoint}token_price/${this.networkNativeCurrency.coingeckoPlatformId}`;
 
-        const response = await axios.get(query, {
-            params: {
-                contract_addresses: tokenContracts,
-                vs_currencies: this._preferencesController.nativeCurrency,
-            },
+        return httpClient.get(query, {
+            contract_addresses: tokenContracts,
+            vs_currencies: this._preferencesController.nativeCurrency,
         });
-
-        if (response.status != 200) {
-            throw new Error(response.statusText);
-        }
-
-        return response.data;
     };
 
     /**

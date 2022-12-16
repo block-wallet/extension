@@ -1,8 +1,6 @@
 import { BigNumber } from "ethers"
 
 export const SEND_GAS_COST = BigNumber.from("0x5208") // Hex for 21000, cost of a simple send.
-export const DEPOSIT_GAS_COST = BigNumber.from("0x124f80") // Hex for 12e5, cost of deposit.
-export const WITHDRAW_GAS_COST = BigNumber.from("0x86470") // Hex for 55e4, cost of a withdrawal.
 export const APPROVE_GAS_COST = BigNumber.from("0xcb34") // Hex for 52020, default cost of approve.
 
 /**
@@ -45,6 +43,8 @@ export const LINKS = {
     GITHUB: "https://github.com/block-wallet/",
     TWITTER: "https://twitter.com/BlockWallet",
     WEBSITE_BUG_REPORT: "https://blockwallet.io/bug-report.html",
+    GITHUB_BUG_REPORT:
+        "https://github.com/block-wallet/extension/issues/new?assignees=&labels=&template=bug_report.md&title=",
     ARTICLES: {
         HD_PATH:
             "https://help.blockwallet.io/hc/en-us/articles/6670471581841-What-is-an-HD-Path-",
@@ -55,5 +55,6 @@ export const LINKS = {
         MALICIOUS_DAPPS:
             "https://help.blockwallet.io/hc/en-us/articles/10374731466769",
         BRIDGES: "https://help.blockwallet.io/hc/en-us/articles/10669678195473",
+        CHANGELOG: "https://bit.ly/bw-release"
     },
 }

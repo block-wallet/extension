@@ -3,7 +3,6 @@ import BlankProviderController, {
     BlankProviderEvents,
 } from '@block-wallet/background/controllers/BlankProviderController';
 import KeyringControllerDerivated from '@block-wallet/background/controllers/KeyringControllerDerivated';
-import MockDepositController from '../mocks/mock-deposit-controller';
 import NetworkController from '../../src/controllers/NetworkController';
 import PermissionsController from '@block-wallet/background/controllers/PermissionsController';
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
@@ -38,6 +37,7 @@ import BlockFetchController from '@block-wallet/background/controllers/block-upd
 import { ExternalEventSubscription } from '@block-wallet/background/utils/types/communication';
 import * as random from '@block-wallet/background/utils/randomBytes';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
+import { PrivacyAsyncController } from '@block-wallet/background/controllers/privacy/PrivacyAsyncController';
 
 const UNI_ORIGIN = 'https://app.uniswap.org';
 const TX_HASH =
@@ -45,8 +45,7 @@ const TX_HASH =
 const TEXT_FOR_HASH = 'HASH ME';
 
 describe('Blank Provider Controller', function () {
-    const defaultIdleTimeout = 5;
-    const initialLastActiveTime = new Date().getTime();
+    const defaultIdleTimeout = 500000;
     const portId = '7e24f69d-c740-4eb3-9c6e-4d47df491005';
     const accounts = {
         goerli: [
@@ -150,8 +149,6 @@ describe('Blank Provider Controller', function () {
     let transactionWatcherController: TransactionWatcherController;
 
     beforeEach(function () {
-        const depositController = MockDepositController();
-
         // Instantiate objects
         networkController = getNetworkControllerInstance();
 
@@ -186,9 +183,11 @@ describe('Blank Provider Controller', function () {
         appStateController = new AppStateController(
             {
                 idleTimeout: defaultIdleTimeout,
+                isAppUnlocked: true,
+                lastActiveTime: new Date().getTime(),
+                lockedByTimeout: false,
             },
             mockKeyringController,
-            depositController,
             transactionController
         );
 
@@ -244,7 +243,8 @@ describe('Blank Provider Controller', function () {
             appStateController,
             new KeyringControllerDerivated({}),
             tokenController,
-            blockUpdatesController
+            blockUpdatesController,
+            gasPricesController
         );
 
         accountTrackerController.addPrimaryAccount(
@@ -402,9 +402,16 @@ describe('Blank Provider Controller', function () {
 
             sinon.stub(appStateController.UIStore, 'getState').returns({
                 isAppUnlocked: true,
-                lastActiveTime: 0,
+                lastActiveTime: new Date().getTime(),
                 lockedByTimeout: false,
             });
+            sinon.stub(appStateController.store, 'getState').returns({
+                isAppUnlocked: true,
+                lastActiveTime: new Date().getTime(),
+                lockedByTimeout: false,
+                idleTimeout: defaultIdleTimeout,
+            });
+
             sinon.stub(permissionsController.store, 'getState').returns({
                 permissions: {
                     'https://app.uniswap.org': {

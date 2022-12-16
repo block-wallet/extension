@@ -43,6 +43,9 @@ const persistedState = {
     },
     AppStateController: {
         idleTimeout: 5,
+        isAppUnlocked: true,
+        lastActiveTime: 0,
+        lockedByTimeout: false,
     },
     BlankDepositController: {
         pendingWithdrawals: {
@@ -169,6 +172,9 @@ const initialState: BlankAppState & {
     },
     AppStateController: {
         idleTimeout: 5,
+        isAppUnlocked: true,
+        lastActiveTime: 0,
+        lockedByTimeout: false,
     },
     KeyringController: {
         isUnlocked: false,
@@ -251,16 +257,19 @@ const initialState: BlankAppState & {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     fast: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     slow: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                 },
             },
@@ -270,6 +279,11 @@ const initialState: BlankAppState & {
         userTokens: {} as any,
         deletedUserTokens: {} as any,
         cachedPopulatedTokens: {} as any,
+    },
+    RemoteConfigsController: {
+        provider: {
+            incompatibleSites: [],
+        },
     },
 };
 
@@ -318,6 +332,9 @@ describe('State reconciler', () => {
             },
             AppStateController: {
                 idleTimeout: 5,
+                isAppUnlocked: true,
+                lastActiveTime: 0,
+                lockedByTimeout: false,
             },
             BlankDepositController: {
                 pendingWithdrawals: {
@@ -440,6 +457,11 @@ describe('State reconciler', () => {
             PermissionsController: {
                 permissions: {},
                 permissionRequests: {},
+            },
+            RemoteConfigsController: {
+                provider: {
+                    incompatibleSites: [],
+                },
             },
         });
     });

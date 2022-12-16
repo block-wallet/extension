@@ -8,7 +8,7 @@ import {
 } from '../../../../utils/networks';
 
 /**
- * This migration adds RSK Mainnet and RSK Testnet
+ * This migration adds RSK Mainnet and RSK Testnet and also updates ZKsync endpoint
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
@@ -17,6 +17,11 @@ export default {
         const networkController = new NetworkController(
             persistedState.NetworkController
         );
+
+        updatedNetworks.ZKSYNC_ALPHA_TESTNET = {
+            ...updatedNetworks.ZKSYNC_ALPHA_TESTNET,
+            rpcUrls: INITIAL_NETWORKS.ZKSYNC_ALPHA_TESTNET.rpcUrls,
+        };
 
         const rskNonNativeKey = networkController.getNonNativeNetworkKey(
             INITIAL_NETWORKS.RSK.chainId

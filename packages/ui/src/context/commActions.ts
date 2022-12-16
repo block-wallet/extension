@@ -3,11 +3,6 @@ import {
     AccountInfo,
     DeviceAccountInfo,
 } from "@block-wallet/background/controllers/AccountTrackerController"
-import { ComplianceInfo } from "@block-wallet/background/controllers/blank-deposit/infrastructure/IBlankDepositService"
-import {
-    CurrencyAmountPair,
-    KnownCurrencies,
-} from "@block-wallet/background/controllers/blank-deposit/types"
 import {
     MessageTypes,
     RequestTypes,
@@ -15,7 +10,6 @@ import {
     ResponseGetState,
     StateSubscription,
     SubscriptionMessageTypes,
-    ResponseBlankCurrencyDepositsCount,
     RequestAddNetwork,
     RequestEditNetwork,
     RequestEditNetworksOrder,
@@ -24,9 +18,9 @@ import { Devices, ExchangeType, Messages } from "./commTypes"
 import {
     IToken,
     ITokens,
+    SearchTokensResponse,
     Token,
 } from "@block-wallet/background/controllers/erc-20/Token"
-import { IBlankDeposit } from "@block-wallet/background/controllers/blank-deposit/BlankDeposit"
 import { SiteMetadata } from "@block-wallet/provider/types"
 import {
     TransactionAdvancedData,
@@ -57,6 +51,7 @@ import {
     OneInchSwapQuoteParams,
     OneInchSwapRequestParams,
 } from "@block-wallet/background/utils/types/1inch"
+import { generatePhishingPreventionBase64 } from "../util/phishingPrevention"
 import {
     BridgeQuoteRequest,
     BridgeRoutesRequest,
@@ -652,8 +647,8 @@ export const sendToken = async (
  */
 export const searchTokenInAssetsList = async (
     query: string,
-    exact?: boolean
-): Promise<Token[]> => {
+    exact?: boolean,
+): Promise<SearchTokensResponse> => {
     return sendMessage(Messages.TOKEN.SEARCH_TOKEN, {
         query,
         exact,
@@ -680,7 +675,8 @@ export const populateTokenData = async (
  * @returns vault seed phrase
  */
 export const createWallet = async (password: string): Promise<void> => {
-    return sendMessage(Messages.WALLET.CREATE, { password })
+    const antiPhishingImage = await generatePhishingPreventionBase64()
+    return sendMessage(Messages.WALLET.CREATE, { password, antiPhishingImage })
 }
 
 /**
@@ -694,10 +690,12 @@ export const importWallet = async (
     seedPhrase: string,
     defaultNetwork?: string
 ): Promise<boolean> => {
+    const antiPhishingImage = await generatePhishingPreventionBase64()
     return sendMessage(Messages.WALLET.IMPORT, {
         password,
         seedPhrase,
         defaultNetwork,
+        antiPhishingImage,
     })
 }
 
@@ -711,132 +709,12 @@ export const resetWallet = async (
     password: string,
     seedPhrase: string
 ): Promise<boolean> => {
-    return sendMessage(Messages.WALLET.RESET, { password, seedPhrase })
-}
-
-/**
- * It makes a Blank deposit
- *
- * @param pair The currency/amount pair
- * @param feeData gas fee data
- * @param customNonce Custom transaction nonce
- */
-export const makeBlankDeposit = async (
-    pair: CurrencyAmountPair,
-    feeData: TransactionFeeData,
-    customNonce?: number
-): Promise<string> => {
-    return sendMessage(Messages.BLANK.DEPOSIT, {
-        pair,
-        feeData,
-        customNonce,
+    const antiPhishingImage = await generatePhishingPreventionBase64()
+    return sendMessage(Messages.WALLET.RESET, {
+        password,
+        seedPhrase,
+        antiPhishingImage,
     })
-}
-
-/**
- * Submits an approval transaction to setup asset allowance
- *
- * @param allowance User selected allowance
- * @param feeData Deposit gas fee data
- * @param pair The deposit currency and amount values
- * @param customNonce Custom transaction nonce
- */
-export const blankDepositAllowance = async (
-    allowance: BigNumber,
-    feeData: TransactionFeeData,
-    pair: CurrencyAmountPair,
-    customNonce?: number
-): Promise<boolean> => {
-    return sendMessage(Messages.BLANK.DEPOSIT_ALLOWANCE, {
-        allowance,
-        feeData,
-        pair,
-        customNonce,
-    })
-}
-
-/**
- * Obtains the underlying token allowance of a deposit contract instance
- *
- * @param pair The pair associated to the contract instance
- * @returns The specified pair instance underlying token allowance
- */
-export const getDepositInstanceAllowance = async (pair: CurrencyAmountPair) => {
-    return sendMessage(Messages.BLANK.GET_INSTANCE_ALLOWANCE, {
-        pair,
-    })
-}
-
-/**
- * It makes a Blank withdrawal
- *
- * @param pair The currency/amount pair
- * @param address The withdrawal recipient (Defaults to selected address)
- */
-export const makeBlankWithdrawal = async (
-    pair: CurrencyAmountPair,
-    accountAddressOrIndex?: string | number
-): Promise<string> => {
-    return sendMessage(Messages.BLANK.WITHDRAW, {
-        pair,
-        accountAddressOrIndex,
-    })
-}
-
-/**
- * It returns compliance information for the specified deposit
- *
- * @param id The Deposit Id
- */
-export const getDepositComplianceInformation = async (
-    id: string
-): Promise<ComplianceInfo> => {
-    return sendMessage(Messages.BLANK.COMPLIANCE, { id })
-}
-
-/**
- * It returns the unspent deposit count for the specified pair
- *
- * @param pair The currency/amount pair
- */
-export const getDepositsCount = async (
-    pair: CurrencyAmountPair
-): Promise<number> => {
-    return sendMessage(Messages.BLANK.PAIR_DEPOSITS_COUNT, { pair })
-}
-
-/**
- * It returns the unspent deposit count for the specified pair
- *
- * @param pair The currency/amount pair
- */
-export const getCurrencyDepositsCount = async (
-    currency: KnownCurrencies
-): Promise<ResponseBlankCurrencyDepositsCount> => {
-    return sendMessage(Messages.BLANK.CURRENCY_DEPOSITS_COUNT, { currency })
-}
-
-/**
- * It returns the list of unspent deposits
- */
-export const getUnspentDeposits = async (): Promise<IBlankDeposit[]> => {
-    return sendMessage(Messages.BLANK.GET_UNSPENT_DEPOSITS)
-}
-
-/**
- * It obtains the Deposit formatted note
- *
- * @param id The Deposit id
- */
-export const getDepositFormattedNote = async (id: string): Promise<string> => {
-    return sendMessage(Messages.BLANK.GET_DEPOSIT_NOTE_STRING, { id })
-}
-
-/**
- * It returns the withdrawal operation fees
- */
-export const getWithdrawalFees = async (pair: CurrencyAmountPair) => {
-    return sendMessage(Messages.BLANK.GET_WITHDRAWAL_FEES, { pair })
 }
 
 /**
@@ -846,55 +724,6 @@ export const updatePopupTab = async (popupTab: PopupTabs): Promise<void> => {
     return sendMessage(Messages.APP.UPDATE_POPUP_TAB, {
         popupTab,
     })
-}
-
-/**
- * It forces the deposit reconstruction for the current network
- */
-export const forceDepositsImport = async () => {
-    return sendMessage(Messages.BLANK.FORCE_DEPOSITS_IMPORT)
-}
-
-/**
- * It checks for possible spent notes and updates their internal state
- */
-export const updateNotesSpentState = async () => {
-    return sendMessage(Messages.BLANK.UPDATE_SPENT_NOTES)
-}
-
-/**
- * It triggers the deposits tree update for the current network
- * (used to update the deposits tree and calculate the subsequent deposits accurately)
- */
-export const updateDepositsTree = async (pair: CurrencyAmountPair) => {
-    return sendMessage(Messages.BLANK.UPDATE_DEPOSITS_TREE, { pair })
-}
-
-/**
- * hasDepositedFromAddress
- *
- * @returns Whether or not the user has made at least one deposit from this address in the past
- */
-export const hasDepositedFromAddress = async (
-    withdrawAddress: string,
-    pair?: CurrencyAmountPair
-) => {
-    return sendMessage(Messages.BLANK.HAS_DEPOSITED_FROM_ADDRESS, {
-        pair,
-        withdrawAddress,
-    })
-}
-
-/**
- * It returns the date of the latest deposit made
- * for the specified currency/amount pair
- *
- * @param pair The currency/amount pair
- */
-export const getLatestDepositDate = async (
-    pair: CurrencyAmountPair
-): Promise<Date> => {
-    return sendMessage(Messages.BLANK.GET_LATEST_DEPOSIT_DATE, { pair })
 }
 
 /**
@@ -1005,20 +834,6 @@ export const getApproveTransactionGasLimit = async (
             amount,
         }
     )
-}
-
-/**
- * It calculates a Deposit transaction gas limit
- *
- * @param currencyAmountPair The currency amount pair
- * @returns The Deposit estimated gas limit
- */
-export const getDepositTransactionGasLimit = async (
-    currencyAmountPair: CurrencyAmountPair
-): Promise<TransactionGasEstimation> => {
-    return sendMessage(Messages.BLANK.CALCULATE_DEPOSIT_TRANSACTION_GAS_LIMIT, {
-        currencyAmountPair,
-    })
 }
 
 /**
@@ -1324,14 +1139,6 @@ export const toggleDefaultBrowserWallet = async (
 }
 
 /**
- * Generates a new base64 image that can be use for the phishing protection
- * @returns a base64 image used for phishing protection
- */
-export const generateNewAntiPhishingImage = async (): Promise<string> => {
-    return sendMessage(Messages.WALLET.GENERATE_ANTI_PHISHING_IMAGE, {})
-}
-
-/**
  * Sets the provided base64 image as the phishing protection picture
  * @param image the base64 image to be used for phishing protection
  */
@@ -1469,30 +1276,6 @@ export const getHardwareWalletHDPath = async (
 
 export const getWindowId = () => {
     return sendMessage(Messages.BROWSER.GET_WINDOW_ID)
-}
-
-/**
- * It gets the subsequent deposits from the user's most recent for a given pair.
- * @param pair The pair to get subsequent deposits for.
- *
- * @returns If successful, it returns the subsequent deposits.
- */
-export const getSubsequentDepositsCount = async (pair: CurrencyAmountPair) => {
-    return sendMessage(Messages.BLANK.GET_SUBSEQUENT_DEPOSITS_COUNT, {
-        pair,
-    })
-}
-
-/**
- * It gets the pair's pool anonimity set.
- *
- * @param pair The pair to get the anonimity set for.
- * @returns If successful, it returns the anonimity set.
- */
-export const getAnonimitySet = async (pair: CurrencyAmountPair) => {
-    return sendMessage(Messages.BLANK.GET_ANONIMITY_SET, {
-        pair,
-    })
 }
 
 export const searchChainsByTerm = async (term: string) => {
@@ -1649,8 +1432,27 @@ export const executeExchange = async (
 }
 
 /**
- * Returns the available tokes for bridging in the current user's network
+ * Sets the user's current network status
  *
+ * @param networkStatus The current network status
+ */
+export const setNetworkStatus = async (
+    networkStatus: boolean
+): Promise<void> => {
+    return sendMessage(Messages.APP.SET_USER_ONLINE, { networkStatus })
+}
+
+/**
+ * Subscribes to navigator network status
+ */
+export const subscribeNetworkStatus = () => {
+    if (window && window.navigator) {
+        window.addEventListener("online", () => setNetworkStatus(true))
+        window.addEventListener("offline", () => setNetworkStatus(false))
+    }
+}
+/**
+ * Returns the available tokes for bridging in the current user's network
  */
 export const getBridgeTokens = async (): Promise<IToken[]> => {
     return sendMessage(Messages.BRIDGE.GET_BRIDGE_TOKENS)

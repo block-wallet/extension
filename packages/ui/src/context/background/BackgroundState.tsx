@@ -1,7 +1,11 @@
 import { Messages } from "../commTypes"
 import BackgroundReducer from "./backgroundReducer"
 import { useReducer, useEffect } from "react"
-import { subscribeState, getState } from "../commActions"
+import {
+    subscribeState,
+    getState,
+    subscribeNetworkStatus,
+} from "../commActions"
 import BackgroundContext, { initBackgroundState } from "./backgroundContext"
 import { isPortConnected } from "../setup"
 
@@ -34,6 +38,9 @@ const BackgroundState = (props: any) => {
                         payload: state,
                     })
                 })
+
+                // Subscribe to network status
+                subscribeNetworkStatus()
 
                 // Set context as initialized
                 isContextInit = true

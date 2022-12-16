@@ -33,10 +33,14 @@ import { session } from "../context/setup"
 import { useConnectedSite } from "../context/hooks/useConnectedSite"
 import { useTokensList } from "../context/hooks/useTokensList"
 
+// Utils
+import { useSelectedAddressWithChainIdChecksum } from "../util/hooks/useSelectedAddressWithChainIdChecksum"
+
 // Assets
 import TokenSummary from "../components/token/TokenSummary"
 import GasPricesInfo from "../components/gas/GasPricesInfo"
 import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
+import TransparentOverlay from "../components/loading/TransparentOverlay"
 import PopupLayout from "../components/popup/PopupLayout"
 import PopupHeader from "../components/popup/PopupHeader"
 
@@ -44,8 +48,7 @@ import PopupHeader from "../components/popup/PopupHeader"
 // see gas (alt + 'g')
 
 const AccountDisplay = () => {
-    const blankState = useBlankState()!
-    const accountAddress = blankState.selectedAddress
+    const accountAddress = useSelectedAddressWithChainIdChecksum()
     const account = useSelectedAccount()
     const [copied, setCopied] = useState(false)
     const copy = async () => {
@@ -148,11 +151,10 @@ const PopupPage = () => {
     const error = (useHistory().location.state as { error: string })?.error
     const state = useBlankState()!
     const history = useHistory()
-    const account = useSelectedAccount()
     const { nativeToken } = useTokensList()
     const { nativeCurrency, isSendEnabled, isSwapEnabled, isBridgeEnabled } =
         useSelectedNetwork()
-
+    const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
 
     const isLoading =
@@ -162,6 +164,7 @@ const PopupPage = () => {
         <PopupLayout
             header={
                 <PopupHeader title="" close={false} backButton={false}>
+                    {state.isNetworkChanging && <TransparentOverlay />}
                     <div className="flex flex-row items-center justify-between w-full">
                         <div className="flex flex-row items-center space-x-3">
                             <div className="relative flex flex-col items-start group">
@@ -173,7 +176,7 @@ const PopupPage = () => {
                                 >
                                     <AccountIcon
                                         className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
-                                        fill={getAccountColor(account?.address)}
+                                        fill={getAccountColor(checksumAddress)}
                                     />
                                 </Link>
                                 <Tooltip
@@ -248,7 +251,7 @@ const PopupPage = () => {
                         </GenericTooltip>
                         <DAppConnection />
                     </div>
-                    <TokenSummary>
+                    <TokenSummary className="p-4">
                         <TokenSummary.Balances>
                             <TokenSummary.TokenBalance
                                 title={

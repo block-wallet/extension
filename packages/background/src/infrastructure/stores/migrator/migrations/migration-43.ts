@@ -5,7 +5,7 @@ import { FEATURES } from '../../../../utils/constants/features';
 import {
     DEFAULT_TORNADO_CONFIRMATION,
     DERIVATIONS_FORWARD,
-} from '../../../../controllers/blank-deposit/types';
+} from '../../../../controllers/privacy/types';
 
 /**
  * This migration adds the zkSync alpha testnet network to the networks

@@ -1111,6 +1111,12 @@
   version "2.1.1"
   resolved "https://github.com/Block-Wallet/explorer-link#88f34d2e1ad1f7a5f5be05ed5c67f92f3a8cc75c"
 
+"@block-wallet/phishing-prevention@git+https://github.com/block-wallet/phishing-prevention#4708461673825816104b8a6cf5260ecb29b75c61":
+  version "1.0.0"
+  resolved "git+https://github.com/block-wallet/phishing-prevention#4708461673825816104b8a6cf5260ecb29b75c61"
+  dependencies:
+    p5 "^1.4.0"
+
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.npmjs.org/@cnakazawa/watch/-/watch-1.0.4.tgz#f864ae85004d0fcab6f50be9141c4da368d1656a"
@@ -2233,10 +2239,10 @@
     "@types/filesystem" "*"
     "@types/har-format" "*"
 
-"@types/chrome@^0.0.128":
-  version "0.0.128"
-  resolved "https://registry.npmjs.org/@types/chrome/-/chrome-0.0.128.tgz#5dbd8b2539a367353fbe4386f119b510105f8b6a"
-  integrity sha512-eGc599TDtersMBW1cSnExHm0IHrXrO5xdk6Sa2Dq30ED+hR1rpT1ez0NNcCgvGO52nmktGfyvd3Uyquzv3LL4g==
+"@types/chrome@^0.0.193":
+  version "0.0.193"
+  resolved "https://registry.yarnpkg.com/@types/chrome/-/chrome-0.0.193.tgz#cd0dc5033f27a243d228aebe566c3ec19ef17e36"
+  integrity sha512-R8C84oqvk8A8C8G1viBd8qLpDr86Y/jwD+KLgzUekbIT9RGds6a9GnlQyg8P7ltnGogTMHkiEQK0ZlcrvTeo3Q==
   dependencies:
     "@types/filesystem" "*"
     "@types/har-format" "*"
@@ -2658,6 +2664,11 @@
   integrity sha512-/xFrPIo+4zOeNGtVMbf9rUm0N+i4pDf1ynExomqtokIJmVzR3962lJ1UE+MmexMkA0cmN9oTzg5Xcbwge0Ij2Q==
   dependencies:
     source-map "^0.6.1"
+
+"@types/uuid@^8.3.4":
+  version "8.3.4"
+  resolved "https://registry.yarnpkg.com/@types/uuid/-/uuid-8.3.4.tgz#bd86a43617df0594787d38b735f55c805becf1bc"
+  integrity sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==
 
 "@types/w3c-web-hid@^1.0.3":
   version "1.0.3"
@@ -9991,6 +10002,11 @@ p-try@^2.0.0:
   version "2.2.0"
   resolved "https://registry.npmjs.org/p-try/-/p-try-2.2.0.tgz#cb2868540e313d61de58fafbe35ce9004d5540e6"
   integrity sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==
+
+p5@^1.4.0:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/p5/-/p5-1.4.2.tgz#c258fcf655ff75bd4e8b530607c9a96e6a556023"
+  integrity sha512-J5zqZ/l1NIbJSuNr/FH9nDYgBRg7/NubStNPnx1fQCMSAgxI6peKDHs9i5iaG9EuwbJzjuG6/5bX/D0lqqrP9A==
 
 pako@~1.0.5:
   version "1.0.11"

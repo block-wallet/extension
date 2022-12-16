@@ -1,9 +1,9 @@
 import NetworkController from '../NetworkController';
-import axios from 'axios';
 import log from 'loglevel';
 import { Contract } from '@ethersproject/contracts';
 import { Interface } from 'ethers/lib/utils';
 import { ethers } from 'ethers';
+import httpClient, { RequestError } from '../../utils/http';
 
 const SIGNATURE_REGISTRY_CONTRACT = {
     address: '0x44691B39d1a75dC4E0A0346CBB15E310e6ED1E86',
@@ -203,18 +203,20 @@ export class ContractSignatureParser {
             return undefined;
         }
 
-        const request = await axios.get(`${etherscanAPI}/api`, {
-            params: {
+        const request = await httpClient.get<{
+            status: string;
+            result: string;
+        }>(
+            `${etherscanAPI}/api`,
+            {
                 module: 'contract',
                 action: 'getabi',
                 address,
-                //TODO: current .env API key is invalid, should we get a new one?
-                //apikey:
             },
-            timeout: 30000,
-        });
+            30000
+        );
 
-        return request.data?.status === '1' ? request.data.result : undefined;
+        return request.status === '1' ? request.result : undefined;
     }
 
     /**
@@ -284,15 +286,18 @@ export class ContractSignatureParser {
             let fourByteResponse: FourByteResponse | undefined = undefined;
 
             try {
-                fourByteResponse = (
-                    await axios.get<FourByteResponse>(
-                        `https://www.4byte.directory/api/v1/signatures/?hex_signature=${bytes}`
-                    )
-                ).data;
+                fourByteResponse = await httpClient.get<FourByteResponse>(
+                    `https://www.4byte.directory/api/v1/signatures/`,
+                    {
+                        hex_signature: bytes,
+                    }
+                );
             } catch (error) {
                 log.warn(
                     'Error looking up in 4byte, fallbacking to contract signature',
-                    error.message || error
+                    JSON.stringify((error as RequestError).response) ||
+                        error.message ||
+                        error
                 );
             }
 

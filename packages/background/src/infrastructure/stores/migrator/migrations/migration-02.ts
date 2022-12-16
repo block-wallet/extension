@@ -52,6 +52,7 @@ export default {
                                 'slow',
                                 'maxPriorityFeePerGas'
                             ),
+                            lastBaseFeePerGas: null,
                         },
                         average: {
                             gasPrice: getGasData(
@@ -69,6 +70,7 @@ export default {
                                 'average',
                                 'maxPriorityFeePerGas'
                             ),
+                            lastBaseFeePerGas: null,
                         },
                         fast: {
                             gasPrice: getGasData(
@@ -86,6 +88,7 @@ export default {
                                 'fast',
                                 'maxPriorityFeePerGas'
                             ),
+                            lastBaseFeePerGas: null,
                         },
                     },
                 };

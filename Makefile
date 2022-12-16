@@ -36,10 +36,6 @@ install/ci:
 	@cd packages/ui && yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
 	@cd packages/provider && yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
 
-cp/snarks:
-	@mkdir -p dist/snarks/tornado
-	@cp utils/tornado/* dist/snarks/tornado
-
 build/ui:
 	@cd packages/ui && $(MAKE) build/ui --no-print-directory
 
@@ -57,7 +53,6 @@ build:
 	@$(MAKE) ENVIRONMENT=$(ENVIRONMENT) build/background --no-print-directory
 	@$(MAKE) ENVIRONMENT=$(ENVIRONMENT) build/provider --no-print-directory
 	@$(MAKE) build/ui --no-print-directory
-	@$(MAKE) cp/snarks --no-print-directory
 	@$(MAKE) cp/release-notes --no-print-directory
 
 build/prod:
@@ -65,7 +60,6 @@ build/prod:
 	@$(MAKE) ENVIRONMENT=prod build/background --no-print-directory
 	@$(MAKE) ENVIRONMENT=prod build/provider --no-print-directory
 	@$(MAKE) GENERATE_SOURCEMAP=false build/ui --no-print-directory
-	@$(MAKE) cp/snarks --no-print-directory
 	@$(MAKE) cp/release-notes --no-print-directory
 
 build/prod-zip:
@@ -73,6 +67,5 @@ build/prod-zip:
 	@$(MAKE) ENVIRONMENT=prod build/background --no-print-directory
 	@$(MAKE) ENVIRONMENT=prod build/provider --no-print-directory
 	@$(MAKE) build/ui --no-print-directory
-	@$(MAKE) cp/snarks --no-print-directory
 	@$(MAKE) cp/release-notes --no-print-directory
 	@zip -r -D block-extension.zip dist/

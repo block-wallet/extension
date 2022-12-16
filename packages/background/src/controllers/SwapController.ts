@@ -1,5 +1,4 @@
 import NetworkController from './NetworkController';
-import axios, { AxiosResponse } from 'axios';
 import {
     ONEINCH_NATIVE_ADDRESS,
     ONEINCH_SWAPS_ENDPOINT,
@@ -25,9 +24,10 @@ import { TransactionFeeData } from './erc-20/transactions/SignedTransaction';
 import { retryHandling } from '../utils/retryHandling';
 import { TokenController } from './erc-20/TokenController';
 import {
-    get1InchErrorMessageFromAxiosResponse,
+    get1InchErrorMessageFromResponse,
     map1InchErrorMessage,
 } from '../utils/1inchError';
+import httpClient from '../utils/http';
 import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
 import { BaseController } from '../infrastructure/BaseController';
 
@@ -210,40 +210,37 @@ export default class SwapController extends BaseController<
         amount,
     }: OneInchSwapQuoteParams): Promise<SwapQuote> => {
         try {
-            const res = await retryHandling<
-                AxiosResponse<OneInchSwapQuoteResponse>
-            >(() =>
-                axios.get<OneInchSwapQuoteResponse>(
+            const res = await retryHandling<OneInchSwapQuoteResponse>(() =>
+                httpClient.get<
+                    OneInchSwapQuoteResponse,
+                    OneInchSwapQuoteParams
+                >(
                     `${ONEINCH_SWAPS_ENDPOINT}${this._networkController.network.chainId}/quote`,
                     {
-                        params: {
-                            fromTokenAddress:
-                                fromTokenAddress === '0x0'
-                                    ? ONEINCH_NATIVE_ADDRESS
-                                    : fromTokenAddress,
-                            toTokenAddress:
-                                toTokenAddress === '0x0'
-                                    ? ONEINCH_NATIVE_ADDRESS
-                                    : toTokenAddress,
-                            amount,
-                            fee: BASE_SWAP_FEE,
-                        } as OneInchSwapQuoteParams,
+                        fromTokenAddress:
+                            fromTokenAddress === '0x0'
+                                ? ONEINCH_NATIVE_ADDRESS
+                                : fromTokenAddress,
+                        toTokenAddress:
+                            toTokenAddress === '0x0'
+                                ? ONEINCH_NATIVE_ADDRESS
+                                : toTokenAddress,
+                        amount,
+                        fee: BASE_SWAP_FEE,
                     }
                 )
             );
 
             return {
-                ...res.data,
-                blockWalletFee: BigNumber.from(res.data.fromTokenAmount)
+                ...res,
+                blockWalletFee: BigNumber.from(res.fromTokenAmount)
                     .mul(BASE_SWAP_FEE * 10)
                     .div(1000),
-                estimatedGas: Math.round(
-                    res.data.estimatedGas * GAS_LIMIT_INCREASE
-                ),
+                estimatedGas: Math.round(res.estimatedGas * GAS_LIMIT_INCREASE),
             };
         } catch (error) {
             const errMessage = map1InchErrorMessage(
-                get1InchErrorMessageFromAxiosResponse(error)
+                get1InchErrorMessageFromResponse(error) // Error should be of type RequestError
             );
             throw new Error(errMessage || 'Error getting 1Inch swap quote');
         }
@@ -263,42 +260,38 @@ export default class SwapController extends BaseController<
         );
 
         try {
-            const res = await retryHandling<
-                AxiosResponse<OneInchSwapRequestResponse>
-            >(() =>
-                axios.get<OneInchSwapRequestResponse>(
-                    `${ONEINCH_SWAPS_ENDPOINT}${chainId}/swap`,
-                    {
-                        params: {
-                            ...swapParams,
-                            fee: BASE_SWAP_FEE,
-                            referrerAddress: REFERRER_ADDRESS,
-                            allowPartialFill: false,
-                        } as OneInchSwapRequestParams,
-                    }
-                )
+            const res = await retryHandling<OneInchSwapRequestResponse>(() =>
+                httpClient.get<
+                    OneInchSwapRequestResponse,
+                    OneInchSwapRequestParams
+                >(`${ONEINCH_SWAPS_ENDPOINT}${chainId}/swap`, {
+                    ...swapParams,
+                    fee: BASE_SWAP_FEE,
+                    referrerAddress: REFERRER_ADDRESS,
+                    allowPartialFill: false,
+                })
             );
 
             const methodSignature =
                 await contractSignatureParser.getMethodSignature(
-                    res.data.tx.data,
-                    res.data.tx.to
+                    res.tx.data,
+                    res.tx.to
                 );
 
             return {
-                ...res.data,
+                ...res,
                 methodSignature,
-                blockWalletFee: BigNumber.from(res.data.fromTokenAmount)
+                blockWalletFee: BigNumber.from(res.fromTokenAmount)
                     .mul(BASE_SWAP_FEE * 10)
                     .div(1000),
                 tx: {
-                    ...res.data.tx,
-                    gas: Math.round(res.data.tx.gas * GAS_LIMIT_INCREASE),
+                    ...res.tx,
+                    gas: Math.round(res.tx.gas * GAS_LIMIT_INCREASE),
                 },
             };
         } catch (error) {
             const errMessage = map1InchErrorMessage(
-                get1InchErrorMessageFromAxiosResponse(error)
+                get1InchErrorMessageFromResponse(error) // Error should be of type RequestError
             );
             throw new Error(
                 errMessage || 'Error getting 1Inch swap parameters'
@@ -383,15 +376,13 @@ export default class SwapController extends BaseController<
         try {
             if (exchangeType === ExchangeType.SWAP_1INCH) {
                 // 1Inch router contract address
-                const res = await retryHandling<
-                    AxiosResponse<OneInchSpenderRes>
-                >(() =>
-                    axios.get<OneInchSpenderRes>(
+                const res = await retryHandling<OneInchSpenderRes>(() =>
+                    httpClient.get<OneInchSpenderRes>(
                         `${ONEINCH_SWAPS_ENDPOINT}${chainId}/approve/spender`
                     )
                 );
 
-                return res.data.address;
+                return res.address;
             } else {
                 throw new Error('Exchange type not supported');
             }

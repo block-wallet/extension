@@ -2,6 +2,7 @@ import initialState from '@block-wallet/background/utils/constants/initialState'
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import {
+    FeeDataResponse,
     GasPriceData,
     GasPriceLevels,
     GasPricesController,
@@ -12,10 +13,11 @@ import { getNetworkControllerInstance } from '../mocks/mock-network-instance';
 import { Network } from '@block-wallet/background/utils/constants/networks';
 import { it } from 'mocha';
 import { Block } from '@ethersproject/abstract-provider';
-import axios from 'axios';
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
+import httpClient, { RequestError } from './../../src/utils/http';
 
+// TODO(REC): FIX US!
 describe('GasPrices Controller', () => {
     let gasPricesController: GasPricesController;
     let networkController: NetworkController;
@@ -100,16 +102,19 @@ describe('GasPrices Controller', () => {
                                 gasPrice: BigNumber.from('181000000000'),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                             fast: {
                                 gasPrice: BigNumber.from('165000000000'),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                             slow: {
                                 gasPrice: BigNumber.from('125000000000'),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                         },
                     },
@@ -123,7 +128,7 @@ describe('GasPrices Controller', () => {
             );
             _fetchFeeDataStub.returns(
                 Promise.resolve({
-                    average: { gasPrice: BigNumber.from('181000000001') },
+                    average: { gasPrice: BigNumber.from('181000000000') },
                     fast: { gasPrice: BigNumber.from('165000000000') },
                     slow: { gasPrice: BigNumber.from('125000000000') },
                 })
@@ -147,7 +152,7 @@ describe('GasPrices Controller', () => {
             _fetchFeeDataStub.returns(
                 Promise.resolve({
                     average: { gasPrice: BigNumber.from('181000000000') },
-                    fast: { gasPrice: BigNumber.from('165000000001') },
+                    fast: { gasPrice: BigNumber.from('165000000000') },
                     slow: { gasPrice: BigNumber.from('125000000000') },
                 })
             );
@@ -207,18 +212,21 @@ describe('GasPrices Controller', () => {
                                     BigNumber.from('181000000000'),
                                 maxFeePerGas: BigNumber.from('181000000000'),
                                 gasPrice: null,
+                                lastBaseFeePerGas: null,
                             },
                             fast: {
                                 maxPriorityFeePerGas:
                                     BigNumber.from('165000000000'),
                                 maxFeePerGas: BigNumber.from('165000000000'),
                                 gasPrice: null,
+                                lastBaseFeePerGas: null,
                             },
                             slow: {
                                 maxPriorityFeePerGas:
                                     BigNumber.from('125000000000'),
                                 maxFeePerGas: BigNumber.from('125000000000'),
                                 gasPrice: null,
+                                lastBaseFeePerGas: null,
                             },
                         },
                     },
@@ -340,18 +348,21 @@ describe('GasPrices Controller', () => {
                                     BigNumber.from('181000000000'),
                                 maxFeePerGas: BigNumber.from('181000000000'),
                                 gasPrice: null,
+                                lastBaseFeePerGas: null,
                             },
                             fast: {
                                 maxPriorityFeePerGas:
                                     BigNumber.from('165000000000'),
                                 maxFeePerGas: BigNumber.from('165000000000'),
                                 gasPrice: null,
+                                lastBaseFeePerGas: null,
                             },
                             slow: {
                                 maxPriorityFeePerGas:
                                     BigNumber.from('125000000000'),
                                 maxFeePerGas: BigNumber.from('125000000000'),
                                 gasPrice: null,
+                                lastBaseFeePerGas: null,
                             },
                         },
                     },
@@ -366,7 +377,7 @@ describe('GasPrices Controller', () => {
             _fetchFeeDataStub.returns(
                 Promise.resolve({
                     average: {
-                        maxPriorityFeePerGas: BigNumber.from('181000000001'),
+                        maxPriorityFeePerGas: BigNumber.from('181000000000'),
                     },
                     fast: {
                         maxPriorityFeePerGas: BigNumber.from('165000000000'),
@@ -1024,29 +1035,22 @@ describe('GasPrices Controller', () => {
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(axios, 'get').returns(
-                new Promise((resolve) => {
+            sinon.stub(httpClient, 'get').returns(
+                new Promise<FeeDataResponse>((resolve) => {
                     resolve({
-                        data: {
-                            blockNumber: '22332861',
-                            blockGasLimit: '1234567',
-                            gasPricesLevels: {
-                                slow: {
-                                    gasPrice: '25500000000',
-                                },
-                                average: {
-                                    gasPrice: '30000000000',
-                                },
-                                fast: {
-                                    gasPrice: '37500000000',
-                                },
+                        blockNumber: '22332861',
+                        blockGasLimit: '1234567',
+                        gasPricesLevels: {
+                            slow: {
+                                gasPrice: '25500000000',
+                            },
+                            average: {
+                                gasPrice: '30000000000',
+                            },
+                            fast: {
+                                gasPrice: '37500000000',
                             },
                         },
-                        status: 200,
-                        statusText: '200',
-                        headers: {},
-                        config: {},
-                        request: {},
                     });
                 })
             );
@@ -1061,16 +1065,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: BigNumber.from('25500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 average: {
                     gasPrice: BigNumber.from('30000000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 fast: {
                     gasPrice: BigNumber.from('37500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
             } as GasPriceLevels);
 
@@ -1089,39 +1096,33 @@ describe('GasPrices Controller', () => {
                 estimatedBaseFee: undefined,
             } as GasPriceData);
         });
+
         it('EIP1559 network, supported by the service', async () => {
             sinon
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(axios, 'get').returns(
+            sinon.stub(httpClient, 'get').returns(
                 new Promise((resolve) => {
                     resolve({
-                        data: {
-                            blockNumber: '13775611',
-                            blockGasLimit: '1234567',
-                            baseFee: '51022938614',
-                            estimatedBaseFee: '51022949725',
-                            gasPricesLevels: {
-                                slow: {
-                                    maxFeePerGas: '45920644752',
-                                    maxPriorityFeePerGas: '500000000',
-                                },
-                                average: {
-                                    maxFeePerGas: '57125232475',
-                                    maxPriorityFeePerGas: '1000000000',
-                                },
-                                fast: {
-                                    maxFeePerGas: '67829820198',
-                                    maxPriorityFeePerGas: '1500000000',
-                                },
+                        blockNumber: '13775611',
+                        blockGasLimit: '1234567',
+                        baseFee: '51022938614',
+                        estimatedBaseFee: '51022949725',
+                        gasPricesLevels: {
+                            slow: {
+                                maxFeePerGas: '45920644752',
+                                maxPriorityFeePerGas: '500000000',
+                            },
+                            average: {
+                                maxFeePerGas: '57125232475',
+                                maxPriorityFeePerGas: '1000000000',
+                            },
+                            fast: {
+                                maxFeePerGas: '67829820198',
+                                maxPriorityFeePerGas: '1500000000',
                             },
                         },
-                        status: 200,
-                        statusText: '200',
-                        headers: {},
-                        config: {},
-                        request: {},
                     });
                 })
             );
@@ -1136,16 +1137,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('45920644752'),
                     maxPriorityFeePerGas: BigNumber.from('500000000'),
+                    lastBaseFeePerGas: BigNumber.from('51022938614'),
                 },
                 average: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('57125232475'),
                     maxPriorityFeePerGas: BigNumber.from('1000000000'),
+                    lastBaseFeePerGas: BigNumber.from('51022938614'),
                 },
                 fast: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('67829820198'),
                     maxPriorityFeePerGas: BigNumber.from('1500000000'),
+                    lastBaseFeePerGas: BigNumber.from('51022938614'),
                 },
             } as GasPriceLevels);
 
@@ -1164,21 +1168,15 @@ describe('GasPrices Controller', () => {
                 estimatedBaseFee: BigNumber.from('51022949725'),
             } as GasPriceData);
         });
+
         it('No EIP1559 network, no supported by the service, fetching the chain', async () => {
             sinon
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(axios, 'get').returns(
-                new Promise((resolve) => {
-                    resolve({
-                        data: {},
-                        status: 400,
-                        statusText: '400',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+            sinon.stub(httpClient, 'get').returns(
+                new Promise((_, reject) => {
+                    reject(new RequestError('400', 400, {}));
                 })
             );
 
@@ -1209,16 +1207,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: BigNumber.from('25500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 average: {
                     gasPrice: BigNumber.from('30000000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 fast: {
                     gasPrice: BigNumber.from('37500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
             } as GasPriceLevels);
 
@@ -1237,21 +1238,15 @@ describe('GasPrices Controller', () => {
                 estimatedBaseFee: undefined,
             } as GasPriceData);
         });
+
         it('EIP1559 network, no supported by the service, fetching the chain', async () => {
             sinon
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(axios, 'get').returns(
-                new Promise((resolve) => {
-                    resolve({
-                        data: {},
-                        status: 400,
-                        statusText: '400',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+            sinon.stub(httpClient, 'get').returns(
+                new Promise((_, reject) => {
+                    reject(new RequestError('400', 400, {}));
                 })
             );
 
@@ -1293,16 +1288,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('130000'),
                     maxPriorityFeePerGas: BigNumber.from('20000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
                 average: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('133000'),
                     maxPriorityFeePerGas: BigNumber.from('23000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
                 fast: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('136000'),
                     maxPriorityFeePerGas: BigNumber.from('26000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
             } as GasPriceLevels);
 
@@ -1321,6 +1319,7 @@ describe('GasPrices Controller', () => {
                 estimatedBaseFee: BigNumber.from('110000'),
             } as GasPriceData);
         });
+
         it('No EIP1559 network. no supported by the service (cached), fetching the chain', async () => {
             sinon
                 .stub(gasPricesController as any, '_shouldRequestChainService')
@@ -1353,16 +1352,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: BigNumber.from('25500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 average: {
                     gasPrice: BigNumber.from('30000000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 fast: {
                     gasPrice: BigNumber.from('37500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
             } as GasPriceLevels);
 
@@ -1381,21 +1383,15 @@ describe('GasPrices Controller', () => {
                 estimatedBaseFee: undefined,
             } as GasPriceData);
         });
+
         it('EIP1559 network, no supported by the service (cached), fetching the chain', async () => {
             sinon
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(false);
 
-            sinon.stub(axios, 'get').returns(
-                new Promise((resolve) => {
-                    resolve({
-                        data: {},
-                        status: 400,
-                        statusText: '400',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+            sinon.stub(httpClient, 'get').returns(
+                new Promise((_, reject) => {
+                    reject(new RequestError('400', 400, {}));
                 })
             );
 
@@ -1437,16 +1433,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('130000'),
                     maxPriorityFeePerGas: BigNumber.from('20000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
                 average: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('133000'),
                     maxPriorityFeePerGas: BigNumber.from('23000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
                 fast: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('136000'),
                     maxPriorityFeePerGas: BigNumber.from('26000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
             } as GasPriceLevels);
 
@@ -1465,21 +1464,15 @@ describe('GasPrices Controller', () => {
                 estimatedBaseFee: BigNumber.from('110000'),
             } as GasPriceData);
         });
+
         it('No EIP1559 network, supported by the service but the service fails, fetching the chain', async () => {
             sinon
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(axios, 'get').returns(
-                new Promise((resolve) => {
-                    resolve({
-                        data: {},
-                        status: 500,
-                        statusText: '500',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+            sinon.stub(httpClient, 'get').returns(
+                new Promise((_, reject) => {
+                    reject(new RequestError('500', 500, {}));
                 })
             );
 
@@ -1510,16 +1503,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: BigNumber.from('25500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 average: {
                     gasPrice: BigNumber.from('30000000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
                 fast: {
                     gasPrice: BigNumber.from('37500000000'),
                     maxFeePerGas: null,
                     maxPriorityFeePerGas: null,
+                    lastBaseFeePerGas: null,
                 },
             } as GasPriceLevels);
 
@@ -1538,21 +1534,15 @@ describe('GasPrices Controller', () => {
                 estimatedBaseFee: undefined,
             } as GasPriceData);
         });
+
         it('EIP1559 network, supported by the service but the service fails, fetching the chain', async () => {
             sinon
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(axios, 'get').returns(
-                new Promise((resolve) => {
-                    resolve({
-                        data: {},
-                        status: 500,
-                        statusText: '500',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+            sinon.stub(httpClient, 'get').returns(
+                new Promise((_, reject) => {
+                    reject(new RequestError('500', 500, {}));
                 })
             );
 
@@ -1594,16 +1584,19 @@ describe('GasPrices Controller', () => {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('130000'),
                     maxPriorityFeePerGas: BigNumber.from('20000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
                 average: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('133000'),
                     maxPriorityFeePerGas: BigNumber.from('23000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
                 fast: {
                     gasPrice: null,
                     maxFeePerGas: BigNumber.from('136000'),
                     maxPriorityFeePerGas: BigNumber.from('26000'),
+                    lastBaseFeePerGas: BigNumber.from('100000'),
                 },
             } as GasPriceLevels);
 
@@ -1622,21 +1615,15 @@ describe('GasPrices Controller', () => {
                 estimatedBaseFee: BigNumber.from('110000'),
             } as GasPriceData);
         });
+
         it('General error, returning default falue', async () => {
             sinon
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(axios, 'get').returns(
-                new Promise((resolve) => {
-                    resolve({
-                        data: {},
-                        status: 400,
-                        statusText: '400',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+            sinon.stub(httpClient, 'get').returns(
+                new Promise((_, reject) => {
+                    reject(new RequestError('400', 400, {}));
                 })
             );
 

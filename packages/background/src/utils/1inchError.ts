@@ -1,4 +1,4 @@
-import { AxiosError } from 'axios';
+import { RequestError } from './http';
 
 const EXACT_MATCH_ERRORS = ['Insufficient liquidity', 'Cannot estimate'];
 
@@ -44,12 +44,15 @@ export const map1InchErrorMessage = (
     return err?.errorMessage;
 };
 
-export const get1InchErrorMessageFromAxiosResponse = (
-    axiosErr: AxiosError
+export const get1InchErrorMessageFromResponse = (
+    error: RequestError
 ): string | undefined => {
-    const axiosResponse = axiosErr.response;
-    if (axiosResponse && axiosResponse.data) {
-        return axiosResponse.data.description;
+    if (
+        'response' in error &&
+        error.response &&
+        'description' in error.response
+    ) {
+        return error.response.description;
     }
     return undefined;
 };

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import BlankController, {
     BlankControllerEvents,
 } from './controllers/BlankController';
@@ -14,6 +15,7 @@ import { DeepPartial } from './utils/types/helpers';
 import log, { LogLevelDesc } from 'loglevel';
 import { resolvePreferencesAfterWalletUpdate } from './utils/userPreferences';
 import { CONTENT } from './utils/types/communication';
+import { isManifestV3 } from './utils/manifest';
 
 // Initialize Block State Store
 const blankStateStore = new BlankStorageStore();
@@ -98,8 +100,13 @@ const getDevTools = () => {
  * updates the extension badge
  */
 const updateExtensionBadge = (label: string) => {
-    chrome.browserAction.setBadgeText({ text: label });
-    chrome.browserAction.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
+    if (isManifestV3()) {
+        chrome.action.setBadgeText({ text: label });
+        chrome.action.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
+    } else {
+        chrome.browserAction.setBadgeText({ text: label });
+        chrome.browserAction.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
+    }
 };
 
 /**
@@ -144,11 +151,13 @@ const initBlockWallet = async () => {
     });
 
     // Set isBlankInitialized response and should inject response
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
         if (request.message === 'isBlankInitialized') {
             sendResponse({ isBlankInitialized: true });
         } else if (request.message === CONTENT.SHOULD_INJECT) {
             sendResponse({ shouldInject: blankController.shouldInject() });
+        } else if (request.message === CONTENT.SW_KEEP_ALIVE) {
+            sendResponse();
         }
     });
 
@@ -181,3 +190,12 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
         chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
     }
 });
+
+if (isManifestV3()) {
+    // this keeps alive the service worker.
+    // when it goes 'inactive' it is restarted.
+    chrome.alarms.create({ delayInMinutes: 0.5, periodInMinutes: 0.05 });
+    chrome.alarms.onAlarm.addListener(() => {
+        fetch(chrome.runtime.getURL('keep-alive'));
+    });
+}

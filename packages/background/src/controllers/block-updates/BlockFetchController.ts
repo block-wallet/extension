@@ -1,9 +1,9 @@
 import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES } from '../../utils/constants/networks';
 import { Mutex } from 'async-mutex';
-import axios from 'axios';
 import log from 'loglevel';
 import { BaseController } from '../../infrastructure/BaseController';
 import NetworkController from '../NetworkController';
+import httpClient, { RequestError } from '../../utils/http';
 
 export const BLOCKS_TO_WAIT_BEFORE_CHECHKING_FOR_CHAIN_SUPPORT = 100;
 const OFF_CHAIN_BLOCK_FETCH_SERVICE_URL = 'https://chain-fee.blockwallet.io/v1';
@@ -85,7 +85,11 @@ export default class BlockFetchController extends BaseController<BlockFetchContr
                     interval,
                     chainId,
                     this._getState(chainId).currentBlockNumber,
-                    this._getBlockNumberCallback(chainId, blockListener)
+                    this._getBlockNumberCallback(
+                        chainId,
+                        blockListener,
+                        interval
+                    )
                 );
             } else {
                 this._offChainBlockFetchService.unsetFetch();
@@ -93,7 +97,11 @@ export default class BlockFetchController extends BaseController<BlockFetchContr
                     interval;
 
                 this._networkController.addOnBlockListener(
-                    this._getBlockNumberCallback(chainId, blockListener)
+                    this._getBlockNumberCallback(
+                        chainId,
+                        blockListener,
+                        interval
+                    )
                 );
             }
         } finally {
@@ -120,7 +128,8 @@ export default class BlockFetchController extends BaseController<BlockFetchContr
      */
     private _getBlockNumberCallback(
         chainId: number = this._networkController.network.chainId,
-        blockListener: (blockNumber: number) => void | Promise<void>
+        blockListener: (blockNumber: number) => void | Promise<void>,
+        interval: number
     ): (blockNumber: number, error?: Error) => void | Promise<void> {
         return (blockNumber: number, error?: Error) => {
             // Check if in the middle of the execution the chain has changed
@@ -150,7 +159,8 @@ export default class BlockFetchController extends BaseController<BlockFetchContr
                                 if (r) {
                                     this.addNewOnBlockListener(
                                         chainId,
-                                        blockListener
+                                        blockListener,
+                                        interval
                                     );
                                 }
                             })
@@ -173,7 +183,11 @@ export default class BlockFetchController extends BaseController<BlockFetchContr
                         lastBlockOffChainChecked: currentBlockNumber,
                     });
 
-                    this.addNewOnBlockListener(chainId, blockListener);
+                    this.addNewOnBlockListener(
+                        chainId,
+                        blockListener,
+                        interval
+                    );
                 }
             }
         };
@@ -329,6 +343,7 @@ export class OffChainBlockFetchService {
         if (currentBlockNumber) {
             blockListener(currentBlockNumber);
         }
+        fetchPerform();
     }
 
     /**
@@ -349,37 +364,31 @@ export class OffChainBlockFetchService {
      */
     public async fetchBlockNumber(chainId: number): Promise<number> {
         try {
-            const blockDataResponse = await axios.get(
-                `${OFF_CHAIN_BLOCK_FETCH_SERVICE_URL}/block_number`,
-                {
-                    params: {
-                        chain_id: chainId,
-                    },
-                }
-            );
+            const blockDataResponse = await httpClient.get<{
+                bn: string;
+            }>(`${OFF_CHAIN_BLOCK_FETCH_SERVICE_URL}/bn`, {
+                c: chainId,
+            });
 
-            if (blockDataResponse.status !== 200) {
-                throw new Error(
-                    `response status != 200. Got: ${blockDataResponse.status}`
-                );
-            }
-
-            if (!blockDataResponse.data) {
+            if (!blockDataResponse) {
                 throw new Error('empty response');
             }
 
             if (
-                !blockDataResponse.data.blockNumber ||
-                isNaN(parseInt(blockDataResponse.data.blockNumber))
+                !blockDataResponse.bn ||
+                isNaN(parseInt(blockDataResponse.bn))
             ) {
                 throw new Error(
-                    `block number with invalid format: ${blockDataResponse.data.blockNumber}`
+                    `block number with invalid format: ${blockDataResponse.bn}`
                 );
             }
 
-            return parseInt(blockDataResponse.data.blockNumber);
+            return parseInt(blockDataResponse.bn);
         } catch (err) {
-            log.warn(`Error fetching block number for chain ${chainId}`, err);
+            log.warn(
+                `Error fetching block number for chain ${chainId}`,
+                JSON.stringify((err as RequestError).response)
+            );
             throw new Error(`Error fetching block number for chain ${chainId}`);
         }
     }

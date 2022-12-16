@@ -1,4 +1,4 @@
-import { typedSignatureHash } from 'eth-sig-util';
+import { typedSignatureHash } from '@metamask/eth-sig-util';
 import {
     bufferToHex,
     isHexPrefixed,

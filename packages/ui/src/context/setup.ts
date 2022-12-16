@@ -22,6 +22,9 @@ const initPort = () => {
     // Open port
     port = chrome.runtime.connect({ name: Origin.EXTENSION })
 
+    // Override postMessage function
+    // port.postMessage = postMessageWithRetry(port.postMessage)
+
     // Check for error
     port.onDisconnect.addListener(() => {
         const error = chrome.runtime.lastError

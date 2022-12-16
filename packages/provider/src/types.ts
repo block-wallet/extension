@@ -1,5 +1,6 @@
 import BlankProvider from './provider/BlankProvider';
 import { JSONRPCMethod } from '@block-wallet/background/utils/types/ethereum';
+import { Origin } from '@block-wallet/background/utils/types/communication';
 
 // Global
 type This = typeof globalThis;
@@ -214,3 +215,12 @@ export interface SiteMetadata {
     iconURL: string | null;
     name: string;
 }
+
+export enum Signals {
+    SW_REINIT = 'SW_REINIT',
+}
+
+export type SignalMessage = {
+    origin: Origin;
+    signal: Signals;
+};

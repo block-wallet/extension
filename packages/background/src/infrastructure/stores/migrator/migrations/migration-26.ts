@@ -1,6 +1,4 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
-import { generatePhishingPrevention } from 'phishing-prevention';
-import { v4 as createUuid } from 'uuid';
 import { IMigration } from '../IMigration';
 
 /**
@@ -17,10 +15,11 @@ export default {
                     // enable for launch of this feature
                     useAntiPhishingProtection: true,
                 },
-                antiPhishingImage: await generatePhishingPrevention(
-                    createUuid(),
-                    175
-                ),
+                antiPhishingImage: '', // REMOVED ON MV3 migration
+                // await generatePhishingPrevention(
+                //     createUuid(),
+                //     175
+                // ),
             },
         };
     },

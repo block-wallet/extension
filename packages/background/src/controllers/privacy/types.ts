@@ -1,4 +1,6 @@
-import TornadoConfig from './tornado/config/config';
+import { BigNumber } from 'ethers';
+import { ContractMethodSignature } from '../transactions/ContractSignatureParser';
+import { TransactionReceipt } from '@ethersproject/providers';
 
 /**
  * List of known supported networks
@@ -191,25 +193,6 @@ export const CurrenciesByChain: {
 };
 
 /**
- * getTokenDecimals
- *
- * Obtains the decimal numbers of a pair token
- *
- * @param chainId The note chainId
- * @param pair The note pair
- * @returns The pair token decimals
- */
-export const getTornadoTokenDecimals = (
-    chainId: number,
-    pair: CurrencyAmountPair
-): number => {
-    const currencies = TornadoConfig.deployments[
-        `netId${chainId}` as keyof typeof TornadoConfig.deployments
-    ].currencies as unknown as { [c in KnownCurrencies]: { decimals: number } };
-    return currencies[pair.currency.toLowerCase() as KnownCurrencies].decimals;
-};
-
-/**
  * The amount of derivations forward to do as safeguard
  * for possible holes in the derivations due to chain reorganization
  */
@@ -224,3 +207,76 @@ export const DEFAULT_TORNADO_CONFIRMATION = 4;
  * Default transaction receipt timeout
  */
 export const DEFAULT_TX_RECEIPT_TIMEOUT = 60000;
+
+//
+export interface PrivacyControllerStoreState {
+    pendingWithdrawals: PendingWithdrawalsStore;
+    vaultState: { vault: string };
+}
+export enum PendingWithdrawalStatus {
+    UNSUBMITTED = 'UNSUBMITTED',
+    PENDING = 'PENDING',
+    CONFIRMED = 'CONFIRMED',
+    FAILED = 'FAILED',
+    REJECTED = 'REJECTED',
+    MINED = 'MINED',
+}
+
+export type PendingWithdrawal = {
+    pendingId: string;
+    relayerUrl: string;
+    jobId: string;
+    depositId: string;
+    pair: CurrencyAmountPair;
+    toAddress: string;
+    time: number;
+    fee?: BigNumber;
+    decimals?: number;
+    transactionReceipt?: TransactionReceipt;
+    errMessage?: string;
+    transactionHash?: string;
+    status?: PendingWithdrawalStatus;
+    statusMessage?: string;
+    chainId: number;
+    data?: string;
+    methodSignature?: ContractMethodSignature;
+    value?: BigNumber;
+    nonce?: number;
+    gasLimit?: BigNumber;
+    gasPrice?: BigNumber;
+    maxFeePerGas?: BigNumber;
+    maxPriorityFeePerGas?: BigNumber;
+};
+
+export type PendingWithdrawalsStore = {
+    [network in AvailableNetworks]: {
+        pending: PendingWithdrawal[];
+    };
+};
+
+export type PairCount = {
+    pair: CurrencyAmountPair;
+    count: number;
+}[];
+
+export interface PrivacyControllerUIStoreState {
+    previousWithdrawals: {
+        depositId: string;
+        time: number;
+        pair: CurrencyAmountPair;
+    }[];
+    depositsCount: {
+        [key in KnownCurrencies]?: PairCount;
+    };
+    pendingWithdrawals: PendingWithdrawal[];
+    pendingDeposits: {
+        [currency in KnownCurrencies]?: {
+            [amount in CurrencyAmountType[currency]]: boolean;
+        };
+    };
+    isVaultInitialized: boolean;
+    isImportingDeposits: boolean;
+    areDepositsPending: boolean;
+    areWithdrawalsPending: boolean;
+    importingErrors: string[];
+}

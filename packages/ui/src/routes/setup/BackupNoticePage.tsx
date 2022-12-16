@@ -78,11 +78,11 @@ const BackupNoticePage = () => {
                 <Divider />
                 <div className="flex flex-col p-8 space-y-8 text-sm text-gray-600">
                     <span>
-                        Your seed phrase is the key to your wallet and your
-                        privacy deposits. It makes it possible to restore your
-                        wallet after losing access. Import your seed phrase to
-                        gain access to the funds held on your BlockWallet.
-                        Backup your seed phrase and store it in a safe place.
+                        Your seed phrase is the key to your wallet. It makes it
+                        possible to restore your wallet after losing access.
+                        Import your seed phrase to gain access to the funds held
+                        on your BlockWallet. Backup your seed phrase and store
+                        it in a safe place.
                     </span>
                     <div className="md:hidden">
                         <SideTips />

@@ -137,12 +137,11 @@ const ReminderPage = () => {
                 <div className="flex-1 flex flex-col items-center justify-center w-full h-0 max-h-screen p-6">
                     <div className="flex flex-col space-y-8 p-2 text-gray-600 text-sm">
                         <span>
-                            Your seed phrase is the key to your wallet and your
-                            privacy deposits. It makes it possible to restore
-                            your wallet after losing access. Import your seed
-                            phrase to gain access to the funds held on your
-                            BlockWallet. Backup your seed phrase and store it in
-                            a safe place.
+                            Your seed phrase is the key to your wallet. It makes
+                            it possible to restore your wallet after losing
+                            access. Import your seed phrase to gain access to
+                            the funds held on your BlockWallet. Backup your seed
+                            phrase and store it in a safe place.
                         </span>
                         <span>
                             <b className="text-gray-900">Warning:</b> Never

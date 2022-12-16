@@ -2,12 +2,11 @@ import { BlankAppState } from '@block-wallet/background/utils/constants/initialS
 import { IMigration } from '../IMigration';
 import { SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES } from '../../../../utils/constants/networks';
 import { FEATURES } from '../../../../utils/constants/features';
+import { normalizeNetworksOrder } from '../../../../utils/networks';
 import {
     DEFAULT_TORNADO_CONFIRMATION,
     DERIVATIONS_FORWARD,
-} from '../../../../controllers/blank-deposit/types';
-import { normalizeNetworksOrder } from '../../../../utils/networks';
-
+} from '../../../../controllers/privacy/types';
 /**
  * This migration adds the zkSync alpha testnet network to the networks
  */

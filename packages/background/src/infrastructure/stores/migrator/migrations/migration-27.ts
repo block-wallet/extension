@@ -1,7 +1,7 @@
 import {
     DEFAULT_TORNADO_CONFIRMATION,
     DERIVATIONS_FORWARD,
-} from '../../../../controllers/blank-deposit/types';
+} from '../../../../controllers/privacy/types';
 import { BlankAppState } from '../../../../utils/constants/initialState';
 import { FEATURES } from '../../../../utils/constants/features';
 import { IMigration } from '../IMigration';

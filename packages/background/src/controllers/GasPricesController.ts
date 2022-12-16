@@ -8,11 +8,11 @@ import {
     Network,
 } from '../utils/constants/networks';
 import { FeeData } from '@ethersproject/abstract-provider';
-import axios from 'axios';
 import { ActionIntervalController } from './block-updates/ActionIntervalController';
 import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
+import httpClient from '../utils/http';
 
 const CHAIN_FEE_DATA_SERVICE_URL = 'https://chain-fee.blockwallet.io/v1';
 const BLOCKS_TO_WAIT_BEFORE_CHECKING_FOR_CHAIN_SUPPORT = 100;
@@ -53,6 +53,46 @@ export interface FeeHistory {
     oldestBlock: number;
     reward?: string[][];
 }
+
+export type FeeDataResponse =
+    | {
+          blockNumber: string;
+          baseFee: string;
+          blockGasLimit: string;
+          estimatedBaseFee: string;
+          gasPricesLevels: {
+              slow: {
+                  maxFeePerGas: string;
+                  maxPriorityFeePerGas: string;
+                  gasPrice: string;
+              };
+              average: {
+                  maxFeePerGas: string;
+                  maxPriorityFeePerGas: string;
+                  gasPrice: string;
+              };
+              fast: {
+                  maxFeePerGas: string;
+                  maxPriorityFeePerGas: string;
+                  gasPrice: string;
+              };
+          };
+      }
+    | {
+          blockNumber: string;
+          blockGasLimit: string;
+          gasPricesLevels: {
+              slow: {
+                  gasPrice: string;
+              };
+              average: {
+                  gasPrice: string;
+              };
+              fast: {
+                  gasPrice: string;
+              };
+          };
+      };
 
 const expirationTime = 75000;
 export class GasPricesController extends BaseController<GasPricesControllerState> {
@@ -234,7 +274,9 @@ export class GasPricesController extends BaseController<GasPricesControllerState
         if (
             this._isEth_feeHistorySupportedByChain(chainId, isEIP1559Compatible)
         ) {
-            const latestBlock = await this._networkController.getLatestBlock();
+            const latestBlock = await this._networkController.getLatestBlock(
+                provider
+            );
 
             // Get gasLimit of the last block
             const blockGasLimit: BigNumber = BigNumber.from(
@@ -312,6 +354,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                         maxPriorityFeePerGas: BigNumber.from(
                             maxPriorityFeePerGasSlow
                         ),
+                        lastBaseFeePerGas: BigNumber.from(blockBaseFee),
                     },
                     average: {
                         gasPrice: null,
@@ -319,6 +362,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                         maxPriorityFeePerGas: BigNumber.from(
                             maxPriorityFeePerGasAverage
                         ),
+                        lastBaseFeePerGas: BigNumber.from(blockBaseFee),
                     },
                     fast: {
                         gasPrice: null,
@@ -326,11 +370,14 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                         maxPriorityFeePerGas: BigNumber.from(
                             maxPriorityFeePerGasFast
                         ),
+                        lastBaseFeePerGas: BigNumber.from(blockBaseFee),
                     },
                 },
             };
         } else {
-            const latestBlock = await this._networkController.getLatestBlock();
+            const latestBlock = await this._networkController.getLatestBlock(
+                provider
+            );
 
             // Get gasLimit of the last block
             const blockGasLimit = latestBlock.gasLimit;
@@ -352,16 +399,19 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                         gasPrice: BigNumber.from(gasPriceSlow),
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     average: {
                         gasPrice: BigNumber.from(gasPriceAverage),
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     fast: {
                         gasPrice: BigNumber.from(gasPriceFast),
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                 },
             };
@@ -384,60 +434,72 @@ export class GasPricesController extends BaseController<GasPricesControllerState
 
         // Fetch the service to detect if the chain has support.
         try {
-            const feeDataResponse = await axios.get(
+            // If the chain has support request the service
+            const feeDataResponse = await httpClient.get<FeeDataResponse>(
                 `${CHAIN_FEE_DATA_SERVICE_URL}/fee_data`,
                 {
-                    params: {
-                        chain_id: chainId,
-                    },
+                    c: chainId,
                 }
             );
 
-            if (feeDataResponse.status === 200 && feeDataResponse.data) {
+            if (feeDataResponse) {
                 // Parsing the gas result considering the EIP1559 status
                 // for the case of fantom(250) we will detect that the network is EIP1559 but the service
                 // won't return gas with that format because eth_feeHistory is not available.
-                if (isEIP1559Compatible && feeDataResponse.data.baseFee) {
+                if (
+                    isEIP1559Compatible &&
+                    'baseFee' in feeDataResponse &&
+                    feeDataResponse.baseFee
+                ) {
                     gasPriceData = {
                         blockGasLimit: BigNumber.from(
-                            feeDataResponse.data.blockGasLimit
+                            feeDataResponse.blockGasLimit
                         ),
-                        baseFee: BigNumber.from(feeDataResponse.data.baseFee),
+                        baseFee: BigNumber.from(feeDataResponse.baseFee),
                         estimatedBaseFee: BigNumber.from(
-                            feeDataResponse.data.estimatedBaseFee
+                            feeDataResponse.estimatedBaseFee
                         ),
                         gasPricesLevels: {
                             slow: {
                                 gasPrice: null,
                                 maxFeePerGas: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels.slow
+                                    feeDataResponse.gasPricesLevels.slow
                                         .maxFeePerGas
                                 ),
                                 maxPriorityFeePerGas: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels.slow
+                                    feeDataResponse.gasPricesLevels.slow
                                         .maxPriorityFeePerGas
+                                ),
+                                lastBaseFeePerGas: BigNumber.from(
+                                    feeDataResponse.baseFee
                                 ),
                             },
                             average: {
                                 gasPrice: null,
                                 maxFeePerGas: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels.average
+                                    feeDataResponse.gasPricesLevels.average
                                         .maxFeePerGas
                                 ),
                                 maxPriorityFeePerGas: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels.average
+                                    feeDataResponse.gasPricesLevels.average
                                         .maxPriorityFeePerGas
+                                ),
+                                lastBaseFeePerGas: BigNumber.from(
+                                    feeDataResponse.baseFee
                                 ),
                             },
                             fast: {
                                 gasPrice: null,
                                 maxFeePerGas: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels.fast
+                                    feeDataResponse.gasPricesLevels.fast
                                         .maxFeePerGas
                                 ),
                                 maxPriorityFeePerGas: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels.fast
+                                    feeDataResponse.gasPricesLevels.fast
                                         .maxPriorityFeePerGas
+                                ),
+                                lastBaseFeePerGas: BigNumber.from(
+                                    feeDataResponse.baseFee
                                 ),
                             },
                         },
@@ -445,32 +507,35 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                 } else {
                     gasPriceData = {
                         blockGasLimit: BigNumber.from(
-                            feeDataResponse.data.blockGasLimit
+                            feeDataResponse.blockGasLimit
                         ),
                         gasPricesLevels: {
                             slow: {
                                 gasPrice: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels.slow
+                                    feeDataResponse.gasPricesLevels.slow
                                         .gasPrice
                                 ),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                             average: {
                                 gasPrice: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels.average
+                                    feeDataResponse.gasPricesLevels.average
                                         .gasPrice
                                 ),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                             fast: {
                                 gasPrice: BigNumber.from(
-                                    feeDataResponse.data.gasPricesLevels.fast
+                                    feeDataResponse.gasPricesLevels.fast
                                         .gasPrice
                                 ),
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                         },
                     };

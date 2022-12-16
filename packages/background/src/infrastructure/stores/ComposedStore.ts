@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { Flatten } from '@block-wallet/background/utils/types/helpers';
 import ObservableStore, { IObservableStore } from './ObservableStore';
 
 type SubStore<T> = Record<keyof T, IObservableStore<T[keyof T]>>;
 
-export default class ComposedStore<T> extends ObservableStore<T> {
+export default class ComposedStore<
+    T extends Object
+> extends ObservableStore<T> {
     private readonly _subStores: SubStore<T>;
 
     constructor(subStores: SubStore<T>) {
@@ -43,7 +46,7 @@ export default class ComposedStore<T> extends ObservableStore<T> {
      * @returns Flatten state representation of composed store.
      */
     public get flatState(): Flatten<T> {
-        let flatState = {};
+        let flatState: T[keyof T] = {} as T[keyof T];
         for (const subStore in this._subStores) {
             flatState = {
                 ...flatState,

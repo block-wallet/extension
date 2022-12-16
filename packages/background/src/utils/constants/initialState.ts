@@ -6,16 +6,9 @@ import { ValuesOf } from '../types/helpers';
 import { IObservableStore } from '../../infrastructure/stores/ObservableStore';
 
 import { AccountTrackerState } from '../../controllers/AccountTrackerController';
-import {
-    AppStateControllerMemState,
-    AppStateControllerState,
-} from '../../controllers/AppStateController';
+import { AppStateControllerState } from '../../controllers/AppStateController';
 import { OnboardingControllerState } from '../../controllers/OnboardingController';
 import { PreferencesControllerState } from '../../controllers/PreferencesController';
-import {
-    BlankDepositControllerStoreState,
-    BlankDepositControllerUIStoreState,
-} from '../../controllers/blank-deposit/BlankDepositController';
 import { ExchangeRatesControllerState } from '../../controllers/ExchangeRatesController';
 import { GasPricesControllerState } from '../../controllers/GasPricesController';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -47,6 +40,10 @@ import {
 import { SIGN_TRANSACTION_TIMEOUT } from './time';
 import { TransactionWatcherControllerState } from '@block-wallet/background/controllers/TransactionWatcherController';
 import {
+    PrivacyControllerStoreState,
+    PrivacyControllerUIStoreState,
+} from '@block-wallet/background/controllers/privacy/types';
+import {
     BridgeControllerMemState,
     BridgeControllerState,
 } from '@block-wallet/background/controllers/BridgeController';
@@ -61,7 +58,7 @@ export type BlankAppState = {
     OnboardingController: OnboardingControllerState;
     PreferencesController: PreferencesControllerState;
     TransactionController: TransactionControllerState;
-    BlankDepositController: BlankDepositControllerStoreState;
+    BlankDepositController: PrivacyControllerStoreState;
     BlockUpdatesController: BlockUpdatesControllerState;
     ExchangeRatesController: ExchangeRatesControllerState;
     GasPricesController: GasPricesControllerState;
@@ -77,13 +74,12 @@ export type BlankAppState = {
 
 export type BlankAppUIState = {
     AccountTrackerController: AccountTrackerState;
-    AppStateController: AppStateControllerMemState;
+    AppStateController: AppStateControllerState;
     KeyringController: KeyringControllerMemState;
     OnboardingController: OnboardingControllerState;
     PreferencesController: PreferencesControllerState;
     TransactionController: TransactionVolatileControllerState;
-    BlankDepositController: BlankDepositControllerUIStoreState;
-    BlockUpdatesController: BlockUpdatesControllerState;
+    BlankDepositController: PrivacyControllerUIStoreState;
     ExchangeRatesController: ExchangeRatesControllerState;
     GasPricesController: GasPricesControllerState;
     ActivityListController: IActivityListState;
@@ -124,6 +120,9 @@ const initialState: BlankAppState = {
     },
     AppStateController: {
         idleTimeout: 5,
+        isAppUnlocked: false,
+        lastActiveTime: 0,
+        lockedByTimeout: false,
     },
     BlockUpdatesController: { blockData: {} },
     KeyringController: {
@@ -205,16 +204,19 @@ const initialState: BlankAppState = {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     fast: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     slow: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                 },
             },

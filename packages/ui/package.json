@@ -4,6 +4,7 @@
     "private": true,
     "dependencies": {
         "@block-wallet/explorer-link": "https://github.com/Block-Wallet/explorer-link",
+        "@block-wallet/phishing-prevention": "git+https://github.com/block-wallet/phishing-prevention#4708461673825816104b8a6cf5260ecb29b75c61",
         "@hookform/resolvers": "^2.9.3",
         "@tailwindcss/forms": "^0.5.2",
         "bfj": "^7.0.2",
@@ -35,6 +36,7 @@
         "react-window": "^1.8.6",
         "styled-components": "^5.3.3",
         "use-custom-compare": "^1.2.0",
+        "uuid": "^8.3.2",
         "yup": "^0.32.11"
     },
     "devDependencies": {
@@ -47,7 +49,7 @@
         "@testing-library/jest-dom": "^5.16.5",
         "@testing-library/react": "^13.3.0",
         "@testing-library/user-event": "^14.2.5",
-        "@types/chrome": "^0.0.128",
+        "@types/chrome": "^0.0.193",
         "@types/classnames": "^2.2.11",
         "@types/color-hash": "^1.0.0",
         "@types/jest": "^26.0.15",
@@ -61,6 +63,7 @@
         "@types/react-virtualized-auto-sizer": "^1.0.1",
         "@types/react-window": "^1.8.5",
         "@types/styled-components": "^5.1.9",
+        "@types/uuid": "^8.3.4",
         "@types/w3c-web-hid": "^1.0.3",
         "@typescript-eslint/eslint-plugin": "^5.30.6",
         "@typescript-eslint/parser": "^5.36.2",

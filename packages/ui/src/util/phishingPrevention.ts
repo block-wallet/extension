@@ -1,5 +1,5 @@
-import { v4 as createUuid } from 'uuid';
-import { generatePhishingPrevention } from 'phishing-prevention';
+import { v4 as createUuid } from "uuid"
+import { generatePhishingPrevention } from "@block-wallet/phishing-prevention"
 
 /**
  * generatePhishingPreventionBase64
@@ -16,10 +16,10 @@ import { generatePhishingPrevention } from 'phishing-prevention';
 export const generatePhishingPreventionBase64 = async (
     customUuid?: string
 ): Promise<string> => {
-    const uuid = customUuid || createUuid();
+    const uuid = customUuid || createUuid()
     try {
-        return generatePhishingPrevention(uuid, 175);
+        return generatePhishingPrevention(uuid, 175)
     } catch (e) {
-        return Promise.reject('Error generating the phishing prevention image');
+        return Promise.reject("Error generating the phishing prevention image")
     }
-};
+}

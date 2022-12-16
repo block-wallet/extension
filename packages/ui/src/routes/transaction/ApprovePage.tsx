@@ -17,7 +17,6 @@ import {
 import {
     approveBridgeAllowance,
     approveExchange,
-    blankDepositAllowance,
     getApproveTransactionGasLimit,
     getLatestGasPrice,
 } from "../../context/commActions"
@@ -50,7 +49,6 @@ import { isHardwareWallet } from "../../util/account"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { HardwareWalletOpTypes } from "../../context/commTypes"
 import { rejectTransaction } from "../../context/commActions"
-import { DepositConfirmLocalState } from "../deposit/DepositConfirmPage"
 import { SwapConfirmPageLocalState } from "../swap/SwapConfirmPage"
 import { ExchangeType } from "../../context/commTypes"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
@@ -61,7 +59,6 @@ const UNLIMITED_ALLOWANCE = ethers.constants.MaxUint256
 
 export enum ApproveOperation {
     BRIDGE,
-    DEPOSIT,
     SWAP,
 }
 
@@ -77,12 +74,6 @@ const getLabels = (
             mainSectionTitle: `Approve BlockWallet to bridge your ${assetName}`,
             mainSectionText: `Allow BlockWallet Bridge to withdraw your ${assetName} and automate transactions for you.`,
             editAllowanceText: `Allow the BlockWallet Bridge to the following amount of ${assetName}:`,
-        }
-    } else if (operation === ApproveOperation.DEPOSIT) {
-        return {
-            mainSectionTitle: "Allow the Privacy Pool to:",
-            mainSectionText: `Transfer ${assetName} from your account to the Privacy Pool to make the deposit.`,
-            editAllowanceText: `Allow the Privacy Pool to deposit up to the following amount of ${assetName}:`,
         }
     } else {
         return {
@@ -174,10 +165,7 @@ export interface ApprovePageLocalState {
     assetAddress: string
     minAllowance?: BigNumber
     approveOperation: ApproveOperation
-    nextLocationState:
-        | BridgeConfirmPageLocalState
-        | DepositConfirmLocalState
-        | SwapConfirmPageLocalState
+    nextLocationState: BridgeConfirmPageLocalState | SwapConfirmPageLocalState
 }
 
 const ApprovePage: FunctionComponent<{}> = () => {
@@ -187,7 +175,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const {
         assetAddress,
         minAllowance,
-        approveOperation = ApproveOperation.DEPOSIT,
+        approveOperation = ApproveOperation.SWAP,
         nextLocationState,
     } = useMemo(
         () => history.location.state as ApprovePageLocalState,
@@ -373,9 +361,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         (
                             await getApproveTransactionGasLimit(
                                 localAsset.token.address,
-                                approveOperation === ApproveOperation.DEPOSIT
-                                    ? "deposit"
-                                    : selectedAccount.address
+                                selectedAccount.address
                             )
                         ).gasLimit
                     ),
@@ -472,29 +458,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
                             : undefined,
                     },
                     nextState.swapQuote.fromToken.address,
-                    customNonce
-                )
-            } else if (approveOperation === ApproveOperation.DEPOSIT) {
-                const nextState = nextLocationState as DepositConfirmLocalState
-
-                res = await blankDepositAllowance(
-                    assetAllowance,
-                    {
-                        gasPrice: !isEIP1559Compatible
-                            ? selectedGasPrice
-                            : undefined,
-                        gasLimit: selectedGasLimit,
-                        maxFeePerGas: isEIP1559Compatible
-                            ? selectedFees.maxFeePerGas
-                            : undefined,
-                        maxPriorityFeePerGas: isEIP1559Compatible
-                            ? selectedFees.maxPriorityFeePerGas
-                            : undefined,
-                    },
-                    {
-                        currency: nextState.selectedCurrency,
-                        amount: nextState.amount as any,
-                    },
                     customNonce
                 )
             } else {

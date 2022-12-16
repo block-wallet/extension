@@ -230,9 +230,12 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 this._balanceFetchIntervalController.tick(
                     balanceFetchInterval,
                     async () => {
-                        await this.updateAccounts({
-                            assetAddresses: [NATIVE_TOKEN_ADDRESS],
-                        });
+                        await this.updateAccounts(
+                            {
+                                assetAddresses: [NATIVE_TOKEN_ADDRESS],
+                            },
+                            chainId
+                        );
                     }
                 );
             }
@@ -241,15 +244,18 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         this._transactionWatcherController.on(
             TransactionWatcherControllerEvents.INCOMING_TRANSACTION,
             async (
-                _: number,
+                chainId: number,
                 address: string,
                 transactionType: TransactionTypeEnum
             ) => {
                 if (transactionType === TransactionTypeEnum.Native) {
-                    await this.updateAccounts({
-                        addresses: [address],
-                        assetAddresses: [NATIVE_TOKEN_ADDRESS],
-                    });
+                    await this.updateAccounts(
+                        {
+                            addresses: [address],
+                            assetAddresses: [NATIVE_TOKEN_ADDRESS],
+                        },
+                        chainId
+                    );
                 }
             }
         );
@@ -265,24 +271,30 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     ))
                 );
 
-                await this.updateAccounts({
-                    addresses: [accountAddress],
-                    assetAddresses,
-                });
+                await this.updateAccounts(
+                    {
+                        addresses: [accountAddress],
+                        assetAddresses,
+                    },
+                    chainId
+                );
             }
         );
 
         this._transactionWatcherController.on(
             TransactionWatcherControllerEvents.NEW_KNOWN_ERC20_TRANSACTIONS,
             async (
-                _: number,
+                chainId: number,
                 accountAddress: string,
                 tokenAddresses: string[]
             ) => {
-                await this.updateAccounts({
-                    addresses: [accountAddress],
-                    assetAddresses: tokenAddresses,
-                });
+                await this.updateAccounts(
+                    {
+                        addresses: [accountAddress],
+                        assetAddresses: tokenAddresses,
+                    },
+                    chainId
+                );
             }
         );
     }
@@ -779,11 +791,14 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 } else {
                     if (balance.gt(zero) || userTokens.includes(tokenAddress)) {
                         // Ensure Token is added to accounts object
-                        const token = await this._tokenController.getToken(
+                        const { tokens } = await this._tokenController.search(
                             tokenAddress,
+                            true,
                             accountAddress,
                             chainId
                         );
+
+                        const token = tokens.length ? tokens[0] : undefined;
 
                         if (token) {
                             if (

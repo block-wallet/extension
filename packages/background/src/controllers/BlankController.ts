@@ -164,7 +164,13 @@ import {
     TokenControllerProps,
 } from './erc-20/TokenController';
 import SwapController, { SwapParameters, SwapQuote } from './SwapController';
-import { IToken, ITokens, Token } from './erc-20/Token';
+import {
+    FetchTokenResponse,
+    IToken,
+    ITokens,
+    SearchTokensResponse,
+    Token,
+} from './erc-20/Token';
 import { ImportStrategy, getAccountJson } from '../utils/account';
 import { ActivityListController } from './ActivityListController';
 import {
@@ -3008,12 +3014,13 @@ export default class BlankController extends EventEmitter {
         exact,
         accountAddress,
         chainId,
-    }: RequestSearchToken): Promise<Token[]> {
+    }: RequestSearchToken): Promise<SearchTokensResponse> {
         return this.tokenController.search(
             query,
             exact,
             accountAddress,
-            chainId
+            chainId,
+            false
         );
     }
 
@@ -3112,8 +3119,10 @@ export default class BlankController extends EventEmitter {
      */
     private async populateTokenData({
         tokenAddress,
-    }: RequestPopulateTokenData): Promise<Token> {
-        return this.tokenOperationsController.populateTokenData(tokenAddress);
+    }: RequestPopulateTokenData): Promise<FetchTokenResponse> {
+        return this.tokenOperationsController.fetchTokenDataFromChain(
+            tokenAddress
+        );
     }
 
     /**

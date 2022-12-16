@@ -209,8 +209,8 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     useEffect(
         () => {
             searchTokenInAssetsList(tokenAddress)
-                .then((token) => {
-                    setTokenName(token[0].symbol)
+                .then((searchTokensResponse) => {
+                    setTokenName(searchTokensResponse.tokens[0].symbol)
                 })
                 .catch(() => {
                     throw new Error("Failed to fetch token data")

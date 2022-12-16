@@ -1,8 +1,10 @@
 import {
+    FetchTokenResponse,
     IAccountTokens,
     INetworkTokens,
     IToken,
     ITokens,
+    SearchTokensResponse,
     Token,
 } from './Token';
 import { BaseController } from '../../infrastructure/BaseController';
@@ -207,27 +209,33 @@ export class TokenController extends BaseController<TokenControllerState> {
         accountAddress?: string,
         chainId?: number,
         isLocalSearch = false
-    ): Promise<Token[]> {
+    ): Promise<SearchTokensResponse> {
         if (!search) {
             throw searchParamNotPresentError;
         }
 
+        // if it's searching for an address or a specific token
         if (isHexPrefixed(search)) {
-            let token = await this.getToken(search, accountAddress, chainId);
+            const token = await this.getToken(search, accountAddress, chainId);
 
-            if (!token && !isLocalSearch) {
-                token = await this._populateTokenData(
+            // token is cached
+            if (token) return { tokens: [token], fetchFailed: false };
+
+            if (!isLocalSearch) {
+                const tokenResponse = await this._populateTokenData(
                     search,
                     accountAddress,
                     chainId
                 );
+
+                // return the token with the failed flag
+                return {
+                    tokens: [tokenResponse.token],
+                    fetchFailed: tokenResponse.fetchFailed,
+                };
             }
 
-            if (token) {
-                return [token];
-            }
-
-            return [];
+            return { tokens: [], fetchFailed: false };
         }
 
         const tokensList = Object.values(await this.getTokens(chainId));
@@ -241,7 +249,7 @@ export class TokenController extends BaseController<TokenControllerState> {
                 : name.includes(search) || symbol.includes(search);
         });
 
-        return tokens;
+        return { tokens, fetchFailed: false };
     }
 
     /**
@@ -457,21 +465,31 @@ export class TokenController extends BaseController<TokenControllerState> {
         tokenAddress: string,
         accountAddress?: string,
         chainId?: number
-    ): Promise<Token> {
+    ): Promise<FetchTokenResponse> {
         tokenAddress = toChecksumAddress(tokenAddress);
 
-        let token = (await this.getCachedPopulatedTokens(chainId))[
+        // Check cached tokens
+        const token = (await this.getCachedPopulatedTokens(chainId))[
             tokenAddress
         ];
         if (token) {
-            return token;
+            return { token, fetchFailed: false };
         }
 
-        token = await this._tokenOperationsController.populateTokenData(
-            tokenAddress
-        );
+        // Tries to fetch token data from chain
+        const fetchTokenResponse =
+            await this._tokenOperationsController.fetchTokenDataFromChain(
+                tokenAddress,
+                chainId
+            );
+
         // Cache the token data if the token data is all fetched correctly.
-        if (token && token.name && token.symbol && token.decimals !== -1) {
+        if (
+            fetchTokenResponse.token &&
+            fetchTokenResponse.token.name &&
+            fetchTokenResponse.token.symbol &&
+            !fetchTokenResponse.fetchFailed
+        ) {
             const userTokens = await this.getUserTokens(
                 accountAddress,
                 chainId
@@ -484,7 +502,7 @@ export class TokenController extends BaseController<TokenControllerState> {
             const cachedPopulatedTokens = await this.getCachedPopulatedTokens(
                 chainId
             );
-            cachedPopulatedTokens[tokenAddress] = token;
+            cachedPopulatedTokens[tokenAddress] = fetchTokenResponse.token;
 
             await this._updateState(
                 userTokens,
@@ -496,7 +514,7 @@ export class TokenController extends BaseController<TokenControllerState> {
             );
         }
 
-        return token;
+        return fetchTokenResponse;
     }
 
     private async _updateState(
@@ -658,11 +676,14 @@ export class TokenController extends BaseController<TokenControllerState> {
             chainId
         );
 
-        if ((!fullToken || !fullToken.length) && !defaultTokenData) {
+        if ((!fullToken || !fullToken.tokens.length) && !defaultTokenData) {
             return;
         }
 
-        const token = fillTokenData(fullToken[0] as IToken, defaultTokenData);
+        const token = fillTokenData(
+            fullToken.tokens[0] as IToken,
+            defaultTokenData
+        );
 
         //If the token has no symbol, ensure that the user adds it manually.
         if (!token.symbol) {

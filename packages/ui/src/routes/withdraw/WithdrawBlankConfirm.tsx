@@ -140,8 +140,12 @@ const WithdrawBlankConfirm = () => {
         const { totalFee, gasFee, relayerFee } = await getWithdrawalFees(pair)
         decimals = tokenDecimals
         if (!decimals) {
-            const token = await searchTokenInAssetsList(pair.currency, true)
-            decimals = token.length !== 0 ? token[0].decimals : DEFAULT_DECIMALS
+            const { tokens } = await searchTokenInAssetsList(
+                pair.currency,
+                true
+            )
+            decimals =
+                tokens.length !== 0 ? tokens[0].decimals : DEFAULT_DECIMALS
 
             setTokenDecimals(decimals)
         }

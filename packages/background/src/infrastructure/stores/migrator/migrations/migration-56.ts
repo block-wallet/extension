@@ -3,13 +3,11 @@ import { IMigration } from '../IMigration';
 import { INITIAL_NETWORKS } from '../../../../utils/constants/networks';
 import { normalizeNetworksOrder } from '../../../../utils/networks';
 
-
 /**
  * Remotes config initialization
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
-
         const { availableNetworks } = persistedState.NetworkController;
         const updatedNetworks = { ...availableNetworks };
 

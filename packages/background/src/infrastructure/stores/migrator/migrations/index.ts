@@ -111,5 +111,7 @@ const migrations: IMigration[] = [
     migration52,
     migration53,
     migration54,
+    migration55,
+    migration56
 ];
 export default (): IMigration[] => migrations;

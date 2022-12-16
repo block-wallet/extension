@@ -9,13 +9,13 @@ import refresh from "../../assets/images/icons/refresh.svg"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import {
-    generateNewAntiPhishingImage,
     toggleAntiPhishingProtection,
     updateAntiPhishingImage,
 } from "../../context/commActions"
 import log from "loglevel"
 import SuccessDialog from "../../components/dialog/SuccessDialog"
 import { useHistory } from "react-router-dom"
+import { generatePhishingPreventionBase64 } from "../../util/phishingPrevention"
 
 const PhishingProtectionPreferencesPage = () => {
     const history = useHistory()
@@ -51,7 +51,7 @@ const PhishingProtectionPreferencesPage = () => {
 
     const refreshImage = async () => {
         try {
-            const newImage = await generateNewAntiPhishingImage()
+            const newImage = await generatePhishingPreventionBase64()
             setNewPhishingImage(newImage)
         } catch (e) {
             log.error("error generating the phishing prevention image")

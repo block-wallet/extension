@@ -17,7 +17,6 @@ import { formatRounded } from "../../util/formatRounded"
 import { formatUnits } from "ethers/lib/utils"
 import { searchTokenInAssetsList } from "../../context/commActions"
 import { useCustomCompareEffect } from "use-custom-compare"
-import { useDepositTokens } from "../../context/hooks/useDepositTokens"
 import { useSwappedTokenList } from "../../context/hooks/useSwappedTokenList"
 import AssetDropdownDisplay from "./AssetDropdownDisplay"
 import AssetList from "./AssetList"
@@ -26,7 +25,6 @@ import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 export enum AssetListType {
     ALL = "ALL",
     DEFAULT = "DEFAULT",
-    DEPOSIT = "DEPOSIT",
 }
 
 interface AssetSelectionProps {
@@ -69,7 +67,6 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
     const [assetList, setAssetList] = useState<TokenWithBalance[]>([])
 
     const { currentNetworkTokens, nativeToken } = useTokensList()
-    const depositsAssetList = useDepositTokens()
     const swappedAssetList = useSwappedTokenList()
 
     const defaultAssetList = [nativeToken].concat(currentNetworkTokens)
@@ -77,15 +74,11 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
     useEffect(() => {
         // Only set asset list if this keeps being empty due to hooks init
         if (!assetList.length) {
-            setAssetList(
-                selectedAssetList === AssetListType.DEFAULT
-                    ? defaultAssetList
-                    : depositsAssetList
-            )
+            setAssetList(defaultAssetList)
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [defaultAssetList, depositsAssetList])
+    }, [defaultAssetList])
 
     useEffect(() => {
         const searchAll = async () => {

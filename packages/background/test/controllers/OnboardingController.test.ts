@@ -29,7 +29,7 @@ describe('Onboarding Controller', function () {
         let { isOnboarded } = onboardingController.store.getState();
         expect(isOnboarded).to.be.false;
 
-        await mockKeyringController.createNewVaultAndKeychain('testPassword');
+        await mockKeyringController.createNewVaultAndKeychain('password');
         isOnboarded = onboardingController.store.getState().isOnboarded;
         expect(isOnboarded).to.be.true;
     });

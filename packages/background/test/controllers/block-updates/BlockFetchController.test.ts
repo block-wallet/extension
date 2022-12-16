@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import axios from 'axios';
 import { it } from 'mocha';
 import NetworkController from '../../../src/controllers/NetworkController';
 import BlockFetchController, {
@@ -9,6 +8,7 @@ import BlockFetchController, {
 import sinon from 'sinon';
 import { getNetworkControllerInstance } from 'test/mocks/mock-network-instance';
 import { ethers } from 'ethers';
+import httpClient, { RequestError } from './../../../src/utils/http';
 
 const wait = (ms: number) => {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -27,7 +27,7 @@ describe('OffChainBlockFetchService', () => {
 
     describe('fetchBlockNumber', async () => {
         it('should return an error if the service is not available', async () => {
-            sinon.stub(axios, 'get').returns(
+            sinon.stub(httpClient, 'get').returns(
                 new Promise((_, reject) => {
                     reject('service not available');
                 })
@@ -42,16 +42,9 @@ describe('OffChainBlockFetchService', () => {
             }
         });
         it('should return an error if the service returns an invalid status code', async () => {
-            sinon.stub(axios, 'get').returns(
-                new Promise((resolve, _) => {
-                    resolve({
-                        data: {},
-                        status: 400,
-                        statusText: '400',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+            sinon.stub(httpClient, 'get').returns(
+                new Promise((_, reject) => {
+                    reject(new RequestError('400', 400, {}));
                 })
             );
 
@@ -64,15 +57,9 @@ describe('OffChainBlockFetchService', () => {
             }
         });
         it('should return an error if the service returns an invalid payload', async () => {
-            sinon.stub(axios, 'get').returns(
+            sinon.stub(httpClient, 'get').returns(
                 new Promise((resolve, _) => {
-                    resolve({
-                        status: 200,
-                        statusText: '200',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+                    resolve({});
                 })
             );
 
@@ -86,17 +73,12 @@ describe('OffChainBlockFetchService', () => {
         });
         it('should return an error if the service returns an invalid block number', async () => {
             sinon
-                .stub(axios, 'get')
+                .stub(httpClient, 'get')
                 .onFirstCall()
                 .returns(
                     new Promise((resolve, _) => {
                         resolve({
                             data: {},
-                            status: 200,
-                            statusText: '200',
-                            headers: {},
-                            config: {},
-                            request: {},
                         });
                     })
                 )
@@ -104,12 +86,7 @@ describe('OffChainBlockFetchService', () => {
                 .returns(
                     new Promise((resolve, _) => {
                         resolve({
-                            data: { blockNumber: 'not a number' },
-                            status: 200,
-                            statusText: '200',
-                            headers: {},
-                            config: {},
-                            request: {},
+                            blockNumber: 'not a number',
                         });
                     })
                 );
@@ -131,16 +108,9 @@ describe('OffChainBlockFetchService', () => {
             }
         });
         it('should return a block number if the service returns ok', async () => {
-            sinon.stub(axios, 'get').returns(
+            sinon.stub(httpClient, 'get').returns(
                 new Promise((resolve, _) => {
-                    resolve({
-                        data: { blockNumber: '50120221117' },
-                        status: 200,
-                        statusText: '200',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+                    resolve({ bn: '50120221117' });
                 })
             );
 
@@ -156,16 +126,9 @@ describe('OffChainBlockFetchService', () => {
             let set = false;
             let errorCount = 0;
 
-            sinon.stub(axios, 'get').returns(
+            sinon.stub(httpClient, 'get').returns(
                 new Promise((resolve, _) => {
-                    resolve({
-                        data: { blockNumber: mockBlockNumber.toString() },
-                        status: 200,
-                        statusText: '200',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+                    resolve({ bn: mockBlockNumber.toString() });
                 })
             );
 
@@ -226,15 +189,9 @@ describe('OffChainBlockFetchService', () => {
             let watchedError: Error = new Error('not set');
             let atLeastOneErrorDetected = false;
 
-            sinon.stub(axios, 'get').returns(
-                new Promise((resolve, _) => {
-                    resolve({
-                        status: 500,
-                        statusText: '500',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+            sinon.stub(httpClient, 'get').returns(
+                new Promise((_, reject) => {
+                    reject(new RequestError('500', 500, {}));
                 })
             );
 
@@ -288,16 +245,9 @@ describe('OffChainBlockFetchService', () => {
             let watchedError: Error = new Error('not set');
             let atLeastOneErrorDetected = false;
 
-            sinon.stub(axios, 'get').returns(
+            sinon.stub(httpClient, 'get').returns(
                 new Promise((resolve, _) => {
-                    resolve({
-                        data: { blockNumber: '50120221117' },
-                        status: 200,
-                        statusText: '200',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+                    resolve({ bn: '50120221117' });
                 })
             );
 
@@ -347,18 +297,11 @@ describe('OffChainBlockFetchService', () => {
             let watchedError: Error | null = null;
             let atLeastOneErrorDetected = false;
 
-            const stubGet = sinon.stub(axios, 'get');
+            const stubGet = sinon.stub(httpClient, 'get');
             for (let i = 0; i < 200; i++) {
                 stubGet.onCall(i).returns(
                     new Promise((resolve, _) => {
-                        resolve({
-                            data: { blockNumber: i.toString() },
-                            status: 200,
-                            statusText: '200',
-                            headers: {},
-                            config: {},
-                            request: {},
-                        });
+                        resolve({ bn: i.toString() });
                     })
                 );
             }
@@ -437,16 +380,9 @@ describe('BlockFetchController', () => {
                 lastBlockOffChainChecked: 10,
             } as Partial<BlockFetchData>);
 
-            sinon.stub(axios, 'get').returns(
+            sinon.stub(httpClient, 'get').returns(
                 new Promise((resolve, _) => {
-                    resolve({
-                        data: { blockNumber: '20000' },
-                        status: 200,
-                        statusText: '200',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+                    resolve({ bn: '20000' });
                 })
             );
 
@@ -469,16 +405,9 @@ describe('BlockFetchController', () => {
                 lastBlockOffChainChecked: 10,
             } as Partial<BlockFetchData>);
 
-            sinon.stub(axios, 'get').returns(
+            sinon.stub(httpClient, 'get').returns(
                 new Promise((resolve, _) => {
-                    resolve({
-                        data: { blockNumber: '500' },
-                        status: 200,
-                        statusText: '200',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+                    resolve({ blockNumber: '500' });
                 })
             );
 
@@ -501,15 +430,9 @@ describe('BlockFetchController', () => {
                 lastBlockOffChainChecked: 10,
             } as Partial<BlockFetchData>);
 
-            sinon.stub(axios, 'get').returns(
-                new Promise((resolve, _) => {
-                    resolve({
-                        status: 500,
-                        statusText: '500',
-                        headers: {},
-                        config: {},
-                        request: {},
-                    });
+            sinon.stub(httpClient, 'get').returns(
+                new Promise((_, reject) => {
+                    reject(new RequestError('500', 500, {}));
                 })
             );
 
@@ -548,30 +471,17 @@ describe('BlockFetchController', () => {
     describe('getBlockNumberCallback', async () => {
         it('it should switch from off chain to on chain', async () => {
             sinon
-                .stub(axios, 'get')
+                .stub(httpClient, 'get')
                 .onFirstCall()
                 .returns(
                     new Promise((resolve, _) => {
-                        resolve({
-                            data: { blockNumber: '1234' },
-                            status: 200,
-                            statusText: '200',
-                            headers: {},
-                            config: {},
-                            request: {},
-                        });
+                        resolve({ bn: '1234' });
                     })
                 )
                 .onSecondCall()
                 .returns(
-                    new Promise((resolve, _) => {
-                        resolve({
-                            status: 500,
-                            statusText: '500',
-                            headers: {},
-                            config: {},
-                            request: {},
-                        });
+                    new Promise((_, reject) => {
+                        reject(new RequestError('400', 400, {}));
                     })
                 );
 
@@ -623,18 +533,11 @@ describe('BlockFetchController', () => {
             });
         });
         it('it should switch from on chain to off chain', async () => {
-            const stubGet = sinon.stub(axios, 'get');
+            const stubGet = sinon.stub(httpClient, 'get');
             for (let i = 0; i < 500; i++) {
                 stubGet.onCall(i).returns(
                     new Promise((resolve, _) => {
-                        resolve({
-                            data: { blockNumber: (i + 2000).toString() },
-                            status: 200,
-                            statusText: '200',
-                            headers: {},
-                            config: {},
-                            request: {},
-                        });
+                        resolve({ bn: (i + 2000).toString() });
                     })
                 );
             }

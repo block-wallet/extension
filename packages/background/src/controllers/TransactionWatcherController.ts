@@ -1,5 +1,4 @@
 import { Mutex } from 'async-mutex';
-import axios from 'axios';
 import { isValidAddress, toChecksumAddress } from 'ethereumjs-util';
 import { BigNumber, ethers, utils } from 'ethers';
 import { hexZeroPad, ParamType } from 'ethers/lib/utils';
@@ -33,6 +32,7 @@ import { TransactionArgument } from './transactions/ContractSignatureParser';
 import { showIncomingTransactionNotification } from '../utils/notifications';
 import { checkIfNotAllowedError } from '../utils/ethersError';
 import TransactionController from './transactions/TransactionController';
+import httpClient from '../utils/http';
 import { fetchBlockWithRetries } from '../utils/blockFetch';
 import { isNil } from 'lodash';
 import { runPromiseSafely } from '../utils/promises';
@@ -147,18 +147,13 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         );
 
         this._blockUpdatesController.on(
-            BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
-            async (chainId: number, _: number, blockNumber: number) => {
-                const network =
-                    this._networkController.getNetworkFromChainId(chainId);
-                const interval =
-                    network?.actionsTimeIntervals.transactionWatcherUpdate ||
-                    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES.transactionWatcherUpdate;
+            BlockUpdatesEvents.BLOCK_UPDATES_SUBSCRIPTION,
+            this._blockUpdatesCallback
+        );
 
-                this._txWatcherIntervalController.tick(interval, async () => {
-                    await this.fetchTransactions(chainId, blockNumber);
-                });
-            }
+        this._blockUpdatesController.on(
+            BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
+            this._blockUpdatesCallback
         );
 
         this._transactionController.on(
@@ -204,6 +199,26 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
         this._fetchPendingTimestampsFromChain();
     }
+
+    /**
+     * _blockUpdatesCallback
+     *
+     * Triggered when a new block is detected
+     */
+    private _blockUpdatesCallback = async (
+        chainId: number,
+        _: number,
+        blockNumber: number
+    ) => {
+        const network = this._networkController.getNetworkFromChainId(chainId);
+        const interval =
+            network?.actionsTimeIntervals.transactionWatcherUpdate ||
+            ACTIONS_TIME_INTERVALS_DEFAULT_VALUES.transactionWatcherUpdate;
+
+        this._txWatcherIntervalController.tick(interval, async () => {
+            await this.fetchTransactions(chainId, blockNumber);
+        });
+    };
 
     /**
      * return the state by chain, address and type
@@ -897,7 +912,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         try {
             contractAddress = toChecksumAddress(_log.address);
 
-            const tokens = await this._tokenController.search(
+            const { tokens } = await this._tokenController.search(
                 contractAddress,
                 true,
                 address,
@@ -1233,22 +1248,25 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
         let retry = 0;
         while (retry < MAX_REQUEST_RETRY) {
-            const result = await axios.get<{
+            const result = await httpClient.get<{
                 status: string;
                 message: string;
                 result: EtherscanTransaction[];
-            }>(`${etherscanApiUrl}/api`, {
-                params: { ...params },
-                timeout: 30000,
-            });
+            }>(
+                `${etherscanApiUrl}/api`,
+                {
+                    ...params,
+                },
+                30000
+            );
 
-            if (result.data.status === '0' && result.data.message === 'NOTOK') {
+            if (result.status === '0' && result.message === 'NOTOK') {
                 await sleep(EXPLORER_API_CALLS_DELAY);
                 retry++;
 
                 continue;
             }
-            return result.data;
+            return result;
         }
 
         return { status: '-999', result: [] };
@@ -1327,7 +1345,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 isLocalSearch = false;
             }
 
-            const tokens = await this._tokenController.search(
+            const { tokens } = await this._tokenController.search(
                 tx.contractAddress,
                 true,
                 address,

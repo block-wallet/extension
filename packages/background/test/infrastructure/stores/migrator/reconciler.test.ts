@@ -43,6 +43,9 @@ const persistedState = {
     },
     AppStateController: {
         idleTimeout: 5,
+        isAppUnlocked: true,
+        lastActiveTime: 0,
+        lockedByTimeout: false,
     },
     BlankDepositController: {
         pendingWithdrawals: {
@@ -169,6 +172,9 @@ const initialState: BlankAppState & {
     },
     AppStateController: {
         idleTimeout: 5,
+        isAppUnlocked: true,
+        lastActiveTime: 0,
+        lockedByTimeout: false,
     },
     KeyringController: {
         isUnlocked: false,
@@ -251,16 +257,19 @@ const initialState: BlankAppState & {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     fast: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     slow: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                 },
             },
@@ -323,6 +332,9 @@ describe('State reconciler', () => {
             },
             AppStateController: {
                 idleTimeout: 5,
+                isAppUnlocked: true,
+                lastActiveTime: 0,
+                lockedByTimeout: false,
             },
             BlankDepositController: {
                 pendingWithdrawals: {

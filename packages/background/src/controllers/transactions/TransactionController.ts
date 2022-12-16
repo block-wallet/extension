@@ -48,7 +48,6 @@ import { ContractSignatureParser } from './ContractSignatureParser';
 import { BaseController } from '../../infrastructure/BaseController';
 import { showTransactionNotification } from '../../utils/notifications';
 import { reverse } from '../../utils/array';
-import axios from 'axios';
 import { TokenController } from '../erc-20/TokenController';
 import { ApproveTransaction } from '../erc-20/transactions/ApproveTransaction';
 import { SignedTransaction } from '../erc-20/transactions/SignedTransaction';
@@ -58,12 +57,13 @@ import BlockUpdatesController, {
 } from '../block-updates/BlockUpdatesController';
 import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES } from '../../utils/constants/networks';
 import { SIGN_TRANSACTION_TIMEOUT } from '../../utils/constants/time';
-import { DEFAULT_TORNADO_CONFIRMATION } from '../blank-deposit/types';
+import { DEFAULT_TORNADO_CONFIRMATION } from '../privacy/types';
 import {
     parseHardwareWalletError,
     SignTimeoutError,
 } from '../../utils/hardware';
 import { NFTContract } from '../erc-721/NFTContract';
+import httpClient from '../../utils/http';
 
 /**
  * It indicates the amount of blocks to wait after marking
@@ -178,6 +178,24 @@ export interface TransactionGasEstimation {
      */
     estimationSucceeded: boolean;
 }
+
+type FlashbotsStatusResponse = {
+    status: 'PENDING' | 'INCLUDED' | 'FAILED' | 'CANCELLED' | 'UNKNOWN';
+    hash: string;
+    maxBlockNumber: number;
+    transaction: {
+        from: string;
+        to: string;
+        gasLimit: string;
+        maxFeePerGas: string;
+        maxPriorityFeePerGas: string;
+        nonce: string;
+        value: string;
+    };
+    fastMode: boolean;
+    seenInMempool: boolean;
+    simError: string;
+};
 
 /**
  * How many block updates to wait before considering a transaction dropped once the account
@@ -318,26 +336,42 @@ export class TransactionController extends BaseController<
 
         // Subscription to new blocks
         this._blockUpdatesController.on(
-            BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
-            async (chainId: number, _: number, newBlockNumber: number) => {
-                const network =
-                    this._networkController.getNetworkFromChainId(chainId);
-                const interval =
-                    network?.actionsTimeIntervals.transactionsStatusesUpdate ||
-                    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES.transactionsStatusesUpdate;
+            BlockUpdatesEvents.BLOCK_UPDATES_SUBSCRIPTION,
+            this._blockUpdatesCallback
+        );
 
-                this._transactionStatusesUpdateIntervalController.tick(
-                    interval,
-                    async () => {
-                        await this.update(newBlockNumber);
-                    }
-                );
-            }
+        // Subscription to new blocks on background
+        this._blockUpdatesController.on(
+            BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
+            this._blockUpdatesCallback
         );
 
         // Show browser notification on transaction status update
         this.subscribeNotifications();
     }
+
+    /**
+     * _blockUpdatesCallback
+     *
+     * Triggered when a new block is detected
+     */
+    private _blockUpdatesCallback = async (
+        chainId: number,
+        _: number,
+        newBlockNumber: number
+    ) => {
+        const network = this._networkController.getNetworkFromChainId(chainId);
+        const interval =
+            network?.actionsTimeIntervals.transactionsStatusesUpdate ||
+            ACTIONS_TIME_INTERVALS_DEFAULT_VALUES.transactionsStatusesUpdate;
+
+        this._transactionStatusesUpdateIntervalController.tick(
+            interval,
+            async () => {
+                await this.update(newBlockNumber);
+            }
+        );
+    };
 
     /**
      * onStoreUpdate
@@ -528,15 +562,15 @@ export class TransactionController extends BaseController<
                 );
 
                 // Get token data
-                const tokenData = await this._tokenController.search(
+                const { tokens } = await this._tokenController.search(
                     transaction.to!
                 );
 
-                if (!tokenData[0]) {
+                if (!tokens[0]) {
                     throw new Error('Failed fetching token data');
                 }
 
-                if (!tokenData[0].decimals) {
+                if (!tokens[0].decimals) {
                     // Check if it is an NFT
                     const nftContract = new NFTContract({
                         networkController: this._networkController,
@@ -556,7 +590,7 @@ export class TransactionController extends BaseController<
                     }
                 } else {
                     transactionMeta.advancedData = {
-                        decimals: tokenData[0].decimals,
+                        decimals: tokens[0].decimals,
                         allowance: _value._hex,
                     };
                 }
@@ -2086,10 +2120,12 @@ export class TransactionController extends BaseController<
     ): Promise<[TransactionMeta, boolean]> {
         const baseUrl = 'https://protect.flashbots.net/tx/';
 
-        const response = await axios.get(baseUrl + meta.transactionParams.hash);
+        const response = await httpClient.get<FlashbotsStatusResponse>(
+            baseUrl + meta.transactionParams.hash
+        );
 
-        if (response.data) {
-            const { status } = response.data;
+        if (response) {
+            const { status } = response;
 
             if (status === 'INCLUDED') {
                 return this.blockchainTransactionStateReconciler(

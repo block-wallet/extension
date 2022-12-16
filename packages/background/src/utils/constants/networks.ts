@@ -404,7 +404,7 @@ export const INITIAL_NETWORKS: Networks = {
     },
     RSK: {
         name: 'rsk',
-        desc: 'RSK Mainnet',
+        desc: 'Rootstock',
         chainId: 30,
         networkVersion: '30',
         nativeCurrency: {
@@ -613,7 +613,7 @@ export const INITIAL_NETWORKS: Networks = {
     },
     RSK_TESTNET: {
         name: 'rsk_testnet',
-        desc: 'RSK Testnet',
+        desc: 'Rootstock Testnet',
         chainId: 31,
         networkVersion: '31',
         nativeCurrency: {

@@ -116,9 +116,7 @@ const AddTokenManualView = ({
         let msg = ""
         if (tokenAddresses.includes(values.tokenAddress.toLowerCase())) {
             msg = "You've already added this token"
-        }
-
-        if (tokenSymbols.includes(values.tokenSymbol.toLowerCase())) {
+        } else if (tokenSymbols.includes(values.tokenSymbol.toLowerCase())) {
             setShouldShowWarningDialog(true)
         }
 

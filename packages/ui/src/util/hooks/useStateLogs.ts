@@ -10,10 +10,21 @@ const useStateLogs = () => {
     const state = useBlankState()!
     const downloadStateLogsHandler = () => {
         let stateLogs: Partial<ResponseGetState> = state
+        // Remove user sensitive data from state logs
         delete stateLogs.hiddenAccounts
         delete stateLogs.antiPhishingImage
         delete stateLogs.addressBook
         delete stateLogs.recentAddresses
+
+        delete stateLogs.previousWithdrawals
+        delete stateLogs.pendingDeposits
+        delete stateLogs.depositsCount
+        delete stateLogs.pendingWithdrawals
+        delete stateLogs.areDepositsPending
+        delete stateLogs.areWithdrawalsPending
+        delete stateLogs.isVaultInitialized
+        delete stateLogs.isImportingDeposits
+        delete stateLogs.importingErrors
 
         const stateJsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
             JSON.stringify(stateLogs)

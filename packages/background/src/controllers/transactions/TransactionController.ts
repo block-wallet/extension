@@ -528,15 +528,15 @@ export class TransactionController extends BaseController<
                 );
 
                 // Get token data
-                const tokenData = await this._tokenController.search(
+                const { tokens } = await this._tokenController.search(
                     transaction.to!
                 );
 
-                if (!tokenData[0]) {
+                if (!tokens[0]) {
                     throw new Error('Failed fetching token data');
                 }
 
-                if (!tokenData[0].decimals) {
+                if (!tokens[0].decimals) {
                     // Check if it is an NFT
                     const nftContract = new NFTContract({
                         networkController: this._networkController,
@@ -556,7 +556,7 @@ export class TransactionController extends BaseController<
                     }
                 } else {
                     transactionMeta.advancedData = {
-                        decimals: tokenData[0].decimals,
+                        decimals: tokens[0].decimals,
                         allowance: _value._hex,
                     };
                 }

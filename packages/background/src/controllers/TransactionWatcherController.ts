@@ -897,7 +897,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         try {
             contractAddress = toChecksumAddress(_log.address);
 
-            const tokens = await this._tokenController.search(
+            const { tokens } = await this._tokenController.search(
                 contractAddress,
                 true,
                 address,
@@ -1327,7 +1327,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 isLocalSearch = false;
             }
 
-            const tokens = await this._tokenController.search(
+            const { tokens } = await this._tokenController.search(
                 tx.contractAddress,
                 true,
                 address,

@@ -307,9 +307,10 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
             })
 
         searchTokenInAssetsList(tokenAddress)
-            .then((token) => {
-                setTokenName(token[0].symbol)
-                setTokenLogo(token[0].logo)
+            .then((searchTokensResponse) => {
+                const token = searchTokensResponse.tokens[0]
+                setTokenName(token.symbol)
+                setTokenLogo(token.logo)
             })
             .catch(() => {
                 throw new Error("Failed to fetch token data")

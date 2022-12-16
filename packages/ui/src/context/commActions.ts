@@ -24,6 +24,7 @@ import { Devices, ExchangeType, Messages } from "./commTypes"
 import {
     IToken,
     ITokens,
+    SearchTokensResponse,
     Token,
 } from "@block-wallet/background/controllers/erc-20/Token"
 import { IBlankDeposit } from "@block-wallet/background/controllers/blank-deposit/BlankDeposit"
@@ -652,8 +653,8 @@ export const sendToken = async (
  */
 export const searchTokenInAssetsList = async (
     query: string,
-    exact?: boolean
-): Promise<Token[]> => {
+    exact?: boolean,
+): Promise<SearchTokensResponse> => {
     return sendMessage(Messages.TOKEN.SEARCH_TOKEN, {
         query,
         exact,

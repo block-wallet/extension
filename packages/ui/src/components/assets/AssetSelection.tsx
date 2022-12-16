@@ -21,6 +21,7 @@ import { useDepositTokens } from "../../context/hooks/useDepositTokens"
 import { useSwappedTokenList } from "../../context/hooks/useSwappedTokenList"
 import AssetDropdownDisplay from "./AssetDropdownDisplay"
 import AssetList from "./AssetList"
+import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 
 export enum AssetListType {
     ALL = "ALL",
@@ -95,7 +96,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
             }
 
             const input = search.toLowerCase()
-            let searchRes = await searchTokenInAssetsList(input)
+            let searchRes = (await searchTokenInAssetsList(input)).tokens
 
             searchRes = searchRes.filter((t) => !!t.symbol)
 
@@ -121,7 +122,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
 
                 if (ownedArray.length) {
                     ownedAsset.push({
-                        token: searchRes[index],
+                        token: searchRes[index] as Token,
                         balance: ZERO_BN,
                     })
                     continue
@@ -131,7 +132,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
 
                 if (input === lcSymbol) {
                     exactResult.push({
-                        token: searchRes[index],
+                        token: searchRes[index] as Token,
                         balance: ZERO_BN,
                     })
                     continue
@@ -141,12 +142,12 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
 
                 if (isPartialResult) {
                     partialResult.push({
-                        token: searchRes[index],
+                        token: searchRes[index] as Token,
                         balance: ZERO_BN,
                     })
                 } else {
                     elseResult.push({
-                        token: searchRes[index],
+                        token: searchRes[index] as Token,
                         balance: ZERO_BN,
                     })
                 }

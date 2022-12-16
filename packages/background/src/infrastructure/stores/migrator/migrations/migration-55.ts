@@ -193,6 +193,7 @@ export default {
                                     fixedTxs[chainId][account][hash] = {
                                         ...currentTx,
                                         transferType: {
+                                            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                                             ...currentTx.transferType!,
                                             decimals: realDecimals,
                                         },

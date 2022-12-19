@@ -119,6 +119,7 @@ import type {
     RequestApproveBridgeAllowance,
     RequestGetBridgeRoutes,
     RequestEditNetworksOrder,
+    RequestAccountReset,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -744,6 +745,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.ACCOUNT.REMOVE:
                 return this.accountRemove(request as RequestAccountRemove);
+            case Messages.ACCOUNT.RESET:
+                return this.accountReset(request as RequestAccountReset);
             case Messages.ACCOUNT.HIDE:
                 return this.accountHide(request as RequestAccountHide);
             case Messages.ACCOUNT.UNHIDE:
@@ -1353,6 +1356,23 @@ export default class BlankController extends EventEmitter {
         this.transactionWatcherController.removeTransactionsByAddress(address);
 
         return true;
+    }
+
+    /**
+     * Resets an account by removing its transaction history and added tokens.
+     *
+     * @param address address to be reset - hex
+     */
+    private async accountReset({
+        address,
+    }: RequestAccountRemove): Promise<void> {
+        this.transactionController.wipeTransactionsByAddress(address);
+        this.transactionWatcherController.clearTransactionsByAccountAddress(
+            address
+        );
+        this.tokenController.resetTokensByAccount(address);
+        this.permissionsController.removeAllPermissionsOfAccount(address);
+        this.accountTrackerController.resetAccount(address);
     }
 
     /**

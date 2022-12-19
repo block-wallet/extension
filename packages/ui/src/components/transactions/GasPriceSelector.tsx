@@ -251,7 +251,7 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                                 !isCustom && "text-gray-400"
                             )}
                         >
-                            Gas Limit
+                            Gas limit
                         </label>
                         <EndLabel label="WEI">
                             <input

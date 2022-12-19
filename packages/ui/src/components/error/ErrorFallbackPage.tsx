@@ -1,4 +1,4 @@
-import { FunctionComponent } from "react"
+import { FunctionComponent, useState } from "react"
 import { FiDownload } from "react-icons/fi"
 import classNames from "classnames"
 import { MdError } from "react-icons/md"
@@ -8,7 +8,11 @@ import PopupFooter from "../popup/PopupFooter"
 import PopupHeader from "../popup/PopupHeader"
 import PopupLayout from "../popup/PopupLayout"
 import { LINKS } from "../../util/constants"
+import { resetAccount } from "../../context/commActions"
+import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
+
 import useStateLogs from "../../util/hooks/useStateLogs"
+import ConfirmDialog from "../dialog/ConfirmDialog"
 
 const ErrorFallbackPage: FunctionComponent<{
     error: Error
@@ -18,6 +22,9 @@ const ErrorFallbackPage: FunctionComponent<{
     resetErrorBoundary,
 }) => {
     const { downloadStateLogsHandler } = useStateLogs()
+    const account = useSelectedAccount()
+
+    const [confirmOpen, setConfirmOpen] = useState(false)
 
     return (
         <PopupLayout
@@ -29,18 +36,30 @@ const ErrorFallbackPage: FunctionComponent<{
                     <button
                         onClick={resetErrorBoundary}
                         type="button"
-                        className={classnames(Classes.redButton)}
+                        className={classnames(Classes.darkButton)}
                     >
-                        Reset
+                        Restart Wallet
                     </button>
                 </PopupFooter>
             }
         >
+            <ConfirmDialog
+                title="Reset Account"
+                message={`Resetting this account will clear its transaction history and added tokens. However, you won't need to re-import your seed phrase! Are you sure you want to proceed?`}
+                open={confirmOpen}
+                onClose={() => setConfirmOpen(false)}
+                onConfirm={async () => {
+                    setConfirmOpen(false)
+                    await resetAccount(account.address)
+                    resetErrorBoundary()
+                }}
+            />
             <div className="flex flex-col space-y-4 p-6 py-4 justify-center items-center">
                 <div className="flex flex-col space-y-6 p-4 items-center justify-center bg-primary-100 rounded-md">
                     <div className="text-sm">
                         <p>
-                            An error ocurred while using <b>BlockWallet</b>.
+                            An error ocurred while using{" "}
+                            <b>BlockWallet v{process.env.VERSION}</b>.
                             <br />
                             <br />
                             Please collect the information and report back to
@@ -53,6 +72,19 @@ const ErrorFallbackPage: FunctionComponent<{
                         <span className="flex text-red-400 text-xs break-all">
                             {error.message}
                         </span>
+                    </div>
+                    <div className="text-sm">
+                        <p>
+                            Please try restarting the wallet and contacting
+                            support. If the issue persists, you can{" "}
+                            <a
+                                className="text-red-600 cursor-pointer"
+                                onClick={() => setConfirmOpen(true)}
+                            >
+                                reset this account
+                            </a>{" "}
+                            state.
+                        </p>
                     </div>
                 </div>
 

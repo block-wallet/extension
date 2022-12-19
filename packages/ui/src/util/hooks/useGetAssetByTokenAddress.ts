@@ -1,4 +1,3 @@
-import { useDepositTokens } from "../../context/hooks/useDepositTokens"
 import {
     TokenWithBalance,
     useTokensList,
@@ -6,9 +5,8 @@ import {
 import { isNativeTokenAddress } from "../tokenUtils"
 const useGetAssetByTokenAddress = (
     tokenAddress: string
-): (TokenWithBalance & { isDepositable: boolean }) | undefined => {
+): TokenWithBalance | undefined => {
     const tokenList = useTokensList()
-    const depositTokens = useDepositTokens()
 
     const asset = isNativeTokenAddress(tokenAddress)
         ? tokenList.nativeToken
@@ -18,13 +16,8 @@ const useGetAssetByTokenAddress = (
 
     if (!asset) return undefined
 
-    const isDepositable =
-        depositTokens &&
-        depositTokens.some((d) => d.token.symbol === asset.token.symbol)
-
     return {
         ...(asset as TokenWithBalance),
-        isDepositable: isDepositable ?? false,
     }
 }
 

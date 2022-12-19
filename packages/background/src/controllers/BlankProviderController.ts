@@ -23,6 +23,7 @@ import {
     Block,
     TypedSignatureMethods,
     DappRequestSigningStatus,
+    EstimateGasParams,
 } from '../utils/types/ethereum';
 import { v4 as uuid } from 'uuid';
 import { BaseController } from '../infrastructure/BaseController';
@@ -36,13 +37,13 @@ import {
 } from '@block-wallet/provider/types';
 import { isEmpty } from 'lodash';
 import AppStateController, {
-    AppStateControllerMemState,
+    AppStateControllerState,
 } from './AppStateController';
 import NetworkController, {
     NetworkControllerState,
     NetworkEvents,
 } from './NetworkController';
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import {
     ExternalEventSubscription,
     Handlers,
@@ -86,7 +87,11 @@ import {
 } from '../utils/subscriptions';
 import { ActionIntervalController } from './block-updates/ActionIntervalController';
 import { focusWindow, isOnboardingTabUrl, switchToTab } from '../utils/window';
-import { TransactionStatus } from './transactions/utils/types';
+import {
+    TransactionMeta,
+    TransactionParams,
+    TransactionStatus,
+} from './transactions/utils/types';
 import {
     DAPP_POPUP_CLOSING_TIMEOUT,
     SIGN_TRANSACTION_TIMEOUT,
@@ -96,6 +101,8 @@ import {
     parseHardwareWalletError,
     SignTimeoutError,
 } from '../utils/hardware';
+import { GasPricesController } from './GasPricesController';
+import { bnGreaterThanZero } from '../utils/bnUtils';
 
 export enum BlankProviderEvents {
     SUBSCRIPTION_UPDATE = 'SUBSCRIPTION_UPDATE',
@@ -142,7 +149,8 @@ export default class BlankProviderController extends BaseController<BlankProvide
         private readonly _appStateController: AppStateController,
         private readonly _keyringController: KeyringControllerDerivated,
         private readonly _tokenController: TokenController,
-        private readonly _blockUpdatesController: BlockUpdatesController
+        private readonly _blockUpdatesController: BlockUpdatesController,
+        private readonly _gasPricesController: GasPricesController
     ) {
         super({ dappRequests: {} });
 
@@ -187,7 +195,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
             this._stateWatcher.TRANSACTIONS
         );
 
-        this._appStateController.UIStore.subscribe(this._stateWatcher.LOCK);
+        this._appStateController.store.subscribe(this._stateWatcher.LOCK);
 
         this._permissionsController.store.subscribe(
             this._stateWatcher.PERMISSIONS
@@ -407,6 +415,8 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 );
             case JSONRPCMethod.web3_sha3:
                 return this._sha3(params);
+            case JSONRPCMethod.eth_estimateGas:
+                return this._handleEstimateGas(params as [EstimateGasParams]);
             default:
                 // If it's a standard json rpc request, forward it to the provider
                 if (ExtProviderMethods.includes(method)) {
@@ -418,6 +428,32 @@ export default class BlankProviderController extends BaseController<BlankProvide
                     throw new Error(ProviderError.UNSUPPORTED_METHOD);
                 }
         }
+    };
+
+    private _handleEstimateGas = async (
+        params: [EstimateGasParams]
+    ): Promise<BigNumber> => {
+        const estimation = await this._transactionController.estimateGas({
+            transactionParams: {
+                data: params[0].data,
+                value: BigNumber.from(params[0].value),
+                from: params[0].from,
+                to: params[0].to,
+            } as TransactionParams,
+        } as TransactionMeta);
+
+        if (estimation.estimationSucceeded) {
+            return estimation.gasLimit;
+        }
+
+        let { blockGasLimit } = this._gasPricesController.getState();
+        if (!bnGreaterThanZero(blockGasLimit)) {
+            // London block size 30 millon gas units
+            // https://ethereum.org/en/developers/docs/gas/#block-size
+            blockGasLimit = BigNumber.from(30_000_000);
+        }
+
+        return blockGasLimit;
     };
 
     /**
@@ -675,7 +711,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
      */
     private _accountsRequest = (portId: string, emitUpdate = false) => {
         // Return empty array if app is locked
-        if (!this._appStateController.UIStore.getState().isAppUnlocked) {
+        if (!this._appStateController.store.getState().isAppUnlocked) {
             return [];
         }
 
@@ -1438,7 +1474,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 this._checkWindows();
             }
         },
-        LOCK: (appState: AppStateControllerMemState) => {
+        LOCK: (appState: AppStateControllerState) => {
             // Resolve unlock handlers if app is unlocked
             if (
                 appState.isAppUnlocked === true &&
@@ -1582,7 +1618,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
      */
     private _waitForUnlock = (portId: string): Promise<boolean> => {
         return new Promise((resolve, reject) => {
-            if (this._appStateController.UIStore.getState().isAppUnlocked) {
+            if (this._appStateController.store.getState().isAppUnlocked) {
                 return resolve(true);
             }
 

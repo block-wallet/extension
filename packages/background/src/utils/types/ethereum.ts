@@ -1,4 +1,4 @@
-import { AppStateControllerMemState } from '@block-wallet/background/controllers/AppStateController';
+import { AppStateControllerState } from '@block-wallet/background/controllers/AppStateController';
 import { BlankProviderControllerState } from '@block-wallet/background/controllers/BlankProviderController';
 import { PermissionsControllerState } from '@block-wallet/background/controllers/PermissionsController';
 import { TransactionVolatileControllerState } from '@block-wallet/background/controllers/transactions/TransactionController';
@@ -27,7 +27,7 @@ export enum WindowRequest {
 
 export interface WindowRequestArguments {
     [WindowRequest.DAPP]: BlankProviderControllerState;
-    [WindowRequest.LOCK]: AppStateControllerMemState;
+    [WindowRequest.LOCK]: AppStateControllerState;
     [WindowRequest.PERMISSIONS]: PermissionsControllerState;
     [WindowRequest.TRANSACTIONS]: TransactionVolatileControllerState;
 }
@@ -261,6 +261,13 @@ export interface WatchAssetConfirmParams {
 
 export interface AddEthereumChainConfirmParams {
     saveImage: boolean;
+}
+
+export interface EstimateGasParams {
+    data: string;
+    from: string;
+    to: string;
+    value: string;
 }
 
 // EIP-712

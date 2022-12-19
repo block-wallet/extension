@@ -17,12 +17,6 @@ import type {
     RequestAccountSelect,
     RequestAddNewSiteWithPermissions,
     RequestAppUnlock,
-    RequestBlankCompliance,
-    RequestBlankCurrencyDepositsCount,
-    RequestBlankDeposit,
-    RequestBlankGetDepositNoteString,
-    RequestBlankWithdrawalFees,
-    RequestBlankHasDepositedFromAddress,
     RequestEnsResolve,
     RequestEnsLookup,
     RequestUDResolve,
@@ -36,8 +30,6 @@ import type {
     RequestAddCustomTokens,
     RequestGetUserTokens,
     RequestPopulateTokenData,
-    RequestBlankPairDepositsCount,
-    RequestBlankWithdraw,
     RequestExternalRequest,
     RequestGetAccountPermissions,
     RequestNetworkChange,
@@ -61,7 +53,6 @@ import type {
     RequestSearchToken,
     RequestShowTestNetworks,
     RequestUpdatePopupTab,
-    RequestCalculateDepositTransactionGasLimit,
     RequestAddAsNewSendTransaction,
     RequestUpdateSendTransactionGas,
     RequestApproveSendTransaction,
@@ -70,8 +61,6 @@ import type {
     RequestRejectTransaction,
     RequestSetIdleTimeout,
     RequestSetIcon,
-    RequestBlankGetInstanceTokenAllowance,
-    RequestCalculateApproveTransactionGasLimit,
     RequestDeleteCustomToken,
     RequestAddressBookGetByAddress,
     RequestAddressBookGet,
@@ -81,7 +70,6 @@ import type {
     RequestAddressBookGetRecentAddresses,
     RequestCompleteSetup,
     RequestAddNetwork,
-    RequestBlankGetLatestDepositDate,
     RequestConfirmDappRequest,
     RequestWalletReset,
     RequestUserSettings,
@@ -97,13 +85,9 @@ import type {
     RequestConnectHardwareWallet,
     RequestGetHardwareWalletAccounts,
     RequestImportHardwareWalletAccounts,
-    RequestGetSubsequentDepositsCount,
-    RequestGetAnonimitySet,
-    RequestBlankDepositsTreeUpdate,
     RequestSetAccountFilters,
     RequestWalletGetHDPath,
     RequestWalletSetHDPath,
-    RequestDepositAllowance,
     RequestRemoveNetwork,
     RequestGetChainData,
     RequestGetRpcChainId,
@@ -114,6 +98,7 @@ import type {
     RequestRemoveHardwareWallet,
     RequestGenerateOnDemandReleaseNotes,
     RequestEditNetwork,
+    RequestSetUserOnline,
     RequestExecuteBridge,
     RequestGetBridgeQuote,
     RequestApproveBridgeAllowance,
@@ -122,7 +107,7 @@ import type {
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
-import { BigNumber, utils } from 'ethers';
+import { BigNumber } from 'ethers';
 import BlankStorageStore from '../infrastructure/stores/BlankStorageStore';
 import { Flatten } from '../utils/types/helpers';
 import { Messages } from '../utils/types/communication';
@@ -131,7 +116,7 @@ import {
     BlankAppState,
     BlankAppUIState,
 } from '../utils/constants/initialState';
-import AppStateController from './AppStateController';
+import AppStateController, { AppStateEvents } from './AppStateController';
 import OnboardingController from './OnboardingController';
 import BlankProviderController, {
     BlankProviderEvents,
@@ -156,7 +141,6 @@ import {
     AccountType,
     DeviceAccountInfo,
 } from './AccountTrackerController';
-import { BlankDepositController } from './blank-deposit/BlankDepositController';
 
 import { GasPricesController } from './GasPricesController';
 import {
@@ -164,7 +148,13 @@ import {
     TokenControllerProps,
 } from './erc-20/TokenController';
 import SwapController, { SwapParameters, SwapQuote } from './SwapController';
-import { IToken, ITokens, Token } from './erc-20/Token';
+import {
+    FetchTokenResponse,
+    IToken,
+    ITokens,
+    SearchTokensResponse,
+    Token,
+} from './erc-20/Token';
 import { ImportStrategy, getAccountJson } from '../utils/account';
 import { ActivityListController } from './ActivityListController';
 import {
@@ -176,7 +166,6 @@ import {
     ProviderEvents,
     ProviderSetupData,
 } from '@block-wallet/provider/types';
-import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import {
     AddressBookController,
     AddressBookEntry,
@@ -197,18 +186,15 @@ import {
 } from '../utils/window';
 import log from 'loglevel';
 import BlockUpdatesController from './block-updates/BlockUpdatesController';
-import { TornadoEventsService } from './blank-deposit/tornado/TornadoEventsService';
 
-import tornadoConfig from './blank-deposit/tornado/config/config';
 import ComposedStore from '../infrastructure/stores/ComposedStore';
 import BlockFetchController from './block-updates/BlockFetchController';
-import { generatePhishingPreventionBase64 } from '../utils/phishingPrevention';
 import {
     Currency,
     getCurrencies,
     isCurrencyCodeValid,
 } from '../utils/currency';
-import { AvailableNetworks } from './blank-deposit/types';
+import { AvailableNetworks } from './privacy/types';
 
 import { toError } from '../utils/toError';
 
@@ -219,6 +205,7 @@ import { Network } from '../utils/constants/networks';
 
 import { generateOnDemandReleaseNotes } from '../utils/userPreferences';
 import { TransactionWatcherController } from './TransactionWatcherController';
+import { PrivacyAsyncController } from './privacy/PrivacyAsyncController';
 import { isNativeTokenAddress } from '../utils/token';
 import BridgeController, {
     GetBridgeAvailableRoutesResponse,
@@ -255,8 +242,7 @@ export default class BlankController extends EventEmitter {
     private readonly accountTrackerController: AccountTrackerController;
     private readonly preferencesController: PreferencesController;
     private readonly transactionController: TransactionController;
-    private readonly tornadoEventsService: TornadoEventsService;
-    private readonly blankDepositController: BlankDepositController;
+    private readonly privacyController: PrivacyAsyncController;
     private readonly exchangeRatesController: ExchangeRatesController;
     private readonly gasPricesController: GasPricesController;
     private readonly blankStateStore: BlankStorageStore;
@@ -382,26 +368,14 @@ export default class BlankController extends EventEmitter {
             this.keyringController.signTransaction.bind(this.keyringController)
         );
 
-        this.tornadoEventsService = new TornadoEventsService({
-            ...tornadoConfig.tornadoEventsService,
-            blockUpdatesController: this.blockUpdatesController,
-        });
-
-        this.blankDepositController = new BlankDepositController({
+        this.privacyController = new PrivacyAsyncController({
             networkController: this.networkController,
-            preferencesController: this.preferencesController,
-            transactionController: this.transactionController,
-            tokenOperationsController: this.tokenOperationsController,
-            tokenController: this.tokenController,
-            gasPricesController: this.gasPricesController,
-            tornadoEventsService: this.tornadoEventsService,
-            initialState: initState.BlankDepositController,
+            state: initState.BlankDepositController,
         });
 
         this.appStateController = new AppStateController(
             initState.AppStateController,
             this.keyringController,
-            this.blankDepositController,
             this.transactionController
         );
 
@@ -432,7 +406,8 @@ export default class BlankController extends EventEmitter {
             this.appStateController,
             this.keyringController,
             this.tokenController,
-            this.blockUpdatesController
+            this.blockUpdatesController,
+            this.gasPricesController
         );
 
         this.tokenAllowanceController = new TokenAllowanceController(
@@ -460,7 +435,7 @@ export default class BlankController extends EventEmitter {
 
         this.activityListController = new ActivityListController(
             this.transactionController,
-            this.blankDepositController,
+            this.privacyController,
             this.preferencesController,
             this.networkController,
             this.transactionWatcherController,
@@ -484,7 +459,7 @@ export default class BlankController extends EventEmitter {
             TransactionController: this.transactionController.store,
             ExchangeRatesController: this.exchangeRatesController.store,
             GasPricesController: this.gasPricesController.store,
-            BlankDepositController: this.blankDepositController.store,
+            BlankDepositController: this.privacyController.store,
             TokenController: this.tokenController.store,
             PermissionsController: this.permissionsController.store,
             AddressBookController: this.addressBookController.store,
@@ -498,7 +473,7 @@ export default class BlankController extends EventEmitter {
 
         this.UIStore = new ComposedStore<BlankAppUIState>({
             NetworkController: this.networkController.store,
-            AppStateController: this.appStateController.UIStore,
+            AppStateController: this.appStateController.store,
             OnboardingController: this.onboardingController.store,
             KeyringController: this.keyringController.memStore,
             AccountTrackerController: this.accountTrackerController.store,
@@ -506,19 +481,21 @@ export default class BlankController extends EventEmitter {
             TransactionController: this.transactionController.UIStore,
             ExchangeRatesController: this.exchangeRatesController.store,
             GasPricesController: this.gasPricesController.store,
-            BlankDepositController: this.blankDepositController.UIStore,
+            BlankDepositController: this.privacyController.UIStore,
             TokenController: this.tokenController.store,
             ActivityListController: this.activityListController.store,
             PermissionsController: this.permissionsController.store,
             AddressBookController: this.addressBookController.store,
             BlankProviderController: this.blankProviderController.store,
-            BlockUpdatesController: this.blockUpdatesController.store,
             SwapController: this.swapController.UIStore,
             BridgeController: this.bridgeController.UIStore,
         });
 
         // Check controllers on app lock/unlock
-        this.appStateController.UIStore.subscribe(() => {
+        this.appStateController.on(AppStateEvents.APP_LOCKED, () => {
+            this.manageControllers();
+        });
+        this.appStateController.on(AppStateEvents.APP_UNLOCKED, () => {
             this.manageControllers();
         });
 
@@ -540,6 +517,9 @@ export default class BlankController extends EventEmitter {
 
         // Set devtools callback on state update
         this.store.subscribe(this.devToolSubscription);
+
+        // mv3 auto unlock
+        this.appStateController.autoUnlock();
     }
 
     /**
@@ -559,12 +539,7 @@ export default class BlankController extends EventEmitter {
 
         // Check if app is unlocked
         const isAppUnlocked =
-            this.appStateController.UIStore.getState().isAppUnlocked;
-
-        // Start/stop controllers
-        if (activeSubscriptions > 0 && isAppUnlocked) {
-            this.blankDepositController.initialize();
-        }
+            this.appStateController.store.getState().isAppUnlocked;
 
         this.blockUpdatesController.setActiveSubscriptions(
             isAppUnlocked,
@@ -769,66 +744,8 @@ export default class BlankController extends EventEmitter {
                 return this.updatePopupTab(request as RequestUpdatePopupTab);
             case Messages.APP.REJECT_UNCONFIRMED_REQUESTS:
                 return this.rejectUnconfirmedRequests();
-            case Messages.BLANK.DEPOSIT:
-                return this.blankDeposit(request as RequestBlankDeposit);
-            case Messages.BLANK.DEPOSIT_ALLOWANCE:
-                return this.blankDepositAllowance(
-                    request as RequestDepositAllowance
-                );
-            case Messages.BLANK.CALCULATE_DEPOSIT_TRANSACTION_GAS_LIMIT:
-                return this.calculateDepositTransactionGasLimit(
-                    request as RequestCalculateDepositTransactionGasLimit
-                );
-            case Messages.BLANK.WITHDRAW:
-                return this.blankWithdraw(request as RequestBlankWithdraw);
-            case Messages.BLANK.COMPLIANCE:
-                return this.getComplianceInformation(
-                    request as RequestBlankCompliance
-                );
-            case Messages.BLANK.PAIR_DEPOSITS_COUNT:
-                return this.getPairDepositsCount(
-                    request as RequestBlankPairDepositsCount
-                );
-            case Messages.BLANK.CURRENCY_DEPOSITS_COUNT:
-                return this.getCurrencyDepositsCount(
-                    request as RequestBlankCurrencyDepositsCount
-                );
-            case Messages.BLANK.GET_UNSPENT_DEPOSITS:
-                return this.getUnspentDeposits();
-            case Messages.BLANK.GET_DEPOSIT_NOTE_STRING:
-                return this.getDepositNoteString(
-                    request as RequestBlankGetDepositNoteString
-                );
-            case Messages.BLANK.UPDATE_SPENT_NOTES:
-                return this.updateNotesSpentState();
-            case Messages.BLANK.UPDATE_DEPOSITS_TREE:
-                return this.updateDepositsTree(
-                    request as RequestBlankDepositsTreeUpdate
-                );
-            case Messages.BLANK.GET_INSTANCE_ALLOWANCE:
-                return this.getTornadoInstanceAllowance(
-                    request as RequestBlankGetInstanceTokenAllowance
-                );
-            case Messages.BLANK.GET_WITHDRAWAL_FEES:
-                return this.getWithdrawalFees(
-                    request as RequestBlankWithdrawalFees
-                );
-            case Messages.BLANK.HAS_DEPOSITED_FROM_ADDRESS:
-                return this.hasDepositedFromAddress(
-                    request as RequestBlankHasDepositedFromAddress
-                );
-            case Messages.BLANK.FORCE_DEPOSITS_IMPORT:
-                return this.forceDepositsImport();
-            case Messages.BLANK.GET_LATEST_DEPOSIT_DATE:
-                return this.getLatestDepositDate(
-                    request as RequestBlankGetLatestDepositDate
-                );
-            case Messages.BLANK.GET_ANONIMITY_SET:
-                return this.getAnonimitySet(request as RequestGetAnonimitySet);
-            case Messages.BLANK.GET_SUBSEQUENT_DEPOSITS_COUNT:
-                return this.getSubsequentDepositsCount(
-                    request as RequestGetSubsequentDepositsCount
-                );
+            case Messages.APP.SET_USER_ONLINE:
+                return this.setUserOnline(request as RequestSetUserOnline);
             case Messages.DAPP.CONFIRM_REQUEST:
                 return this.confirmDappRequest(
                     request as RequestConfirmDappRequest
@@ -972,10 +889,6 @@ export default class BlankController extends EventEmitter {
                 return this.calculateSendTransactionGasLimit(
                     request as RequestCalculateSendTransactionGasLimit
                 );
-            case Messages.TRANSACTION.CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT:
-                return this.calculateApproveTransactionGasLimit(
-                    request as RequestCalculateApproveTransactionGasLimit
-                );
             case Messages.TRANSACTION.CANCEL_TRANSACTION:
                 return this.cancelTransaction(
                     request as RequestCancelTransaction
@@ -1076,8 +989,6 @@ export default class BlankController extends EventEmitter {
                 return this.toggleDefaultBrowserWallet(
                     request as RequestToggleDefaultBrowserWallet
                 );
-            case Messages.WALLET.GENERATE_ANTI_PHISHING_IMAGE:
-                return generatePhishingPreventionBase64();
             case Messages.WALLET.UPDATE_ANTI_PHISHING_IMAGE:
                 return this.updateAntiPhishingImage(
                     request as RequestUpdateAntiPhishingImage
@@ -1140,6 +1051,19 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * setUserOnline
+     *
+     * Sets the user's current network status
+     *
+     * @param isUserOnline Whether the user is online or not
+     */
+    public async setUserOnline({
+        networkStatus,
+    }: RequestSetUserOnline): Promise<void> {
+        this.networkController.handleUserNetworkChange(networkStatus);
+    }
+
+    /**
      * getHardwareWalletHDPath
      *
      * @param device The device to get the HD path for
@@ -1192,51 +1116,6 @@ export default class BlankController extends EventEmitter {
         return this.accountTrackerController.getAccountNativeTokenBalanceForChain(
             chainId
         );
-    }
-    /**
-     * It triggers the deposits tree update for the current network
-     * (used to update the deposits tree and calculate the subsequent deposits accurately)
-     */
-    public async updateDepositsTree({
-        pair,
-    }: RequestBlankDepositsTreeUpdate): Promise<void> {
-        return this.blankDepositController.updateDepositsTree(pair);
-    }
-
-    /**
-     * It gets the subsequent deposits from the user's most recent for a given pair.
-     * @param pair The pair to get subsequent deposits for.
-     *
-     * @returns If successful, it returns the subsequent deposits.
-     */
-    public async getSubsequentDepositsCount({
-        pair,
-    }: RequestGetSubsequentDepositsCount): Promise<number | undefined> {
-        return this.blankDepositController.getPairSubsequentDepositsCount(pair);
-    }
-
-    /**
-     * It gets the pair's pool anonimity set.
-     *
-     * @param pair The pair to get the anonimity set for.
-     * @returns If successful, it returns the anonimity set.
-     */
-    public async getAnonimitySet({
-        pair,
-    }: RequestGetAnonimitySet): Promise<number> {
-        return this.blankDepositController.getPairAnonimitySet(pair);
-    }
-
-    /**
-     * It returns the date of the latest deposit made
-     * for the specified currency/amount pair
-     *
-     * @param pair The currency amount pair to look for
-     */
-    public async getLatestDepositDate({
-        pair,
-    }: RequestBlankGetLatestDepositDate): Promise<Date> {
-        return this.blankDepositController.getLatestDepositDate(pair);
     }
 
     /**
@@ -1548,70 +1427,6 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
-     * It forces an asynchronous deposits reconstruction
-     * The vault must be initialized in order to do so
-     */
-    private forceDepositsImport() {
-        this.blankDepositController.importDeposits();
-    }
-
-    /**
-     * It returns the withdrawal operation gas cost
-     */
-    private async getWithdrawalFees({ pair }: RequestBlankWithdrawalFees) {
-        return this.blankDepositController.getWithdrawalFees(pair);
-    }
-    /**
-     * It checks for possible spent notes and updates their internal state
-     */
-    private async updateNotesSpentState() {
-        return this.blankDepositController.updateNotesSpentState();
-    }
-
-    /**
-     * It returns the deposit formatted note
-     */
-    private async getDepositNoteString(
-        request: RequestBlankGetDepositNoteString
-    ) {
-        return this.blankDepositController.getDepositNoteString(request.id);
-    }
-
-    /**
-     * It returns the list of unspent deposits ordered by timestamp
-     * with their notes string removed
-     */
-    private async getUnspentDeposits() {
-        return this.blankDepositController.getDeposits();
-    }
-
-    /**
-     * It returns the currency/amount pair unspent deposits count
-     */
-    private async getCurrencyDepositsCount(
-        request: RequestBlankCurrencyDepositsCount
-    ) {
-        return this.blankDepositController.getCurrencyDepositsCount(
-            request.currency
-        );
-    }
-
-    /**
-     * It returns the currency/amount pair unspent deposits count
-     */
-    private async getPairDepositsCount(request: RequestBlankPairDepositsCount) {
-        return this.blankDepositController.getUnspentDepositsCount(
-            request.pair
-        );
-    }
-
-    private async getTornadoInstanceAllowance({
-        pair,
-    }: RequestBlankGetInstanceTokenAllowance): Promise<BigNumber> {
-        return this.blankDepositController.getInstanceTokenAllowance(pair);
-    }
-
-    /**
      * Method to confirm a transaction
      *
      * @param id - id of the transaction being confirmed.
@@ -1680,176 +1495,6 @@ export default class BlankController extends EventEmitter {
             transactionId
         );
     };
-
-    /**
-     * It returns information of a deposit for compliance purposes
-     */
-    private async getComplianceInformation(request: RequestBlankCompliance) {
-        const deposit = await this.blankDepositController.getDeposit(
-            request.id
-        );
-        return this.blankDepositController.getComplianceInformation(deposit);
-    }
-
-    /**
-     * hasDepositedFromAddress
-     *
-     * @returns Whether or not the user has made at least one deposit from this address in the past
-     */
-    private async hasDepositedFromAddress({
-        pair,
-        withdrawAddress,
-    }: RequestBlankHasDepositedFromAddress) {
-        let depositsMadeFromWithdrawalAddress = (
-            await this.blankDepositController.getDeposits(false)
-        ).filter((d) => d.depositAddress === withdrawAddress);
-
-        // If pair was provided filter for that as well
-        if (pair) {
-            depositsMadeFromWithdrawalAddress =
-                depositsMadeFromWithdrawalAddress.filter(
-                    (d) =>
-                        d.pair.amount === pair.amount &&
-                        d.pair.currency === pair.currency
-                );
-        }
-
-        return depositsMadeFromWithdrawalAddress.length !== 0;
-    }
-
-    /**
-     * It makes a Blank withdrawal from the oldest deposit note
-     * of the specified currency amount pair
-     *
-     * @param request The Blank withdraw request
-     */
-    private async blankWithdraw({
-        pair,
-        accountAddressOrIndex,
-    }: RequestBlankWithdraw) {
-        // Pick a deposit randomly
-        const deposit = await this.blankDepositController.getDepositToWithdraw(
-            pair
-        );
-
-        let address = undefined;
-        if (typeof accountAddressOrIndex === 'string') {
-            // If it is an address, check if it's valid
-            if (!utils.isAddress(accountAddressOrIndex)) {
-                throw new Error('Invalid address');
-            }
-            address = accountAddressOrIndex;
-        } else if (typeof accountAddressOrIndex === 'number') {
-            const account =
-                await this.accountTrackerController.getAccountByIndex(
-                    accountAddressOrIndex
-                );
-
-            address = account.address;
-        }
-
-        // Trigger withdraw
-        try {
-            const hash = await this.blankDepositController.withdraw(
-                deposit,
-                address
-            );
-            return hash;
-        } catch (e: any) {
-            // If we detect a backend error, we parse it and throw the proper error
-            if ('error' in e) {
-                throw new Error(
-                    (e.error?.body
-                        ? JSON.parse(e.error?.body).error?.message
-                        : e.reason) ?? e.message
-                );
-            }
-
-            throw e;
-        }
-    }
-
-    /**
-     * It makes a Blank deposit
-     *
-     * @param request The Blank deposit request
-     */
-    private async blankDeposit({
-        pair,
-        feeData,
-        customNonce,
-    }: RequestBlankDeposit) {
-        try {
-            const hash = await this.blankDepositController.deposit(
-                pair,
-                feeData,
-                customNonce
-            );
-            return hash;
-        } catch (e: any) {
-            // If we detect a backend error, we parse it and throw the proper error
-            if ('error' in e) {
-                throw new Error(
-                    (e.error?.body
-                        ? JSON.parse(e.error?.body).error?.message
-                        : e.reason) ?? e.message
-                );
-            }
-
-            throw e;
-        }
-    }
-
-    /**
-     * Submits an approval transaction to setup asset allowance
-     */
-    private blankDepositAllowance({
-        allowance,
-        customNonce,
-        feeData,
-        pair,
-    }: RequestDepositAllowance) {
-        try {
-            return this.blankDepositController.depositAllowance(
-                BigNumber.from(allowance),
-                feeData,
-                pair,
-                customNonce
-            );
-        } catch (e: any) {
-            // If we detect a backend error, we parse it and throw the proper error
-            if ('error' in e) {
-                throw new Error(
-                    (e.error?.body
-                        ? JSON.parse(e.error?.body).error?.message
-                        : e.reason) ?? e.message
-                );
-            }
-
-            throw e;
-        }
-    }
-
-    private async calculateDepositTransactionGasLimit({
-        currencyAmountPair,
-    }: RequestCalculateDepositTransactionGasLimit): Promise<TransactionGasEstimation> {
-        try {
-            return this.blankDepositController.calculateDepositTransactionGasLimit(
-                currencyAmountPair
-            );
-        } catch (e: any) {
-            // If we detect a backend error, we parse it and throw the proper error
-            if ('error' in e) {
-                throw new Error(
-                    (e.error?.body
-                        ? JSON.parse(e.error?.body).error?.message
-                        : e.reason) ?? e.message
-                );
-            }
-
-            throw e;
-        }
-    }
 
     public shouldInject(): boolean {
         return this.preferencesController.settings.defaultBrowserWallet;
@@ -2502,32 +2147,6 @@ export default class BlankController extends EventEmitter {
         return this.gasPricesController.fetchGasPriceData(chainId);
     }
 
-    /**
-     * Calculate the gas limit for an approve transaction
-     */
-    private async calculateApproveTransactionGasLimit({
-        tokenAddress,
-        spender,
-        amount,
-    }: RequestCalculateApproveTransactionGasLimit): Promise<TransactionGasEstimation> {
-        const approveTransaction = new ApproveTransaction({
-            transactionController: this.transactionController,
-            preferencesController: this.preferencesController,
-            networkController: this.networkController,
-        });
-
-        spender =
-            spender === 'deposit'
-                ? this.blankDepositController.proxyContractAddress
-                : spender;
-
-        return approveTransaction.calculateTransactionGasLimit({
-            tokenAddress,
-            spender,
-            amount,
-        });
-    }
-
     private cancelTransaction({
         transactionId,
         gasValues,
@@ -2663,12 +2282,10 @@ export default class BlankController extends EventEmitter {
      */
     private async walletCreate({
         password,
+        antiPhishingImage,
     }: RequestWalletCreate): Promise<void> {
         // Create keyring
         await this.keyringController.createNewVaultAndKeychain(password);
-
-        // Initialize vault
-        await this.blankDepositController.initializeVault(password);
 
         // Get account
         const account = (await this.keyringController.getAccounts())[0];
@@ -2690,9 +2307,8 @@ export default class BlankController extends EventEmitter {
         this.accountTrackerController.addPrimaryAccount(account);
 
         // Create and assign to the Wallet an anti phishing image
-        const base64Image = await generatePhishingPreventionBase64();
         this.preferencesController.assignNewPhishingPreventionImage(
-            base64Image
+            antiPhishingImage
         );
 
         // Unlock when account is created so vault will be ready after onboarding
@@ -2708,6 +2324,7 @@ export default class BlankController extends EventEmitter {
     private async walletImport({
         password,
         seedPhrase,
+        antiPhishingImage,
         reImport,
         defaultNetwork,
     }: RequestWalletImport): Promise<boolean> {
@@ -2733,16 +2350,11 @@ export default class BlankController extends EventEmitter {
         );
 
         if (!reImport) {
-            // Initialize deposit vault
-            await this.blankDepositController.initializeVault(password);
-
             // Show the welcome to the wallet message
             this.preferencesController.setShowWelcomeMessage(true);
 
             // Show the default wallet preferences
             this.preferencesController.setShowDefaultWalletPreferences(true);
-        } else {
-            await this.blankDepositController.reinitializeVault(password);
         }
 
         // Set Seed Phrase Backed up
@@ -2783,14 +2395,12 @@ export default class BlankController extends EventEmitter {
         }
         await this.networkController.setNetwork(network);
 
-        await this.blankDepositController.initialize();
         // reconstruct past erc20 transfers
         this.transactionWatcherController.fetchTransactions();
 
         // Create and assign to the Wallet an anti phishing image
-        const base64Image = await generatePhishingPreventionBase64();
         this.preferencesController.assignNewPhishingPreventionImage(
-            base64Image
+            antiPhishingImage
         );
 
         return true;
@@ -2805,8 +2415,14 @@ export default class BlankController extends EventEmitter {
     private async walletReset({
         password,
         seedPhrase,
+        antiPhishingImage,
     }: RequestWalletReset): Promise<boolean> {
-        return this.walletImport({ password, seedPhrase, reImport: true });
+        return this.walletImport({
+            password,
+            seedPhrase,
+            reImport: true,
+            antiPhishingImage,
+        });
     }
 
     /**
@@ -3007,12 +2623,13 @@ export default class BlankController extends EventEmitter {
         exact,
         accountAddress,
         chainId,
-    }: RequestSearchToken): Promise<Token[]> {
+    }: RequestSearchToken): Promise<SearchTokensResponse> {
         return this.tokenController.search(
             query,
             exact,
             accountAddress,
-            chainId
+            chainId,
+            false
         );
     }
 
@@ -3111,8 +2728,10 @@ export default class BlankController extends EventEmitter {
      */
     private async populateTokenData({
         tokenAddress,
-    }: RequestPopulateTokenData): Promise<Token> {
-        return this.tokenOperationsController.populateTokenData(tokenAddress);
+    }: RequestPopulateTokenData): Promise<FetchTokenResponse> {
+        return this.tokenOperationsController.fetchTokenDataFromChain(
+            tokenAddress
+        );
     }
 
     /**

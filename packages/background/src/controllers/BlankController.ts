@@ -147,6 +147,7 @@ import { GasPricesController } from './GasPricesController';
 import {
     TokenController,
     TokenControllerProps,
+    NATIVE_TOKEN_ADDRESS,
 } from './erc-20/TokenController';
 import SwapController, { SwapParameters, SwapQuote } from './SwapController';
 import {
@@ -1238,11 +1239,23 @@ export default class BlankController extends EventEmitter {
     private async accountReset({
         address,
     }: RequestAccountRemove): Promise<void> {
-        this.transactionController.wipeTransactionsByAddress(address);
-        this.transactionWatcherController.removeTransactionsByAddress(address);
-        this.tokenController.resetTokensByAccount(address);
-        this.permissionsController.removeAllPermissionsOfAccount(address);
-        this.accountTrackerController.resetAccount(address);
+        // Reset account
+        await Promise.all([
+            this.transactionController.wipeTransactionsByAddress(address),
+            this.transactionWatcherController.removeTransactionsByAddress(
+                address
+            ),
+            this.tokenController.resetTokensByAccount(address),
+            this.permissionsController.removeAllPermissionsOfAccount(address),
+            this.accountTrackerController.resetAccount(address),
+        ]);
+        // Refetch account balance
+        this.accountTrackerController.updateAccounts({
+            addresses: [address],
+            assetAddresses: [NATIVE_TOKEN_ADDRESS],
+        });
+        // Refetch transactions
+        this.transactionWatcherController.fetchTransactions();
     }
 
     /**

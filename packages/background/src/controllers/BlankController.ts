@@ -1367,9 +1367,7 @@ export default class BlankController extends EventEmitter {
         address,
     }: RequestAccountRemove): Promise<void> {
         this.transactionController.wipeTransactionsByAddress(address);
-        this.transactionWatcherController.clearTransactionsByAccountAddress(
-            address
-        );
+        this.transactionWatcherController.removeTransactionsByAddress(address);
         this.tokenController.resetTokensByAccount(address);
         this.permissionsController.removeAllPermissionsOfAccount(address);
         this.accountTrackerController.resetAccount(address);

@@ -348,35 +348,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     };
 
     /**
-     * clear the transactions data of an account.
-     * @param address
-     */
-    public clearTransactionsByAccountAddress = async (
-        address: string
-    ): Promise<void> => {
-        const transactions = this.store.getState().transactions;
-        let anyUpdate = false;
-        for (const c in transactions) {
-            const chainId = parseInt(c);
-            if (address in transactions[chainId]) {
-                for (const type in transactions[chainId][address]) {
-                    const trasactionType = type as TransactionTypeEnum;
-                    transactions[chainId][address][
-                        trasactionType
-                    ].transactions = {};
-                    anyUpdate = true;
-                }
-            }
-        }
-
-        if (anyUpdate) {
-            this.store.updateState({
-                transactions,
-            });
-        }
-    };
-
-    /**
      * Fetch the past tx and parse them as transactions
      * @param chainId
      * @param currentBlock

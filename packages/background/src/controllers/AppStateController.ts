@@ -1,18 +1,28 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+import log from 'loglevel';
 import { BaseController } from '../infrastructure/BaseController';
-import { BlankDepositController } from './blank-deposit/BlankDepositController';
+import { isManifestV3 } from '../utils/manifest';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 import TransactionController from './transactions/TransactionController';
 
 const STICKY_STORAGE_DATA_TTL = 60000 * 10;
 
-export interface AppStateControllerState {
-    idleTimeout: number; // Minutes until auto-lock - Zero if disabled
-}
-
 export interface AppStateControllerMemState {
+    expiredStickyStorage: boolean;
     isAppUnlocked: boolean;
     lockedByTimeout: boolean;
-    expiredStickyStorage: boolean;
+}
+
+export interface AppStateControllerState {
+    idleTimeout: number; // Minutes until auto-lock - Zero if disabled
+    isAppUnlocked: boolean;
+    lockedByTimeout: boolean;
+    lastActiveTime: number;
+}
+
+export enum AppStateEvents {
+    APP_LOCKED = 'APP_LOCKED',
+    APP_UNLOCKED = 'APP_UNLOCKED',
 }
 
 export default class AppStateController extends BaseController<
@@ -22,35 +32,39 @@ export default class AppStateController extends BaseController<
     private _timer: ReturnType<typeof setTimeout> | null;
     private _stickyStorageTimer: ReturnType<typeof setTimeout> | undefined;
 
-    private isLoadingDeposits = false;
-
     constructor(
         initState: AppStateControllerState,
         private readonly _keyringController: KeyringControllerDerivated,
-        private readonly _blankDepositController: BlankDepositController,
         private readonly _transactionController: TransactionController
     ) {
-        super(initState, {
-            isAppUnlocked: false,
-            lockedByTimeout: false,
-            expiredStickyStorage: false,
-        });
+        super(initState);
 
         this._timer = null;
 
-        this._blankDepositController.UIStore.subscribe(
-            ({ isImportingDeposits }) => {
-                if (this.isLoadingDeposits && !isImportingDeposits) {
-                    this._resetTimer();
-                }
-                this.isLoadingDeposits = isImportingDeposits;
-            }
-        );
+        const { idleTimeout, isAppUnlocked, lastActiveTime } =
+            this.store.getState();
 
-        this.isLoadingDeposits =
-            this._blankDepositController.UIStore.getState().isImportingDeposits;
+        if (isAppUnlocked) {
+            const now = new Date().getTime();
+            if (
+                lastActiveTime + idleTimeout * 60 * 1000 < now ||
+                //Force locking on refresh if it is not MV3.
+                !isManifestV3()
+            ) {
+                this.lock(true);
+            }
+        }
 
         this._resetTimer();
+        this.store.subscribe((newState, oldState) => {
+            //To avoid sending the lastActiveTime to the UI, update the UIStore based on the store data.
+            if (newState.isAppUnlocked !== oldState?.isAppUnlocked) {
+                this.UIStore.updateState({
+                    isAppUnlocked: newState.isAppUnlocked,
+                    lockedByTimeout: newState.lockedByTimeout,
+                });
+            }
+        });
     }
 
     /**
@@ -58,6 +72,7 @@ export default class AppStateController extends BaseController<
      *
      */
     public setLastActiveTime = (): void => {
+        this.store.updateState({ lastActiveTime: new Date().getTime() });
         this._resetTimer();
         this._resetStickyStorageTimer();
     };
@@ -92,20 +107,21 @@ export default class AppStateController extends BaseController<
      * Locks the vault and the app
      */
     public lock = async (lockedByTimeout = false): Promise<void> => {
-        // Do not lock the app if we're loading the deposits
-        if (this.isLoadingDeposits) {
-            return;
-        }
-
         try {
             // Lock vault
             await this._keyringController.setLocked();
 
-            // Lock deposits
-            await this._blankDepositController.lock();
+            // Removing login token from storage
+            if (isManifestV3()) {
+                // @ts-ignore
+                chrome.storage.session && chrome.storage.session.clear();
+            }
 
             // Update controller state
-            this.UIStore.updateState({ isAppUnlocked: false, lockedByTimeout });
+            this.store.updateState({ isAppUnlocked: false, lockedByTimeout });
+
+            // event emit
+            this.emit(AppStateEvents.APP_LOCKED);
         } catch (error) {
             throw new Error(error.message || error);
         }
@@ -119,25 +135,22 @@ export default class AppStateController extends BaseController<
     public unlock = async (password: string): Promise<void> => {
         try {
             // Unlock vault
-            await this._keyringController.submitPassword(password);
-
-            // Set Ledger transport method to WebHID
-            await this._keyringController.setLedgerWebHIDTransportType();
-
-            // Get seed phrase to unlock the blank deposit controller
-            const seedPhrase = await this._keyringController.verifySeedPhrase(
+            const loginToken = await this._keyringController.submitPassword(
                 password
             );
 
-            // Unlock blank deposits vault
-            await this._blankDepositController.unlock(password, seedPhrase);
+            if (isManifestV3()) {
+                // @ts-ignore
+                chrome.storage.session &&
+                    // @ts-ignore
+                    chrome.storage.session
+                        .set({ loginToken })
+                        .catch((err: any) => {
+                            log.error('error setting loginToken', err);
+                        });
+            }
 
-            // Update controller state
-            this.UIStore.updateState({
-                isAppUnlocked: true,
-            });
-
-            this._resetTimer();
+            await this._postLoginAction();
         } catch (error) {
             throw new Error(error.message || error);
         }
@@ -155,6 +168,46 @@ export default class AppStateController extends BaseController<
         this._stickyStorageTimer = setTimeout(() => {
             this.UIStore.updateState({ expiredStickyStorage: true });
         }, STICKY_STORAGE_DATA_TTL);
+    };
+    public autoUnlock = async (): Promise<void> => {
+        if (isManifestV3()) {
+            const { isAppUnlocked } = this.store.getState();
+            if (!isAppUnlocked) {
+                // @ts-ignore
+                chrome.storage.session &&
+                    // @ts-ignore
+                    chrome.storage.session.get(
+                        ['loginToken'],
+                        async ({ loginToken }: { [key: string]: string }) => {
+                            if (loginToken) {
+                                await (this._keyringController as any)[
+                                    'submitEncryptionKey'
+                                ](loginToken);
+                                await this._postLoginAction();
+                            }
+                        }
+                    );
+            }
+        }
+    };
+
+    /**
+     * Sets the app as unlocked
+     */
+    private _postLoginAction = async () => {
+        // Set Ledger transport method to WebHID
+        await this._keyringController.setLedgerWebHIDTransportType();
+
+        // Update controller state
+        this.store.updateState({
+            isAppUnlocked: true,
+            lockedByTimeout: false,
+        });
+
+        this._resetTimer();
+
+        // event emit
+        this.emit(AppStateEvents.APP_UNLOCKED);
     };
 
     /**

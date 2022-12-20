@@ -426,6 +426,24 @@
                 }
             ],
             "version": "0.5.2"
+        },
+        {
+            "sections": [
+                {
+                    "title": "v0.5.3",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "RSK rebranded to Rootstock."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed issues with some tokens decimals."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.5.3"
         }
     ]
 }

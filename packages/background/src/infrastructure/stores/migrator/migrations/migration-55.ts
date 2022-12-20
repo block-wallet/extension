@@ -1,104 +1,286 @@
-import { BridgeControllerState } from '@block-wallet/background/controllers/BridgeController';
-import { pruneTransaction } from '../../../../controllers/transactions/utils/utils';
-import {
-    TransactionTypeEnum,
-    TransactionWatcherControllerState,
-} from '../../../../controllers/TransactionWatcherController';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
+import {
+    IAccountTokens,
+    INetworkTokens,
+    IToken,
+    ITokens,
+} from '../../../../controllers/erc-20/Token';
+import NetworkController from '../../../../controllers/NetworkController';
+import { TokenOperationsController } from '../../../../controllers/erc-20/transactions/Transaction';
+import { Accounts } from '@block-wallet/background/controllers/AccountTrackerController';
+import { toChecksumAddress } from 'ethereumjs-util';
 
-const pruneBridgeTxs = (
-    txs: BridgeControllerState['bridgeReceivingTransactions']
-): BridgeControllerState['bridgeReceivingTransactions'] => {
-    const newTxs = { ...txs };
-    for (const chainId in newTxs) {
-        const chainTxs = newTxs[chainId];
-        if (chainTxs) {
-            for (const addr in chainTxs) {
-                const addrTxs = chainTxs[addr];
-                if (addrTxs) {
-                    newTxs[chainId][addr] = Object.entries(addrTxs).reduce(
-                        (acc, [txHash, tx]) => {
-                            return {
-                                ...acc,
-                                [txHash]: pruneTransaction(tx),
-                            };
-                        },
-                        addrTxs
+const hasRecords = (records: Record<any, any>): boolean => {
+    return records && Object.keys(records).length > 0;
+};
+
+const isValidToken = (token: IToken): boolean => {
+    return token && !!token.symbol && token.decimals > -1;
+};
+
+/**
+ * This migration fixes the token decimals
+ */
+export default {
+    migrate: async (persistedState: BlankAppState) => {
+        const networkControllerInstance = new NetworkController(
+            persistedState.NetworkController
+        );
+        const tokenOperationsController = new TokenOperationsController({
+            networkController: networkControllerInstance,
+        });
+        const fetchedTokens: Record<number, ITokens> = {};
+
+        const { cachedPopulatedTokens, deletedUserTokens, userTokens } =
+            persistedState.TokenController;
+
+        const { bridgeReceivingTransactions } = persistedState.BridgeController;
+
+        function _updateCache(newToken: IToken, chainId: number) {
+            if (!fetchedTokens[chainId]) {
+                fetchedTokens[chainId] = {};
+            }
+            fetchedTokens[chainId][toChecksumAddress(newToken.address)] =
+                newToken;
+        }
+
+        async function regenerateTokenData(
+            token: IToken,
+            chainId: number
+        ): Promise<IToken | undefined> {
+            if (isValidToken(token)) {
+                _updateCache(token, chainId);
+                return token;
+            }
+
+            //token data is invalid
+            const alreadyFetchedToken = (fetchedTokens[chainId] || {})[
+                toChecksumAddress(token.address)
+            ];
+            if (alreadyFetchedToken) {
+                return alreadyFetchedToken;
+            }
+
+            //refetch token data
+            const { token: fetchedToken } =
+                await tokenOperationsController.fetchTokenDataFromChain(
+                    token.address,
+                    chainId
+                );
+
+            if (fetchedToken && isValidToken(fetchedToken)) {
+                _updateCache(fetchedToken, chainId);
+                return fetchedToken;
+            }
+
+            return undefined;
+        }
+
+        async function fixTokenInfo(
+            tokens: ITokens,
+            chainId: number
+        ): Promise<ITokens> {
+            const tokensRet = { ...tokens };
+            for (const address in tokens) {
+                const token = tokens[address];
+                if (token) {
+                    const regeneratedToken = await regenerateTokenData(
+                        token,
+                        chainId
+                    );
+                    if (!regeneratedToken) {
+                        //delete token if we weren't able to regenerate it successfully
+                        delete tokensRet[address];
+                    } else {
+                        tokensRet[address] = regeneratedToken;
+                    }
+                }
+            }
+            return tokensRet;
+        }
+
+        async function fixNetworkTokens(
+            networkTokens: INetworkTokens
+        ): Promise<INetworkTokens> {
+            const networkTokensRet = { ...networkTokens };
+            for (const chainIdStr in networkTokens) {
+                const chainId = Number(chainIdStr);
+                const currentNetworkTokens = networkTokens[chainId];
+                if (hasRecords(currentNetworkTokens)) {
+                    networkTokensRet[chainId] = await fixTokenInfo(
+                        currentNetworkTokens,
+                        chainId
                     );
                 }
             }
+            return networkTokensRet;
         }
-    }
-    return newTxs;
-};
 
-const pruneWatchedTxs = (
-    txs: TransactionWatcherControllerState['transactions']
-): TransactionWatcherControllerState['transactions'] => {
-    const newTxs = { ...txs };
-    for (const chainId in newTxs) {
-        const chainTxs = newTxs[chainId];
-        if (chainTxs) {
-            for (const addr in chainTxs) {
-                const addrTxs = chainTxs[addr];
-                if (addrTxs) {
-                    for (const type in addrTxs) {
-                        const typeTxs = addrTxs[type as TransactionTypeEnum];
-                        if (typeTxs && typeTxs.transactions) {
-                            newTxs[chainId][addr][
-                                type as TransactionTypeEnum
-                            ].transactions = Object.entries(
-                                typeTxs.transactions
-                            ).reduce((acc, [txHash, tx]) => {
-                                return {
-                                    ...acc,
-                                    [txHash]: pruneTransaction(tx),
-                                };
-                            }, typeTxs.transactions);
+        async function fixAccountTokens(
+            accountTokens: IAccountTokens
+        ): Promise<IAccountTokens> {
+            const accountTokenRet = { ...accountTokens };
+            for (const account in accountTokens) {
+                const currentAccountTokens = accountTokens[account];
+                if (hasRecords(currentAccountTokens)) {
+                    accountTokenRet[account] = await fixNetworkTokens(
+                        currentAccountTokens
+                    );
+                }
+            }
+            return accountTokenRet;
+        }
+
+        /**
+         * TOKEN FIXES
+         */
+
+        const fixedCachedPopulatedTokens = await fixNetworkTokens(
+            cachedPopulatedTokens
+        );
+        const fixedDeletedUserTokens = await fixAccountTokens(
+            deletedUserTokens
+        );
+        const fixedUserTokens = await fixAccountTokens(userTokens);
+
+        /**
+         * BRIDGES FIXES
+         */
+
+        async function fixBridgeTransactions(): Promise<
+            typeof bridgeReceivingTransactions
+        > {
+            const fixedTxs = { ...bridgeReceivingTransactions };
+            for (const chainIdStr in bridgeReceivingTransactions) {
+                const chainId = Number(chainIdStr);
+                const chainBridgeTx = bridgeReceivingTransactions[chainId];
+                if (hasRecords(chainBridgeTx)) {
+                    for (const account in chainBridgeTx) {
+                        const accountBridgeTxs = chainBridgeTx[account];
+                        if (hasRecords(accountBridgeTxs)) {
+                            for (const hash in accountBridgeTxs) {
+                                const bridgeTx = accountBridgeTxs[hash];
+                                if (bridgeTx && bridgeTx.transferType) {
+                                    const toToken =
+                                        bridgeTx.bridgeParams
+                                            ?.effectiveToToken ||
+                                        bridgeTx.bridgeParams?.toToken;
+                                    let realDecimals = 18;
+                                    if (toToken) {
+                                        const bridgedToken =
+                                            await regenerateTokenData(
+                                                {
+                                                    address: toToken.address,
+                                                    symbol: bridgeTx
+                                                        .transferType.currency,
+                                                    decimals:
+                                                        bridgeTx.transferType
+                                                            .decimals,
+                                                } as IToken,
+                                                chainId
+                                            );
+                                        realDecimals =
+                                            bridgedToken &&
+                                            bridgedToken.decimals > 0
+                                                ? bridgedToken.decimals
+                                                : 18;
+                                    }
+
+                                    const currentTx =
+                                        fixedTxs[chainId][account][hash];
+
+                                    fixedTxs[chainId][account][hash] = {
+                                        ...currentTx,
+                                        transferType: {
+                                            ...currentTx.transferType!,
+                                            decimals: realDecimals,
+                                        },
+                                    };
+                                }
+                            }
                         }
                     }
                 }
             }
+
+            return fixedTxs;
         }
-    }
-    return newTxs;
-};
+        const fixedBridgeReceivingTransactions = await fixBridgeTransactions();
 
-/**
- * This migration fixes zksync block explorer
- */
-export default {
-    migrate: async (persistedState: BlankAppState) => {
-        const { transactions } = persistedState.TransactionController;
-        const { bridgeReceivingTransactions } = persistedState.BridgeController;
-        const { transactions: watchedTx } =
-            persistedState.TransactionWatcherControllerState;
+        /**
+         * ACCOUNT TRACKER FIXES
+         */
 
-        const newTxsState = transactions
-            ? transactions.map(pruneTransaction)
-            : transactions;
+        async function fixAccountBalances(
+            accounts: Accounts
+        ): Promise<Accounts> {
+            const fixedAccounts = { ...accounts };
+            for (const accountAddress in fixedAccounts) {
+                const currentAccount = fixedAccounts[accountAddress];
+                if (currentAccount) {
+                    const fixedAccountBalances = { ...currentAccount.balances };
+                    for (const chainIdStr in fixedAccountBalances) {
+                        const chainId = Number(chainIdStr);
+                        const chainAccountTokenBalances =
+                            fixedAccountBalances[chainId];
+                        for (const tokenAddress in chainAccountTokenBalances.tokens ||
+                            {}) {
+                            const tokenWithBalance =
+                                chainAccountTokenBalances.tokens[tokenAddress];
+                            if (tokenWithBalance && tokenWithBalance.token) {
+                                const fixedTokenData =
+                                    (await regenerateTokenData(
+                                        tokenWithBalance.token,
+                                        chainId
+                                    )) || { decimals: 18 };
+                                fixedAccountBalances[chainId] = {
+                                    ...fixedAccountBalances[chainId],
+                                    tokens: {
+                                        ...fixedAccountBalances[chainId].tokens,
+                                        [tokenAddress]: {
+                                            ...tokenWithBalance,
+                                            token: {
+                                                ...tokenWithBalance.token,
+                                                ...fixedTokenData,
+                                            },
+                                        },
+                                    },
+                                };
+                            }
+                        }
+                    }
+                    fixedAccounts[accountAddress] = {
+                        ...currentAccount,
+                        balances: fixedAccountBalances,
+                    };
+                }
+            }
+            return fixedAccounts;
+        }
 
-        const newBridgeReceivingTxState = bridgeReceivingTransactions
-            ? pruneBridgeTxs(bridgeReceivingTransactions)
-            : bridgeReceivingTransactions;
-
-        const newWatchedTxsState = watchedTx
-            ? pruneWatchedTxs(watchedTx)
-            : watchedTx;
+        const fixedAccouts = await fixAccountBalances(
+            persistedState.AccountTrackerController.accounts
+        );
+        const fixedHiddenAccouts = await fixAccountBalances(
+            persistedState.AccountTrackerController.hiddenAccounts
+        );
 
         return {
             ...persistedState,
-            TransactionController: {
-                ...persistedState.TransactionController,
-                transactions: newTxsState,
+            TokenController: {
+                cachedPopulatedTokens: fixedCachedPopulatedTokens,
+                deletedUserTokens: fixedDeletedUserTokens,
+                userTokens: fixedUserTokens,
             },
             BridgeController: {
                 ...persistedState.BridgeController,
-                bridgeReceivingTransactions: newBridgeReceivingTxState,
+                bridgeReceivingTransactions: fixedBridgeReceivingTransactions,
             },
-            TransactionWatcherControllerState: {
-                transactions: newWatchedTxsState,
+            AccountTrackerController: {
+                ...persistedState.AccountTrackerController,
+                accounts: fixedAccouts,
+                hiddenAccounts: fixedHiddenAccouts,
             },
         };
     },

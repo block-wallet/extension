@@ -7,15 +7,8 @@ import { GiSuspensionBridge } from "react-icons/gi"
 import { ImSpinner } from "react-icons/im"
 import { BigNumber } from "ethers"
 import classNames from "classnames"
-
-// Styles
 import { Classes, classnames } from "../../styles"
-
-// Components
-import ComplianceMenu from "../privacy/ComplianceMenu"
 import Tooltip from "../../components/label/Tooltip"
-
-// Asset
 import eth from "../../assets/images/icons/ETH.svg"
 import blankLogo from "../../assets/images/logo.svg"
 import flashbotsLogo from "../../assets/images/flashbots.png"
@@ -31,18 +24,14 @@ import {
     TransactionMeta,
     TransferType,
 } from "@block-wallet/background/controllers/transactions/utils/types"
-
-// Utils
 import { capitalize } from "../../util/capitalize"
 import { getDisplayTime } from "../../util/getDisplayTime"
 import formatTransactionValue from "../../util/formatTransactionValue"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import AppIcon from "./../icons/AppIcon"
-import TransactionDetails from "./TransactionDetails"
 import { formatName } from "../../util/formatAccount"
 import { RichedTransactionMeta } from "../../util/transactionUtils"
 import Dots from "../loading/LoadingDots"
-import useContextMenu from "../../util/hooks/useContextMenu"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetBridgeTransactionsData from "../../util/hooks/useGetBridgeTransactionsData"
 import {
@@ -450,7 +439,6 @@ const TransactionItem: React.FC<{
 
     const isBlankWithdraw: boolean =
         transactionCategory === "blankWithdrawal" ? true : false
-    const blankWithdrawId: string = id
 
     const label = getTransactionLabel(
         status,
@@ -487,11 +475,6 @@ const TransactionItem: React.FC<{
         valueLabel
     )
 
-    const contextMenuRef = useRef(null)
-
-    const { anchorPoint, show: showContextMenu } =
-        useContextMenu(contextMenuRef)
-
     const tokenSymbol = transfer.currency
         ? transfer.currency.toUpperCase()
         : networkNativeCurrency.symbol.toUpperCase()
@@ -524,7 +507,6 @@ const TransactionItem: React.FC<{
                         onClick()
                     }
                 }}
-                ref={contextMenuRef}
             >
                 <div className="flex flex-row items-center w-full justify-between">
                     <TransactionIcon
@@ -704,21 +686,6 @@ const TransactionItem: React.FC<{
                     </div>
                 ) : null}
             </div>
-
-            {/* Compliance Menu */}
-            {isBlankWithdraw &&
-            status !== TransactionStatus.SUBMITTED &&
-            showContextMenu ? (
-                <div
-                    className="absolute"
-                    style={{ top: anchorPoint.y, left: anchorPoint.x }}
-                >
-                    <ComplianceMenu
-                        withdrawId={blankWithdrawId}
-                        active={true}
-                    />
-                </div>
-            ) : null}
         </>
     )
 }

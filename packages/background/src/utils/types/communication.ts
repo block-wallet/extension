@@ -2,16 +2,10 @@
 import { Flatten } from './helpers';
 import {
     ActivityListUIState,
-    BlankAppUIState,
     ExchangeRatesUIState,
     GasPricesUIState,
+    BlankAppUIState,
 } from '../constants/initialState';
-import {
-    CurrencyAmountPair,
-    KnownCurrencies,
-} from '../../controllers/blank-deposit/types';
-import { IBlankDeposit } from '../../controllers/blank-deposit/BlankDeposit';
-import { ComplianceInfo } from '../../controllers/blank-deposit/infrastructure/IBlankDepositService';
 import { BigNumber } from '@ethersproject/bignumber';
 import {
     AccountInfo,
@@ -21,7 +15,12 @@ import {
     GasPriceValue,
     FeeMarketEIP1559Values,
 } from '../../controllers/transactions/TransactionController';
-import { IToken, ITokens, Token } from '../../controllers/erc-20/Token';
+import {
+    IToken,
+    ITokens,
+    SearchTokensResponse,
+    Token,
+} from '../../controllers/erc-20/Token';
 import {
     TransactionAdvancedData,
     TransactionMeta,
@@ -96,31 +95,11 @@ enum APP {
     SET_USER_SETTINGS = 'SET_USER_SETTINGS',
     UPDATE_POPUP_TAB = 'UPDATE_POPUP_TAB',
     REJECT_UNCONFIRMED_REQUESTS = 'REJECT_UNCONFIRMED_REQUESTS',
+    SET_USER_ONLINE = 'SET_USER_ONLINE',
 }
 
 enum BACKGROUND {
     ACTION = 'ACTION',
-}
-
-enum BLANK {
-    DEPOSIT = 'DEPOSIT',
-    DEPOSIT_ALLOWANCE = 'DEPOSIT_ALLOWANCE',
-    CALCULATE_DEPOSIT_TRANSACTION_GAS_LIMIT = 'CALCULATE_DEPOSIT_TRANSACTION_GAS_LIMIT',
-    WITHDRAW = 'WITHDRAW',
-    COMPLIANCE = 'COMPLIANCE',
-    PAIR_DEPOSITS_COUNT = 'PAIR_DEPOSITS_COUNT',
-    CURRENCY_DEPOSITS_COUNT = 'CURRENCY_DEPOSITS_COUNT',
-    GET_UNSPENT_DEPOSITS = 'GET_UNSPENT_DEPOSITS',
-    GET_DEPOSIT_NOTE_STRING = 'GET_DEPOSIT_NOTE_STRING',
-    UPDATE_SPENT_NOTES = 'UPDATE_SPENT_NOTES',
-    UPDATE_DEPOSITS_TREE = 'UPDATE_DEPOSITS_TREE',
-    GET_WITHDRAWAL_FEES = 'GET_WITHDRAWAL_GAS_COST',
-    FORCE_DEPOSITS_IMPORT = 'FORCE_DEPOSITS_IMPORT',
-    HAS_DEPOSITED_FROM_ADDRESS = 'HAS_DEPOSITED_FROM_ADDRESS',
-    GET_INSTANCE_ALLOWANCE = 'GET_INSTANCE_ALLOWANCE',
-    GET_LATEST_DEPOSIT_DATE = 'GET_LATEST_DEPOSIT_DATE',
-    GET_ANONIMITY_SET = 'GET_ANONIMITY_SET',
-    GET_SUBSEQUENT_DEPOSITS_COUNT = 'GET_SUBSEQUENT_DEPOSITS_COUNT',
 }
 
 enum DAPP {
@@ -149,12 +128,14 @@ export enum EXTERNAL {
     EVENT_SUBSCRIPTION = 'EVENT_SUBSCRIPTION',
     REQUEST = 'EXTERNAL_REQUEST',
     SETUP_PROVIDER = 'SETUP_PROVIDER',
+    SW_REINIT = 'SW_REINIT',
     SET_ICON = 'SET_ICON',
     GET_PROVIDER_CONFIG = 'GET_PROVIDER_CONFIG',
 }
 
 export enum CONTENT {
     SHOULD_INJECT = 'SHOULD_INJECT',
+    SW_KEEP_ALIVE = 'SW_KEEP_ALIVE',
 }
 
 enum NETWORK {
@@ -228,7 +209,6 @@ enum WALLET {
     DISMISS_DEFAULT_WALLET_PREFERENCES = 'DISMISS_DEFAULT_WALLET_PREFERENCES',
     DISMISS_RELEASE_NOTES = 'DISMISS_RELEASE_NOTES',
     TOGGLE_RELEASE_NOTES_SUBSCRIPTION = 'TOGGLE_RELEASE_NOTES_SUBSCRIPTION',
-    GENERATE_ANTI_PHISHING_IMAGE = 'GENERATE_ANTI_PHISHING_IMAGE',
     GENERATE_ON_DEMAND_RELEASE_NOTES = 'GENERATE_ON_DEMAND_RELEASE_NOTES',
     UPDATE_ANTI_PHISHING_IMAGE = 'UPDATE_ANTI_PHISHING_IMAGE',
     TOGGLE_ANTI_PHISHING_PROTECTION = 'TOGGLE_ANTI_PHISHING_PROTECTION',
@@ -278,7 +258,6 @@ export const Messages = {
     ACCOUNT,
     APP,
     BACKGROUND,
-    BLANK,
     CONTENT,
     DAPP,
     EXCHANGE,
@@ -333,55 +312,8 @@ export interface RequestSignatures {
     [Messages.APP.SET_USER_SETTINGS]: [RequestUserSettings, UserSettings];
     [Messages.APP.UPDATE_POPUP_TAB]: [RequestUpdatePopupTab, void];
     [Messages.APP.REJECT_UNCONFIRMED_REQUESTS]: [undefined, void];
+    [Messages.APP.SET_USER_ONLINE]: [RequestSetUserOnline, void];
     [Messages.BACKGROUND.ACTION]: [];
-    [Messages.BLANK.DEPOSIT]: [RequestBlankDeposit, string];
-    [Messages.BLANK.DEPOSIT_ALLOWANCE]: [RequestDepositAllowance, boolean];
-    [Messages.BLANK.CALCULATE_DEPOSIT_TRANSACTION_GAS_LIMIT]: [
-        RequestCalculateDepositTransactionGasLimit,
-        TransactionGasEstimation
-    ];
-    [Messages.BLANK.WITHDRAW]: [RequestBlankWithdraw, string];
-    [Messages.BLANK.COMPLIANCE]: [RequestBlankCompliance, ComplianceInfo];
-    [Messages.BLANK.PAIR_DEPOSITS_COUNT]: [
-        RequestBlankPairDepositsCount,
-        number
-    ];
-    [Messages.BLANK.CURRENCY_DEPOSITS_COUNT]: [
-        RequestBlankCurrencyDepositsCount,
-        ResponseBlankCurrencyDepositsCount
-    ];
-    [Messages.BLANK.GET_UNSPENT_DEPOSITS]: [undefined, IBlankDeposit[]];
-    [Messages.BLANK.GET_DEPOSIT_NOTE_STRING]: [
-        RequestBlankGetDepositNoteString,
-        string
-    ];
-    [Messages.BLANK.UPDATE_SPENT_NOTES]: [undefined, void];
-    [Messages.BLANK.UPDATE_DEPOSITS_TREE]: [
-        RequestBlankDepositsTreeUpdate,
-        void
-    ];
-    [Messages.BLANK.GET_WITHDRAWAL_FEES]: [
-        RequestBlankWithdrawalFees,
-        ResponseBlankWithdrawalFees
-    ];
-    [Messages.BLANK.FORCE_DEPOSITS_IMPORT]: [undefined, void];
-    [Messages.BLANK.HAS_DEPOSITED_FROM_ADDRESS]: [
-        RequestBlankHasDepositedFromAddress,
-        boolean
-    ];
-    [Messages.BLANK.GET_INSTANCE_ALLOWANCE]: [
-        RequestBlankGetInstanceTokenAllowance,
-        BigNumber
-    ];
-    [Messages.BLANK.GET_LATEST_DEPOSIT_DATE]: [
-        RequestBlankGetLatestDepositDate,
-        Date
-    ];
-    [Messages.BLANK.GET_ANONIMITY_SET]: [RequestGetAnonimitySet, number];
-    [Messages.BLANK.GET_SUBSEQUENT_DEPOSITS_COUNT]: [
-        RequestGetSubsequentDepositsCount,
-        number | undefined
-    ];
     [Messages.DAPP.CONFIRM_REQUEST]: [RequestConfirmDappRequest, void];
     [Messages.DAPP.ATTEMPT_REJECT_REQUEST]: [RequestRejectDappRequest, void];
     [Messages.EXCHANGE.CHECK_ALLOWANCE]: [
@@ -394,6 +326,7 @@ export interface RequestSignatures {
     [Messages.EXCHANGE.EXECUTE]: [RequestExecuteExchange, string];
     [Messages.EXTERNAL.REQUEST]: [RequestExternalRequest, unknown];
     [Messages.EXTERNAL.SETUP_PROVIDER]: [undefined, ProviderSetupData];
+    [Messages.EXTERNAL.SW_REINIT]: [void, void];
     [Messages.EXTERNAL.SET_ICON]: [RequestSetIcon, boolean];
     [Messages.EXTERNAL.GET_PROVIDER_CONFIG]: [
         undefined,
@@ -528,7 +461,7 @@ export interface RequestSignatures {
     [Messages.TOKEN.ADD_CUSTOM_TOKENS]: [RequestAddCustomTokens, void | void[]];
     [Messages.TOKEN.SEND_TOKEN]: [RequestSendToken, string];
     [Messages.TOKEN.POPULATE_TOKEN_DATA]: [RequestPopulateTokenData, Token];
-    [Messages.TOKEN.SEARCH_TOKEN]: [RequestSearchToken, Token[]];
+    [Messages.TOKEN.SEARCH_TOKEN]: [RequestSearchToken, SearchTokensResponse];
     [Messages.EXTERNAL.EVENT_SUBSCRIPTION]: [
         undefined,
         boolean,
@@ -559,11 +492,6 @@ export interface RequestSignatures {
     [Messages.WALLET.TOGGLE_DEFAULT_BROWSER_WALLET]: [
         RequestToggleDefaultBrowserWallet,
         void
-    ];
-
-    [Messages.WALLET.GENERATE_ANTI_PHISHING_IMAGE]: [
-        RequestAntiPhishingImage,
-        string
     ];
 
     [Messages.WALLET.UPDATE_ANTI_PHISHING_IMAGE]: [
@@ -609,6 +537,10 @@ export type MessageTypes = keyof RequestSignatures;
 export type RequestTypes = {
     [MessageType in keyof RequestSignatures]: RequestSignatures[MessageType][0];
 };
+
+export interface RequestSetUserOnline {
+    networkStatus: boolean;
+}
 
 export interface RequestAccountCreate {
     name: string;
@@ -737,85 +669,6 @@ export interface RequestSetIcon {
     iconURL: string;
 }
 
-export interface RequestBlankDeposit {
-    pair: CurrencyAmountPair;
-    feeData: TransactionFeeData;
-    customNonce?: number;
-}
-
-export interface RequestDepositAllowance {
-    allowance: BigNumber;
-    customNonce?: number;
-    feeData: TransactionFeeData;
-    pair: CurrencyAmountPair;
-}
-
-export interface RequestCalculateDepositTransactionGasLimit {
-    currencyAmountPair: CurrencyAmountPair;
-}
-
-export interface RequestBlankWithdraw {
-    pair: CurrencyAmountPair;
-    accountAddressOrIndex?: string | number;
-}
-
-export interface RequestBlankGetDepositNoteString {
-    id: string;
-}
-
-export interface RequestBlankCompliance {
-    id: string;
-}
-
-export interface RequestBlankPairDepositsCount {
-    pair: CurrencyAmountPair;
-}
-
-export interface RequestBlankDepositsTreeUpdate {
-    pair: CurrencyAmountPair;
-}
-
-export interface RequestBlankCurrencyDepositsCount {
-    currency: KnownCurrencies;
-}
-
-export type ResponseBlankCurrencyDepositsCount = {
-    pair: CurrencyAmountPair;
-    count: number;
-}[];
-
-export interface RequestBlankWithdrawalFees {
-    pair: CurrencyAmountPair;
-}
-
-export interface RequestBlankGetInstanceTokenAllowance {
-    pair: CurrencyAmountPair;
-}
-
-export interface RequestBlankGetLatestDepositDate {
-    pair: CurrencyAmountPair;
-}
-
-export interface RequestGetSubsequentDepositsCount {
-    pair: CurrencyAmountPair;
-}
-
-export interface RequestGetAnonimitySet {
-    pair: CurrencyAmountPair;
-}
-
-export interface ResponseBlankWithdrawalFees {
-    gasFee: BigNumber;
-    relayerFee: BigNumber;
-    totalFee: BigNumber;
-    total: BigNumber;
-}
-
-export interface RequestBlankHasDepositedFromAddress {
-    pair?: CurrencyAmountPair;
-    withdrawAddress: string;
-}
-
 export interface RequestNetworkChange {
     networkName: string;
 }
@@ -927,6 +780,7 @@ export interface RequestSendEther {
 
 export interface RequestWalletCreate {
     password: string;
+    antiPhishingImage: string;
 }
 
 export interface RequestSeedPhrase {
@@ -939,6 +793,7 @@ export interface RequestCompleteSetup {
 export interface RequestWalletImport {
     password: string;
     seedPhrase: string;
+    antiPhishingImage: string;
     reImport?: boolean;
     defaultNetwork?: string;
 }
@@ -946,6 +801,7 @@ export interface RequestWalletImport {
 export interface RequestWalletReset {
     password: string;
     seedPhrase: string;
+    antiPhishingImage: string;
 }
 
 export interface RequestWalletGetHDPath {
@@ -1028,6 +884,11 @@ export interface RequestApproveSendTransaction {
 export interface RequestSendTransactionResult {
     transactionId: string;
 }
+export interface RequestCalculateApproveTransactionGasLimit {
+    tokenAddress: string;
+    spender: string;
+    amount: BigNumber | 'UNLIMITED';
+}
 
 export interface RequestCalculateSendTransactionGasLimit {
     address: string;
@@ -1051,12 +912,6 @@ export interface RequestGetCancelSpeedUpGasPriceTransaction {
     transactionId: string;
 }
 
-export interface RequestCalculateApproveTransactionGasLimit {
-    tokenAddress: string;
-    spender: string;
-    amount: BigNumber | 'UNLIMITED';
-}
-
 export interface RequestPopulateTokenData {
     tokenAddress: string;
 }
@@ -1066,9 +921,12 @@ export interface RequestSearchToken {
     exact?: boolean;
     accountAddress?: string;
     chainId?: number;
+    manualAddToken?: boolean;
 }
 
-export interface RequestAntiPhishingImage {}
+export interface RequestAntiPhishingImage {
+    antiPhishingImage: string;
+}
 
 export interface RequestUpdateAntiPhishingImage {
     antiPhishingImage: string;

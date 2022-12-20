@@ -4,7 +4,7 @@ import { Duration, MINUTE, SECOND } from './time';
 import {
     DEFAULT_TORNADO_CONFIRMATION,
     DERIVATIONS_FORWARD,
-} from '../../controllers/blank-deposit/types';
+} from '../../controllers/privacy/types';
 
 export type TornadoIntervals = {
     depositConfirmations: number;
@@ -94,7 +94,7 @@ export interface ActionsTimeInterval {
 
 // If the interval is < than blockNumberPull the action will happend 'every new block'.
 export const ACTIONS_TIME_INTERVALS_DEFAULT_VALUES = {
-    blockNumberPull: 10 * SECOND,
+    blockNumberPull: 15 * SECOND,
     balanceFetch: 30 * SECOND,
     gasPricesUpdate: 8 * SECOND,
     exchangeRatesFetch: 1 * MINUTE,
@@ -106,7 +106,7 @@ export const ACTIONS_TIME_INTERVALS_DEFAULT_VALUES = {
 export const FAST_TIME_INTERVALS_DEFAULT_VALUES = {
     ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     ...{
-        blockNumberPull: 4 * SECOND,
+        blockNumberPull: 6 * SECOND,
         balanceFetch: 20 * SECOND,
         gasPricesUpdate: 3 * SECOND,
         transactionsStatusesUpdate: 3 * SECOND,
@@ -118,7 +118,7 @@ export const FAST_TIME_INTERVALS_DEFAULT_VALUES = {
 export const TESTNET_TIME_INTERVALS_DEFAULT_VALUES = {
     ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     ...{
-        blockNumberPull: 20 * SECOND,
+        blockNumberPull: 30 * SECOND,
         balanceFetch: 1 * MINUTE,
         gasPricesUpdate: 19 * SECOND,
         transactionsStatusesUpdate: 19 * SECOND,
@@ -130,7 +130,7 @@ export const TESTNET_TIME_INTERVALS_DEFAULT_VALUES = {
 export const SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES = {
     ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     ...{
-        blockNumberPull: 30 * SECOND,
+        blockNumberPull: 40 * SECOND,
         balanceFetch: 1 * MINUTE,
         gasPricesUpdate: 29 * SECOND,
         transactionsStatusesUpdate: 29 * SECOND,
@@ -158,7 +158,7 @@ export const INITIAL_NETWORKS: Networks = {
         enable: true,
         test: false,
         order: 1,
-        features: [FEATURES.SENDS, FEATURES.TORNADO],
+        features: [FEATURES.SENDS],
         ens: true,
         showGasLevels: true,
         rpcUrls: [`https://mainnet-node.blockwallet.io`],
@@ -252,7 +252,7 @@ export const INITIAL_NETWORKS: Networks = {
         enable: true,
         test: false,
         order: 4,
-        features: [FEATURES.SENDS, FEATURES.TORNADO],
+        features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
         rpcUrls: ['https://bsc-node.blockwallet.io'],
@@ -288,7 +288,7 @@ export const INITIAL_NETWORKS: Networks = {
         enable: true,
         test: false,
         order: 5,
-        features: [FEATURES.SENDS, FEATURES.TORNADO],
+        features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
         rpcUrls: [`https://polygon-node.blockwallet.io`],
@@ -404,7 +404,7 @@ export const INITIAL_NETWORKS: Networks = {
     },
     RSK: {
         name: 'rsk',
-        desc: 'RSK Mainnet',
+        desc: 'Rootstock',
         chainId: 30,
         networkVersion: '30',
         nativeCurrency: {
@@ -446,7 +446,7 @@ export const INITIAL_NETWORKS: Networks = {
         enable: true,
         test: true,
         order: 1,
-        features: [FEATURES.SENDS, FEATURES.TORNADO],
+        features: [FEATURES.SENDS],
         ens: true,
         showGasLevels: true,
         rpcUrls: [`https://goerli-node.blockwallet.io`],
@@ -613,7 +613,7 @@ export const INITIAL_NETWORKS: Networks = {
     },
     RSK_TESTNET: {
         name: 'rsk_testnet',
-        desc: 'RSK Testnet',
+        desc: 'Rootstock Testnet',
         chainId: 31,
         networkVersion: '31',
         nativeCurrency: {

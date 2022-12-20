@@ -7,7 +7,7 @@ import {
     spenderParamNotPresentError,
     tokenAddressParamNotPresentError,
 } from '../TokenController';
-import { Token } from '../Token';
+import { FetchTokenResponse, Token } from '../Token';
 import { Interface } from 'ethers/lib/utils';
 import log from 'loglevel';
 
@@ -27,15 +27,19 @@ export class TokenTransactionController {
      * @param {string} tokenAddress
      * @returns ethers.Contract
      */
-    protected getContract(tokenAddress: string): ethers.Contract {
+    protected getContract(
+        tokenAddress: string,
+        provider: ethers.providers.StaticJsonRpcProvider = this._networkController.getProvider()
+    ): ethers.Contract {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
         }
-        return new ethers.Contract(
-            tokenAddress,
-            erc20Abi,
-            this._networkController.getProvider()
-        );
+        if (!provider) {
+            throw new Error(
+                'The provider is mandatory to execute a contract call'
+            );
+        }
+        return new ethers.Contract(tokenAddress, erc20Abi, provider);
     }
 }
 
@@ -53,7 +57,8 @@ export class TokenOperationsController extends TokenTransactionController {
      */
     public async balanceOf(
         tokenAddress: string,
-        account: string
+        account: string,
+        provider: ethers.providers.StaticJsonRpcProvider = this._networkController.getProvider()
     ): Promise<BigNumber> {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
@@ -61,7 +66,7 @@ export class TokenOperationsController extends TokenTransactionController {
         if (!account) {
             throw accountParamNotPresentError;
         }
-        const contract = this.getContract(tokenAddress);
+        const contract = this.getContract(tokenAddress, provider);
         return contract.balanceOf(account);
     }
 
@@ -89,49 +94,38 @@ export class TokenOperationsController extends TokenTransactionController {
         return contract.allowance(owner, spender);
     }
     /**
-     * Search the token in the blockchain
+     * Searchs the token in the blockchain
      *
      * @param {string} tokenAddress erc20 token address
+     * @param {number} chainId network to search the token in
      */
-    public async populateTokenData(tokenAddress: string): Promise<Token> {
+    public async fetchTokenDataFromChain(
+        tokenAddress: string,
+        chainId: number = this._networkController.network.chainId
+    ): Promise<FetchTokenResponse> {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
         }
 
+        const networkProvider =
+            this._networkController.getProviderForChainId(chainId);
+
         let name = '';
         let symbol = '';
-        let decimals = 0;
+        let decimals = 18;
+        let fetchFailed = false;
 
         try {
-            const contract = this.getContract(tokenAddress);
-
-            const namePromise = contract.name();
-            const symbolPromise = contract.symbol();
-            const decimalsPromise = contract.decimals();
-
-            const results = await Promise.allSettled([
-                namePromise,
-                symbolPromise,
-                decimalsPromise,
-            ]);
-
-            const nameResult = results[0];
-            const symbolResult = results[1];
-            const decimalsResult = results[2];
-
-            if (nameResult.status === 'fulfilled') {
-                name = nameResult.value as string;
-            }
-            if (symbolResult.status === 'fulfilled') {
-                symbol = symbolResult.value as string;
-            }
-            if (decimalsResult.status === 'fulfilled') {
-                decimals = parseFloat(decimalsResult.value as string);
-            }
+            const contract = this.getContract(tokenAddress, networkProvider);
+            name = await contract.name();
+            symbol = await contract.symbol();
+            decimals = parseFloat((await contract.decimals()) as string);
         } catch (error) {
             log.error(error.message || error);
+            fetchFailed = true;
         }
 
-        return new Token(tokenAddress, name, symbol, decimals);
+        const token = new Token(tokenAddress, name, symbol, decimals);
+        return { token, fetchFailed };
     }
 }

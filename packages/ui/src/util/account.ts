@@ -46,7 +46,7 @@ export const isInternalAccount = (accountType: AccountType): boolean => {
 }
 
 export const isActiveAccount = (accountInfo: AccountInfo): boolean => {
-    return accountInfo.status.toString() === AccountStatus.ACTIVE
+    return accountInfo.status?.toString() === AccountStatus.ACTIVE
 }
 
 /**
@@ -70,8 +70,7 @@ export const accountNameExists = (
     accounts: Accounts,
     name: string
 ): boolean => {
-    const normalizeAccountName = (name: string) =>
-        name.toLowerCase().replace(/ /g, "")
+    const normalizeAccountName = (name: string) => name.replace(/ /g, "")
     return Object.values(accounts || {}).some(
         (a) => normalizeAccountName(a.name) === normalizeAccountName(name)
     )

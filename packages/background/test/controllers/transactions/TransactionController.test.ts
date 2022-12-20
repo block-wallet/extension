@@ -29,7 +29,6 @@ import BlockUpdatesController from '@block-wallet/background/controllers/block-u
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TokenController } from '@block-wallet/background/controllers/erc-20/TokenController';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
-import { reject } from 'lodash';
 
 // TODO: Test gas override
 
@@ -334,8 +333,8 @@ describe('Transactions Controller', () => {
 
         it('Should estimate gas cost of a send in a custom network', async () => {
             sinon
-                .stub(networkController, 'isChainIdCustomNetwork')
-                .returns(true);
+                .stub(networkController, 'hasChainFixedGasCost')
+                .returns(false);
 
             sinon.stub(networkController, 'getProvider').returns({
                 ...providerMock,
@@ -416,6 +415,7 @@ describe('Transactions Controller', () => {
                 maxFeePerGas: BigNumber.from('200000000000'),
                 maxPriorityFeePerGas: BigNumber.from('1000000000'),
                 gasPrice: BigNumber.from('100000000000'),
+                lastBaseFeePerGas: null,
             });
 
             sinon.stub(gasPricesController, 'store').get(() => ({
@@ -1050,6 +1050,9 @@ describe('Transactions Controller', () => {
                     gasLimit: BigNumber.from(SEND_GAS_COST),
                 })
             );
+            sinon
+                .stub(networkController, 'getEIP1559Compatibility')
+                .returns(Promise.resolve(true));
 
             let {
                 transactionMeta: { transactionParams },
@@ -1081,6 +1084,9 @@ describe('Transactions Controller', () => {
                     gasLimit: BigNumber.from(SEND_GAS_COST),
                 })
             );
+            sinon
+                .stub(networkController, 'getEIP1559Compatibility')
+                .returns(Promise.resolve(true));
 
             mockedProvider.restore();
             mockedProvider = sinon
@@ -1321,10 +1327,10 @@ describe('Transactions Controller', () => {
             expect(transactions.length).to.be.equal(2);
             expect(
                 transactions[1].transactionParams.maxFeePerGas?.toString()
-            ).to.be.equal('220000000000');
+            ).to.be.equal('300000000001');
             expect(
                 transactions[1].transactionParams.maxPriorityFeePerGas?.toString()
-            ).to.be.equal('1100000000');
+            ).to.be.equal('1500000001');
         });
 
         it('Should speed up a legacy pre EIP-1559 transaction correctly', async () => {
@@ -1357,7 +1363,7 @@ describe('Transactions Controller', () => {
             expect(transactions.length).to.be.equal(2);
             expect(
                 transactions[1].transactionParams.gasPrice?.toString()
-            ).to.be.equal('1100000000');
+            ).to.be.equal('1500000001');
         });
 
         it('Should keep the transaction status as submitted while pending confirmation', async () => {
@@ -1640,6 +1646,9 @@ describe('Transactions Controller', () => {
                     gasLimit: BigNumber.from(SEND_GAS_COST),
                 })
             );
+            sinon
+                .stub(networkController, 'getEIP1559Compatibility')
+                .returns(Promise.resolve(true));
 
             transactionController.config = {
                 txHistoryLimit: 1,

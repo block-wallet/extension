@@ -41,7 +41,7 @@ export default {
             etherscanApiUrl: 'https://api.snowtrace.io/',
             actionsTimeIntervals: ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
             nativelySupported: true,
-        };
+        } as any;
 
         updatedNetworks.GOERLI = {
             ...updatedNetworks.GOERLI,

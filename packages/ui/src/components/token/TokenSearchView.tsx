@@ -146,7 +146,6 @@ const SearchedTokenView = ({
                                         clickable={false}
                                         active={true}
                                         hoverable={true}
-                                        textSize="sm"
                                     />
                                 </div>
                             )
@@ -194,7 +193,6 @@ const SearchedTokenView = ({
                                                         clickable={false}
                                                         active={false}
                                                         hoverable={true}
-                                                        textSize="sm"
                                                     />
                                                 </div>
                                             )}

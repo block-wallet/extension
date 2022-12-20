@@ -14,6 +14,7 @@ import { toChecksumAddress } from 'ethereumjs-util';
 import { getNetworkControllerInstance } from '../../mocks/mock-network-instance';
 import { PreferencesController } from '@block-wallet/background/controllers/PreferencesController';
 import { mockPreferencesController } from '../../mocks/mock-preferences';
+import { isNativeTokenAddress } from '@block-wallet/background/utils/token';
 
 describe('Token controller implementation', function () {
     let tokenController: TokenController;
@@ -327,7 +328,7 @@ describe('Token controller implementation', function () {
                     });
                 })
             );
-            const dai_1 = await tokenController.search('DAI');
+            const { tokens: dai_1 } = await tokenController.search('DAI');
             expect(dai_1).to.be.not.null;
             expect(dai_1).to.be.not.undefined;
             expect(dai_1.length).to.be.greaterThan(0);
@@ -335,14 +336,14 @@ describe('Token controller implementation', function () {
             expect(addresses.has('0x6B175474E89094C44Da98b954EedeAC495271d0F'))
                 .to.be.true;
 
-            const dai_2 = await tokenController.search('Dai Stablecoin');
+            const { tokens: dai_2 } = await tokenController.search('Dai Stablecoin');
             expect(dai_2[0]).to.be.not.null;
             expect(dai_2[0]).to.be.not.undefined;
             expect(dai_2[0].address).equal(
                 '0x6B175474E89094C44Da98b954EedeAC495271d0F'
             );
 
-            const dai_3 = await tokenController.search(
+            const { tokens: dai_3 } = await tokenController.search(
                 '0x6B175474E89094C44Da98b954EedeAC495271d0F'
             );
             expect(dai_3).to.be.not.null;
@@ -433,32 +434,6 @@ describe('Token controller implementation', function () {
                     await tokenController.getDeletedUserTokenContractAddresses()
                 ).includes(token.address)
             ).equal(false);
-        });
-    });
-
-    describe('isNativeToken', function () {
-        it('Should fail - address not present', async () => {
-            try {
-                tokenController.isNativeToken('');
-            } catch (e: any) {
-                expect(e).equal(tokenAddressParamNotPresentError);
-            }
-        });
-        it('false', () => {
-            expect(
-                tokenController.isNativeToken(
-                    '0x6B175474E89094C44Da98b954EedeAC495271d0F'
-                )
-            ).to.be.false;
-            expect(tokenController.isNativeToken('wrong address')).to.be.false;
-        });
-        it('true', () => {
-            expect(
-                tokenController.isNativeToken(
-                    '0x0000000000000000000000000000000000000000'
-                )
-            ).to.be.true;
-            expect(tokenController.isNativeToken('0x0')).to.be.true;
         });
     });
 });

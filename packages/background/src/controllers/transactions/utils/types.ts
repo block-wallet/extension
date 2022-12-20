@@ -1,11 +1,18 @@
+import {
+    BridgeImplementation,
+    BridgeStatus,
+    BridgeSubstatus,
+    IBridgeFeeCost,
+} from '@block-wallet/background/utils/bridgeApi';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { BigNumber, Transaction } from 'ethers';
-import { CurrencyAmountPair } from '../../blank-deposit/types';
-import { ExchangeParams } from '../../ExchangeController';
+import { CurrencyAmountPair } from '../../privacy/types';
+import { IToken } from '../../erc-20/Token';
+import { ExchangeParams } from '../../SwapController';
 import { ContractMethodSignature } from '../ContractSignatureParser';
 
 /**
- * TransactionParams
+ * TransactionParams../../privacy/types
  * @link https://github.com/ethers-io/ethers.js/issues/321
  * @link https://github.com/ethers-io/ethers.js/issues/299
  */
@@ -88,6 +95,34 @@ export interface TransactionMeta {
     };
     originId?: string;
     exchangeParams?: ExchangeParams;
+    bridgeParams?: BridgeTransactionParams;
+}
+
+export interface BridgeTransactionParams {
+    bridgeImplementation?: BridgeImplementation;
+    fromToken: IToken;
+    toToken: IToken;
+    fromTokenAmount: string;
+    toTokenAmount: string;
+    fromChainId: number;
+    toChainId: number;
+    tool: string; //tool used to perform the bridging.
+    slippage: number;
+    estimatedDurationInSeconds: number;
+    receivingTxLink?: string;
+    receivingTxHash?: string;
+    sendingTxHash?: string;
+    sendingTxLink?: string;
+    role: 'SENDING' | 'RECEIVING';
+    substatus?: BridgeSubstatus;
+    status?: BridgeStatus;
+    feeCosts?: IBridgeFeeCost[];
+    //effective token involved on the bridge process
+    effectiveToToken?: IToken;
+    effectiveToTokenAmount?: string;
+    effectiveToChainId?: number;
+    startTime?: number;
+    endTime?: number;
 }
 
 export interface uiTransactionParams extends TransactionParams {
@@ -141,6 +176,13 @@ export enum TransactionCategories {
     TOKEN_METHOD_INCOMING_TRANSFER = 'incoming_transfer',
     TOKEN_METHOD_TRANSFER_FROM = 'transferfrom',
     EXCHANGE = 'exchange',
+    BRIDGE = 'bridge',
+    INCOMING_BRIDGE = 'incoming_bridge',
+    INCOMING_BRIDGE_REFUND = 'incoming_bridge_refund',
+    // Category that temporarely represents receiving transactions in a bridge operation:
+    // - These transactions are placeholders for the real transaction that will replace them.
+    // - These transactions are not persisted in the state, they are only meant to be shown in the Activity list.
+    INCOMING_BRIDGE_PLACEHOLDER = 'incoming_bridge_placeholder',
 }
 
 /**
@@ -172,10 +214,11 @@ export enum TransactionType {
 }
 
 /**
- * Transaction params that can be setted by the user using the Advance Settings popup.
+ * Transaction params that can be set by the user
  */
 export interface TransactionAdvancedData {
     customAllowance?: string;
     customNonce?: number;
     flashbots?: boolean;
+    slippage?: number;
 }

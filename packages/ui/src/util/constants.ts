@@ -1,8 +1,6 @@
 import { BigNumber } from "ethers"
 
 export const SEND_GAS_COST = BigNumber.from("0x5208") // Hex for 21000, cost of a simple send.
-export const DEPOSIT_GAS_COST = BigNumber.from("0x124f80") // Hex for 12e5, cost of deposit.
-export const WITHDRAW_GAS_COST = BigNumber.from("0x86470") // Hex for 55e4, cost of a withdrawal.
 export const APPROVE_GAS_COST = BigNumber.from("0xcb34") // Hex for 52020, default cost of approve.
 
 /**
@@ -31,6 +29,11 @@ export const SIGN_TRANSACTION_TIMEOUT = 180000
 export const BASE_SWAP_FEE = 0.5
 
 /**
+ * Default bridge fee for users without fee discount
+ */
+export const BASE_BRIDGE_FEE = 0.005
+
+/**
  * Time ellapsed before refreshing the swap quote
  */
 export const SWAP_QUOTE_REFRESH_TIMEOUT = 1000 * 15
@@ -40,6 +43,8 @@ export const LINKS = {
     GITHUB: "https://github.com/block-wallet/",
     TWITTER: "https://twitter.com/BlockWallet",
     WEBSITE_BUG_REPORT: "https://blockwallet.io/bug-report.html",
+    GITHUB_BUG_REPORT:
+        "https://github.com/block-wallet/extension/issues/new?assignees=&labels=&template=bug_report.md&title=",
     ARTICLES: {
         HD_PATH:
             "https://help.blockwallet.io/hc/en-us/articles/6670471581841-What-is-an-HD-Path-",
@@ -47,5 +52,9 @@ export const LINKS = {
             "https://help.blockwallet.io/hc/en-us/articles/6815376575249",
         CUSTOM_NETWORK_RISKS:
             "https://help.blockwallet.io/hc/en-us/articles/7786071253649-How-to-Add-a-Custom-Network-RPC",
+        MALICIOUS_DAPPS:
+            "https://help.blockwallet.io/hc/en-us/articles/10374731466769",
+        BRIDGES: "https://help.blockwallet.io/hc/en-us/articles/10669678195473",
+        CHANGELOG: "https://bit.ly/bw-release"
     },
 }

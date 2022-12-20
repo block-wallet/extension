@@ -53,8 +53,9 @@ import NetworkDetailsPage from "../routes/networks/NetworkDetailsPage"
 import SearchNetworkPage from "../routes/networks/SearchNetworkPage"
 import SuggestedAddNetwork from "../routes/networks/SuggestedAddNetwork"
 import ManuallyAddNetwork from "../routes/networks/ManuallyAddNetwork"
-import PrivacySettingsPage from "../routes/settings/PrivacySettingsPage"
-import DepositAndWithdrawHistory from "../routes/deposit/DepositAndWithdrawHistory"
+import SetupBridgePage from "../routes/bridge/BridgeSetupPage"
+import BridgeConfirmPage from "../routes/bridge/BridgeConfirmPage"
+import BridgeAfterAddTokenPage from "../routes/bridge/BridgeAfterAddTokenPage"
 
 export const ROUTES_DEFINITION = [
     /* Root */
@@ -115,6 +116,14 @@ export const ROUTES_DEFINITION = [
         exact: true,
         component: SwapAfterAddTokenPage,
     },
+    /* Bridge */
+    { path: "/bridge", exact: true, component: SetupBridgePage },
+    { path: "/bridge/confirm", exact: true, component: BridgeConfirmPage },
+    {
+        path: "/bridge/afterAddToken",
+        exact: true,
+        component: BridgeAfterAddTokenPage,
+    },
 
     /* Settings */
     { path: "/settings", exact: true, component: SettingsPage },
@@ -156,13 +165,6 @@ export const ROUTES_DEFINITION = [
     },
 
     { path: "/settings/tokens/add", exact: true, component: AddTokensPage },
-    { path: "/settings/privacy", exact: true, component: PrivacySettingsPage },
-    {
-        path: "/settings/privacy/depositWithdrawalsHistory",
-        exact: true,
-        component: DepositAndWithdrawHistory,
-    },
-
     {
         path: "/settings/tokens/add/confirm",
         exact: true,

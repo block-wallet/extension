@@ -58,10 +58,8 @@ export interface ApproveNFTProps {
 }
 
 const ApproveNFTPage = () => {
-    const {
-        transaction: nextTransaction,
-        transactionCount,
-    } = useNonSubmittedExternalTransaction()
+    const { transaction: nextTransaction, transactionCount } =
+        useNonSubmittedExternalTransaction()
     const route = useNextRequestRoute()
     const [currentTx, setCurrentTx] = useDebouncedState<TransactionMeta>(
         nextTransaction,
@@ -102,11 +100,8 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     const selectedAccountBalance = useSelectedAccountBalance()
     const { nativeToken } = useTokensList()
 
-    const {
-        isDeviceUnlinked,
-        checkDeviceIsLinked,
-        resetDeviceLinkStatus,
-    } = useCheckAccountDeviceLinked()
+    const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
+        useCheckAccountDeviceLinked()
 
     // Get tx
     const { transaction: txById, params } = useTransactionById(transactionId)
@@ -131,10 +126,8 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     const [isLoading, setIsLoading] = useState(transaction.loadingGasValues)
     const [isNameLoading, setIsNameLoading] = useState(true)
 
-    const [
-        transactionAdvancedData,
-        setTransactionAdvancedData,
-    ] = useState<TransactionAdvancedData>({})
+    const [transactionAdvancedData, setTransactionAdvancedData] =
+        useState<TransactionAdvancedData>({})
 
     const [hasBalance, setHasBalance] = useState(true)
     const [gasEstimationFailed, setGasEstimationFailed] = useState(false)
@@ -171,33 +164,26 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     ).toString()
     const networkName = capitalize(desc)
 
-    const {
-        status,
-        isOpen,
-        dispatch,
-        texts,
-        titles,
-        closeDialog,
-        gifs,
-    } = useTransactionWaitingDialog(
-        transaction
-            ? {
-                  id: transactionId,
-                  status: transaction.status,
-                  error: transaction.error as Error,
-                  epochTime: transaction?.approveTime,
-              }
-            : undefined,
-        HardwareWalletOpTypes.APPROVE_ALLOWANCE,
-        account.accountType,
-        {
-            reject: useCallback(() => {
-                if (transactionId) {
-                    rejectTransaction(transactionId)
-                }
-            }, [transactionId]),
-        }
-    )
+    const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
+        useTransactionWaitingDialog(
+            transaction
+                ? {
+                      id: transactionId,
+                      status: transaction.status,
+                      error: transaction.error as Error,
+                      epochTime: transaction?.approveTime,
+                  }
+                : undefined,
+            HardwareWalletOpTypes.APPROVE_ALLOWANCE,
+            account.accountType,
+            {
+                reject: useCallback(() => {
+                    if (transactionId) {
+                        rejectTransaction(transactionId)
+                    }
+                }, [transactionId]),
+            }
+        )
 
     // To prevent calculations on every render, force dependency array to only check state value that impacts
     useEffect(() => {
@@ -223,8 +209,8 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     useEffect(
         () => {
             searchTokenInAssetsList(tokenAddress)
-                .then((token) => {
-                    setTokenName(token[0].symbol)
+                .then((searchTokensResponse) => {
+                    setTokenName(searchTokensResponse.tokens[0].symbol)
                 })
                 .catch(() => {
                     throw new Error("Failed to fetch token data")
@@ -442,7 +428,8 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                             feeData: {
                                 gasLimit: defaultGas.gasLimit,
                                 maxFeePerGas: defaultGas.maxFeePerGas!,
-                                maxPriorityFeePerGas: defaultGas.maxPriorityFeePerGas!,
+                                maxPriorityFeePerGas:
+                                    defaultGas.maxPriorityFeePerGas!,
                             },
                         }}
                         setGas={(gasFees) => {
@@ -456,18 +443,14 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                     />
                 )}
                 <AdvancedSettings
-                    config={{
-                        showCustomNonce: true,
-                        showFlashbots: false,
-                        address: checksumFromAddress,
-                    }}
-                    data={{
-                        flashbots: false,
-                    }}
-                    setData={(data) => {
+                    address={checksumFromAddress}
+                    advancedSettings={transactionAdvancedData}
+                    setAdvancedSettings={(
+                        newSettings: TransactionAdvancedData
+                    ) => {
                         setTransactionAdvancedData({
-                            customNonce: data.customNonce,
-                            flashbots: data.flashbots,
+                            customNonce: newSettings.customNonce,
+                            flashbots: newSettings.flashbots,
                         })
                     }}
                 />

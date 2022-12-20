@@ -1,6 +1,7 @@
-import { typedSignatureHash } from 'eth-sig-util';
+import { typedSignatureHash } from '@metamask/eth-sig-util';
 import {
     bufferToHex,
+    isHexPrefixed,
     isValidAddress,
     stripHexPrefix,
     toChecksumAddress,
@@ -31,7 +32,13 @@ export const validateSignature = <TSignatureType extends SignatureMethods>(
     params: RawSignatureData[TSignatureType],
     chainId: string
 ): NormalizedSignatureParams<TSignatureType> => {
-    const nParams = normalizeParams(method, params);
+    const parsedParams = normalizeParams(method, params);
+    const nParams = {
+        ...parsedParams,
+        rawData: isHexPrefixed(parsedParams.data as string)
+            ? hexToString(parsedParams.data as string)
+            : parsedParams.data,
+    };
 
     // Validate
     if (!nParams.data) {
@@ -89,8 +96,6 @@ export const validateSignature = <TSignatureType extends SignatureMethods>(
         if (typeof nParams.data === 'string') {
             const typedData = JSON.parse(nParams.data);
             nParams.data = sanitizeTypedData(typedData);
-
-
         }
     }
 
@@ -180,38 +185,36 @@ export const validateTypedData = <
  * @returns Hex string
  */
 export const normalizeMessageData = (data: string): string => {
-    if (data[0] === '0' && data[1] === 'x') {
+    if (isHexPrefixed(data)) {
         return data;
-    } else {
-        return bufferToHex(Buffer.from(data, 'utf8'));
     }
+
+    return bufferToHex(Buffer.from(data, 'utf8'));
 };
 
 /**
  * Util to rebuild a string from a hex string
  *
- * @param hex hex string
+ * @param strHex hex string
+ * @returns parsed string from hex
  */
-export const hexToString = (hex: string): string => {
-    const strippedHex = stripHexPrefix(hex);
-    let output = '';
-
-    for (let i = 0; i < strippedHex.length; i += 2) {
-        output += String.fromCharCode(parseInt(hex.substring(i, 2), 16));
+export function hexToString(strHex: string): string {
+    const hex = stripHexPrefix(strHex);
+    let str = '';
+    for (let i = 0; i < hex.length; i += 2) {
+        str += String.fromCharCode(parseInt(hex.substring(i, i + 2), 16));
     }
-
-    return output;
-};
-
+    return str;
+}
 
 const sanitizeTypedData = (typedData: TypedMessage<MessageSchema>): any => {
-
     try {
         // Check and remove null values from the typed data primary type.
-        const uint256Properties = typedData.types[typedData.primaryType].filter(t => t.type === 'uint256');
+        const uint256Properties = typedData.types[typedData.primaryType].filter(
+            (t) => t.type === 'uint256'
+        );
 
         if (!uint256Properties) return typedData;
-
 
         // Loop properties
         for (const k in uint256Properties) {
@@ -220,14 +223,10 @@ const sanitizeTypedData = (typedData: TypedMessage<MessageSchema>): any => {
             // If an uint256 property has null value, we replace it with a 0 to prevent errors.
             if (typedData.message[propertyName] === null)
                 typedData.message[propertyName] = 0;
-
         }
 
         return typedData;
     } catch (error) {
         return typedData;
     }
-
-
-}
-
+};

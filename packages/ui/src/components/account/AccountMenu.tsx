@@ -1,4 +1,5 @@
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
+import { useSelectedAddressWithChainIdChecksum } from "../../util/hooks/useSelectedAddressWithChainIdChecksum"
 import VerticalSelect from "../input/VerticalSelect"
 import PopupHeader from "../popup/PopupHeader"
 import PopupLayout from "../popup/PopupLayout"
@@ -7,6 +8,7 @@ import AccountDisplay from "./AccountDisplay"
 import exportIcon from "../../assets/images/icons/export.svg"
 import trashBinIcon from "../../assets/images/icons/trash_bin.svg"
 import openExternal from "../../assets/images/icons/open_external.svg"
+import accounts from "../../assets/images/icons/accounts.svg"
 import qrIcon from "../../assets/images/icons/qr_icon.svg"
 import sites from "../../assets/images/icons/connected_sites.svg"
 import editIcon from "../../assets/images/icons/pencil.svg"
@@ -20,6 +22,7 @@ import { openHardwareRemove } from "../../context/commActions"
 const AccountMenu = () => {
     const { availableNetworks, selectedNetwork } = useBlankState()!
     const account = useSelectedAccount()
+    const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const history = useOnMountHistory()
     const fromAccountList = history.location.state?.fromAccountList
     const explorerName = getExplorerTitle(availableNetworks, selectedNetwork)
@@ -52,7 +55,7 @@ const AccountMenu = () => {
             to: generateExplorerLink(
                 availableNetworks,
                 selectedNetwork,
-                account.address,
+                checksumAddress,
                 "address"
             ),
         },
@@ -75,6 +78,12 @@ const AccountMenu = () => {
         })
     }
 
+    options.push({
+        icon: accounts,
+        label: "My Accounts",
+        to: "/accounts",
+    })
+
     return (
         <PopupLayout
             header={
@@ -90,7 +99,7 @@ const AccountMenu = () => {
                 />
             }
         >
-            <div className="flex flex-col p-6 space-y-8 text-sm text-gray-500">
+            <div className="flex flex-col p-6 space-y-4 text-sm text-gray-500">
                 <div className="flex flex-col">
                     <AccountDisplay
                         account={account}

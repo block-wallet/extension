@@ -43,6 +43,9 @@ const persistedState = {
     },
     AppStateController: {
         idleTimeout: 5,
+        isAppUnlocked: true,
+        lastActiveTime: 0,
+        lockedByTimeout: false,
     },
     BlankDepositController: {
         pendingWithdrawals: {
@@ -137,6 +140,10 @@ const initialState: BlankAppState & {
     TransactionWatcherControllerState: {
         transactions: {},
     },
+    BridgeController: {
+        bridgeReceivingTransactions: {},
+        perndingBridgeReceivingTransactions: {},
+    },
     BlockFetchController: {
         blockFetchData: {
             1: {
@@ -165,6 +172,9 @@ const initialState: BlankAppState & {
     },
     AppStateController: {
         idleTimeout: 5,
+        isAppUnlocked: true,
+        lastActiveTime: 0,
+        lockedByTimeout: false,
     },
     KeyringController: {
         isUnlocked: false,
@@ -202,6 +212,7 @@ const initialState: BlankAppState & {
             defaultBrowserWallet: true,
             hideEstimatedGasExceedsThresholdWarning: false,
             hideDepositsExternalAccountsWarning: false,
+            hideBridgeInsufficientNativeTokenWarning: false,
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',
@@ -235,6 +246,7 @@ const initialState: BlankAppState & {
             // Default Coingecko id for ETH rates
             coingeckoPlatformId: 'ethereum',
         },
+        isRatesChangingAfterNetworkChange: false,
     },
     GasPricesController: {
         gasPriceData: {
@@ -245,16 +257,19 @@ const initialState: BlankAppState & {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     fast: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     slow: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                 },
             },
@@ -264,6 +279,11 @@ const initialState: BlankAppState & {
         userTokens: {} as any,
         deletedUserTokens: {} as any,
         cachedPopulatedTokens: {} as any,
+    },
+    RemoteConfigsController: {
+        provider: {
+            incompatibleSites: [],
+        },
     },
 };
 
@@ -289,6 +309,10 @@ describe('State reconciler', () => {
                 addressBook: {} as AddressBook,
                 recentAddresses: {} as AddressBook,
             },
+            BridgeController: {
+                bridgeReceivingTransactions: {},
+                perndingBridgeReceivingTransactions: {},
+            },
             AccountTrackerController: {
                 isAccountTrackerLoading: false,
                 accounts: {
@@ -308,6 +332,9 @@ describe('State reconciler', () => {
             },
             AppStateController: {
                 idleTimeout: 5,
+                isAppUnlocked: true,
+                lastActiveTime: 0,
+                lockedByTimeout: false,
             },
             BlankDepositController: {
                 pendingWithdrawals: {
@@ -331,6 +358,7 @@ describe('State reconciler', () => {
                     // Default Coingecko id for ETH rates
                     coingeckoCurrencyId: 'ethereum',
                 },
+                isRatesChangingAfterNetworkChange: false,
             },
             GasPricesController: {
                 gasPriceData: {
@@ -406,6 +434,7 @@ describe('State reconciler', () => {
                     defaultBrowserWallet: true,
                     hideEstimatedGasExceedsThresholdWarning: false,
                     hideDepositsExternalAccountsWarning: false,
+                    hideBridgeInsufficientNativeTokenWarning: false,
                 },
                 releaseNotesSettings: {
                     lastVersionUserSawNews: '0.1.3',
@@ -428,6 +457,11 @@ describe('State reconciler', () => {
             PermissionsController: {
                 permissions: {},
                 permissionRequests: {},
+            },
+            RemoteConfigsController: {
+                provider: {
+                    incompatibleSites: [],
+                },
             },
         });
     });

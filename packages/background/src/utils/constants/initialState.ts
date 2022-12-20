@@ -6,16 +6,9 @@ import { ValuesOf } from '../types/helpers';
 import { IObservableStore } from '../../infrastructure/stores/ObservableStore';
 
 import { AccountTrackerState } from '../../controllers/AccountTrackerController';
-import {
-    AppStateControllerMemState,
-    AppStateControllerState,
-} from '../../controllers/AppStateController';
+import { AppStateControllerState } from '../../controllers/AppStateController';
 import { OnboardingControllerState } from '../../controllers/OnboardingController';
 import { PreferencesControllerState } from '../../controllers/PreferencesController';
-import {
-    BlankDepositControllerStoreState,
-    BlankDepositControllerUIStoreState,
-} from '../../controllers/blank-deposit/BlankDepositController';
 import { ExchangeRatesControllerState } from '../../controllers/ExchangeRatesController';
 import { GasPricesControllerState } from '../../controllers/GasPricesController';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -46,6 +39,17 @@ import {
 } from '../../controllers/block-updates/BlockFetchController';
 import { SIGN_TRANSACTION_TIMEOUT } from './time';
 import { TransactionWatcherControllerState } from '@block-wallet/background/controllers/TransactionWatcherController';
+import {
+    PrivacyControllerStoreState,
+    PrivacyControllerUIStoreState,
+} from '@block-wallet/background/controllers/privacy/types';
+import {
+    BridgeControllerMemState,
+    BridgeControllerState,
+} from '@block-wallet/background/controllers/BridgeController';
+import { SwapControllerMemState } from '@block-wallet/background/controllers/SwapController';
+import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
+import CACHED_INCOMPATIBLE_SITES from '@block-wallet/remote-configs/provider/incompatible_sites.json';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -54,7 +58,7 @@ export type BlankAppState = {
     OnboardingController: OnboardingControllerState;
     PreferencesController: PreferencesControllerState;
     TransactionController: TransactionControllerState;
-    BlankDepositController: BlankDepositControllerStoreState;
+    BlankDepositController: PrivacyControllerStoreState;
     BlockUpdatesController: BlockUpdatesControllerState;
     ExchangeRatesController: ExchangeRatesControllerState;
     GasPricesController: GasPricesControllerState;
@@ -64,17 +68,18 @@ export type BlankAppState = {
     AddressBookController: AddressBookControllerMemState;
     BlockFetchController: BlockFetchControllerState;
     TransactionWatcherControllerState: TransactionWatcherControllerState;
+    BridgeController: BridgeControllerState;
+    RemoteConfigsController: RemoteConfigsControllerState;
 };
 
 export type BlankAppUIState = {
     AccountTrackerController: AccountTrackerState;
-    AppStateController: AppStateControllerMemState;
+    AppStateController: AppStateControllerState;
     KeyringController: KeyringControllerMemState;
     OnboardingController: OnboardingControllerState;
     PreferencesController: PreferencesControllerState;
     TransactionController: TransactionVolatileControllerState;
-    BlankDepositController: BlankDepositControllerUIStoreState;
-    BlockUpdatesController: BlockUpdatesControllerState;
+    BlankDepositController: PrivacyControllerUIStoreState;
     ExchangeRatesController: ExchangeRatesControllerState;
     GasPricesController: GasPricesControllerState;
     ActivityListController: IActivityListState;
@@ -82,6 +87,8 @@ export type BlankAppUIState = {
     PermissionsController: PermissionsControllerState;
     NetworkController: NetworkControllerState;
     AddressBookController: AddressBookControllerMemState;
+    BridgeController: BridgeControllerMemState;
+    SwapController: SwapControllerMemState;
     BlankProviderController: BlankProviderControllerState;
 };
 
@@ -113,6 +120,9 @@ const initialState: BlankAppState = {
     },
     AppStateController: {
         idleTimeout: 5,
+        isAppUnlocked: false,
+        lastActiveTime: 0,
+        lockedByTimeout: false,
     },
     BlockUpdatesController: { blockData: {} },
     KeyringController: {
@@ -141,6 +151,7 @@ const initialState: BlankAppState = {
             defaultBrowserWallet: true,
             hideEstimatedGasExceedsThresholdWarning: false, // Shown by default,
             hideDepositsExternalAccountsWarning: false,
+            hideBridgeInsufficientNativeTokenWarning: false, // Shown by default
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',
@@ -182,6 +193,7 @@ const initialState: BlankAppState = {
             // Default Coingecko id for ETH rates
             coingeckoPlatformId: 'ethereum',
         },
+        isRatesChangingAfterNetworkChange: false,
     },
     GasPricesController: {
         gasPriceData: {
@@ -192,16 +204,19 @@ const initialState: BlankAppState = {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     fast: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     slow: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                 },
             },
@@ -215,6 +230,15 @@ const initialState: BlankAppState = {
     PermissionsController: {
         permissions: {},
         permissionRequests: {},
+    },
+    BridgeController: {
+        bridgeReceivingTransactions: {},
+        perndingBridgeReceivingTransactions: {},
+    },
+    RemoteConfigsController: {
+        provider: {
+            incompatibleSites: CACHED_INCOMPATIBLE_SITES,
+        },
     },
 };
 

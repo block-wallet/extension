@@ -1,5 +1,5 @@
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
-import { utils } from "ethers"
+import { isValidAddress, toChecksumAddress } from "ethereumjs-util"
 import { useRef, useEffect, useReducer } from "react"
 import { useAddressBookAccounts } from "../../context/hooks/useAddressBookAccounts"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
@@ -64,6 +64,7 @@ const AccountSearchResults = ({
         !resultsToDisplay.wallet || results.wallet.length === 0
     const noAddressBookResults =
         !resultsToDisplay.addressBook || results.addressBook.length === 0
+
     const noEnsResults = !resultsToDisplay.ens || !results.ens
     const noUDResults = !resultsToDisplay.ud || !results.ud
     const displayEmptyResultsMessage = (): boolean => {
@@ -72,7 +73,7 @@ const AccountSearchResults = ({
             noAddressBookResults &&
             noEnsResults &&
             noUDResults &&
-            !utils.isAddress(filter) &&
+            !isValidAddress(filter) &&
             filter !== ""
         )
     }
@@ -98,7 +99,7 @@ const AccountSearchResults = ({
             }
 
             // If Ens enabled, search for it
-            if (ensEnabled) {
+            if (ensEnabled && ensEnabled.current) {
                 newResults.ens = filter ? await searchEns(filter) : undefined
             }
 
@@ -137,7 +138,11 @@ const AccountSearchResults = ({
                             <AccountDisplay
                                 key={account.address}
                                 account={account}
-                                selected={filter === account.address}
+                                selected={
+                                    isValidAddress(filter) &&
+                                    toChecksumAddress(filter) ===
+                                        account.address
+                                }
                                 showAddress={true}
                                 onClickAccount={() => onSelect(account)}
                             />

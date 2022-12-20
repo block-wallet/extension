@@ -41,6 +41,21 @@ import migration39 from './migration-39';
 import migration40 from './migration-40';
 import migration41 from './migration-41';
 import migration42 from './migration-42';
+import migration43 from './migration-43';
+import migration44 from './migration-44';
+import migration45 from './migration-45';
+import migration46 from './migration-46';
+import migration47 from './migration-47';
+import migration48 from './migration-48';
+import migration49 from './migration-49';
+import migration50 from './migration-50';
+import migration51 from './migration-51';
+import migration52 from './migration-52';
+import migration53 from './migration-53';
+import migration54 from './migration-54';
+import migration55 from './migration-55';
+import migration56 from './migration-56';
+import migration57 from './migration-57';
 
 const migrations: IMigration[] = [
     migration01,
@@ -85,5 +100,20 @@ const migrations: IMigration[] = [
     migration40,
     migration41,
     migration42,
+    migration43,
+    migration44,
+    migration45,
+    migration46,
+    migration47,
+    migration48,
+    migration49,
+    migration50,
+    migration51,
+    migration52,
+    migration53,
+    migration54,
+    migration55,
+    migration56,
+    migration57,
 ];
 export default (): IMigration[] => migrations;

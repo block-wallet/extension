@@ -26,8 +26,8 @@ const handleOnChange = (
 
 const getFilterOptions = () => {
     return [
-        { label: "Show Testnets", value: ChainFilters.TESTNET },
-        { label: "Show Enabled", value: ChainFilters.ENABLED },
+        { label: "Testnets", value: ChainFilters.TESTNET },
+        { label: "Enabled", value: ChainFilters.ENABLED },
     ]
 }
 
@@ -41,7 +41,7 @@ const ChainFiltersButton: React.FC<ChainFiltersProps> = ({
     onChangeFilters,
 }) => {
     return (
-        <div className="relative text-sm text-gray-500">
+        <div className="relative text-sm text-primary-300">
             <Dropdown
                 onClickItem={(selected) => {
                     return onChangeFilters(handleOnChange(selected, filters))
@@ -50,13 +50,14 @@ const ChainFiltersButton: React.FC<ChainFiltersProps> = ({
                 <Dropdown.Button>
                     <DropdownOutlinedIconButton iconName={IconName.GROUP} />
                 </Dropdown.Button>
-                <Dropdown.Menu id="filter-menu" className="w-36 p-1">
+                <Dropdown.Menu id="filter-menu" className="w-28">
                     {getFilterOptions().map(({ value, label }) => {
                         return (
                             <Fragment key={value}>
                                 <Dropdown.MenuItem
                                     value={value}
                                     selected={filters.includes(value)}
+                                    className="p-2 font-normal text-black"
                                 >
                                     {label}
                                 </Dropdown.MenuItem>

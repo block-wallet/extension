@@ -277,6 +277,173 @@
                 }
             ],
             "version": "0.4.0"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added support for zkSync 2.0 Testnet."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Networks, accounts and token management UX improvements."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Bug fixes and other minor improvements ."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Fixed compatibility with more dApps."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.4.1"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added support for Scroll L1 and L2 Testnets."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Now you can change network display order with drag & drop."
+                        },
+                        {
+                            "type": "success",
+                            "message": "For our ETH/USD pair, we now retrieve price from Chainlink mainnet data feed contract."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added current network indicator on Sends, Swaps, and Custom Tokens flows."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Asset selector now displays current balance."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Improvements on balance fetching and validations for custom tokens."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Added warnings and complete display of DApp origin URL on relevant screens."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Minor visual improvements and other small bug fixes."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.4.2"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Introducing BlockWallet Bridges: now you can bridge assets directly inside BlockWallet."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Users can now immediately switch networks after adding a new one from DApps."
+                        },
+                        {
+                            "type": "success",
+                            "message": "We added a warning when users try sending funds to a Null Address (0x0...0000)."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Minor visual improvements."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.5.0"
+        },
+        {
+            "sections": [
+                {
+                    "title": "v0.5.1",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Rootstock(RSK), Gnosis, and Optimism are now default networks."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improved gas estimation on Polygon and other L2 networks."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Swaps are now available on the Aurora network."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Your experience will now be even smoother thanks to many minor improvements to the UI/UX and bugs fixed."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.5.1"
+        },
+        {
+            "sections": [
+                {
+                    "title": "v0.5.2",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Bug fixes and improvements."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.5.2"
+        },
+        {
+            "sections": [
+                {
+                    "title": "v0.5.3",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "RSK rebranded to Rootstock."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed issues with some tokens decimals."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.5.3"
         }
     ]
 }

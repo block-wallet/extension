@@ -51,6 +51,7 @@ import { HardwareWalletOpTypes } from "../../context/commTypes"
 import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
 import DAppOrigin from "../../components/dApp/DAppOrigin"
 import { getNetworkNameFromChainId } from "../../util/getExplorer"
+import CodeBlock from "../../components/ui/CodeBlock"
 
 const SignPage = () => {
     return (
@@ -73,61 +74,46 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
     approveTime,
     error,
 }) => {
-    const {
-        accounts,
-        availableNetworks,
-        selectedAddress,
-        settings,
-    } = useBlankState()!
+    const { accounts, availableNetworks, selectedAddress, settings } =
+        useBlankState()!
     const { nativeToken } = useTokensList()
     const { hideAddressWarning } = useUserSettings()
     const [copied, setCopied] = useState(false)
     const [accountWarningClosed, setAccountWarningClosed] = useState(false)
     const [isEthSignWarningOpen, setIsEthSignWarningOpen] = useState(true)
-    const {
-        isDeviceUnlinked,
-        checkDeviceIsLinked,
-        resetDeviceLinkStatus,
-    } = useCheckAccountDeviceLinked()
+    const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
+        useCheckAccountDeviceLinked()
 
-    const {
-        method,
-        params: dappReqParams,
-    } = dappReqData as DappRequestParams[DappReq.SIGNING]
+    const { method, params: dappReqParams } =
+        dappReqData as DappRequestParams[DappReq.SIGNING]
 
     const websiteIcon = siteMetadata.iconURL
-    const { address, data } = dappReqParams
+    const { address, data, rawData } = dappReqParams
+
     const accountData = accounts[address]
 
     // Detect if the transaction was triggered using an address different to the active one
     const checksumFromAddress = getAddress(address)
     const differentAddress = checksumFromAddress !== selectedAddress
 
-    const {
-        status,
-        isOpen,
-        dispatch,
-        texts,
-        titles,
-        closeDialog,
-        gifs,
-    } = useTransactionWaitingDialog(
-        {
-            id: requestId,
-            status: requestStatus,
-            error,
-            epochTime: approveTime,
-        },
-        HardwareWalletOpTypes.SIGN_MESSAGE,
-        accountData.accountType,
-        {
-            reject: useCallback(() => {
-                if (requestId) {
-                    attemptRejectDappRequest(requestId)
-                }
-            }, [requestId]),
-        }
-    )
+    const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
+        useTransactionWaitingDialog(
+            {
+                id: requestId,
+                status: requestStatus,
+                error,
+                epochTime: approveTime,
+            },
+            HardwareWalletOpTypes.SIGN_MESSAGE,
+            accountData.accountType,
+            {
+                reject: useCallback(() => {
+                    if (requestId) {
+                        attemptRejectDappRequest(requestId)
+                    }
+                }, [requestId]),
+            }
+        )
 
     const sign = async () => {
         dispatch({ type: "open", payload: { status: "loading" } })
@@ -233,9 +219,9 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
 
     const formatSignatureData = (
         method: SignatureMethods,
-        data: NormalizedSignatureData[SignatureMethods]
+        data: NormalizedSignatureData[SignatureMethods],
+        rawData: string | undefined
     ) => {
-        //TODO: TEST THIS
         if (method === "eth_sign") {
             return (
                 <>
@@ -254,21 +240,20 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                         {`Make sure you trust ${origin}. Signing this could grant complete control of your assets`}
                     </div>
                     <span className="font-bold py-2">Message</span>
-                    <span className="text-gray-600 allow-select-all">
-                        <>{data}</>
-                    </span>
+                    <CodeBlock className="max-h-56">
+                        <>{rawData ?? data}</>
+                    </CodeBlock>
                 </>
             )
         }
 
-        //TODO: TEST THIS
         if (method === "personal_sign") {
             return (
                 <>
                     <span className="font-bold py-2">Message</span>
-                    <span className="text-gray-600 allow-select-all">
-                        <>{data}</>
-                    </span>
+                    <CodeBlock className="max-h-56">
+                        <>{rawData ?? data}</>
+                    </CodeBlock>
                 </>
             )
         }
@@ -425,7 +410,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                 </div>
             </div>
             <div className="flex flex-col px-6 py-3 space-y-0.5 text-sm text-gray-800 break-words">
-                {formatSignatureData(method, data)}
+                {formatSignatureData(method, data, rawData)}
             </div>
             <HardwareDeviceNotLinkedDialog
                 onDone={resetDeviceLinkStatus}

@@ -7,13 +7,13 @@ import {
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Transaction } from '@ethersproject/transactions';
-import { CurrencyAmountPair } from '../../blank-deposit/types';
+import { CurrencyAmountPair } from '../../privacy/types';
 import { IToken } from '../../erc-20/Token';
 import { ExchangeParams } from '../../SwapController';
 import { ContractMethodSignature } from '../ContractSignatureParser';
 
 /**
- * TransactionParams
+ * TransactionParams../../privacy/types
  * @link https://github.com/ethers-io/ethers.js/issues/321
  * @link https://github.com/ethers-io/ethers.js/issues/299
  */

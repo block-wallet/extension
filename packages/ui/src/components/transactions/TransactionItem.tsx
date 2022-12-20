@@ -7,22 +7,13 @@ import { GiSuspensionBridge } from "react-icons/gi"
 import { ImSpinner } from "react-icons/im"
 import { BigNumber } from "@ethersproject/bignumber"
 import classNames from "classnames"
-
-// Styles
 import { Classes, classnames } from "../../styles"
-
-// Components
-import ComplianceMenu from "../privacy/ComplianceMenu"
 import { AssetIcon } from "./../AssetsList"
 import Tooltip from "../../components/label/Tooltip"
-
-// Asset
 import eth from "../../assets/images/icons/ETH.svg"
 import blankLogo from "../../assets/images/logo.svg"
 import flashbotsLogo from "../../assets/images/flashbots.png"
-
 import {
-    BridgeStatus,
     BridgeSubstatus,
     MetaType,
     TransactionCategories,
@@ -34,18 +25,14 @@ import {
     TransactionMeta,
     TransferType,
 } from "@block-wallet/background/controllers/transactions/utils/types"
-
-// Utils
 import { capitalize } from "../../util/capitalize"
 import { getDisplayTime } from "../../util/getDisplayTime"
 import formatTransactionValue from "../../util/formatTransactionValue"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import AppIcon from "./../icons/AppIcon"
-import TransactionDetails from "./TransactionDetails"
 import { formatName } from "../../util/formatAccount"
 import { RichedTransactionMeta } from "../../util/transactionUtils"
 import Dots from "../loading/LoadingDots"
-import useContextMenu from "../../util/hooks/useContextMenu"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetBridgeTransactionsData from "../../util/hooks/useGetBridgeTransactionsData"
 import BridgeDetails from "../bridge/BridgeDetails"
@@ -53,6 +40,7 @@ import {
     BRIDGE_PENDING_STATUS,
     getBridgePendingMessage,
 } from "../../util/bridgeUtils"
+import TransactionDetails from "./TransactionDetails"
 
 const transactionMessages = {
     [TransactionCategories.BLANK_DEPOSIT]: "Privacy Pool Deposit",
@@ -449,7 +437,6 @@ const TransactionItem: React.FC<{
 
     const isBlankWithdraw: boolean =
         transactionCategory === "blankWithdrawal" ? true : false
-    const blankWithdrawId: string = id
 
     const label = getTransactionLabel(
         status,
@@ -485,11 +472,6 @@ const TransactionItem: React.FC<{
         label,
         valueLabel
     )
-
-    const contextMenuRef = useRef(null)
-
-    const { anchorPoint, show: showContextMenu } =
-        useContextMenu(contextMenuRef)
 
     const tokenSymbol = transfer.currency
         ? transfer.currency.toUpperCase()
@@ -540,7 +522,6 @@ const TransactionItem: React.FC<{
                         setHasDetails(true)
                     }
                 }}
-                ref={contextMenuRef}
             >
                 {/* Type */}
                 <div className="flex flex-row items-center w-full justify-between">
@@ -711,21 +692,6 @@ const TransactionItem: React.FC<{
                     </div>
                 ) : null}
             </div>
-
-            {/* Compliance Menu */}
-            {isBlankWithdraw &&
-            status !== TransactionStatus.SUBMITTED &&
-            showContextMenu ? (
-                <div
-                    className="absolute"
-                    style={{ top: anchorPoint.y, left: anchorPoint.x }}
-                >
-                    <ComplianceMenu
-                        withdrawId={blankWithdrawId}
-                        active={true}
-                    />
-                </div>
-            ) : null}
         </>
     )
 }

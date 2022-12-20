@@ -8,7 +8,9 @@ const MAX_UINT32 = 4294967295;
 
 export function randomBytes(size: number): Buffer {
     const cryptoLib =
-        typeof window !== 'undefined' ? window.crypto : require('crypto');
+        typeof self !== 'undefined' && self.crypto
+            ? self.crypto
+            : require('crypto');
 
     if (size > MAX_UINT32)
         throw new RangeError('Requested too many random bytes');

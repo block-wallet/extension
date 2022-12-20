@@ -15,11 +15,11 @@ import {
     ASSET_PLATFORMS_IDS_LIST,
 } from '@block-wallet/chains-assets';
 
-import axios from 'axios';
 import { ActionIntervalController } from './block-updates/ActionIntervalController';
 import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
+import httpClient from '../utils/http';
 import {
     getRateService,
     RateService,
@@ -230,18 +230,10 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
 
         const query = `${BaseApiEndpoint}token_price/${this.networkNativeCurrency.coingeckoPlatformId}`;
 
-        const response = await axios.get(query, {
-            params: {
-                contract_addresses: tokenContracts,
-                vs_currencies: this._preferencesController.nativeCurrency,
-            },
+        return httpClient.get(query, {
+            contract_addresses: tokenContracts,
+            vs_currencies: this._preferencesController.nativeCurrency,
         });
-
-        if (response.status != 200) {
-            throw new Error(response.statusText);
-        }
-
-        return response.data;
     };
 
     /**

@@ -509,6 +509,46 @@ export default class BridgeController extends BaseController<
     };
 
     /**
+     * Remove the bridge transactions data of an account.
+     * @param address
+     */
+    public resetBridgeTransactionsByAddress = async (
+        address: string
+    ): Promise<void> => {
+        const {
+            bridgeReceivingTransactions,
+            perndingBridgeReceivingTransactions,
+        } = this.store.getState();
+
+        let anyUpdate = false;
+
+        // Reset bridge receiving transactions
+        for (const c in bridgeReceivingTransactions) {
+            const chainId = parseInt(c);
+            if (address in bridgeReceivingTransactions[chainId]) {
+                delete bridgeReceivingTransactions[chainId][address];
+                anyUpdate = true;
+            }
+        }
+
+        // Reset pending bridge receiving transactions
+        for (const c in perndingBridgeReceivingTransactions) {
+            const chainId = parseInt(c);
+            if (address in perndingBridgeReceivingTransactions[chainId]) {
+                delete perndingBridgeReceivingTransactions[chainId][address];
+                anyUpdate = true;
+            }
+        }
+
+        if (anyUpdate) {
+            this.store.updateState({
+                bridgeReceivingTransactions,
+                perndingBridgeReceivingTransactions,
+            });
+        }
+    };
+
+    /**
      * Fetch quote details
      *
      * @param getQuoteRequest request to get a quote

@@ -10,14 +10,35 @@ import { resetAccount, lockApp } from "../../context/commActions"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { Classes } from "../../styles"
 import useStateLogs from "../../util/hooks/useStateLogs"
+import WaitingDialog, {
+    useWaitingDialog,
+} from "../../components/dialog/WaitingDialog"
 
 const ResetAccountPage = ({}) => {
     const account = useSelectedAccount()
     const { downloadStateLogsHandler } = useStateLogs()
 
+    const { isOpen, status, dispatch } = useWaitingDialog()
+
     const handleReset = async () => {
-        await resetAccount(account.address)
-        lockApp()
+        dispatch({
+            type: "open",
+            payload: { status: "loading" },
+        })
+        try {
+            await resetAccount(account.address)
+            setTimeout(() => {
+                dispatch({
+                    type: "setStatus",
+                    payload: { status: "success" },
+                })
+            }, 1000)
+        } catch (error) {
+            dispatch({
+                type: "setStatus",
+                payload: { status: "error" },
+            })
+        }
     }
 
     return (
@@ -33,6 +54,22 @@ const ResetAccountPage = ({}) => {
                 </PopupFooter>
             }
         >
+            <WaitingDialog
+                status={status}
+                open={isOpen}
+                titles={{
+                    loading: "Resetting account...",
+                    error: "Error",
+                    success: "Success!",
+                }}
+                texts={{
+                    loading: "Please wait while the account is being reset...",
+                    error: "There was an error while resetting the account",
+                    success: `Resetting account was successful.`,
+                }}
+                onDone={lockApp}
+                timeout={1100}
+            />
             <div className="flex flex-col p-6 space-y-6 w-full">
                 <div className="text-sm text-gray-500">
                     <span>

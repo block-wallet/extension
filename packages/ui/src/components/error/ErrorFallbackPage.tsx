@@ -10,6 +10,7 @@ import PopupLayout from "../popup/PopupLayout"
 import { LINKS } from "../../util/constants"
 import { resetAccount } from "../../context/commActions"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
+import WaitingDialog, { useWaitingDialog } from "../dialog/WaitingDialog"
 
 import useStateLogs from "../../util/hooks/useStateLogs"
 import ConfirmDialog from "../dialog/ConfirmDialog"
@@ -25,6 +26,29 @@ const ErrorFallbackPage: FunctionComponent<{
     const account = useSelectedAccount()
 
     const [confirmOpen, setConfirmOpen] = useState(false)
+
+    const { isOpen, status, dispatch } = useWaitingDialog()
+
+    const handleReset = async () => {
+        dispatch({
+            type: "open",
+            payload: { status: "loading" },
+        })
+        try {
+            await resetAccount(account.address)
+            setTimeout(() => {
+                dispatch({
+                    type: "setStatus",
+                    payload: { status: "success" },
+                })
+            }, 1000)
+        } catch (error) {
+            dispatch({
+                type: "setStatus",
+                payload: { status: "error" },
+            })
+        }
+    }
 
     return (
         <PopupLayout
@@ -43,16 +67,29 @@ const ErrorFallbackPage: FunctionComponent<{
                 </PopupFooter>
             }
         >
+            <WaitingDialog
+                status={status}
+                open={isOpen}
+                titles={{
+                    loading: "Resetting account...",
+                    error: "Error",
+                    success: "Success!",
+                }}
+                texts={{
+                    loading: "Please wait while the account is being reset...",
+                    error: "There was an error while resetting the account",
+                    success: `Resetting account was successful.`,
+                }}
+                onDone={resetErrorBoundary}
+                timeout={1100}
+            />
+
             <ConfirmDialog
                 title="Reset Account"
                 message={`Resetting this account will clear its transaction history and added tokens. You will not need to re-import your seed phrase. Are you sure you want to proceed?`}
                 open={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
-                onConfirm={async () => {
-                    setConfirmOpen(false)
-                    await resetAccount(account.address)
-                    resetErrorBoundary()
-                }}
+                onConfirm={handleReset}
             />
             <div className="flex flex-col space-y-4 p-6 py-4 justify-center items-center">
                 <div className="flex flex-col space-y-6 p-4 items-center justify-center bg-primary-100 rounded-md">

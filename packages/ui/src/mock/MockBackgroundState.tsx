@@ -377,33 +377,6 @@ export const initBackgroundState: BackgroundStateType = {
         isImportingDeposits: false,
         importingErrors: [],
         isEIP1559Compatible: { 5: true },
-        /* gasPriceData: {
-            5: {
-                blockGasLimit: BigNumber.from(0),
-                estimatedBaseFee: BigNumber.from(0),
-                gasPricesLevels: {
-                    slow: {
-                        gasPrice: BigNumber.from(111111111110),
-                        maxPriorityFeePerGas: BigNumber.from(0),
-                        maxFeePerGas: BigNumber.from(0),
-                        lastBaseFeePerGas: null,
-                    },
-                    average: {
-                        gasPrice: BigNumber.from(111111111110),
-                        maxPriorityFeePerGas: BigNumber.from(0),
-                        maxFeePerGas: BigNumber.from(0),
-                        lastBaseFeePerGas: null,
-                    },
-                    fast: {
-                        gasPrice: BigNumber.from(111111111110),
-                        maxPriorityFeePerGas: BigNumber.from(0),
-                        maxFeePerGas: BigNumber.from(0),
-                        lastBaseFeePerGas: null,
-                    },
-                },
-                baseFee: BigNumber.from("0x02540be400"),
-            },
-        }, */
         showTestNetworks: true,
         showWelcomeMessage: false,
         showDefaultWalletPreferences: false,

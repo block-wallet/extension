@@ -4,6 +4,14 @@ import MockBackgroundState from "./MockBackgroundState"
 import PopupRouter from "../router/PopupRouter"
 import { BackgroundStateType } from "../context/background/backgroundContext"
 import TabRouter from "../router/TabRouter"
+import MockGasPricesState from "./MockGasPricesState"
+import MockActivityListState from "./MockActivityListState"
+import MockExchangeRatesState from "./MockExchangeRatesState"
+import {
+    ResponseGetActivityListState,
+    ResponseGetExchangeRatesState,
+    ResponseGetGasPricesState,
+} from "@block-wallet/background/utils/types/communication"
 
 const MockTab: FunctionComponent<{
     location: string
@@ -32,7 +40,17 @@ const MockPopup: FunctionComponent<{
     location: string
     state?: any // location state
     assignBlankState?: Partial<BackgroundStateType["blankState"]>
-}> = ({ location, state, assignBlankState }) => {
+    assignGasPricesState?: Partial<ResponseGetGasPricesState>
+    assignActivityListState?: Partial<ResponseGetActivityListState>
+    assignExchangeRatesState?: Partial<ResponseGetExchangeRatesState>
+}> = ({
+    location,
+    state,
+    assignBlankState,
+    assignGasPricesState,
+    assignActivityListState,
+    assignExchangeRatesState,
+}) => {
     const HistoryInjector = () => {
         const history = useHistory()
         useEffect(() => {
@@ -46,9 +64,23 @@ const MockPopup: FunctionComponent<{
             style={{ width: 357, height: 600 }}
         >
             <MockBackgroundState assignBlankState={assignBlankState}>
-                <PopupRouter>
-                    <HistoryInjector />
-                </PopupRouter>
+                <MockGasPricesState
+                    assignGasPricesState={assignGasPricesState || {}}
+                >
+                    <MockActivityListState
+                        assignActivityListState={assignActivityListState || {}}
+                    >
+                        <MockExchangeRatesState
+                            assignExchangeRatesState={
+                                assignExchangeRatesState || {}
+                            }
+                        >
+                            <PopupRouter>
+                                <HistoryInjector />
+                            </PopupRouter>
+                        </MockExchangeRatesState>
+                    </MockActivityListState>
+                </MockGasPricesState>
             </MockBackgroundState>
         </div>
     )

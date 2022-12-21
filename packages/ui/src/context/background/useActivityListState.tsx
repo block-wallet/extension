@@ -3,16 +3,13 @@ import {
     getActivityListState,
     subscribeActivityListState,
 } from "../commActions"
-import {
-    ResponseGetActivityListState,
-    ResponseGetGasPricesState,
-} from "@block-wallet/background/utils/types/communication"
+import { ResponseGetActivityListState } from "@block-wallet/background/utils/types/communication"
 import useSubscription, { SubscriptionContext } from "./useStateSubscription"
 
 type ContextType = SubscriptionContext<ResponseGetActivityListState>
 
-const defaultState = { activityList: { pending: [], confirmed: [] } }
-const ActivityListContext = createContext<ContextType>({
+export const defaultState = { activityList: { pending: [], confirmed: [] } }
+export const ActivityListContext = createContext<ContextType>({
     state: defaultState,
     isLoading: false,
 })

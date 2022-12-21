@@ -8,7 +8,7 @@ type GasPricesContextType = SubscriptionContext<ResponseGetGasPricesState>
 
 const defaultState = { gasPriceData: {} }
 
-const GasPricesContext = createContext<GasPricesContextType>({
+export const GasPricesContext = createContext<GasPricesContextType>({
     state: defaultState,
     isLoading: true,
 })

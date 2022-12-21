@@ -9,7 +9,7 @@ import useSubscription, { SubscriptionContext } from "./useStateSubscription"
 type ExchangeRatesContextType =
     SubscriptionContext<ResponseGetExchangeRatesState>
 
-const defualtState = {
+export const defaultState = {
     exchangeRates: {},
     networkNativeCurrency: {
         symbol: "ETH",
@@ -19,9 +19,9 @@ const defualtState = {
     isRatesChangingAfterNetworkChange: false,
 }
 
-const ExchangeRatesContext = createContext<ExchangeRatesContextType>({
+export const ExchangeRatesContext = createContext<ExchangeRatesContextType>({
     isLoading: false,
-    state: defualtState,
+    state: defaultState,
 })
 
 export const ExchangeRatesStateProvider: FC<{ children: ReactNode }> = ({
@@ -33,7 +33,7 @@ export const ExchangeRatesStateProvider: FC<{ children: ReactNode }> = ({
         //state subcriber
         subscribeExchangeRatesState,
         //inital state
-        defualtState,
+        defaultState,
         { name: "Exchange rates" }
     )
     return (

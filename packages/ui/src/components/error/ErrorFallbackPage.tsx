@@ -45,7 +45,7 @@ const ErrorFallbackPage: FunctionComponent<{
         >
             <ConfirmDialog
                 title="Reset Account"
-                message={`Resetting this account will clear its transaction history and added tokens. However, you won't need to re-import your seed phrase! Are you sure you want to proceed?`}
+                message={`Resetting this account will clear its transaction history and added tokens. You will not need to re-import your seed phrase. Are you sure you want to proceed?`}
                 open={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
                 onConfirm={async () => {

@@ -9,6 +9,7 @@ import exportIcon from "../../assets/images/icons/export.svg"
 import trashBinIcon from "../../assets/images/icons/trash_bin.svg"
 import openExternal from "../../assets/images/icons/open_external.svg"
 import accounts from "../../assets/images/icons/accounts.svg"
+import refresh from "../../assets/images/icons/refresh.svg"
 import qrIcon from "../../assets/images/icons/qr_icon.svg"
 import sites from "../../assets/images/icons/connected_sites.svg"
 import editIcon from "../../assets/images/icons/pencil.svg"
@@ -82,6 +83,12 @@ const AccountMenu = () => {
         icon: accounts,
         label: "My Accounts",
         to: "/accounts",
+    })
+
+    options.push({
+        icon: refresh,
+        label: "Reset Account",
+        to: "/accounts/menu/reset",
     })
 
     return (

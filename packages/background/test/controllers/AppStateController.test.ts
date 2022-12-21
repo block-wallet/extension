@@ -1,7 +1,6 @@
 import AppStateController from '../../src/controllers/AppStateController';
 import { mockKeyringController } from '../mocks/mock-keyring-controller';
 import { expect } from 'chai';
-import MockDepositController from '../mocks/mock-deposit-controller';
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
 import { TypedTransaction } from '@ethereumjs/tx';
 import { getNetworkControllerInstance } from 'test/mocks/mock-network-instance';
@@ -20,12 +19,9 @@ import { sleep } from '@block-wallet/background/utils/sleep';
 
 describe('AppState Controller', function () {
     let appStateController: AppStateController;
-    let transactionController: TransactionController;
     const defaultIdleTimeout = 5;
-    const initialLastActiveTime = new Date().getTime();
 
     this.beforeAll(function () {
-        const depositController = MockDepositController();
         const networkController = getNetworkControllerInstance();
         const preferencesController = mockPreferencesController;
         const permissionsController = mockedPermissionsController;
@@ -66,9 +62,11 @@ describe('AppState Controller', function () {
         appStateController = new AppStateController(
             {
                 idleTimeout: defaultIdleTimeout,
+                isAppUnlocked: true,
+                lastActiveTime: new Date().getTime(),
+                lockedByTimeout: false,
             },
             mockKeyringController,
-            depositController,
             new TransactionController(
                 networkController,
                 preferencesController,
@@ -97,29 +95,28 @@ describe('AppState Controller', function () {
     });
 
     it('should update the last user active time', async function () {
-        const initialTime =
-            appStateController.UIStore.getState().lastActiveTime;
+        const initialTime = appStateController.store.getState().lastActiveTime;
         expect(initialTime).to.be.greaterThan(0);
         const promise = await sleep(600);
         appStateController.setLastActiveTime();
         expect(
-            appStateController.UIStore.getState().lastActiveTime
+            appStateController.store.getState().lastActiveTime
         ).to.be.greaterThan(initialTime);
     });
 
     it('should lock and unlock properly', async function () {
         await mockKeyringController.createNewVaultAndKeychain('testPassword');
         await appStateController.lock();
-        expect(appStateController.UIStore.getState().isAppUnlocked).to.be.false;
+        expect(appStateController.store.getState().isAppUnlocked).to.be.false;
 
         await appStateController.unlock('testPassword');
-        expect(appStateController.UIStore.getState().isAppUnlocked).to.be.true;
+        expect(appStateController.store.getState().isAppUnlocked).to.be.true;
 
         await appStateController.lock();
-        expect(appStateController.UIStore.getState().isAppUnlocked).to.be.false;
+        expect(appStateController.store.getState().isAppUnlocked).to.be.false;
 
         await appStateController.unlock('testPassword');
-        expect(appStateController.UIStore.getState().isAppUnlocked).to.be.true;
+        expect(appStateController.store.getState().isAppUnlocked).to.be.true;
     });
 
     it('should set a custom auto block timeout', async function () {
@@ -136,13 +133,13 @@ describe('AppState Controller', function () {
         // Set idle timeout to 600 ms
         appStateController.setIdleTimeout(0.01);
 
-        expect(appStateController.UIStore.getState().isAppUnlocked).to.be.true;
+        expect(appStateController.store.getState().isAppUnlocked).to.be.true;
 
         window.setTimeout(function () {
             expect(
-                appStateController.UIStore.getState().isAppUnlocked
+                appStateController.store.getState().isAppUnlocked
             ).to.be.false;
             done();
-        }, 700);
+        }, 1000);
     });
 });

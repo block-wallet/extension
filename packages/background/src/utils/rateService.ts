@@ -1,9 +1,8 @@
 import { BigNumber, Contract, ethers } from 'ethers';
 import { formatUnits } from 'ethers/lib/utils';
 import { RATES_IDS_LIST } from '@block-wallet/chains-assets';
-import axios from 'axios';
 import CHAINLINK_DATAFEEDS_CONTRACTS from './chain-link/dataFeeds';
-
+import httpClient from '../utils/http';
 interface getRateOptions {
     networkProvider?: ethers.providers.StaticJsonRpcProvider;
 }
@@ -61,18 +60,14 @@ export const coingekoService: RateService = {
                 ]
             );
 
-            const response = await axios.get(query, {
-                params: {
-                    ids: currencyApiId,
-                    vs_currencies: currency,
-                },
+            const response = await httpClient.get<
+                Record<string, Record<string, number>>
+            >(query, {
+                ids: currencyApiId,
+                vs_currencies: currency,
             });
 
-            if (response.status != 200) {
-                throw new Error(response.statusText);
-            }
-
-            return response.data[currencyApiId][currency];
+            return response[currencyApiId][currency];
         } catch (e) {
             console.log('Failed fecthing price from Coingeko. Ex: ' + e);
             return 0;

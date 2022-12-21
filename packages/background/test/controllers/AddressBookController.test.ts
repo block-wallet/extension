@@ -10,10 +10,7 @@ import PermissionsController from '@block-wallet/background/controllers/Permissi
 import { PreferencesController } from '@block-wallet/background/controllers/PreferencesController';
 import { mockedPermissionsController } from '../mocks/mock-permissions';
 import { ActivityListController } from '@block-wallet/background/controllers/ActivityListController';
-import {
-    BlankDepositController,
-    PendingWithdrawalsStore,
-} from '@block-wallet/background/controllers/blank-deposit/BlankDepositController';
+import { PendingWithdrawalsStore } from '@block-wallet/background/controllers/privacy/types';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
 import {
     TokenController,
@@ -24,10 +21,10 @@ import initialState from '@block-wallet/background/utils/constants/initialState'
 import { TypedTransaction } from '@ethereumjs/tx';
 import { getNetworkControllerInstance } from '../mocks/mock-network-instance';
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
-import { TornadoEventsService } from '@block-wallet/background/controllers/blank-deposit/tornado/TornadoEventsService';
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
+import { PrivacyAsyncController } from '@block-wallet/background/controllers/privacy/PrivacyAsyncController';
 import BridgeController from '@block-wallet/background/controllers/BridgeController';
 import TokenAllowanceController from '@block-wallet/background/controllers/erc-20/transactions/TokenAllowanceController';
 import { AccountTrackerController } from '@block-wallet/background/controllers/AccountTrackerController';
@@ -49,11 +46,10 @@ describe('Address book controller implementation', function () {
     let addressBookController: AddressBookController;
     let networkController: NetworkController;
     let transactionController: TransactionController;
-    let tornadoEventsService: TornadoEventsService;
     let preferencesController: PreferencesController;
     let permissionsController: PermissionsController;
     let activityListController: ActivityListController;
-    let blankDepositController: BlankDepositController;
+    let privacyController: PrivacyAsyncController;
     let bridgeController: BridgeController;
     let tokenOperationsController: TokenOperationsController;
     let tokenController: TokenController;
@@ -119,24 +115,12 @@ describe('Address book controller implementation', function () {
             { txHistoryLimit: 40 }
         );
 
-        tornadoEventsService = new TornadoEventsService({
-            endpoint: 'http://localhost:8080',
-            version: 'v1',
-            blockUpdatesController,
-        });
-
-        blankDepositController = new BlankDepositController({
+        privacyController = new PrivacyAsyncController({
             networkController: networkController,
-            preferencesController: preferencesController,
-            transactionController: transactionController,
-            tokenOperationsController: tokenOperationsController,
-            tokenController: tokenController,
-            gasPricesController: gasPricesController,
-            initialState: {
+            state: {
                 pendingWithdrawals: {} as PendingWithdrawalsStore,
                 vaultState: { vault: '' },
             },
-            tornadoEventsService,
         });
         transactionWatcherController = new TransactionWatcherController(
             networkController,
@@ -179,7 +163,7 @@ describe('Address book controller implementation', function () {
         );
         activityListController = new ActivityListController(
             transactionController,
-            blankDepositController,
+            privacyController,
             preferencesController,
             networkController,
             transactionWatcherController,

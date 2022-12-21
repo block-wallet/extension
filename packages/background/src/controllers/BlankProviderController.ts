@@ -37,7 +37,7 @@ import {
 } from '@block-wallet/provider/types';
 import { isEmpty } from 'lodash';
 import AppStateController, {
-    AppStateControllerMemState,
+    AppStateControllerState,
 } from './AppStateController';
 import NetworkController, {
     NetworkControllerState,
@@ -196,7 +196,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
             this._stateWatcher.TRANSACTIONS
         );
 
-        this._appStateController.UIStore.subscribe(this._stateWatcher.LOCK);
+        this._appStateController.store.subscribe(this._stateWatcher.LOCK);
 
         this._permissionsController.store.subscribe(
             this._stateWatcher.PERMISSIONS
@@ -741,7 +741,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
      */
     private _accountsRequest = (portId: string, emitUpdate = false) => {
         // Return empty array if app is locked
-        if (!this._appStateController.UIStore.getState().isAppUnlocked) {
+        if (!this._appStateController.store.getState().isAppUnlocked) {
             return [];
         }
 
@@ -1504,7 +1504,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 this._checkWindows();
             }
         },
-        LOCK: (appState: AppStateControllerMemState) => {
+        LOCK: (appState: AppStateControllerState) => {
             // Resolve unlock handlers if app is unlocked
             if (
                 appState.isAppUnlocked === true &&
@@ -1648,7 +1648,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
      */
     private _waitForUnlock = (portId: string): Promise<boolean> => {
         return new Promise((resolve, reject) => {
-            if (this._appStateController.UIStore.getState().isAppUnlocked) {
+            if (this._appStateController.store.getState().isAppUnlocked) {
                 return resolve(true);
             }
 

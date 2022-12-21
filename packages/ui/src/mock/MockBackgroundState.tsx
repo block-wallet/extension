@@ -5,13 +5,14 @@ import BackgroundContext, {
     BackgroundStateType,
 } from "../context/background/backgroundContext"
 import BackgroundReducer from "../context/background/backgroundReducer"
-import { CurrencyAmountPair } from "@block-wallet/background/controllers/blank-deposit/types"
+import { CurrencyAmountPair } from "@block-wallet/background/controllers/privacy/types"
 import { AddressBook } from "@block-wallet/background/controllers/AddressBookController"
 import { ActionsTimeInterval } from "@block-wallet/background/utils/constants/networks"
 import { AccountStatus, AccountType } from "../context/commTypes"
 
 export const initBackgroundState: BackgroundStateType = {
     blankState: {
+        idleTimeout: 0,
         antiPhishingImage: "",
         userTokens: {},
         deletedUserTokens: {},
@@ -366,7 +367,6 @@ export const initBackgroundState: BackgroundStateType = {
                 },
             ],
         },
-        blockData: { 5: { blockNumber: -1 } },
         areDepositsPending: false,
         areWithdrawalsPending: false,
         pendingDeposits: {
@@ -398,16 +398,19 @@ export const initBackgroundState: BackgroundStateType = {
                         gasPrice: BigNumber.from(111111111110),
                         maxPriorityFeePerGas: BigNumber.from(0),
                         maxFeePerGas: BigNumber.from(0),
+                        lastBaseFeePerGas: null,
                     },
                     average: {
                         gasPrice: BigNumber.from(111111111110),
                         maxPriorityFeePerGas: BigNumber.from(0),
                         maxFeePerGas: BigNumber.from(0),
+                        lastBaseFeePerGas: null,
                     },
                     fast: {
                         gasPrice: BigNumber.from(111111111110),
                         maxPriorityFeePerGas: BigNumber.from(0),
                         maxFeePerGas: BigNumber.from(0),
+                        lastBaseFeePerGas: null,
                     },
                 },
                 baseFee: BigNumber.from("0x02540be400"),

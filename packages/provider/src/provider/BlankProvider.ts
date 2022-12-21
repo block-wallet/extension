@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import {
     Callback,
     RequestArguments,
@@ -10,6 +11,7 @@ import {
     ChainChangedInfo,
     EthSubscription,
     Web3LegacySubscription,
+    Signals,
 } from '../types';
 import {
     ExternalEventSubscription,
@@ -59,6 +61,14 @@ export default class BlankProvider
     private _state: BlankProviderState;
     private _handlers: Handlers;
     private _requestId: number;
+    private _ethSubscriptions: {
+        [reqId: string]: {
+            params: any;
+            subId: string;
+            prevSubId: string;
+        };
+    };
+
     private _metamask: {
         isEnabled: () => boolean;
         isApproved: () => Promise<boolean>;
@@ -82,6 +92,9 @@ export default class BlankProvider
 
         const cachedCompatibility = getBlockWalletCompatibility();
         this.isBlockWallet = cachedCompatibility.isBlockWallet ?? true;
+        this._ethSubscriptions = {};
+
+        // Metamask compatibility
         this.isMetaMask = !this.isBlockWallet;
         this._updateSiteCompatibility();
 
@@ -122,6 +135,47 @@ export default class BlankProvider
         );
         this.isBlockWallet = isBlockWallet;
         this.isMetaMask = !isBlockWallet;
+    }
+
+    private async reInitializeSubscriptions() {
+        log.trace('reInitializeSubscriptions', 'init', this._ethSubscriptions);
+        for (const reqId in this._ethSubscriptions) {
+            const { params, subId, prevSubId } = this._ethSubscriptions[reqId];
+            const request: RequestArguments = {
+                method: JSONRPCMethod.eth_subscribe,
+                params,
+            };
+
+            log.trace(reqId, 'request', request);
+            await this._postMessage(
+                Messages.EXTERNAL.REQUEST,
+                request,
+                undefined,
+                reqId
+            );
+            this._ethSubscriptions[reqId].prevSubId =
+                prevSubId && prevSubId !== '' ? prevSubId : subId;
+        }
+        log.trace('reInitializeSubscriptions', 'end', this._ethSubscriptions);
+    }
+
+    /**
+     * handleSignal
+     *
+     * Handles a signal
+     *
+     * @param signal The signal received
+     */
+    public handleSignal(signal: Signals): void {
+        switch (signal) {
+            case Signals.SW_REINIT:
+                this._eventSubscription(this._eventHandler);
+                this.reInitializeSubscriptions();
+                break;
+            default:
+                log.debug('Unrecognized signal received');
+                break;
+        }
     }
 
     /**
@@ -192,6 +246,9 @@ export default class BlankProvider
         if (!handler.subscriber) {
             delete this._handlers[data.id];
         }
+
+        // check for subscription id in response
+        this.setEthSubscriptionsSubId(data);
 
         if (data.subscription) {
             (handler.subscriber as (data: any) => void)(data.subscription);
@@ -390,19 +447,28 @@ export default class BlankProvider
     private _postMessage = <TMessageType extends EXTERNAL>(
         message: TMessageType,
         request?: RequestTypes[TMessageType],
-        subscriber?: (data: SubscriptionMessageTypes[TMessageType]) => void
+        subscriber?: (data: SubscriptionMessageTypes[TMessageType]) => void,
+        reqId?: string
     ): Promise<ResponseTypes[TMessageType]> => {
         return new Promise((resolve, reject): void => {
-            const id = `${Date.now()}.${++this._requestId}`;
+            const id = reqId || `${Date.now()}.${++this._requestId}`;
 
             this._handlers[id] = { reject, resolve, subscriber };
+
+            // If request is a subscription,
+            // store it for resubscription in case the SW is terminated
+            const updatedReq = this._checkForEthSubscriptions<TMessageType>(
+                message,
+                request,
+                id
+            );
 
             window.postMessage(
                 {
                     id,
                     message,
                     origin: Origin.PROVIDER,
-                    request: request || {},
+                    request: updatedReq ?? (request || {}),
                 } as WindowTransportRequestMessage,
                 window.location.href
             );
@@ -580,6 +646,30 @@ export default class BlankProvider
      * @param message The received subscription message
      */
     private _emitSubscriptionMessage = (message: EthSubscription) => {
+        // re-write subscription id
+        for (const reqId in this._ethSubscriptions) {
+            const { prevSubId, subId } = this._ethSubscriptions[reqId];
+            if (
+                message.data.subscription === subId &&
+                prevSubId &&
+                prevSubId !== ''
+            ) {
+                message = {
+                    ...message,
+                    data: {
+                        ...message.data,
+                        subscription: prevSubId,
+                    },
+                };
+
+                log.trace(
+                    '_emitSubscriptionMessage',
+                    'message overridden',
+                    message
+                );
+                break;
+            }
+        }
         this.emit(ProviderEvents.message, message);
 
         // Emit events for legacy API
@@ -596,6 +686,77 @@ export default class BlankProvider
             ProviderEvents.notification,
             web3LegacyResponse.params.result
         );
+    };
+
+    private _checkForEthSubscriptions<TMessageType extends EXTERNAL>(
+        message: TMessageType,
+        request: RequestTypes[TMessageType] | undefined,
+        id: string
+    ): RequestTypes[EXTERNAL.REQUEST] | undefined {
+        if (!request) {
+            return undefined;
+        }
+
+        // @ts-ignore
+        if (message === EXTERNAL.REQUEST && request && 'method' in request) {
+            if (request.method === JSONRPCMethod.eth_subscribe) {
+                // Store request params for SW reinit
+                this._ethSubscriptions[id] = {
+                    params: request.params,
+                    subId: '',
+                    prevSubId: '',
+                };
+            } else if (request.method === JSONRPCMethod.eth_unsubscribe) {
+                // If this is an unsubscription, remove from the list so we won't
+                // subscribe again on SW termination
+                const [subscriptionId] = request.params as string[];
+                let subIdToUnsubscribe = subscriptionId;
+                for (const reqId in this._ethSubscriptions) {
+                    const { subId, prevSubId } = this._ethSubscriptions[reqId];
+                    if (
+                        subId === subIdToUnsubscribe ||
+                        prevSubId === subIdToUnsubscribe
+                    ) {
+                        subIdToUnsubscribe = subId;
+
+                        delete this._ethSubscriptions[reqId];
+                        break;
+                    }
+                }
+
+                log.trace(
+                    'eth_unsubscribe',
+                    'subIdToUnsubscribe',
+                    subIdToUnsubscribe,
+                    this._ethSubscriptions
+                );
+
+                return {
+                    method: request.method,
+                    params: [subIdToUnsubscribe],
+                };
+            }
+        }
+
+        return undefined;
+    }
+
+    /**
+     * Adds the new subscription id to the ethSubscriptions dictionary.
+     *
+     */
+    private setEthSubscriptionsSubId = <TMessageType extends MessageTypes>(
+        data: TransportResponseMessage<TMessageType>
+    ): void => {
+        if ('id' in data && data.id in this._ethSubscriptions) {
+            log.trace(
+                'setEthSubscriptionsSubId',
+                'found',
+                this._ethSubscriptions[data.id],
+                data.response
+            );
+            this._ethSubscriptions[data.id].subId = data.response as string;
+        }
     };
 
     /**

@@ -433,7 +433,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
 
     private _handleEstimateGas = async (
         params: [EstimateGasParams]
-    ): Promise<BigNumber> => {
+    ): Promise<string> => {
         let gasLimit: BigNumber;
         try {
             let data = '';
@@ -467,11 +467,13 @@ export default class BlankProviderController extends BaseController<BlankProvide
 
             gasLimit = estimation.gasLimit;
         } catch (error) {
-            log.error('error estimating gas:', error);
+            log.debug('error estimating gas:', error);
             try {
-                gasLimit = await this._networkController
-                    .getProvider()
-                    .send(JSONRPCMethod.eth_estimateGas, params);
+                gasLimit = BigNumber.from(
+                    await this._networkController
+                        .getProvider()
+                        .send(JSONRPCMethod.eth_estimateGas, params)
+                );
             } catch {
                 let { blockGasLimit } = this._gasPricesController.getState();
                 if (!bnGreaterThanZero(blockGasLimit)) {
@@ -483,7 +485,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
             }
         }
 
-        return gasLimit;
+        return gasLimit._hex;
     };
 
     /**

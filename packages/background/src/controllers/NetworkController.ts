@@ -6,9 +6,9 @@ import {
     Networks,
     HARDFORKS,
     AddNetworkType,
-    FAST_TIME_INTERVALS_DEFAULT_VALUES,
     EditNetworkUpdatesType,
     EditNetworkOrderType,
+    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
 } from '../utils/constants/networks';
 import { isABlockWalletNode } from '../utils/nodes';
 import { constants, ethers } from 'ethers';
@@ -52,16 +52,6 @@ export default class NetworkController extends BaseController<NetworkControllerS
         this.provider = this.getProviderFromName(
             initialState.selectedNetwork || 'goerli'
         );
-
-        if (window && window.navigator) {
-            window.addEventListener('online', () =>
-                this._handleUserNetworkChange()
-            );
-            window.addEventListener('offline', () =>
-                this._handleUserNetworkChange()
-            );
-            this._handleUserNetworkChange();
-        }
 
         // Set the error handler for the provider to check for network status
         this.provider.on('error', this._updateProviderNetworkStatus);
@@ -420,7 +410,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 showGasLevels: true,
                 blockExplorerUrls: [explorerUrl],
                 blockExplorerName: blockExplorerName || 'Explorer',
-                actionsTimeIntervals: FAST_TIME_INTERVALS_DEFAULT_VALUES,
+                actionsTimeIntervals: ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
                 test: !!network.test,
                 order:
                     Object.values(this.networks)
@@ -750,8 +740,8 @@ export default class NetworkController extends BaseController<NetworkControllerS
         return Common.custom({ name, chainId }, { hardfork });
     }
 
-    private _handleUserNetworkChange() {
-        const newValue = navigator.onLine;
+    public handleUserNetworkChange(isOnline: boolean) {
+        const newValue = isOnline;
         if (this.getState().isUserNetworkOnline == newValue) {
             return;
         }

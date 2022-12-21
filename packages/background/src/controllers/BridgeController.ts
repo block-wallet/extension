@@ -1071,6 +1071,7 @@ export default class BridgeController extends BaseController<
                     ...txReceipt,
                 },
                 bridgeParams: {
+                    // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
                     ...transactionMeta.bridgeParams!,
                     endTime: txConfirmationTime,
                 },

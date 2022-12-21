@@ -11,6 +11,7 @@ export interface AppStateControllerMemState {
     expiredStickyStorage: boolean;
     isAppUnlocked: boolean;
     lockedByTimeout: boolean;
+    idleTimeout: number;
 }
 
 export interface AppStateControllerState {
@@ -37,7 +38,12 @@ export default class AppStateController extends BaseController<
         private readonly _keyringController: KeyringControllerDerivated,
         private readonly _transactionController: TransactionController
     ) {
-        super(initState);
+        super(initState, {
+            idleTimeout: initState.idleTimeout,
+            isAppUnlocked: initState.isAppUnlocked,
+            lockedByTimeout: initState.lockedByTimeout,
+            expiredStickyStorage: false,
+        });
 
         this._timer = null;
 
@@ -56,15 +62,28 @@ export default class AppStateController extends BaseController<
         }
 
         this._resetTimer();
-        this.store.subscribe((newState, oldState) => {
-            //To avoid sending the lastActiveTime to the UI, update the UIStore based on the store data.
-            if (newState.isAppUnlocked !== oldState?.isAppUnlocked) {
-                this.UIStore.updateState({
-                    isAppUnlocked: newState.isAppUnlocked,
-                    lockedByTimeout: newState.lockedByTimeout,
-                });
+        this.store.subscribe(
+            (
+                newState: AppStateControllerState,
+                oldState?: AppStateControllerState
+            ) => {
+                //To avoid sending the lastActiveTime to the UI, update the UIStore based on the store data.
+
+                if (newState.isAppUnlocked !== oldState?.isAppUnlocked) {
+                    this.UIStore.updateState({
+                        isAppUnlocked: newState.isAppUnlocked,
+                        lockedByTimeout: newState.lockedByTimeout,
+                    });
+                    return;
+                }
+
+                if (newState.idleTimeout !== oldState?.idleTimeout) {
+                    this.UIStore.updateState({
+                        idleTimeout: newState.idleTimeout,
+                    });
+                }
             }
-        });
+        );
     }
 
     /**

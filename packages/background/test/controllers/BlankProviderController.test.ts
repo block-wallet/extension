@@ -404,6 +404,7 @@ describe('Blank Provider Controller', function () {
                 isAppUnlocked: true,
                 expiredStickyStorage: false,
                 lockedByTimeout: false,
+                idleTimeout: 2000,
             });
             sinon.stub(appStateController.store, 'getState').returns({
                 isAppUnlocked: true,

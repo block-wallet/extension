@@ -34,7 +34,7 @@ const HomeBalancePanel = () => {
 
     return (
         <div className="px-6">
-            <TokenSummary>
+            <TokenSummary className="p-4">
                 <TokenSummary.Balances>
                     <TokenSummary.TokenBalance
                         isLoading={isNetworkChanging}

@@ -201,7 +201,7 @@ const AssetDetailsPage = () => {
                                 )}
                             </TokenSummary.ExchangeRateBalance>
                         </TokenSummary.Balances>
-                        <TokenSummary.Actions>
+                        <TokenSummary.Actions className="mb-4">
                             <Link
                                 to={{
                                     pathname: "/send",

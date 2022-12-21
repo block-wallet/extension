@@ -120,27 +120,21 @@ const PopupRouter = ({
                     resetKeys={[state.isAppUnlocked]}
                 >
                     {isOnboarded ? (
-                        <GasPricesStateProvider>
-                            <ExchangeRatesStateProvider>
-                                <ActivityListStateProvider>
-                                    <ProviderDownDialog />
-                                    <ErrorDialog
-                                        onClickOutside={() =>
-                                            setShouldShowDialog(false)
-                                        }
-                                        title="No connection"
-                                        message="Please check your internet connection. Some features of the wallet will remain disabled while you’re offline."
-                                        open={shouldShowDialog}
-                                        onDone={() =>
-                                            setShouldShowDialog(false)
-                                        }
-                                    />
-                                    <IdleComponent>
-                                        <PopupComponent />
-                                    </IdleComponent>
-                                </ActivityListStateProvider>
-                            </ExchangeRatesStateProvider>
-                        </GasPricesStateProvider>
+                        <>
+                            <ProviderDownDialog />
+                            <ErrorDialog
+                                onClickOutside={() =>
+                                    setShouldShowDialog(false)
+                                }
+                                title="No connection"
+                                message="Please check your internet connection. Some features of the wallet will remain disabled while you’re offline."
+                                open={shouldShowDialog}
+                                onDone={() => setShouldShowDialog(false)}
+                            />
+                            <IdleComponent>
+                                <PopupComponent />
+                            </IdleComponent>
+                        </>
                     ) : (
                         <PendingSetupPage />
                     )}

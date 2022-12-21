@@ -9,6 +9,9 @@ import TabRouter from "./router/TabRouter"
 import { WindowIdProvider } from "./context/hooks/useWindowId"
 import { Profiler } from "react"
 import useMetricCollector from "./util/useMetricCollector"
+import { GasPricesStateProvider } from "./context/background/useGasPricesState"
+import { ExchangeRatesStateProvider } from "./context/background/useExchangeRatesState"
+import { ActivityListStateProvider } from "./context/background/useActivityListState"
 
 export const AppLoading = () => {
     return (
@@ -24,7 +27,17 @@ const App = () => {
         <ModalProvider>
             <WindowIdProvider>
                 <GlobalModal />
-                {isPopup() ? <PopupRouter /> : <TabRouter />}
+                {isPopup() ? (
+                    <GasPricesStateProvider>
+                        <ExchangeRatesStateProvider>
+                            <ActivityListStateProvider>
+                                <PopupRouter />
+                            </ActivityListStateProvider>
+                        </ExchangeRatesStateProvider>
+                    </GasPricesStateProvider>
+                ) : (
+                    <TabRouter />
+                )}
             </WindowIdProvider>
         </ModalProvider>
     ) : (

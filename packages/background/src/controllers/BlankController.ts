@@ -119,6 +119,7 @@ import type {
     RequestApproveBridgeAllowance,
     RequestGetBridgeRoutes,
     RequestEditNetworksOrder,
+    RequestAccountReset,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -162,6 +163,7 @@ import { GasPricesController } from './GasPricesController';
 import {
     TokenController,
     TokenControllerProps,
+    NATIVE_TOKEN_ADDRESS,
 } from './erc-20/TokenController';
 import SwapController, { SwapParameters, SwapQuote } from './SwapController';
 import {
@@ -744,6 +746,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.ACCOUNT.REMOVE:
                 return this.accountRemove(request as RequestAccountRemove);
+            case Messages.ACCOUNT.RESET:
+                return this.accountReset(request as RequestAccountReset);
             case Messages.ACCOUNT.HIDE:
                 return this.accountHide(request as RequestAccountHide);
             case Messages.ACCOUNT.UNHIDE:
@@ -1347,12 +1351,42 @@ export default class BlankController extends EventEmitter {
         address,
     }: RequestAccountRemove): Promise<boolean> {
         await this.accountTrackerController.removeAccount(address);
-        this.transactionController.wipeTransactionsByAddress(address);
-        this.permissionsController.removeAllPermissionsOfAccount(address);
+        this.transactionController.resetTransactionsByAddress(address);
+        this.permissionsController.revokeAllPermissionsOfAccount(address);
         await this.keyringController.removeAccount(address);
-        this.transactionWatcherController.removeTransactionsByAddress(address);
+        this.transactionWatcherController.resetTransactionsByAddress(address);
+        this.bridgeController.resetBridgeTransactionsByAddress(address);
+        this.tokenController.resetTokensByAccount(address);
 
         return true;
+    }
+
+    /**
+     * Resets an account by removing its transaction history and added tokens.
+     *
+     * @param address address to be reset - hex
+     */
+    private async accountReset({
+        address,
+    }: RequestAccountRemove): Promise<void> {
+        // Reset account
+        await Promise.all([
+            this.transactionController.resetTransactionsByAddress(address),
+            this.transactionWatcherController.resetTransactionsByAddress(
+                address
+            ),
+            this.tokenController.resetTokensByAccount(address),
+            this.permissionsController.revokeAllPermissionsOfAccount(address),
+            this.accountTrackerController.resetAccount(address),
+            this.bridgeController.resetBridgeTransactionsByAddress(address),
+        ]);
+        // Refetch account balance
+        this.accountTrackerController.updateAccounts({
+            addresses: [address],
+            assetAddresses: [NATIVE_TOKEN_ADDRESS],
+        });
+        // Refetch transactions
+        this.transactionWatcherController.fetchTransactions();
     }
 
     /**
@@ -1364,7 +1398,7 @@ export default class BlankController extends EventEmitter {
         address,
     }: RequestAccountRemove): Promise<boolean> {
         await this.accountTrackerController.hideAccount(address);
-        this.permissionsController.removeAllPermissionsOfAccount(address);
+        this.permissionsController.revokeAllPermissionsOfAccount(address);
 
         return true;
     }
@@ -1378,7 +1412,7 @@ export default class BlankController extends EventEmitter {
         address,
     }: RequestAccountRemove): Promise<boolean> {
         await this.accountTrackerController.unhideAccount(address);
-        this.permissionsController.removeAllPermissionsOfAccount(address);
+        this.permissionsController.revokeAllPermissionsOfAccount(address);
 
         return true;
     }

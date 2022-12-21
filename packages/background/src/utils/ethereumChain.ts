@@ -5,10 +5,7 @@ import {
     AddEthereumChainParameter,
     NormalizedAddEthereumChainParameter,
 } from './types/ethereum';
-import {
-    isABlockWalletNode,
-    customHeadersForBlockWalletNode,
-} from '../utils/nodes';
+
 /**
  * It validates and parses the chainId parameter checking if it's in the expected form
  *

@@ -226,8 +226,8 @@ export const CANCEL_RATE = {
  * Multiplier used to determine a transaction's increased gas fee during speed up
  */
 export const SPEED_UP_RATE = {
-    numerator: 11,
-    denominator: 10,
+    numerator: 3,
+    denominator: 2,
 };
 
 /**
@@ -1144,28 +1144,41 @@ export class TransactionController extends BaseController<
         const rate =
             type === SpeedUpCancel.CANCEL ? CANCEL_RATE : SPEED_UP_RATE;
 
+        // Docs: https://docs.ethers.org/v5/single-page/#/v5/api/utils/logger/-%23-errors--replacement-underpriced
         if (txType !== TransactionType.FEE_MARKET_EIP1559) {
-            const gasPrice = BnMultiplyByFraction(
+            let gasPrice = BnMultiplyByFraction(
                 transactionMeta.transactionParams.gasPrice!,
                 rate.numerator,
                 rate.denominator
             );
+
+            if (type == SpeedUpCancel.SPEED_UP) {
+                gasPrice = gasPrice.add(1);
+            }
+
             return {
                 gasPrice: gasPrice.gt(fast.gasPrice ?? BigNumber.from(0))
                     ? gasPrice
                     : fast.gasPrice!,
             };
         } else {
-            const maxFeePerGas = BnMultiplyByFraction(
+            let maxFeePerGas = BnMultiplyByFraction(
                 transactionMeta.transactionParams.maxFeePerGas!,
                 rate.numerator,
                 rate.denominator
             );
-            const maxPriorityFeePerGas = BnMultiplyByFraction(
+            if (type == SpeedUpCancel.SPEED_UP) {
+                maxFeePerGas = maxFeePerGas.add(1);
+            }
+
+            let maxPriorityFeePerGas = BnMultiplyByFraction(
                 transactionMeta.transactionParams.maxPriorityFeePerGas!,
                 rate.numerator,
                 rate.denominator
             );
+            if (type == SpeedUpCancel.SPEED_UP) {
+                maxPriorityFeePerGas = maxPriorityFeePerGas.add(1);
+            }
 
             return {
                 maxPriorityFeePerGas: maxPriorityFeePerGas.gt(

@@ -10,10 +10,7 @@ import {
     EditNetworkOrderType,
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
 } from '../utils/constants/networks';
-import {
-    isABlockWalletNode,
-    customHeadersForBlockWalletNode,
-} from '../utils/nodes';
+import { isABlockWalletNode } from '../utils/nodes';
 import { constants, ethers } from 'ethers';
 import { poll } from '@ethersproject/web';
 import { ErrorCode } from '@ethersproject/logger';

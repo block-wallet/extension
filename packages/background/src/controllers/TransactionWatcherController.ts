@@ -324,7 +324,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      * Remove the transactions data of an account.
      * @param address
      */
-    public removeTransactionsByAddress = async (
+    public resetTransactionsByAddress = async (
         address: string
     ): Promise<void> => {
         const transactions = this.store.getState().transactions;

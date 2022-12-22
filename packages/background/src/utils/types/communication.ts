@@ -68,6 +68,7 @@ enum ACCOUNT {
     IMPORT_JSON = 'IMPORT_ACCOUNT_JSON',
     IMPORT_PRIVATE_KEY = 'IMPORT_ACCOUNT_PK',
     REMOVE = 'REMOVE_ACCOUNT',
+    RESET = 'RESET_ACCOUNT',
     RENAME = 'RENAME_ACCOUNT',
     SELECT = 'SELECT_ACCOUNT',
     GET_BALANCE = 'GET_ACCOUNT_BALANCE',
@@ -284,6 +285,7 @@ export interface RequestSignatures {
         AccountInfo
     ];
     [Messages.ACCOUNT.REMOVE]: [RequestAccountRemove, boolean];
+    [Messages.ACCOUNT.RESET]: [RequestAccountReset, void];
     [Messages.ACCOUNT.HIDE]: [RequestAccountHide, boolean];
     [Messages.ACCOUNT.UNHIDE]: [RequestAccountUnhide, boolean];
     [Messages.ACCOUNT.RENAME]: [RequestAccountRename, boolean];
@@ -559,6 +561,10 @@ export interface RequestAccountImportPK {
 }
 
 export interface RequestAccountRemove {
+    address: string;
+}
+
+export interface RequestAccountReset {
     address: string;
 }
 

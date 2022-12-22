@@ -455,6 +455,29 @@ export class TokenController extends BaseController<TokenControllerState> {
     }
 
     /**
+     * It removes all tokens related to an account
+     * @param accountAddress
+     *
+     * @returns Promise<void>
+     *
+     **/
+    public async resetTokensByAccount(accountAddress: string) {
+        const tokens = this.store.getState();
+        if (accountAddress in tokens.userTokens) {
+            delete tokens.userTokens[accountAddress];
+        }
+        if (accountAddress in tokens.deletedUserTokens) {
+            delete tokens.deletedUserTokens[accountAddress];
+        }
+
+        this.store.updateState({
+            cachedPopulatedTokens: {},
+            userTokens: tokens.userTokens,
+            deletedUserTokens: tokens.deletedUserTokens,
+        });
+    }
+
+    /**
      * Populates a token and caches it.
      * @param tokenAddress
      * @param accountAddress

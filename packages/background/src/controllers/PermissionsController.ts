@@ -206,7 +206,7 @@ export default class PermissionsController extends BaseController<PermissionsCon
      * Removes one specific account from all sites' permissions
      *
      */
-    public removeAllPermissionsOfAccount = (account: string): void => {
+    public revokeAllPermissionsOfAccount = (account: string): void => {
         const permissions = this.store.getState().permissions;
         const sites = Object.keys(permissions);
 

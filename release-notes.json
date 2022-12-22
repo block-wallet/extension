@@ -444,6 +444,28 @@
                 }
             ],
             "version": "0.5.3"
+        },
+        {
+            "sections": [
+                {
+                    "title": "v0.5.4",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added new Reset Account functionality."
+                        },
+                        {
+                            "type": "success",
+                            "message": "State logs can now be downloaded for better customer support."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed gas estimation issues on some dApps."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.5.4"
         }
     ]
 }

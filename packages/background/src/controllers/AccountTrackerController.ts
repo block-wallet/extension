@@ -1054,6 +1054,19 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     }
 
     /**
+     * Resets an account and associated balances
+     *
+     */
+    public resetAccount(address: string): void {
+        const stateAccounts = this.store.getState().accounts;
+        stateAccounts[address].balances = {};
+
+        this.store.updateState({
+            accounts: stateAccounts,
+        });
+    }
+
+    /**
      * getAccountTokens
      *
      * @param accountAddress The account address

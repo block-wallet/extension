@@ -28,8 +28,11 @@ const schema = yup.object().shape({
         ),
     passwordConfirmation: yup
         .string()
-        .required("Required")
-        .oneOf([yup.ref("password"), null], "Passwords must match."),
+        .required("Please enter the password confirmation.")
+        .oneOf(
+            [yup.ref("password"), null],
+            "Password and password confirmation must match."
+        ),
     acceptTOU: yup
         .bool()
         .required("You must accept the Terms of Use.")
@@ -50,15 +53,11 @@ const PasswordSetupPage = () => {
     // if the onboarding is ready the user shoulnd't set the password again.
     useCheckUserIsOnboarded()
 
-    const {
-        register,
-        handleSubmit,
-        setError,
-        watch,
-        formState: { errors },
-    } = useForm<PasswordSetupFormData>({
-        resolver: yupResolver(schema),
-    })
+    const { register, handleSubmit, setError, watch, formState, trigger } =
+        useForm<PasswordSetupFormData>({
+            mode: "onChange",
+            resolver: yupResolver(schema),
+        })
 
     const onSubmit = handleSubmit(async (data: PasswordSetupFormData) => {
         if (passwordScore < 3) {
@@ -98,18 +97,19 @@ const PasswordSetupPage = () => {
 
     const passwordValues = watch()
     useEffect(() => {
-        if (
-            passwordValues.password &&
-            passwordValues.passwordConfirmation &&
-            passwordValues.password === passwordValues.passwordConfirmation &&
-            passwordValues.acceptTOU &&
-            !errors.password
-        ) {
+        if (formState.isValid) {
             setIsSubmitDisabled(false)
         } else {
             setIsSubmitDisabled(true)
         }
-    }, [passwordValues, errors.password])
+    }, [passwordValues, formState.errors.password])
+
+    useEffect(() => {
+        // trigger password confirmation validation when password changes given that there is a value in both fields
+        if (passwordValues.password && passwordValues.passwordConfirmation) {
+            trigger("passwordConfirmation")
+        }
+    }, [passwordValues.password, trigger])
     return (
         <PageLayout header maxWidth="max-w-md">
             <span className="my-6 text-lg font-bold font-title">
@@ -123,7 +123,7 @@ const PasswordSetupPage = () => {
                             label="New Password"
                             placeholder="Enter New Password"
                             {...register("password")}
-                            error={errors.password?.message}
+                            error={formState.errors.password?.message}
                             autoFocus={true}
                             strengthBar={true}
                             setPasswordScore={setPasswordScore}
@@ -134,7 +134,9 @@ const PasswordSetupPage = () => {
                             label="Confirm password"
                             placeholder="Confirm New Password"
                             {...register("passwordConfirmation")}
-                            error={errors.passwordConfirmation?.message}
+                            error={
+                                formState.errors.passwordConfirmation?.message
+                            }
                         />
                     </div>
                     <div className="flex flex-col space-y-1">
@@ -158,7 +160,7 @@ const PasswordSetupPage = () => {
                             </label>
                         </div>
                         <span className="text-xs text-red-500">
-                            {errors.acceptTOU?.message || <>&nbsp;</>}
+                            {formState.errors.acceptTOU?.message || <>&nbsp;</>}
                         </span>
                     </div>
                 </div>

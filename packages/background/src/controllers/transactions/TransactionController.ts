@@ -1779,7 +1779,7 @@ export class TransactionController extends BaseController<
         });
     }
 
-    public wipeTransactionsByAddress(address: string): void {
+    public resetTransactionsByAddress(address: string): void {
         const newTransactions = this.store
             .getState()
             .transactions.filter(

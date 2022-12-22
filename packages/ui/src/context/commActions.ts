@@ -200,6 +200,16 @@ export const removeAccount = async (address: string): Promise<boolean> => {
 }
 
 /**
+ * Resets the selected account
+ *
+ *
+ * @param address account to be deleted
+ */
+export const resetAccount = async (address: string): Promise<void> => {
+    return sendMessage(Messages.ACCOUNT.RESET, { address })
+}
+
+/**
  * Renames selected account
  *
  * @param address account address

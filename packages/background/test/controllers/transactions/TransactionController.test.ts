@@ -935,7 +935,7 @@ describe('Transactions Controller', () => {
                 transactionController.store.getState().transactions.length
             ).to.be.equal(3);
 
-            transactionController.wipeTransactionsByAddress(
+            transactionController.resetTransactionsByAddress(
                 mockedAccounts['goerli'][0].address
             );
 

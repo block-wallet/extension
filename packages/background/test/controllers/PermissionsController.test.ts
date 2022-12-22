@@ -280,7 +280,7 @@ describe('Permissions Controller', function () {
             expect(p['https://app.1inch.io'].accounts.includes(addressToRemove))
                 .to.be.true;
 
-            permissionsController.removeAllPermissionsOfAccount(
+            permissionsController.revokeAllPermissionsOfAccount(
                 addressToRemove
             );
 

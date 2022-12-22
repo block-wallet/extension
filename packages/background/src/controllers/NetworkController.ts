@@ -10,7 +10,6 @@ import {
     EditNetworkOrderType,
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
 } from '../utils/constants/networks';
-import { isABlockWalletNode } from '../utils/nodes';
 import { constants, ethers } from 'ethers';
 import { poll } from '@ethersproject/web';
 import { ErrorCode } from '@ethersproject/logger';
@@ -26,6 +25,10 @@ import {
 } from '../utils/ethereumChain';
 import { normalizeNetworksOrder } from '../utils/networks';
 import log from 'loglevel';
+import {
+    isABlockWalletNode,
+    customHeadersForBlockWalletNode,
+} from '../utils/nodes';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -527,10 +530,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 {
                     url: rpcUrl,
                     allowGzip: blockWalletNode,
-                    // temporarily removed until cors issue is fixed
-                    //headers: blockWalletNode
-                    //    ? customHeadersForBlockWalletNode
-                    //    : undefined,
+                    headers: blockWalletNode
+                        ? customHeadersForBlockWalletNode
+                        : undefined,
                 },
                 chainId
             )

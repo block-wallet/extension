@@ -232,12 +232,31 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 this._balanceFetchIntervalController.tick(
                     balanceFetchInterval,
                     async () => {
-                        await this.updateAccounts(
-                            {
-                                assetAddresses: [NATIVE_TOKEN_ADDRESS],
-                            },
-                            chainId
+                        // Get addresses from state
+                        const addresses = Object.keys(
+                            this.store.getState().accounts
                         );
+
+                        for (const address in addresses) {
+                            const assetAddresses: string[] = [
+                                NATIVE_TOKEN_ADDRESS,
+                            ];
+
+                            assetAddresses.push(
+                                ...(await this._tokenController.getUserTokenContractAddresses(
+                                    address,
+                                    chainId
+                                ))
+                            );
+
+                            await this.updateAccounts(
+                                {
+                                    addresses: [address],
+                                    assetAddresses: assetAddresses,
+                                },
+                                chainId
+                            );
+                        }
                     }
                 );
             }

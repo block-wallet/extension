@@ -5,6 +5,10 @@ import {
     AddEthereumChainParameter,
     NormalizedAddEthereumChainParameter,
 } from './types/ethereum';
+import {
+    isABlockWalletNode,
+    customHeadersForBlockWalletNode,
+} from '../utils/nodes';
 
 /**
  * It validates and parses the chainId parameter checking if it's in the expected form
@@ -83,10 +87,9 @@ export const getCustomRpcChainId = memoize(
         // Check that chainId matches with network's
         const tempProvider = new StaticJsonRpcProvider({
             url: rpcUrl,
-            // temporarily removed until cors issue is fixed
-            //headers: isABlockWalletNode(rpcUrl)
-            //    ? customHeadersForBlockWalletNode
-            //    : undefined,
+            headers: isABlockWalletNode(rpcUrl)
+                ? customHeadersForBlockWalletNode
+                : undefined,
         });
         const { chainId: rpcChainId } = await tempProvider.getNetwork();
 

@@ -161,7 +161,7 @@ const GasSelectorBasic = (props: GasComponentProps) => {
 
 // Schema
 const schema = yup.object({
-    gasLimit: makeStringNumberFormField("Gas Limit is required", false),
+    gasLimit: makeStringNumberFormField("Gas limit is required", false),
     maxPriorityFeePerGas: makeStringNumberFormField(
         "Max tip is required",
         true
@@ -330,7 +330,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
             <div className="flex flex-col w-full space-y-3 px-3 pb-3">
                 <div className="flex flex-col">
                     <label className="leading-loose text-xs font-medium mb-1 text-gra">
-                        Gas Limit
+                        Gas limit
                     </label>
                     <input
                         type="text"
@@ -383,7 +383,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                 </div>
                 <div className="flex flex-col relative">
                     <label className="leading-loose text-xs font-medium  mb-1">
-                        Max Tip (per gas)
+                        Max tip (per gas unit)
                     </label>
                     <EndLabel label="GWEI">
                         <input
@@ -440,7 +440,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                 </div>
                 <div className="flex flex-col relative">
                     <label className="leading-loose text-xs font-medium  mb-1">
-                        Max fee (per gas)
+                        Max fee (per gas unit)
                     </label>
                     <EndLabel label="GWEI">
                         <input

@@ -35,10 +35,10 @@ const amountParamNotPresentError = new Error('amount is required');
 const gasPriceParamNotPresentError = new Error('gas price is required');
 const gasLimitParamNotPresentError = new Error('gas limit is required');
 const gasMaxFeePerGasParamNotPresentError = new Error(
-    'max fee per gas is required'
+    'max fee per gas unit is required'
 );
 const gasMaxPriorityFeePerGasParamNotPresentError = new Error(
-    'max priority fee per gas is required'
+    'max priority fee per gas unit is required'
 );
 const ownerParamNotPresentError = new Error('owner is required');
 const spenderParamNotPresentError = new Error('spender is required');

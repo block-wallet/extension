@@ -39,7 +39,7 @@ import {
     isSwapNativeTokenAddress,
     populateExchangeTransaction,
 } from "../../util/exchangeUtils"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import { OneInchSwapRequestParams } from "@block-wallet/background/utils/types/1inch"

@@ -1,6 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber';
+import { MaxUint256 } from '@ethersproject/constants';
+import { PopulatedTransaction } from '@ethersproject/contracts';
 import { isHexString, isValidAddress, stripHexPrefix } from 'ethereumjs-util';
-import { ethers } from 'ethers';
 import { TransactionGasEstimation } from '../../transactions/TransactionController';
 import {
     TransactionCategories,
@@ -56,7 +57,7 @@ export interface ApproveTransactionPopulatedTransactionParams
     customNonce?: number;
 }
 
-const UNLIMITED_ALLOWANCE = ethers.constants.MaxUint256;
+const UNLIMITED_ALLOWANCE = MaxUint256;
 
 /**
  * Approve an amount of a token
@@ -110,7 +111,7 @@ export class ApproveTransaction extends SignedTransaction {
      */
     public async populateTransaction(
         populateTransactionParams: ApproveTransactionPopulatedTransactionParams
-    ): Promise<ethers.PopulatedTransaction> {
+    ): Promise<PopulatedTransaction> {
         if (!populateTransactionParams.tokenAddress) {
             throw tokenAddressParamNotPresentError;
         }

@@ -1,5 +1,5 @@
 import { IBridgeFeeCost } from "@block-wallet/background/utils/bridgeApi"
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import React from "react"
 import { formatRounded } from "../../util/formatRounded"
 import FeeItem from "./FeeItem"

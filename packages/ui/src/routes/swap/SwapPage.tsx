@@ -13,7 +13,7 @@ import {
     AssetListType,
     AssetSelection,
 } from "../../components/assets/AssetSelection"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { BASE_SWAP_FEE, SWAP_QUOTE_REFRESH_TIMEOUT } from "../../util/constants"
 import { ExchangeType } from "../../context/commTypes"
@@ -23,7 +23,7 @@ import { SwapQuote } from "@block-wallet/background/controllers/SwapController"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { classnames, Classes } from "../../styles"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
-import { formatUnits, parseUnits } from "ethers/lib/utils"
+import { formatUnits, parseUnits } from "@ethersproject/units"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { useForm } from "react-hook-form"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"

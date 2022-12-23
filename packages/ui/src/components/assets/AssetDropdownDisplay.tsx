@@ -1,10 +1,10 @@
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import { FC } from "react"
 import classnames from "classnames"
 import { formatNumberLength } from "../../util/formatNumberLength"
 import { formatRounded } from "../../util/formatRounded"
 import TokenLogo from "../token/TokenLogo"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { TokenWithBalance } from "../../context/hooks/useTokensList"
 
 interface AssetDropdownDisplayProps {

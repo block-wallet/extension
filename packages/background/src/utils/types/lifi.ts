@@ -1,5 +1,5 @@
 import { IToken } from '@block-wallet/background/controllers/erc-20/Token';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { BridgeStatus, BridgeSubstatus, IBridgeFeeCost } from '../bridgeApi';
 
 /**

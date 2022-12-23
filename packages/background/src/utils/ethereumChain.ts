@@ -1,4 +1,4 @@
-import { providers } from 'ethers';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { memoize } from 'lodash';
 import { getChainListItem } from './chainlist';
 import {
@@ -85,7 +85,7 @@ export const validateNetworkChainId = async (
 export const getCustomRpcChainId = memoize(
     async (rpcUrl: string): Promise<number> => {
         // Check that chainId matches with network's
-        const tempProvider = new providers.StaticJsonRpcProvider({
+        const tempProvider = new StaticJsonRpcProvider({
             url: rpcUrl,
             headers: isABlockWalletNode(rpcUrl)
                 ? customHeadersForBlockWalletNode

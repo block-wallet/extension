@@ -1,4 +1,4 @@
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { formatCurrency, toCurrencyAmount } from "../formatCurrency"
 import { getValueByKey } from "../objectUtils"

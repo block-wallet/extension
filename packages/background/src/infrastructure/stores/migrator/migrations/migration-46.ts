@@ -1,5 +1,5 @@
 import { TransactionTypeEnum } from '../../../../controllers/TransactionWatcherController';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { BlankAppState } from '../../../../utils/constants/initialState';
 import { IMigration } from '../IMigration';
 

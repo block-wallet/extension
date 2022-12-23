@@ -1,5 +1,5 @@
 import { FunctionComponent } from "react"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 
 // Utils
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"

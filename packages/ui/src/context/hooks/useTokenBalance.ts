@@ -1,5 +1,5 @@
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { useTokensList } from "./useTokensList"
 
 export const useTokenBalance = (

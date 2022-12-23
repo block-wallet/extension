@@ -1,9 +1,9 @@
 import { FC } from "react"
 import unknownTokenIcon from "../../assets/images/unknown_token.svg"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { formatRounded } from "../../util/formatRounded"
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import { formatNumberLength } from "../../util/formatNumberLength"
 
 interface AssetAmountComponentProps {

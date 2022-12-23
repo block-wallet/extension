@@ -16,7 +16,8 @@ import {
     TypedMessage,
     TypedSignatureMethods,
 } from './types/ethereum';
-import { hexValue } from 'ethers/lib/utils';
+import { hexValue } from '@ethersproject/bytes';
+
 import schemaValidator from 'schema-validator';
 
 /**

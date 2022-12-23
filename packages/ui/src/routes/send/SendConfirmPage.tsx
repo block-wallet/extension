@@ -19,8 +19,9 @@ import classnames from "classnames"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import { InferType } from "yup"
-import { utils, BigNumber, constants } from "ethers"
-import { formatUnits } from "ethers/lib/utils"
+import { BigNumber } from "@ethersproject/bignumber"
+import { formatUnits, parseUnits } from "@ethersproject/units"
+import { Zero, One } from "@ethersproject/constants"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { DEFAULT_DECIMALS, SEND_GAS_COST } from "../../util/constants"
 
@@ -125,7 +126,7 @@ const GetAmountYupSchema = (
                 try {
                     if (!asset) return false
                     const decimals = asset.token.decimals || DEFAULT_DECIMALS
-                    const txAmount: BigNumber = utils.parseUnits(
+                    const txAmount: BigNumber = parseUnits(
                         value!.toString(),
                         decimals
                     )
@@ -353,7 +354,7 @@ const SendConfirmPage = () => {
             const symbol =
                 selectedToken?.token.symbol.toUpperCase() ||
                 network.nativeCurrency.symbol
-            const txAmount: BigNumber = utils.parseUnits(
+            const txAmount: BigNumber = parseUnits(
                 assetAmount.toString(),
                 decimals
             )
@@ -396,7 +397,7 @@ const SendConfirmPage = () => {
         // Value
         const value = usingMax
             ? getMaxTransactionAmount()
-            : utils.parseUnits(
+            : parseUnits(
                   data.amount.toString(),
                   selectedToken!.token.decimals || DEFAULT_DECIMALS // Default to eth decimals
               )
@@ -610,11 +611,9 @@ const SendConfirmPage = () => {
 
                 const hasTokenBalance = BigNumber.from(
                     selectedToken.balance
-                ).gt(constants.Zero)
+                ).gt(Zero)
 
-                const estimateValue = hasTokenBalance
-                    ? constants.One
-                    : constants.Zero
+                const estimateValue = hasTokenBalance ? One : Zero
 
                 let { gasLimit, estimationSucceeded } =
                     await getSendTransactionGasLimit(

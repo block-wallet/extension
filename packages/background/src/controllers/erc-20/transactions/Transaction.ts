@@ -1,4 +1,7 @@
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
+import { Interface } from '@ethersproject/abi';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import NetworkController from '../../NetworkController';
 import erc20Abi from '../abi';
 import {
@@ -8,7 +11,6 @@ import {
     tokenAddressParamNotPresentError,
 } from '../TokenController';
 import { FetchTokenResponse, Token } from '../Token';
-import { Interface } from 'ethers/lib/utils';
 import log from 'loglevel';
 
 export interface TokenTransactionProps {
@@ -25,12 +27,12 @@ export class TokenTransactionController {
     /**
      * Generates a new instance of the contract for a token address
      * @param {string} tokenAddress
-     * @returns ethers.Contract
+     * @returns Contract
      */
     protected getContract(
         tokenAddress: string,
-        provider: ethers.providers.StaticJsonRpcProvider = this._networkController.getProvider()
-    ): ethers.Contract {
+        provider: StaticJsonRpcProvider = this._networkController.getProvider()
+    ): Contract {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
         }
@@ -39,7 +41,7 @@ export class TokenTransactionController {
                 'The provider is mandatory to execute a contract call'
             );
         }
-        return new ethers.Contract(tokenAddress, erc20Abi, provider);
+        return new Contract(tokenAddress, erc20Abi, provider);
     }
 }
 
@@ -58,7 +60,7 @@ export class TokenOperationsController extends TokenTransactionController {
     public async balanceOf(
         tokenAddress: string,
         account: string,
-        provider: ethers.providers.StaticJsonRpcProvider = this._networkController.getProvider()
+        provider: StaticJsonRpcProvider = this._networkController.getProvider()
     ): Promise<BigNumber> {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;

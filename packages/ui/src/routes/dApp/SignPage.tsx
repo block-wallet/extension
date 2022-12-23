@@ -9,7 +9,8 @@ import PopupLayout from "../../components/popup/PopupLayout"
 import { Classes } from "../../styles/classes"
 import Divider from "../../components/Divider"
 import { formatHash, formatName } from "../../util/formatAccount"
-import { formatUnits, getAddress } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
+import { getAddress } from "@ethersproject/address"
 import {
     DappReq,
     DappRequestSigningStatus,

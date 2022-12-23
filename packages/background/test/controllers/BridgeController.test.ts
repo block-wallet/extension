@@ -33,7 +33,7 @@ import NETWORK_TOKENS_LIST from '@block-wallet/background/controllers/erc-20/Tok
 import { IToken } from '@block-wallet/background/controllers/erc-20/Token';
 import { ContractSignatureParser } from '@block-wallet/background/controllers/transactions/ContractSignatureParser';
 import { expectThrowsAsync } from 'test/utils/expectThrowsAsync.test';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { getChainListItem } from '@block-wallet/background/utils/chainlist';
 import { BRIDGE_REFERRER_ADDRESS } from '@block-wallet/background/utils/types/lifi';
 import MOCKS from '../mocks/mock-bridge-operations';

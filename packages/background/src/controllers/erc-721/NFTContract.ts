@@ -1,6 +1,7 @@
 import NetworkController from '../NetworkController';
 import erc721Abi from './abi';
-import { BigNumber, ethers } from 'ethers';
+import { Contract } from '@ethersproject/contracts';
+import { BigNumber } from '@ethersproject/bignumber';
 import { tokenAddressParamNotPresentError } from '../erc-20/TokenController';
 
 export interface NFTContractProps {
@@ -19,12 +20,12 @@ export class NFTContract {
      *
      * @param contractAddress NFT contract address
      */
-    protected getContract(contractAddress: string): ethers.Contract {
+    protected getContract(contractAddress: string): Contract {
         if (!contractAddress) {
             tokenAddressParamNotPresentError;
         }
 
-        return new ethers.Contract(
+        return new Contract(
             contractAddress,
             erc721Abi,
             this._networkController.getProvider()

@@ -1,4 +1,4 @@
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { ContractMethodSignature } from '../transactions/ContractSignatureParser';
 import { TransactionReceipt } from '@ethersproject/providers';
 

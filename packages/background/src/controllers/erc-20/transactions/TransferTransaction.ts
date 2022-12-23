@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BigNumber } from '@ethersproject/bignumber';
-import { ethers } from 'ethers';
+import { PopulatedTransaction } from '@ethersproject/contracts';
 import log from 'loglevel';
 import { TransactionGasEstimation } from '../../transactions/TransactionController';
 import {
@@ -93,7 +93,7 @@ export class TransferTransaction extends SignedTransaction {
     public async populateTransaction(
         populateTransasctionParams: TransferTransactionPopulatedTransactionParams,
         ignoreZeroValue = false
-    ): Promise<ethers.PopulatedTransaction> {
+    ): Promise<PopulatedTransaction> {
         if (!populateTransasctionParams.tokenAddress) {
             throw tokenAddressParamNotPresentError;
         }

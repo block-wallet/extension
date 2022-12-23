@@ -9,7 +9,7 @@ import {
     AssetListType,
     AssetSelection,
 } from "../../components/assets/AssetSelection"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GetAmountYupSchema } from "../../util/yup/GetAmountSchema"
 import { InferType } from "yup"
@@ -17,7 +17,7 @@ import { NetworkSelector } from "../../components/network/NetworkSelector"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { classnames } from "../../styles"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
-import { formatUnits, parseUnits } from "ethers/lib/utils"
+import { formatUnits, parseUnits } from "@ethersproject/units"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { useCallback } from "react"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"

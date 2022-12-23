@@ -1,8 +1,8 @@
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import * as yup from "yup"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { DEFAULT_DECIMALS } from "../constants"
-import { parseUnits } from "ethers/lib/utils"
+import { parseUnits } from "@ethersproject/units"
 
 export const GetAmountYupSchema = (
     fromToken: Token | undefined,

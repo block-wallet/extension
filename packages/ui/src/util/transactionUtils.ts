@@ -4,7 +4,7 @@ import {
     uiTransactionParams,
 } from "@block-wallet/background/controllers/transactions/utils/types"
 import { TransactionCategories, TransactionStatus } from "../context/commTypes"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { DappRequestSigningStatus } from "../context/hooks/useDappRequest"
 export interface RichedTransactionMeta extends TransactionMeta {
     //Dynamically calculated using this transaction status and comparing the nonce with other transactions.

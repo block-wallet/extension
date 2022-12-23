@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 import NetworkController from '../../src/controllers/NetworkController';
-import { BigNumber, ethers } from 'ethers';
 import { getNetworkControllerInstance } from '../mocks/mock-network-instance';
 import sinon from 'sinon';
+import { BigNumber } from '@ethersproject/bignumber';
 import { Block } from '@ethersproject/abstract-provider';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { AddNetworkType } from '@block-wallet/background/utils/constants/networks';
 import * as ethereumChain from '@block-wallet/background/utils/ethereumChain';
 
@@ -41,7 +42,7 @@ describe('Network controller', function () {
     it('should get a real provider', async function () {
         const provider = networkController.getProvider();
         expect(networkController.getProvider()).to.be.instanceOf(
-            ethers.providers.StaticJsonRpcProvider
+            StaticJsonRpcProvider
         );
     });
 

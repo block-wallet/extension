@@ -1,8 +1,8 @@
 import { FunctionComponent, useRef, useState, useEffect } from "react"
 import classnames from "classnames"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 
-import { formatUnits, parseUnits } from "ethers/lib/utils"
+import { formatUnits, parseUnits } from "@ethersproject/units"
 import * as yup from "yup"
 import { InferType } from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"

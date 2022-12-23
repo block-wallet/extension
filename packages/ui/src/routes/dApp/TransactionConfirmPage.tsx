@@ -2,10 +2,11 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { Redirect } from "react-router-dom"
 import { BsFileEarmarkText } from "react-icons/bs"
 import { AiFillInfoCircle } from "react-icons/ai"
-import { formatUnits, getAddress } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
+import { getAddress } from "@ethersproject/address"
 import { HiOutlineExclamationCircle } from "react-icons/hi"
 
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 
 // Styles
 import { Classes, classnames } from "../../styles"

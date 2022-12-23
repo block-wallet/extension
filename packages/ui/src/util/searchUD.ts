@@ -1,6 +1,6 @@
-import { utils } from "ethers"
 import { AccountResult } from "../components/account/AccountSearchResults"
 import { resolveUDName } from "../context/commActions"
+import { isAddress } from "@ethersproject/address"
 
 export const supportedSuffixes = [
     "crypto",
@@ -14,17 +14,15 @@ export const supportedSuffixes = [
     "zil",
 ]
 
-
 export const searchUD = async (
-    search: string,
+    search: string
 ): Promise<AccountResult | undefined> => {
-
     if (search === "") return undefined
 
-    const isAddress = utils.isAddress(`${search}`)
+    const _isAddress = isAddress(`${search}`)
 
     // Search from address
-    if (isAddress) {
+    if (_isAddress) {
         return undefined
     }
 
@@ -34,8 +32,7 @@ export const searchUD = async (
         ? (suffix = search.split(".").pop()) // suffix last part of seach after dot
         : (suffix = undefined)
 
-    if (!suffix || !supportedSuffixes.includes(suffix))
-        return undefined
+    if (!suffix || !supportedSuffixes.includes(suffix)) return undefined
 
     // Check result
     const result = await resolveUDName(search)

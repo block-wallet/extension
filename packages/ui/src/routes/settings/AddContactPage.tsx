@@ -14,7 +14,7 @@ import {
     useAddressBook,
     useAddressBookRecentAddresses,
 } from "../../context/hooks/useAddressBook"
-import { utils } from "ethers"
+import { isValidAddress } from "ethereumjs-util"
 import { addressBookSet } from "../../context/commActions"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import WaitingDialog, {
@@ -33,7 +33,7 @@ const contactSchema = yup.object().shape({
         .string()
         .required("No address provided.")
         .test("is-correct", "Address is incorrect.", (address) => {
-            return utils.isAddress(address || "")
+            return isValidAddress(address || "")
         }),
 })
 type contactFormData = { contactName: string; contactAddress: string }

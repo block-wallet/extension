@@ -1,5 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber';
-import { parseUnits } from 'ethers/lib/utils';
+import { parseUnits } from '@ethersproject/units';
 import { BaseController } from '../infrastructure/BaseController';
 import { Network } from '../utils/constants/networks';
 import { PrivacyAsyncController } from './privacy/PrivacyAsyncController';

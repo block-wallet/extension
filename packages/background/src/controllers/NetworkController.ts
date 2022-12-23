@@ -10,8 +10,15 @@ import {
     EditNetworkOrderType,
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
 } from '../utils/constants/networks';
-import { constants, ethers } from 'ethers';
+import { Zero } from '@ethersproject/constants';
 import { poll } from '@ethersproject/web';
+import {
+    StaticJsonRpcProvider,
+    JsonRpcProvider,
+    Block,
+    Network as EthersNetwork,
+    TransactionReceipt,
+} from '@ethersproject/providers';
 import { ErrorCode } from '@ethersproject/logger';
 import { cloneDeep } from 'lodash';
 
@@ -47,7 +54,7 @@ export interface NetworkControllerState {
 
 export default class NetworkController extends BaseController<NetworkControllerState> {
     public static readonly CURRENT_HARDFORK: string = 'london';
-    private provider: ethers.providers.StaticJsonRpcProvider;
+    private provider: StaticJsonRpcProvider;
 
     constructor(initialState: NetworkControllerState) {
         super(initialState);
@@ -457,29 +464,27 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
     /**
      * It returns the Network Provider instance
-     * @returns {ethers.providers.StaticJsonRpcProvider}
+     * @returns {StaticJsonRpcProvider}
      */
-    public getProvider(): ethers.providers.StaticJsonRpcProvider {
+    public getProvider(): StaticJsonRpcProvider {
         return this.provider;
     }
 
     /**
      * It returns the Ethereum mainnet Flashbots Provider instance
-     * @returns {ethers.providers.StaticJsonRpcProvider}
+     * @returns {StaticJsonRpcProvider}
      */
-    public getFlashbotsProvider(): ethers.providers.StaticJsonRpcProvider {
-        return new ethers.providers.StaticJsonRpcProvider(
-            'https://rpc.flashbots.net'
-        );
+    public getFlashbotsProvider(): StaticJsonRpcProvider {
+        return new StaticJsonRpcProvider('https://rpc.flashbots.net');
     }
 
     /**
      * Gets a provider for a given network
-     * @returns {ethers.providers.StaticJsonRpcProvider}
+     * @returns {StaticJsonRpcProvider}
      */
     public getProviderFromName = (
         networkName: string
-    ): ethers.providers.StaticJsonRpcProvider => {
+    ): StaticJsonRpcProvider => {
         const network = this.searchNetworkByName(networkName);
         return this._getProviderForNetwork(network.chainId, network.rpcUrls[0]);
     };
@@ -489,12 +494,12 @@ export default class NetworkController extends BaseController<NetworkControllerS
      *
      * @param chainId the network's chainId
      * @param userNetworksOnly whether return the generated provider if the chainId exists on the user's network list.
-     * @returns {ethers.providers.StaticJsonRpcProvider}
+     * @returns {StaticJsonRpcProvider}
      */
     public getProviderForChainId = (
         chainId: number,
         userNetworksOnly = true
-    ): ethers.providers.StaticJsonRpcProvider | undefined => {
+    ): StaticJsonRpcProvider | undefined => {
         if (this.network.chainId === chainId) {
             return this.provider;
         }
@@ -526,7 +531,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         const blockWalletNode = isABlockWalletNode(rpcUrl);
         return this._overloadProviderMethods(
             { chainId },
-            new ethers.providers.StaticJsonRpcProvider(
+            new StaticJsonRpcProvider(
                 {
                     url: rpcUrl,
                     allowGzip: blockWalletNode,
@@ -543,8 +548,8 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * It returns the latest block from the network
      */
     public async getLatestBlock(
-        provider: ethers.providers.JsonRpcProvider = this.getProvider()
-    ): Promise<ethers.providers.Block> {
+        provider: JsonRpcProvider = this.getProvider()
+    ): Promise<Block> {
         return provider.getBlock('latest');
     }
 
@@ -556,7 +561,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         forceUpdate = false,
         //required by parameter to avoid returning undefined if the user hasn't added the chain
         //previous check should be done before invoking this method.
-        provider: ethers.providers.JsonRpcProvider = this.getProvider()
+        provider: JsonRpcProvider = this.getProvider()
     ): Promise<boolean> {
         let shouldFetchTheCurrentState = false;
 
@@ -613,18 +618,18 @@ export default class NetworkController extends BaseController<NetworkControllerS
     /**
      * Get current selected network
      *
-     * @returns Promise<Network> (https://docs.ethers.io/v5/api/providers/provider/#Provider-getNetwork)
+     * @returns Promise<EthersNetwork> (https://docs.ethers.io/v5/api/providers/provider/#Provider-getNetwork)
      */
-    public async getNetwork(): Promise<ethers.providers.Network> {
+    public async getNetwork(): Promise<EthersNetwork> {
         return this.provider.getNetwork();
     }
 
     /**
      * Stalls until network is connected
      *
-     * @returns Promise<Network> (https://docs.ethers.io/v5/api/providers/provider/#Provider-ready)
+     * @returns Promise<EthersNetwork> (https://docs.ethers.io/v5/api/providers/provider/#Provider-ready)
      */
-    public async waitUntilNetworkLoaded(): Promise<ethers.providers.Network> {
+    public async waitUntilNetworkLoaded(): Promise<EthersNetwork> {
         return this.provider.ready;
     }
 
@@ -632,9 +637,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * It transfer the list of listeners from the state provider to a new one when changing networks
      * @param newProvider The provider for the selected nework
      */
-    private _updateListeners(
-        newProvider: ethers.providers.StaticJsonRpcProvider
-    ) {
+    private _updateListeners(newProvider: StaticJsonRpcProvider) {
         const listeners = this.getProvider()._events.map((ev) => ({
             name: ev.event,
             listener: ev.listener,
@@ -716,7 +719,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         transactionHash: string,
         confirmations?: number,
         timeout?: number
-    ): Promise<ethers.providers.TransactionReceipt> {
+    ): Promise<TransactionReceipt> {
         return this.getProvider().waitForTransaction(
             transactionHash,
             confirmations,
@@ -779,8 +782,8 @@ export default class NetworkController extends BaseController<NetworkControllerS
     };
 
     private _isProviderReady(
-        provider: ethers.providers.StaticJsonRpcProvider = this.provider
-    ): Promise<ethers.providers.Network | undefined> {
+        provider: StaticJsonRpcProvider = this.provider
+    ): Promise<Network | undefined> {
         return poll(
             async () => {
                 try {
@@ -806,23 +809,23 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
     /**
      * Overload provider methods for some chains that present an special case.
-     * @returns {ethers.providers.StaticJsonRpcProvider}
+     * @returns {StaticJsonRpcProvider}
      */
     private _overloadProviderMethods = (
         { chainId }: { chainId: number },
-        provider: ethers.providers.StaticJsonRpcProvider
-    ): ethers.providers.StaticJsonRpcProvider => {
+        provider: StaticJsonRpcProvider
+    ): StaticJsonRpcProvider => {
         switch (chainId) {
             // celo
             case 42220: {
                 const originalBlockFormatter: (
                     value: any,
                     format: any
-                ) => ethers.providers.Block = provider.formatter._block;
+                ) => Block = provider.formatter._block;
                 provider.formatter._block = (value: any, format: any) => {
                     return originalBlockFormatter(
                         {
-                            gasLimit: constants.Zero,
+                            gasLimit: Zero,
                             ...value,
                         },
                         format

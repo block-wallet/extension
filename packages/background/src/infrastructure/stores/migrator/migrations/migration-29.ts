@@ -1,6 +1,6 @@
 import { BlankAppState } from '../../../../utils/constants/initialState';
 import { IMigration } from '../IMigration';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 
 /**
  * This migration updates the gas lower cap for polygon

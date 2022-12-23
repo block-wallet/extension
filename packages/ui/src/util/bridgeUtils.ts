@@ -5,7 +5,7 @@ import {
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 import { IBridgeRoute } from "@block-wallet/background/utils/bridgeApi"
 import { IChain } from "@block-wallet/background/utils/types/chain"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import {
     BridgeImplementation,
     BridgeStatus,
@@ -26,7 +26,7 @@ import {
 import { DetailedItem } from "../components/transactions/TransactionDetailsList"
 import { BridgeTransactionsData } from "./hooks/useGetBridgeTransactionsData"
 import isNil from "./isNil"
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import { bnOr0 } from "./numberUtils"
 
 const LIFI_NATIVE_ADDRESS = "0x0000000000000000000000000000000000000000"

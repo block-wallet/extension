@@ -12,7 +12,7 @@ import { searchTokenInAssetsList } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
 // Assets
-import { utils } from "ethers/lib/ethers"
+import { isAddress } from "@ethersproject/address"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
@@ -39,7 +39,7 @@ const AddTokensPage = () => {
         { initialValue: history.location.state?.searchValue ?? "" }
     )
 
-    const isManualTokenView = utils.isAddress(searchedValue)
+    const isManualTokenView = isAddress(searchedValue)
     useEffect(() => {
         if (searchedValue && !isManualTokenView) {
             if (/^[a-zA-Z0-9_.-]{3,}$/.test(searchedValue)) {

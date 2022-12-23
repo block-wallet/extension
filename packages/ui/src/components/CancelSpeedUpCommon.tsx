@@ -3,8 +3,8 @@ import * as yup from "yup"
 import { InferType } from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
-import { BigNumber } from "ethers"
-import { formatUnits, parseUnits } from "ethers/lib/utils"
+import { BigNumber } from "@ethersproject/bignumber"
+import { formatUnits, parseUnits } from "@ethersproject/units"
 import classnames from "classnames"
 
 // Components

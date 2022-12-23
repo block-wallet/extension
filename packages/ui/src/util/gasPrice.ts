@@ -1,9 +1,10 @@
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
 import { Rates } from "@block-wallet/background/controllers/ExchangeRatesController"
-import { BigNumber, utils } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { DEFAULT_TRANSACTION_GAS_PERCENTAGE_THRESHOLD } from "./constants"
 import { formatCurrency, toCurrencyAmount } from "./formatCurrency"
 import { FeeData } from "@ethersproject/abstract-provider"
+import { formatUnits } from "@ethersproject/units"
 import { DisplayGasPricesData } from "../components/gas/GasPricesInfo"
 
 interface GasFeesCalculation {
@@ -132,7 +133,7 @@ const estimatedGasExceedsBaseHigherThreshold = (
 const gasToGweiString = (gas: BigNumber | null) => {
     if (!gas) return ""
 
-    const gasInGwei = utils.formatUnits(gas, "gwei")
+    const gasInGwei = formatUnits(gas, "gwei")
 
     if (Number(gasInGwei) > 1) {
         return String(Math.round(Number(gasInGwei)))

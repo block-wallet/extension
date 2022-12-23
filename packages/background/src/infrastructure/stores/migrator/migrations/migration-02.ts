@@ -1,6 +1,6 @@
 import { GasPricesControllerState } from '@block-wallet/background/controllers/GasPricesController';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { IMigration } from '../IMigration';
 
 export default {

@@ -49,6 +49,7 @@ import {
     TransactionWatcherControllerEvents,
 } from './TransactionWatcherController';
 import { isNativeTokenAddress } from '../utils/token';
+import isTokenExcluded from 'banned-assets';
 
 export interface AccountBalanceToken {
     token: Token;
@@ -767,6 +768,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 tokens: {},
             } as AccountBalance;
 
+            // list of known tokens
+            const knownTokens =
+                await this._tokenController.getContractAddresses(chainId);
+
             // Adding the user custom tokens to the list
             const userTokens =
                 await this._tokenController.getUserTokenContractAddresses(
@@ -824,7 +829,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         if (token) {
                             if (
                                 balance.gt(zero) &&
-                                !userTokens.includes(tokenAddress)
+                                !userTokens.includes(tokenAddress) &&
+                                knownTokens.includes(tokenAddress) && // the token has to be known (not spam)
+                                isTokenExcluded(chainId, tokenAddress) // the token must be no spam
                             ) {
                                 await this._tokenController.addCustomToken(
                                     token,

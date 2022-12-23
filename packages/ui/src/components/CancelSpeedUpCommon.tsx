@@ -550,7 +550,7 @@ const CancelAndSpeedUpComponent = ({
                                 : undefined,
                     },
                     {
-                        title: "Original max tip (per gas)",
+                        title: "Original max tip (per gas unit)",
                         content:
                             transactionType ===
                             TransactionType.FEE_MARKET_EIP1559
@@ -561,7 +561,7 @@ const CancelAndSpeedUpComponent = ({
                                 : undefined,
                     },
                     {
-                        title: "Original max price (per gas)",
+                        title: "Original max price (per gas unit)",
                         content:
                             transactionType ===
                             TransactionType.FEE_MARKET_EIP1559
@@ -787,7 +787,7 @@ const CancelAndSpeedUpComponent = ({
                             )}
                         >
                             <TextInput
-                                label="Max Tip (per gas)"
+                                label="Max tip (per gas unit)"
                                 appearance="border"
                                 name="maxPriorityFeePerGas"
                                 value={newFees.maxPriorityFeePerGas}
@@ -834,7 +834,7 @@ const CancelAndSpeedUpComponent = ({
                             )}
                         >
                             <TextInput
-                                label="Max Price (per gas)"
+                                label="Max price (per gas unit)"
                                 appearance="border"
                                 name="maxFeePerGas"
                                 value={newFees.maxFeePerGas}

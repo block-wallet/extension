@@ -1,5 +1,5 @@
 import { isNativeTokenAddress } from '../../../utils/token';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import NetworkController from '../../NetworkController';
 import { PreferencesController } from '../../PreferencesController';
 import TransactionController from '../../transactions/TransactionController';

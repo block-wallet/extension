@@ -1,5 +1,5 @@
 import { FC, useState } from "react"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import classnames from "classnames"
 import { GasPriceLevels } from "@block-wallet/background/controllers/GasPricesController"
 import Dialog from "../dialog/Dialog"

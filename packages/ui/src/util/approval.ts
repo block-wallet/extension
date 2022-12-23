@@ -1,4 +1,4 @@
-import { parseUnits } from "ethers/lib/utils"
+import { parseUnits } from "@ethersproject/units"
 import { stripHexPrefix } from "ethereumjs-util"
 
 /**

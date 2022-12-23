@@ -1,5 +1,5 @@
 import type { BlankAppState } from '../../utils/constants/initialState';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import BaseStorageStore from './BaseStorageStore';
 import { TransactionTypeEnum } from '@block-wallet/background/controllers/TransactionWatcherController';
 

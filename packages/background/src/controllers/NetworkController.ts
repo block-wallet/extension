@@ -45,6 +45,8 @@ export interface NetworkControllerState {
     isEIP1559Compatible: { [chainId in number]: boolean };
 }
 
+import { RPChProvider } from '../../../../../RPCh/packages/ethers';
+
 export default class NetworkController extends BaseController<NetworkControllerState> {
     public static readonly CURRENT_HARDFORK: string = 'london';
     private provider: ethers.providers.StaticJsonRpcProvider;
@@ -481,7 +483,19 @@ export default class NetworkController extends BaseController<NetworkControllerS
         networkName: string
     ): ethers.providers.StaticJsonRpcProvider => {
         const network = this.searchNetworkByName(networkName);
-        return this._getProviderForNetwork(network.chainId, network.rpcUrls[0]);
+        const rpchNetwork = new RPChProvider(network.rpcUrls[0], {
+            discoveryPlatformApiEndpoint: '',
+            entryNodeApiEndpoint:
+                'https://one_carpo_aras_yellow.playground.hoprnet.org:3001',
+            entryNodeApiToken: 'd97#90B8132be#dA5D1c#412',
+            entryNodePeerId:
+                '16Uiu2HAmM426na7CjAyKz6pUrGiztRrVfi7jzswgGPcdib6AXJa9',
+            exitNodePeerId:
+                '16Uiu2HAmRF2A9HeYHhYtvLjVPUaVX9YwVbJaQjqSKX3H5ckkuPwR',
+            freshNodeThreshold: 1000,
+            maxResponses: 300,
+        });
+        return rpchNetwork;
     };
 
     /**

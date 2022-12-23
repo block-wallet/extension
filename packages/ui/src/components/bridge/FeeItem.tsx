@@ -1,5 +1,5 @@
 import { IToken } from "@block-wallet/background/controllers/erc-20/Token"
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import classnames from "classnames"
 import { useState } from "react"
 import { formatRounded } from "../../util/formatRounded"

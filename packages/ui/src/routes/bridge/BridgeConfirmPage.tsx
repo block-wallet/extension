@@ -12,7 +12,7 @@ import WaitingDialog from "../../components/dialog/WaitingDialog"
 import arrowDown from "../../assets/images/icons/arrow_down_long.svg"
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import {

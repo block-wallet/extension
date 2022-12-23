@@ -15,7 +15,7 @@ import { InferType } from "yup"
 import { searchTokenInAssetsList } from "../../context/commActions"
 
 // Assets
-import { utils } from "ethers/lib/ethers"
+import { isValidAddress } from "ethereumjs-util"
 import { useForm } from "react-hook-form"
 import { useAccountTokens } from "../../context/hooks/useAccountTokens"
 import { MdRefresh } from "react-icons/md"
@@ -133,7 +133,7 @@ const AddTokenManualView = ({
 
     const fetchTokenData = async (tokenAddress: string) => {
         if (!setSubmitEnabled) return
-        if (!utils.isAddress(tokenAddress)) return
+        if (!isValidAddress(tokenAddress)) return
 
         setSubmitEnabled(false)
         setRefetchOption(false)

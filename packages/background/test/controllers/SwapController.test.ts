@@ -9,7 +9,7 @@ import TransactionController from '@block-wallet/background/controllers/transact
 import initialState from '@block-wallet/background/utils/constants/initialState';
 import sinon from 'sinon';
 import { ApproveTransaction } from '@block-wallet/background/controllers/erc-20/transactions/ApproveTransaction';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { ContractSignatureParser } from '@block-wallet/background/controllers/transactions/ContractSignatureParser';
 import { GasPricesController } from '@block-wallet/background/controllers/GasPricesController';
 import {

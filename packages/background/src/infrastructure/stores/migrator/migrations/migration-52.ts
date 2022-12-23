@@ -1,5 +1,5 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { IMigration } from '../IMigration';
 
 /**

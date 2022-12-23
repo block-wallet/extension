@@ -1,5 +1,5 @@
-import { BigNumber } from "ethers"
-import { formatUnits } from "ethers/lib/utils"
+import { BigNumber } from "@ethersproject/bignumber"
+import { formatUnits } from "@ethersproject/units"
 import { FunctionComponent, useMemo } from "react"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { getAccountColor } from "../../util/getAccountColor"

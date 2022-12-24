@@ -292,13 +292,15 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     ))
                 );
 
-                await this.updateAccounts(
-                    {
-                        addresses: [accountAddress],
-                        assetAddresses,
-                    },
-                    chainId
-                );
+                if (assetAddresses.length > 0) {
+                    await this.updateAccounts(
+                        {
+                            addresses: [accountAddress],
+                            assetAddresses,
+                        },
+                        chainId
+                    );
+                }
             }
         );
 
@@ -309,13 +311,15 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 accountAddress: string,
                 tokenAddresses: string[]
             ) => {
-                await this.updateAccounts(
-                    {
-                        addresses: [accountAddress],
-                        assetAddresses: tokenAddresses,
-                    },
-                    chainId
-                );
+                if (tokenAddresses.length > 0) {
+                    await this.updateAccounts(
+                        {
+                            addresses: [accountAddress],
+                            assetAddresses: tokenAddresses,
+                        },
+                        chainId
+                    );
+                }
             }
         );
     }

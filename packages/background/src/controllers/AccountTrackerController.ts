@@ -49,7 +49,6 @@ import {
     TransactionWatcherControllerEvents,
 } from './TransactionWatcherController';
 import { isNativeTokenAddress } from '../utils/token';
-import isTokenExcluded from 'banned-assets';
 
 export interface AccountBalanceToken {
     token: Token;
@@ -238,21 +237,21 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             this.store.getState().accounts
                         );
 
-                        for (const address in addresses) {
+                        for (let i = 0; i < addresses.length; i++) {
                             const assetAddresses: string[] = [
                                 NATIVE_TOKEN_ADDRESS,
                             ];
 
                             assetAddresses.push(
                                 ...(await this._tokenController.getUserTokenContractAddresses(
-                                    address,
+                                    addresses[i],
                                     chainId
                                 ))
                             );
 
                             await this.updateAccounts(
                                 {
-                                    addresses: [address],
+                                    addresses: [addresses[i]],
                                     assetAddresses: assetAddresses,
                                 },
                                 chainId
@@ -830,8 +829,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             if (
                                 balance.gt(zero) &&
                                 !userTokens.includes(tokenAddress) &&
-                                knownTokens.includes(tokenAddress) && // the token has to be known (not spam)
-                                isTokenExcluded(chainId, tokenAddress) // the token must be no spam
+                                knownTokens.includes(tokenAddress) // the token has to be known (not spam)
                             ) {
                                 await this._tokenController.addCustomToken(
                                     token,
@@ -839,12 +837,19 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                     chainId,
                                     true
                                 );
+                                userTokens.push(tokenAddress);
                             }
 
-                            account.balances[chainId].tokens[tokenAddress] = {
-                                token,
-                                balance,
-                            };
+                            if (
+                                userTokens.includes(tokenAddress) ||
+                                knownTokens.includes(tokenAddress)
+                            ) {
+                                account.balances[chainId].tokens[tokenAddress] =
+                                    {
+                                        token,
+                                        balance,
+                                    };
+                            }
                         }
                     }
                 }

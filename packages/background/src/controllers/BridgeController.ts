@@ -7,7 +7,8 @@ import {
     ContractMethodSignature,
     ContractSignatureParser,
 } from './transactions/ContractSignatureParser';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { TransactionResponse } from '@ethersproject/providers';
 import {
     BridgeTransactionParams,
     MetaType,
@@ -509,6 +510,46 @@ export default class BridgeController extends BaseController<
     };
 
     /**
+     * Remove the bridge transactions data of an account.
+     * @param address
+     */
+    public resetBridgeTransactionsByAddress = async (
+        address: string
+    ): Promise<void> => {
+        const {
+            bridgeReceivingTransactions,
+            perndingBridgeReceivingTransactions,
+        } = this.store.getState();
+
+        let anyUpdate = false;
+
+        // Reset bridge receiving transactions
+        for (const c in bridgeReceivingTransactions) {
+            const chainId = parseInt(c);
+            if (address in bridgeReceivingTransactions[chainId]) {
+                delete bridgeReceivingTransactions[chainId][address];
+                anyUpdate = true;
+            }
+        }
+
+        // Reset pending bridge receiving transactions
+        for (const c in perndingBridgeReceivingTransactions) {
+            const chainId = parseInt(c);
+            if (address in perndingBridgeReceivingTransactions[chainId]) {
+                delete perndingBridgeReceivingTransactions[chainId][address];
+                anyUpdate = true;
+            }
+        }
+
+        if (anyUpdate) {
+            this.store.updateState({
+                bridgeReceivingTransactions,
+                perndingBridgeReceivingTransactions,
+            });
+        }
+    };
+
+    /**
      * Fetch quote details
      *
      * @param getQuoteRequest request to get a quote
@@ -909,17 +950,13 @@ export default class BridgeController extends BaseController<
             toToken
         );
 
-        let transactionByHash: ethers.providers.TransactionResponse;
+        let transactionByHash: TransactionResponse;
         try {
-            transactionByHash =
-                await retryHandling<ethers.providers.TransactionResponse>(
-                    () =>
-                        receivingChainIdProvider.getTransaction(
-                            receivingTxHash
-                        ),
-                    MILISECOND * 500,
-                    3
-                );
+            transactionByHash = await retryHandling<TransactionResponse>(
+                () => receivingChainIdProvider.getTransaction(receivingTxHash),
+                MILISECOND * 500,
+                3
+            );
         } catch (e) {
             log.error('_waitForReceivingTx', 'getTransaction', e);
             return false;
@@ -1136,7 +1173,7 @@ export default class BridgeController extends BaseController<
     }
 
     private _transactionByHashToTransactionMeta(
-        transaction: ethers.providers.TransactionResponse,
+        transaction: TransactionResponse,
         isRefund: boolean
     ): Partial<TransactionMeta> {
         return {

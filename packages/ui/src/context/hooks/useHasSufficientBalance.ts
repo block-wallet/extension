@@ -1,6 +1,7 @@
 import { AccountBalanceToken } from "@block-wallet/background/controllers/AccountTrackerController"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { BigNumber, utils } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
+import { parseUnits } from "@ethersproject/units"
 import { useTokensList } from "./useTokensList"
 
 export const useHasSufficientBalance = (
@@ -10,9 +11,7 @@ export const useHasSufficientBalance = (
     const { nativeToken, currentNetworkTokens } = useTokensList()
     const { symbol, address } = token
     value =
-        typeof value === "string"
-            ? utils.parseUnits(value, token.decimals)
-            : value
+        typeof value === "string" ? parseUnits(value, token.decimals) : value
 
     const tokens: { [key in string]: AccountBalanceToken } = {}
 

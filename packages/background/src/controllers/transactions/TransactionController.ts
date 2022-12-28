@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-case-declarations */
 import { EventEmitter } from 'events';
-import { BigNumber, constants } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { Zero } from '@ethersproject/constants';
 import {
     StaticJsonRpcProvider,
     TransactionReceipt,
@@ -225,8 +226,8 @@ export const CANCEL_RATE = {
  * Multiplier used to determine a transaction's increased gas fee during speed up
  */
 export const SPEED_UP_RATE = {
-    numerator: 11,
-    denominator: 10,
+    numerator: 3,
+    denominator: 2,
 };
 
 /**
@@ -1143,28 +1144,41 @@ export class TransactionController extends BaseController<
         const rate =
             type === SpeedUpCancel.CANCEL ? CANCEL_RATE : SPEED_UP_RATE;
 
+        // Docs: https://docs.ethers.org/v5/single-page/#/v5/api/utils/logger/-%23-errors--replacement-underpriced
         if (txType !== TransactionType.FEE_MARKET_EIP1559) {
-            const gasPrice = BnMultiplyByFraction(
+            let gasPrice = BnMultiplyByFraction(
                 transactionMeta.transactionParams.gasPrice!,
                 rate.numerator,
                 rate.denominator
             );
+
+            if (type == SpeedUpCancel.SPEED_UP) {
+                gasPrice = gasPrice.add(1);
+            }
+
             return {
                 gasPrice: gasPrice.gt(fast.gasPrice ?? BigNumber.from(0))
                     ? gasPrice
                     : fast.gasPrice!,
             };
         } else {
-            const maxFeePerGas = BnMultiplyByFraction(
+            let maxFeePerGas = BnMultiplyByFraction(
                 transactionMeta.transactionParams.maxFeePerGas!,
                 rate.numerator,
                 rate.denominator
             );
-            const maxPriorityFeePerGas = BnMultiplyByFraction(
+            if (type == SpeedUpCancel.SPEED_UP) {
+                maxFeePerGas = maxFeePerGas.add(1);
+            }
+
+            let maxPriorityFeePerGas = BnMultiplyByFraction(
                 transactionMeta.transactionParams.maxPriorityFeePerGas!,
                 rate.numerator,
                 rate.denominator
             );
+            if (type == SpeedUpCancel.SPEED_UP) {
+                maxPriorityFeePerGas = maxPriorityFeePerGas.add(1);
+            }
 
             return {
                 maxPriorityFeePerGas: maxPriorityFeePerGas.gt(
@@ -1245,7 +1259,7 @@ export class TransactionController extends BaseController<
                 type,
                 nonce: transactionMeta.transactionParams.nonce,
                 to: transactionMeta.transactionParams.from,
-                value: constants.Zero,
+                value: Zero,
             };
         } else {
             // maxFeePerGas (EIP1559)
@@ -1277,7 +1291,7 @@ export class TransactionController extends BaseController<
                 type,
                 nonce: transactionMeta.transactionParams.nonce,
                 to: transactionMeta.transactionParams.from,
-                value: constants.Zero,
+                value: Zero,
             };
         }
 
@@ -1765,7 +1779,7 @@ export class TransactionController extends BaseController<
         });
     }
 
-    public wipeTransactionsByAddress(address: string): void {
+    public resetTransactionsByAddress(address: string): void {
         const newTransactions = this.store
             .getState()
             .transactions.filter(
@@ -2215,7 +2229,7 @@ export class TransactionController extends BaseController<
 
         // 2. If this is a contract address, safely estimate gas using RPC
         estimatedTransaction.value =
-            typeof value === 'undefined' ? constants.Zero : value;
+            typeof value === 'undefined' ? Zero : value;
 
         // Estimate Gas
         try {

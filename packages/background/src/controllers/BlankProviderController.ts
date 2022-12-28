@@ -43,7 +43,7 @@ import NetworkController, {
     NetworkControllerState,
     NetworkEvents,
 } from './NetworkController';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import {
     ExternalEventSubscription,
     Handlers,
@@ -62,7 +62,9 @@ import {
     providerInstances,
 } from '../infrastructure/connection';
 import { validateSignature } from '../utils/signature';
-import { hexValue } from 'ethers/lib/utils';
+import { keccak256 } from '@ethersproject/keccak256';
+import { toUtf8Bytes } from '@ethersproject/strings';
+import { hexValue } from '@ethersproject/bytes';
 import {
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     Network,
@@ -81,6 +83,7 @@ import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
 import { Filter } from '@ethersproject/abstract-provider';
+import { Zero } from '@ethersproject/constants';
 import {
     parseBlock,
     validateLogSubscriptionRequest,
@@ -432,28 +435,59 @@ export default class BlankProviderController extends BaseController<BlankProvide
 
     private _handleEstimateGas = async (
         params: [EstimateGasParams]
-    ): Promise<BigNumber> => {
-        const estimation = await this._transactionController.estimateGas({
-            transactionParams: {
-                data: params[0].data,
-                value: BigNumber.from(params[0].value),
-                from: params[0].from,
-                to: params[0].to,
-            } as TransactionParams,
-        } as TransactionMeta);
+    ): Promise<string> => {
+        let gasLimit: BigNumber;
+        try {
+            let data = '';
+            if (typeof params[0].data !== 'undefined') {
+                data = params[0].data;
+            }
 
-        if (estimation.estimationSucceeded) {
-            return estimation.gasLimit;
+            let from = '';
+            if (typeof params[0].from !== 'undefined') {
+                from = params[0].from;
+            }
+
+            let to = '';
+            if (typeof params[0].to !== 'undefined') {
+                to = params[0].to;
+            }
+
+            let value = Zero;
+            if (typeof params[0].value !== 'undefined') {
+                value = BigNumber.from(params[0].value);
+            }
+
+            const estimation = await this._transactionController.estimateGas({
+                transactionParams: {
+                    data,
+                    value,
+                    from,
+                    to,
+                } as TransactionParams,
+            } as TransactionMeta);
+
+            gasLimit = estimation.gasLimit;
+        } catch (error) {
+            log.debug('error estimating gas:', error);
+            try {
+                gasLimit = BigNumber.from(
+                    await this._networkController
+                        .getProvider()
+                        .send(JSONRPCMethod.eth_estimateGas, params)
+                );
+            } catch {
+                let { blockGasLimit } = this._gasPricesController.getState();
+                if (!bnGreaterThanZero(blockGasLimit)) {
+                    // London block size 30 millon gas units
+                    // https://ethereum.org/en/developers/docs/gas/#block-size
+                    blockGasLimit = BigNumber.from(30_000_000);
+                }
+                gasLimit = blockGasLimit;
+            }
         }
 
-        let { blockGasLimit } = this._gasPricesController.getState();
-        if (!bnGreaterThanZero(blockGasLimit)) {
-            // London block size 30 millon gas units
-            // https://ethereum.org/en/developers/docs/gas/#block-size
-            blockGasLimit = BigNumber.from(30_000_000);
-        }
-
-        return blockGasLimit;
+        return gasLimit._hex;
     };
 
     /**
@@ -485,7 +519,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
         params: readonly unknown[] | Record<string, unknown> | undefined
     ) => {
         if (params && Array.isArray(params) && typeof params[0] === 'string') {
-            return ethers.utils.keccak256(ethers.utils.toUtf8Bytes(params[0]));
+            return keccak256(toUtf8Bytes(params[0]));
         } else {
             throw new Error(
                 `Wrong input data for web3_sha3: ${params}. See https://eth.wiki/json-rpc/API#web3_sha3`

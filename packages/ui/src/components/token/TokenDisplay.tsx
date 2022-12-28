@@ -4,9 +4,9 @@ import classnames from "classnames"
 import { TokenResponse } from "../../routes/settings/AddTokensPage"
 import { useState, FunctionComponent } from "react"
 import { formatName } from "../../util/formatAccount"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { formatRounded } from "../../util/formatRounded"
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 
 type TokenDisplayType = {
     data: TokenResponse

@@ -1,4 +1,4 @@
-import { providers } from 'ethers';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { memoize } from 'lodash';
 import { getChainListItem } from './chainlist';
 import {
@@ -9,6 +9,7 @@ import {
     isABlockWalletNode,
     customHeadersForBlockWalletNode,
 } from '../utils/nodes';
+
 /**
  * It validates and parses the chainId parameter checking if it's in the expected form
  *
@@ -84,12 +85,11 @@ export const validateNetworkChainId = async (
 export const getCustomRpcChainId = memoize(
     async (rpcUrl: string): Promise<number> => {
         // Check that chainId matches with network's
-        const tempProvider = new providers.StaticJsonRpcProvider({
+        const tempProvider = new StaticJsonRpcProvider({
             url: rpcUrl,
-            // temporarily removed until cors issue is fixed
-            //headers: isABlockWalletNode(rpcUrl)
-            //    ? customHeadersForBlockWalletNode
-            //    : undefined,
+            headers: isABlockWalletNode(rpcUrl)
+                ? customHeadersForBlockWalletNode
+                : undefined,
         });
         const { chainId: rpcChainId } = await tempProvider.getNetwork();
 

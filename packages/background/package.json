@@ -26,7 +26,7 @@
         "loglevel": "^1.7.1",
         "schema-validator": "git+https://github.com/block-wallet/schema-validator.git",
         "uuid": "^8.3.2",
-        "@rpch/ethers": "0.1.1"
+        "@rpch/ethers": "^0.1.3"
     },
     "devDependencies": {
         "@types/bn.js": "^5.1.0",

@@ -834,23 +834,23 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@rpch/common@0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@rpch/common/-/common-0.1.1.tgz#13ae4632a420648e4ce61d8452a21e2721c6d400"
-  integrity sha512-1Qoks9ZovovT0rizAduJWnzEoJzROLk9PJMie8cacRXJHqTIh6Zezeo/cS44qrWfolTCdZGRhtC/vdoOXeUjAw==
+"@rpch/common@0.1.3":
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/@rpch/common/-/common-0.1.3.tgz#253e8a6cf37455f887d9955e625777c606c83fe5"
+  integrity sha512-5pgNW8fk5E6VY5Wz+GYqRSg2VTNSicRukotIrSNAmNbT6o76aD1WTk8SKe5kZwa8kvay4FbKhkD5pAc2K5u5mQ==
   dependencies:
-    "@rpch/crypto-bridge" "0.1.1"
+    "@rpch/crypto-bridge" "0.1.3"
+    cross-fetch "^3.1.5"
     debug "^4.3.4"
     ethers "^5.7.2"
-    nock "^13.2.9"
-    node-fetch "^2.6.2"
+    isomorphic-ws "^5.0.0"
     peer-id "^0.16.0"
     ws "^8.11.0"
 
-"@rpch/crypto-bridge@0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@rpch/crypto-bridge/-/crypto-bridge-0.1.1.tgz#5d652eb9b2c5cf8ee0086e8c8dd76c26dba0a1ad"
-  integrity sha512-i3hotuv4slm1RBNpjm5yhuRdWQ/VEBG2wQdj41pkXAAs0WxZmnUUKPHEaDU2sbAYnwvM9efj/qycVH9P3WKj6w==
+"@rpch/crypto-bridge@0.1.3":
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/@rpch/crypto-bridge/-/crypto-bridge-0.1.3.tgz#80fa7fbb26b547509994d62c519dd8dcfd27bf14"
+  integrity sha512-WEy6sjnWw5/RkKfRXv2PHYfV2uEQE2aDkcx6/ixiaTE0kBMLcTi6JPxBj4A6G+7LxEpD7dQ1WC8Y46ZfQ8f7ug==
   dependencies:
     "@rpch/crypto" "^0.3.0"
 
@@ -859,21 +859,21 @@
   resolved "https://registry.yarnpkg.com/@rpch/crypto/-/crypto-0.3.0.tgz#dc427b80135040e2eca24a3670fac142719fdab9"
   integrity sha512-pJIUYpePLXEE3an54s5f1jVgbMNOSpS+AGvpDwqbrCU5+AMRgFbSvoqik771qeoY+j09bbv3maDKUn57/eU6Og==
 
-"@rpch/ethers@0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@rpch/ethers/-/ethers-0.1.1.tgz#51283699f9b140c89578d09da902b5d2b272328d"
-  integrity sha512-7zs+zdxov//VjJsFAMwGoNQeuvUw85e6ULt/O5Qn+s5Or/Jb6GKgDRZRW08X+ZFK75l8/w4xP0+N+tLHbBpsUQ==
+"@rpch/ethers@0.1.3":
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/@rpch/ethers/-/ethers-0.1.3.tgz#1962c3285e5af0c2883c99cb34bd26f15c4a0e8f"
+  integrity sha512-ztwiM2/no5+DEWFCXx4g/D376T2jtKTEHYW0GBKMCWlB7ijRDKatKChI35kr9JfRPdKfmoJPN3c4qTDSewKDEA==
   dependencies:
-    "@rpch/common" "0.1.1"
-    "@rpch/sdk" "0.1.1"
+    "@rpch/common" "0.1.3"
+    "@rpch/sdk" "0.1.3"
 
-"@rpch/sdk@0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@rpch/sdk/-/sdk-0.1.1.tgz#47e13f316ef706328b7d72e44313d67bc0a6562c"
-  integrity sha512-zolpcubI1TevQPBE2WEEOAZK8QBqogtgp487oNtzRjZKg/5eEy1Ynri+DmHZaqTYCzb2TFgTyNOHkd3NHS0HsA==
+"@rpch/sdk@0.1.3":
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/@rpch/sdk/-/sdk-0.1.3.tgz#c6684d7d9871e2548092704c7fc3a9034104027f"
+  integrity sha512-5MqEbaBhKLGqtHm7DQK9P7boGYPar7zxIY2jtZK7lT/TTFQaKu14Jfg9vOx5ttEjuKAptbpu+7MHKiFxit46QQ==
   dependencies:
-    "@rpch/common" "0.1.1"
-    "@rpch/crypto-bridge" "0.1.1"
+    "@rpch/common" "0.1.3"
+    "@rpch/crypto-bridge" "0.1.3"
     peer-id "^0.16.0"
 
 "@scure/base@~1.1.0":
@@ -3740,6 +3740,11 @@ isomorphic-fetch@^3.0.0:
     node-fetch "^2.6.1"
     whatwg-fetch "^3.4.1"
 
+isomorphic-ws@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/isomorphic-ws/-/isomorphic-ws-5.0.0.tgz#e5529148912ecb9b451b46ed44d53dae1ce04bbf"
+  integrity sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==
+
 istanbul-lib-coverage@^3.0.0, istanbul-lib-coverage@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/istanbul-lib-coverage/-/istanbul-lib-coverage-3.2.0.tgz#189e7909d0a39fa5a3dfad5b03f71947770191d3"
@@ -3926,11 +3931,6 @@ json-stable-stringify@^1.0.1:
   integrity sha512-eunSSaEnxV12z+Z73y/j5N37/In40GK4GmsSy+tEHJMxknvqnA7/djeYtAgW0GsWHUfg+847WJjKaEylk2y09g==
   dependencies:
     jsonify "^0.0.1"
-
-json-stringify-safe@^5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/json-stringify-safe/-/json-stringify-safe-5.0.1.tgz#1296a2d58fd45f19a0f6ce01d65701e2c735b6eb"
-  integrity sha512-ZClg6AaYvamvYEE82d3Iyd3vSSIjQ+odgjaTzRuO3s7toCdFKczob2i0zCh7JE8kWn17yvAWhUVxvqGwUalsRA==
 
 json5@^1.0.1:
   version "1.0.1"
@@ -4326,16 +4326,6 @@ nise@^4.0.4:
     just-extend "^4.0.2"
     path-to-regexp "^1.7.0"
 
-nock@^13.2.9:
-  version "13.2.9"
-  resolved "https://registry.yarnpkg.com/nock/-/nock-13.2.9.tgz#4faf6c28175d36044da4cfa68e33e5a15086ad4c"
-  integrity sha512-1+XfJNYF1cjGB+TKMWi29eZ0b82QOvQs2YoLNzbpWGqFMtRQHTa57osqdGj4FrFPgkO4D4AZinzUJR9VvW3QUA==
-  dependencies:
-    debug "^4.1.0"
-    json-stringify-safe "^5.0.1"
-    lodash "^4.17.21"
-    propagate "^2.0.0"
-
 node-addon-api@^2.0.0:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-2.0.2.tgz#432cfa82962ce494b132e9d72a15b29f71ff5d32"
@@ -4346,7 +4336,7 @@ node-addon-api@^3.0.0:
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-3.2.1.tgz#81325e0a2117789c0128dab65e7e38f07ceba161"
   integrity sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==
 
-node-fetch@2.6.7, node-fetch@^2.6.1, node-fetch@^2.6.2:
+node-fetch@2.6.7, node-fetch@^2.6.1:
   version "2.6.7"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.7.tgz#24de9fba827e3b4ae44dc8b20256a379160052ad"
   integrity sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==
@@ -4736,11 +4726,6 @@ process-on-spawn@^1.0.0:
   integrity sha512-1WsPDsUSMmZH5LeMLegqkPDrsGgsWwk1Exipy2hvB0o/F0ASzbpIctSCcZIK1ykJvtTJULEH+20WOFjMvGnCTg==
   dependencies:
     fromentries "^1.2.0"
-
-propagate@^2.0.0:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/propagate/-/propagate-2.0.1.tgz#40cdedab18085c792334e64f0ac17256d38f9a45"
-  integrity sha512-vGrhOavPSTz4QVNuBNdcNXePNdNMaO1xj9yBeH1ScQPjk/rhg9sSlCXPhMkFuaNNW/syTvYqsnbIJxMBfRbbag==
 
 protobufjs@^6.10.2, protobufjs@^6.11.2:
   version "6.11.3"

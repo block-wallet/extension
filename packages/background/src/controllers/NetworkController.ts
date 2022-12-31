@@ -53,8 +53,7 @@ export interface NetworkControllerState {
     isEIP1559Compatible: { [chainId in number]: boolean };
 }
 
-import { RPChProvider } from '../../../../../rpch/packages/ethers/build';
-// import { RPChProvider } from '@rpch/ethers';
+import { RPChProvider } from '@rpch/ethers';
 let provider: StaticJsonRpcProvider;
 
 class RPChStore extends BaseStorageStore<string> {

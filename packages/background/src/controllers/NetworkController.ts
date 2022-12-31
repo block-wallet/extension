@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import Common from '@ethereumjs/common';
 import { BaseController } from '../infrastructure/BaseController';
+import BaseStorageStore from '../infrastructure/stores/BaseStorageStore';
 import {
     Network,
     Networks,
@@ -52,7 +53,16 @@ export interface NetworkControllerState {
     isEIP1559Compatible: { [chainId in number]: boolean };
 }
 
-import { RPChProvider } from '../../../../../RPCh/packages/ethers';
+import { RPChProvider } from '../../../../../rpch/packages/ethers/build';
+// import { RPChProvider } from '@rpch/ethers';
+let provider: StaticJsonRpcProvider;
+
+class RPChStore extends BaseStorageStore<string> {
+    constructor() {
+        super('rpch');
+    }
+}
+const rpchStore = new RPChStore();
 
 export default class NetworkController extends BaseController<NetworkControllerState> {
     public static readonly CURRENT_HARDFORK: string = 'london';
@@ -488,19 +498,42 @@ export default class NetworkController extends BaseController<NetworkControllerS
         networkName: string
     ): StaticJsonRpcProvider => {
         const network = this.searchNetworkByName(networkName);
-        const rpchNetwork = new RPChProvider(network.rpcUrls[0], {
-            discoveryPlatformApiEndpoint: '',
-            entryNodeApiEndpoint:
-                'https://one_carpo_aras_yellow.playground.hoprnet.org:3001',
-            entryNodeApiToken: 'd97#90B8132be#dA5D1c#412',
-            entryNodePeerId:
-                '16Uiu2HAmM426na7CjAyKz6pUrGiztRrVfi7jzswgGPcdib6AXJa9',
-            exitNodePeerId:
-                '16Uiu2HAmRF2A9HeYHhYtvLjVPUaVX9YwVbJaQjqSKX3H5ckkuPwR',
-            freshNodeThreshold: 1000,
-            maxResponses: 300,
-        });
-        return rpchNetwork;
+
+        console.log('get provider', network);
+
+        if (provider) return provider;
+
+        provider = new RPChProvider(
+            'https://primary.gnosis-chain.rpc.hoprtech.net',
+            10000,
+            {
+                discoveryPlatformApiEndpoint: '',
+                entryNodeApiEndpoint: 'http://localhost:13301',
+                entryNodeApiToken: '^^awesomeHOPRr3l4y^^',
+                entryNodePeerId:
+                    '16Uiu2HAm7ZzsLv85xdv5ZjJmUPqxYD2aY86vqDzdH3gCQJ3RBsxb',
+                exitNodePeerId:
+                    '16Uiu2HAmTf3Rfw4Q3pn2T5tTtbhqYZVL4s4cjwVCVsLSJwUTycYL',
+                exitNodePubKey:
+                    '0x036169fb47b14118dda35d866093c4224bcf8f1a1310108f4f2a79eaaddd1c4347',
+                freshNodeThreshold: 1000,
+                maxResponses: 300,
+            },
+            (k, v) => {
+                return new Promise<void>((resolve) => {
+                    rpchStore.set(k, v, resolve);
+                });
+            },
+            (k) => {
+                return new Promise((resolve) => {
+                    rpchStore.get(k, resolve);
+                });
+            }
+        );
+
+        console.log('provider', provider);
+
+        return provider;
     };
 
     /**

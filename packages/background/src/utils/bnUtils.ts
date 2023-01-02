@@ -31,6 +31,17 @@ export const bnToHex = (inputBn: BN): string => {
 };
 
 /**
+ * Converts a bigint object to a hex string with a '0x' prefix
+ *
+ * @param {bigint} inputBn - The bigint to convert to a hex string
+ * @returns {string} - A '0x' prefixed hex string
+ *
+ */
+export const bigIntToHex = (inputBn: bigint): string => {
+    return addHexPrefix(inputBn.toString(16));
+};
+
+/**
  * Checks if a big number is greater than zero
  *
  * @param {BigNumber} bn - BigNumber to check.

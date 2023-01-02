@@ -10,7 +10,6 @@ import {
 import log from 'loglevel';
 import {
     addHexPrefix,
-    bnToHex,
     bufferToHex,
     isValidAddress,
     toChecksumAddress,
@@ -39,7 +38,11 @@ import {
     validateTransaction,
 } from './utils/utils';
 import { toError } from '../../utils/toError';
-import { bnGreaterThanZero, BnMultiplyByFraction } from '../../utils/bnUtils';
+import {
+    bigIntToHex,
+    bnGreaterThanZero,
+    BnMultiplyByFraction,
+} from '../../utils/bnUtils';
 import { ProviderError } from '../../utils/types/ethereum';
 import { runPromiseSafely } from '../../utils/promises';
 import { PreferencesController } from '../PreferencesController';
@@ -907,10 +910,10 @@ export class TransactionController extends BaseController<
             transactionMeta.status = TransactionStatus.SIGNED;
 
             // Set r,s,v values
-            transactionMeta.transactionParams.r = bnToHex(signedTx.r!);
-            transactionMeta.transactionParams.s = bnToHex(signedTx.s!);
+            transactionMeta.transactionParams.r = bigIntToHex(signedTx.r!);
+            transactionMeta.transactionParams.s = bigIntToHex(signedTx.s!);
             transactionMeta.transactionParams.v = BigNumber.from(
-                bnToHex(signedTx.v!)
+                bigIntToHex(signedTx.v!)
             ).toNumber();
 
             // Serialize transaction & update
@@ -1363,9 +1366,9 @@ export class TransactionController extends BaseController<
         newTransactionMeta.status = TransactionStatus.SIGNED;
         newTransactionMeta.transactionParams = {
             ...newTransactionMeta.transactionParams,
-            r: bnToHex(signedTx.r!),
-            s: bnToHex(signedTx.s!),
-            v: BigNumber.from(bnToHex(signedTx.v!)).toNumber(),
+            r: bigIntToHex(signedTx.r!),
+            s: bigIntToHex(signedTx.s!),
+            v: BigNumber.from(bigIntToHex(signedTx.v!)).toNumber(),
         };
         this.store.updateState({
             transactions: this.trimTransactionsForState(transactions),
@@ -1566,9 +1569,9 @@ export class TransactionController extends BaseController<
         newTransactionMeta.status = TransactionStatus.SIGNED;
         newTransactionMeta.transactionParams = {
             ...newTransactionMeta.transactionParams,
-            r: bnToHex(signedTx.r!),
-            s: bnToHex(signedTx.s!),
-            v: BigNumber.from(bnToHex(signedTx.v!)).toNumber(),
+            r: bigIntToHex(signedTx.r!),
+            s: bigIntToHex(signedTx.s!),
+            v: BigNumber.from(bigIntToHex(signedTx.v!)).toNumber(),
         };
         this.store.updateState({
             transactions: this.trimTransactionsForState(transactions),

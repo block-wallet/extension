@@ -370,8 +370,8 @@ export class TokenController extends BaseController<TokenControllerState> {
 
         this.emit(
             TokenControllerEvents.USER_TOKEN_CHANGE,
-            this.getSelectedAccountAddress(),
-            this.getSelectedNetworkChainId(),
+            accountAddress ? accountAddress : this.getSelectedAccountAddress(),
+            chainId ? chainId : this.getSelectedNetworkChainId(),
             tokens.map(function (token) {
                 return token.address;
             })

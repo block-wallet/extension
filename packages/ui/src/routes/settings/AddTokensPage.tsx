@@ -12,7 +12,7 @@ import { searchTokenInAssetsList } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
 // Assets
-import { utils } from "ethers/lib/ethers"
+import { isAddress } from "@ethersproject/address"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
@@ -39,19 +39,19 @@ const AddTokensPage = () => {
         { initialValue: history.location.state?.searchValue ?? "" }
     )
 
-    const isManualTokenView = utils.isAddress(searchedValue)
+    const isManualTokenView = isAddress(searchedValue)
     useEffect(() => {
-        if (searchedValue) {
+        if (searchedValue && !isManualTokenView) {
             if (/^[a-zA-Z0-9_.-]{3,}$/.test(searchedValue)) {
                 // Accept only number, letters and - . _
                 searchTokenInAssetsList(searchedValue.toUpperCase())
                     .then((res) => {
-                        const exacts = res.filter(
+                        const exacts = res.tokens.filter(
                             (r) =>
                                 r.symbol.toLowerCase() ===
                                 searchedValue.toLowerCase()
                         )
-                        const others = res.filter(
+                        const others = res.tokens.filter(
                             (r) =>
                                 r.symbol.toLowerCase() !==
                                 searchedValue.toLowerCase()
@@ -94,6 +94,7 @@ const AddTokensPage = () => {
                             history.replace("/")
                         }
                     }}
+                    networkIndicator
                 />
             }
             // submitOnEnter={{ isEnabled: submitEnabled }}

@@ -2,10 +2,11 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { Redirect } from "react-router-dom"
 import { BsFileEarmarkText } from "react-icons/bs"
 import { AiFillInfoCircle } from "react-icons/ai"
-import { formatUnits, getAddress } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
+import { getAddress } from "@ethersproject/address"
 import { HiOutlineExclamationCircle } from "react-icons/hi"
 
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 
 // Styles
 import { Classes, classnames } from "../../styles"
@@ -384,7 +385,7 @@ const TransactionConfirm: React.FC<{
         return (
             <GenericTooltip
                 top
-                className="w-60 p-2 ml-8"
+                className="w-60 p-2 ml-8 break-all"
                 content={
                     <div>
                         <p>
@@ -752,21 +753,16 @@ const TransactionConfirm: React.FC<{
                         </div>
                     </div>
                 </div>
-
                 <AdvancedSettings
-                    config={{
-                        showCustomNonce: true,
-                        showFlashbots: network.chainId === 1,
-                        address: checksumFromAddress,
-                        gasLimit: transactionGas.gasLimit,
-                    }}
-                    data={{
-                        flashbots: false,
-                    }}
-                    setData={(data) => {
+                    address={checksumFromAddress}
+                    transactionGasLimit={transactionGas.gasLimit}
+                    advancedSettings={transactionAdvancedData}
+                    setAdvancedSettings={(
+                        newSettings: TransactionAdvancedData
+                    ) => {
                         setTransactionAdvancedData({
-                            customNonce: data.customNonce,
-                            flashbots: data.flashbots,
+                            customNonce: newSettings.customNonce,
+                            flashbots: newSettings.flashbots,
                         })
                     }}
                 />

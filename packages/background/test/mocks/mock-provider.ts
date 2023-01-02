@@ -1,11 +1,12 @@
-import { ethers } from 'ethers';
-import sinon from 'sinon';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
+import sinon, { SinonSandbox, SinonStatic } from 'sinon';
 import { INITIAL_NETWORKS } from '../../src/utils/constants/networks';
 
-const MockProvider = (network: string) => {
-    const mockedProvider = sinon.stub(
-        ethers.providers.StaticJsonRpcProvider.prototype
-    );
+const MockProvider = (
+    network: string,
+    sandbox: SinonStatic | SinonSandbox = sinon
+) => {
+    const mockedProvider = sandbox.stub(StaticJsonRpcProvider.prototype);
 
     const _network = network || 'homestead';
     const mayusNetwork = _network.toUpperCase();
@@ -13,17 +14,21 @@ const MockProvider = (network: string) => {
         throw new Error('invalid network');
     }
 
-    mockedProvider.getNetwork.callsFake(() =>
-        Promise.resolve({
-            name: _network,
-            chainId: (INITIAL_NETWORKS as any)[mayusNetwork].chainId,
-        })
-    );
+    const chainId = (INITIAL_NETWORKS as any)[mayusNetwork].chainId;
 
-    mockedProvider._network = {
-        name: _network,
-        chainId: (INITIAL_NETWORKS as any)[mayusNetwork].chainId,
-    };
+    mockedProvider.getNetwork.callsFake(() => {
+        return Promise.resolve({
+            name: _network,
+            chainId,
+        });
+    });
+
+    mockedProvider.send.callsFake((method) => {
+        if (method === 'eth_chainId') {
+            return chainId;
+        }
+        return Promise.resolve(true);
+    });
 
     return mockedProvider;
 };

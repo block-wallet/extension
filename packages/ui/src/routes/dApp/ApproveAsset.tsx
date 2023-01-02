@@ -21,7 +21,7 @@ import {
 } from "../../context/commActions"
 import { AdvancedSettings } from "../../components/transactions/AdvancedSettings"
 import { AiFillInfoCircle } from "react-icons/ai"
-import { BigNumber, ethers } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes, classnames } from "../../styles/classes"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
@@ -37,9 +37,10 @@ import {
 } from "../../context/commTypes"
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
 import { capitalize } from "../../util/capitalize"
-import { formatName } from "../../util/formatAccount"
+import { formatHash, formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
-import { formatUnits, getAddress, parseUnits } from "ethers/lib/utils"
+import { formatUnits, parseUnits } from "@ethersproject/units"
+import { getAddress } from "@ethersproject/address"
 import { getAccountColor } from "../../util/getAccountColor"
 import { parseAllowance } from "../../util/approval"
 import { useBlankState } from "../../context/background/backgroundHooks"
@@ -59,9 +60,10 @@ import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDevic
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { canUserSubmitTransaction } from "../../util/transactionUtils"
+import { MaxUint256 } from "@ethersproject/constants"
 
 const UNKNOWN_BALANCE = "UNKNOWN_BALANCE"
-const UNLIMITED_ALLOWANCE = ethers.constants.MaxUint256
+const UNLIMITED_ALLOWANCE = MaxUint256
 
 // Schema
 const GetAllowanceYupSchema = (
@@ -194,6 +196,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
 
     // Local state
     const [tokenName, setTokenName] = useState("")
+    const [tokenLogo, setTokenLogo] = useState("")
     const [isEditAllowancePage, setIsEditAllowancePage] = useState(false)
     const [isCustomSelected, setIsCustomSelected] = useState(false)
     const [customAllowance, setCustomAllowance] = useState("")
@@ -239,7 +242,6 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const tokenAddress = params.to!
     const tokenDecimals = transaction.advancedData?.decimals!
     const defaultAllowance = transaction.advancedData?.allowance!
-    const networkName = capitalize(desc)
 
     const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
         useTransactionWaitingDialog(
@@ -307,8 +309,10 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
             })
 
         searchTokenInAssetsList(tokenAddress)
-            .then((token) => {
-                setTokenName(token[0].symbol)
+            .then((searchTokensResponse) => {
+                const token = searchTokensResponse.tokens[0]
+                setTokenName(token.symbol)
+                setTokenLogo(token.logo)
             })
             .catch(() => {
                 throw new Error("Failed to fetch token data")
@@ -460,26 +464,24 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     />
                 )}
                 <AdvancedSettings
-                    config={{
-                        showCustomNonce: true,
-                        showFlashbots: false,
-                        address: checksumFromAddress,
-                    }}
-                    data={{
-                        flashbots: false,
-                    }}
-                    setData={(data) => {
+                    address={checksumFromAddress}
+                    advancedSettings={transactionAdvancedData}
+                    setAdvancedSettings={(
+                        newSettings: TransactionAdvancedData
+                    ) => {
                         setTransactionAdvancedData({
-                            customNonce: data.customNonce,
-                            flashbots: data.flashbots,
+                            customNonce: newSettings.customNonce,
+                            flashbots: newSettings.flashbots,
                         })
                     }}
                 />
-                <div
-                    className="text-xs font-bold text-primary-300 cursor-pointer hover:underline"
-                    onClick={() => setIsEditAllowancePage(true)}
-                >
-                    Set custom allowance
+                <div className="flex flex-col items-end">
+                    <span
+                        className="text-xs font-bold text-primary-300 cursor-pointer hover:underline"
+                        onClick={() => setIsEditAllowancePage(true)}
+                    >
+                        Set custom allowance
+                    </span>
                 </div>
                 <div className="text-xs text-red-500">
                     {!hasBalance && "Insufficient funds."}
@@ -572,7 +574,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     }
                     onFocus={handleFocus}
                 />
-                <ErrorMessage error={errors.customAllowance?.message} />
+                <ErrorMessage>{errors.customAllowance?.message}</ErrorMessage>
             </div>
         </div>
     )
@@ -585,6 +587,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     title={isEditAllowancePage ? "Edit allowance" : "Approval"}
                     backButton={isEditAllowancePage}
                     onBack={() => setIsEditAllowancePage(false)}
+                    networkIndicator
                 >
                     {transactionCount > 1 && (
                         <div className="group relative">
@@ -694,24 +697,46 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     <span className="text-sm font-bold">
                         {formatName(account.name, 15)}
                     </span>
-                    <span className="text-xs text-gray-600">
-                        {`${assetBalance} ${tokenName}`}
-                    </span>
-                    <span className="text-xs text-gray-600">
-                        {formatRounded(
-                            formatUnits(
-                                balance || "0",
-                                nativeToken.token.decimals
-                            )
-                        )}
-                        {` ${nativeToken.token.symbol}`}
+                    <span
+                        className="text-xs text-gray-600 truncate"
+                        title={account.address}
+                    >
+                        {formatHash(account.address)}
                     </span>
                 </div>
-                <div className="flex flex-row items-center ml-auto p-1 px-2 pr-1 text-gray-600 rounded-md border border-primary-200 text-xs bg-green-100">
-                    <span className="inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-green-400 pointer-events-none" />
-                    <span className="mr-1 pointer-events-none text-green-600">
-                        {networkName}
-                    </span>
+                <div className="ml-auto flex flex-col items-end space-x-1">
+                    <div className="flex flex-row items-center">
+                        <span className="text-xs text-gray-600 truncate">
+                            {`${formatName(assetBalance, 18)}`}
+                        </span>
+                        <img
+                            src={tokenLogo}
+                            alt={tokenName}
+                            width="14px"
+                            draggable={false}
+                            className="ml-1"
+                        />
+                    </div>
+                    <div className="flex flex-row items-center mt-1">
+                        <span className="text-xs text-gray-600 truncate">
+                            {formatName(
+                                formatRounded(
+                                    formatUnits(
+                                        balance || "0",
+                                        nativeToken.token.decimals
+                                    )
+                                ),
+                                18
+                            )}
+                        </span>
+                        <img
+                            src={nativeToken.token.logo}
+                            alt={nativeToken.token.symbol}
+                            width="14px"
+                            draggable={false}
+                            className="ml-1"
+                        />
+                    </div>
                 </div>
             </div>
             <Divider />

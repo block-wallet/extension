@@ -1,5 +1,5 @@
 import { FunctionComponent, useState } from "react"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { TransactionArgument } from "@block-wallet/background/controllers/transactions/ContractSignatureParser"
 import { TransactionDetailsTabProps } from "./TransactionDetails"
 import ExpandableText from "../ExpandableText"
@@ -10,7 +10,7 @@ import { generateExplorerLink } from "../../util/getExplorer"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import GenericTooltip from "../label/GenericTooltip"
 import { formatName } from "../../util/formatAccount"
-import { isAddress } from "ethers/lib/utils"
+import { isValidAddress } from "ethereumjs-util"
 import log from "loglevel"
 
 export interface TransactionDetailsProps {
@@ -59,7 +59,7 @@ const ArgumentValue = ({
             <ExpandableText className="allow-select text-gray-600 pt-1">
                 {parsedValue as string}
             </ExpandableText>
-            {isAddress(parsedValue as string) && (
+            {isValidAddress(parsedValue as string) && (
                 <a
                     href={generateExplorerLink(
                         availableNetworks,

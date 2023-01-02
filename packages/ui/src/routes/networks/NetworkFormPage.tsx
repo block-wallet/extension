@@ -35,16 +35,6 @@ import CollapsableWarning from "../../components/CollapsableWarning"
 import { AiOutlineWarning } from "react-icons/ai"
 import usePersistedLocalStorageForm from "../../util/hooks/usePersistedLocalStorageForm"
 
-const URLRegExp = new RegExp(
-    "^(https:\\/\\/)?" + // protocol
-        "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
-        "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
-        "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
-        "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
-        "(\\#[-a-z\\d_]*)?$",
-    "i"
-)
-
 const getStatusFromEnpoint = (
     chainInfo: ChainListItem,
     configuredUrl: string
@@ -55,6 +45,18 @@ const getStatusFromEnpoint = (
     )
         ? RPCUrlValidation.VERIFIED_ENDPOINT
         : RPCUrlValidation.UNVERIFIED_ENDPOINT
+}
+
+const validateUrl = (url: string) => {
+    try {
+        new URL(url)
+        return (
+            url.toLowerCase().startsWith("http://") ||
+            url.toLowerCase().startsWith("https://")
+        )
+    } catch {
+        return false
+    }
 }
 
 interface NetworkInputs {
@@ -79,17 +81,23 @@ interface Props {
 const networkSchema = yup.object({
     name: yup
         .string()
+        .trim()
         .test("is-empty", "Network name is empty.", (s) => {
             return !!s && s.trim().length > 0
         })
-        .max(40, "Network name is too long"),
+        .max(40, "Network name is too long")
+        .required(),
     rpcUrl: yup
         .string()
-        .matches(
-            URLRegExp,
-            "Invalid URL. Make sure that you are using https protocol."
+        .test(
+            "match url shape",
+            "Invalid URL. Make sure that you are using http/s protocol.",
+            (url) => {
+                return url === undefined ? false : validateUrl(url)
+            }
         )
-        .required("RPC URL is empty."),
+        .trim()
+        .required(),
     chainId: yup
         .string()
         .test("is-empty", "Chain Id is empty", (s) => {
@@ -97,15 +105,16 @@ const networkSchema = yup.object({
         })
         .test("numeric", "Chain ID must be numeric", (s) => {
             return !Number.isNaN(Number(s))
-        }),
+        })
+        .required(),
     symbol: yup.string().required("Currency Symbol is empty"),
     blockExplorerUrl: yup
         .string()
         .test(
             "match url shape",
-            "Invalid URL. Make sure that you are using https protocol.",
-            (value) => {
-                return !value || !!URLRegExp.test(value)
+            "Invalid URL. Make sure that you are using http/s protocol.",
+            (url) => {
+                return !url || validateUrl(url)
             }
         ),
     test: yup.boolean(),
@@ -127,12 +136,8 @@ const NetworkFormPage = ({
     const [isValidating, setIsValidating] = useState<boolean>(false)
     const [confirmDeletion, setConfirmDeletion] = useState<boolean>(false)
     const [rpcValidationStatus, setRpcValidationStatus] =
-        useState<RPCUrlValidation>(() => {
-            if (network) {
-                return RPCUrlValidation.VERIFIED_ENDPOINT
-            }
-            return RPCUrlValidation.EMPTY
-        })
+        useState<RPCUrlValidation>(RPCUrlValidation.EMPTY)
+    const [rpcChainId, setRpcChainId] = useState<number>(0)
     const [isNativelySupported, setIsNativelySupported] =
         useState<boolean>(false)
     const { availableNetworks } = useBlankState()!
@@ -169,7 +174,9 @@ const NetworkFormPage = ({
 
     useEffect(() => {
         let ref: NodeJS.Timeout | null = null
-        setIsValidating(true)
+        if (!!watchRPCUrl && !!watchChainId) {
+            setIsValidating(true)
+        }
         const derivateRPCStatusFromWatchers = async () => {
             try {
                 const parsedChainId = parseChainId(watchChainId)
@@ -194,9 +201,11 @@ const NetworkFormPage = ({
                     return
                 }
 
+                if (errors.rpcUrl !== undefined || !validateUrl(watchRPCUrl)) {
+                    setRpcValidationStatus(RPCUrlValidation.INVALID_URL)
+                    return
+                }
                 try {
-                    const chainId = await getRpcChainId(watchRPCUrl)
-
                     //Unknown chain id, validation cannot be done.
                     if (!chainDetailsRef.current) {
                         setRpcValidationStatus(
@@ -205,6 +214,8 @@ const NetworkFormPage = ({
                         return
                     }
 
+                    const chainId = await getRpcChainId(watchRPCUrl)
+                    setRpcChainId(chainId)
                     setRpcValidationStatus(
                         Number(chainId) === parsedChainId
                             ? getStatusFromEnpoint(
@@ -215,9 +226,7 @@ const NetworkFormPage = ({
                     )
                 } catch (e) {
                     //Invalid URL if we were not able to fetch the chainId using the rpcUrl.
-                    console.log(watchRPCUrl)
-                    console.log(e)
-                    setRpcValidationStatus(RPCUrlValidation.INVALID_URL)
+                    setRpcValidationStatus(RPCUrlValidation.INVALID_ENDPOINT)
                 }
             } finally {
                 setIsValidating(false)
@@ -247,6 +256,7 @@ const NetworkFormPage = ({
                           rpcUrl: data.rpcUrl,
                           blockExplorerUrl: data.blockExplorerUrl,
                           name: data.name!,
+                          test: !!data.test,
                       },
                   })
                 : addNetwork(networkData)
@@ -306,7 +316,9 @@ const NetworkFormPage = ({
         rpcEndpointIsValid &&
         !networkAlreadyExistError &&
         !networkNameInUseError &&
-        !editingSelectedNetwork
+        !editingSelectedNetwork &&
+        !!watchName &&
+        !!watchCurrencySymbol
 
     return (
         <PopupLayout
@@ -326,9 +338,9 @@ const NetworkFormPage = ({
                                       onClick={() => {
                                           setConfirmDeletion(true)
                                       }}
-                                      className={classnames(
-                                          "text-red-500 cursor-pointer flex flex-row items-center hover:bg-gray-100 rounded-b-md w-40"
-                                      )}
+                                      className={
+                                          "text-red-500 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 rounded-md w-40"
+                                      }
                                   >
                                       <div className="pl-1 pr-1 w-8">
                                           <Icon
@@ -418,7 +430,7 @@ const NetworkFormPage = ({
                     if (addNetworkInvoke.isError) {
                         return addNetworkInvoke.reset()
                     }
-                    history.push("/settings/networks")
+                    history.replace("/settings/networks")
                 }}
             />
             <WaitingDialog
@@ -498,6 +510,7 @@ const NetworkFormPage = ({
                         endLabel={
                             <RPCValidationEndLabelInfo
                                 currentChainId={watchChainId}
+                                rpcChainId={rpcChainId}
                                 isValidating={isValidating}
                                 rpcValidation={rpcValidationStatus}
                             />
@@ -563,7 +576,8 @@ const NetworkFormPage = ({
                         onToggle={(isChecked) => {
                             setValue("test", isChecked)
                         }}
-                        readOnly={isEdit}
+                        readOnly={isNativelySupported}
+                        disabled={isNativelySupported}
                     />
                     {networkAlreadyExistError && (
                         <Alert type="error">

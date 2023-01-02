@@ -23,6 +23,7 @@ import {
     Block,
     TypedSignatureMethods,
     DappRequestSigningStatus,
+    EstimateGasParams,
 } from '../utils/types/ethereum';
 import { v4 as uuid } from 'uuid';
 import { BaseController } from '../infrastructure/BaseController';
@@ -36,17 +37,17 @@ import {
 } from '@block-wallet/provider/types';
 import { isEmpty } from 'lodash';
 import AppStateController, {
-    AppStateControllerMemState,
+    AppStateControllerState,
 } from './AppStateController';
 import NetworkController, {
     NetworkControllerState,
     NetworkEvents,
 } from './NetworkController';
-import { ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import {
     ExternalEventSubscription,
-    Handler,
     Handlers,
+    UnlockHandler,
 } from '../utils/types/communication';
 import {
     TransactionController,
@@ -61,7 +62,9 @@ import {
     providerInstances,
 } from '../infrastructure/connection';
 import { validateSignature } from '../utils/signature';
-import { hexValue } from 'ethers/lib/utils';
+import { keccak256 } from '@ethersproject/keccak256';
+import { toUtf8Bytes } from '@ethersproject/strings';
+import { hexValue } from '@ethersproject/bytes';
 import {
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     Network,
@@ -80,13 +83,18 @@ import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
 import { Filter } from '@ethersproject/abstract-provider';
+import { Zero } from '@ethersproject/constants';
 import {
     parseBlock,
     validateLogSubscriptionRequest,
 } from '../utils/subscriptions';
 import { ActionIntervalController } from './block-updates/ActionIntervalController';
-import { focusWindow, switchToTab } from '../utils/window';
-import { TransactionStatus } from './transactions/utils/types';
+import { focusWindow, isOnboardingTabUrl, switchToTab } from '../utils/window';
+import {
+    TransactionMeta,
+    TransactionParams,
+    TransactionStatus,
+} from './transactions/utils/types';
 import {
     DAPP_POPUP_CLOSING_TIMEOUT,
     SIGN_TRANSACTION_TIMEOUT,
@@ -96,6 +104,8 @@ import {
     parseHardwareWalletError,
     SignTimeoutError,
 } from '../utils/hardware';
+import { GasPricesController } from './GasPricesController';
+import { bnGreaterThanZero } from '../utils/bnUtils';
 
 export enum BlankProviderEvents {
     SUBSCRIPTION_UPDATE = 'SUBSCRIPTION_UPDATE',
@@ -121,7 +131,7 @@ export interface BlankProviderControllerState {
  */
 export default class BlankProviderController extends BaseController<BlankProviderControllerState> {
     private readonly _providerSubscriptionUpdateIntervalController: ActionIntervalController;
-    private _unlockHandlers: Handler[];
+    private _unlockHandlers: UnlockHandler[];
     private _requestHandlers: Handlers;
     private _activeSubscriptions: ActiveSubscriptions;
     private _isConnected: boolean;
@@ -142,7 +152,8 @@ export default class BlankProviderController extends BaseController<BlankProvide
         private readonly _appStateController: AppStateController,
         private readonly _keyringController: KeyringControllerDerivated,
         private readonly _tokenController: TokenController,
-        private readonly _blockUpdatesController: BlockUpdatesController
+        private readonly _blockUpdatesController: BlockUpdatesController,
+        private readonly _gasPricesController: GasPricesController
     ) {
         super({ dappRequests: {} });
 
@@ -187,7 +198,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
             this._stateWatcher.TRANSACTIONS
         );
 
-        this._appStateController.UIStore.subscribe(this._stateWatcher.LOCK);
+        this._appStateController.store.subscribe(this._stateWatcher.LOCK);
 
         this._permissionsController.store.subscribe(
             this._stateWatcher.PERMISSIONS
@@ -340,6 +351,8 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 return this._accountsRequest(portId, true);
             case JSONRPCMethod.eth_chainId:
                 return this._getChainId();
+            case JSONRPCMethod.net_version:
+                return this._netVersion();
             case JSONRPCMethod.eth_getCode:
                 if (params) {
                     if (
@@ -405,6 +418,8 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 );
             case JSONRPCMethod.web3_sha3:
                 return this._sha3(params);
+            case JSONRPCMethod.eth_estimateGas:
+                return this._handleEstimateGas(params as [EstimateGasParams]);
             default:
                 // If it's a standard json rpc request, forward it to the provider
                 if (ExtProviderMethods.includes(method)) {
@@ -416,6 +431,63 @@ export default class BlankProviderController extends BaseController<BlankProvide
                     throw new Error(ProviderError.UNSUPPORTED_METHOD);
                 }
         }
+    };
+
+    private _handleEstimateGas = async (
+        params: [EstimateGasParams]
+    ): Promise<string> => {
+        let gasLimit: BigNumber;
+        try {
+            let data = '';
+            if (typeof params[0].data !== 'undefined') {
+                data = params[0].data;
+            }
+
+            let from = '';
+            if (typeof params[0].from !== 'undefined') {
+                from = params[0].from;
+            }
+
+            let to = '';
+            if (typeof params[0].to !== 'undefined') {
+                to = params[0].to;
+            }
+
+            let value = Zero;
+            if (typeof params[0].value !== 'undefined') {
+                value = BigNumber.from(params[0].value);
+            }
+
+            const estimation = await this._transactionController.estimateGas({
+                transactionParams: {
+                    data,
+                    value,
+                    from,
+                    to,
+                } as TransactionParams,
+            } as TransactionMeta);
+
+            gasLimit = estimation.gasLimit;
+        } catch (error) {
+            log.debug('error estimating gas:', error);
+            try {
+                gasLimit = BigNumber.from(
+                    await this._networkController
+                        .getProvider()
+                        .send(JSONRPCMethod.eth_estimateGas, params)
+                );
+            } catch {
+                let { blockGasLimit } = this._gasPricesController.getState();
+                if (!bnGreaterThanZero(blockGasLimit)) {
+                    // London block size 30 millon gas units
+                    // https://ethereum.org/en/developers/docs/gas/#block-size
+                    blockGasLimit = BigNumber.from(30_000_000);
+                }
+                gasLimit = blockGasLimit;
+            }
+        }
+
+        return gasLimit._hex;
     };
 
     /**
@@ -447,7 +519,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
         params: readonly unknown[] | Record<string, unknown> | undefined
     ) => {
         if (params && Array.isArray(params) && typeof params[0] === 'string') {
-            return ethers.utils.keccak256(ethers.utils.toUtf8Bytes(params[0]));
+            return keccak256(toUtf8Bytes(params[0]));
         } else {
             throw new Error(
                 `Wrong input data for web3_sha3: ${params}. See https://eth.wiki/json-rpc/API#web3_sha3`
@@ -464,6 +536,15 @@ export default class BlankProviderController extends BaseController<BlankProvide
         const { chainId } = this._networkController.network;
 
         return hexValue(chainId);
+    };
+
+    /**
+     * Returns network stored network version
+     */
+    private _netVersion = async (): Promise<string> => {
+        const { networkVersion } = this._networkController.network;
+
+        return networkVersion;
     };
 
     /**
@@ -644,7 +725,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
 
         // Trigger unlock before returning accounts
         // Just in case permissions were already granted
-        const isUnlocked = await this._waitForUnlock();
+        const isUnlocked = await this._waitForUnlock(portId);
         if (!isUnlocked) {
             return [];
         }
@@ -664,7 +745,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
      */
     private _accountsRequest = (portId: string, emitUpdate = false) => {
         // Return empty array if app is locked
-        if (!this._appStateController.UIStore.getState().isAppUnlocked) {
+        if (!this._appStateController.store.getState().isAppUnlocked) {
             return [];
         }
 
@@ -811,6 +892,12 @@ export default class BlankProviderController extends BaseController<BlankProvide
                         test: parsedAndValidatedData.isTestnet,
                     });
 
+                    // Trigger switch request to the newly added network
+                    this._handleSwitchEthereumChain(
+                        params as [SwitchEthereumChainParameters],
+                        portId
+                    );
+
                     // By EIP-3085, the method MUST return null if the request was successful
                     return null;
                 } else {
@@ -838,12 +925,14 @@ export default class BlankProviderController extends BaseController<BlankProvide
 
         // Throw if there's already a request to switch networks from that origin
         const currentRequests = { ...this.store.getState().dappRequests };
-        Object.values(currentRequests).forEach((req) => {
+        Object.entries(currentRequests).forEach(([id, req]) => {
             if (req.type === DappReq.SWITCH_NETWORK && req.origin === origin) {
+                //update timestampt to focus the extension window.
+                this._updateDappRequestTimestamp(id);
+                //return error to keep interface consitent with the dApp
                 throw new Error(ProviderError.RESOURCE_UNAVAILABLE);
             }
         });
-
         const chainId = params[0].chainId;
 
         // Validate and normalize switchEthereumChain params
@@ -1066,6 +1155,8 @@ export default class BlankProviderController extends BaseController<BlankProvide
                     error: parsedError,
                 });
                 callback.reject(parsedError);
+            } else {
+                throw e;
             }
         } finally {
             __clearTimeouts();
@@ -1105,10 +1196,13 @@ export default class BlankProviderController extends BaseController<BlankProvide
 
         // Return if there's already a request to add that token
         const currentRequests = { ...this.store.getState().dappRequests };
-        Object.values(currentRequests).forEach((req) => {
+        Object.entries(currentRequests).forEach(([id, req]) => {
             if (req.type === DappReq.ASSET) {
                 const reqParams = req.params as WatchAssetReq;
                 if (reqParams.params.address === validParams.address) {
+                    //update timestampt to focus the extension window.
+                    this._updateDappRequestTimestamp(id);
+                    //return error to keep interface consitent with the dApp
                     throw new Error(ProviderError.RESOURCE_UNAVAILABLE);
                 }
             }
@@ -1177,6 +1271,25 @@ export default class BlankProviderController extends BaseController<BlankProvide
             // Remove current request from list
             this.removeDappRequest(reqId);
         }
+    };
+
+    private _updateDappRequestTimestamp = async (id: string) => {
+        const requests = { ...this.store.getState().dappRequests };
+        const currentRequest = requests[id];
+
+        if (!currentRequest) {
+            throw new Error('The request no longer exist.');
+        }
+
+        // Update timestamp
+        requests[id] = {
+            ...currentRequest,
+            time: Date.now(),
+        };
+
+        this.store.updateState({
+            dappRequests: requests,
+        });
     };
 
     /**
@@ -1395,21 +1508,24 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 this._checkWindows();
             }
         },
-        LOCK: (appState: AppStateControllerMemState) => {
+        LOCK: (appState: AppStateControllerState) => {
             // Resolve unlock handlers if app is unlocked
             if (
                 appState.isAppUnlocked === true &&
                 this._unlockHandlers.length > 0
             ) {
                 this._closeImmediately = true;
+                let portId: string | undefined;
                 this._unlockHandlers.forEach((handler) => {
                     handler.resolve(true);
+                    //store last port to return
+                    portId = handler.portId;
                 });
 
                 this._unlockHandlers = [];
 
                 // Close open windows
-                this._checkWindows();
+                this._checkWindows(portId);
             }
 
             // Update accounts on provider
@@ -1446,7 +1562,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
      * It closes any open window if there are no pending requests and focuses
      * the last request window
      */
-    private _checkWindows = async () => {
+    private _checkWindows = async (fallbackPortId?: string) => {
         const { transactions } = this._transactionController.UIStore.getState();
         const { permissionRequests } =
             this._permissionsController.store.getState();
@@ -1470,7 +1586,8 @@ export default class BlankProviderController extends BaseController<BlankProvide
             return;
         }
 
-        // Wait 1500ms for any pending message to be displayed and then close the windows (if any)
+        const oldLastRequestTime = this._lastRequest?.time;
+        // Wait 3000ms for any pending message to be displayed and then close the windows (if any)
         await new Promise<void>((resolve) => {
             if (this._closeImmediately) {
                 this._closeImmediately = false;
@@ -1487,40 +1604,60 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 // Check if it is a window
                 instanceTabId &&
                 // Check if it's not an onboarding tab
-                !extensionInstances[instance].port.sender?.url?.includes(
-                    'tab.html'
+                !isOnboardingTabUrl(
+                    extensionInstances[instance].port.sender?.url
                 )
             ) {
-                // Focus last request window
-                if (this._lastRequest) {
-                    try {
-                        await switchToTab(this._lastRequest.tabId);
-                        await focusWindow(this._lastRequest.windowId);
-                    } catch (error) {
-                        log.debug(`Couldn't focus tab - ${error}`);
-                    }
+                let tabId: number | undefined;
+                let windowId: number | undefined;
 
-                    this._lastRequest = null;
+                //if there is not last request, then use the fallbackPortId
+                if (!this._lastRequest && fallbackPortId) {
+                    ({ tabId, windowId } =
+                        providerInstances[fallbackPortId] || {});
+                } else {
+                    const currentLastRequestTime = this._lastRequest?.time;
+
+                    // If the last request time is the same, means that there is not a new request that requires the extension to be focused.
+                    if (
+                        currentLastRequestTime === oldLastRequestTime &&
+                        this._lastRequest
+                    ) {
+                        ({ tabId, windowId } = this._lastRequest);
+                        this._lastRequest = null;
+                    }
                 }
 
-                closeExtensionInstance(instance);
+                if (tabId && windowId) {
+                    await this._focusDApp(tabId, windowId);
+                    closeExtensionInstance(instance);
+                }
             }
         }
     };
+
+    private async _focusDApp(tabId: number, windowId: number) {
+        try {
+            await switchToTab(tabId);
+            await focusWindow(windowId);
+        } catch (error) {
+            log.debug(`Couldn't focus tab - ${error}`);
+        }
+    }
 
     /**
      * Opens a new window if the app is locked
      *
      * @returns A promise that resolves when the app is unlocked
      */
-    private _waitForUnlock = (): Promise<boolean> => {
+    private _waitForUnlock = (portId: string): Promise<boolean> => {
         return new Promise((resolve, reject) => {
-            if (this._appStateController.UIStore.getState().isAppUnlocked) {
+            if (this._appStateController.store.getState().isAppUnlocked) {
                 return resolve(true);
             }
 
             // Add handler
-            this._unlockHandlers.push({ reject, resolve });
+            this._unlockHandlers.push({ reject, resolve, portId });
 
             openPopup();
         });

@@ -1,8 +1,11 @@
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
 import { Rates } from "@block-wallet/background/controllers/ExchangeRatesController"
-import { BigNumber, utils } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { DEFAULT_TRANSACTION_GAS_PERCENTAGE_THRESHOLD } from "./constants"
 import { formatCurrency, toCurrencyAmount } from "./formatCurrency"
+import { FeeData } from "@ethersproject/abstract-provider"
+import { formatUnits } from "@ethersproject/units"
+import { DisplayGasPricesData } from "../components/gas/GasPricesInfo"
 
 interface GasFeesCalculation {
     minValue: BigNumber
@@ -130,7 +133,7 @@ const estimatedGasExceedsBaseHigherThreshold = (
 const gasToGweiString = (gas: BigNumber | null) => {
     if (!gas) return ""
 
-    const gasInGwei = utils.formatUnits(gas, "gwei")
+    const gasInGwei = formatUnits(gas, "gwei")
 
     if (Number(gasInGwei) > 1) {
         return String(Math.round(Number(gasInGwei)))
@@ -143,6 +146,36 @@ const gasToGweiString = (gas: BigNumber | null) => {
     }
 }
 
+const getTransactionFees = (
+    isEIP1559Compatible: boolean,
+    gasPrice: FeeData,
+    estimatedBaseFee: BigNumber,
+    gasLimit: BigNumber
+): DisplayGasPricesData => {
+    if (isEIP1559Compatible && estimatedBaseFee) {
+        const baseFee = BigNumber.from(estimatedBaseFee)
+        const priority = BigNumber.from(gasPrice?.maxPriorityFeePerGas ?? 0)
+        const baseFeePlusTip = baseFee.add(priority)
+        return {
+            baseFee: gasToGweiString(baseFee),
+            priority: gasToGweiString(priority),
+            totalGwei: gasToGweiString(BigNumber.from(baseFeePlusTip)),
+            totalTransactionCost: calculateTransactionGas(
+                gasLimit,
+                BigNumber.from(baseFeePlusTip)
+            ),
+        }
+    } else {
+        return {
+            totalGwei: gasToGweiString(gasPrice?.gasPrice),
+            totalTransactionCost: calculateTransactionGas(
+                gasLimit,
+                BigNumber.from(gasPrice?.gasPrice ?? 1)
+            ),
+        }
+    }
+}
+
 export {
     calculateGasPricesFromTransactionFees,
     estimatedGasExceedsBaseLowerThreshold,
@@ -150,4 +183,5 @@ export {
     calculateTransactionGas,
     gasPriceToNativeCurrency,
     gasToGweiString,
+    getTransactionFees,
 }

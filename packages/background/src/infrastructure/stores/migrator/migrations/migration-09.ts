@@ -1,6 +1,6 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES } from '../../../../utils/constants/networks';
 
 /**
@@ -41,7 +41,7 @@ export default {
             etherscanApiUrl: 'https://api.snowtrace.io/',
             actionsTimeIntervals: ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
             nativelySupported: true,
-        };
+        } as any;
 
         updatedNetworks.GOERLI = {
             ...updatedNetworks.GOERLI,

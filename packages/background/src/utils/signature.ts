@@ -1,6 +1,7 @@
-import { typedSignatureHash } from 'eth-sig-util';
+import { typedSignatureHash } from '@metamask/eth-sig-util';
 import {
     bufferToHex,
+    isHexPrefixed,
     isValidAddress,
     stripHexPrefix,
     toChecksumAddress,
@@ -15,7 +16,8 @@ import {
     TypedMessage,
     TypedSignatureMethods,
 } from './types/ethereum';
-import { hexValue } from 'ethers/lib/utils';
+import { hexValue } from '@ethersproject/bytes';
+
 import schemaValidator from 'schema-validator';
 
 /**
@@ -31,7 +33,13 @@ export const validateSignature = <TSignatureType extends SignatureMethods>(
     params: RawSignatureData[TSignatureType],
     chainId: string
 ): NormalizedSignatureParams<TSignatureType> => {
-    const nParams = normalizeParams(method, params);
+    const parsedParams = normalizeParams(method, params);
+    const nParams = {
+        ...parsedParams,
+        rawData: isHexPrefixed(parsedParams.data as string)
+            ? hexToString(parsedParams.data as string)
+            : parsedParams.data,
+    };
 
     // Validate
     if (!nParams.data) {
@@ -178,28 +186,27 @@ export const validateTypedData = <
  * @returns Hex string
  */
 export const normalizeMessageData = (data: string): string => {
-    if (data[0] === '0' && data[1] === 'x') {
+    if (isHexPrefixed(data)) {
         return data;
-    } else {
-        return bufferToHex(Buffer.from(data, 'utf8'));
     }
+
+    return bufferToHex(Buffer.from(data, 'utf8'));
 };
 
 /**
  * Util to rebuild a string from a hex string
  *
- * @param hex hex string
+ * @param strHex hex string
+ * @returns parsed string from hex
  */
-export const hexToString = (hex: string): string => {
-    const strippedHex = stripHexPrefix(hex);
-    let output = '';
-
-    for (let i = 0; i < strippedHex.length; i += 2) {
-        output += String.fromCharCode(parseInt(hex.substring(i, 2), 16));
+export function hexToString(strHex: string): string {
+    const hex = stripHexPrefix(strHex);
+    let str = '';
+    for (let i = 0; i < hex.length; i += 2) {
+        str += String.fromCharCode(parseInt(hex.substring(i, i + 2), 16));
     }
-
-    return output;
-};
+    return str;
+}
 
 const sanitizeTypedData = (typedData: TypedMessage<MessageSchema>): any => {
     try {

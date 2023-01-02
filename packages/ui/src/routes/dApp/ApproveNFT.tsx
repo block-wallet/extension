@@ -17,7 +17,7 @@ import {
 } from "../../context/commActions"
 import { AdvancedSettings } from "../../components/transactions/AdvancedSettings"
 import { AiFillInfoCircle } from "react-icons/ai"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes } from "../../styles/classes"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
@@ -34,7 +34,8 @@ import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/
 import { capitalize } from "../../util/capitalize"
 import { formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
-import { formatUnits, getAddress } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
+import { getAddress } from "@ethersproject/address"
 import { getAccountColor } from "../../util/getAccountColor"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { useSelectedAccountBalance } from "../../context/hooks/useSelectedAccountBalance"
@@ -209,8 +210,8 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     useEffect(
         () => {
             searchTokenInAssetsList(tokenAddress)
-                .then((token) => {
-                    setTokenName(token[0].symbol)
+                .then((searchTokensResponse) => {
+                    setTokenName(searchTokensResponse.tokens[0].symbol)
                 })
                 .catch(() => {
                     throw new Error("Failed to fetch token data")
@@ -443,18 +444,14 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                     />
                 )}
                 <AdvancedSettings
-                    config={{
-                        showCustomNonce: true,
-                        showFlashbots: false,
-                        address: checksumFromAddress,
-                    }}
-                    data={{
-                        flashbots: false,
-                    }}
-                    setData={(data) => {
+                    address={checksumFromAddress}
+                    advancedSettings={transactionAdvancedData}
+                    setAdvancedSettings={(
+                        newSettings: TransactionAdvancedData
+                    ) => {
                         setTransactionAdvancedData({
-                            customNonce: data.customNonce,
-                            flashbots: data.flashbots,
+                            customNonce: newSettings.customNonce,
+                            flashbots: newSettings.flashbots,
                         })
                     }}
                 />

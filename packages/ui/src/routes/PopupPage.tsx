@@ -1,8 +1,8 @@
 import { useState } from "react"
 import classnames from "classnames"
 import { Link, useHistory } from "react-router-dom"
-import { formatUnits } from "ethers/lib/utils"
-import { BigNumber } from "ethers"
+import { formatUnits } from "@ethersproject/units"
+import { BigNumber } from "@ethersproject/bignumber"
 import { BiCircle } from "react-icons/bi"
 
 // Components
@@ -16,6 +16,7 @@ import ErrorDialog from "../components/dialog/ErrorDialog"
 import AccountIcon from "../components/icons/AccountIcon"
 import ActivityAssetsView from "../components/ActivityAssetsView"
 import GenericTooltip from "../components/label/GenericTooltip"
+import AnimatedIcon, { AnimatedIconName } from "../components/AnimatedIcon"
 import Tooltip from "../components/label/Tooltip"
 
 // Utils
@@ -33,14 +34,17 @@ import { session } from "../context/setup"
 import { useConnectedSite } from "../context/hooks/useConnectedSite"
 import { useTokensList } from "../context/hooks/useTokensList"
 
+// Utils
+import { useSelectedAddressWithChainIdChecksum } from "../util/hooks/useSelectedAddressWithChainIdChecksum"
+
 // Assets
 import TokenSummary from "../components/token/TokenSummary"
 import GasPricesInfo from "../components/gas/GasPricesInfo"
 import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
+import TransparentOverlay from "../components/loading/TransparentOverlay"
 
 const AccountDisplay = () => {
-    const blankState = useBlankState()!
-    const accountAddress = blankState.selectedAddress
+    const accountAddress = useSelectedAddressWithChainIdChecksum()
     const account = useSelectedAccount()
     const [copied, setCopied] = useState(false)
     const copy = async () => {
@@ -143,13 +147,14 @@ const PopupPage = () => {
     const error = (useHistory().location.state as { error: string })?.error
     const state = useBlankState()!
     const history = useHistory()
-    const account = useSelectedAccount()
     const { nativeToken } = useTokensList()
-    const network = useSelectedNetwork()
-    const sendsEnabled = network.isSendEnabled
-    const swapsEnabled = network.isSwapEnabled
-
+    const { nativeCurrency, isSendEnabled, isSwapEnabled, isBridgeEnabled } =
+        useSelectedNetwork()
+    const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
+
+    const isLoading =
+        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
 
     return (
         <PageLayout screen className="max-h-screen popup-layout">
@@ -162,6 +167,7 @@ const PopupPage = () => {
                 }}
                 onDone={() => setHasErrorDialog(false)}
             />
+            {state.isNetworkChanging && <TransparentOverlay />}
             <div
                 className="absolute top-0 left-0 z-10 flex flex-col items-start w-full p-6 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
                 style={{ backdropFilter: "blur(4px)" }}
@@ -177,7 +183,7 @@ const PopupPage = () => {
                             >
                                 <AccountIcon
                                     className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
-                                    fill={getAccountColor(account?.address)}
+                                    fill={getAccountColor(checksumAddress)}
                                 />
                             </Link>
                             <Tooltip
@@ -241,24 +247,24 @@ const PopupPage = () => {
                         </GenericTooltip>
                         <DAppConnection />
                     </div>
-                    <TokenSummary>
+                    <TokenSummary className="p-4">
                         <TokenSummary.Balances>
                             <TokenSummary.TokenBalance
                                 title={
                                     formatUnits(
                                         nativeToken.balance || "0",
-                                        network.nativeCurrency.decimals
-                                    ) + ` ${network.nativeCurrency.symbol}`
+                                        nativeCurrency.decimals
+                                    ) + ` ${nativeCurrency.symbol}`
                                 }
                             >
                                 {formatRounded(
                                     formatUnits(
                                         nativeToken.balance || "0",
-                                        network.nativeCurrency.decimals
+                                        nativeCurrency.decimals
                                     ),
                                     5
                                 )}{" "}
-                                {network.nativeCurrency.symbol}
+                                {nativeCurrency.symbol}
                             </TokenSummary.TokenBalance>
                             <TokenSummary.ExchangeRateBalance>
                                 {formatCurrency(
@@ -268,7 +274,7 @@ const PopupPage = () => {
                                         state.exchangeRates[
                                             state.networkNativeCurrency.symbol
                                         ],
-                                        network.nativeCurrency.decimals
+                                        nativeCurrency.decimals
                                     ),
                                     {
                                         currency: state.nativeCurrency,
@@ -285,32 +291,42 @@ const PopupPage = () => {
                                 draggable={false}
                                 className={classnames(
                                     "flex flex-col items-center space-y-2 group",
-                                    !network.isSendEnabled &&
-                                        "pointer-events-none"
+                                    !isSendEnabled && "pointer-events-none"
                                 )}
                             >
                                 <div
                                     className={classnames(
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        !network.isSendEnabled
+                                        !isSendEnabled
                                             ? "bg-gray-300"
                                             : "bg-primary-300"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
-                                    <ArrowHoverAnimation />
+                                    {isLoading ? (
+                                        <div className="flex flex-row items-center justify-center w-full h-full">
+                                            <AnimatedIcon
+                                                icon={
+                                                    AnimatedIconName.BlueCircleLoadingSkeleton
+                                                }
+                                                className="w-4 h-4 pointer-events-none"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <ArrowHoverAnimation />
+                                    )}
                                 </div>
                                 <span className="text-xs font-medium">
                                     Send
                                 </span>
                             </Link>
-                            {swapsEnabled && (
+                            {isSwapEnabled && (
                                 <Link
                                     to="/swap"
                                     draggable={false}
                                     className={classnames(
                                         "flex flex-col items-center space-y-2 group",
-                                        (!sendsEnabled ||
+                                        (!isSendEnabled ||
                                             !state.isUserNetworkOnline) &&
                                             "pointer-events-none"
                                     )}
@@ -318,17 +334,70 @@ const PopupPage = () => {
                                     <div
                                         className={classnames(
                                             "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                            !sendsEnabled ||
+                                            !isSendEnabled ||
                                                 !state.isUserNetworkOnline
                                                 ? "bg-gray-300"
                                                 : "bg-primary-300"
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
-                                        <DoubleArrowHoverAnimation />
+                                        {isLoading ? (
+                                            <div className="flex flex-row items-center justify-center w-full h-full">
+                                                <AnimatedIcon
+                                                    icon={
+                                                        AnimatedIconName.BlueCircleLoadingSkeleton
+                                                    }
+                                                    className="w-4 h-4 pointer-events-none rotate-180"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <DoubleArrowHoverAnimation />
+                                        )}
                                     </div>
                                     <span className="text-xs font-medium">
                                         Swap
+                                    </span>
+                                </Link>
+                            )}
+                            {isBridgeEnabled && (
+                                <Link
+                                    to="/bridge"
+                                    draggable={false}
+                                    className={classnames(
+                                        "flex flex-col items-center space-y-2 group",
+                                        (!isSendEnabled ||
+                                            !state.isUserNetworkOnline) &&
+                                            "pointer-events-none"
+                                    )}
+                                >
+                                    <div
+                                        className={classnames(
+                                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                            !isSendEnabled ||
+                                                !state.isUserNetworkOnline
+                                                ? "bg-gray-300"
+                                                : "bg-primary-300"
+                                        )}
+                                        style={{ transform: "scaleY(-1)" }}
+                                    >
+                                        {isLoading ? (
+                                            <div className="flex flex-row items-center justify-center w-full h-full">
+                                                <AnimatedIcon
+                                                    icon={
+                                                        AnimatedIconName.BlueCircleLoadingSkeleton
+                                                    }
+                                                    className="w-4 h-4 pointer-events-none"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <AnimatedIcon
+                                                icon={AnimatedIconName.Bridge}
+                                                className="cursor-pointer"
+                                            />
+                                        )}
+                                    </div>
+                                    <span className="text-xs font-medium">
+                                        Bridge
                                     </span>
                                 </Link>
                             )}

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Classes } from "../../styles/classes"
 
@@ -15,6 +15,7 @@ import { createWallet, requestSeedPhrase } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import log from "loglevel"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
+import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboarded"
 
 const schema = yup.object().shape({
     password: yup
@@ -34,6 +35,7 @@ const schema = yup.object().shape({
         .required("You must accept the Terms of Use.")
         .oneOf([true], "You must accept the Terms of Use."),
 })
+
 type PasswordSetupFormData = {
     password: string
     passwordConfirmation: string
@@ -44,16 +46,20 @@ const PasswordSetupPage = () => {
     const history = useOnMountHistory()
     const [passwordScore, setPasswordScore] = useState<number>(0)
     const [isCreating, setIsCreating] = useState<boolean>(false)
+    const [isSubmitDisabled, setIsSubmitDisabled] = useState(true)
+    // if the onboarding is ready the user shoulnd't set the password again.
+    useCheckUserIsOnboarded()
 
     const {
         register,
         handleSubmit,
         setError,
-
+        watch,
         formState: { errors },
     } = useForm<PasswordSetupFormData>({
         resolver: yupResolver(schema),
     })
+
     const onSubmit = handleSubmit(async (data: PasswordSetupFormData) => {
         if (passwordScore < 3) {
             return setError(
@@ -90,6 +96,20 @@ const PasswordSetupPage = () => {
             })
     })
 
+    const passwordValues = watch()
+    useEffect(() => {
+        if (
+            passwordValues.password &&
+            passwordValues.passwordConfirmation &&
+            passwordValues.password === passwordValues.passwordConfirmation &&
+            passwordValues.acceptTOU &&
+            !errors.password
+        ) {
+            setIsSubmitDisabled(false)
+        } else {
+            setIsSubmitDisabled(true)
+        }
+    }, [passwordValues, errors.password])
     return (
         <PageLayout header maxWidth="max-w-md">
             <span className="my-6 text-lg font-bold font-title">
@@ -155,6 +175,7 @@ const PasswordSetupPage = () => {
                         isLoading={isCreating}
                         onClick={onSubmit}
                         buttonClass={Classes.button}
+                        disabled={isCreating || isSubmitDisabled}
                     ></ButtonWithLoading>
                 </div>
             </form>

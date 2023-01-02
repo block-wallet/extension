@@ -1,6 +1,6 @@
 import { GasPricesControllerState } from '@block-wallet/background/controllers/GasPricesController';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { IMigration } from '../IMigration';
 
 export default {
@@ -52,6 +52,7 @@ export default {
                                 'slow',
                                 'maxPriorityFeePerGas'
                             ),
+                            lastBaseFeePerGas: null,
                         },
                         average: {
                             gasPrice: getGasData(
@@ -69,6 +70,7 @@ export default {
                                 'average',
                                 'maxPriorityFeePerGas'
                             ),
+                            lastBaseFeePerGas: null,
                         },
                         fast: {
                             gasPrice: getGasData(
@@ -86,6 +88,7 @@ export default {
                                 'fast',
                                 'maxPriorityFeePerGas'
                             ),
+                            lastBaseFeePerGas: null,
                         },
                     },
                 };

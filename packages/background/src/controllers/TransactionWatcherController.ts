@@ -1,8 +1,10 @@
 import { Mutex } from 'async-mutex';
-import axios from 'axios';
 import { isValidAddress, toChecksumAddress } from 'ethereumjs-util';
-import { BigNumber, ethers, utils } from 'ethers';
-import { hexZeroPad, ParamType } from 'ethers/lib/utils';
+import { BigNumber } from '@ethersproject/bignumber';
+import { TransactionResponse } from '@ethersproject/providers';
+import { hexZeroPad } from '@ethersproject/bytes';
+import { id } from '@ethersproject/hash';
+import { LogDescription, ParamType } from '@ethersproject/abi';
 import log from 'loglevel';
 import { BaseController } from '../infrastructure/BaseController';
 import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES } from '../utils/constants/networks';
@@ -33,6 +35,10 @@ import { TransactionArgument } from './transactions/ContractSignatureParser';
 import { showIncomingTransactionNotification } from '../utils/notifications';
 import { checkIfNotAllowedError } from '../utils/ethersError';
 import TransactionController from './transactions/TransactionController';
+import httpClient from '../utils/http';
+import { fetchBlockWithRetries } from '../utils/blockFetch';
+import { isNil } from 'lodash';
+import { runPromiseSafely } from '../utils/promises';
 
 export enum TransactionTypeEnum {
     Native = 'txlist',
@@ -98,13 +104,14 @@ interface EtherscanTransaction {
 
 const SIGNATURES: { [type in TransactionTypeEnum]: string } = {
     txlist: '',
-    tokentx: utils.id('Transfer(address,address,uint256)'),
+    tokentx: id('Transfer(address,address,uint256)'),
     token1155tx: '',
     tokennfttx: '',
 };
 
-const MAX_REQUEST_RETRY = 10;
+const MAX_REQUEST_RETRY = 20;
 const EXPLORER_API_CALLS_DELAY = 2000 * MILISECOND;
+const DEFAULT_BATCH_MULTIPLIER = 20;
 
 export class TransactionWatcherController extends BaseController<TransactionWatcherControllerState> {
     private readonly _mutex: Mutex;
@@ -143,18 +150,13 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         );
 
         this._blockUpdatesController.on(
-            BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
-            async (chainId: number, _: number, blockNumber: number) => {
-                const network =
-                    this._networkController.getNetworkFromChainId(chainId);
-                const interval =
-                    network?.actionsTimeIntervals.transactionWatcherUpdate ||
-                    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES.transactionWatcherUpdate;
+            BlockUpdatesEvents.BLOCK_UPDATES_SUBSCRIPTION,
+            this._blockUpdatesCallback
+        );
 
-                this._txWatcherIntervalController.tick(interval, async () => {
-                    await this.fetchTransactions(chainId, blockNumber);
-                });
-            }
+        this._blockUpdatesController.on(
+            BlockUpdatesEvents.BACKGROUND_AVAILABLE_BLOCK_UPDATES_SUBSCRIPTION,
+            this._blockUpdatesCallback
         );
 
         this._transactionController.on(
@@ -200,6 +202,26 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
         this._fetchPendingTimestampsFromChain();
     }
+
+    /**
+     * _blockUpdatesCallback
+     *
+     * Triggered when a new block is detected
+     */
+    private _blockUpdatesCallback = async (
+        chainId: number,
+        _: number,
+        blockNumber: number
+    ) => {
+        const network = this._networkController.getNetworkFromChainId(chainId);
+        const interval =
+            network?.actionsTimeIntervals.transactionWatcherUpdate ||
+            ACTIONS_TIME_INTERVALS_DEFAULT_VALUES.transactionWatcherUpdate;
+
+        this._txWatcherIntervalController.tick(interval, async () => {
+            await this.fetchTransactions(chainId, blockNumber);
+        });
+    };
 
     /**
      * return the state by chain, address and type
@@ -305,7 +327,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      * Remove the transactions data of an account.
      * @param address
      */
-    public removeTransactionsByAddress = async (
+    public resetTransactionsByAddress = async (
         address: string
     ): Promise<void> => {
         const transactions = this.store.getState().transactions;
@@ -598,10 +620,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     currentBlock
                 );
 
-                const getLogsPromises: Promise<Log[]>[] = [];
-
                 // incoming
-                getLogsPromises.push(
+                const incoming = await runPromiseSafely(
                     this._getLogsFromChain(chainId, provider, {
                         fromBlock,
                         toBlock,
@@ -614,7 +634,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 );
 
                 // outgoing
-                getLogsPromises.push(
+                const outgoing = await runPromiseSafely(
                     this._getLogsFromChain(chainId, provider, {
                         fromBlock,
                         toBlock,
@@ -623,9 +643,12 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 );
 
                 // results
-                const results = await Promise.all(getLogsPromises);
-                logs.incoming = logs.incoming.concat(...results[0]);
-                logs.outgoing = logs.outgoing.concat(...results[1]);
+                if (incoming) {
+                    logs.incoming = logs.incoming.concat(...incoming);
+                }
+                if (outgoing) {
+                    logs.outgoing = logs.outgoing.concat(...outgoing);
+                }
             }
         }
 
@@ -643,12 +666,40 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         lastBlockQueried: number,
         currentBlock: number
     ): number => {
+        const batchMultiplier = Math.min(
+            DEFAULT_BATCH_MULTIPLIER,
+            this._getBatchMultiplier(chainId)
+        );
+
         const oldestSafeBlock = Math.max(
             this._getInitialBlock(chainId),
-            currentBlock - this._getMaxBlockBatchSize(chainId) * 20
+            currentBlock - this._getMaxBlockBatchSize(chainId) * batchMultiplier
         );
 
         return Math.max(lastBlockQueried, oldestSafeBlock);
+    };
+
+    /**
+     * Gets the multiplier for the max batch size
+     * @param chainId
+     * @returns
+     */
+    private _getBatchMultiplier = (chainId: number): number => {
+        switch (chainId) {
+            case 1:
+            case 5:
+            case 10:
+            case 42:
+            case 100:
+            case 137:
+            case 42161:
+            case 43114:
+            case 56:
+            case 250:
+                return DEFAULT_BATCH_MULTIPLIER;
+            default:
+                return 1;
+        }
     };
 
     /**
@@ -723,11 +774,10 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 return 10000;
             case 56:
                 return 5000;
-            case 280:
-                return 100;
             case 250:
-            default:
                 return 2000;
+            default: // all the custom networks will be caught by this default because we don't know the quality of the RPCs
+                return 100;
         }
     };
 
@@ -759,7 +809,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             }
 
             log.warn('getLogs', e.message || e);
-            await sleep(400 * MILISECOND);
+            await sleep(1 * SECOND);
 
             const toBlock = parseInt((filter.toBlock as string) || '0');
             const fromBlock = parseInt((filter.fromBlock as string) || '0');
@@ -851,8 +901,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     ) => {
         let contractAddress: string = _log.address;
         let token: Token = { logo: '', decimals: 1, symbol: '' } as Token;
-        let logData: utils.LogDescription | undefined;
-        let txResponse: Partial<ethers.providers.TransactionResponse> = {
+        let logData: LogDescription | undefined;
+        let txResponse: Partial<TransactionResponse> = {
             value: undefined,
             nonce: undefined,
             type: undefined,
@@ -865,7 +915,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         try {
             contractAddress = toChecksumAddress(_log.address);
 
-            const tokens = await this._tokenController.search(
+            const { tokens } = await this._tokenController.search(
                 contractAddress,
                 true,
                 address,
@@ -1039,22 +1089,13 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             const blockNumbersOrdered = blockNumbers.sort((a, b) => b - a);
             for (let i = 0; i < blockNumbers.length; i++) {
                 const blockNumber = blockNumbersOrdered[i];
-                let block: Block = {} as Block;
-                let error = undefined;
-                let retry = 0;
-                do {
-                    try {
-                        block = await provider.getBlock(blockNumber);
-                        error = undefined;
-                    } catch (e) {
-                        log.warn('getBlock', e.message || e);
-                        error = e;
-                        retry++;
-                        await sleep(400 * MILISECOND);
-                    }
-                } while (error && retry < MAX_REQUEST_RETRY);
+                const block = await fetchBlockWithRetries(
+                    blockNumber,
+                    provider,
+                    MAX_REQUEST_RETRY
+                );
 
-                if (!error && block.number) {
+                if (block && !isNil(block.number)) {
                     this._updateTransactionsTimestampsFromChain(chainId, block);
                 }
             }
@@ -1210,22 +1251,25 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
         let retry = 0;
         while (retry < MAX_REQUEST_RETRY) {
-            const result = await axios.get<{
+            const result = await httpClient.get<{
                 status: string;
                 message: string;
                 result: EtherscanTransaction[];
-            }>(`${etherscanApiUrl}/api`, {
-                params: { ...params },
-                timeout: 30000,
-            });
+            }>(
+                `${etherscanApiUrl}/api`,
+                {
+                    ...params,
+                },
+                30000
+            );
 
-            if (result.data.status === '0' && result.data.message === 'NOTOK') {
+            if (result.status === '0' && result.message === 'NOTOK') {
                 await sleep(EXPLORER_API_CALLS_DELAY);
                 retry++;
 
                 continue;
             }
-            return result.data;
+            return result;
         }
 
         return { status: '-999', result: [] };
@@ -1304,7 +1348,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 isLocalSearch = false;
             }
 
-            const tokens = await this._tokenController.search(
+            const { tokens } = await this._tokenController.search(
                 tx.contractAddress,
                 true,
                 address,
@@ -1341,7 +1385,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             confirmationTime: time,
             submittedTime: time,
             status:
-                parseInt(tx.isError) === 0
+                parseInt(tx.isError ?? 0) === 0
                     ? TransactionStatus.CONFIRMED
                     : TransactionStatus.FAILED,
             chainId: chainId,
@@ -1349,7 +1393,10 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             transactionParams: {
                 to: tx.to,
                 from: tx.from,
-                value: BigNumber.from(tx.value),
+                value:
+                    type === TransactionTypeEnum.Native
+                        ? BigNumber.from(tx.value)
+                        : BigNumber.from(0),
                 hash: tx.hash,
                 nonce: Number(tx.nonce),
                 data: tx.input,

@@ -1,4 +1,4 @@
-import { AvailableNetworks } from '../../../../controllers/blank-deposit/types';
+import { AvailableNetworks } from '../../../../controllers/privacy/types';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { INITIAL_NETWORKS } from '../../../../utils/constants/networks';
 import { IMigration } from '../IMigration';

@@ -64,7 +64,7 @@ const AccountFilters: React.FC<AccountFilterProps> = ({
                                         selected={selectedFilters.includes(
                                             value
                                         )}
-                                        className="font-normal text-black"
+                                        className="p-2 font-normal text-black"
                                     >
                                         {label}
                                     </Dropdown.MenuItem>

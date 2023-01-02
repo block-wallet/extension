@@ -1,5 +1,5 @@
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import { FunctionComponent, useMemo, useState } from "react"
 import { BiRadioCircleMarked } from "react-icons/bi"
 import { Redirect } from "react-router-dom"
@@ -103,7 +103,7 @@ const ConnectedSiteAccount: FunctionComponent<{
                                     onClick={() => {
                                         setHasDialog(true)
                                     }}
-                                    className="text-red-500 space-x-2 cursor-pointer flex flex-row justify-center items-center hover:bg-gray-100 hover:rounded-t-md"
+                                    className="text-red-500 space-x-2 cursor-pointer flex flex-row p-2 justify-center items-center hover:bg-gray-100 hover:rounded-t-md"
                                 >
                                     <Icon
                                         name={IconName.TRASH_BIN}
@@ -116,7 +116,7 @@ const ConnectedSiteAccount: FunctionComponent<{
                                     onClick={() => {
                                         handleConnectSite(account.address)
                                     }}
-                                    className="text-green-400 space-x-2 cursor-pointer flex flex-row justify-start items-center hover:bg-gray-100 hover:rounded-t-md"
+                                    className="text-green-400 space-x-2 cursor-pointer flex flex-row p-2 justify-start items-center hover:bg-gray-100 hover:rounded-t-md"
                                 >
                                     <BiRadioCircleMarked size={24} />
                                     <span>Connect</span>

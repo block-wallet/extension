@@ -1,6 +1,9 @@
 import { isAddress } from '@ethersproject/address';
 import { isValidAddress, toChecksumAddress } from 'ethereumjs-util';
-import { BigNumber, Contract, providers, Signer } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
+import { Signer } from '@ethersproject/abstract-signer';
+import { Provider as EthersProvider } from '@ethersproject/providers';
 import log from 'loglevel';
 import BalanceCheckerABI from './abis/BalanceChecker.abi.json';
 
@@ -45,7 +48,7 @@ const SINGLE_CALL_BALANCES_CONTRACTS: {
     1337: '', // localhost
 };
 
-type Provider = providers.Provider | Signer;
+type Provider = EthersProvider | Signer;
 
 export type BalanceMap = {
     [tokenAddress: string]: BigNumber;

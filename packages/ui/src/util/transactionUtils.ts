@@ -3,8 +3,8 @@ import {
     TransactionMeta,
     uiTransactionParams,
 } from "@block-wallet/background/controllers/transactions/utils/types"
-import { TransactionStatus } from "../context/commTypes"
-import { BigNumber } from "ethers"
+import { TransactionCategories, TransactionStatus } from "../context/commTypes"
+import { BigNumber } from "@ethersproject/bignumber"
 import { DappRequestSigningStatus } from "../context/hooks/useDappRequest"
 export interface RichedTransactionMeta extends TransactionMeta {
     //Dynamically calculated using this transaction status and comparing the nonce with other transactions.
@@ -21,23 +21,38 @@ export const flagQueuedTransactions = (
     }
     const lowestPendingNonce = pendingTransactions
         .filter((transaction) => {
-            return transaction.status === TransactionStatus.SUBMITTED
+            return (
+                transaction.status === TransactionStatus.SUBMITTED &&
+                transaction.transactionCategory !==
+                    TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER
+            )
         })
         .reduce((lowest, current) => {
-            const currentNonce = current.transactionParams.nonce || -1
-            if (lowest === -1 || currentNonce < lowest) {
+            const currentNonce =
+                current.transactionParams.nonce ?? Number.MAX_VALUE
+            if (currentNonce < lowest) {
                 return currentNonce
             }
             return lowest
-        }, -1)
+        }, Number.MAX_VALUE)
 
     return pendingTransactions.map((transaction) => {
-        const transactionNonce = transaction.transactionParams.nonce || -1
+        const transactionNonce = transaction.transactionParams.nonce
+        if (!transactionNonce) {
+            return {
+                ...transaction,
+                isQueued: false,
+            }
+        }
         const isPendingState =
             transaction.status === TransactionStatus.SUBMITTED
         return {
             ...transaction,
-            isQueued: isPendingState && transactionNonce > lowestPendingNonce,
+            isQueued:
+                transaction.transactionCategory !==
+                    TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER &&
+                isPendingState &&
+                transactionNonce > lowestPendingNonce,
         }
     })
 }
@@ -114,4 +129,14 @@ export const canUserSubmitTransaction = (
     status: TransactionStatus
 ): boolean => {
     return [TransactionStatus.UNAPPROVED].includes(status)
+}
+
+export const resolveTransactionTo = (tx: TransactionMeta): string => {
+    let to: string | undefined
+    if (
+        tx.transactionCategory === TransactionCategories.TOKEN_METHOD_TRANSFER
+    ) {
+        to = tx.transferType?.to
+    }
+    return to ?? tx.transactionParams.to ?? ""
 }

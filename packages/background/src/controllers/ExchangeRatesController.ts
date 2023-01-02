@@ -1,3 +1,5 @@
+import log from 'loglevel';
+
 import { PreferencesController } from './PreferencesController';
 import { BaseController } from '../infrastructure/BaseController';
 import { Token } from './erc-20/Token';
@@ -13,11 +15,18 @@ import {
     ASSET_PLATFORMS_IDS_LIST,
 } from '@block-wallet/chains-assets';
 
-import axios from 'axios';
 import { ActionIntervalController } from './block-updates/ActionIntervalController';
 import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
+import httpClient from '../utils/http';
+import {
+    getRateService,
+    RateService,
+    BaseApiEndpoint,
+    chainLinkService,
+    coingekoService,
+} from '../utils/rateService';
 
 export interface ExchangeRatesControllerState {
     exchangeRates: Rates;
@@ -25,6 +34,7 @@ export interface ExchangeRatesControllerState {
         symbol: string;
         coingeckoPlatformId: string;
     };
+    isRatesChangingAfterNetworkChange: boolean;
 }
 
 export interface Rates {
@@ -33,8 +43,6 @@ export interface Rates {
 
 const DEFAULT_NETWORK_CURRENCY_ID = 'ethereum';
 export class ExchangeRatesController extends BaseController<ExchangeRatesControllerState> {
-    private readonly baseApiEndpoint =
-        'https://api.coingecko.com/api/v3/simple/';
     private readonly staticTokens: { [address: string]: { token: Token } } = {
         '0x6B175474E89094C44Da98b954EedeAC495271d0F': {
             token: { symbol: 'DAI' } as Token,
@@ -53,6 +61,7 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         },
     };
     private readonly _exchangeRateFetchIntervalController: ActionIntervalController;
+    private _exchangeRateService: RateService;
 
     constructor(
         initState: ExchangeRatesControllerState,
@@ -70,11 +79,28 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         this._exchangeRateFetchIntervalController =
             new ActionIntervalController(this._networkController);
 
+        this._exchangeRateService = getRateService(
+            _preferencesController.nativeCurrency.toLowerCase(),
+            this.networkNativeCurrency.symbol
+        );
+
         this._networkController.on(
             NetworkEvents.NETWORK_CHANGE,
-            (network: Network) => {
-                this.updateNetworkNativeCurrencyId(network);
-                this.updateExchangeRates();
+            async (network: Network) => {
+                try {
+                    this.store.updateState({
+                        isRatesChangingAfterNetworkChange: true,
+                    });
+
+                    this.updateNetworkNativeCurrencyId(network);
+                    await this.updateExchangeRates();
+                } catch (error) {
+                    log.error(error);
+                } finally {
+                    this.store.updateState({
+                        isRatesChangingAfterNetworkChange: false,
+                    });
+                }
             }
         );
 
@@ -98,6 +124,13 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         );
     }
 
+    /**
+     * Indicates whether the exchange rates is being changed after a network change
+     */
+    public get isRatesChangingAfterNetworkChange(): boolean {
+        return this.store.getState().isRatesChangingAfterNetworkChange;
+    }
+
     private updateNetworkNativeCurrencyId = ({
         chainId,
         nativeCurrency,
@@ -114,6 +147,11 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
             coingeckoPlatformId =
                 RATES_IDS_LIST[symbol as keyof typeof RATES_IDS_LIST];
         }
+
+        this._exchangeRateService = getRateService(
+            this._preferencesController.nativeCurrency.toLowerCase(),
+            symbol
+        );
 
         this.store.updateState({
             networkNativeCurrency: {
@@ -135,19 +173,32 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         const { symbol } = this.networkNativeCurrency;
         // Rates format: {[tokenTicker]: [price: number]}
         const rates = this.store.getState().exchangeRates;
-        const currencyApiId =
-            RATES_IDS_LIST[
-                this.networkNativeCurrency.symbol as keyof typeof RATES_IDS_LIST
-            ];
 
         // Get network native currency rate
-        const nativeCurrencyRates = (
-            await this._getNetworkNativeCurrencyRate()
-        )[currencyApiId];
+        const nativeCurrency =
+            this._preferencesController.nativeCurrency.toLowerCase();
 
-        // Response -> { ethereum : { [nativeCurrency] : rate }}
-        rates[symbol] =
-            nativeCurrencyRates[this._preferencesController.nativeCurrency];
+        rates[symbol] = await this._exchangeRateService.getRate(
+            nativeCurrency,
+            symbol,
+            //TODO: check if we want to get the price using the mainnet datafeed even when standing on other networks
+            {
+                networkProvider:
+                    this._networkController.getProviderFromName('mainnet'),
+            }
+            // this._networkController.getProvider()
+        );
+
+        //In case chainlink returns 0, we will retrieve value from Coingeko, in case of failure from chainlink
+        if (
+            rates[symbol] === 0 &&
+            this._exchangeRateService === chainLinkService
+        ) {
+            rates[symbol] = await coingekoService.getRate(
+                nativeCurrency,
+                symbol
+            );
+        }
 
         // Get tokens exchange rates
         const tokenRatesQuery = await this._getTokenRates();
@@ -177,20 +228,12 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         const tokens = { ...this.staticTokens, ...this.getTokens() };
         const tokenContracts = Object.keys(tokens).join(',');
 
-        const query = `${this.baseApiEndpoint}token_price/${this.networkNativeCurrency.coingeckoPlatformId}`;
+        const query = `${BaseApiEndpoint}token_price/${this.networkNativeCurrency.coingeckoPlatformId}`;
 
-        const response = await axios.get(query, {
-            params: {
-                contract_addresses: tokenContracts,
-                vs_currencies: this._preferencesController.nativeCurrency,
-            },
+        return httpClient.get(query, {
+            contract_addresses: tokenContracts,
+            vs_currencies: this._preferencesController.nativeCurrency,
         });
-
-        if (response.status != 200) {
-            throw new Error(response.statusText);
-        }
-
-        return response.data;
     };
 
     /**
@@ -202,32 +245,6 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
     } {
         return this.store.getState().networkNativeCurrency;
     }
-
-    /**
-     *  Gets ethereum current price in native currency
-     */
-    private _getNetworkNativeCurrencyRate = async (): Promise<{
-        [nativeCurrency: string]: { [vsCurrency: string]: number };
-    }> => {
-        const query = `${this.baseApiEndpoint}price`;
-        const currencyApiId =
-            RATES_IDS_LIST[
-                this.networkNativeCurrency.symbol.toUpperCase() as keyof typeof RATES_IDS_LIST
-            ];
-
-        const response = await axios.get(query, {
-            params: {
-                ids: currencyApiId,
-                vs_currencies: this._preferencesController.nativeCurrency,
-            },
-        });
-
-        if (response.status != 200) {
-            throw new Error(response.statusText);
-        }
-
-        return response.data;
-    };
 
     /**
      * Updates the tokens selected by the user

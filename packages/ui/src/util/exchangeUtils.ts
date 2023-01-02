@@ -4,9 +4,9 @@ import {
     TransactionCategories,
     TransactionStatus,
 } from "../context/commTypes"
-import { SwapParameters } from "@block-wallet/background/controllers/ExchangeController"
-import { BigNumber } from "ethers"
-import { formatUnits } from "ethers/lib/utils"
+import { SwapParameters } from "@block-wallet/background/controllers/SwapController"
+import { BigNumber } from "@ethersproject/bignumber"
+import { formatUnits } from "@ethersproject/units"
 import { RichedTransactionMeta } from "./transactionUtils"
 
 const ONEINCH_NATIVE_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"

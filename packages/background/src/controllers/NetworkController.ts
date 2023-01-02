@@ -292,6 +292,11 @@ export default class NetworkController extends BaseController<NetworkControllerS
         newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
         newNetworks[networkKey].test = updates.test;
         this.networks = newNetworks;
+
+        // If network is currently selected & rpc is changed, update provider by resetting the network (only available if provider is down)
+        if (this.network.chainId === chainId && updates.rpcUrls) {
+            this.setNetwork(this.network.name);
+        }
         return;
     }
 

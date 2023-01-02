@@ -11,7 +11,7 @@ import {
     BridgeStatus,
     BridgeSubstatus,
 } from '@block-wallet/background/utils/bridgeApi';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 
 const BASE_SENDING_TRANSACTION = {
     approveTime: 1656527770143,

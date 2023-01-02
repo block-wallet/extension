@@ -1,4 +1,4 @@
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { Fragment, FunctionComponent, useState } from "react"
 import { useOnMountHistory } from "../context/hooks/useOnMount"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"

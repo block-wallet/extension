@@ -21,7 +21,7 @@ import {
 } from "../../context/commActions"
 import { AdvancedSettings } from "../../components/transactions/AdvancedSettings"
 import { AiFillInfoCircle } from "react-icons/ai"
-import { BigNumber, ethers } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes, classnames } from "../../styles/classes"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
@@ -39,7 +39,8 @@ import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/
 import { capitalize } from "../../util/capitalize"
 import { formatHash, formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
-import { formatUnits, getAddress, parseUnits } from "ethers/lib/utils"
+import { formatUnits, parseUnits } from "@ethersproject/units"
+import { getAddress } from "@ethersproject/address"
 import { getAccountColor } from "../../util/getAccountColor"
 import { parseAllowance } from "../../util/approval"
 import { useBlankState } from "../../context/background/backgroundHooks"
@@ -59,9 +60,10 @@ import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDevic
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { canUserSubmitTransaction } from "../../util/transactionUtils"
+import { MaxUint256 } from "@ethersproject/constants"
 
 const UNKNOWN_BALANCE = "UNKNOWN_BALANCE"
-const UNLIMITED_ALLOWANCE = ethers.constants.MaxUint256
+const UNLIMITED_ALLOWANCE = MaxUint256
 
 // Schema
 const GetAllowanceYupSchema = (

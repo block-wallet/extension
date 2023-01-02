@@ -188,28 +188,13 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 tokenAddresses: string[] = []
             ) => {
                 try {
-                    // If array tokenAddresses contains at least 1 value, we update that asset balance, else we update all account balances
-                    if (tokenAddresses.length > 0) {
-                        await this.updateAccounts(
-                            {
-                                addresses: [accountAddress],
-                                assetAddresses: tokenAddresses,
-                            },
-                            chainId
-                        );
-                    } else {
-                        await this.updateAccounts(
-                            {
-                                addresses: [accountAddress],
-                                assetAddresses:
-                                    await this._tokenController.getUserTokenContractAddresses(
-                                        accountAddress,
-                                        chainId
-                                    ),
-                            },
-                            chainId
-                        );
-                    }
+                    await this.updateAccounts(
+                        {
+                            addresses: [accountAddress],
+                            assetAddresses: tokenAddresses,
+                        },
+                        chainId
+                    );
                 } catch (err) {
                     log.warn(
                         'An error ocurred while updating the accouns',
@@ -232,9 +217,15 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 this._balanceFetchIntervalController.tick(
                     balanceFetchInterval,
                     async () => {
+                        // Get addresses from state
+                        const addresses = Object.keys(
+                            this.store.getState().accounts
+                        );
+
                         await this.updateAccounts(
                             {
-                                assetAddresses: [NATIVE_TOKEN_ADDRESS],
+                                addresses,
+                                assetAddresses: [],
                             },
                             chainId
                         );
@@ -273,13 +264,15 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     ))
                 );
 
-                await this.updateAccounts(
-                    {
-                        addresses: [accountAddress],
-                        assetAddresses,
-                    },
-                    chainId
-                );
+                if (assetAddresses.length > 0) {
+                    await this.updateAccounts(
+                        {
+                            addresses: [accountAddress],
+                            assetAddresses,
+                        },
+                        chainId
+                    );
+                }
             }
         );
 
@@ -290,13 +283,15 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 accountAddress: string,
                 tokenAddresses: string[]
             ) => {
-                await this.updateAccounts(
-                    {
-                        addresses: [accountAddress],
-                        assetAddresses: tokenAddresses,
-                    },
-                    chainId
-                );
+                if (tokenAddresses.length > 0) {
+                    await this.updateAccounts(
+                        {
+                            addresses: [accountAddress],
+                            assetAddresses: tokenAddresses,
+                        },
+                        chainId
+                    );
+                }
             }
         );
     }
@@ -678,7 +673,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         updateAccountsOptions: UpdateAccountsOptions,
         chainId: number = this._networkController.network.chainId
     ): Promise<void> {
-        const release = !updateAccountsOptions.addresses
+        const { addresses, assetAddresses } = updateAccountsOptions;
+        const release = !addresses
             ? await this._mutex.acquire()
             : () => {
                   return;
@@ -687,8 +683,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         try {
             // Get addresses from state
             const _addresses =
-                updateAccountsOptions.addresses ||
-                Object.keys(this.store.getState().accounts);
+                addresses && addresses.length
+                    ? addresses
+                    : Object.keys(this.store.getState().accounts);
 
             // Provider is immutable, so reference won't be lost
             const provider =
@@ -696,17 +693,28 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
             if (provider) {
                 for (let i = 0; i < _addresses.length; i++) {
+                    const address = _addresses[i];
+
                     // If the chain changed we abort these operations
                     // Set $BLANK as visible on network change if available
-                    await this._tokenController.setBlankToken(
-                        _addresses[i],
-                        chainId
-                    );
+                    await this._tokenController.setBlankToken(address, chainId);
+
+                    if (!assetAddresses.length) {
+                        assetAddresses.push(NATIVE_TOKEN_ADDRESS);
+
+                        assetAddresses.push(
+                            ...(await this._tokenController.getUserTokenContractAddresses(
+                                address,
+                                chainId
+                            ))
+                        );
+                    }
+
                     await this._updateAccountBalance(
                         chainId,
                         provider,
-                        _addresses[i],
-                        updateAccountsOptions.assetAddresses
+                        address,
+                        assetAddresses
                     );
                 }
             }
@@ -747,6 +755,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 nativeTokenBalance: zero,
                 tokens: {},
             } as AccountBalance;
+
+            // list of known tokens
+            const knownTokens =
+                await this._tokenController.getContractAddresses(chainId);
 
             // Adding the user custom tokens to the list
             const userTokens =
@@ -805,7 +817,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         if (token) {
                             if (
                                 balance.gt(zero) &&
-                                !userTokens.includes(tokenAddress)
+                                !userTokens.includes(tokenAddress) &&
+                                knownTokens.includes(tokenAddress) // the token has to be known (not spam)
                             ) {
                                 await this._tokenController.addCustomToken(
                                     token,
@@ -813,12 +826,19 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                     chainId,
                                     true
                                 );
+                                userTokens.push(tokenAddress);
                             }
 
-                            account.balances[chainId].tokens[tokenAddress] = {
-                                token,
-                                balance,
-                            };
+                            if (
+                                userTokens.includes(tokenAddress) ||
+                                knownTokens.includes(tokenAddress)
+                            ) {
+                                account.balances[chainId].tokens[tokenAddress] =
+                                    {
+                                        token,
+                                        balance,
+                                    };
+                            }
                         }
                     }
                 }

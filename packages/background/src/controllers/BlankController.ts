@@ -2720,7 +2720,8 @@ export default class BlankController extends EventEmitter {
         return this.tokenController.addCustomTokens(
             tokens,
             accountAddress,
-            chainId
+            chainId,
+            true
         );
     }
 

@@ -454,4 +454,5 @@ export default class PermissionsController extends BaseController<PermissionsCon
 
         return sitePermission;
     };
+    // test
 }

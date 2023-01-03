@@ -1,5 +1,5 @@
 import { isAddress } from '@ethersproject/address';
-import { isValidAddress, toChecksumAddress } from 'ethereumjs-util';
+import { isValidAddress, toChecksumAddress } from '@ethereumjs/util';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 import { Signer } from '@ethersproject/abstract-signer';

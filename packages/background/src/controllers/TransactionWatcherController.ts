@@ -1,5 +1,5 @@
 import { Mutex } from 'async-mutex';
-import { isValidAddress, toChecksumAddress } from 'ethereumjs-util';
+import { isValidAddress, toChecksumAddress } from '@ethereumjs/util';
 import { BigNumber } from '@ethersproject/bignumber';
 import { TransactionResponse } from '@ethersproject/providers';
 import { hexZeroPad } from '@ethersproject/bytes';

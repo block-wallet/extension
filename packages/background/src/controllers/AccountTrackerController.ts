@@ -14,7 +14,7 @@ import {
     TokenControllerEvents,
 } from './erc-20/TokenController';
 import { Token } from './erc-20/Token';
-import { toChecksumAddress } from 'ethereumjs-util';
+import { toChecksumAddress } from '@ethereumjs/util';
 import { TokenOperationsController } from './erc-20/transactions/Transaction';
 import { Mutex } from 'async-mutex';
 import initialState from '../utils/constants/initialState';

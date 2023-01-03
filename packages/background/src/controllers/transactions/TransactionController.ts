@@ -10,10 +10,11 @@ import {
 import log from 'loglevel';
 import {
     addHexPrefix,
+    bigIntToHex,
     bufferToHex,
     isValidAddress,
     toChecksumAddress,
-} from 'ethereumjs-util';
+} from '@ethereumjs/util';
 import { TransactionFactory, TypedTransaction } from '@ethereumjs/tx';
 import { v4 as uuid } from 'uuid';
 import { Mutex } from 'async-mutex';
@@ -38,11 +39,7 @@ import {
     validateTransaction,
 } from './utils/utils';
 import { toError } from '../../utils/toError';
-import {
-    bigIntToHex,
-    bnGreaterThanZero,
-    BnMultiplyByFraction,
-} from '../../utils/bnUtils';
+import { bnGreaterThanZero, BnMultiplyByFraction } from '../../utils/bnUtils';
 import { ProviderError } from '../../utils/types/ethereum';
 import { runPromiseSafely } from '../../utils/promises';
 import { PreferencesController } from '../PreferencesController';
@@ -1057,7 +1054,13 @@ export class TransactionController extends BaseController<
         );
 
         // Add r,s,v values
-        if (!signedTx.r || !signedTx.s || !signedTx.v)
+        if (
+            !signedTx.r ||
+            !signedTx.s ||
+            // for eip1559 v is 0.
+            // https://github.com/ethereumjs/ethereumjs-monorepo/blob/master/packages/tx/src/eip1559Transaction.ts#L382
+            (!signedTx.v && signedTx.v?.toString() !== '0')
+        )
             throw new Error('An error while signing the transaction ocurred');
 
         return signedTx;

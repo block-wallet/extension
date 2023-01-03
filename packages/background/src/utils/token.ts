@@ -2,7 +2,7 @@ import {
     addHexPrefix,
     isValidAddress,
     toChecksumAddress,
-} from 'ethereumjs-util';
+} from '@ethereumjs/util';
 import { compareAddresses } from '../controllers/transactions/utils/utils';
 import { IToken } from '../controllers/erc-20/Token';
 import {

@@ -17,7 +17,7 @@ import {
     isHexPrefixed,
     isValidAddress,
     toChecksumAddress,
-} from 'ethereumjs-util';
+} from '@ethereumjs/util';
 import { PreferencesController } from '../PreferencesController';
 import { Mutex } from 'async-mutex';
 import initialState from '../../utils/constants/initialState';

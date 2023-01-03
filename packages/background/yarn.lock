@@ -201,14 +201,25 @@
   version "0.0.25"
   resolved "https://github.com/block-wallet/chains-assets#36552560a0f22214f2e5591ce1ea6ac7c121e631"
 
-"@block-wallet/eth-ledger-bridge-keyring@https://github.com/block-wallet/eth-ledger-bridge-keyring":
-  version "0.13.0"
-  resolved "https://github.com/block-wallet/eth-ledger-bridge-keyring#403c27ac0a1d49a4ee9722238f22c3ccf0a926f1"
+"@block-wallet/eth-ledger-bridge-keyring@https://github.com/block-wallet/eth-ledger-bridge-keyring#d050d271291e403343cf0b00aa15648630d7163d":
+  version "0.14.0"
+  resolved "https://github.com/block-wallet/eth-ledger-bridge-keyring#d050d271291e403343cf0b00aa15648630d7163d"
   dependencies:
-    "@ethereumjs/tx" "^3.2.0"
+    "@ethereumjs/rlp" "^4.0.0"
+    "@ethereumjs/tx" "^4.0.2"
+    "@ethereumjs/util" "^8.0.3"
     eth-sig-util "^2.0.0"
-    ethereumjs-util "^7.0.9"
     hdkey "0.8.0"
+
+"@block-wallet/eth-trezor-keyring@https://github.com/block-wallet/eth-trezor-keyring#073aa77bb0d94889ce404843f8451712b80f4afd":
+  version "0.11.0"
+  resolved "https://github.com/block-wallet/eth-trezor-keyring#073aa77bb0d94889ce404843f8451712b80f4afd"
+  dependencies:
+    "@ethereumjs/tx" "^4.0.2"
+    "@ethereumjs/util" "^8.0.3"
+    "@metamask/eth-sig-util" "^5.0.2"
+    hdkey "0.8.0"
+    trezor-connect "8.2.6-extended"
 
 "@block-wallet/explorer-link@https://github.com/block-wallet/explorer-link#v2.2.2":
   version "2.2.2"
@@ -245,14 +256,6 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
-"@ethereumjs/common@^2.6.4":
-  version "2.6.5"
-  resolved "https://registry.yarnpkg.com/@ethereumjs/common/-/common-2.6.5.tgz#0a75a22a046272579d91919cb12d84f2756e8d30"
-  integrity sha512-lRyVQOeCDaIVtgfbowla32pzeDv2Obr8oR8Put5RdUBNRGr1VGPGQNGP6elWIpgK3YdpzqTOh4GyUGOureVeeA==
-  dependencies:
-    crc-32 "^1.2.0"
-    ethereumjs-util "^7.1.5"
-
 "@ethereumjs/common@^3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@ethereumjs/common/-/common-3.0.2.tgz#72be343c9d359b8890e0bb91bd3dc3d8e210087e"
@@ -265,14 +268,6 @@
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@ethereumjs/rlp/-/rlp-4.0.0.tgz#66719891bd727251a7f233f9ca80212d1994f8c8"
   integrity sha512-LM4jS5n33bJN60fM5EC8VeyhUgga6/DjCPBV2vWjnfVtobqtOiNC4SQ1MRFqyBSmJGGdB533JZWewyvlcdJtkQ==
-
-"@ethereumjs/tx@^3.2.0", "@ethereumjs/tx@^3.2.1":
-  version "3.5.2"
-  resolved "https://registry.yarnpkg.com/@ethereumjs/tx/-/tx-3.5.2.tgz#197b9b6299582ad84f9527ca961466fce2296c1c"
-  integrity sha512-gQDNJWKrSDGu2w7w0PzVXVBNMzb7wwdDOmOqczmhNjqFxFuIbhVJDwiGEnxFNC2/b8ifcZzY7MLcluizohRzNw==
-  dependencies:
-    "@ethereumjs/common" "^2.6.4"
-    ethereumjs-util "^7.1.5"
 
 "@ethereumjs/tx@^4.0.2":
   version "4.0.2"
@@ -726,17 +721,6 @@
   dependencies:
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
-
-"@metamask/eth-sig-util@^4.0.0":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@metamask/eth-sig-util/-/eth-sig-util-4.0.1.tgz#3ad61f6ea9ad73ba5b19db780d40d9aae5157088"
-  integrity sha512-tghyZKLHZjcdlDqCA3gNZmLeR0XvOE9U1qoQO9ohyAZT6Pya+H9vkBPcsyXytmYLNgVoin7CKCmweo/R43V+tQ==
-  dependencies:
-    ethereumjs-abi "^0.6.8"
-    ethereumjs-util "^6.2.1"
-    ethjs-util "^0.1.6"
-    tweetnacl "^1.0.3"
-    tweetnacl-util "^0.15.1"
 
 "@metamask/eth-sig-util@^5.0.2":
   version "5.0.2"
@@ -1489,9 +1473,9 @@ ajv@^6.10.0, ajv@^6.12.4, ajv@^6.12.5:
     uri-js "^4.2.2"
 
 ajv@^8.0.0, ajv@^8.8.0:
-  version "8.11.2"
-  resolved "https://registry.yarnpkg.com/ajv/-/ajv-8.11.2.tgz#aecb20b50607acf2569b6382167b65a96008bb78"
-  integrity sha512-E4bfmKAhGiSTvMfL1Myyycaub+cUEU2/IvpylXkUu7CHBkBj1f/ikdzbD7YQ6FKUbixDxeYvB/xY4fvyroDlQg==
+  version "8.12.0"
+  resolved "https://registry.yarnpkg.com/ajv/-/ajv-8.12.0.tgz#d1a0527323e22f53562c567c00991577dfbe19d1"
+  integrity sha512-sRu1kpcO9yLtYxBKvqfTeh9KzZEwO3STyX1HT+4CaDzC6HpTGYhIhPIzj9XuKU7KYDwnaeh5hcOwjy1QuJzBPA==
   dependencies:
     fast-deep-equal "^3.1.1"
     json-schema-traverse "^1.0.0"
@@ -2757,16 +2741,6 @@ eth-simple-keyring@^4.2.0:
     ethereumjs-wallet "^1.0.1"
     events "^1.1.1"
 
-"eth-trezor-keyring@https://github.com/block-wallet/eth-trezor-keyring#v0.10.2":
-  version "0.10.0"
-  resolved "https://github.com/block-wallet/eth-trezor-keyring#ac701bf5c20590e0ba882d4748e578601de74a70"
-  dependencies:
-    "@ethereumjs/tx" "^3.2.1"
-    "@metamask/eth-sig-util" "^4.0.0"
-    ethereumjs-util "^7.0.9"
-    hdkey "0.8.0"
-    trezor-connect "8.2.6-extended"
-
 ethereum-cryptography@^0.1.3:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/ethereum-cryptography/-/ethereum-cryptography-0.1.3.tgz#8d6143cfc3d74bf79bbd8edecdf29e4ae20dd191"
@@ -2819,7 +2793,7 @@ ethereumjs-util@^5.1.1:
     rlp "^2.0.0"
     safe-buffer "^5.1.1"
 
-ethereumjs-util@^6.0.0, ethereumjs-util@^6.2.1:
+ethereumjs-util@^6.0.0:
   version "6.2.1"
   resolved "https://registry.yarnpkg.com/ethereumjs-util/-/ethereumjs-util-6.2.1.tgz#fcb4e4dd5ceacb9d2305426ab1a5cd93e3163b69"
   integrity sha512-W2Ktez4L01Vexijrm5EB6w7dg4n/TgpoYU4avuT5T3Vmnw/eCRtiBrJfQYS/DCSvDIOLn2k57GcHdeBcgVxAqw==
@@ -2832,7 +2806,7 @@ ethereumjs-util@^6.0.0, ethereumjs-util@^6.2.1:
     ethjs-util "0.1.6"
     rlp "^2.2.3"
 
-ethereumjs-util@^7.0.9, ethereumjs-util@^7.1.2, ethereumjs-util@^7.1.5:
+ethereumjs-util@^7.0.9, ethereumjs-util@^7.1.2:
   version "7.1.5"
   resolved "https://registry.yarnpkg.com/ethereumjs-util/-/ethereumjs-util-7.1.5.tgz#9ecf04861e4fbbeed7465ece5f23317ad1129181"
   integrity sha512-SDl5kKrQAudFBUe5OJM9Ac6WmMyYmXX/6sTmLZ3ffG2eY6ZIGBes3pEDxNN6V72WyOw4CPD5RomKdsa8DAAwLg==

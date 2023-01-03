@@ -5,7 +5,7 @@ import KeyringController, {
 import { Hash, Hasheable } from '../utils/hasher';
 import { Mutex } from 'async-mutex';
 import LedgerBridgeKeyring from '@block-wallet/eth-ledger-bridge-keyring';
-import TrezorKeyring from 'eth-trezor-keyring';
+import TrezorKeyring from '@block-wallet/eth-trezor-keyring';
 import { Devices } from '../utils/types/hardware';
 import log from 'loglevel';
 import { HDPaths, BIP44_PATH } from '../utils/types/hardware';

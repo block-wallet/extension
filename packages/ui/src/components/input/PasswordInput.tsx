@@ -71,7 +71,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
         // Handlers
         const handlePasswordChange = (e: any) => {
             setPasswordValue(e.target.value)
-            setShowStrengthBar(e.target.value.length > 0)
+            if (strengthBar) setShowStrengthBar(e.target.value.length > 0)
             if (onChange) onChange(e)
         }
 
@@ -162,7 +162,9 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                         <span
                             className={classNames(
                                 "text-xs text-red-500",
-                                error === "" ? "m-0 h-0" : ""
+                                error === ""
+                                    ? "m-0 h-0"
+                                    : showStrengthBar && "block -mt-5 w-5/6"
                             )}
                         >
                             {error || ""}

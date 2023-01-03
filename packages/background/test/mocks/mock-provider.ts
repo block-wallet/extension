@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import sinon, { SinonSandbox, SinonStatic } from 'sinon';
 import { INITIAL_NETWORKS } from '../../src/utils/constants/networks';
 
@@ -6,9 +6,7 @@ const MockProvider = (
     network: string,
     sandbox: SinonStatic | SinonSandbox = sinon
 ) => {
-    const mockedProvider = sandbox.stub(
-        ethers.providers.StaticJsonRpcProvider.prototype
-    );
+    const mockedProvider = sandbox.stub(StaticJsonRpcProvider.prototype);
 
     const _network = network || 'homestead';
     const mayusNetwork = _network.toUpperCase();

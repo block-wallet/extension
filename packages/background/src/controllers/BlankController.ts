@@ -108,7 +108,7 @@ import type {
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import BlankStorageStore from '../infrastructure/stores/BlankStorageStore';
 import { Flatten } from '../utils/types/helpers';
 import { Messages } from '../utils/types/communication';
@@ -2720,7 +2720,8 @@ export default class BlankController extends EventEmitter {
         return this.tokenController.addCustomTokens(
             tokens,
             accountAddress,
-            chainId
+            chainId,
+            true
         );
     }
 

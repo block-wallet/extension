@@ -54,6 +54,10 @@ export interface AccountBalanceToken {
     token: Token;
     balance: BigNumber;
 }
+export interface TokenAllowance {
+    updatedAt: number;
+    value: BigNumber;
+}
 export interface AccountBalanceTokens {
     [address: string]: AccountBalanceToken;
 }
@@ -62,9 +66,24 @@ export interface AccountBalance {
     tokens: AccountBalanceTokens;
 }
 
-export interface AccountBalances {
-    [chainId: number]: AccountBalance;
+export interface AccountAllowance {
+    tokens: {
+        [address: string]: {
+            token: Token;
+            allowances: {
+                [spenderAddress: string]: TokenAllowance;
+            };
+        };
+    };
 }
+
+export type AccountBalances = {
+    [chainId: number]: AccountBalance;
+};
+
+export type AccountAllowances = {
+    [chainId: number]: AccountAllowance;
+};
 
 /**
  * The type of the added account
@@ -82,6 +101,7 @@ export interface AccountInfo {
     index: number; // for sorting purposes
     accountType: AccountType; // indicates if it was derivated from the seed phrase (false) or imported (true)
     balances: AccountBalances;
+    allowances: AccountAllowances; //account allowances per chain, token and spender.
     status: AccountStatus; //account info metadata calculated in the UI from the hiddenAccounts
 }
 
@@ -313,6 +333,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             index: 0, // first account
             balances: {},
             status: AccountStatus.ACTIVE,
+            allowances: {},
         };
 
         this.store.updateState({
@@ -354,6 +375,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             accountType: AccountType.HD_ACCOUNT,
             balances: {},
             status: AccountStatus.ACTIVE,
+            allowances: {},
         };
         trackedAccounts[newAccount] = accountInfo;
 
@@ -424,6 +446,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 index: accountIndex,
                 balances: {},
                 status: AccountStatus.ACTIVE,
+                allowances: {},
             };
             updatedAccounts.push(accountInfo);
 
@@ -484,6 +507,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             index: accountIndex,
             balances: {},
             status: AccountStatus.ACTIVE,
+            allowances: {},
         };
         trackedAccounts[newAccount] = accountInfo;
 

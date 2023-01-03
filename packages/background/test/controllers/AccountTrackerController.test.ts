@@ -232,6 +232,7 @@ describe('AccountTracker controller implementation', function () {
                         accountType: AccountType.HD_ACCOUNT,
                         name: 'Account 1',
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -268,6 +269,7 @@ describe('AccountTracker controller implementation', function () {
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
                         name: 'Account 1',
+                        allowances: {},
                     },
                 },
             });
@@ -302,6 +304,7 @@ describe('AccountTracker controller implementation', function () {
                         accountType: AccountType.HD_ACCOUNT,
                         name: 'Account 1',
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -337,6 +340,7 @@ describe('AccountTracker controller implementation', function () {
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
                         name: 'Account 1',
+                        allowances: {},
                     },
                 },
             });
@@ -372,6 +376,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -405,6 +410,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -454,6 +460,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -497,6 +504,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0x0d19882936d1b99701470853cb948583979203d3': {
                         address: accountAddress2,
@@ -510,6 +518,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0x3399ee50696cf10dc88d0e11c3fe57f8aa46e0dd': {
                         address: accountAddress3,
@@ -523,6 +532,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -568,6 +578,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0x0d19882936d1b99701470853cb948583979203d3': {
                         address: accountAddress2,
@@ -581,6 +592,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0x3399ee50696cf10dc88d0e11c3fe57f8aa46e0dd': {
                         address: accountAddress3,
@@ -594,6 +606,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -636,6 +649,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0x604D5299227E91ee85899dCDbFfe1505bC1E3233': {
                         address: accountAddress2,
@@ -649,6 +663,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -710,6 +725,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0x0d19882936d1b99701470853cb948583979203d3': {
                         address: accountAddress2,
@@ -723,6 +739,7 @@ describe('AccountTracker controller implementation', function () {
                         accountType: AccountType.HD_ACCOUNT,
                         name: 'Account 2',
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0x3399ee50696cf10dc88d0e11c3fe57f8aa46e0dd': {
                         address: accountAddress3,
@@ -736,6 +753,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -844,6 +862,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0x0d19882936d1b99701470853cb948583979203d3': {
                         address: accountAddress2,
@@ -857,6 +876,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0x3399ee50696cf10dc88d0e11c3fe57f8aa46e0dd': {
                         address: accountAddress3,
@@ -870,6 +890,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -949,6 +970,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0x3399ee50696cf10dc88d0e11c3fe57f8aa46e0dd': {
                         address: accountAddress2,
@@ -962,6 +984,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -1040,6 +1063,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0xfa': {
                         address: '0xfa',
@@ -1053,6 +1077,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -1062,17 +1087,6 @@ describe('AccountTracker controller implementation', function () {
             expect(Object.keys(accounts).length).to.be.equal(2);
             expect(Object.keys(accounts)).to.contain('0xff');
         });
-
-        /*
-    it('Should add an account', () => {
-      const { accounts } = accountTrackerController.store.getState()
-
-      expect(accounts).to.be.empty
-      accountTrackerController.createAccount('test account')
-      expect(accounts).to.not.be.empty
-      expect(Object.keys(accounts)).to.contain('0xff')
-    })
-    */
 
         it('Should not let you remove a non-external account', () => {
             accountTrackerController.store.updateState({
@@ -1089,6 +1103,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0xfa': {
                         address: '0xfa',
@@ -1102,6 +1117,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -1128,6 +1144,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.EXTERNAL,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0xfa': {
                         address: '0xfa',
@@ -1141,6 +1158,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -1167,6 +1185,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.EXTERNAL,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0xfa': {
                         address: '0xfa',
@@ -1180,6 +1199,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -1206,6 +1226,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0xfa': {
                         address: '0xfa',
@@ -1219,6 +1240,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -1248,6 +1270,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.EXTERNAL,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0xfe': {
                         address: '0xfa',
@@ -1261,6 +1284,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0xfa': {
                         address: '0xfa',
@@ -1274,6 +1298,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -1314,6 +1339,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.EXTERNAL,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
                 hiddenAccounts: {
@@ -1329,6 +1355,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.HIDDEN,
+                        allowances: {},
                     },
                 },
             });
@@ -1361,6 +1388,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.EXTERNAL,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                     '0xfa': {
                         address: '0xfa',
@@ -1374,6 +1402,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.HD_ACCOUNT,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -1395,6 +1424,7 @@ describe('AccountTracker controller implementation', function () {
                         index: 0,
                         accountType: AccountType.EXTERNAL,
                         status: AccountStatus.ACTIVE,
+                        allowances: {},
                     },
                 },
             });
@@ -1488,7 +1518,7 @@ describe('AccountTracker controller implementation', function () {
                             },
                         },
                     },
-
+                    allowances: {},
                     index: 0,
                     accountType: AccountType.HD_ACCOUNT,
                     name: 'Account 1',
@@ -1528,6 +1558,7 @@ describe('AccountTracker controller implementation', function () {
                     index: 0,
                     accountType: AccountType.HD_ACCOUNT,
                     name: 'Account 1',
+                    allowances: {},
                 },
             } as Accounts;
 
@@ -1560,7 +1591,7 @@ describe('AccountTracker controller implementation', function () {
                             },
                         },
                     },
-
+                    allowances: {},
                     index: 0,
                     accountType: AccountType.HD_ACCOUNT,
                     name: 'Account 1',

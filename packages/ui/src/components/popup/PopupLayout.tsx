@@ -22,6 +22,10 @@ const CollapsedMessage: FunctionComponent<{ hotkeyByPath: string[] }> = ({
             setIsMessageVisible(true)
         }
     })
+
+    useHotkeys("enter", () => {
+        setIsMessageVisible(false)
+    })
     return (
         <div className="w-full pr-6">
             <div className="flex flex-row items-start w-full justify-end pt-1 pb-2">

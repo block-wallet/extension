@@ -94,7 +94,6 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
         history.push(typeof close === "string" ? close : "/home")
     }
 
-    //////// AGREGAR OPCION DE MOSTRAR LAS HOTKEYS CON UNA HOTKEY MAS POR CADA PANTALLA
     useHotKey({
         onClose: onCloseAction,
         onBack: onBackAction,

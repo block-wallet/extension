@@ -145,8 +145,14 @@ const GasPricesInfo: FC = () => {
         isRatesChangingAfterNetworkChange ||
         !displayGasPrices
 
-    useHotkeys("alt+g", () => {
-        if (showGasLevels) setActive(!active)
+    useHotkeys("alt+g,enter", (e, handler) => {
+        if (showGasLevels) {
+            if (handler.alt) {
+                setActive(!active)
+            } else if (handler.keys && handler.keys[0] === "enter") {
+                setActive(false)
+            }
+        }
     })
 
     return (

@@ -557,7 +557,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                     selectedToken ? selectedToken.symbol : ""
                                 }`}
                                 autoComplete="off"
-                                autoFocus={true}
+                                autoFocus={false}
                                 onFocus={() => setInputFocus(true)}
                                 onBlur={() => setInputFocus(false)}
                             />

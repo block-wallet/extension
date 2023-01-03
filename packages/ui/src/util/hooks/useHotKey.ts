@@ -24,25 +24,25 @@ const useHotKey = (
     useHotkeys(
         hotKeys + ",ctrl+alt+l,alt+backspace,alt+q",
         (e, handler) => {
-            if (!handler.keys || !handler.keys[0]) {
+            if (!e.key) {
                 return
             }
-            const keyPressed = handler.keys[0]
+            const keyPressed = e.key.toLowerCase()
 
             //logout --ctrl+alt+l
-            if (handler.ctrl && handler.alt && keyPressed === "l") {
+            if (e.ctrlKey && e.altKey && keyPressed === "l") {
                 lockApp()
                 return
             }
 
             //Page back --alt + backspace
-            if (handler.alt && keyPressed === "backspace") {
+            if (e.altKey && keyPressed === "backspace") {
                 if (onBack) return onBack(e)
                 return
             }
 
             //Close extension --alt+q
-            if (handler.alt && keyPressed === "q") {
+            if (e.altKey && keyPressed === "q") {
                 if (onClose) return onClose(e)
                 return
             }
@@ -50,15 +50,12 @@ const useHotKey = (
             const navigateTo = getActionByHotkeyAndPath(
                 currentLocation,
                 keyPressed,
-                handler.alt && handler.ctrl
-                    ? "CTRLALT"
-                    : handler.alt
-                    ? "ALT"
-                    : "CTRL"
+                e.altKey && e.ctrlKey ? "CTRLALT" : e.altKey ? "ALT" : "CTRL"
             )
 
             if (navigateTo) {
                 if (typeof navigateTo === "string") {
+                    console.log("NavigateTo")
                     history.push({
                         pathname: navigateTo,
                         state: {

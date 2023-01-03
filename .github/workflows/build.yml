@@ -176,7 +176,6 @@ jobs:
           make install/ci
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-          NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
       - name: Build extension
         env:

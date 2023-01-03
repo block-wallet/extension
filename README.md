@@ -1,4 +1,3 @@
-
 <br /> 
 <p align="center">
   <a href="https://blockwallet.io">
@@ -9,7 +8,6 @@
     </picture>
   </a>
 </p>
-
 
 <div align="center" style="text-align:center">
 
@@ -45,46 +43,24 @@ See the [guideline](docs/guideline.md)
 
 ### Installing
 
-#### Prerequisites
-
-You need a GitHub token with **read:packages** access to the **block-wallet** GitHub organization in order to download some private libraries. The steps are:
-
-1. Create a file ```~/.npmrc``` file with this configuration:
-
-```
-//npm.pkg.github.com/:_authToken=REGISTRY_AUTH_TOKEN
-@block-wallet:registry=https://npm.pkg.github.com/
-@block-wallet:always-auth=true
-```
-
-where **REGISTRY_AUTH_TOKEN** is a token generated here https://github.com/settings/tokens with at least read access to the packages.
-
-
-2. Use the ```npm login``` command to authenticate:
-
-```
-npm login --scope=@block-wallet --registry=https://npm.pkg.github.com
-```
-
-That command will ask for your GitHub username, password (use the GitHub token generated before) and also the email.
-
 #### Environment
 
-It's also needed to setup the environment variables on each package. In both ``~/packages/background`` and ``~/packages/provider``, copy the contents of ``env.orig`` file into a new file called ``.env``.
+It's also needed to setup the environment variables on each package. In both `~/packages/background` and `~/packages/provider`, copy the contents of `env.orig` file into a new file called `.env`.
 
 They should look like:
 
 **packages/background/.env**
+
 ```
 // Complete with the corresponding keys.
 ETHERSCAN_API_KEY= // Included in requests to Etherscan. Can be obtained in https://etherscan.io/apis.
 ```
 
 **packages/provider/.env**
+
 ```
 LOG_LEVEL=error
 ```
-
 
 #### Install
 
@@ -124,10 +100,10 @@ The release process uses a combination of two GitHub workflows called [build](.g
 
 ## Built With
 
-* [Node.js](https://nodejs.org/)
-* [Typescript](https://www.typescriptlang.org/)
-* [React.js](https://reactjs.org/)
-* [tailwindcss](https://tailwindcss.com/)
+- [Node.js](https://nodejs.org/)
+- [Typescript](https://www.typescriptlang.org/)
+- [React.js](https://reactjs.org/)
+- [tailwindcss](https://tailwindcss.com/)
 
 ## Contributing
 
@@ -135,7 +111,7 @@ Please read [CONTRIBUTING.md](docs/contributing.md) for details on our code of c
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/block-wallet/extension/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/block-wallet/extension/tags).
 
 ## Authors
 
@@ -208,6 +184,3 @@ See the [Acknowledgments](docs/acknowledgments.md) file for details
     </picture>
   </a>
 </div>
-
-
-

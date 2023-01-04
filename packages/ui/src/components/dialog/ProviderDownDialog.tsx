@@ -11,12 +11,17 @@ const ProviderDownDialog = () => {
     const location = useLocation()
     const history = useOnMountHistory()
 
+    // Allowed paths to prevent the dialog from showing up
+    const allowedPaths = [
+        "/chain/switch",
+        "/settings/networks",
+        "/settings/networks/details",
+    ]
+
     const showDialog =
         !isProviderNetworkOnline &&
         isUserNetworkOnline &&
-        location.pathname !== "/chain/switch" &&
-        location.pathname !== "/settings/networks" &&
-        location.pathname !== "/settings/networks/details"
+        !allowedPaths.includes(location.pathname)
 
     return (
         <>
@@ -34,8 +39,8 @@ const ProviderDownDialog = () => {
                 message={
                     <div className="mb-4">
                         <p className="mb-2">
-                            The current network is down. Please select another
-                            network and check your internet connection.
+                            The current network provider is down. Please check
+                            your internet connection or select another network.
                         </p>
                         <p>
                             If the problem persists, try restarting the wallet
@@ -51,7 +56,7 @@ const ProviderDownDialog = () => {
                                     })
                                 }
                             >
-                                changing the network's rpc url
+                                changing the network's RPC URL
                             </a>
                             .
                         </p>

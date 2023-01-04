@@ -859,7 +859,7 @@
   resolved "https://registry.yarnpkg.com/@rpch/crypto/-/crypto-0.3.0.tgz#dc427b80135040e2eca24a3670fac142719fdab9"
   integrity sha512-pJIUYpePLXEE3an54s5f1jVgbMNOSpS+AGvpDwqbrCU5+AMRgFbSvoqik771qeoY+j09bbv3maDKUn57/eU6Og==
 
-"@rpch/ethers@^0.1.3":
+"@rpch/ethers@0.1.3":
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/@rpch/ethers/-/ethers-0.1.3.tgz#1962c3285e5af0c2883c99cb34bd26f15c4a0e8f"
   integrity sha512-ztwiM2/no5+DEWFCXx4g/D376T2jtKTEHYW0GBKMCWlB7ijRDKatKChI35kr9JfRPdKfmoJPN3c4qTDSewKDEA==

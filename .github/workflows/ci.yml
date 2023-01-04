@@ -63,7 +63,6 @@ jobs:
           make install/ci
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-          NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
       - name: Check lint in all the packages
         run: |
@@ -144,7 +143,6 @@ jobs:
           make install/ci
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-          NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
       - name: Build tailwind
         run: |
@@ -211,7 +209,6 @@ jobs:
           make install/ci
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-          NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
       - name: Build extension
         env:

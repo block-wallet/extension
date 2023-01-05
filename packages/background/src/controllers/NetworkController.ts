@@ -500,40 +500,35 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         console.log('get provider', network);
 
-        provider = this._getProviderForNetwork(
-            network.chainId,
-            network.rpcUrls[0]
-        );
+        if (provider) return provider;
 
-        if (networkName == 'xdai') {
-            provider = new RPChProvider(
-                'https://primary.gnosis-chain.rpc.hoprtech.net',
-                10000,
-                {
-                    discoveryPlatformApiEndpoint: '',
-                    entryNodeApiEndpoint: 'http://localhost:13301',
-                    entryNodeApiToken: '^^awesomeHOPRr3l4y^^',
-                    entryNodePeerId:
-                        '16Uiu2HAm1PvXY4Pfb6fvaorjbPjcyGvGGjRqLbmYLvaf2WFhdFGA',
-                    exitNodePeerId:
-                        '16Uiu2HAm3std42NHG6xKUeTm8DYkRkqNySrQXvfxqwU1VDRZzMxW',
-                    exitNodePubKey:
-                        '0x033f57aee979c2968f103cae180df6eb7f72ea405eb7174095e6f7fc00f409a900',
-                    freshNodeThreshold: 1000,
-                    maxResponses: 300,
-                },
-                (k, v) => {
-                    return new Promise<void>((resolve) => {
-                        rpchStore.set(k, v, resolve);
-                    });
-                },
-                (k) => {
-                    return new Promise((resolve) => {
-                        rpchStore.get(k, resolve);
-                    });
-                }
-            );
-        }
+        provider = new RPChProvider(
+            'https://primary.gnosis-chain.rpc.hoprtech.net',
+            10000,
+            {
+                discoveryPlatformApiEndpoint: '',
+                entryNodeApiEndpoint: 'http://localhost:13301',
+                entryNodeApiToken: '^^awesomeHOPRr3l4y^^',
+                entryNodePeerId:
+                    '16Uiu2HAm7ZzsLv85xdv5ZjJmUPqxYD2aY86vqDzdH3gCQJ3RBsxb',
+                exitNodePeerId:
+                    '16Uiu2HAmTf3Rfw4Q3pn2T5tTtbhqYZVL4s4cjwVCVsLSJwUTycYL',
+                exitNodePubKey:
+                    '0x036169fb47b14118dda35d866093c4224bcf8f1a1310108f4f2a79eaaddd1c4347',
+                freshNodeThreshold: 1000,
+                maxResponses: 300,
+            },
+            (k, v) => {
+                return new Promise<void>((resolve) => {
+                    rpchStore.set(k, v, resolve);
+                });
+            },
+            (k) => {
+                return new Promise((resolve) => {
+                    rpchStore.get(k, resolve);
+                });
+            }
+        );
 
         console.log('provider', provider);
 

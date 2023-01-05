@@ -6,17 +6,17 @@ import { Classes, classnames } from "../../styles"
 import NetworkSelect from "../input/NetworkSelect"
 import MessageDialog from "./MessageDialog"
 
+// Allowed paths to prevent the dialog from showing up
+const allowedPaths = [
+    "/chain/switch",
+    "/settings/networks",
+    "/settings/networks/details",
+]
+
 const ProviderDownDialog = () => {
     const { isProviderNetworkOnline, isUserNetworkOnline } = useBlankState()!
     const location = useLocation()
     const history = useOnMountHistory()
-
-    // Allowed paths to prevent the dialog from showing up
-    const allowedPaths = [
-        "/chain/switch",
-        "/settings/networks",
-        "/settings/networks/details",
-    ]
 
     const showDialog =
         !isProviderNetworkOnline &&

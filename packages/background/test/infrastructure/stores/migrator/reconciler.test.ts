@@ -221,6 +221,7 @@ const initialState: BlankAppState & {
         filters: {
             account: [],
         },
+        defaultGasOption: "medium"
     },
     TransactionController: {
         transactions: [],

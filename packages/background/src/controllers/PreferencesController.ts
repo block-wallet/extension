@@ -36,6 +36,7 @@ interface FilterPreferences {
 }
 
 export type PopupTabs = 'activity' | 'assets';
+export type DefaultGasOptions = 'low' | 'medium' | 'high';
 
 export interface PreferencesControllerState {
     selectedAddress: string;
@@ -49,6 +50,7 @@ export interface PreferencesControllerState {
     showDefaultWalletPreferences: boolean;
     releaseNotesSettings: ReleaseNotesSettings;
     filters: FilterPreferences;
+    defaultGasOption: DefaultGasOptions
 }
 
 export interface PreferencesControllerProps {
@@ -171,6 +173,21 @@ export class PreferencesController extends BaseController<PreferencesControllerS
      */
     public set popupTab(popupTab: PopupTabs) {
         this.store.updateState({ popupTab: popupTab });
+    }
+
+
+    /**
+    * Gets the default gas option preference
+    */
+    public get defaultGasOption(): DefaultGasOptions {
+        return this.store.getState().defaultGasOption
+    }
+
+    /**
+    * It returns the default gas option
+    */
+    public set defaultGasOption(defaultGasOption: DefaultGasOptions) {
+        this.store.updateState({ defaultGasOption });
     }
 
     /**

@@ -41,6 +41,7 @@ import {
 import { DappReq, DappRequestConfirmOptions } from './ethereum';
 import { TransactionGasEstimation } from '@block-wallet/background/controllers/transactions/TransactionController';
 import {
+    DefaultGasOptions,
     PopupTabs,
     ReleaseNote,
     UserSettings,
@@ -218,6 +219,8 @@ enum WALLET {
     HARDWARE_GET_HD_PATH = 'HARDWARE_GET_HD_PATH',
     HARDWARE_SET_HD_PATH = 'HARDWARE_SET_HD_PATH',
     HARDWARE_IS_LINKED = 'HARDWARE_IS_LINKED',
+    SET_DEFAULT_GAS = "SET_DEFAULT_GAS"
+
 }
 
 enum TOKEN {
@@ -486,6 +489,10 @@ export interface RequestSignatures {
         RequestToggleDefaultBrowserWallet,
         void
     ];
+    [Messages.WALLET.SET_DEFAULT_GAS]: [
+        RequestSetDefaultGas,
+        void
+    ];
 
     [Messages.WALLET.UPDATE_ANTI_PHISHING_IMAGE]: [
         RequestUpdateAntiPhishingImage,
@@ -646,8 +653,8 @@ export interface RequestApproveBridgeAllowance {
     customNonce?: number;
 }
 
-export interface RequestGetBridgeTokens {}
-export interface RequestGetBridgeAvailableChains {}
+export interface RequestGetBridgeTokens { }
+export interface RequestGetBridgeAvailableChains { }
 export interface RequestGetBridgeQuote {
     checkAllowance: boolean;
     quoteRequest: BridgeQuoteRequest;
@@ -937,7 +944,7 @@ export interface RequestSetNativeCurrency {
     currencyCode: string;
 }
 
-export interface RequestGetValidCurrencies {}
+export interface RequestGetValidCurrencies { }
 
 export interface RequestToggleReleaseNotesSubscription {
     releaseNotesSubscriptionEnabled: boolean;
@@ -947,11 +954,16 @@ export interface RequestToggleDefaultBrowserWallet {
     defaultBrowserWalletEnabled: boolean;
 }
 
+export interface RequestSetDefaultGas {
+    defaultGasOption: DefaultGasOptions;
+}
+
+
 export interface RequestRejectTransaction {
     transactionId: string;
 }
 
-export interface RequestAddressBookClear {}
+export interface RequestAddressBookClear { }
 
 export interface RequestAddressBookDelete {
     address: string;
@@ -963,7 +975,7 @@ export interface RequestAddressBookSet {
     note?: string;
 }
 
-export interface RequestAddressBookGet {}
+export interface RequestAddressBookGet { }
 export interface RequestAddressBookGetByAddress {
     address: string;
 }
@@ -1056,7 +1068,7 @@ export interface WindowTransportResponseMessage
     origin: Origin;
 }
 
-export interface DismissMessage {}
+export interface DismissMessage { }
 
 export enum Origin {
     BACKGROUND = 'BLANK_BACKGROUND',

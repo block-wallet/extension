@@ -105,6 +105,7 @@ import type {
     RequestGetBridgeRoutes,
     RequestEditNetworksOrder,
     RequestAccountReset,
+    RequestSetDefaultGas,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -992,6 +993,10 @@ export default class BlankController extends EventEmitter {
             case Messages.WALLET.TOGGLE_DEFAULT_BROWSER_WALLET:
                 return this.toggleDefaultBrowserWallet(
                     request as RequestToggleDefaultBrowserWallet
+                );
+            case Messages.WALLET.SET_DEFAULT_GAS:
+                return this.setDefaultGas(
+                    request as RequestSetDefaultGas
                 );
             case Messages.WALLET.UPDATE_ANTI_PHISHING_IMAGE:
                 return this.updateAntiPhishingImage(
@@ -2044,7 +2049,7 @@ export default class BlankController extends EventEmitter {
         });
 
         // As we don't care about the result here, ignore errors in transaction result
-        result.catch(() => {});
+        result.catch(() => { });
 
         // Approve it
         try {
@@ -2094,7 +2099,7 @@ export default class BlankController extends EventEmitter {
                 });
 
             // As we don't care about the result here, ignore errors in transaction result
-            result.catch(() => {});
+            result.catch(() => { });
 
             const { nativeCurrency, iconUrls } = this.networkController.network;
             const logo = iconUrls ? iconUrls[0] : '';
@@ -2773,7 +2778,7 @@ export default class BlankController extends EventEmitter {
      * Remove all entries in the book
      *
      */
-    private async addressBookClear({}: RequestAddressBookClear): Promise<boolean> {
+    private async addressBookClear({ }: RequestAddressBookClear): Promise<boolean> {
         return this.addressBookController.clear();
     }
 
@@ -2809,7 +2814,7 @@ export default class BlankController extends EventEmitter {
      *
      * @returns - A map with the entries
      */
-    private async addressBookGet({}: RequestAddressBookGet): Promise<NetworkAddressBook> {
+    private async addressBookGet({ }: RequestAddressBookGet): Promise<NetworkAddressBook> {
         return this.addressBookController.get();
     }
 
@@ -2939,6 +2944,17 @@ export default class BlankController extends EventEmitter {
         this.preferencesController.updateDefaultBrowserWalletStatus(
             defaultBrowserWalletEnabled
         );
+    }
+
+
+    /**
+     * Sets whether the user wants to have BlockWallet as the default browser
+     * @param defaultBrowser flags that indicates the default browser status
+     */
+    private setDefaultGas({
+        defaultGasOption,
+    }: RequestSetDefaultGas) {
+        this.preferencesController.defaultGasOption = defaultGasOption;
     }
 
     /**

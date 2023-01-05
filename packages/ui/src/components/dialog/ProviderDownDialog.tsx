@@ -35,16 +35,15 @@ const ProviderDownDialog = () => {
                         <CgDanger className="text-red-500 w-20 h-20 mb-2 block m-auto" />
                     </>
                 }
-                title="Provider down"
+                title="Network Provider Down"
                 message={
                     <div className="mb-4">
                         <p className="mb-2">
-                            The current network provider is down. Please check
-                            your internet connection or select another network.
+                            Please check your internet connection and restart
+                            the wallet using the button below.
                         </p>
                         <p>
-                            If the problem persists, try restarting the wallet
-                            or{" "}
+                            If the problem persists, try{" "}
                             <a
                                 className="text-primary-300 cursor-pointer"
                                 onClick={() =>

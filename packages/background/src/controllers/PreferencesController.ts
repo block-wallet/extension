@@ -50,7 +50,7 @@ export interface PreferencesControllerState {
     showDefaultWalletPreferences: boolean;
     releaseNotesSettings: ReleaseNotesSettings;
     filters: FilterPreferences;
-    defaultGasOption: DefaultGasOptions
+    defaultGasOption: DefaultGasOptions;
 }
 
 export interface PreferencesControllerProps {
@@ -175,17 +175,16 @@ export class PreferencesController extends BaseController<PreferencesControllerS
         this.store.updateState({ popupTab: popupTab });
     }
 
-
     /**
-    * Gets the default gas option preference
-    */
+     * Gets the default gas option preference
+     */
     public get defaultGasOption(): DefaultGasOptions {
-        return this.store.getState().defaultGasOption
+        return this.store.getState().defaultGasOption;
     }
 
     /**
-    * It returns the default gas option
-    */
+     * It returns the default gas option
+     */
     public set defaultGasOption(defaultGasOption: DefaultGasOptions) {
         this.store.updateState({ defaultGasOption });
     }

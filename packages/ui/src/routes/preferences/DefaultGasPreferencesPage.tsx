@@ -13,9 +13,9 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import { setDefaultGasPreference } from "../../context/commActions"
 
 const gasOptions = [
-    { name: "high", desc: "Pricier but faster" },
-    { name: "medium", desc: "Balance price and speed" },
     { name: "low", desc: "Cheaper but slower" },
+    { name: "medium", desc: "Balance price and speed" },
+    { name: "high", desc: "Pricier but faster" },
 ]
 const DefaultGasPreferencesPage = () => {
     const history = useHistory()
@@ -40,7 +40,9 @@ const DefaultGasPreferencesPage = () => {
 
     return (
         <PopupLayout
-            header={<PopupHeader title="Default Gas Setting" />}
+            header={
+                <PopupHeader title="Default Gas Setting" disabled={isLoading} />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading

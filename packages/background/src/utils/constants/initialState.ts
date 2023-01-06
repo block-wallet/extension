@@ -160,7 +160,7 @@ const initialState: BlankAppState = {
         filters: {
             account: [],
         },
-        defaultGasOption: "medium"
+        defaultGasOption: 'medium',
     },
     TransactionController: {
         transactions: [],

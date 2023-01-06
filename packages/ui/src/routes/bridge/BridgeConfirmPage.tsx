@@ -137,7 +137,8 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const { availableNetworks, selectedNetwork } = useBlankState()!
+    const { availableNetworks, selectedNetwork, defaultGasOption } =
+        useBlankState()!
     const { gasPricesLevels } = useGasPriceData()
     const { isEIP1559Compatible } = useSelectedNetwork()
     const selectedAccount = useSelectedAccount()
@@ -631,7 +632,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 {isEIP1559Compatible ? (
                     <GasPriceComponent
                         defaultGas={{
-                            defaultLevel: "medium",
+                            defaultLevel: defaultGasOption || "medium",
                             feeData: {
                                 gasLimit: defaultGas.gasLimit,
                             },

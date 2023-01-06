@@ -205,7 +205,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
     const selectedAccount = useSelectedAccount()
     const { chainId, isEIP1559Compatible } = useSelectedNetwork()
-    const { availableNetworks, selectedNetwork } = useBlankState()!
+    const { availableNetworks, selectedNetwork, defaultGasOption } =
+        useBlankState()!
     const { nativeToken } = useTokensList()
     const { gasPricesLevels } = useGasPriceData()
 
@@ -584,7 +585,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 ) : (
                     <GasPriceComponent
                         defaultGas={{
-                            defaultLevel: "medium",
+                            defaultLevel: defaultGasOption || "medium",
                             feeData: {
                                 gasLimit: defaultGas.gasLimit,
                             },

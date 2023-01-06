@@ -95,7 +95,8 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     transactionId,
 }) => {
     // Hooks
-    const { accounts, selectedAddress, settings } = useBlankState()!
+    const { accounts, selectedAddress, settings, defaultGasOption } =
+        useBlankState()!
     const { chainId, isEIP1559Compatible, desc } = useSelectedNetwork()
     const { hideAddressWarning } = useUserSettings()
     const selectedAccountBalance = useSelectedAccountBalance()
@@ -426,6 +427,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                 ) : (
                     <GasPriceComponent
                         defaultGas={{
+                            defaultLevel: defaultGasOption || "medium",
                             feeData: {
                                 gasLimit: defaultGas.gasLimit,
                                 maxFeePerGas: defaultGas.maxFeePerGas!,

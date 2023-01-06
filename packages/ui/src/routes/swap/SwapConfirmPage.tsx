@@ -73,6 +73,7 @@ import {
 } from "../../components/transactions/AdvancedSettings"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { WithRequired } from "@block-wallet/background/utils/types/helpers"
+import { useBlankState } from "../../context/background/backgroundHooks"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token
@@ -130,6 +131,7 @@ const SwapPageConfirm: FC<{}> = () => {
     const { gasPricesLevels } = useGasPriceData()
     const { isEIP1559Compatible } = useSelectedNetwork()
     const selectedAccount = useSelectedAccount()
+    const { defaultGasOption } = useBlankState()!
     const { nativeToken } = useTokensList()
     const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
         useCheckAccountDeviceLinked()
@@ -541,7 +543,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 {isEIP1559Compatible ? (
                     <GasPriceComponent
                         defaultGas={{
-                            defaultLevel: "medium",
+                            defaultLevel: defaultGasOption || "medium",
                             feeData: {
                                 gasLimit: defaultGas.gasLimit,
                             },

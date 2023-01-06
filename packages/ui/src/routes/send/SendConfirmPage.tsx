@@ -903,7 +903,8 @@ const SendConfirmPage = () => {
                         ) : (
                             <GasPriceComponent
                                 defaultGas={{
-                                    defaultLevel: "medium",
+                                    defaultLevel:
+                                        blankState.defaultGasOption || "medium",
                                     feeData: {
                                         gasLimit: defaultGas.gasLimit!,
                                     },

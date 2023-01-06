@@ -1,80 +1,35 @@
-import {
-    TransactionTypeEnum,
-    TransactionWatcherControllerState,
-} from '../../../../controllers/TransactionWatcherController';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
+import { INITIAL_NETWORKS } from '../../../../utils/constants/networks';
+import { normalizeNetworksOrder } from '../../../../utils/networks';
 
 /**
- * This migration adds the allowances initial state for all the persisted active and hidden accounts.
+ * Update Scroll L1 and L2 endpoints
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
-        const { transactions } =
-            persistedState.TransactionWatcherControllerState;
-        const { accounts, hiddenAccounts } =
-            persistedState.AccountTrackerController;
+        const { availableNetworks } = persistedState.NetworkController;
+        const updatedNetworks = { ...availableNetworks };
 
-        const newWatchedTxs: TransactionWatcherControllerState['transactions'] =
-            {
-                ...Object.entries(transactions).reduce(
-                    (acc, [chainId, accountTxs]) => {
-                        return {
-                            ...acc,
-                            [chainId]: {
-                                ...Object.entries(accountTxs).reduce(
-                                    (acc, [address, watchedTxsByType]) => {
-                                        return {
-                                            ...acc,
-                                            [address]: {
-                                                ...(watchedTxsByType || {}),
-                                                [TransactionTypeEnum.Native]: {
-                                                    transactions: [],
-                                                    lastBlockQueried: 0,
-                                                },
-                                            },
-                                        };
-                                    },
-                                    accountTxs[chainId]
-                                ),
-                            },
-                        };
-                    },
-                    transactions
-                ),
-            };
+        updatedNetworks.SCROLL_L1_TESTNET = {
+            ...updatedNetworks.SCROLL_L1_TESTNET,
+            rpcUrls: INITIAL_NETWORKS.SCROLL_L1_TESTNET.rpcUrls,
+        };
+
+        updatedNetworks.SCROLL_L2_TESTNET = {
+            ...updatedNetworks.SCROLL_L2_TESTNET,
+            rpcUrls: INITIAL_NETWORKS.SCROLL_L2_TESTNET.rpcUrls,
+        };
+
+        const orderedNetworks = normalizeNetworksOrder(updatedNetworks);
 
         return {
             ...persistedState,
-            TransactionWatcherControllerState: {
-                transactions: newWatchedTxs,
-            },
-            AccountTrackerController: {
-                ...persistedState.AccountTrackerController,
-                accounts: Object.keys(accounts).reduce((acc, address) => {
-                    return {
-                        ...acc,
-                        [address]: {
-                            ...accounts[address],
-                            allowances: accounts[address].allowances ?? {},
-                        },
-                    };
-                }, accounts),
-                hiddenAccounts: Object.keys(hiddenAccounts).reduce(
-                    (acc, address) => {
-                        return {
-                            ...acc,
-                            [address]: {
-                                ...hiddenAccounts[address],
-                                allowances:
-                                    hiddenAccounts[address].allowances ?? {},
-                            },
-                        };
-                    },
-                    hiddenAccounts
-                ),
+            NetworkController: {
+                ...persistedState.NetworkController,
+                availableNetworks: { ...orderedNetworks },
             },
         };
     },
-    version: '1.1.0',
+    version: '1.0.1',
 } as IMigration;

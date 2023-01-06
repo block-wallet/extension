@@ -1,6 +1,6 @@
 import { addHexPrefix, isHexString, isValidAddress } from 'ethereumjs-util';
-import { BigNumber } from 'ethers';
 import { TransactionMeta, TransactionParams, TransactionType } from './types';
+import { BigNumber } from '@ethersproject/bignumber';
 import ensNamehash from 'eth-ens-namehash';
 import {
     FeeMarketEIP1559Values,

@@ -1,4 +1,4 @@
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { deleteCustomToken } from "../../context/commActions"

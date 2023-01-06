@@ -1,6 +1,6 @@
 import initialState from '@block-wallet/background/utils/constants/initialState';
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import {
     FeeDataResponse,
     GasPriceData,

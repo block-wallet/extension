@@ -83,6 +83,7 @@ const PopupComponent = () => {
     }
     return (
         <WalletNews>
+            <ProviderDownDialog />
             <Route path="/" component={LocationHolder} />
             <Route exact path="/">
                 {showPage ? <Redirect to={route} /> : <Redirect to="/home" />}
@@ -102,7 +103,7 @@ const PopupRouter = ({
     const state = useBlankState()!
     const isOnboarded = state?.isOnboarded
     const resetHandler = async () => {
-        await lockApp()
+        chrome.runtime.reload()
     }
 
     const [shouldShowDialog, setShouldShowDialog] = useState(false)
@@ -121,7 +122,6 @@ const PopupRouter = ({
                 >
                     {isOnboarded ? (
                         <>
-                            <ProviderDownDialog />
                             <ErrorDialog
                                 onClickOutside={() =>
                                     setShouldShowDialog(false)

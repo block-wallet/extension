@@ -5,7 +5,7 @@ import Divider from "../Divider"
 import PasswordInput from "../input/PasswordInput"
 import Spinner from "../spinner/Spinner"
 import * as yup from "yup"
-import { isValidMnemonic } from "ethers/lib/utils"
+import { isValidMnemonic } from "@ethersproject/hdnode"
 import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import log from "loglevel"
@@ -23,8 +23,11 @@ const schema = yup.object().shape({
         ),
     passwordConfirmation: yup
         .string()
-        .required("Required")
-        .oneOf([yup.ref("password"), null], "Passwords must match."),
+        .required("Please enter the password confirmation.")
+        .oneOf(
+            [yup.ref("password"), null],
+            "Password and password confirmation must match."
+        ),
     acceptTOU: yup
         .bool()
         .required("You must accept the Terms of Use.")
@@ -55,16 +58,11 @@ const SeedImport: FunctionComponent<{
     const [seedPhraseError, setSeedPhraseError] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [isImportDisabled, setIsImportDisabled] = useState(true)
-    const {
-        register,
-        handleSubmit,
-        setError,
-        trigger,
-        watch,
-        formState: { errors },
-    } = useForm<SeedImportFormData>({
-        resolver: yupResolver(schema),
-    })
+    const { register, handleSubmit, setError, trigger, watch, formState } =
+        useForm<SeedImportFormData>({
+            mode: "onChange",
+            resolver: yupResolver(schema),
+        })
 
     const passwordConfirmationWatch = watch("passwordConfirmation")
     const onSubmit = handleSubmit(async (data: SeedImportFormData) => {
@@ -158,18 +156,21 @@ const SeedImport: FunctionComponent<{
         if (
             seedPhrase &&
             !seedPhraseError &&
-            !errors.password &&
             seedPhrase.filter((s) => s !== "").length === numberOfWords &&
-            passwordValues.password &&
-            passwordValues.passwordConfirmation &&
-            passwordValues.password === passwordValues.passwordConfirmation &&
-            passwordValues.acceptTOU
+            formState.isValid
         ) {
             setIsImportDisabled(false)
         } else {
             setIsImportDisabled(true)
         }
-    }, [seedPhrase, passwordValues, seedPhraseError, errors.password])
+    }, [seedPhrase, passwordValues, seedPhraseError, formState.errors.password])
+
+    useEffect(() => {
+        // trigger password confirmation validation when password changes given that there is a value in both fields
+        if (passwordValues.password && passwordValues.passwordConfirmation) {
+            trigger("passwordConfirmation")
+        }
+    }, [passwordValues.password, trigger])
 
     return (
         <form
@@ -251,7 +252,7 @@ const SeedImport: FunctionComponent<{
                                     trigger("passwordConfirmation")
                             },
                         })}
-                        error={errors.password?.message}
+                        error={formState.errors.password?.message}
                         strengthBar={true}
                         setPasswordScore={setPasswordScore}
                     />
@@ -261,7 +262,7 @@ const SeedImport: FunctionComponent<{
                         label="Confirm Password"
                         placeholder="Confirm New Password"
                         {...register("passwordConfirmation")}
-                        error={errors.passwordConfirmation?.message}
+                        error={formState.errors.passwordConfirmation?.message}
                     />
                 </div>
                 <div className="flex flex-col space-y-1">
@@ -285,7 +286,7 @@ const SeedImport: FunctionComponent<{
                         </label>
                     </div>
                     <span className="text-xs text-red-500">
-                        {errors.acceptTOU?.message || <>&nbsp;</>}
+                        {formState.errors.acceptTOU?.message || <>&nbsp;</>}
                     </span>
                 </div>
             </div>

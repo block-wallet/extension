@@ -1,4 +1,4 @@
-import { parseEther } from "ethers/lib/utils"
+import { parseEther } from "@ethersproject/units"
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 
 import {

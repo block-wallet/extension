@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react"
 import { ImCheckmark } from "react-icons/im"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import classnames from "classnames"
 import { parseUnits } from "@ethersproject/units"
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import { GasPriceLevels } from "@block-wallet/background/controllers/GasPricesController"
 import * as yup from "yup"
 import { InferType } from "yup"
@@ -252,7 +252,7 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                                 !isCustom && "text-gray-400"
                             )}
                         >
-                            Gas Limit
+                            Gas limit
                         </label>
                         <EndLabel label="WEI">
                             <input

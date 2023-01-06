@@ -1,4 +1,4 @@
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { useBlankState } from "../background/backgroundHooks"
 import { TransactionCategories } from "../commTypes"
 import { useSelectedAccount } from "./useSelectedAccount"

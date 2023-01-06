@@ -1,5 +1,5 @@
-import { BigNumber } from "ethers"
-import { formatUnits } from "ethers/lib/utils"
+import { BigNumber } from "@ethersproject/bignumber"
+import { formatUnits } from "@ethersproject/units"
 import { FunctionComponent, useMemo } from "react"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { getAccountColor } from "../../util/getAccountColor"
@@ -26,6 +26,7 @@ import { TransactionMeta } from "@block-wallet/background/controllers/transactio
 import { resolveTransactionTo } from "../../util/transactionUtils"
 import { useMultipleCopyToClipboard } from "../../util/hooks/useCopyToClipboard"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
+import { BsFileEarmarkText } from "react-icons/bs"
 
 export const TransactionDetailsBasic: FunctionComponent<
     TransactionDetailsTabProps & { nonce?: number }
@@ -347,18 +348,26 @@ export const TransactionDetailsBasic: FunctionComponent<
                     onClick={() => onCopy(transactionTo, 1)}
                 >
                     <div>
-                        <AccountIcon
-                            className="h-6 w-6"
-                            fill={getAccountColor(transactionTo!)}
-                        />
+                        {transaction.transactionCategory !==
+                        TransactionCategories.CONTRACT_DEPLOYMENT ? (
+                            <AccountIcon
+                                className="h-6 w-6"
+                                fill={getAccountColor(transactionTo!)}
+                            />
+                        ) : (
+                            <BsFileEarmarkText size={24} />
+                        )}
                     </div>
                     <span
                         title={transactionTo}
                         className="pl-2 font-bold text-sm truncate"
                     >
-                        {toName
-                            ? formatName(toName, 12)
-                            : formatHash(transactionTo!, 2)}
+                        {transaction.transactionCategory !==
+                        TransactionCategories.CONTRACT_DEPLOYMENT
+                            ? toName
+                                ? formatName(toName, 12)
+                                : formatHash(transactionTo!, 2)
+                            : "New Contract"}
                     </span>
                     <CopyTooltip copied={copied === 1} text="Copy address" />
                 </div>

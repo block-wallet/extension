@@ -1,7 +1,10 @@
 import { Mutex } from 'async-mutex';
 import { isValidAddress, toChecksumAddress } from 'ethereumjs-util';
-import { BigNumber, ethers, utils } from 'ethers';
-import { hexZeroPad, ParamType } from 'ethers/lib/utils';
+import { BigNumber } from '@ethersproject/bignumber';
+import { TransactionResponse } from '@ethersproject/providers';
+import { hexZeroPad } from '@ethersproject/bytes';
+import { id } from '@ethersproject/hash';
+import { LogDescription, ParamType } from '@ethersproject/abi';
 import log from 'loglevel';
 import { BaseController } from '../infrastructure/BaseController';
 import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES } from '../utils/constants/networks';
@@ -101,7 +104,7 @@ interface EtherscanTransaction {
 
 const SIGNATURES: { [type in TransactionTypeEnum]: string } = {
     txlist: '',
-    tokentx: utils.id('Transfer(address,address,uint256)'),
+    tokentx: id('Transfer(address,address,uint256)'),
     token1155tx: '',
     tokennfttx: '',
 };
@@ -898,8 +901,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     ) => {
         let contractAddress: string = _log.address;
         let token: Token = { logo: '', decimals: 1, symbol: '' } as Token;
-        let logData: utils.LogDescription | undefined;
-        let txResponse: Partial<ethers.providers.TransactionResponse> = {
+        let logData: LogDescription | undefined;
+        let txResponse: Partial<TransactionResponse> = {
             value: undefined,
             nonce: undefined,
             type: undefined,

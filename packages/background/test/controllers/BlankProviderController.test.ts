@@ -9,7 +9,12 @@ import TransactionController from '@block-wallet/background/controllers/transact
 import initialState from '@block-wallet/background/utils/constants/initialState';
 import sinon from 'sinon';
 import { AccountTrackerController } from '../../src/controllers/AccountTrackerController';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { JsonRpcProvider } from '@ethersproject/providers';
+import { Wallet } from '@ethersproject/wallet';
+import { keccak256 } from '@ethersproject/keccak256';
+import { toUtf8Bytes } from '@ethersproject/strings';
+import { Contract } from '@ethersproject/contracts';
 import { GasPricesController } from '@block-wallet/background/controllers/GasPricesController';
 import {
     JSONRPCMethod,
@@ -25,7 +30,7 @@ import { TokenOperationsController } from '@block-wallet/background/controllers/
 import { TypedTransaction } from '@ethereumjs/tx';
 import { expect } from 'chai';
 import { getNetworkControllerInstance } from '../mocks/mock-network-instance';
-import { hexValue } from 'ethers/lib/utils';
+import { hexValue } from '@ethersproject/bytes';
 import { mockKeyringController } from '../mocks/mock-keyring-controller';
 import { mockPreferencesController } from '../mocks/mock-preferences';
 import { mockedPermissionsController } from '../mocks/mock-permissions';
@@ -248,7 +253,7 @@ describe('Blank Provider Controller', function () {
         );
 
         accountTrackerController.addPrimaryAccount(
-            ethers.Wallet.createRandom().address
+            Wallet.createRandom().address
         );
     });
 
@@ -264,7 +269,7 @@ describe('Blank Provider Controller', function () {
     describe('Provider requests', () => {
         before(async () => {
             // Stub ethers methods
-            sinon.stub(ethers, 'Contract').returns({
+            sinon.stub(Contract, 'prototype').returns({
                 balances: (
                     addresses: string[],
                     _ethBalance: string[]
@@ -307,7 +312,7 @@ describe('Blank Provider Controller', function () {
 
         it('Should get balance', async function () {
             sinon
-                .stub(ethers.providers.JsonRpcProvider.prototype, 'send')
+                .stub(JsonRpcProvider.prototype, 'send')
                 .returns(Promise.resolve('0x00'));
             const accountsController =
                 accountTrackerController.store.getState().accounts;
@@ -338,7 +343,7 @@ describe('Blank Provider Controller', function () {
 
         it('Should fetch transaction count', async function () {
             sinon
-                .stub(ethers.providers.JsonRpcProvider.prototype, 'send')
+                .stub(JsonRpcProvider.prototype, 'send')
                 .returns(Promise.resolve(0));
             const accountsController =
                 accountTrackerController.store.getState().accounts;
@@ -355,32 +360,30 @@ describe('Blank Provider Controller', function () {
         });
 
         it('Should get transaction by hash', async function () {
-            sinon
-                .stub(ethers.providers.JsonRpcProvider.prototype, 'send')
-                .returns(
-                    Promise.resolve({
-                        blockHash:
-                            '0x4262f108d324574999aac9e5d9500118732e252b600d71c44079dd25ad2e7ee1',
-                        blockNumber: '0xd2d61b',
-                        from: '0xd911f68222acff6f6036d98e2909f85f781d3a47',
-                        gas: '0x2aea6',
-                        gasPrice: '0x25fda44264',
-                        maxFeePerGas: '0x2721e01771',
-                        maxPriorityFeePerGas: '0x64f29720',
-                        hash: '0x3979f7ae255171ae6c6fd1c625219b45e2da7e52e6401028c29f0f27581af601',
-                        input: '0x7ff36ab500000000000000000000000000000000000000000000001990c704258d5b3bd90000000000000000000000000000000000000000000000000000000000000080000000000000000000000000d911f68222acff6f6036d98e2909f85f781d3a470000000000000000000000000000000000000000000000000000000061bb75890000000000000000000000000000000000000000000000000000000000000002000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200000000000000000000000041a3dba3d677e573636ba691a70ff2d606c29666',
-                        nonce: '0x1',
-                        to: '0x7a250d5630b4cf539739df2c5dacb4c659f2488d',
-                        transactionIndex: '0x69',
-                        value: '0x13fbe85edc90000',
-                        type: '0x2',
-                        accessList: [],
-                        chainId: '0x1',
-                        v: '0x0',
-                        r: '0xc2fe0bda3cf75fe3ba24468ff1eeb7ba9e7cd6990a240ac9b6763f44100fd78',
-                        s: '0x10f7879ba1451691e924280c3881066fa047e37aef50bcc15dfd8082ca099026',
-                    })
-                );
+            sinon.stub(JsonRpcProvider.prototype, 'send').returns(
+                Promise.resolve({
+                    blockHash:
+                        '0x4262f108d324574999aac9e5d9500118732e252b600d71c44079dd25ad2e7ee1',
+                    blockNumber: '0xd2d61b',
+                    from: '0xd911f68222acff6f6036d98e2909f85f781d3a47',
+                    gas: '0x2aea6',
+                    gasPrice: '0x25fda44264',
+                    maxFeePerGas: '0x2721e01771',
+                    maxPriorityFeePerGas: '0x64f29720',
+                    hash: '0x3979f7ae255171ae6c6fd1c625219b45e2da7e52e6401028c29f0f27581af601',
+                    input: '0x7ff36ab500000000000000000000000000000000000000000000001990c704258d5b3bd90000000000000000000000000000000000000000000000000000000000000080000000000000000000000000d911f68222acff6f6036d98e2909f85f781d3a470000000000000000000000000000000000000000000000000000000061bb75890000000000000000000000000000000000000000000000000000000000000002000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200000000000000000000000041a3dba3d677e573636ba691a70ff2d606c29666',
+                    nonce: '0x1',
+                    to: '0x7a250d5630b4cf539739df2c5dacb4c659f2488d',
+                    transactionIndex: '0x69',
+                    value: '0x13fbe85edc90000',
+                    type: '0x2',
+                    accessList: [],
+                    chainId: '0x1',
+                    v: '0x0',
+                    r: '0xc2fe0bda3cf75fe3ba24468ff1eeb7ba9e7cd6990a240ac9b6763f44100fd78',
+                    s: '0x10f7879ba1451691e924280c3881066fa047e37aef50bcc15dfd8082ca099026',
+                })
+            );
 
             const web3Trx: any = await blankProviderController.handle(portId, {
                 method: JSONRPCMethod.eth_getTransactionByHash,
@@ -454,9 +457,7 @@ describe('Blank Provider Controller', function () {
             sinon.restore();
         });
         it('Should hash sha3', async function () {
-            const utilHash = ethers.utils.keccak256(
-                ethers.utils.toUtf8Bytes(TEXT_FOR_HASH)
-            );
+            const utilHash = keccak256(toUtf8Bytes(TEXT_FOR_HASH));
 
             const web3Hash = await blankProviderController.handle(portId, {
                 method: JSONRPCMethod.web3_sha3,

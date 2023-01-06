@@ -71,8 +71,8 @@ describe('Preferences Controller', function () {
 
 
     it('get and set default gas option', async function () {
-        expect(preferencesController.defaultGasOption).to.equal("medium");
-        preferencesController.defaultGasOption = "high";
-        expect(preferencesController.defaultGasOption).to.equal("high");
+        expect(preferencesController.defaultGasOption).to.equal('medium');
+        preferencesController.defaultGasOption = 'high';
+        expect(preferencesController.defaultGasOption).to.equal('high');
     });
 });

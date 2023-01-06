@@ -444,6 +444,7 @@ describe('State reconciler', () => {
                 filters: {
                     account: [],
                 },
+                defaultGasOption: 'medium'
             },
             TransactionController: {
                 transactions: [],

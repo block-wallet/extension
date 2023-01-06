@@ -436,6 +436,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 <label className="text-sm text-gray-600">Gas Price</label>
                 {!isEIP1559Compatible ? (
                     <GasPriceSelector
+                        defaultLevel={defaultGasOption || "medium"}
                         defaultGasLimit={defaultGas.gasLimit!}
                         defaultGasPrice={defaultGas.gasPrice!}
                         setGasPriceAndLimit={(gasPrice, gasLimit) => {

@@ -653,6 +653,7 @@ const TransactionConfirm: React.FC<{
 
                     {!isEIP1559Compatible ? (
                         <GasPriceSelector
+                            defaultLevel={defaultGasOption || "medium"}
                             defaultGasLimit={defaultGas.gasLimit!}
                             defaultGasPrice={defaultGas.gasPrice!}
                             setGasPriceAndLimit={(gasPrice, gasLimit) => {

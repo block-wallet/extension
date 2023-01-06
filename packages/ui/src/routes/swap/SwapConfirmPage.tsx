@@ -562,6 +562,7 @@ const SwapPageConfirm: FC<{}> = () => {
                     />
                 ) : (
                     <GasPriceSelector
+                        defaultLevel={defaultGasOption || "medium"}
                         defaultGasLimit={defaultGas.gasLimit}
                         defaultGasPrice={defaultGas.gasPrice}
                         setGasPriceAndLimit={(gasPrice, gasLimit) => {

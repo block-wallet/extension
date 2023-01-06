@@ -43,6 +43,18 @@ import { fetchBlockWithRetries } from '../utils/blockFetch';
 import { isNil } from 'lodash';
 import { runPromiseSafely } from '../utils/promises';
 
+interface NewTokenAllowanceSpenders {
+    [tokenAddress: string]: { spender: string; txHash: string }[];
+}
+
+export type NewTokenAllowanceSpendersEventParametersSignature = Parameters<
+    (
+        chainId: number,
+        accountAddress: string,
+        allowances: NewTokenAllowanceSpenders
+    ) => void
+>;
+
 export enum TransactionTypeEnum {
     Native = 'txlist',
     ERC20 = 'tokentx',
@@ -1569,7 +1581,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     ...currentSpenders,
                     {
                         spender: tx.methodSignature.args[0].value!,
-                        txHash: tx.transactionParams.hash,
+                        txHash: tx.transactionParams.hash!,
                     },
                 ];
             }

@@ -36,19 +36,19 @@ import BlockUpdatesController, {
 } from './block-updates/BlockUpdatesController';
 import { ActionIntervalController } from './block-updates/ActionIntervalController';
 import { Devices } from '../utils/types/hardware';
-
-export enum AccountStatus {
-    ACTIVE = 'ACTIVE',
-    HIDDEN = 'HIDDEN',
-}
-
 import checksummedAddress from '../utils/checksummedAddress';
 import {
     TransactionTypeEnum,
     TransactionWatcherController,
     TransactionWatcherControllerEvents,
+    NewTokenAllowanceSpendersEventParametersSignature,
 } from './TransactionWatcherController';
 import { isNativeTokenAddress } from '../utils/token';
+
+export enum AccountStatus {
+    ACTIVE = 'ACTIVE',
+    HIDDEN = 'HIDDEN',
+}
 
 export interface AccountBalanceToken {
     token: Token;
@@ -319,88 +319,115 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         this._transactionWatcherController.on(
             TransactionWatcherControllerEvents.NEW_KNOWN_TOKEN_ALLOWANCE_SPENDERS,
             async (
-                chainId: number,
-                accountAddress: string,
-                newAllowances: { [tokenAddress: string]: string[] }
+                ...args: NewTokenAllowanceSpendersEventParametersSignature
             ) => {
-                await this._updateSpenderAllowances(
-                    chainId,
-                    accountAddress,
-                    newAllowances
-                );
+                await this._updateSpenderAllowances(args[0], args[1], args[2]);
             }
         );
     }
 
-    private async _updateSpenderAllowances(
+    private _getUpdatedAccountAllowances = async (
         chainId: number,
-        accountAddress: string,
-        newAllowances: { [tokenAddress: string]: string[] }
-    ) {
-        console.log('HERE', chainId, accountAddress, newAllowances);
-        const { accounts, hiddenAccounts } = this.store.getState();
-        const updateAccountAllowances = async (
-            accountAllowances: AccountAllowances,
-            chainId: number
-        ) => {
-            const allowances = cloneDeep(accountAllowances);
-            if (!allowances[chainId]) {
-                allowances[chainId] = { tokens: {} };
-            }
-            const chainAllowances = allowances[chainId].tokens;
-            for (const tokenAddress in newAllowances) {
-                let currentToken = chainAllowances[tokenAddress]
-                    ? chainAllowances[tokenAddress].token
-                    : undefined;
-                if (!currentToken) {
-                    const { tokens } = await this._tokenController.search(
-                        tokenAddress,
-                        true,
-                        accountAddress,
-                        chainId
-                    );
+        account: AccountInfo,
+        newAllowances: NewTokenAllowanceSpendersEventParametersSignature['2']
+    ) => {
+        const allowances = cloneDeep(account.allowances);
 
-                    const token = tokens.length ? tokens[0] : undefined;
-                    if (!token) {
-                        continue;
-                    }
-                    currentToken = token;
+        if (!allowances[chainId]) {
+            allowances[chainId] = { tokens: {} };
+        }
+
+        const chainAllowances = allowances[chainId].tokens;
+
+        for (const tokenAddress in newAllowances) {
+            let currentToken = chainAllowances[tokenAddress]
+                ? chainAllowances[tokenAddress].token
+                : undefined;
+
+            //check whether we need to fetch the token data or not
+            if (!currentToken) {
+                const { tokens } = await this._tokenController.search(
+                    tokenAddress,
+                    true,
+                    account.address,
+                    chainId
+                );
+
+                const token = tokens.length ? tokens[0] : undefined;
+                if (!token) {
+                    continue;
                 }
-                const newSpenders = newAllowances[tokenAddress];
-                for (const spender of newSpenders) {
+                currentToken = token;
+            }
+
+            //grab all the new allowances per token address
+            const newSpendersTransactions = newAllowances[tokenAddress];
+            const newTokenSpendersAllowance: Record<string, TokenAllowance> =
+                {};
+            for (const spenderTransaction of newSpendersTransactions) {
+                const { spender, txHash } = spenderTransaction;
+                try {
+                    //fetch spender allowance
                     const spenderAllowance =
                         await this._tokenOperationsController.allowance(
                             tokenAddress,
-                            accountAddress,
+                            account.address,
                             spender
                         );
-                    const tokenSpenders =
-                        allowances[chainId].tokens[tokenAddress] || {};
-                    allowances[chainId] = {
-                        ...allowances[chainId],
-                        tokens: {
-                            ...allowances[chainId].tokens,
-                            [tokenAddress]: {
-                                token: currentToken,
-                                allowances: {
-                                    ...(tokenSpenders.allowances || {}),
-                                    [spender]: {
-                                        value: spenderAllowance,
-                                        updatedAt: new Date().getTime(),
-                                    },
-                                },
-                            },
-                        },
+
+                    newTokenSpendersAllowance[spender] = {
+                        value: spenderAllowance,
+                        updatedAt: new Date().getTime(),
+                        txHash,
                     };
+                } catch (e) {
+                    log.warn(
+                        `Error fetching spender: ${spender} allowance for token ${tokenAddress}`,
+                        e
+                    );
                 }
             }
-            return allowances;
-        };
+
+            const currentTokenSpenders =
+                allowances[chainId].tokens[tokenAddress] || {};
+
+            allowances[chainId] = {
+                ...allowances[chainId],
+                tokens: {
+                    ...allowances[chainId].tokens,
+                    [tokenAddress]: {
+                        token: currentToken,
+                        allowances: Object.entries({
+                            ...currentTokenSpenders.allowances,
+                            ...newTokenSpendersAllowance,
+                        }).reduce((acc, [spenderAddress, allowanceRecord]) => {
+                            if (BigNumber.from(allowanceRecord.value).gt(0)) {
+                                return {
+                                    ...acc,
+                                    [spenderAddress]: allowanceRecord,
+                                };
+                            }
+                            return acc;
+                        }, {}), //start from empty allowances since it is going to be filled in the reduce function
+                    },
+                },
+            };
+        }
+        return allowances;
+    };
+
+    private async _updateSpenderAllowances(
+        ...args: NewTokenAllowanceSpendersEventParametersSignature
+    ) {
+        const [chainId, accountAddress, newAllowances] = args;
+        const { accounts, hiddenAccounts } = this.store.getState();
         if (accounts[accountAddress]) {
-            const newAccountAllowances = await updateAccountAllowances(
-                accounts[accountAddress].allowances,
-                chainId
-            );
+            const newAccountAllowances =
+                await this._getUpdatedAccountAllowances(
+                    chainId,
+                    accounts[accountAddress],
+                    newAllowances
+                );
             this.store.updateState({
                 accounts: {
                     ...this.store.getState().accounts,
@@ -411,10 +438,13 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 },
             });
         } else if (hiddenAccounts[accountAddress]) {
-            const newAccountAllowances = await updateAccountAllowances(
-                hiddenAccounts[accountAddress].allowances,
-                chainId
-            );
+            const newAccountAllowances =
+                await this._getUpdatedAccountAllowances(
+                    chainId,
+
+                    hiddenAccounts[accountAddress],
+                    newAllowances
+                );
             this.store.updateState({
                 hiddenAccounts: {
                     ...this.store.getState().hiddenAccounts,

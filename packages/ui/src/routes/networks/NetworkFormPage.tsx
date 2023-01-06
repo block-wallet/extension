@@ -7,7 +7,6 @@ import TextInput from "../../components/input/TextInput"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
-import classnames from "classnames"
 import {
     addNetwork,
     editNetwork,
@@ -140,7 +139,7 @@ const NetworkFormPage = ({
     const [rpcChainId, setRpcChainId] = useState<number>(0)
     const [isNativelySupported, setIsNativelySupported] =
         useState<boolean>(false)
-    const { availableNetworks } = useBlankState()!
+    const { availableNetworks, isProviderNetworkOnline } = useBlankState()!
 
     const {
         register,
@@ -308,8 +307,11 @@ const NetworkFormPage = ({
         )
     }, [availableNetworks, watchChainId, watchName])
 
+    //Do not allow to edit the selected network unless the provider is down.
     const editingSelectedNetwork =
-        isEdit && selectedChainId === Number(watchChainId)
+        isEdit &&
+        selectedChainId === Number(watchChainId) &&
+        isProviderNetworkOnline
 
     const canSubmitForm =
         Object.keys(errors).length === 0 &&

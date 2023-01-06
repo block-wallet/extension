@@ -57,6 +57,7 @@ export interface AccountBalanceToken {
 export interface TokenAllowance {
     updatedAt: number;
     value: BigNumber;
+    txHash: string;
 }
 export interface AccountBalanceTokens {
     [address: string]: AccountBalanceToken;
@@ -314,6 +315,116 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 }
             }
         );
+
+        this._transactionWatcherController.on(
+            TransactionWatcherControllerEvents.NEW_KNOWN_TOKEN_ALLOWANCE_SPENDERS,
+            async (
+                chainId: number,
+                accountAddress: string,
+                newAllowances: { [tokenAddress: string]: string[] }
+            ) => {
+                await this._updateSpenderAllowances(
+                    chainId,
+                    accountAddress,
+                    newAllowances
+                );
+            }
+        );
+    }
+
+    private async _updateSpenderAllowances(
+        chainId: number,
+        accountAddress: string,
+        newAllowances: { [tokenAddress: string]: string[] }
+    ) {
+        console.log('HERE', chainId, accountAddress, newAllowances);
+        const { accounts, hiddenAccounts } = this.store.getState();
+        const updateAccountAllowances = async (
+            accountAllowances: AccountAllowances,
+            chainId: number
+        ) => {
+            const allowances = cloneDeep(accountAllowances);
+            if (!allowances[chainId]) {
+                allowances[chainId] = { tokens: {} };
+            }
+            const chainAllowances = allowances[chainId].tokens;
+            for (const tokenAddress in newAllowances) {
+                let currentToken = chainAllowances[tokenAddress]
+                    ? chainAllowances[tokenAddress].token
+                    : undefined;
+                if (!currentToken) {
+                    const { tokens } = await this._tokenController.search(
+                        tokenAddress,
+                        true,
+                        accountAddress,
+                        chainId
+                    );
+
+                    const token = tokens.length ? tokens[0] : undefined;
+                    if (!token) {
+                        continue;
+                    }
+                    currentToken = token;
+                }
+                const newSpenders = newAllowances[tokenAddress];
+                for (const spender of newSpenders) {
+                    const spenderAllowance =
+                        await this._tokenOperationsController.allowance(
+                            tokenAddress,
+                            accountAddress,
+                            spender
+                        );
+                    const tokenSpenders =
+                        allowances[chainId].tokens[tokenAddress] || {};
+                    allowances[chainId] = {
+                        ...allowances[chainId],
+                        tokens: {
+                            ...allowances[chainId].tokens,
+                            [tokenAddress]: {
+                                token: currentToken,
+                                allowances: {
+                                    ...(tokenSpenders.allowances || {}),
+                                    [spender]: {
+                                        value: spenderAllowance,
+                                        updatedAt: new Date().getTime(),
+                                    },
+                                },
+                            },
+                        },
+                    };
+                }
+            }
+            return allowances;
+        };
+        if (accounts[accountAddress]) {
+            const newAccountAllowances = await updateAccountAllowances(
+                accounts[accountAddress].allowances,
+                chainId
+            );
+            this.store.updateState({
+                accounts: {
+                    ...this.store.getState().accounts,
+                    [accountAddress]: {
+                        ...this.store.getState().accounts[accountAddress],
+                        allowances: newAccountAllowances,
+                    },
+                },
+            });
+        } else if (hiddenAccounts[accountAddress]) {
+            const newAccountAllowances = await updateAccountAllowances(
+                hiddenAccounts[accountAddress].allowances,
+                chainId
+            );
+            this.store.updateState({
+                hiddenAccounts: {
+                    ...this.store.getState().hiddenAccounts,
+                    [accountAddress]: {
+                        ...this.store.getState().hiddenAccounts[accountAddress],
+                        allowances: newAccountAllowances,
+                    },
+                },
+            });
+        }
     }
 
     /**

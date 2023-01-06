@@ -31,7 +31,10 @@ import {
 import { Block, Filter, Log } from '@ethersproject/abstract-provider';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { SignedTransaction } from './erc-20/transactions/SignedTransaction';
-import { TransactionArgument } from './transactions/ContractSignatureParser';
+import {
+    ContractSignatureParser,
+    TransactionArgument,
+} from './transactions/ContractSignatureParser';
 import { showIncomingTransactionNotification } from '../utils/notifications';
 import { checkIfNotAllowedError } from '../utils/ethersError';
 import TransactionController from './transactions/TransactionController';
@@ -77,6 +80,7 @@ export const TRANSACTION_TYPE_STATUS: {
 
 export enum TransactionWatcherControllerEvents {
     NEW_KNOWN_ERC20_TRANSACTIONS = 'NEW_KNOWN_ERC20_TRANSACTIONS',
+    NEW_KNOWN_TOKEN_ALLOWANCE_SPENDERS = 'NEW_KNOWN_TOKEN_ALLOWANCE_SPENDERS',
     NEW_ERC20_TRANSACTIONS = 'NEW_ERC20_TRANSACTIONS',
     INCOMING_TRANSACTION = 'INCOMING_TRANSACTION',
 }
@@ -100,6 +104,7 @@ interface EtherscanTransaction {
     tokenName: string;
     tokenSymbol: string;
     tokenDecimal: string;
+    functionName: string;
 }
 
 const SIGNATURES: { [type in TransactionTypeEnum]: string } = {
@@ -109,6 +114,7 @@ const SIGNATURES: { [type in TransactionTypeEnum]: string } = {
     tokennfttx: '',
 };
 
+const APPROVE_SIGNATURE = 'Approve(address,address,unit256)';
 const MAX_REQUEST_RETRY = 20;
 const EXPLORER_API_CALLS_DELAY = 2000 * MILISECOND;
 const DEFAULT_BATCH_MULTIPLIER = 20;
@@ -414,6 +420,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
                     let newTransactions: TransactionByHash = {};
                     let tokenAddresses: string[] = [];
+                    let allowancesTxs: TransactionMeta[];
 
                     let fetchEtherscanApi = true;
                     if (transactionType !== TransactionTypeEnum.Native) {
@@ -434,6 +441,14 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                             );
                             newTransactions = result.transactions;
                             tokenAddresses = result.tokenAddresses;
+                            allowancesTxs = Object.values(
+                                result.transactions || []
+                            ).filter((tx) => {
+                                return (
+                                    tx.transactionCategory ===
+                                    TransactionCategories.TOKEN_METHOD_APPROVE
+                                );
+                            });
                         } catch (e: any) {
                             log.warn(
                                 'fetchTransactions',
@@ -459,6 +474,14 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                             );
                             newTransactions = result.transactions;
                             tokenAddresses = result.tokenAddresses;
+                            allowancesTxs = Object.values(
+                                result.transactions || []
+                            ).filter((tx) => {
+                                return (
+                                    tx.transactionCategory ===
+                                    TransactionCategories.TOKEN_METHOD_APPROVE
+                                );
+                            });
                         } catch (e: any) {
                             log.warn(
                                 'fetchTransactions',
@@ -489,6 +512,14 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                         tokenAddresses,
                         transactionType
                     );
+
+                    if (allowancesTxs.length) {
+                        this._emitNewKnownSpendersEvent(
+                            chainId,
+                            address,
+                            allowancesTxs
+                        );
+                    }
 
                     // state
                     this.setState(transactionType, chainId, address, {
@@ -1144,6 +1175,14 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         }
     };
 
+    private _isApprovalTransaction(
+        etherscanTransaction: EtherscanTransaction
+    ): boolean {
+        return etherscanTransaction.functionName
+            .toLowerCase()
+            .startsWith('approve');
+    }
+
     // ###################### API METHODS ######################
 
     /**
@@ -1191,7 +1230,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             .filter((tx: EtherscanTransaction) => {
                 return (
                     transactionType !== TransactionTypeEnum.Native ||
-                    tx.input.length < 4
+                    tx.input.length < 4 ||
+                    this._isApprovalTransaction(tx)
                 );
             });
 
@@ -1306,6 +1346,11 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             tx.contractAddress = toChecksumAddress(tx.contractAddress);
         }
 
+        // Instantiate contract signature parser
+        const contractSignatureParser = new ContractSignatureParser(
+            this._networkController
+        );
+
         const time = Number(tx.timeStamp) * 1000;
 
         const isIncomming =
@@ -1317,6 +1362,9 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             case TransactionTypeEnum.Native:
                 if (isIncomming) {
                     transactionCategory = TransactionCategories.INCOMING;
+                } else if (this._isApprovalTransaction(tx)) {
+                    transactionCategory =
+                        TransactionCategories.TOKEN_METHOD_APPROVE;
                 } else {
                     transactionCategory = TransactionCategories.SENT_ETHER;
                 }
@@ -1380,6 +1428,17 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             };
         }
 
+        let methodSignature;
+        if (
+            type !== TransactionTypeEnum.Native ||
+            this._isApprovalTransaction(tx)
+        ) {
+            methodSignature = await contractSignatureParser.getMethodSignature(
+                tx.input,
+                tx.contractAddress || tx.to
+            );
+        }
+
         return {
             time,
             confirmationTime: time,
@@ -1395,7 +1454,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 from: tx.from,
                 value:
                     type === TransactionTypeEnum.Native
-                        ? BigNumber.from(tx.value)
+                        ? BigNumber.from(tx.value ?? 0)
                         : BigNumber.from(0),
                 hash: tx.hash,
                 nonce: Number(tx.nonce),
@@ -1415,7 +1474,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 gasUsed: BigNumber.from(tx.gasUsed),
             },
             transferType: transferType,
-            // TODO(REC): methodSignature ?
+            methodSignature,
         } as Partial<TransactionMeta>;
     };
 
@@ -1485,6 +1544,42 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 TransactionWatcherControllerEvents.NEW_ERC20_TRANSACTIONS,
                 chainId,
                 address
+            );
+        }
+    };
+
+    private _emitNewKnownSpendersEvent = (
+        chainId: number,
+        address: string,
+        allowancesTxs: TransactionMeta[]
+    ) => {
+        const allowances: {
+            [tokenAddress: string]: { spender: string; txHash: string }[];
+        } = {};
+        allowancesTxs.forEach((tx) => {
+            if (
+                tx.transactionParams.to &&
+                tx.methodSignature &&
+                tx.methodSignature.args[0] &&
+                tx.methodSignature.args[0].value
+            ) {
+                const tokenAddress = tx.transactionParams.to;
+                const currentSpenders = allowances[tokenAddress] || [];
+                allowances[tokenAddress] = [
+                    ...currentSpenders,
+                    {
+                        spender: tx.methodSignature.args[0].value!,
+                        txHash: tx.transactionParams.hash,
+                    },
+                ];
+            }
+        });
+        if (Object.keys(allowances).length) {
+            this.emit(
+                TransactionWatcherControllerEvents.NEW_KNOWN_TOKEN_ALLOWANCE_SPENDERS,
+                chainId,
+                address,
+                allowances
             );
         }
     };

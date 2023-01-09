@@ -104,7 +104,7 @@ const GasSelectorBasic = (props: GasComponentProps) => {
                             setSelectedGas(option)
                         }}
                     >
-                        <div className="flex flex-col flex-grow px-1 py-1  px-1 w-11/12">
+                        <div className="flex flex-col flex-grow px-1 py-1  w-11/12">
                             <label
                                 className={classnames(
                                     "text-base font-semibold cursor-pointer capitalize",
@@ -114,7 +114,7 @@ const GasSelectorBasic = (props: GasComponentProps) => {
                             >
                                 {option.label}
                             </label>
-                            <div className="flex flex-col w-full justify-between w-full py-2 space-y-1">
+                            <div className="flex flex-col w-full justify-between py-2 space-y-1">
                                 <div className="flex flex-row justify-between items-center">
                                     <span
                                         className={classnames(

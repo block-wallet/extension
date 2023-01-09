@@ -1149,6 +1149,18 @@ export const toggleDefaultBrowserWallet = async (
 }
 
 /**
+* Updates the default gas option preference
+* @param defaultGasOption default gas option
+*/
+export const setDefaultGasPreference = async (
+    defaultGasOption: "low" | "medium" | "high"
+): Promise<void> => {
+    return sendMessage(Messages.WALLET.SET_DEFAULT_GAS, {
+        defaultGasOption,
+    })
+}
+
+/**
  * Sets the provided base64 image as the phishing protection picture
  * @param image the base64 image to be used for phishing protection
  */

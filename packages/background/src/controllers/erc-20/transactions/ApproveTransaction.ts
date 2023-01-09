@@ -93,6 +93,11 @@ export class ApproveTransaction extends SignedTransaction {
             feeData
         );
 
+        transactionMeta.approveAllowanceParams = {
+            allowanceValue: BigNumber.from(amount),
+            spenderAddress: spender,
+        };
+
         await this.approveTransaction(transactionMeta.id);
 
         return this.getTransactionResult(

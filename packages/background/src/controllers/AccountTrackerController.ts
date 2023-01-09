@@ -365,7 +365,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             const newTokenSpendersAllowance: Record<string, TokenAllowance> =
                 {};
             for (const spenderTransaction of newSpendersTransactions) {
-                const { spender, txHash } = spenderTransaction;
+                const { spender, txHash, txTime } = spenderTransaction;
                 try {
                     //fetch spender allowance
                     const spenderAllowance =
@@ -377,7 +377,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
                     newTokenSpendersAllowance[spender] = {
                         value: spenderAllowance,
-                        updatedAt: new Date().getTime(),
+                        updatedAt: txTime || new Date().getTime(),
                         txHash,
                     };
                 } catch (e) {
@@ -413,7 +413,29 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 },
             };
         }
-        return allowances;
+
+        //cleanup empty allowances
+        return {
+            ...allowances,
+            [chainId]: {
+                tokens: Object.entries(allowances[chainId].tokens || {}).reduce(
+                    (acc, [tokenAddress, allowancesRecord]) => {
+                        //if there is at least 1 spender
+                        if (
+                            Object.keys(allowancesRecord.allowances || {})
+                                .length > 0
+                        ) {
+                            return {
+                                ...acc,
+                                [tokenAddress]: allowancesRecord,
+                            };
+                        }
+                        return acc;
+                    },
+                    {}
+                ),
+            },
+        };
     };
 
     private async _updateSpenderAllowances(

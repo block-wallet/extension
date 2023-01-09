@@ -29,7 +29,7 @@ export default {
                                             [address]: {
                                                 ...(watchedTxsByType || {}),
                                                 [TransactionTypeEnum.Native]: {
-                                                    transactions: [],
+                                                    transactions: {},
                                                     lastBlockQueried: 0,
                                                 },
                                             },
@@ -56,7 +56,7 @@ export default {
                         ...acc,
                         [address]: {
                             ...accounts[address],
-                            allowances: accounts[address].allowances ?? {},
+                            allowances: {},
                         },
                     };
                 }, accounts),
@@ -66,8 +66,7 @@ export default {
                             ...acc,
                             [address]: {
                                 ...hiddenAccounts[address],
-                                allowances:
-                                    hiddenAccounts[address].allowances ?? {},
+                                allowances: {},
                             },
                         };
                     },

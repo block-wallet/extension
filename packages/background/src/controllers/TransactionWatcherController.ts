@@ -22,6 +22,7 @@ import {
     PreferencesControllerState,
 } from './PreferencesController';
 import {
+    ApproveAllowanceParams,
     TransactionCategories,
     TransactionEvents,
     TransactionMeta,
@@ -44,7 +45,11 @@ import { isNil } from 'lodash';
 import { runPromiseSafely } from '../utils/promises';
 
 interface NewTokenAllowanceSpenders {
-    [tokenAddress: string]: { spender: string; txHash: string }[];
+    [tokenAddress: string]: {
+        spender: string;
+        txHash: string;
+        txTime?: number;
+    }[];
 }
 
 export type NewTokenAllowanceSpendersEventParametersSignature = Parameters<
@@ -124,9 +129,9 @@ const SIGNATURES: { [type in TransactionTypeEnum]: string } = {
     tokentx: id('Transfer(address,address,uint256)'),
     token1155tx: '',
     tokennfttx: '',
+    //approvetx: id('Approve(address,address,unit256)'),
 };
 
-const APPROVE_SIGNATURE = 'Approve(address,address,unit256)';
 const MAX_REQUEST_RETRY = 20;
 const EXPLORER_API_CALLS_DELAY = 2000 * MILISECOND;
 const DEFAULT_BATCH_MULTIPLIER = 20;
@@ -432,7 +437,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
                     let newTransactions: TransactionByHash = {};
                     let tokenAddresses: string[] = [];
-                    let allowancesTxs: TransactionMeta[];
 
                     let fetchEtherscanApi = true;
                     if (transactionType !== TransactionTypeEnum.Native) {
@@ -453,14 +457,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                             );
                             newTransactions = result.transactions;
                             tokenAddresses = result.tokenAddresses;
-                            allowancesTxs = Object.values(
-                                result.transactions || []
-                            ).filter((tx) => {
-                                return (
-                                    tx.transactionCategory ===
-                                    TransactionCategories.TOKEN_METHOD_APPROVE
-                                );
-                            });
                         } catch (e: any) {
                             log.warn(
                                 'fetchTransactions',
@@ -486,14 +482,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                             );
                             newTransactions = result.transactions;
                             tokenAddresses = result.tokenAddresses;
-                            allowancesTxs = Object.values(
-                                result.transactions || []
-                            ).filter((tx) => {
-                                return (
-                                    tx.transactionCategory ===
-                                    TransactionCategories.TOKEN_METHOD_APPROVE
-                                );
-                            });
                         } catch (e: any) {
                             log.warn(
                                 'fetchTransactions',
@@ -524,6 +512,17 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                         tokenAddresses,
                         transactionType
                     );
+
+                    //Grab only confirmed txs to submit allowance events
+                    const allowancesTxs = Object.values(
+                        newTransactions || {}
+                    ).filter((tx) => {
+                        return (
+                            tx.transactionCategory ===
+                                TransactionCategories.TOKEN_METHOD_APPROVE &&
+                            tx.status === TransactionStatus.CONFIRMED
+                        );
+                    });
 
                     if (allowancesTxs.length) {
                         this._emitNewKnownSpendersEvent(
@@ -1358,11 +1357,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             tx.contractAddress = toChecksumAddress(tx.contractAddress);
         }
 
-        // Instantiate contract signature parser
-        const contractSignatureParser = new ContractSignatureParser(
-            this._networkController
-        );
-
         const time = Number(tx.timeStamp) * 1000;
 
         const isIncomming =
@@ -1440,15 +1434,24 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             };
         }
 
-        let methodSignature;
+        let allowanceTransactionData: ApproveAllowanceParams | undefined =
+            undefined;
         if (
-            type !== TransactionTypeEnum.Native ||
-            this._isApprovalTransaction(tx)
+            transactionCategory === TransactionCategories.TOKEN_METHOD_APPROVE
         ) {
-            methodSignature = await contractSignatureParser.getMethodSignature(
-                tx.input,
-                tx.contractAddress || tx.to
+            const approvalTxData = SignedTransaction.parseTransactionData(
+                tx.input
             );
+            if (
+                approvalTxData?.args?.length &&
+                approvalTxData?.args?.length > 1
+            ) {
+                const [spenderAddress, allowanceValue] = approvalTxData.args;
+                allowanceTransactionData = {
+                    allowanceValue,
+                    spenderAddress,
+                };
+            }
         }
 
         return {
@@ -1486,7 +1489,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 gasUsed: BigNumber.from(tx.gasUsed),
             },
             transferType: transferType,
-            methodSignature,
+            approveAllowanceParams: allowanceTransactionData,
         } as Partial<TransactionMeta>;
     };
 
@@ -1565,23 +1568,21 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         address: string,
         allowancesTxs: TransactionMeta[]
     ) => {
-        const allowances: {
-            [tokenAddress: string]: { spender: string; txHash: string }[];
-        } = {};
+        const allowances: NewTokenAllowanceSpenders = {};
         allowancesTxs.forEach((tx) => {
             if (
                 tx.transactionParams.to &&
-                tx.methodSignature &&
-                tx.methodSignature.args[0] &&
-                tx.methodSignature.args[0].value
+                tx.approveAllowanceParams &&
+                tx.approveAllowanceParams.spenderAddress
             ) {
                 const tokenAddress = tx.transactionParams.to;
                 const currentSpenders = allowances[tokenAddress] || [];
                 allowances[tokenAddress] = [
                     ...currentSpenders,
                     {
-                        spender: tx.methodSignature.args[0].value!,
+                        spender: tx.approveAllowanceParams.spenderAddress,
                         txHash: tx.transactionParams.hash!,
+                        txTime: tx.confirmationTime,
                     },
                 ];
             }

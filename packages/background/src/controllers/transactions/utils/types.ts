@@ -97,6 +97,7 @@ export interface TransactionMeta {
     originId?: string;
     exchangeParams?: ExchangeParams;
     bridgeParams?: BridgeTransactionParams;
+    approveAllowanceParams?: ApproveAllowanceParams;
 }
 
 export interface BridgeTransactionParams {
@@ -124,6 +125,11 @@ export interface BridgeTransactionParams {
     effectiveToChainId?: number;
     startTime?: number;
     endTime?: number;
+}
+
+export interface ApproveAllowanceParams {
+    spenderAddress: string;
+    allowanceValue: BigNumber;
 }
 
 export interface uiTransactionParams extends TransactionParams {

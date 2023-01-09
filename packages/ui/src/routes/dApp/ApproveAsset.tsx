@@ -169,8 +169,9 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     transactionId,
 }) => {
     // Hooks
-    const { accounts, selectedAddress, settings } = useBlankState()!
-    const { chainId, isEIP1559Compatible, desc } = useSelectedNetwork()
+    const { accounts, selectedAddress, settings, defaultGasOption } =
+        useBlankState()!
+    const { chainId, isEIP1559Compatible } = useSelectedNetwork()
     const { hideAddressWarning } = useUserSettings()
     const selectedAccountBalance = useSelectedAccountBalance()
     const { nativeToken } = useTokensList()
@@ -435,6 +436,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 <label className="text-sm text-gray-600">Gas Price</label>
                 {!isEIP1559Compatible ? (
                     <GasPriceSelector
+                        defaultLevel={defaultGasOption || "medium"}
                         defaultGasLimit={defaultGas.gasLimit!}
                         defaultGasPrice={defaultGas.gasPrice!}
                         setGasPriceAndLimit={(gasPrice, gasLimit) => {
@@ -446,6 +448,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 ) : (
                     <GasPriceComponent
                         defaultGas={{
+                            defaultLevel: defaultGasOption || "medium",
                             feeData: {
                                 gasLimit: defaultGas.gasLimit,
                                 maxFeePerGas: defaultGas.maxFeePerGas!,

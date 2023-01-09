@@ -37,6 +37,7 @@ import PhishingProtectionPreferencesPage from "../routes/preferences/PhishingPro
 import LocalePreferencesPage from "../routes/preferences/LocalePreferencesPage"
 import PreferencesPage from "../routes/settings/PreferencesPage"
 import DefaultWalletPreferencesPage from "../routes/preferences/DefaultWalletPreferencesPage"
+import DefaultGasPreferencesPage from "../routes/preferences/DefaultGasPreferencesPage"
 import ReleaseNotesPreferencesPage from "../routes/preferences/ReleaseNotesPreferencesPage"
 import OnDemandReleaseNotesPage from "../components/releaseNotes/OnDemandReleaseNotesPage"
 import WelcomeInfo from "../components/info/WelcomeInfo"
@@ -168,6 +169,11 @@ export const ROUTES_DEFINITION = [
         path: "/settings/preferences/defaultWallet",
         exact: true,
         component: DefaultWalletPreferencesPage,
+    },
+    {
+        path: "/settings/preferences/defaultGas",
+        exact: true,
+        component: DefaultGasPreferencesPage,
     },
 
     { path: "/settings/tokens/add", exact: true, component: AddTokensPage },

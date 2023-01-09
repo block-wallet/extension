@@ -41,6 +41,7 @@ testInitState = {
     filters: {
         account: [],
     },
+    defaultGasOption: "medium"
 };
 
 const mockPreferencesController = new PreferencesController({

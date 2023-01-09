@@ -419,6 +419,7 @@ export const initBackgroundState: BackgroundStateType = {
         showTestNetworks: true,
         showWelcomeMessage: false,
         showDefaultWalletPreferences: false,
+        defaultGasOption: "medium",
         popupTab: "activity",
         settings: {
             hideAddressWarning: false,

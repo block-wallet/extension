@@ -68,4 +68,11 @@ describe('Preferences Controller', function () {
         preferencesController.showWelcomeMessage = true;
         expect(preferencesController.showWelcomeMessage).to.be.true;
     });
+
+
+    it('get and set default gas option', async function () {
+        expect(preferencesController.defaultGasOption).to.equal('medium');
+        preferencesController.defaultGasOption = 'high';
+        expect(preferencesController.defaultGasOption).to.equal('high');
+    });
 });

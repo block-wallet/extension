@@ -33,6 +33,7 @@ import {
     ExchangeType,
     HardwareWalletOpTypes,
     TransactionCategories,
+    TransactionStatus,
 } from "../../context/commTypes"
 import {
     calcExchangeRate,
@@ -63,10 +64,6 @@ import OutlinedButton from "../../components/ui/OutlinedButton"
 import Icon, { IconName } from "../../components/ui/Icon"
 import RefreshLabel from "../../components/swaps/RefreshLabel"
 import { capitalize } from "../../util/capitalize"
-import { useInProgressAllowanceTransaction } from "../../context/hooks/useInProgressAllowanceTransaction"
-import LoadingDialog from "../../components/dialog/LoadingDialog"
-import ClickableText from "../../components/button/ClickableText"
-import Divider from "../../components/Divider"
 import {
     AdvancedSettings,
     defaultAdvancedSettings,
@@ -74,12 +71,16 @@ import {
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { WithRequired } from "@block-wallet/background/utils/types/helpers"
 import { useBlankState } from "../../context/background/backgroundHooks"
+import { useTransactionById } from "../../context/hooks/useTransactionById"
+import useAwaitAllowanceTransactionDialog from "../../context/hooks/useAwaitAllowanceTransactionDialog"
+import WaitingAllowanceTransactionDialog from "../../components/dialog/WaitingAllowanceTransactionDialog"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token
     swapQuote: SwapQuote
     toToken: Token
     amount?: string
+    allowanceTransactionId?: string
 }
 
 // 15s
@@ -87,7 +88,7 @@ const QUOTE_REFRESH_TIMEOUT = 1000 * 15
 
 const SwapPageConfirm: FC<{}> = () => {
     const history = useOnMountHistory()
-    const { fromToken, swapQuote, toToken } = useMemo(
+    const { fromToken, swapQuote, toToken, allowanceTransactionId } = useMemo(
         () => history.location.state as SwapConfirmPageLocalState,
         [history.location.state]
     )
@@ -115,10 +116,6 @@ const SwapPageConfirm: FC<{}> = () => {
         useInProgressInternalTransaction({
             categories: [TransactionCategories.EXCHANGE],
         })
-
-    const inProgressAllowanceTransaction = useInProgressAllowanceTransaction(
-        fromToken.address
-    )
 
     useEffect(() => {
         // Redirect to homepage if there is no pending transaction
@@ -156,6 +153,20 @@ const SwapPageConfirm: FC<{}> = () => {
                 }, [inProgressTransaction?.id]),
             }
         )
+
+    const { transaction: allowanceTransaction } = useTransactionById(
+        allowanceTransactionId
+    )
+
+    const isInProgressAllowanceTransaction = allowanceTransaction
+        ? allowanceTransaction.status !== TransactionStatus.CONFIRMED
+        : false
+
+    const {
+        status: allowanceTxDialogStatus,
+        isOpen: allowanceTxDialogIsOpen,
+        closeDialog: closeAllowanceTxDialog,
+    } = useAwaitAllowanceTransactionDialog(allowanceTransaction)
 
     const [isFetchingSwaps, setIsFetchingSwaps] = useState<boolean>(false)
     const [isGasLoading, setIsGasLoading] = useState<boolean>(true)
@@ -342,7 +353,7 @@ const SwapPageConfirm: FC<{}> = () => {
     }, [swapParameters, error])
 
     useEffect(() => {
-        if (!shouldFetchSwapParams || inProgressAllowanceTransaction?.id) {
+        if (!shouldFetchSwapParams || isInProgressAllowanceTransaction) {
             setTimeoutStart(undefined)
             return
         }
@@ -359,7 +370,7 @@ const SwapPageConfirm: FC<{}> = () => {
     }, [
         updateSwapParameters,
         shouldFetchSwapParams,
-        inProgressAllowanceTransaction?.id,
+        isInProgressAllowanceTransaction,
     ])
 
     const remainingSuffix = Math.ceil(remainingSeconds!)
@@ -401,7 +412,7 @@ const SwapPageConfirm: FC<{}> = () => {
                                 : "Insufficient funds"
                         }
                         isLoading={
-                            error || !!inProgressAllowanceTransaction
+                            error || isInProgressAllowanceTransaction
                                 ? false
                                 : !swapParameters ||
                                   isGasLoading ||
@@ -419,30 +430,20 @@ const SwapPageConfirm: FC<{}> = () => {
                 </PopupFooter>
             }
         >
-            <LoadingDialog
-                open={!!inProgressAllowanceTransaction}
-                title={"Waiting for pending transactions..."}
-                message={
-                    <div className="flex flex-col space-y-2 items-center">
-                        <span>
-                            You will not be able to initiate the swap until the
-                            allowance transaction is mined.
-                        </span>
-                        <Divider />
-                        <span className="text-xs">
-                            You can wait here until it is done
-                        </span>
-                        <div className="mt-1 text-xs">
-                            <span>
-                                <i>OR</i>
-                            </span>
-                            <br />
-                            <ClickableText onClick={() => history.push("/")}>
-                                Return to the home page
-                            </ClickableText>
-                        </div>
-                    </div>
+            <WaitingAllowanceTransactionDialog
+                status={allowanceTxDialogStatus}
+                isOpen={allowanceTxDialogIsOpen}
+                onSuccess={closeAllowanceTxDialog}
+                onError={() =>
+                    history.push({
+                        pathname: "/swap",
+                        state: {
+                            ...history.location.state,
+                            allowanceTransactionId: undefined,
+                        },
+                    })
                 }
+                operation="swap"
             />
             <WaitingDialog
                 open={isOpen}

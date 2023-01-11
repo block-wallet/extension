@@ -38,7 +38,8 @@ const WaitingAllowanceTransactionDialog: FC<Props> = ({
                 error: "Please try again. If the problem persists, please contact support.",
             }}
             clickOutsideToClose={false}
-            timeout={status === "success" ? 1000 : 3000}
+            //Less timeout for success message.
+            timeout={status === "success" ? 2000 : 3000}
             onDone={useCallback(() => {
                 if (status === "error") {
                     onError ? onError() : history.push("/")

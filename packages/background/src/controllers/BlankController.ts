@@ -105,6 +105,7 @@ import type {
     RequestGetBridgeRoutes,
     RequestEditNetworksOrder,
     RequestAccountReset,
+    RequestSetDefaultGas,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -993,6 +994,8 @@ export default class BlankController extends EventEmitter {
                 return this.toggleDefaultBrowserWallet(
                     request as RequestToggleDefaultBrowserWallet
                 );
+            case Messages.WALLET.SET_DEFAULT_GAS:
+                return this.setDefaultGas(request as RequestSetDefaultGas);
             case Messages.WALLET.UPDATE_ANTI_PHISHING_IMAGE:
                 return this.updateAntiPhishingImage(
                     request as RequestUpdateAntiPhishingImage
@@ -2939,6 +2942,14 @@ export default class BlankController extends EventEmitter {
         this.preferencesController.updateDefaultBrowserWalletStatus(
             defaultBrowserWalletEnabled
         );
+    }
+
+    /**
+     * Sets the default gas option preference
+     * @param defaultGasOption default gas option
+     */
+    private setDefaultGas({ defaultGasOption }: RequestSetDefaultGas) {
+        this.preferencesController.defaultGasOption = defaultGasOption;
     }
 
     /**

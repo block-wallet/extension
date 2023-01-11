@@ -141,7 +141,6 @@ import { ExchangeRatesController } from './ExchangeRatesController';
 import {
     AccountInfo,
     AccountTrackerController,
-    AccountType,
     DeviceAccountInfo,
 } from './AccountTrackerController';
 
@@ -175,7 +174,6 @@ import {
     AddressBookEntry,
     NetworkAddressBook,
 } from './AddressBookController';
-import { Devices } from '../utils/types/hardware';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 
 import { showSetUpCompleteNotification } from '../utils/notifications';
@@ -3090,7 +3088,7 @@ export default class BlankController extends EventEmitter {
         device,
     }: RequestRemoveHardwareWallet): Promise<boolean> {
         const accountType =
-            device === Devices.LEDGER ? AccountType.LEDGER : AccountType.TREZOR;
+            this.accountTrackerController.getAccountTypeFromDevice(device);
         const removeAccountPromises: Promise<boolean>[] = [];
 
         const accounts =

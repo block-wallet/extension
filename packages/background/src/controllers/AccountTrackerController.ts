@@ -73,6 +73,7 @@ export enum AccountType {
     HD_ACCOUNT = 'HD Account',
     LEDGER = 'Ledger',
     TREZOR = 'Trezor',
+    KEYSTONE = 'Keystone',
     EXTERNAL = 'External',
 }
 
@@ -373,6 +374,28 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         return accountInfo;
     }
 
+    // TODO(REC): TEST
+    /**
+     * getAccountTypeFromDevice
+     *
+     * @param device The device type
+     * @returns The Account Type instance name
+     */
+    public getAccountTypeFromDevice(
+        device: Devices
+    ): AccountType.LEDGER | AccountType.TREZOR | AccountType.KEYSTONE {
+        switch (device) {
+            case Devices.LEDGER:
+                return AccountType.LEDGER;
+            case Devices.TREZOR:
+                return AccountType.TREZOR;
+            case Devices.KEYSTONE:
+                return AccountType.KEYSTONE;
+            default:
+                throw new Error('Invalid device');
+        }
+    }
+
     /**
      * importHardwareWalletAccounts
      *
@@ -413,14 +436,14 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             // Calculates new account index
             const accountIndex = this._getNewAccountIndex(trackedAccounts);
 
+            // Gets the account type
+            const accountType = this.getAccountTypeFromDevice(device);
+
             // Add new account to the account tracker
             const accountInfo: AccountInfo = {
                 address: newAccount,
                 name,
-                accountType:
-                    device === Devices.LEDGER
-                        ? AccountType.LEDGER
-                        : AccountType.TREZOR, // HW wallet account
+                accountType,
                 index: accountIndex,
                 balances: {},
                 status: AccountStatus.ACTIVE,
@@ -1201,6 +1224,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
 
             keyring.perPage = pageSize;
+            // TODO(REC): does this work for keystone?
             const deviceAccounts = await keyring.getPage(pageIndex);
 
             if (deviceAccounts) {

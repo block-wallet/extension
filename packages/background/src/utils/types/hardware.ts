@@ -4,6 +4,7 @@
 export enum Devices {
     LEDGER = 'LEDGER',
     TREZOR = 'TREZOR',
+    KEYSTONE = 'KEYSTONE',
 }
 
 type HDPath = {
@@ -26,4 +27,5 @@ export const HDPaths: DevicesHDPath = {
         { name: 'BIP44 Standard', path: BIP44_PATH, default: true },
         /*{ name: 'Trezor Testnets', path: `m/44'/1'/0'/0` },*/
     ],
+    KEYSTONE: [{ name: 'BIP44 Standard', path: BIP44_PATH, default: true }],
 };

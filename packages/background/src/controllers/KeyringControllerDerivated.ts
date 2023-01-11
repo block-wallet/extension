@@ -10,6 +10,15 @@ import { Devices } from '../utils/types/hardware';
 import log from 'loglevel';
 import { HDPaths, BIP44_PATH } from '../utils/types/hardware';
 import { TypedTransaction } from '@ethereumjs/tx';
+import {
+    normalize as normalizeAddress,
+    SignTypedDataVersion,
+} from '@metamask/eth-sig-util';
+import {
+    MetaMaskKeyring as QRKeyring,
+    IKeyringState as IQRKeyringState,
+} from '@keystonehq/metamask-airgapped-keyring';
+
 /**
  * Available keyring types
  */
@@ -18,13 +27,14 @@ export enum KeyringTypes {
     HD_KEY_TREE = 'HD Key Tree',
     TREZOR = 'Trezor Hardware',
     LEDGER = 'Ledger Hardware',
+    QR = 'QR Hardware Wallet Device',
 }
 
 export default class KeyringControllerDerivated extends KeyringController {
     private readonly _mutex: Mutex;
 
     constructor(opts: KeyringControllerProps) {
-        opts.keyringTypes = [LedgerBridgeKeyring, TrezorKeyring];
+        opts.keyringTypes = [LedgerBridgeKeyring, TrezorKeyring, QRKeyring];
         super(opts);
 
         this._mutex = new Mutex();
@@ -402,12 +412,14 @@ export default class KeyringControllerDerivated extends KeyringController {
      */
     private _getKeyringTypeFromDevice(
         device: Devices
-    ): KeyringTypes.LEDGER | KeyringTypes.TREZOR {
+    ): KeyringTypes.LEDGER | KeyringTypes.TREZOR | KeyringTypes.QR {
         switch (device) {
             case Devices.LEDGER:
                 return KeyringTypes.LEDGER;
             case Devices.TREZOR:
                 return KeyringTypes.TREZOR;
+            case Devices.KEYSTONE:
+                return KeyringTypes.QR;
             default:
                 throw new Error('Invalid device');
         }
@@ -602,9 +614,41 @@ export default class KeyringControllerDerivated extends KeyringController {
             version: 'V1' | 'V3' | 'V4';
         }
     ): Promise<string> {
-        return this._mutex.runExclusive(async () =>
-            super.signTypedMessage(msgParams, opts)
-        );
+        return this._mutex.runExclusive(async () => {
+            try {
+                const keyring = await this.getKeyringFromDevice(
+                    Devices.KEYSTONE
+                );
+                if (keyring) {
+                    const address = normalizeAddress(msgParams.from);
+                    const qrAccounts = await keyring.getAccounts();
+                    if (
+                        qrAccounts.findIndex(
+                            (qrAddress: string) =>
+                                qrAddress.toLowerCase() ===
+                                address.toLowerCase()
+                        ) !== -1
+                    ) {
+                        const messageParamsClone = { ...msgParams };
+                        if (
+                            opts.version !== SignTypedDataVersion.V1 &&
+                            typeof messageParamsClone.data === 'string'
+                        ) {
+                            messageParamsClone.data = JSON.parse(
+                                messageParamsClone.data
+                            );
+                        }
+                        return super.signTypedMessage(messageParamsClone, opts);
+                    }
+                }
+
+                return super.signTypedMessage(msgParams, opts);
+            } catch (error) {
+                throw new Error(
+                    `Keyring Controller signTypedMessage: ${error}`
+                );
+            }
+        });
     }
 
     /**
@@ -619,6 +663,83 @@ export default class KeyringControllerDerivated extends KeyringController {
             keyring.updateTransportMethod('webhid').catch((e: Error) => {
                 log.error('setLedgerWebHIDTransportType', e.message);
             });
+        }
+    }
+
+    // QR Hardware related methods
+    // TODO(REC): Check if these methods are needed
+
+    /**
+     * Get qr hardware keyring.
+     *
+     * @returns The added keyring
+     */
+    async getOrAddQRKeyring(): Promise<QRKeyring> {
+        let keyring = await this.getKeyringFromDevice(Devices.KEYSTONE);
+        if (!keyring) {
+            await this.connectHardwareKeyring(Devices.KEYSTONE);
+            keyring = await this.getKeyringFromDevice(Devices.KEYSTONE);
+        }
+        return keyring;
+    }
+
+    async resetQRKeyringState(): Promise<void> {
+        const keyring = await this.getOrAddQRKeyring();
+        return keyring.resetStore();
+    }
+
+    async getQRKeyringState(): Promise<IQRKeyringState> {
+        const keyring = await this.getOrAddQRKeyring();
+        return keyring.getMemStore();
+    }
+
+    async submitQRCryptoHDKey(cryptoHDKey: string): Promise<void> {
+        const keyring = await this.getOrAddQRKeyring();
+        return keyring.submitCryptoHDKey(cryptoHDKey);
+    }
+
+    async submitQRCryptoAccount(cryptoAccount: string): Promise<void> {
+        const keyring = await this.getOrAddQRKeyring();
+        return keyring.submitCryptoAccount(cryptoAccount);
+    }
+
+    async submitQRSignature(
+        requestId: string,
+        ethSignature: string
+    ): Promise<void> {
+        const keyring = await this.getOrAddQRKeyring();
+        return keyring.submitSignature(requestId, ethSignature);
+    }
+
+    async cancelQRSignRequest(): Promise<void> {
+        const keyring = await this.getOrAddQRKeyring();
+        return keyring.cancelSignRequest();
+    }
+
+    async connectQRHardware(
+        page: number
+    ): Promise<{ balance: string; address: string; index: number }[]> {
+        try {
+            const keyring = await this.getOrAddQRKeyring();
+            let accounts;
+            switch (page) {
+                case -1:
+                    accounts = await keyring.getPreviousPage();
+                    break;
+                case 1:
+                    accounts = await keyring.getNextPage();
+                    break;
+                default:
+                    accounts = await keyring.getFirstPage();
+            }
+            return accounts.map((account: any) => {
+                return {
+                    ...account,
+                    balance: '0x0',
+                };
+            });
+        } catch (e) {
+            throw new Error(`Unspecified error when connect QR Hardware, ${e}`);
         }
     }
 }

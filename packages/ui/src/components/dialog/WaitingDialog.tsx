@@ -41,6 +41,7 @@ type action =
               texts?: Partial<texts>
               titles?: Partial<texts>
               gifs?: gifs
+              forceOpen?: boolean
           }
       }
     | {
@@ -72,6 +73,7 @@ const reducer = (state: state, action: action) => {
                 texts: action.payload.texts,
                 titles: action.payload.titles,
                 gifs: action.payload.gifs,
+                isOpen: action.payload.forceOpen ? true : state.isOpen,
             }
     }
 }

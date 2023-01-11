@@ -106,6 +106,7 @@ import type {
     RequestEditNetworksOrder,
     RequestAccountReset,
     RequestSetDefaultGas,
+    RequestCalculateApproveTransactionGasLimit,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -222,6 +223,7 @@ import { isOnboardingTabUrl } from '../utils/window';
 import RemoteConfigsController, {
     RemoteConfigsControllerState,
 } from './RemoteConfigsController';
+import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -889,6 +891,10 @@ export default class BlankController extends EventEmitter {
             case Messages.TRANSACTION.GET_SEND_TRANSACTION_RESULT:
                 return this.getSendTransactionResult(
                     request as RequestSendTransactionResult
+                );
+            case Messages.TRANSACTION.CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT:
+                return this.calculateApproveTransactionGasLimit(
+                    request as RequestCalculateApproveTransactionGasLimit
                 );
             case Messages.TRANSACTION.CALCULATE_SEND_TRANSACTION_GAS_LIMIT:
                 return this.calculateSendTransactionGasLimit(
@@ -2183,6 +2189,25 @@ export default class BlankController extends EventEmitter {
     ): Promise<GasPriceData | undefined> {
         return this.gasPricesController.fetchGasPriceData(chainId);
     }
+    /**
+     * Calculate the gas limit for an approve transaction
+     */
+    private async calculateApproveTransactionGasLimit({
+        tokenAddress,
+        spender,
+        amount,
+    }: RequestCalculateApproveTransactionGasLimit): Promise<TransactionGasEstimation> {
+        const approveTransaction = new ApproveTransaction({
+            transactionController: this.transactionController,
+            preferencesController: this.preferencesController,
+            networkController: this.networkController,
+        });
+        return approveTransaction.calculateTransactionGasLimit({
+            tokenAddress,
+            spender,
+            amount,
+        });
+    }
 
     private cancelTransaction({
         transactionId,
@@ -2985,7 +3010,7 @@ export default class BlankController extends EventEmitter {
             networkByChainId.set(network.chainId, network);
         });
         return Promise.resolve(
-            filteredChains.map((chain) => {
+            filteredChains.map((chain: any) => {
                 return {
                     chain,
                     isEnabled:

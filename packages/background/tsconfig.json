@@ -27,6 +27,7 @@
         "experimentalDecorators": true
     },
     "include": ["src", "test"],
+    "exclude": [".eslintrc.js", "test/mocks/sinonChrome.js"],
     "ts-node": {
         "files": true
     }

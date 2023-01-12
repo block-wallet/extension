@@ -106,6 +106,7 @@ import type {
     RequestEditNetworksOrder,
     RequestAccountReset,
     RequestSetDefaultGas,
+    RequestApproveAllowance,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -955,6 +956,10 @@ export default class BlankController extends EventEmitter {
             case Messages.TOKEN.SEARCH_TOKEN:
                 return this.searchTokenInAssetsList(
                     request as RequestSearchToken
+                );
+            case Messages.TOKEN.APPROVE_ALLOWANCE:
+                return this.approveAllowance(
+                    request as RequestApproveAllowance
                 );
             case Messages.EXTERNAL.EVENT_SUBSCRIPTION:
                 return this.blankProviderEventSubscribe(id, port, portId);
@@ -2667,6 +2672,34 @@ export default class BlankController extends EventEmitter {
             accountAddress,
             chainId,
             false
+        );
+    }
+
+    /**
+     * Submits an approval transaction to setup asset allowance
+     *
+     * @param allowance User selected allowance
+     * @param amount Exchange amount
+     * @param spenderAddress The spender address
+     * @param feeData Transaction gas fee data
+     * @param tokenAddress Asset token address
+     * @param customNonce Custom transaction nonce
+     */
+    private async approveAllowance({
+        allowance,
+        amount,
+        spenderAddress,
+        feeData,
+        tokenAddress,
+        customNonce,
+    }: RequestApproveAllowance): Promise<boolean> {
+        return this.tokenAllowanceController.approveAllowance(
+            BigNumber.from(allowance),
+            BigNumber.from(amount),
+            spenderAddress,
+            feeData,
+            tokenAddress,
+            customNonce
         );
     }
 

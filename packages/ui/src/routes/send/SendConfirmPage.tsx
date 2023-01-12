@@ -896,6 +896,9 @@ const SendConfirmPage = () => {
 
                         {!isEIP1559Compatible ? (
                             <GasPriceSelector
+                                defaultLevel={
+                                    blankState.defaultGasOption || "medium"
+                                }
                                 defaultGasLimit={defaultGas.gasLimit!}
                                 defaultGasPrice={defaultGas.gasPrice!}
                                 setGasPriceAndLimit={(gasPrice, gasLimit) => {
@@ -907,7 +910,8 @@ const SendConfirmPage = () => {
                         ) : (
                             <GasPriceComponent
                                 defaultGas={{
-                                    defaultLevel: "medium",
+                                    defaultLevel:
+                                        blankState.defaultGasOption || "medium",
                                     feeData: {
                                         gasLimit: defaultGas.gasLimit!,
                                     },

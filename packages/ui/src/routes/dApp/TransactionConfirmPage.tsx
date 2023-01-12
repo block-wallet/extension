@@ -113,11 +113,12 @@ const TransactionConfirm: React.FC<{
     transactionCount: number
 }> = ({ transactionId, transactionCount }) => {
     //Hooks
-    const { accounts, nativeCurrency, localeInfo, selectedAddress, settings } =
+    const { accounts, nativeCurrency, localeInfo, selectedAddress, settings, defaultGasOption } =
         useBlankState()!
     const {
         state: { exchangeRates, networkNativeCurrency },
     } = useExchangeRatesState()
+
     const { isEIP1559Compatible, defaultNetworkLogo } = useSelectedNetwork()
     const [gasPriceThresholdWarning, setGasPriceThresholdWarning] = useState<{
         message?: string
@@ -649,6 +650,7 @@ const TransactionConfirm: React.FC<{
 
                     {!isEIP1559Compatible ? (
                         <GasPriceSelector
+                            defaultLevel={defaultGasOption || "medium"}
                             defaultGasLimit={defaultGas.gasLimit!}
                             defaultGasPrice={defaultGas.gasPrice!}
                             setGasPriceAndLimit={(gasPrice, gasLimit) => {
@@ -660,6 +662,7 @@ const TransactionConfirm: React.FC<{
                     ) : (
                         <GasPriceComponent
                             defaultGas={{
+                                defaultLevel: defaultGasOption || "medium",
                                 feeData: {
                                     gasLimit: defaultGas.gasLimit,
                                     maxFeePerGas: defaultGas.maxFeePerGas!,

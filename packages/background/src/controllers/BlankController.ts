@@ -109,6 +109,8 @@ import {
     RequestGetState,
     ResponseGetState,
     RequestAccountReset,
+    RequestSetDefaultGas,
+    RequestCalculateApproveTransactionGasLimit,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -227,6 +229,7 @@ import { isOnboardingTabUrl } from '../utils/window';
 import RemoteConfigsController, {
     RemoteConfigsControllerState,
 } from './RemoteConfigsController';
+import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -921,6 +924,10 @@ export default class BlankController extends EventEmitter {
                 return this.getSendTransactionResult(
                     request as RequestSendTransactionResult
                 );
+            case Messages.TRANSACTION.CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT:
+                return this.calculateApproveTransactionGasLimit(
+                    request as RequestCalculateApproveTransactionGasLimit
+                );
             case Messages.TRANSACTION.CALCULATE_SEND_TRANSACTION_GAS_LIMIT:
                 return this.calculateSendTransactionGasLimit(
                     request as RequestCalculateSendTransactionGasLimit
@@ -1023,6 +1030,8 @@ export default class BlankController extends EventEmitter {
                 return this.toggleDefaultBrowserWallet(
                     request as RequestToggleDefaultBrowserWallet
                 );
+            case Messages.WALLET.SET_DEFAULT_GAS:
+                return this.setDefaultGas(request as RequestSetDefaultGas);
             case Messages.WALLET.UPDATE_ANTI_PHISHING_IMAGE:
                 return this.updateAntiPhishingImage(
                     request as RequestUpdateAntiPhishingImage
@@ -2210,6 +2219,25 @@ export default class BlankController extends EventEmitter {
     ): Promise<GasPriceData | undefined> {
         return this.gasPricesController.fetchGasPriceData(chainId);
     }
+    /**
+     * Calculate the gas limit for an approve transaction
+     */
+    private async calculateApproveTransactionGasLimit({
+        tokenAddress,
+        spender,
+        amount,
+    }: RequestCalculateApproveTransactionGasLimit): Promise<TransactionGasEstimation> {
+        const approveTransaction = new ApproveTransaction({
+            transactionController: this.transactionController,
+            preferencesController: this.preferencesController,
+            networkController: this.networkController,
+        });
+        return approveTransaction.calculateTransactionGasLimit({
+            tokenAddress,
+            spender,
+            amount,
+        });
+    }
 
     private cancelTransaction({
         transactionId,
@@ -2978,6 +3006,14 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * Sets the default gas option preference
+     * @param defaultGasOption default gas option
+     */
+    private setDefaultGas({ defaultGasOption }: RequestSetDefaultGas) {
+        this.preferencesController.defaultGasOption = defaultGasOption;
+    }
+
+    /**
      * Updates the user's native currency preference and fires the exchange rates update
      * @param currencyCode the user selected currency
      *
@@ -3010,7 +3046,7 @@ export default class BlankController extends EventEmitter {
             networkByChainId.set(network.chainId, network);
         });
         return Promise.resolve(
-            filteredChains.map((chain) => {
+            filteredChains.map((chain: any) => {
                 return {
                     chain,
                     isEnabled:

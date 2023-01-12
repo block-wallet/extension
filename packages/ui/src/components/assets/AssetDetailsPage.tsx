@@ -45,7 +45,7 @@ const AssetDetailsPage = () => {
         useSelectedNetwork()
     const asset = useGetAssetByTokenAddress(address)
     const isNative = isNativeTokenAddress(address)
-    const tokenTransactions = useTokenTransactions(asset?.token.address)
+    const tokenTransactions = useTokenTransactions(asset?.token)
 
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [isRemoving, setIsRemoving] = useState(false)

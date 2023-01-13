@@ -7,7 +7,7 @@ import Divider from "../Divider"
 import CloseIcon from "../icons/CloseIcon"
 import { Classes } from "../../styles"
 
-type option = {
+export type option = {
     title: string | JSX.Element
     content: string | JSX.Element | undefined
     expandable?: boolean

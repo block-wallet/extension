@@ -657,7 +657,7 @@ export const sendToken = async (
  */
 export const searchTokenInAssetsList = async (
     query: string,
-    exact?: boolean,
+    exact?: boolean
 ): Promise<SearchTokensResponse> => {
     return sendMessage(Messages.TOKEN.SEARCH_TOKEN, {
         query,
@@ -675,6 +675,34 @@ export const populateTokenData = async (
 ): Promise<Token> => {
     return sendMessage(Messages.TOKEN.POPULATE_TOKEN_DATA, {
         tokenAddress,
+    })
+}
+
+/**
+ * Submits an approval transaction to setup asset allowance
+ *
+ * @param allowance User selected allowance
+ * @param amount Exchange amount
+ * @param spenderAddress The spender address for the allowance
+ * @param feeData Transaction gas fee data
+ * @param tokenAddress Asset token address
+ * @param customNonce Custom transaction nonce
+ */
+export const approveAllowance = async (
+    allowance: BigNumber,
+    amount: BigNumber,
+    spenderAddress: string,
+    feeData: TransactionFeeData,
+    tokenAddress: string,
+    customNonce?: number
+): Promise<boolean> => {
+    return sendMessage(Messages.TOKEN.APPROVE_ALLOWANCE, {
+        allowance,
+        amount,
+        spenderAddress,
+        feeData,
+        tokenAddress,
+        customNonce,
     })
 }
 
@@ -1149,9 +1177,9 @@ export const toggleDefaultBrowserWallet = async (
 }
 
 /**
-* Updates the default gas option preference
-* @param defaultGasOption default gas option
-*/
+ * Updates the default gas option preference
+ * @param defaultGasOption default gas option
+ */
 export const setDefaultGasPreference = async (
     defaultGasOption: "low" | "medium" | "high"
 ): Promise<void> => {

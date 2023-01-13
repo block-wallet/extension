@@ -107,6 +107,7 @@ import type {
     RequestAccountReset,
     RequestSetDefaultGas,
     RequestCalculateApproveTransactionGasLimit,
+    RequestApproveAllowance,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -1267,7 +1268,7 @@ export default class BlankController extends EventEmitter {
             assetAddresses: [NATIVE_TOKEN_ADDRESS],
         });
         // Refetch transactions
-        this.transactionWatcherController.fetchTransactions();
+        this.transactionWatcherController.fetchAccountOnChainEvents();
     }
 
     /**

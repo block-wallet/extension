@@ -15,6 +15,7 @@ import {
     useCallback,
 } from "react"
 import {
+    approveAllowance,
     approveBridgeAllowance,
     approveExchange,
     getApproveTransactionGasLimit,
@@ -55,12 +56,14 @@ import { TransactionAdvancedData } from "@block-wallet/background/controllers/tr
 import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { MaxUint256 } from "@ethersproject/constants"
+import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
 export enum ApproveOperation {
     BRIDGE,
     SWAP,
+    REVOKE,
 }
 
 const getLabels = (
@@ -76,11 +79,17 @@ const getLabels = (
             mainSectionText: `Allow BlockWallet Bridge to withdraw your ${assetName} and automate transactions for you.`,
             editAllowanceText: `Allow the BlockWallet Bridge to the following amount of ${assetName}:`,
         }
-    } else {
+    } else if (operation === ApproveOperation.SWAP) {
         return {
             mainSectionTitle: `Approve BlockWallet to swap your ${assetName}`,
             mainSectionText: `Allow BlockWallet Swaps to withdraw your ${assetName} and automate transactions for you.`,
             editAllowanceText: `Allow BlockWallet Swaps to swap up to the following amount of ${assetName}:`,
+        }
+    } else {
+        return {
+            mainSectionTitle: `Approve BlockWallet to revoke your ${assetName} allowance`,
+            mainSectionText: `Allow BlockWallet to revoke your ${assetName} allowance.`,
+            editAllowanceText: `You can customize your ${assetName} allowance to only the needed amount:`,
         }
     }
 }
@@ -189,6 +198,19 @@ const ApprovePage: FunctionComponent<{}> = () => {
             initialValue: INITIAL_VALUE_PERSISTED_DATA,
             volatile: true,
         })
+
+    useEffect(() => {
+        if (approveOperation === ApproveOperation.REVOKE) {
+            setPersistedData((prev: ApprovePageState) => {
+                return {
+                    ...prev,
+                    assetAllowance: BigNumber.from(0),
+                    isCustomSelected: true,
+                    isCustomAllowanceSaved: true,
+                }
+            })
+        }
+    }, [])
 
     // Hooks
     const { transaction: inProgressTransaction, clearTransaction } =
@@ -460,7 +482,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     nextState.swapQuote.fromToken.address,
                     customNonce
                 )
-            } else {
+            } else if (approveOperation === ApproveOperation.BRIDGE) {
                 const nextState =
                     nextLocationState as BridgeConfirmPageLocalState
 
@@ -483,6 +505,30 @@ const ApprovePage: FunctionComponent<{}> = () => {
                             : undefined,
                     },
                     nextState.bridgeQuote.bridgeParams.params.fromToken.address,
+                    customNonce
+                )
+            } else {
+                console.log(
+                    "history.location.state.spenderAddress",
+                    history.location.state.spenderAddress
+                )
+                res = await approveAllowance(
+                    assetAllowance,
+                    BigNumber.from(assetAllowance),
+                    history.location.state.spenderAddress,
+                    {
+                        gasPrice: !isEIP1559Compatible
+                            ? selectedGasPrice
+                            : undefined,
+                        gasLimit: selectedGasLimit,
+                        maxFeePerGas: isEIP1559Compatible
+                            ? selectedFees.maxFeePerGas
+                            : undefined,
+                        maxPriorityFeePerGas: isEIP1559Compatible
+                            ? selectedFees.maxPriorityFeePerGas
+                            : undefined,
+                    },
+                    localAsset.token.address,
                     customNonce
                 )
             }
@@ -554,6 +600,17 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     pathname: "/bridge",
                     state: {
                         ...nextLocationState,
+                        transitionDirection: "right",
+                    },
+                })
+            }
+        } else if (approveOperation === ApproveOperation.REVOKE) {
+            return () => {
+                history.push({
+                    pathname: "/asset/details",
+                    state: {
+                        address: assetAddress,
+                        tab: "Allowances",
                         transitionDirection: "right",
                     },
                 })

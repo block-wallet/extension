@@ -233,6 +233,7 @@ enum TOKEN {
     SEND_TOKEN = 'SEND_TOKEN',
     POPULATE_TOKEN_DATA = 'POPULATE_TOKEN_DATA',
     SEARCH_TOKEN = 'SEARCH_TOKEN',
+    APPROVE_ALLOWANCE = 'APPROVE_ALLOWANCE',
 }
 
 enum ADDRESS_BOOK {
@@ -457,6 +458,7 @@ export interface RequestSignatures {
     [Messages.TOKEN.SEND_TOKEN]: [RequestSendToken, string];
     [Messages.TOKEN.POPULATE_TOKEN_DATA]: [RequestPopulateTokenData, Token];
     [Messages.TOKEN.SEARCH_TOKEN]: [RequestSearchToken, SearchTokensResponse];
+    [Messages.TOKEN.APPROVE_ALLOWANCE]: [RequestApproveAllowance, boolean];
     [Messages.EXTERNAL.EVENT_SUBSCRIPTION]: [
         undefined,
         boolean,
@@ -641,6 +643,14 @@ export interface RequestExecuteExchange {
 }
 
 export interface RequestApproveBridgeAllowance {
+    allowance: BigNumber;
+    amount: BigNumber;
+    spenderAddress: string;
+    feeData: TransactionFeeData;
+    tokenAddress: string;
+    customNonce?: number;
+}
+export interface RequestApproveAllowance {
     allowance: BigNumber;
     amount: BigNumber;
     spenderAddress: string;

@@ -159,7 +159,7 @@ enum WALLET {
     HARDWARE_GET_HD_PATH = "HARDWARE_GET_HD_PATH",
     HARDWARE_SET_HD_PATH = "HARDWARE_SET_HD_PATH",
     HARDWARE_IS_LINKED = "HARDWARE_IS_LINKED",
-    SET_DEFAULT_GAS = "SET_DEFAULT_GAS"
+    SET_DEFAULT_GAS = "SET_DEFAULT_GAS",
 }
 
 enum ADDRESS_BOOK {
@@ -317,6 +317,7 @@ export enum BridgeAllowanceCheck {
 export enum Devices {
     LEDGER = "LEDGER",
     TREZOR = "TREZOR",
+    KEYSTONE = "KEYSTONE",
 }
 
 /**
@@ -343,6 +344,12 @@ export const HDPaths: DevicesHDPath = {
         { name: "BIP44 Standard", path: BIP44_PATH, default: true },
         // { name: "Trezor Testnets", path: `m/44'/1'/0'/0` },
     ],
+    KEYSTONE: [
+        { name: "Ledger Live", path: `m/44'/60'/0'/0/0`, default: true },
+        // https://support.keyst.one/3rd-party-wallets/eth-and-web3-wallets-keystone/bind-metamask-with-keystone/how-to-switch-eth-path-to-ledger-live-legacy-format
+        { name: "Legacy (MEW / MyCrypto)", path: `m/44'/60'/0'` },
+        { name: "BIP44 Standard", path: BIP44_PATH },
+    ],
 }
 
 /**
@@ -352,6 +359,7 @@ export enum AccountType {
     HD_ACCOUNT = "HD Account",
     LEDGER = "Ledger",
     TREZOR = "Trezor",
+    KEYSTONE = "Keystone",
     EXTERNAL = "External",
 }
 

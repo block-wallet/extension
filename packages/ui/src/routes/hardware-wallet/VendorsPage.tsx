@@ -9,6 +9,8 @@ import Divider from "../../components/Divider"
 // Assets & icons
 import ledger from "../../assets/images/icons/ledger.svg"
 import trezor from "../../assets/images/icons/trezor.svg"
+// TODO: add a new icon here!
+import keystone from "../../assets/images/icons/trezor.svg"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes } from "../../styles"
 
@@ -72,6 +74,23 @@ const HardwareWalletVendorsPage = () => {
                             className="h-8"
                         />
                     </button>
+                    <button
+                        type="button"
+                        onClick={() => setSelectedVendor(Devices.KEYSTONE)}
+                        className={classnames(
+                            "bg-white rounded-md justify-center p-4 w-1/2 flex flex-col items-center group space-y-3 cursor-pointer border  hover:border-primary-300",
+                            selectedVendor === Devices.KEYSTONE
+                                ? "border-primary-300"
+                                : "border-primary-100"
+                        )}
+                        style={{ height: "120px" }}
+                    >
+                        <img
+                            src={keystone}
+                            alt="Connect Keystone"
+                            className="h-8"
+                        />
+                    </button>
                 </div>
                 <Divider />
                 <div className="w-full flex flex-col p-8 space-y-5">
@@ -86,6 +105,11 @@ const HardwareWalletVendorsPage = () => {
                     <ExternalLink
                         href="https://help.blockwallet.io/hc/en-us/articles/6670542248209-How-to-get-the-Trezor-Hardware-Wallet-"
                         title="How to get a Trezor?"
+                    />
+                    {/* TODO: Add a link for keystone */}
+                    <ExternalLink
+                        href="https://help.blockwallet.io/hc/en-us/articles/..."
+                        title="How to get a Keystone?"
                     />
                 </div>
             </div>

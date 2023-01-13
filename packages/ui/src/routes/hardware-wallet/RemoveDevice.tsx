@@ -3,7 +3,7 @@ import classnames from "classnames"
 
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
-import { AccountType, Devices } from "../../context/commTypes"
+import { Devices } from "../../context/commTypes"
 import Divider from "../../components/Divider"
 
 // Assets & icons
@@ -16,6 +16,7 @@ import HardwareWalletSetupLayout from "./SetupLayout"
 import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import { removeHardwareWallet } from "../../context/commActions"
+import { getAccountTypeFromDevice } from "../../util/hardwareDevice"
 
 const HardwareWalletRemoveDevicePage = () => {
     const history = useOnMountHistory()
@@ -45,8 +46,7 @@ const HardwareWalletRemoveDevicePage = () => {
     }
 
     const isDeviceImported = (device: Devices): number => {
-        const accountType =
-            device === Devices.LEDGER ? AccountType.LEDGER : AccountType.TREZOR
+        const accountType = getAccountTypeFromDevice(device)
         return accounts.filter(
             (account: AccountInfo) => account.accountType === accountType
         ).length
@@ -113,6 +113,29 @@ const HardwareWalletRemoveDevicePage = () => {
                             className="h-8"
                         />
                         {isDeviceImported(Devices.TREZOR)} Accounts
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() =>
+                            isDeviceImported(Devices.KEYSTONE) &&
+                            setSelectedVendor(Devices.KEYSTONE)
+                        }
+                        className={classnames(
+                            "bg-white rounded-md justify-center p-4 w-1/2 flex flex-col items-center group space-y-3 cursor-pointer border hover:border-primary-300",
+                            selectedVendor === Devices.KEYSTONE
+                                ? "border-primary-300"
+                                : "border-primary-100",
+                            !isDeviceImported(Devices.KEYSTONE) &&
+                                "opacity-50 pointer-events-none"
+                        )}
+                        style={{ height: "120px" }}
+                    >
+                        <img
+                            src={trezor}
+                            alt="Connect Keyston QR"
+                            className="h-8"
+                        />
+                        {isDeviceImported(Devices.KEYSTONE)} Accounts
                     </button>
                 </div>
                 <Divider />

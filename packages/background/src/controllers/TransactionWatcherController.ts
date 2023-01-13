@@ -32,10 +32,7 @@ import {
 import { Block, Filter, Log } from '@ethersproject/abstract-provider';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { SignedTransaction } from './erc-20/transactions/SignedTransaction';
-import {
-    ContractSignatureParser,
-    TransactionArgument,
-} from './transactions/ContractSignatureParser';
+import { TransactionArgument } from './transactions/ContractSignatureParser';
 import { showIncomingTransactionNotification } from '../utils/notifications';
 import { checkIfNotAllowedError } from '../utils/ethersError';
 import TransactionController from './transactions/TransactionController';
@@ -43,8 +40,9 @@ import httpClient from '../utils/http';
 import { fetchBlockWithRetries } from '../utils/blockFetch';
 import { isNil } from 'lodash';
 import { runPromiseSafely } from '../utils/promises';
+import { paddedToChecksumAddress } from '../utils/addressUtils';
 
-interface NewTokenAllowanceSpenders {
+interface TokenAllowanceEvent {
     [tokenAddress: string]: {
         spender: string;
         txHash: string;
@@ -56,7 +54,7 @@ export type NewTokenAllowanceSpendersEventParametersSignature = Parameters<
     (
         chainId: number,
         accountAddress: string,
-        allowances: NewTokenAllowanceSpenders
+        allowances: TokenAllowanceEvent
     ) => void
 >;
 
@@ -76,6 +74,11 @@ export interface TransactionsWatched {
     lastBlockQueried: number;
 }
 
+export interface TokenAllowanceEventWatched {
+    events: TokenAllowanceEvent;
+    lastBlockQueried: number;
+}
+
 export interface TransactionWatcherControllerState {
     transactions: {
         [chainId: number]: {
@@ -84,13 +87,30 @@ export interface TransactionWatcherControllerState {
             };
         };
     };
+    tokenAllowanceEvents: {
+        [chainId: number]: {
+            [address: string]: {
+                [type in TransactionTypeEnum]: TokenAllowanceEventWatched;
+            };
+        };
+    };
 }
 
 export const TRANSACTION_TYPE_STATUS: {
     [type in TransactionTypeEnum]: boolean;
 } = {
-    txlist: true,
+    txlist: false,
     tokentx: true,
+    tokennfttx: false,
+    token1155tx: false,
+};
+
+//run only for erc20 approvals
+export const ALLOWANCE_EVENTS_TRANSACTION_TYPE_STATUS: {
+    [type in TransactionTypeEnum]: boolean;
+} = {
+    tokentx: true,
+    txlist: false,
     tokennfttx: false,
     token1155tx: false,
 };
@@ -129,7 +149,13 @@ const SIGNATURES: { [type in TransactionTypeEnum]: string } = {
     tokentx: id('Transfer(address,address,uint256)'),
     token1155tx: '',
     tokennfttx: '',
-    //approvetx: id('Approve(address,address,unit256)'),
+};
+
+const TOKEN_ALLOWACE_SIGNATURES: { [type in TransactionTypeEnum]: string } = {
+    txlist: '',
+    tokentx: id('Approval(address,address,uint256)'),
+    token1155tx: 'ApprovalForAll(address,address,bool)',
+    tokennfttx: id('Approval(address,address,uint256)'), //maybe add ApprovalForAll(address,address,bool)??
 };
 
 const MAX_REQUEST_RETRY = 20;
@@ -156,7 +182,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         );
 
         this._networkController.on(NetworkEvents.NETWORK_CHANGE, () => {
-            this.fetchTransactions();
+            this.fetchAccountOnChainEvents();
         });
 
         this._preferencesController.store.subscribe(
@@ -168,7 +194,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     previousState &&
                     state.selectedAddress !== previousState.selectedAddress
                 )
-                    this.fetchTransactions();
+                    this.fetchAccountOnChainEvents();
             }
         );
 
@@ -186,7 +212,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             TransactionEvents.STATUS_UPDATE,
             async (meta: TransactionMeta) => {
                 if (meta.status === TransactionStatus.CONFIRMED) {
-                    return this.fetchTransactions(
+                    return this.fetchAccountOnChainEvents(
                         meta.chainId,
                         undefined,
                         true
@@ -242,14 +268,14 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             ACTIONS_TIME_INTERVALS_DEFAULT_VALUES.transactionWatcherUpdate;
 
         this._txWatcherIntervalController.tick(interval, async () => {
-            await this.fetchTransactions(chainId, blockNumber);
+            await this.fetchAccountOnChainEvents(chainId, blockNumber);
         });
     };
 
     /**
      * return the state by chain, address and type
      */
-    public getState(
+    public getTransactionState(
         type: TransactionTypeEnum,
         chainId: number = this._networkController.network.chainId,
         address: string = this._preferencesController.getSelectedAddress()
@@ -273,9 +299,33 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     }
 
     /**
+     * return the state by chain, address and type
+     */
+    public getAllowanceEventsState(
+        chainId: number = this._networkController.network.chainId,
+        address: string = this._preferencesController.getSelectedAddress(),
+        type: TransactionTypeEnum
+    ): TokenAllowanceEventWatched {
+        const state = this.store.getState() || {};
+
+        if (state.tokenAllowanceEvents) {
+            if (chainId in state.tokenAllowanceEvents) {
+                if (address in state.tokenAllowanceEvents[chainId]) {
+                    return state.tokenAllowanceEvents[chainId][address][type];
+                }
+            }
+        }
+
+        return {
+            events: {},
+            lastBlockQueried: 0,
+        } as TokenAllowanceEventWatched;
+    }
+
+    /**
      * save the state by chain, address and type
      */
-    public setState(
+    public setTransactionsState(
         type: TransactionTypeEnum,
         chainId: number = this._networkController.network.chainId,
         address: string = this._preferencesController.getSelectedAddress(),
@@ -346,6 +396,88 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         });
     }
 
+    public setAllowancesState(
+        chainId: number = this._networkController.network.chainId,
+        address: string = this._preferencesController.getSelectedAddress(),
+        type: TransactionTypeEnum,
+        eventsWatched: TokenAllowanceEventWatched
+    ) {
+        const state = this.store.getState() || {};
+
+        if (!state.tokenAllowanceEvents) {
+            state.tokenAllowanceEvents = {};
+        }
+        if (!(chainId in state.tokenAllowanceEvents)) {
+            state.tokenAllowanceEvents[chainId] = {};
+        }
+        if (!(address in state.tokenAllowanceEvents[chainId])) {
+            state.tokenAllowanceEvents[chainId][address] = {
+                txlist: {
+                    events: {},
+                    lastBlockQueried: 0,
+                },
+                token1155tx: {
+                    events: {},
+                    lastBlockQueried: 0,
+                },
+                tokentx: {
+                    events: {},
+                    lastBlockQueried: 0,
+                },
+                tokennfttx: {
+                    events: {},
+                    lastBlockQueried: 0,
+                },
+            };
+        }
+
+        if (!(type in state.transactions[chainId][address])) {
+            state.tokenAllowanceEvents[chainId][address][type] = {
+                events: {},
+                lastBlockQueried: 0,
+            };
+        }
+
+        for (const tokenAddress in eventsWatched.events) {
+            const previousRecord =
+                state.tokenAllowanceEvents[chainId][address][type].events[
+                    tokenAddress
+                ] || {};
+            state.tokenAllowanceEvents[chainId][address][type].events[
+                tokenAddress
+            ] = {
+                ...previousRecord,
+                ...eventsWatched.events[tokenAddress],
+            };
+        }
+
+        if (
+            eventsWatched.lastBlockQueried >
+            state.tokenAllowanceEvents[chainId][address][type].lastBlockQueried
+        ) {
+            state.tokenAllowanceEvents[chainId][address][
+                type
+            ].lastBlockQueried = eventsWatched.lastBlockQueried;
+        }
+
+        this.store.updateState({
+            tokenAllowanceEvents: {
+                ...state.tokenAllowanceEvents,
+                [chainId]: {
+                    ...state.tokenAllowanceEvents[chainId],
+                    [address]: {
+                        ...state.tokenAllowanceEvents[chainId][address],
+                        [type]: {
+                            ...state.tokenAllowanceEvents[chainId][address][
+                                type
+                            ],
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     /**
      * Remove the transactions data of an account.
      * @param address
@@ -374,12 +506,13 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     };
 
     /**
-     * Fetch the past tx and parse them as transactions
+     * fetchAccountOnChainEvents
+     * This method fetches allowances events alogn with confirmed erc20 and incoming transactions.
      * @param chainId
      * @param currentBlock
      * @returns
      */
-    public fetchTransactions = async (
+    public fetchAccountOnChainEvents = async (
         chainId: number = this._networkController.network.chainId,
         currentBlock: number = this._blockUpdatesController.getBlockNumber(),
         forceChainQuery = false
@@ -429,7 +562,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                         continue;
                     }
 
-                    const currentTransactionsWatched = this.getState(
+                    const currentTransactionsWatched = this.getTransactionState(
                         transactionType,
                         chainId,
                         address
@@ -459,7 +592,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                             tokenAddresses = result.tokenAddresses;
                         } catch (e: any) {
                             log.warn(
-                                'fetchTransactions',
+                                'fetchAccountOnChainEvents',
                                 '_getTransactionsFromAPI',
                                 e
                             );
@@ -484,7 +617,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                             tokenAddresses = result.tokenAddresses;
                         } catch (e: any) {
                             log.warn(
-                                'fetchTransactions',
+                                'fetchAccountOnChainEvents',
                                 '_getTransactionsFromChain',
                                 e
                             );
@@ -513,28 +646,83 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                         transactionType
                     );
 
-                    //Grab only confirmed txs to submit allowance events
-                    const allowancesTxs = Object.values(
-                        newTransactions || {}
-                    ).filter((tx) => {
-                        return (
-                            tx.transactionCategory ===
-                                TransactionCategories.TOKEN_METHOD_APPROVE &&
-                            tx.status === TransactionStatus.CONFIRMED
-                        );
-                    });
+                    // state
+                    this.setTransactionsState(
+                        transactionType,
+                        chainId,
+                        address,
+                        {
+                            transactions: newTransactions,
+                            lastBlockQueried: currentBlock,
+                        }
+                    );
 
-                    if (allowancesTxs.length) {
+                    // to avoid rate limits
+                    if (!forceChainQuery) {
+                        await sleep(EXPLORER_API_CALLS_DELAY);
+                    }
+                }
+
+                for (const type in ALLOWANCE_EVENTS_TRANSACTION_TYPE_STATUS) {
+                    const transactionType = type as TransactionTypeEnum;
+
+                    if (!TRANSACTION_TYPE_STATUS[transactionType]) {
+                        continue;
+                    }
+
+                    const tokenAllowanceEventsState =
+                        this.getAllowanceEventsState(
+                            chainId,
+                            address,
+                            transactionType
+                        );
+                    let approvalLogs: Log[] = [];
+
+                    //fetch allowances events
+                    if (!forceChainQuery && etherscanApiUrlValid) {
+                        ({ logs: approvalLogs } =
+                            await this._getTokenApprovalLogsFromAPI(
+                                etherscanApiUrl,
+                                address,
+                                tokenAllowanceEventsState.lastBlockQueried,
+                                currentBlock,
+                                transactionType
+                            ));
+                    } else {
+                        const lastBlockQueried =
+                            this._getOldestSafeBlockToFetchLogs(
+                                chainId,
+                                tokenAllowanceEventsState.lastBlockQueried,
+                                currentBlock
+                            );
+                        ({ logs: approvalLogs } =
+                            await this._getTokenApprovalLogsFromChain(
+                                chainId,
+                                provider,
+                                address,
+                                currentBlock,
+                                lastBlockQueried,
+                                transactionType
+                            ));
+                    }
+
+                    const allowanceEvents =
+                        await this._generateAllowanceEventsFromLogs(
+                            approvalLogs || [],
+                            provider,
+                            transactionType
+                        );
+
+                    if (allowanceEvents.length) {
                         this._emitNewKnownSpendersEvent(
                             chainId,
                             address,
-                            allowancesTxs
+                            allowanceEvents
                         );
                     }
 
-                    // state
-                    this.setState(transactionType, chainId, address, {
-                        transactions: newTransactions,
+                    this.setAllowancesState(chainId, address, transactionType, {
+                        events: allowanceEvents,
                         lastBlockQueried: currentBlock,
                     });
 
@@ -544,7 +732,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     }
                 }
             } catch (e) {
-                log.warn('fetchTransactions', e.message || e);
+                log.warn('fetchAccountOnChainEvents', e.message || e);
             }
         });
     };
@@ -577,21 +765,11 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         const {
             transactions: incomingTransactions,
             tokenAddresses: incomingTokenAddresses,
-        } = await this._parseTransactionLogsFromChain(
-            chainId,
-            address,
-            incoming,
-            true
-        );
+        } = await this._parseTransactionLogs(chainId, address, incoming, true);
         const {
             transactions: outgoingTransactions,
             tokenAddresses: outgoingTokenAddresses,
-        } = await this._parseTransactionLogsFromChain(
-            chainId,
-            address,
-            outgoing,
-            false
-        );
+        } = await this._parseTransactionLogs(chainId, address, outgoing, false);
 
         const transactions = Object.assign(
             incomingTransactions,
@@ -650,18 +828,13 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             outgoing: [],
         };
 
-        if (currentBlock > lastBlockQueried) {
-            const addressHashed = hexZeroPad(address, 32);
-            const max = this._getMaxBlockBatchSize(chainId);
-            const steps = Math.ceil((currentBlock - lastBlockQueried) / max);
+        const addressHashed = hexZeroPad(address, 32);
 
-            for (let i = 0; i < steps; i++) {
-                const fromBlock = lastBlockQueried + max * i;
-                const toBlock = Math.min(
-                    lastBlockQueried + max * (i + 1),
-                    currentBlock
-                );
-
+        await this._batchedChainQuery(
+            chainId,
+            lastBlockQueried,
+            currentBlock,
+            async (fromBlock: number, toBlock: number) => {
                 // incoming
                 const incoming = await runPromiseSafely(
                     this._getLogsFromChain(chainId, provider, {
@@ -692,9 +865,76 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     logs.outgoing = logs.outgoing.concat(...outgoing);
                 }
             }
-        }
+        );
 
         return logs;
+    };
+
+    private async _batchedChainQuery<T>(
+        chainId: number,
+        currentBlock: number,
+        lastBlockQueried: number,
+        chunkExecutor: (fromBlock: number, toBlock: number) => Promise<void>
+    ): Promise<void> {
+        if (currentBlock > lastBlockQueried) {
+            const max = this._getMaxBlockBatchSize(chainId);
+            const steps = Math.ceil((currentBlock - lastBlockQueried) / max);
+            for (let i = 0; i < steps; i++) {
+                const fromBlock = lastBlockQueried + max * i;
+                const toBlock = Math.min(
+                    lastBlockQueried + max * (i + 1),
+                    currentBlock
+                );
+                await chunkExecutor(fromBlock, toBlock);
+            }
+        }
+    }
+
+    /**
+     * Get token approval logs directly from the chain
+     * @param chainId
+     * @param address
+     * @param currentBlock
+     * @returns
+     */
+    private _getTokenApprovalLogsFromChain = async (
+        chainId: number,
+        provider: StaticJsonRpcProvider,
+        address: string,
+        currentBlock: number,
+        lastBlockQueried: number,
+        transactionType: TransactionTypeEnum
+    ): Promise<{ logs: Log[] }> => {
+        let logs: Log[] = [];
+        const eventSignature = TOKEN_ALLOWACE_SIGNATURES[transactionType];
+        if (!eventSignature) {
+            return { logs: [] };
+        }
+
+        const addressHashed = hexZeroPad(address, 32);
+        const topics = [eventSignature, addressHashed];
+
+        await this._batchedChainQuery(
+            chainId,
+            lastBlockQueried,
+            currentBlock,
+            async (fromBlock: number, toBlock: number) => {
+                const chainLogs = await runPromiseSafely<Log[]>(
+                    this._getLogsFromChain(chainId, provider, {
+                        fromBlock,
+                        toBlock,
+                        topics,
+                    })
+                );
+
+                if (chainLogs) {
+                    logs = logs.concat(chainLogs);
+                }
+            }
+        );
+        return {
+            logs,
+        };
     };
     /**
      * Return oldes block to start fetching logs
@@ -884,7 +1124,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      * @param chainId
      * @returns
      */
-    private _parseTransactionLogsFromChain = async (
+    private _parseTransactionLogs = async (
         chainId: number,
         address: string,
         logs: Log[],
@@ -1163,7 +1403,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         for (const address in addresses) {
             for (const type in addresses[address]) {
                 const transactionType = type as TransactionTypeEnum;
-                const transactions = this.getState(
+                const transactions = this.getTransactionState(
                     transactionType,
                     chainId,
                     address
@@ -1181,7 +1421,12 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     }
                 }
 
-                this.setState(transactionType, chainId, address, transactions);
+                this.setTransactionsState(
+                    transactionType,
+                    chainId,
+                    address,
+                    transactions
+                );
             }
         }
     };
@@ -1224,6 +1469,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             currentTransactionsWatched.lastBlockQueried,
             currentBlock
         );
+
         // the request failed
         if (status === '-999') {
             throw Error('etherscan api error');
@@ -1274,6 +1520,35 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         return { transactions, tokenAddresses };
     };
 
+    private async _fetchAPI<T>(
+        etherscanApiUrl: string,
+        params: Record<string, any>
+    ): Promise<{ result: T[]; status: string }> {
+        let retry = 0;
+        while (retry < MAX_REQUEST_RETRY) {
+            const result = await httpClient.get<{
+                status: string;
+                message: string;
+                result: T[];
+            }>(
+                `${etherscanApiUrl}/api`,
+                {
+                    ...params,
+                },
+                30000
+            );
+
+            if (result.status === '0' && result.message === 'NOTOK') {
+                await sleep(EXPLORER_API_CALLS_DELAY);
+                retry++;
+
+                continue;
+            }
+            return result;
+        }
+        return { status: '-999', result: [] };
+    }
+
     /**
      * Fetches transactions from the API
      *
@@ -1299,31 +1574,67 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             endBlock: endBlock,
             page: 1,
         };
+        return this._fetchAPI<EtherscanTransaction>(etherscanApiUrl, params);
+    };
 
-        let retry = 0;
-        while (retry < MAX_REQUEST_RETRY) {
-            const result = await httpClient.get<{
-                status: string;
-                message: string;
-                result: EtherscanTransaction[];
-            }>(
-                `${etherscanApiUrl}/api`,
-                {
-                    ...params,
-                },
-                30000
-            );
+    /**
+     * Gets token approval/allowance logs events from the API.
+     *
+     * @param etherscanApiUrl
+     * @param address
+     * @param fromBlock
+     * @param endBlock
+     * @returns { result: Log[]; status: string }
+     */
+    private _getTokenApprovalLogsFromAPI = async (
+        etherscanApiUrl: string,
+        address: string,
+        fromBlock: number,
+        endBlock: number,
+        transactionType: TransactionTypeEnum
+    ): Promise<{ logs: Log[] }> => {
+        const eventSignature = TOKEN_ALLOWACE_SIGNATURES[transactionType];
+        if (!eventSignature) {
+            return { logs: [] };
+        }
+        const addressHashed = hexZeroPad(address, 32);
+        const topics = [eventSignature, addressHashed];
 
-            if (result.status === '0' && result.message === 'NOTOK') {
-                await sleep(EXPLORER_API_CALLS_DELAY);
-                retry++;
-
-                continue;
+        const topicsOperators: Record<string, string> = {};
+        if (topics.length > 1) {
+            for (let i = 0; i < topics.length - 1; i++) {
+                topicsOperators[`topic${i}_${i + 1}_opr`] = 'and';
             }
-            return result;
+        }
+        const params = {
+            module: 'logs',
+            action: 'getLogs',
+            fromBlock: fromBlock - 100 > 0 ? fromBlock - 100 : 0, // this avoid sync delays of the API.
+            toBlock: endBlock,
+            ...topics.reduce((acc, topic, index) => {
+                return {
+                    ...acc,
+                    [`topic${index}`]: topic,
+                };
+            }, {}),
+            ...topicsOperators,
+            page: 1,
+        };
+        const { result, status } = await this._fetchAPI<Log>(
+            etherscanApiUrl,
+            params
+        );
+
+        // the request failed
+        if (status === '-999') {
+            throw Error('etherscan api error');
         }
 
-        return { status: '-999', result: [] };
+        if (!this._isAPIResponseValid(result, status)) {
+            return { logs: [] };
+        }
+
+        return { logs: result };
     };
 
     /**
@@ -1333,7 +1644,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      * @returns
      */
     private _isAPIResponseValid = (
-        result: EtherscanTransaction[],
+        result: EtherscanTransaction[] | Log[],
         status: string
     ): boolean => {
         return status === '1' && Array.isArray(result) && result.length > 0;
@@ -1563,38 +1874,70 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         }
     };
 
-    private _emitNewKnownSpendersEvent = (
-        chainId: number,
-        address: string,
-        allowancesTxs: TransactionMeta[]
-    ) => {
-        const allowances: NewTokenAllowanceSpenders = {};
-        allowancesTxs.forEach((tx) => {
-            if (
-                tx.transactionParams.to &&
-                tx.approveAllowanceParams &&
-                tx.approveAllowanceParams.spenderAddress
-            ) {
-                const tokenAddress = tx.transactionParams.to;
-                const currentSpenders = allowances[tokenAddress] || [];
-                allowances[tokenAddress] = [
+    private async _generateAllowanceEventsFromLogs(
+        allowancesLogs: Log[],
+        provider: StaticJsonRpcProvider,
+        transactionType: TransactionTypeEnum
+    ): Promise<TokenAllowanceEvent> {
+        const allowanceEvents: TokenAllowanceEvent = {};
+        const eventSignatureForType =
+            TOKEN_ALLOWACE_SIGNATURES[transactionType];
+        for (const log of allowancesLogs) {
+            if (log.topics[0] === eventSignatureForType) {
+                const block = await fetchBlockWithRetries(
+                    log.blockNumber,
+                    provider,
+                    3
+                );
+                const [, , spenderAddress] = log.topics;
+                const tokenAddress = log.address;
+                const txHash = log.transactionHash;
+                const currentSpenders = allowanceEvents[tokenAddress] || [];
+                allowanceEvents[tokenAddress] = [
                     ...currentSpenders,
                     {
-                        spender: tx.approveAllowanceParams.spenderAddress,
-                        txHash: tx.transactionParams.hash!,
-                        txTime: tx.confirmationTime,
+                        spender: paddedToChecksumAddress(spenderAddress),
+                        txHash,
+                        txTime: block?.timestamp || new Date().getTime(),
                     },
                 ];
             }
-        });
-        if (Object.keys(allowances).length) {
+        }
+        return allowanceEvents;
+    }
+
+    private _emitNewKnownSpendersEvent = (
+        chainId: number,
+        address: string,
+        allowanceEvents: TokenAllowanceEvent
+    ): TokenAllowanceEvent => {
+        if (Object.keys(allowanceEvents).length) {
+            //emit only the last spender event
+            const eventsToEmit = Object.entries(allowanceEvents).reduce(
+                (acc, [address, tokenEvents]) => {
+                    const tokenAddressSpender = tokenEvents.map(
+                        (e) => e.spender
+                    );
+                    return {
+                        ...acc,
+                        [address]: tokenEvents.filter((event, index) => {
+                            return (
+                                index ===
+                                tokenAddressSpender.lastIndexOf(event.spender)
+                            );
+                        }),
+                    };
+                },
+                {}
+            );
             this.emit(
                 TransactionWatcherControllerEvents.NEW_KNOWN_TOKEN_ALLOWANCE_SPENDERS,
                 chainId,
                 address,
-                allowances
+                eventsToEmit
             );
         }
+        return allowanceEvents;
     };
 
     private _sameAddress = (a?: string, b?: string): boolean => {

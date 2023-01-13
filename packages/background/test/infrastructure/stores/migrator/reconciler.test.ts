@@ -139,6 +139,7 @@ const initialState: BlankAppState & {
 } = {
     TransactionWatcherControllerState: {
         transactions: {},
+        tokenAllowanceEvents: {},
     },
     BridgeController: {
         bridgeReceivingTransactions: {},
@@ -167,6 +168,7 @@ const initialState: BlankAppState & {
     },
     AccountTrackerController: {
         isAccountTrackerLoading: false,
+        isRefreshingAllowances: false,
         hiddenAccounts: {},
         accounts: {},
     },
@@ -221,7 +223,7 @@ const initialState: BlankAppState & {
         filters: {
             account: [],
         },
-        defaultGasOption: "medium"
+        defaultGasOption: 'medium',
     },
     TransactionController: {
         transactions: [],
@@ -444,7 +446,7 @@ describe('State reconciler', () => {
                 filters: {
                     account: [],
                 },
-                defaultGasOption: 'medium'
+                defaultGasOption: 'medium',
             },
             TransactionController: {
                 transactions: [],

@@ -159,6 +159,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         initialState: AccountTrackerState = {
             accounts: {},
             hiddenAccounts: {},
+            isRefreshingAllowances: false,
             isAccountTrackerLoading: false,
         }
     ) {
@@ -471,8 +472,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             return;
         }
 
-        let updates = {};
-
+        //const updates = {};
+        /*
         for (const tokenAddress in chainAllowances.tokens) {
             const tokenSpenders =
                 chainAllowances.tokens[tokenAddress].allowances;
@@ -495,6 +496,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     return;
                 })
             );
+
             for (const spender in tokenSpenders) {
                 const allowance =
                     await this._tokenOperationsController.allowance(
@@ -509,7 +511,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 ) {
                 }
             }
-        }
+
+        } */
         this.store.updateState({ isRefreshingAllowances: false });
     }
 

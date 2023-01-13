@@ -48,6 +48,7 @@ export default {
             ...persistedState,
             TransactionWatcherControllerState: {
                 transactions: newWatchedTxs,
+                tokenAllowanceEvents: {},
             },
             AccountTrackerController: {
                 ...persistedState.AccountTrackerController,

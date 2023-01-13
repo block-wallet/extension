@@ -15,6 +15,7 @@ export const initBackgroundState: BackgroundStateType = {
         idleTimeout: 0,
         antiPhishingImage: "",
         userTokens: {},
+        isRefreshingAllowances: false,
         deletedUserTokens: {},
         cachedPopulatedTokens: {},
         isAccountTrackerLoading: false,

@@ -951,6 +951,10 @@ export default class BlankController extends EventEmitter {
                 return this.deleteCustomToken(
                     request as RequestDeleteCustomToken
                 );
+            case Messages.TOKEN.APPROVE_ALLOWANCE:
+                return this.approveAllowance(
+                    request as RequestApproveAllowance
+                );
             case Messages.TOKEN.ADD_CUSTOM_TOKENS:
                 return this.addCustomTokens(request as RequestAddCustomTokens);
             case Messages.TOKEN.SEND_TOKEN:
@@ -2459,7 +2463,7 @@ export default class BlankController extends EventEmitter {
         await this.networkController.setNetwork(network);
 
         // reconstruct past erc20 transfers
-        this.transactionWatcherController.fetchTransactions();
+        this.transactionWatcherController.fetchAccountOnChainEvents();
 
         // Create and assign to the Wallet an anti phishing image
         this.preferencesController.assignNewPhishingPreventionImage(
@@ -2693,6 +2697,34 @@ export default class BlankController extends EventEmitter {
             accountAddress,
             chainId,
             false
+        );
+    }
+
+    /**
+     * Submits an approval transaction to setup asset allowance
+     *
+     * @param allowance User selected allowance
+     * @param amount Exchange amount
+     * @param spenderAddress The spender address
+     * @param feeData Transaction gas fee data
+     * @param tokenAddress Asset token address
+     * @param customNonce Custom transaction nonce
+     */
+    private async approveAllowance({
+        allowance,
+        amount,
+        spenderAddress,
+        feeData,
+        tokenAddress,
+        customNonce,
+    }: RequestApproveAllowance): Promise<boolean> {
+        return this.tokenAllowanceController.approveAllowance(
+            BigNumber.from(allowance),
+            BigNumber.from(amount),
+            spenderAddress,
+            feeData,
+            tokenAddress,
+            customNonce
         );
     }
 

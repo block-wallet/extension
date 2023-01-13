@@ -125,6 +125,7 @@ describe('AccountTracker controller implementation', function () {
             transactionController,
             {
                 transactions: {},
+                tokenAllowanceEvents: {},
             }
         );
 

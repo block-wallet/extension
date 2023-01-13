@@ -228,6 +228,7 @@ describe('Blank Provider Controller', function () {
             transactionController,
             {
                 transactions: {},
+                tokenAllowanceEvents: {},
             }
         );
 

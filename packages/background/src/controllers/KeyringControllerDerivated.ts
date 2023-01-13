@@ -716,7 +716,7 @@ export default class KeyringControllerDerivated extends KeyringController {
         return keyring.cancelSignRequest();
     }
 
-    async connectQRHardware(
+    async getQRPage(
         page: number
     ): Promise<{ balance: string; address: string; index: number }[]> {
         try {

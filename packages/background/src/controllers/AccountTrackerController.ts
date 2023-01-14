@@ -131,6 +131,7 @@ export interface AccountTrackerState {
     accounts: Accounts;
     hiddenAccounts: Accounts;
     isAccountTrackerLoading: boolean;
+    isRefreshingAllowances: boolean;
 }
 
 export enum AccountTrackerEvents {
@@ -158,6 +159,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         initialState: AccountTrackerState = {
             accounts: {},
             hiddenAccounts: {},
+            isRefreshingAllowances: false,
             isAccountTrackerLoading: false,
         }
     ) {
@@ -326,6 +328,39 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         );
     }
 
+    private _cleanupAllowancesBeforeStore(
+        allowances: AccountAllowances
+    ): AccountAllowances {
+        //cleanup empty allowances
+        return Object.entries(allowances).reduce(
+            (acc, [chainId, allowance]) => {
+                return {
+                    ...acc,
+                    [chainId]: {
+                        tokens: Object.entries(allowance.tokens || {}).reduce(
+                            (acc, [tokenAddress, allowancesRecord]) => {
+                                //if there is at least 1 spender
+                                if (
+                                    Object.keys(
+                                        allowancesRecord.allowances || {}
+                                    ).length > 0
+                                ) {
+                                    return {
+                                        ...acc,
+                                        [tokenAddress]: allowancesRecord,
+                                    };
+                                }
+                                return acc;
+                            },
+                            {}
+                        ),
+                    },
+                };
+            },
+            {}
+        );
+    }
+
     private _getUpdatedAccountAllowances = async (
         chainId: number,
         account: AccountInfo,
@@ -414,65 +449,117 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             };
         }
 
-        //cleanup empty allowances
-        return {
-            ...allowances,
-            [chainId]: {
-                tokens: Object.entries(allowances[chainId].tokens || {}).reduce(
-                    (acc, [tokenAddress, allowancesRecord]) => {
-                        //if there is at least 1 spender
-                        if (
-                            Object.keys(allowancesRecord.allowances || {})
-                                .length > 0
-                        ) {
-                            return {
-                                ...acc,
-                                [tokenAddress]: allowancesRecord,
-                            };
-                        }
-                        return acc;
-                    },
-                    {}
-                ),
-            },
-        };
+        return allowances;
     };
+
+    public async refreshTokenAllowances() {
+        this.store.updateState({ isRefreshingAllowances: true });
+        const currentAccountAddress =
+            this._preferencesController.getSelectedAddress();
+        const { chainId } = this._networkController.network;
+        const currentAccount =
+            this.store.getState().accounts[currentAccountAddress];
+        if (!currentAccount) {
+            return;
+        }
+
+        const chainAllowances = (currentAccount.allowances || {})[chainId];
+
+        if (
+            !chainAllowances ||
+            Object.keys(chainAllowances.tokens).length === 0
+        ) {
+            return;
+        }
+
+        //const updates = {};
+        /*
+        for (const tokenAddress in chainAllowances.tokens) {
+            const tokenSpenders =
+                chainAllowances.tokens[tokenAddress].allowances;
+            await Promise.all(
+                Object.keys(tokenSpenders).map(async (spender) => {
+                    const allowance =
+                        await this._tokenOperationsController.allowance(
+                            tokenAddress,
+                            currentAccountAddress,
+                            spender
+                        );
+                    const currentAllowanceRecord = tokenSpenders[spender];
+                    //if not equal, then update
+                    if (
+                        !allowance.eq(
+                            BigNumber.from(currentAllowanceRecord.value ?? 0)
+                        )
+                    ) {
+                    }
+                    return;
+                })
+            );
+
+            for (const spender in tokenSpenders) {
+                const allowance =
+                    await this._tokenOperationsController.allowance(
+                        tokenAddress,
+                        currentAccountAddress,
+                        spender
+                    );
+                const currentAllowanceRecord = tokenSpenders[spender];
+                //if not equal, then update
+                if (
+                    !allowance.eq(BigNumber.from(currentAllowanceRecord.value))
+                ) {
+                }
+            }
+
+        } */
+        this.store.updateState({ isRefreshingAllowances: false });
+    }
 
     private async _updateSpenderAllowances(
         ...args: NewTokenAllowanceSpendersEventParametersSignature
     ) {
         const [chainId, accountAddress, newAllowances] = args;
         const { accounts, hiddenAccounts } = this.store.getState();
-        if (accounts[accountAddress]) {
-            const newAccountAllowances =
-                await this._getUpdatedAccountAllowances(
-                    chainId,
-                    accounts[accountAddress],
-                    newAllowances
-                );
+        const account =
+            accounts[accountAddress] || hiddenAccounts[accountAddress];
+
+        const newAccountAllowances = await this._getUpdatedAccountAllowances(
+            chainId,
+            account,
+            newAllowances
+        );
+
+        this._updateAccountAllowancesState(
+            accountAddress,
+            newAccountAllowances
+        );
+    }
+
+    private _updateAccountAllowancesState(
+        accountAddress: string,
+        newAllowances: AccountAllowances
+    ): void {
+        const { accounts, hiddenAccounts } = this.store.getState();
+        const cleanedAllowances =
+            this._cleanupAllowancesBeforeStore(newAllowances);
+        if (accountAddress in accounts) {
             this.store.updateState({
                 accounts: {
                     ...this.store.getState().accounts,
                     [accountAddress]: {
                         ...this.store.getState().accounts[accountAddress],
-                        allowances: newAccountAllowances,
+                        allowances: cleanedAllowances,
                     },
                 },
             });
-        } else if (hiddenAccounts[accountAddress]) {
-            const newAccountAllowances =
-                await this._getUpdatedAccountAllowances(
-                    chainId,
-
-                    hiddenAccounts[accountAddress],
-                    newAllowances
-                );
+        } else if (accountAddress in hiddenAccounts) {
             this.store.updateState({
                 hiddenAccounts: {
                     ...this.store.getState().hiddenAccounts,
                     [accountAddress]: {
                         ...this.store.getState().hiddenAccounts[accountAddress],
-                        allowances: newAccountAllowances,
+                        allowances: cleanedAllowances,
                     },
                 },
             });

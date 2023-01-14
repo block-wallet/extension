@@ -231,7 +231,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
         useBlankState()!
     const { nativeToken } = useTokensList()
     const { gasPricesLevels } = useGasPriceData()
-
     const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
         useTransactionWaitingDialog(
             inProgressTransaction
@@ -460,12 +459,11 @@ const ApprovePage: FunctionComponent<{}> = () => {
         }
 
         try {
-            let res: boolean = false
+            let allowanceResponse: boolean
 
             if (approveOperation === ApproveOperation.SWAP) {
                 const nextState = nextLocationState as SwapConfirmPageLocalState
-
-                res = await approveExchange(
+                allowanceResponse = await approveExchange(
                     assetAllowance,
                     BigNumber.from(nextState.swapQuote.fromTokenAmount),
                     ExchangeType.SWAP_1INCH,
@@ -488,7 +486,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 const nextState =
                     nextLocationState as BridgeConfirmPageLocalState
 
-                res = await approveBridgeAllowance(
+                allowanceResponse = await approveBridgeAllowance(
                     assetAllowance,
                     BigNumber.from(
                         nextState.bridgeQuote.bridgeParams.params.fromAmount
@@ -531,7 +529,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 )
             }
 
-            if (res) {
+            if (allowanceResponse) {
                 dispatch({
                     type: "setStatus",
                     payload: { status: "success" },
@@ -567,7 +565,10 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
         history.push({
             pathname,
-            state: nextLocationState,
+            state: {
+                ...nextLocationState,
+                allowanceTransactionId: inProgressTransaction?.id,
+            },
         })
     }
 

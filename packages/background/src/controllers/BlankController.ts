@@ -106,6 +106,7 @@ import type {
     RequestEditNetworksOrder,
     RequestAccountReset,
     RequestSetDefaultGas,
+    RequestCalculateApproveTransactionGasLimit,
     RequestApproveAllowance,
 } from '../utils/types/communication';
 
@@ -223,6 +224,7 @@ import { isOnboardingTabUrl } from '../utils/window';
 import RemoteConfigsController, {
     RemoteConfigsControllerState,
 } from './RemoteConfigsController';
+import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -891,6 +893,10 @@ export default class BlankController extends EventEmitter {
                 return this.getSendTransactionResult(
                     request as RequestSendTransactionResult
                 );
+            case Messages.TRANSACTION.CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT:
+                return this.calculateApproveTransactionGasLimit(
+                    request as RequestCalculateApproveTransactionGasLimit
+                );
             case Messages.TRANSACTION.CALCULATE_SEND_TRANSACTION_GAS_LIMIT:
                 return this.calculateSendTransactionGasLimit(
                     request as RequestCalculateSendTransactionGasLimit
@@ -945,6 +951,10 @@ export default class BlankController extends EventEmitter {
                 return this.deleteCustomToken(
                     request as RequestDeleteCustomToken
                 );
+            case Messages.TOKEN.APPROVE_ALLOWANCE:
+                return this.approveAllowance(
+                    request as RequestApproveAllowance
+                );
             case Messages.TOKEN.ADD_CUSTOM_TOKENS:
                 return this.addCustomTokens(request as RequestAddCustomTokens);
             case Messages.TOKEN.SEND_TOKEN:
@@ -956,10 +966,6 @@ export default class BlankController extends EventEmitter {
             case Messages.TOKEN.SEARCH_TOKEN:
                 return this.searchTokenInAssetsList(
                     request as RequestSearchToken
-                );
-            case Messages.TOKEN.APPROVE_ALLOWANCE:
-                return this.approveAllowance(
-                    request as RequestApproveAllowance
                 );
             case Messages.EXTERNAL.EVENT_SUBSCRIPTION:
                 return this.blankProviderEventSubscribe(id, port, portId);
@@ -1266,7 +1272,7 @@ export default class BlankController extends EventEmitter {
             assetAddresses: [NATIVE_TOKEN_ADDRESS],
         });
         // Refetch transactions
-        this.transactionWatcherController.fetchTransactions();
+        this.transactionWatcherController.fetchAccountOnChainEvents();
     }
 
     /**
@@ -2188,6 +2194,25 @@ export default class BlankController extends EventEmitter {
     ): Promise<GasPriceData | undefined> {
         return this.gasPricesController.fetchGasPriceData(chainId);
     }
+    /**
+     * Calculate the gas limit for an approve transaction
+     */
+    private async calculateApproveTransactionGasLimit({
+        tokenAddress,
+        spender,
+        amount,
+    }: RequestCalculateApproveTransactionGasLimit): Promise<TransactionGasEstimation> {
+        const approveTransaction = new ApproveTransaction({
+            transactionController: this.transactionController,
+            preferencesController: this.preferencesController,
+            networkController: this.networkController,
+        });
+        return approveTransaction.calculateTransactionGasLimit({
+            tokenAddress,
+            spender,
+            amount,
+        });
+    }
 
     private cancelTransaction({
         transactionId,
@@ -2438,7 +2463,7 @@ export default class BlankController extends EventEmitter {
         await this.networkController.setNetwork(network);
 
         // reconstruct past erc20 transfers
-        this.transactionWatcherController.fetchTransactions();
+        this.transactionWatcherController.fetchAccountOnChainEvents();
 
         // Create and assign to the Wallet an anti phishing image
         this.preferencesController.assignNewPhishingPreventionImage(
@@ -3018,7 +3043,7 @@ export default class BlankController extends EventEmitter {
             networkByChainId.set(network.chainId, network);
         });
         return Promise.resolve(
-            filteredChains.map((chain) => {
+            filteredChains.map((chain: any) => {
                 return {
                     chain,
                     isEnabled:

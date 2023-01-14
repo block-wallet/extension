@@ -130,6 +130,7 @@ describe('Address book controller implementation', function () {
             transactionController,
             {
                 transactions: {},
+                tokenAllowanceEvents: {},
             }
         );
 

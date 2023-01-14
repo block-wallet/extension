@@ -193,7 +193,7 @@ describe('Bridge Controller', () => {
                 blockUpdatesController,
                 tokenController,
                 transactionController,
-                { transactions: [] }
+                { transactions: [], tokenAllowanceEvents: {} }
             )
         );
 

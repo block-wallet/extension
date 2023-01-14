@@ -1,28 +1,44 @@
-import {
-    AccountAllowance,
-    TokenAllowance,
-} from "@block-wallet/background/controllers/AccountTrackerController"
+import { generalAllowances } from "../../context/hooks/useAccountAllowances"
 import AllowanceItem from "./AllowanceItem"
 import { AllowancesFilters } from "./AllowancesFilterButton"
 
-const AllowanceList = ({
-    allowances,
-    groupBy,
-}: {
-    allowances: AccountAllowance[]
-    groupBy: AllowancesFilters
-}) => {
+const AllowanceList = ({ allowances }: { allowances: generalAllowances }) => {
     return (
         <div>
-            <span className="text-gray-600">Tether USD</span>
-            <div className="flex flex-col">
-                {allowances.map((allowance) => (
+            {allowances.length > 0 &&
+                allowances.map((accountAllowance) => (
                     <>
-                        <AllowanceItem allowance={allowance} />
-                        <hr />
+                        <span className="text-gray-600">
+                            {accountAllowance.groupBy.name}
+                        </span>
+                        <div className="flex flex-col mb-6">
+                            {accountAllowance.allowances.map((allowance) => (
+                                <>
+                                    <AllowanceItem
+                                        token={
+                                            accountAllowance.groupBy.type ===
+                                            AllowancesFilters.TOKEN
+                                                ? accountAllowance.groupBy
+                                                : allowance.displayData
+                                        }
+                                        allowance={allowance.allowance}
+                                        spender={
+                                            accountAllowance.groupBy.type ===
+                                            AllowancesFilters.TOKEN
+                                                ? allowance.displayData
+                                                : accountAllowance.groupBy
+                                        }
+                                        showToken={
+                                            accountAllowance.groupBy.type !==
+                                            AllowancesFilters.TOKEN
+                                        }
+                                    />
+                                    <hr />
+                                </>
+                            ))}
+                        </div>
                     </>
                 ))}
-            </div>
         </div>
     )
 }

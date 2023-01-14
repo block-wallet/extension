@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { TokenAllowance } from "@block-wallet/background/controllers/AccountTrackerController"
-import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { BigNumber } from "ethers"
 import { Classes, classnames } from "../../styles"
 import ChevronRightIcon from "../icons/ChevronRightIcon"
@@ -11,16 +10,17 @@ import { getAllowanceValue } from "../../util/getAllowanceValue"
 import DetailsDialog from "../dialog/DetailsDialog"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { ApproveOperation } from "../../routes/transaction/ApprovePage"
+import { AllowanceDisplayData } from "../../context/hooks/useAccountAllowances"
 
 const AllowanceItem = ({
     allowance,
     token,
     spender,
-    showToken = true,
+    showToken = false,
 }: {
     allowance: TokenAllowance
-    token: Token
-    spender: { name: string; address: string; logo: string }
+    token: AllowanceDisplayData
+    spender: AllowanceDisplayData
     showToken?: boolean
 }) => {
     const history = useOnMountHistory()

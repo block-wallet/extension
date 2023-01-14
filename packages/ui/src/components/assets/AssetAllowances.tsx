@@ -1,26 +1,25 @@
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import AllowanceItem from "../allowances/AllowanceItem"
-import useTokenAllowances from "../../context/hooks/useTokenAllowances"
+import useAccountAllowances from "../../context/hooks/useAccountAllowances"
+import { AllowancesFilters } from "../allowances/AllowancesFilterButton"
 
 const AssetAllowances = () => {
     const history = useOnMountHistory()
     const tokenAddress: string = history.location.state.address
 
-    const { token, allowances } = useTokenAllowances(tokenAddress)!
+    const tokenAllowances = useAccountAllowances(AllowancesFilters.TOKEN)!.find(
+        (allowance) => allowance.groupBy.address === tokenAddress
+    )
 
     return (
         <>
-            {allowances?.length > 0 ? (
-                allowances.map((spenderAllowance) => (
+            {tokenAllowances && tokenAllowances.allowances?.length > 0 ? (
+                tokenAllowances.allowances.map((allowance) => (
                     <>
                         <AllowanceItem
-                            allowance={spenderAllowance[1]}
-                            token={token}
-                            spender={{
-                                name: "spenderName",
-                                address: spenderAllowance[0],
-                                logo: "",
-                            }}
+                            allowance={allowance.allowance}
+                            token={tokenAllowances.groupBy}
+                            spender={allowance.displayData}
                             showToken={false}
                         />
                         <hr />

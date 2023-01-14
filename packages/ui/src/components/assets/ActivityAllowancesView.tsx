@@ -1,6 +1,7 @@
 import { useState } from "react"
+import useAccountAllowances from "../../context/hooks/useAccountAllowances"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import useTokenAllowances from "../../context/hooks/useTokenAllowances"
+import { AllowancesFilters } from "../allowances/AllowancesFilterButton"
 import HorizontalSelect from "../input/HorizontalSelect"
 import AssetActivity from "./AssetActivity"
 import AssetAllowances from "./AssetAllowances"
@@ -30,7 +31,9 @@ const ActivityAllowancesView = () => {
     const TabComponent = tab.component
     const tokenAddress: string = history.location.state.address
 
-    const { allowances } = useTokenAllowances(tokenAddress)!
+    const allowances = useAccountAllowances(AllowancesFilters.TOKEN)!.find(
+        (allowance) => allowance.groupBy.address === tokenAddress
+    )?.allowances
 
     const onTabChange = async (value: any) => {
         setTab(value)
@@ -43,7 +46,9 @@ const ActivityAllowancesView = () => {
                 value={tab}
                 onChange={onTabChange}
                 display={(t) =>
-                    t.label === TabLabels.ALLOWANCES && allowances.length > 0
+                    t.label === TabLabels.ALLOWANCES &&
+                    allowances &&
+                    allowances.length > 0
                         ? `${t.label} (${allowances.length})`
                         : t.label
                 }

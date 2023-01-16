@@ -74,7 +74,8 @@
     },
     "resolutions": {
         "webpack/**/glob-parent": "^5.1.2",
-        "webpack/**/set-value": "^4.0.1"
+        "webpack/**/set-value": "^4.0.1",
+        "readable-stream": "^3.6.0"
     },
     "scripts": {
         "test": "make test/background",

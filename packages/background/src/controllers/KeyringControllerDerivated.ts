@@ -347,6 +347,8 @@ export default class KeyringControllerDerivated extends KeyringController {
         const keyringType = this._getKeyringTypeFromDevice(device);
         let keyring = await this.getKeyringFromDevice(device);
 
+        console.log(keyring);
+
         // If the keyring doesn't exist, create it
         if (!keyring) {
             keyring = await this.addNewKeyring(keyringType, {
@@ -366,10 +368,16 @@ export default class KeyringControllerDerivated extends KeyringController {
         // Unlock the keyring. If it's already unlocked it will resolve.
         // For Trezor devices, we force the unlock to prevent displaying
         // old accounts or accounts from a different device
-        await keyring.unlock(device === Devices.TREZOR);
+        if (keyring.unlock) {
+            await keyring.unlock(device === Devices.TREZOR);
+        }
 
         // Return whether we connected and unlocked the keyring successfully
-        return keyring.isUnlocked();
+        if (keyring.isUnlocked) {
+            return keyring.isUnlocked();
+        } else {
+            return keyring.unlockedAccount === 1;
+        }
     }
 
     /**

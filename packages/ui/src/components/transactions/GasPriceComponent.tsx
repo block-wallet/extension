@@ -166,7 +166,7 @@ const schemaBuilder = ({ minGasLimit }: { minGasLimit?: string } = {}) =>
         gasLimit: makeStringNumberFormField("Gas limit is required", false, {
             min: [
                 parseInt(minGasLimit ?? "0"),
-                `Gas limit should be bigger or equal to ${parseInt(
+                `Gas limit can't be lower than ${parseInt(
                     minGasLimit ?? "0"
                 )}`,
             ],

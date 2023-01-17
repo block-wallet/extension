@@ -508,10 +508,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     customNonce
                 )
             } else {
-                console.log(
-                    "history.location.state.spenderAddress",
-                    history.location.state.spenderAddress
-                )
                 res = await approveAllowance(
                     assetAllowance,
                     BigNumber.from(assetAllowance),

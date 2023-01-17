@@ -22,7 +22,7 @@ export interface PopupHeaderProps {
     backButton?: boolean
     keepState?: boolean // if true, keeps the previous state while going back using the back button
     networkIndicator?: boolean
-    tooltipContent?: React.ReactElement // if defined, a more info icon will be displayed on the right of the title with the content displayed on hover
+    tooltip?: { link: string; content: React.ReactElement } // if defined, a more info icon will be displayed on the right of the title with the content displayed on hover
     close?: string | boolean
     icon?: string | null
     disabled?: boolean // used to disable back or close buttons
@@ -39,7 +39,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     backButton = true,
     keepState = false,
     networkIndicator = false,
-    tooltipContent = undefined,
+    tooltip = undefined,
     close = "/home",
     icon,
     children,
@@ -131,13 +131,18 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
             >
                 {title}
             </span>
-            {tooltipContent && (
+            {tooltip && (
                 <div className="group relative">
-                    <AiFillInfoCircle
-                        size={26}
-                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
-                    />
-                    <Tooltip content={tooltipContent} className="-mb-4" />
+                    <a href={tooltip.link} target="_blank" rel="noreferrer">
+                        <AiFillInfoCircle
+                            size={26}
+                            className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                        />
+                        <Tooltip
+                            content={tooltip.content}
+                            className="-mb-4 translate-y-[90%] -translate-x-[39%]"
+                        />
+                    </a>
                 </div>
             )}
             <div className="ml-auto flex space-x-1">

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import AllowancesFilterButton, {
     AllowancesFilters,
 } from "../../components/allowances/AllowancesFilterButton"
@@ -13,21 +13,15 @@ import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import useAccountAllowances from "../../context/hooks/useAccountAllowances"
 
 const AllowancesPage = () => {
+    const [search, setSearch] = useState("")
     const [showEmptyState, setShowEmptyState] = useState(false)
-    const [filter, setFilter] = useState<AllowancesFilters>(
+    const [groupBy, setGroupBy] = useState<AllowancesFilters>(
         AllowancesFilters.SPENDER
     )
-    const allowances = useAccountAllowances(filter)!
 
-    const onSearchChange = (value: string) => {
-        if (value.length > 0) {
-            setShowEmptyState(true)
-        } else {
-            setShowEmptyState(false)
-        }
-    }
+    const allowances = useAccountAllowances(groupBy, search)!
 
-    const revokeAll = (allowances) => {
+    const revokeAll = (allowances: any) => {
         console.log(allowances)
     }
 
@@ -35,17 +29,27 @@ const AllowancesPage = () => {
         console.log("refetchAllowances")
     }
 
+    useEffect(() => {
+        setShowEmptyState(allowances.length === 0)
+    }, [allowances])
+
     return (
         <PopupLayout
             header={
                 <PopupHeader
                     title="Allowances"
-                    tooltipContent={
-                        <div className="font-normal text-xs text-white-500">
-                            Token Allowance is allowing a spender to spend{" "}
-                            <br /> a token amount from your token balance.
-                        </div>
-                    }
+                    tooltip={{
+                        link: "https://academy.bit2me.com/en/que-es-token-allowance/#:~:text=This%20standard%20defined%20the%20basic,contained%20in%20a%20given%20address.",
+                        content: (
+                            <div className="font-normal text-xs text-white-500">
+                                Token allowance is a function that grants
+                                permissions <br /> to access and use funds by
+                                DApps. Your token <br /> allowances should be
+                                reviewed periodically. <br />
+                                Click on this icon to learn more.
+                            </div>
+                        ),
+                    }}
                     networkIndicator
                     close
                 />
@@ -61,19 +65,24 @@ const AllowancesPage = () => {
                     <div className="flex-1">
                         <SearchInput
                             inputClassName="!h-12"
-                            placeholder="Search"
-                            onChange={onSearchChange}
+                            placeholder={`Search ${
+                                groupBy === AllowancesFilters.SPENDER
+                                    ? "spenders"
+                                    : "tokens"
+                            }`}
+                            onChange={(event) => setSearch(event.target.value)}
                             debounced
+                            defaultValue={search}
                         />
                     </div>
                     <AllowancesFilterButton
-                        filter={filter}
-                        onChangeFilter={setFilter}
+                        filter={groupBy}
+                        onChangeFilter={setGroupBy}
                     />
                     <AllowancesRefetchButton onClick={refetchAllowances} />
                 </div>
                 {showEmptyState && (
-                    <EmptyState title="No results" className="p-6">
+                    <EmptyState title="No allowances" className="p-6 mt-16">
                         The allowances you are searching for does not exist. Try
                         adjusting your search.
                     </EmptyState>
@@ -81,7 +90,7 @@ const AllowancesPage = () => {
             </div>
             <div className="flex flex-col h-full w-full p-6">
                 <div className="w-full mt-16 pt-2 h-full space-y-6">
-                    <AllowanceList allowances={allowances} groupBy={filter} />
+                    <AllowanceList allowances={allowances} />
                 </div>
             </div>
         </PopupLayout>

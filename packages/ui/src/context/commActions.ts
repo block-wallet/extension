@@ -657,7 +657,7 @@ export const sendToken = async (
  */
 export const searchTokenInAssetsList = async (
     query: string,
-    exact?: boolean,
+    exact?: boolean
 ): Promise<SearchTokensResponse> => {
     return sendMessage(Messages.TOKEN.SEARCH_TOKEN, {
         query,
@@ -1149,9 +1149,9 @@ export const toggleDefaultBrowserWallet = async (
 }
 
 /**
-* Updates the default gas option preference
-* @param defaultGasOption default gas option
-*/
+ * Updates the default gas option preference
+ * @param defaultGasOption default gas option
+ */
 export const setDefaultGasPreference = async (
     defaultGasOption: "low" | "medium" | "high"
 ): Promise<void> => {
@@ -1353,6 +1353,40 @@ export const removeHardwareWallet = async (
     device: Devices
 ): Promise<boolean> => {
     return sendMessage(Messages.WALLET.HARDWARE_REMOVE, { device })
+}
+
+export const hardwareQrSubmitCryptoHdKey = async (
+    cbor: string
+): Promise<void> => {
+    return sendMessage(Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY, {
+        cbor,
+    })
+}
+
+export const hardwareQrSubmitCryptoAccount = async (
+    cbor: string
+): Promise<void> => {
+    return sendMessage(Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_ACCOUNT, {
+        cbor,
+    })
+}
+
+export const hardwareQrSubmitSignature = async (
+    requestId: string,
+    cbor: string
+): Promise<void> => {
+    return sendMessage(Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE, {
+        requestId,
+        cbor,
+    })
+}
+
+export const hardwareQrCancelSync = async (): Promise<void> => {
+    return sendMessage(Messages.WALLET.HARDWARE_QR_CANCEL_SYNC)
+}
+
+export const hardwareQrCancelSignRequest = async (): Promise<void> => {
+    return sendMessage(Messages.WALLET.HARDWARE_QR_CANCEL_SYNC)
 }
 
 /**

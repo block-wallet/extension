@@ -107,6 +107,11 @@ import type {
     RequestAccountReset,
     RequestSetDefaultGas,
     RequestCalculateApproveTransactionGasLimit,
+    SubmitQRHardwareCryptoHDKeyMessage,
+    SubmitQRHardwareCryptoAccountMessage,
+    SubmitQRHardwareSignatureMessage,
+    CancelSyncQRHardwareMessage,
+    CancelQRHardwareSignRequestMessage,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -1021,6 +1026,26 @@ export default class BlankController extends EventEmitter {
             case Messages.WALLET.HARDWARE_REMOVE:
                 return this.removeHardwareWallet(
                     request as RequestRemoveHardwareWallet
+                );
+            case Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY:
+                return this.hardwareQrSubmitCryptoHdKey(
+                    request as SubmitQRHardwareCryptoHDKeyMessage
+                );
+            case Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_ACCOUNT:
+                return this.hardwareQrSubmitCryptoAccount(
+                    request as SubmitQRHardwareCryptoAccountMessage
+                );
+            case Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE:
+                return this.hardwareQrSubmitSignature(
+                    request as SubmitQRHardwareSignatureMessage
+                );
+            case Messages.WALLET.HARDWARE_QR_CANCEL_SYNC:
+                return this.hardwareQrCancelSync(
+                    request as CancelSyncQRHardwareMessage
+                );
+            case Messages.WALLET.HARDWARE_QR_CANCEL_SIGN_REQUEST:
+                return this.hardwareQrCancelSignRequest(
+                    request as CancelQRHardwareSignRequestMessage
                 );
             case Messages.APP.OPEN_HW_CONNECT:
                 return this.openHardwareConnect();
@@ -3112,6 +3137,33 @@ export default class BlankController extends EventEmitter {
         await this.keyringController.removeDeviceKeyring(device);
 
         return true;
+    }
+
+    private async hardwareQrSubmitCryptoHdKey({
+        cbor,
+    }: SubmitQRHardwareCryptoHDKeyMessage): Promise<void> {
+        this.keyringController.submitQRHardwareCryptoHDKey(cbor);
+    }
+
+    private async hardwareQrSubmitCryptoAccount({
+        cbor,
+    }: SubmitQRHardwareCryptoAccountMessage): Promise<void> {
+        this.keyringController.submitQRHardwareCryptoAccount(cbor);
+    }
+
+    private async hardwareQrSubmitSignature({
+        requestId,
+        cbor,
+    }: SubmitQRHardwareSignatureMessage): Promise<void> {
+        this.keyringController.submitQRHardwareSignature(requestId, cbor);
+    }
+
+    private async hardwareQrCancelSync({}: CancelSyncQRHardwareMessage): Promise<void> {
+        this.keyringController.cancelSyncQRHardware();
+    }
+
+    private async hardwareQrCancelSignRequest({}: CancelQRHardwareSignRequestMessage): Promise<void> {
+        this.keyringController.cancelQRHardwareSignRequest();
     }
 
     /*

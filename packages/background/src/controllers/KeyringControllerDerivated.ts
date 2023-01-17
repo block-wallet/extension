@@ -17,6 +17,7 @@ import {
 import {
     MetaMaskKeyring as QRKeyring,
     IKeyringState as IQRKeyringState,
+    MetaMaskKeyring as QRHardwareKeyring,
 } from '@keystonehq/metamask-airgapped-keyring';
 
 /**
@@ -32,12 +33,14 @@ export enum KeyringTypes {
 
 export default class KeyringControllerDerivated extends KeyringController {
     private readonly _mutex: Mutex;
+    private readonly _qrHardwareKeyring: QRHardwareKeyring;
 
     constructor(opts: KeyringControllerProps) {
         opts.keyringTypes = [LedgerBridgeKeyring, TrezorKeyring, QRKeyring];
         super(opts);
 
         this._mutex = new Mutex();
+        this._qrHardwareKeyring = new QRHardwareKeyring();
     }
 
     /**
@@ -749,5 +752,22 @@ export default class KeyringControllerDerivated extends KeyringController {
         } catch (e) {
             throw new Error(`Unspecified error when connect QR Hardware, ${e}`);
         }
+    }
+
+    // qr hardware devices
+    submitQRHardwareCryptoHDKey(cbor: string) {
+        this._qrHardwareKeyring.submitCryptoHDKey(cbor);
+    }
+    submitQRHardwareCryptoAccount(cbor: string) {
+        this._qrHardwareKeyring.submitCryptoAccount(cbor);
+    }
+    submitQRHardwareSignature(requestId: string, cbor: string) {
+        this._qrHardwareKeyring.submitSignature(requestId, cbor);
+    }
+    cancelSyncQRHardware() {
+        this._qrHardwareKeyring.cancelSync();
+    }
+    cancelQRHardwareSignRequest() {
+        this._qrHardwareKeyring.cancelSignRequest();
     }
 }

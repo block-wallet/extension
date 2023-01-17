@@ -81,7 +81,8 @@ export class TokenOperationsController extends TokenTransactionController {
     public async allowance(
         tokenAddress: string,
         owner: string,
-        spender: string
+        spender: string,
+        provider: StaticJsonRpcProvider = this._networkController.getProvider()
     ): Promise<BigNumber> {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
@@ -92,7 +93,7 @@ export class TokenOperationsController extends TokenTransactionController {
         if (!spender) {
             throw spenderParamNotPresentError;
         }
-        const contract = this.getContract(tokenAddress);
+        const contract = this.getContract(tokenAddress, provider);
         return contract.allowance(owner, spender);
     }
     /**

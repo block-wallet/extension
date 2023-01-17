@@ -229,3 +229,10 @@ export interface TransactionAdvancedData {
     flashbots?: boolean;
     slippage?: number;
 }
+
+export enum WatchedTransactionType {
+    Native = 'txlist',
+    ERC20 = 'tokentx',
+    ERC721 = 'tokennfttx',
+    ERC1155 = 'token1155tx',
+}

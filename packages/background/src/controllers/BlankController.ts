@@ -734,6 +734,10 @@ export default class BlankController extends EventEmitter {
                 return this.getAccountNativeTokenBalanceForChain(
                     request as number
                 );
+            case Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES:
+                return this.getAccountNativeTokenBalanceForChain(
+                    request as number
+                );
             case Messages.APP.GET_IDLE_TIMEOUT:
                 return this.getIdleTimeout();
             case Messages.APP.SET_IDLE_TIMEOUT:
@@ -1134,6 +1138,16 @@ export default class BlankController extends EventEmitter {
         return this.accountTrackerController.getAccountNativeTokenBalanceForChain(
             chainId
         );
+    }
+
+    /**
+     * refreshAccountTokenAllowances
+     *
+     * It refreshes all the token allownaces for the provided filters
+     *
+     */
+    public async refreshAccountTokenAllowances(): Promise<void> {
+        return this.accountTrackerController.refreshTokenAllowances();
     }
 
     /**

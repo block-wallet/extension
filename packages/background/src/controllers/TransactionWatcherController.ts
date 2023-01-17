@@ -2,8 +2,6 @@ import { Mutex } from 'async-mutex';
 import { isValidAddress, toChecksumAddress } from 'ethereumjs-util';
 import { BigNumber } from '@ethersproject/bignumber';
 import { TransactionResponse } from '@ethersproject/providers';
-import { hexZeroPad } from '@ethersproject/bytes';
-import { id } from '@ethersproject/hash';
 import { LogDescription, ParamType } from '@ethersproject/abi';
 import log from 'loglevel';
 import { BaseController } from '../infrastructure/BaseController';
@@ -22,31 +20,37 @@ import {
     PreferencesControllerState,
 } from './PreferencesController';
 import {
-    ApproveAllowanceParams,
     TransactionCategories,
     TransactionEvents,
     TransactionMeta,
     TransactionStatus,
     TransferType,
+    WatchedTransactionType,
 } from './transactions/utils/types';
-import { Block, Filter, Log } from '@ethersproject/abstract-provider';
+import { Block, Log } from '@ethersproject/abstract-provider';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { SignedTransaction } from './erc-20/transactions/SignedTransaction';
 import { TransactionArgument } from './transactions/ContractSignatureParser';
 import { showIncomingTransactionNotification } from '../utils/notifications';
-import { checkIfNotAllowedError } from '../utils/ethersError';
 import TransactionController from './transactions/TransactionController';
-import httpClient from '../utils/http';
 import { fetchBlockWithRetries } from '../utils/blockFetch';
 import { isNil } from 'lodash';
-import { runPromiseSafely } from '../utils/promises';
 import { paddedToChecksumAddress } from '../utils/addressUtils';
+import { RPCLogsFetcher } from '../utils/rpc/RPCLogsFetcher';
+import { EtherscanFetcher } from '../utils/scanner/EtherscanFetcher';
+import {
+    chainTopicsToAPITopics,
+    getAllowanceSignatureForType,
+    getIncomingERC20LogsTopics,
+    getOutgoingERC20LogsTopics,
+    getTokenApprovalLogsTopics,
+} from '../utils/logsQuery';
 
 interface TokenAllowanceEvent {
     [tokenAddress: string]: {
         spender: string;
         txHash: string;
-        txTime?: number;
+        txTime: number;
     }[];
 }
 
@@ -57,13 +61,6 @@ export type NewTokenAllowanceSpendersEventParametersSignature = Parameters<
         allowances: TokenAllowanceEvent
     ) => void
 >;
-
-export enum TransactionTypeEnum {
-    Native = 'txlist',
-    ERC20 = 'tokentx',
-    ERC721 = 'tokennfttx',
-    ERC1155 = 'token1155tx',
-}
 
 export interface TransactionByHash {
     [txHash: string]: TransactionMeta;
@@ -83,21 +80,21 @@ export interface TransactionWatcherControllerState {
     transactions: {
         [chainId: number]: {
             [address: string]: {
-                [type in TransactionTypeEnum]: TransactionsWatched;
+                [type in WatchedTransactionType]: TransactionsWatched;
             };
         };
     };
     tokenAllowanceEvents: {
         [chainId: number]: {
             [address: string]: {
-                [type in TransactionTypeEnum]: TokenAllowanceEventWatched;
+                [type in WatchedTransactionType]: TokenAllowanceEventWatched;
             };
         };
     };
 }
 
 export const TRANSACTION_TYPE_STATUS: {
-    [type in TransactionTypeEnum]: boolean;
+    [type in WatchedTransactionType]: boolean;
 } = {
     txlist: false,
     tokentx: true,
@@ -107,7 +104,7 @@ export const TRANSACTION_TYPE_STATUS: {
 
 //run only for erc20 approvals
 export const ALLOWANCE_EVENTS_TRANSACTION_TYPE_STATUS: {
-    [type in TransactionTypeEnum]: boolean;
+    [type in WatchedTransactionType]: boolean;
 } = {
     tokentx: true,
     txlist: false,
@@ -144,23 +141,8 @@ interface EtherscanTransaction {
     functionName: string;
 }
 
-const SIGNATURES: { [type in TransactionTypeEnum]: string } = {
-    txlist: '',
-    tokentx: id('Transfer(address,address,uint256)'),
-    token1155tx: '',
-    tokennfttx: '',
-};
-
-const TOKEN_ALLOWACE_SIGNATURES: { [type in TransactionTypeEnum]: string } = {
-    txlist: '',
-    tokentx: id('Approval(address,address,uint256)'),
-    token1155tx: 'ApprovalForAll(address,address,bool)',
-    tokennfttx: id('Approval(address,address,uint256)'), //maybe add ApprovalForAll(address,address,bool)??
-};
-
 const MAX_REQUEST_RETRY = 20;
 const EXPLORER_API_CALLS_DELAY = 2000 * MILISECOND;
-const DEFAULT_BATCH_MULTIPLIER = 20;
 
 export class TransactionWatcherController extends BaseController<TransactionWatcherControllerState> {
     private readonly _mutex: Mutex;
@@ -227,7 +209,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             async (
                 chainId: number,
                 address: string,
-                transactionType: TransactionTypeEnum
+                transactionType: WatchedTransactionType
             ) => {
                 let section:
                     | ''
@@ -235,13 +217,13 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     | 'tokentxnsErc721'
                     | 'tokentxnsErc1155' = '';
                 switch (transactionType) {
-                    case TransactionTypeEnum.ERC20:
+                    case WatchedTransactionType.ERC20:
                         section = 'tokentxns';
                         break;
-                    case TransactionTypeEnum.ERC721:
+                    case WatchedTransactionType.ERC721:
                         section = 'tokentxnsErc721';
                         break;
-                    case TransactionTypeEnum.ERC1155:
+                    case WatchedTransactionType.ERC1155:
                         section = 'tokentxnsErc1155';
                         break;
                 }
@@ -276,7 +258,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      * return the state by chain, address and type
      */
     public getTransactionState(
-        type: TransactionTypeEnum,
+        type: WatchedTransactionType,
         chainId: number = this._networkController.network.chainId,
         address: string = this._preferencesController.getSelectedAddress()
     ): TransactionsWatched {
@@ -304,7 +286,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     public getAllowanceEventsState(
         chainId: number = this._networkController.network.chainId,
         address: string = this._preferencesController.getSelectedAddress(),
-        type: TransactionTypeEnum
+        type: WatchedTransactionType
     ): TokenAllowanceEventWatched {
         const state = this.store.getState() || {};
 
@@ -326,7 +308,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      * save the state by chain, address and type
      */
     public setTransactionsState(
-        type: TransactionTypeEnum,
+        type: WatchedTransactionType,
         chainId: number = this._networkController.network.chainId,
         address: string = this._preferencesController.getSelectedAddress(),
         transactionsWatched: TransactionsWatched
@@ -399,7 +381,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     public setAllowancesState(
         chainId: number = this._networkController.network.chainId,
         address: string = this._preferencesController.getSelectedAddress(),
-        type: TransactionTypeEnum,
+        type: WatchedTransactionType,
         eventsWatched: TokenAllowanceEventWatched
     ) {
         const state = this.store.getState() || {};
@@ -491,7 +473,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             const chainId = parseInt(c);
             if (address in transactions[chainId]) {
                 for (const type in transactions[chainId][address]) {
-                    const trasactionType = type as TransactionTypeEnum;
+                    const trasactionType = type as WatchedTransactionType;
                     delete transactions[chainId][address][trasactionType];
                     anyUpdate = true;
                 }
@@ -535,7 +517,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
                 const { etherscanApiUrl } = this._networkController.network;
                 const provider = this._networkController.getProvider();
-
+                const rpcLogsFetcher = new RPCLogsFetcher(provider);
                 const etherscanApiUrlValid =
                     typeof etherscanApiUrl !== 'undefined' &&
                     etherscanApiUrl.length > 0;
@@ -547,7 +529,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
                 // fetch all the enabled transactions type
                 for (const type in TRANSACTION_TYPE_STATUS) {
-                    const transactionType = type as TransactionTypeEnum;
+                    const transactionType = type as WatchedTransactionType;
 
                     if (!TRANSACTION_TYPE_STATUS[transactionType]) {
                         continue;
@@ -557,7 +539,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     // can't be fetched
                     if (
                         !etherscanApiUrlValid &&
-                        transactionType === TransactionTypeEnum.Native
+                        transactionType === WatchedTransactionType.Native
                     ) {
                         continue;
                     }
@@ -572,7 +554,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     let tokenAddresses: string[] = [];
 
                     let fetchEtherscanApi = true;
-                    if (transactionType !== TransactionTypeEnum.Native) {
+                    if (transactionType !== WatchedTransactionType.Native) {
                         if (forceChainQuery || !etherscanApiUrlValid) {
                             fetchEtherscanApi = false;
                         }
@@ -580,10 +562,13 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
                     if (fetchEtherscanApi) {
                         try {
+                            const etherscanFetcher = new EtherscanFetcher(
+                                etherscanApiUrl!
+                            );
                             const result = await this._getTransactionsFromAPI(
+                                etherscanFetcher,
                                 chainId,
                                 address,
-                                etherscanApiUrl || '',
                                 transactionType,
                                 currentTransactionsWatched,
                                 currentBlock
@@ -606,9 +591,9 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     } else {
                         try {
                             const result = await this._getTransactionsFromChain(
+                                rpcLogsFetcher,
                                 chainId,
                                 address,
-                                provider,
                                 transactionType,
                                 currentTransactionsWatched.lastBlockQueried,
                                 currentBlock
@@ -664,7 +649,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 }
 
                 for (const type in ALLOWANCE_EVENTS_TRANSACTION_TYPE_STATUS) {
-                    const transactionType = type as TransactionTypeEnum;
+                    const transactionType = type as WatchedTransactionType;
 
                     if (!TRANSACTION_TYPE_STATUS[transactionType]) {
                         continue;
@@ -680,9 +665,12 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
                     //fetch allowances events
                     if (!forceChainQuery && etherscanApiUrlValid) {
+                        const etherscanFetcher = new EtherscanFetcher(
+                            etherscanApiUrl
+                        );
                         ({ logs: approvalLogs } =
                             await this._getTokenApprovalLogsFromAPI(
-                                etherscanApiUrl,
+                                etherscanFetcher,
                                 address,
                                 tokenAllowanceEventsState.lastBlockQueried,
                                 currentBlock,
@@ -690,15 +678,13 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                             ));
                     } else {
                         const lastBlockQueried =
-                            this._getOldestSafeBlockToFetchLogs(
-                                chainId,
+                            rpcLogsFetcher.getOldestSafeBlockToFetchERC20Logs(
                                 tokenAllowanceEventsState.lastBlockQueried,
                                 currentBlock
                             );
                         ({ logs: approvalLogs } =
                             await this._getTokenApprovalLogsFromChain(
-                                chainId,
-                                provider,
+                                rpcLogsFetcher,
                                 address,
                                 currentBlock,
                                 lastBlockQueried,
@@ -713,7 +699,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                             transactionType
                         );
 
-                    if (allowanceEvents.length) {
+                    if (Object.keys(allowanceEvents).length) {
                         this._emitNewKnownSpendersEvent(
                             chainId,
                             address,
@@ -740,10 +726,10 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     // ###################### CHAIN LOGS METHODS ######################
 
     private _getTransactionsFromChain = async (
+        rpcLogsFetcher: RPCLogsFetcher,
         chainId: number,
         address: string,
-        provider: StaticJsonRpcProvider,
-        transactionType: TransactionTypeEnum,
+        transactionType: WatchedTransactionType,
         lastBlockQueried: number,
         currentBlock: number
     ): Promise<{
@@ -752,8 +738,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     }> => {
         // logs fetch
         const getLogsResults = await this._getTransactionLogsFromChain(
+            rpcLogsFetcher,
             chainId,
-            provider,
             address,
             transactionType,
             currentBlock,
@@ -799,18 +785,18 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      * @returns
      */
     private _getTransactionLogsFromChain = async (
+        rpcLogsFetcher: RPCLogsFetcher,
         chainId: number,
-        provider: StaticJsonRpcProvider,
         address: string,
-        transactionType: TransactionTypeEnum,
+        transactionType: WatchedTransactionType,
         currentBlock: number,
         stateLastBlockQueried: number
     ): Promise<{ incoming: Log[]; outgoing: Log[] }> => {
-        const lastBlockQueried = this._getOldestSafeBlockToFetchLogs(
-            chainId,
-            stateLastBlockQueried,
-            currentBlock
-        );
+        const lastBlockQueried =
+            rpcLogsFetcher.getOldestSafeBlockToFetchERC20Logs(
+                stateLastBlockQueried,
+                currentBlock
+            );
 
         // if we can not fetch the whole events history we must
         // force a token balance discovery
@@ -823,72 +809,34 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             );
         }
 
-        const logs: { incoming: Log[]; outgoing: Log[] } = {
-            incoming: [],
-            outgoing: [],
-        };
+        const chainLastMinedBlock =
+            this._blockUpdatesController.getBlockNumber();
 
-        const addressHashed = hexZeroPad(address, 32);
-
-        await this._batchedChainQuery(
-            chainId,
-            lastBlockQueried,
-            currentBlock,
-            async (fromBlock: number, toBlock: number) => {
-                // incoming
-                const incoming = await runPromiseSafely(
-                    this._getLogsFromChain(chainId, provider, {
-                        fromBlock,
-                        toBlock,
-                        topics: [
-                            SIGNATURES[transactionType],
-                            null,
-                            addressHashed,
-                        ],
-                    })
-                );
-
-                // outgoing
-                const outgoing = await runPromiseSafely(
-                    this._getLogsFromChain(chainId, provider, {
-                        fromBlock,
-                        toBlock,
-                        topics: [SIGNATURES[transactionType], addressHashed],
-                    })
-                );
-
-                // results
-                if (incoming) {
-                    logs.incoming = logs.incoming.concat(...incoming);
-                }
-                if (outgoing) {
-                    logs.outgoing = logs.outgoing.concat(...outgoing);
-                }
-            }
+        const incoming = await rpcLogsFetcher.getLogsFromChainInBatch(
+            {
+                fromBlock: lastBlockQueried,
+                toBlock: currentBlock,
+                topics: getIncomingERC20LogsTopics(address, transactionType),
+                address: address,
+            },
+            chainLastMinedBlock
         );
 
-        return logs;
-    };
+        const outgoing = await rpcLogsFetcher.getLogsFromChainInBatch(
+            {
+                fromBlock: lastBlockQueried,
+                toBlock: currentBlock,
+                topics: getOutgoingERC20LogsTopics(address, transactionType),
+                address: address,
+            },
+            chainLastMinedBlock
+        );
 
-    private async _batchedChainQuery<T>(
-        chainId: number,
-        currentBlock: number,
-        lastBlockQueried: number,
-        chunkExecutor: (fromBlock: number, toBlock: number) => Promise<void>
-    ): Promise<void> {
-        if (currentBlock > lastBlockQueried) {
-            const max = this._getMaxBlockBatchSize(chainId);
-            const steps = Math.ceil((currentBlock - lastBlockQueried) / max);
-            for (let i = 0; i < steps; i++) {
-                const fromBlock = lastBlockQueried + max * i;
-                const toBlock = Math.min(
-                    lastBlockQueried + max * (i + 1),
-                    currentBlock
-                );
-                await chunkExecutor(fromBlock, toBlock);
-            }
-        }
-    }
+        return {
+            incoming,
+            outgoing,
+        };
+    };
 
     /**
      * Get token approval logs directly from the chain
@@ -898,224 +846,31 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      * @returns
      */
     private _getTokenApprovalLogsFromChain = async (
-        chainId: number,
-        provider: StaticJsonRpcProvider,
+        rpcLogsFetcher: RPCLogsFetcher,
         address: string,
         currentBlock: number,
         lastBlockQueried: number,
-        transactionType: TransactionTypeEnum
+        transactionType: WatchedTransactionType
     ): Promise<{ logs: Log[] }> => {
-        let logs: Log[] = [];
-        const eventSignature = TOKEN_ALLOWACE_SIGNATURES[transactionType];
-        if (!eventSignature) {
+        const topics = getTokenApprovalLogsTopics(address, transactionType);
+        if (!topics[0]) {
             return { logs: [] };
         }
 
-        const addressHashed = hexZeroPad(address, 32);
-        const topics = [eventSignature, addressHashed];
+        const lastMinedBlock = this._blockUpdatesController.getBlockNumber();
 
-        await this._batchedChainQuery(
-            chainId,
-            lastBlockQueried,
-            currentBlock,
-            async (fromBlock: number, toBlock: number) => {
-                const chainLogs = await runPromiseSafely<Log[]>(
-                    this._getLogsFromChain(chainId, provider, {
-                        fromBlock,
-                        toBlock,
-                        topics,
-                    })
-                );
-
-                if (chainLogs) {
-                    logs = logs.concat(chainLogs);
-                }
-            }
+        const logs = await rpcLogsFetcher.getLogsFromChainInBatch(
+            {
+                fromBlock: lastBlockQueried,
+                toBlock: currentBlock,
+                topics,
+            },
+            lastMinedBlock
         );
+
         return {
             logs,
         };
-    };
-    /**
-     * Return oldes block to start fetching logs
-     * @param chainId
-     * @param lastBlockQueried
-     * @param currentBlock
-     * @returns
-     */
-    private _getOldestSafeBlockToFetchLogs = (
-        chainId: number,
-        lastBlockQueried: number,
-        currentBlock: number
-    ): number => {
-        const batchMultiplier = Math.min(
-            DEFAULT_BATCH_MULTIPLIER,
-            this._getBatchMultiplier(chainId)
-        );
-
-        const oldestSafeBlock = Math.max(
-            this._getInitialBlock(chainId),
-            currentBlock - this._getMaxBlockBatchSize(chainId) * batchMultiplier
-        );
-
-        return Math.max(lastBlockQueried, oldestSafeBlock);
-    };
-
-    /**
-     * Gets the multiplier for the max batch size
-     * @param chainId
-     * @returns
-     */
-    private _getBatchMultiplier = (chainId: number): number => {
-        switch (chainId) {
-            case 1:
-            case 5:
-            case 10:
-            case 42:
-            case 100:
-            case 137:
-            case 42161:
-            case 43114:
-            case 56:
-            case 250:
-                return DEFAULT_BATCH_MULTIPLIER;
-            default:
-                return 1;
-        }
-    };
-
-    /**
-     * Fetches the first block where we can find an erc20 tx
-     * @param chainId
-     * @returns
-     */
-    private _getInitialBlock = (chainId: number): number => {
-        let initialBlock = 0;
-        switch (chainId) {
-            case 1:
-                initialBlock = 447767;
-                break;
-            case 3:
-                initialBlock = 5943;
-                break;
-            case 4:
-                initialBlock = 119945;
-                break;
-            case 5:
-                initialBlock = 13543;
-                break;
-            case 10:
-                initialBlock = 102;
-                break;
-            case 42:
-                initialBlock = 32255;
-                break;
-            case 56:
-                initialBlock = 57109;
-                break;
-            case 97:
-                initialBlock = 235;
-                break;
-            case 100:
-                initialBlock = 334457;
-                break;
-            case 137:
-                initialBlock = 2764;
-                break;
-            case 250:
-                initialBlock = 2323;
-                break;
-            case 42161:
-                initialBlock = 60;
-                break;
-            case 43114:
-                initialBlock = 20;
-                break;
-            case 80001:
-                initialBlock = 136184;
-                break;
-        }
-        return initialBlock;
-    };
-
-    /**
-     * Return the max safe block distance to fetch logs
-     * @param chainId
-     * @returns
-     */
-    private _getMaxBlockBatchSize = (chainId: number): number => {
-        switch (chainId) {
-            case 1:
-            case 5:
-            case 10:
-            case 42:
-            case 100:
-            case 137:
-            case 42161:
-            case 43114:
-                return 10000;
-            case 56:
-                return 5000;
-            case 250:
-                return 2000;
-            default: // all the custom networks will be caught by this default because we don't know the quality of the RPCs
-                return 100;
-        }
-    };
-
-    /**
-     * Fetch logs with a retry logic
-     * @param filter
-     * @param provider
-     * @returns
-     */
-    private _getLogsFromChain = async (
-        chainId: number,
-        provider: StaticJsonRpcProvider,
-        filter: Filter
-    ): Promise<Log[]> => {
-        let logs: Log[] = [];
-
-        // check to block
-        const lastBlock = this._blockUpdatesController.getBlockNumber(chainId);
-        if (filter.toBlock && lastBlock > 0 && filter.toBlock > lastBlock) {
-            filter.toBlock = lastBlock;
-        }
-
-        try {
-            logs = await provider.getLogs(filter);
-        } catch (e) {
-            // check 403 not allowed
-            if (checkIfNotAllowedError(e)) {
-                return [];
-            }
-
-            log.warn('getLogs', e.message || e);
-            await sleep(1 * SECOND);
-
-            const toBlock = parseInt((filter.toBlock as string) || '0');
-            const fromBlock = parseInt((filter.fromBlock as string) || '0');
-            if (toBlock - fromBlock > 1) {
-                return [
-                    ...(await this._getLogsFromChain(chainId, provider, {
-                        ...filter,
-                        toBlock: Math.ceil(
-                            fromBlock + (toBlock - fromBlock) / 2
-                        ),
-                    })),
-                    ...(await this._getLogsFromChain(chainId, provider, {
-                        ...filter,
-                        fromBlock: Math.ceil(
-                            fromBlock + (toBlock - fromBlock) / 2 + 1
-                        ),
-                    })),
-                ];
-            } else {
-                throw e;
-            }
-        }
-
-        return logs;
     };
 
     /**
@@ -1338,10 +1093,10 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
             for (const address in transactionByAddress) {
                 for (const type in transactionByAddress[address]) {
-                    const transactionType = type as TransactionTypeEnum;
+                    const transactionType = type as WatchedTransactionType;
                     const transactions =
                         transactionByAddress[address][
-                            transactionType as TransactionTypeEnum
+                            transactionType as WatchedTransactionType
                         ];
 
                     for (const transactionHash in transactions.transactions) {
@@ -1402,7 +1157,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         const addresses = this.store.getState().transactions[chainId];
         for (const address in addresses) {
             for (const type in addresses[address]) {
-                const transactionType = type as TransactionTypeEnum;
+                const transactionType = type as WatchedTransactionType;
                 const transactions = this.getTransactionState(
                     transactionType,
                     chainId,
@@ -1431,14 +1186,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         }
     };
 
-    private _isApprovalTransaction(
-        etherscanTransaction: EtherscanTransaction
-    ): boolean {
-        return etherscanTransaction.functionName
-            .toLowerCase()
-            .startsWith('approve');
-    }
-
     // ###################### API METHODS ######################
 
     /**
@@ -1452,23 +1199,26 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      * @returns
      */
     private _getTransactionsFromAPI = async (
+        etherscanFetcher: EtherscanFetcher,
         chainId: number,
         address: string,
-        etherscanApiUrl: string,
-        transactionType: TransactionTypeEnum,
+        transactionType: WatchedTransactionType,
         currentTransactionsWatched: TransactionsWatched,
         currentBlock: number
     ): Promise<{
         transactions: TransactionByHash;
         tokenAddresses: string[];
     }> => {
-        const { result, status } = await this._fetchTransactionsFromAPI(
-            etherscanApiUrl,
-            address,
-            transactionType,
-            currentTransactionsWatched.lastBlockQueried,
-            currentBlock
-        );
+        const fromBlock = currentTransactionsWatched.lastBlockQueried;
+        const { result, status } =
+            await etherscanFetcher.fetch<EtherscanTransaction>({
+                module: 'account',
+                action: transactionType.toString(),
+                address,
+                startblock: fromBlock - 100 > 0 ? fromBlock - 100 : 0, // this avoid sync delays of the API.
+                endblock: currentBlock,
+                page: 1,
+            });
 
         // the request failed
         if (status === '-999') {
@@ -1486,14 +1236,13 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             )
             .filter((tx: EtherscanTransaction) => {
                 return (
-                    transactionType !== TransactionTypeEnum.Native ||
-                    tx.input.length < 4 ||
-                    this._isApprovalTransaction(tx)
+                    transactionType !== WatchedTransactionType.Native ||
+                    tx.input.length < 4
                 );
             });
 
         const tokenAddresses: string[] = [];
-        if (transactionType !== TransactionTypeEnum.Native) {
+        if (transactionType !== WatchedTransactionType.Native) {
             etherscanTransactions.map((tx: EtherscanTransaction) => {
                 if (!tokenAddresses.includes(tx.contractAddress)) {
                     tokenAddresses.push(tx.contractAddress);
@@ -1520,63 +1269,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         return { transactions, tokenAddresses };
     };
 
-    private async _fetchAPI<T>(
-        etherscanApiUrl: string,
-        params: Record<string, any>
-    ): Promise<{ result: T[]; status: string }> {
-        let retry = 0;
-        while (retry < MAX_REQUEST_RETRY) {
-            const result = await httpClient.get<{
-                status: string;
-                message: string;
-                result: T[];
-            }>(
-                `${etherscanApiUrl}/api`,
-                {
-                    ...params,
-                },
-                30000
-            );
-
-            if (result.status === '0' && result.message === 'NOTOK') {
-                await sleep(EXPLORER_API_CALLS_DELAY);
-                retry++;
-
-                continue;
-            }
-            return result;
-        }
-        return { status: '-999', result: [] };
-    }
-
-    /**
-     * Fetches transactions from the API
-     *
-     * @param etherscanApiUrl
-     * @param address
-     * @param transactionType
-     * @param fromBlock
-     * @param endBlock
-     * @returns { result: EtherscanTransaction[]; status: string }
-     */
-    private _fetchTransactionsFromAPI = async (
-        etherscanApiUrl: string,
-        address: string,
-        transactionType: TransactionTypeEnum,
-        fromBlock: number,
-        endBlock: number
-    ): Promise<{ result: EtherscanTransaction[]; status: string }> => {
-        const params = {
-            module: 'account',
-            action: transactionType.toString(),
-            address,
-            startblock: fromBlock - 100 > 0 ? fromBlock - 100 : 0, // this avoid sync delays of the API.
-            endBlock: endBlock,
-            page: 1,
-        };
-        return this._fetchAPI<EtherscanTransaction>(etherscanApiUrl, params);
-    };
-
     /**
      * Gets token approval/allowance logs events from the API.
      *
@@ -1587,43 +1279,30 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      * @returns { result: Log[]; status: string }
      */
     private _getTokenApprovalLogsFromAPI = async (
-        etherscanApiUrl: string,
+        etherscanFetcher: EtherscanFetcher,
         address: string,
         fromBlock: number,
         endBlock: number,
-        transactionType: TransactionTypeEnum
+        transactionType: WatchedTransactionType
     ): Promise<{ logs: Log[] }> => {
-        const eventSignature = TOKEN_ALLOWACE_SIGNATURES[transactionType];
-        if (!eventSignature) {
+        const chainQueryTopics = getTokenApprovalLogsTopics(
+            address,
+            transactionType
+        );
+
+        if (!chainQueryTopics[0]) {
             return { logs: [] };
         }
-        const addressHashed = hexZeroPad(address, 32);
-        const topics = [eventSignature, addressHashed];
 
-        const topicsOperators: Record<string, string> = {};
-        if (topics.length > 1) {
-            for (let i = 0; i < topics.length - 1; i++) {
-                topicsOperators[`topic${i}_${i + 1}_opr`] = 'and';
-            }
-        }
         const params = {
             module: 'logs',
             action: 'getLogs',
             fromBlock: fromBlock - 100 > 0 ? fromBlock - 100 : 0, // this avoid sync delays of the API.
             toBlock: endBlock,
-            ...topics.reduce((acc, topic, index) => {
-                return {
-                    ...acc,
-                    [`topic${index}`]: topic,
-                };
-            }, {}),
-            ...topicsOperators,
+            ...chainTopicsToAPITopics(chainQueryTopics),
             page: 1,
         };
-        const { result, status } = await this._fetchAPI<Log>(
-            etherscanApiUrl,
-            params
-        );
+        const { result, status } = await etherscanFetcher.fetch<Log>(params);
 
         // the request failed
         if (status === '-999') {
@@ -1659,7 +1338,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      * @returns TransactionMeta
      */
     private _formatTransactionFromAPI = async (
-        type: TransactionTypeEnum,
+        type: WatchedTransactionType,
         chainId: number,
         address: string,
         tx: EtherscanTransaction
@@ -1676,19 +1355,16 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         let transactionCategory: TransactionCategories =
             TransactionCategories.INCOMING;
         switch (type) {
-            case TransactionTypeEnum.Native:
+            case WatchedTransactionType.Native:
                 if (isIncomming) {
                     transactionCategory = TransactionCategories.INCOMING;
-                } else if (this._isApprovalTransaction(tx)) {
-                    transactionCategory =
-                        TransactionCategories.TOKEN_METHOD_APPROVE;
                 } else {
                     transactionCategory = TransactionCategories.SENT_ETHER;
                 }
                 break;
-            case TransactionTypeEnum.ERC20:
-            case TransactionTypeEnum.ERC721:
-            case TransactionTypeEnum.ERC1155:
+            case WatchedTransactionType.ERC20:
+            case WatchedTransactionType.ERC721:
+            case WatchedTransactionType.ERC1155:
                 if (isIncomming) {
                     transactionCategory =
                         TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER;
@@ -1700,7 +1376,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         }
 
         let transferType: TransferType | undefined = undefined;
-        if (type === TransactionTypeEnum.ERC20) {
+        if (type === WatchedTransactionType.ERC20) {
             let isLocalSearch = true;
             if (
                 !tx.tokenDecimal ||
@@ -1745,26 +1421,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             };
         }
 
-        let allowanceTransactionData: ApproveAllowanceParams | undefined =
-            undefined;
-        if (
-            transactionCategory === TransactionCategories.TOKEN_METHOD_APPROVE
-        ) {
-            const approvalTxData = SignedTransaction.parseTransactionData(
-                tx.input
-            );
-            if (
-                approvalTxData?.args?.length &&
-                approvalTxData?.args?.length > 1
-            ) {
-                const [spenderAddress, allowanceValue] = approvalTxData.args;
-                allowanceTransactionData = {
-                    allowanceValue,
-                    spenderAddress,
-                };
-            }
-        }
-
         return {
             time,
             confirmationTime: time,
@@ -1779,7 +1435,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 to: tx.to,
                 from: tx.from,
                 value:
-                    type === TransactionTypeEnum.Native
+                    type === WatchedTransactionType.Native
                         ? BigNumber.from(tx.value ?? 0)
                         : BigNumber.from(0),
                 hash: tx.hash,
@@ -1800,7 +1456,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 gasUsed: BigNumber.from(tx.gasUsed),
             },
             transferType: transferType,
-            approveAllowanceParams: allowanceTransactionData,
         } as Partial<TransactionMeta>;
     };
 
@@ -1812,7 +1467,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     private _emitIncomingTransactionEvent = (
         chainId: number,
         address: string,
-        transactionType: TransactionTypeEnum,
+        transactionType: WatchedTransactionType,
         currentTransactions: TransactionByHash,
         newTransactions: TransactionByHash
     ) => {
@@ -1842,10 +1497,10 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         chainId: number,
         address: string,
         tokenAddresses: string[],
-        transactionType: TransactionTypeEnum
+        transactionType: WatchedTransactionType
     ) => {
         if (
-            transactionType === TransactionTypeEnum.ERC20 &&
+            transactionType === WatchedTransactionType.ERC20 &&
             tokenAddresses.length
         ) {
             this.emit(
@@ -1863,9 +1518,9 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     private _emitNewERC20TransactionsEvent = (
         chainId: number,
         address: string,
-        transactionType: TransactionTypeEnum
+        transactionType: WatchedTransactionType
     ) => {
-        if (transactionType === TransactionTypeEnum.ERC20) {
+        if (transactionType === WatchedTransactionType.ERC20) {
             this.emit(
                 TransactionWatcherControllerEvents.NEW_ERC20_TRANSACTIONS,
                 chainId,
@@ -1877,28 +1532,44 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
     private async _generateAllowanceEventsFromLogs(
         allowancesLogs: Log[],
         provider: StaticJsonRpcProvider,
-        transactionType: TransactionTypeEnum
+        transactionType: WatchedTransactionType
     ): Promise<TokenAllowanceEvent> {
         const allowanceEvents: TokenAllowanceEvent = {};
-        const eventSignatureForType =
-            TOKEN_ALLOWACE_SIGNATURES[transactionType];
         for (const log of allowancesLogs) {
-            if (log.topics[0] === eventSignatureForType) {
-                const block = await fetchBlockWithRetries(
-                    log.blockNumber,
-                    provider,
-                    3
-                );
+            if (
+                log.topics[0] === getAllowanceSignatureForType(transactionType)
+            ) {
+                //API logs return the hexadecimal timestamp
+                const logTimestamp: string = (log as any).timeStamp;
+                //some networks returns the log timestamp
+                let txTimestamp = logTimestamp
+                    ? parseInt(logTimestamp)
+                    : undefined;
+                if (!txTimestamp) {
+                    const block = await fetchBlockWithRetries(
+                        log.blockNumber,
+                        provider,
+                        3
+                    );
+                    if (block) {
+                        txTimestamp = block.timestamp;
+                    }
+                }
+
                 const [, , spenderAddress] = log.topics;
                 const tokenAddress = log.address;
                 const txHash = log.transactionHash;
                 const currentSpenders = allowanceEvents[tokenAddress] || [];
+                const txTime = txTimestamp
+                    ? txTimestamp * 1000
+                    : new Date().getTime();
+
                 allowanceEvents[tokenAddress] = [
                     ...currentSpenders,
                     {
                         spender: paddedToChecksumAddress(spenderAddress),
                         txHash,
-                        txTime: block?.timestamp || new Date().getTime(),
+                        txTime,
                     },
                 ];
             }
@@ -1915,17 +1586,23 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             //emit only the last spender event
             const eventsToEmit = Object.entries(allowanceEvents).reduce(
                 (acc, [address, tokenEvents]) => {
-                    const tokenAddressSpender = tokenEvents.map(
-                        (e) => e.spender
+                    //sort events by timestamp
+                    const soredEvents = [...tokenEvents].sort(
+                        (eventA, eventB) => eventB.txTime - eventA.txTime
+                    );
+                    const sortedAndFilteredEvents = soredEvents.filter(
+                        (event, index) => {
+                            const eventWithSameSpenderIdx =
+                                soredEvents.findIndex(
+                                    (currentEvent) =>
+                                        currentEvent.spender === event.spender
+                                );
+                            return eventWithSameSpenderIdx === index;
+                        }
                     );
                     return {
                         ...acc,
-                        [address]: tokenEvents.filter((event, index) => {
-                            return (
-                                index ===
-                                tokenAddressSpender.lastIndexOf(event.spender)
-                            );
-                        }),
+                        [address]: sortedAndFilteredEvents,
                     };
                 },
                 {}

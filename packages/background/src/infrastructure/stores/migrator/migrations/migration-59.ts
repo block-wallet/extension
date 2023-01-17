@@ -1,9 +1,7 @@
-import {
-    TransactionTypeEnum,
-    TransactionWatcherControllerState,
-} from '../../../../controllers/TransactionWatcherController';
+import { TransactionWatcherControllerState } from '../../../../controllers/TransactionWatcherController';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
+import { WatchedTransactionType } from '../../../../controllers/transactions/utils/types';
 
 /**
  * This migration adds the allowances initial state for all the persisted active and hidden accounts.
@@ -28,10 +26,11 @@ export default {
                                             ...acc,
                                             [address]: {
                                                 ...(watchedTxsByType || {}),
-                                                [TransactionTypeEnum.Native]: {
-                                                    transactions: {},
-                                                    lastBlockQueried: 0,
-                                                },
+                                                [WatchedTransactionType.Native]:
+                                                    {
+                                                        transactions: {},
+                                                        lastBlockQueried: 0,
+                                                    },
                                             },
                                         };
                                     },

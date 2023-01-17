@@ -39,7 +39,7 @@ export default {
         }
 
         // transactions
-        enum TransactionTypeEnum {
+        enum WatchedTransactionType {
             Native = 'txlist',
             ERC20 = 'tokentx',
             ERC721 = 'tokennfttx',
@@ -50,7 +50,7 @@ export default {
             transactions: {
                 [chainId: number]: {
                     [address: string]: {
-                        [type in TransactionTypeEnum]: {
+                        [type in WatchedTransactionType]: {
                             transactions: {
                                 [txHash: string]: TransactionMeta;
                             };
@@ -66,7 +66,7 @@ export default {
         if (
             'ERC20TransactionWatcherControllerState' in (persistedState as any)
         ) {
-            const erc20 = TransactionTypeEnum.ERC20;
+            const erc20 = WatchedTransactionType.ERC20;
             const PS = (persistedState as any)[
                 'ERC20TransactionWatcherControllerState'
             ];
@@ -116,7 +116,7 @@ export default {
         }
 
         if ('IncomingTransactionController' in (persistedState as any)) {
-            const native = TransactionTypeEnum.Native;
+            const native = WatchedTransactionType.Native;
             const IT = (persistedState as any)['IncomingTransactionController'];
             if (IT && IT.incomingTransactions) {
                 for (const add in IT.incomingTransactions) {

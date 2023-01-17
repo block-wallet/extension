@@ -38,12 +38,17 @@ import { ActionIntervalController } from './block-updates/ActionIntervalControll
 import { Devices } from '../utils/types/hardware';
 import checksummedAddress from '../utils/checksummedAddress';
 import {
-    TransactionTypeEnum,
     TransactionWatcherController,
     TransactionWatcherControllerEvents,
     NewTokenAllowanceSpendersEventParametersSignature,
 } from './TransactionWatcherController';
 import { isNativeTokenAddress } from '../utils/token';
+import { WatchedTransactionType } from './transactions/utils/types';
+import { retryHandling } from '../utils/retryHandling';
+import { providers } from 'ethers';
+import { RPCLogsFetcher } from '../utils/rpc/RPCLogsFetcher';
+import { getTokenApprovalLogsTopics } from '../utils/logsQuery';
+import { runPromiseSafely } from '../utils/promises';
 
 export enum AccountStatus {
     ACTIVE = 'ACTIVE',
@@ -57,7 +62,8 @@ export interface AccountBalanceToken {
 export interface TokenAllowance {
     updatedAt: number;
     value: BigNumber;
-    txHash: string;
+    txHash?: string;
+    txTime?: number;
 }
 export interface AccountBalanceTokens {
     [address: string]: AccountBalanceToken;
@@ -262,9 +268,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             async (
                 chainId: number,
                 address: string,
-                transactionType: TransactionTypeEnum
+                transactionType: WatchedTransactionType
             ) => {
-                if (transactionType === TransactionTypeEnum.Native) {
+                if (transactionType === WatchedTransactionType.Native) {
                     await this.updateAccounts(
                         {
                             addresses: [address],
@@ -323,7 +329,11 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             async (
                 ...args: NewTokenAllowanceSpendersEventParametersSignature
             ) => {
-                await this._updateSpenderAllowances(args[0], args[1], args[2]);
+                await this._handleNewTokenAllowanceSpendersEvents(
+                    args[0],
+                    args[1],
+                    args[2]
+                );
             }
         );
     }
@@ -339,12 +349,33 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     [chainId]: {
                         tokens: Object.entries(allowance.tokens || {}).reduce(
                             (acc, [tokenAddress, allowancesRecord]) => {
+                                const tokenAllowances: Record<
+                                    string,
+                                    TokenAllowance
+                                > = Object.entries(
+                                    allowancesRecord.allowances || {}
+                                ).reduce(
+                                    (
+                                        acc,
+                                        [spenderAddress, allowanceRecord]
+                                    ) => {
+                                        if (
+                                            BigNumber.from(
+                                                allowanceRecord.value ?? 0
+                                            ).gt(0)
+                                        ) {
+                                            return {
+                                                ...acc,
+                                                [spenderAddress]:
+                                                    allowanceRecord,
+                                            };
+                                        }
+                                        return acc;
+                                    },
+                                    {}
+                                );
                                 //if there is at least 1 spender
-                                if (
-                                    Object.keys(
-                                        allowancesRecord.allowances || {}
-                                    ).length > 0
-                                ) {
+                                if (Object.keys(tokenAllowances).length > 0) {
                                     return {
                                         ...acc,
                                         [tokenAddress]: allowancesRecord,
@@ -361,7 +392,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         );
     }
 
-    private _getUpdatedAccountAllowances = async (
+    private _getUpdatedAccountAllowancesFromEvent = async (
         chainId: number,
         account: AccountInfo,
         newAllowances: NewTokenAllowanceSpendersEventParametersSignature['2']
@@ -412,8 +443,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
                     newTokenSpendersAllowance[spender] = {
                         value: spenderAllowance,
-                        updatedAt: txTime || new Date().getTime(),
+                        updatedAt: new Date().getTime(),
                         txHash,
+                        txTime,
                     };
                 } catch (e) {
                     log.warn(
@@ -432,18 +464,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     ...allowances[chainId].tokens,
                     [tokenAddress]: {
                         token: currentToken,
-                        allowances: Object.entries({
+                        allowances: {
                             ...currentTokenSpenders.allowances,
                             ...newTokenSpendersAllowance,
-                        }).reduce((acc, [spenderAddress, allowanceRecord]) => {
-                            if (BigNumber.from(allowanceRecord.value).gt(0)) {
-                                return {
-                                    ...acc,
-                                    [spenderAddress]: allowanceRecord,
-                                };
-                            }
-                            return acc;
-                        }, {}), //start from empty allowances since it is going to be filled in the reduce function
+                        },
                     },
                 },
             };
@@ -457,13 +481,16 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         const currentAccountAddress =
             this._preferencesController.getSelectedAddress();
         const { chainId } = this._networkController.network;
+        const provider = this._networkController.getProvider();
         const currentAccount =
             this.store.getState().accounts[currentAccountAddress];
         if (!currentAccount) {
             return;
         }
 
-        const chainAllowances = (currentAccount.allowances || {})[chainId];
+        const chainAllowances = cloneDeep(
+            (currentAccount.allowances || {})[chainId]
+        );
 
         if (
             !chainAllowances ||
@@ -472,13 +499,11 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             return;
         }
 
-        //const updates = {};
-        /*
         for (const tokenAddress in chainAllowances.tokens) {
             const tokenSpenders =
                 chainAllowances.tokens[tokenAddress].allowances;
-            await Promise.all(
-                Object.keys(tokenSpenders).map(async (spender) => {
+            for (const spender in tokenSpenders) {
+                try {
                     const allowance =
                         await this._tokenOperationsController.allowance(
                             tokenAddress,
@@ -486,54 +511,81 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             spender
                         );
                     const currentAllowanceRecord = tokenSpenders[spender];
-                    //if not equal, then update
+                    let txHash: string | undefined;
+                    let txTime: number | undefined;
+
+                    //if not equal, then store the update to be processed
                     if (
                         !allowance.eq(
                             BigNumber.from(currentAllowanceRecord.value ?? 0)
                         )
                     ) {
+                        if (allowance.gt(BigNumber.from(0))) {
+                            //attempt to get new txHash and time
+                            ({ txHash, txTime } =
+                                await this._lookupLastTokenApprovalEventTx(
+                                    currentAccountAddress,
+                                    spender,
+                                    currentAllowanceRecord.txHash,
+                                    provider
+                                ));
+                        }
+                        chainAllowances.tokens[tokenAddress].allowances[
+                            spender
+                        ] = {
+                            value: allowance,
+                            txHash,
+                            txTime,
+                            updatedAt: new Date().getTime(),
+                        };
                     }
-                    return;
-                })
-            );
-
-            for (const spender in tokenSpenders) {
-                const allowance =
-                    await this._tokenOperationsController.allowance(
-                        tokenAddress,
-                        currentAccountAddress,
-                        spender
+                } catch (e) {
+                    log.warn(
+                        'Error requesting _tokenOperationsController.allowance',
+                        e
                     );
-                const currentAllowanceRecord = tokenSpenders[spender];
-                //if not equal, then update
-                if (
-                    !allowance.eq(BigNumber.from(currentAllowanceRecord.value))
-                ) {
+                    continue;
                 }
             }
+        }
 
-        } */
+        const usrAccountData =
+            this.store.getState().accounts[currentAccountAddress];
+        const newAllowancesState = {
+            ...usrAccountData.allowances,
+            [chainId]: chainAllowances,
+        };
+        this._updateAccountAllowancesState(
+            currentAccountAddress,
+            newAllowancesState
+        );
         this.store.updateState({ isRefreshingAllowances: false });
     }
 
-    private async _updateSpenderAllowances(
+    private async _handleNewTokenAllowanceSpendersEvents(
         ...args: NewTokenAllowanceSpendersEventParametersSignature
     ) {
+        const release = await this._mutex.acquire();
         const [chainId, accountAddress, newAllowances] = args;
         const { accounts, hiddenAccounts } = this.store.getState();
         const account =
             accounts[accountAddress] || hiddenAccounts[accountAddress];
 
-        const newAccountAllowances = await this._getUpdatedAccountAllowances(
-            chainId,
-            account,
-            newAllowances
-        );
+        try {
+            const newAccountAllowances =
+                await this._getUpdatedAccountAllowancesFromEvent(
+                    chainId,
+                    account,
+                    newAllowances
+                );
 
-        this._updateAccountAllowancesState(
-            accountAddress,
-            newAccountAllowances
-        );
+            this._updateAccountAllowancesState(
+                accountAddress,
+                newAccountAllowances
+            );
+        } finally {
+            release();
+        }
     }
 
     private _updateAccountAllowancesState(
@@ -564,6 +616,64 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 },
             });
         }
+    }
+
+    private async _lookupLastTokenApprovalEventTx(
+        accountAddress: string,
+        spenderAddress: string,
+        lastTxHash: string | undefined,
+        provider: StaticJsonRpcProvider
+    ): Promise<{
+        txHash?: string;
+        txTime?: number;
+    }> {
+        let newTxHash = undefined;
+        const newTxTime = undefined;
+        const lastMinedBlock = this._blockUpdatesController.getBlockNumber();
+        let queryFromBlock = 0;
+        //fetch new txHash
+        if (lastTxHash) {
+            try {
+                const oldTtransaction =
+                    await retryHandling<providers.TransactionResponse>(() =>
+                        provider.getTransaction(lastTxHash)
+                    );
+                if (oldTtransaction.blockNumber) {
+                    queryFromBlock = oldTtransaction.blockNumber;
+                }
+            } catch (e) {
+                log.warn('Error getting old allowance transaction by hash', e);
+            }
+            if (!queryFromBlock) {
+                queryFromBlock = this._blockUpdatesController.getBlockNumber();
+            }
+
+            const rpcLogsFetcher = new RPCLogsFetcher(provider);
+            const logs = await runPromiseSafely(
+                rpcLogsFetcher.getLogsFromChainInBatch(
+                    {
+                        topics: getTokenApprovalLogsTopics(
+                            accountAddress,
+                            WatchedTransactionType.ERC20,
+                            spenderAddress
+                        ),
+                        toBlock: lastMinedBlock,
+                        fromBlock: queryFromBlock,
+                    },
+                    lastMinedBlock
+                )
+            );
+            if (logs && logs.length) {
+                const lastLog = logs[logs.length - 1];
+                if (lastLog.transactionHash !== lastTxHash) {
+                    newTxHash = lastLog.transactionHash;
+                }
+            }
+        }
+        return {
+            txHash: newTxHash,
+            txTime: newTxTime,
+        };
     }
 
     /**

@@ -74,6 +74,7 @@ enum ACCOUNT {
     SELECT = 'SELECT_ACCOUNT',
     GET_BALANCE = 'GET_ACCOUNT_BALANCE',
     HIDE = 'HIDE_ACCOUNT',
+    REFRESH_TOKEN_ALLOWANCES = 'REFRESH_TOKEN_ALLOWANCES',
     UNHIDE = 'UNHIDE_ACCOUNT',
     GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
 }
@@ -294,6 +295,7 @@ export interface RequestSignatures {
     [Messages.ACCOUNT.RENAME]: [RequestAccountRename, boolean];
     [Messages.ACCOUNT.SELECT]: [RequestAccountSelect, boolean];
     [Messages.ACCOUNT.GET_BALANCE]: [string, BigNumber];
+    [Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES]: [void, void];
     [Messages.ACCOUNT.GET_NATIVE_TOKEN_BALANCE]: [
         number,
         BigNumber | undefined

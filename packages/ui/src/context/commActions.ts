@@ -1383,6 +1383,10 @@ export const removeHardwareWallet = async (
     return sendMessage(Messages.WALLET.HARDWARE_REMOVE, { device })
 }
 
+export const refreshTokenAllowances = (): Promise<void> => {
+    return sendMessage(Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES)
+}
+
 /**
  * Checks if the given account has enough allowance to make the exchange
  *

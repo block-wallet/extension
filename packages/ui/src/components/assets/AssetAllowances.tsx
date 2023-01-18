@@ -15,15 +15,16 @@ const AssetAllowances = () => {
         <>
             {tokenAllowances && tokenAllowances.allowances?.length > 0 ? (
                 tokenAllowances.allowances.map((allowance) => (
-                    <>
+                    <div key={allowance.allowance.txHash}>
                         <AllowanceItem
                             allowance={allowance.allowance}
                             token={tokenAllowances.groupBy}
                             spender={allowance.displayData}
                             showToken={false}
+                            fromAssetDetails={true}
                         />
                         <hr />
-                    </>
+                    </div>
                 ))
             ) : (
                 <span className="text-sm text-gray-500 pt-4 mx-auto">

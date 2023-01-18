@@ -21,27 +21,34 @@ export class RPCLogsFetcher {
 
     /**
      * Process a chain query by batch and invokes the executor for every chunk
-     * @param filter
-     * @param provider
+     * @param fromBlock start block of the query
+     * @param toBlock end block of the query
      * @returns
      */
     public async batchedChainQuery(
-        currentBlock: number,
-        lastBlockQueried: number,
-        chunkExecutor: (fromBlock: number, toBlock: number) => Promise<void>
+        fromBlock: number,
+        toBlock: number,
+        chunkExecutor: (
+            chunkFromBlock: number,
+            chunkToBlock: number
+        ) => Promise<void>
     ): Promise<void> {
-        if (currentBlock > lastBlockQueried) {
+        if (toBlock > fromBlock) {
             const max = this.config.maxBlockBatchSize;
-            const steps = Math.ceil((currentBlock - lastBlockQueried) / max);
+            const steps = Math.ceil((toBlock - fromBlock) / max);
             for (let i = 0; i < steps; i++) {
-                const fromBlock = lastBlockQueried + max * i;
-                const toBlock = Math.min(
-                    lastBlockQueried + max * (i + 1),
-                    currentBlock
+                const chunkFromBlock = fromBlock + max * i;
+                const chunkToBlock = Math.min(
+                    fromBlock + max * (i + 1),
+                    toBlock
                 );
-                await chunkExecutor(fromBlock, toBlock);
+                await chunkExecutor(chunkFromBlock, chunkToBlock);
             }
         }
+    }
+
+    private _getBlockAsNumber(block: string | number): number {
+        return typeof block === 'string' ? parseInt(block) : block;
     }
 
     public async getLogsFromChainInBatch(
@@ -53,25 +60,14 @@ export class RPCLogsFetcher {
             throw new Error('You must specify a block range.');
         }
 
-        const fromBlock =
-            typeof filter.fromBlock === 'string'
-                ? parseInt(filter.fromBlock)
-                : filter.fromBlock;
+        const fromBlock = this._getBlockAsNumber(filter.fromBlock);
 
-        const toBlock =
-            typeof filter.toBlock === 'string'
-                ? parseInt(filter.toBlock)
-                : filter.toBlock;
+        const toBlock = this._getBlockAsNumber(filter.toBlock);
 
-        if (toBlock > fromBlock) {
-            const max = this.config.maxBlockBatchSize;
-            const steps = Math.ceil((toBlock - fromBlock) / max);
-            for (let i = 0; i < steps; i++) {
-                const chunkFromBlock = fromBlock + max * i;
-                const chunkToBlock = Math.min(
-                    fromBlock + max * (i + 1),
-                    toBlock
-                );
+        await this.batchedChainQuery(
+            fromBlock,
+            toBlock,
+            async (chunkFromBlock, chunkToBlock) => {
                 const newLogs = await this.getLogsFromChain(
                     {
                         ...filter,
@@ -82,7 +78,7 @@ export class RPCLogsFetcher {
                 );
                 logs = logs.concat(newLogs);
             }
-        }
+        );
         return logs;
     }
 

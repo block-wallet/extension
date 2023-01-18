@@ -107,8 +107,7 @@ import type {
     RequestAccountReset,
     RequestSetDefaultGas,
     RequestCalculateApproveTransactionGasLimit,
-    SubmitQRHardwareCryptoHDKeyMessage,
-    SubmitQRHardwareCryptoAccountMessage,
+    SubmitQRHardwareCryptoHDKeyOrAccountMessage,
     SubmitQRHardwareSignatureMessage,
     CancelSyncQRHardwareMessage,
     CancelQRHardwareSignRequestMessage,
@@ -227,6 +226,7 @@ import RemoteConfigsController, {
     RemoteConfigsControllerState,
 } from './RemoteConfigsController';
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
+import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -1027,13 +1027,9 @@ export default class BlankController extends EventEmitter {
                 return this.removeHardwareWallet(
                     request as RequestRemoveHardwareWallet
                 );
-            case Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY:
-                return this.hardwareQrSubmitCryptoHdKey(
-                    request as SubmitQRHardwareCryptoHDKeyMessage
-                );
-            case Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_ACCOUNT:
-                return this.hardwareQrSubmitCryptoAccount(
-                    request as SubmitQRHardwareCryptoAccountMessage
+            case Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT:
+                return this.hardwareQrSubmitCryptoHdKeyOrAccount(
+                    request as SubmitQRHardwareCryptoHDKeyOrAccountMessage
                 );
             case Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE:
                 return this.hardwareQrSubmitSignature(
@@ -3139,31 +3135,55 @@ export default class BlankController extends EventEmitter {
         return true;
     }
 
-    private async hardwareQrSubmitCryptoHdKey({
-        cbor,
-    }: SubmitQRHardwareCryptoHDKeyMessage): Promise<void> {
-        this.keyringController.submitQRHardwareCryptoHDKey(cbor);
-    }
+    private async hardwareQrSubmitCryptoHdKeyOrAccount({
+        qr,
+    }: SubmitQRHardwareCryptoHDKeyOrAccountMessage): Promise<boolean> {
+        console.log('hardwareQrSubmitCryptoHdKeyOrAccount', { qr });
+        try {
+            const decoder = new URRegistryDecoder();
+            if (!decoder.receivePart(qr)) {
+                console.log('urRegistryDecoder.receivePart(qr) === false');
+                return false;
+            }
 
-    private async hardwareQrSubmitCryptoAccount({
-        cbor,
-    }: SubmitQRHardwareCryptoAccountMessage): Promise<void> {
-        this.keyringController.submitQRHardwareCryptoAccount(cbor);
+            if (!decoder.isSuccess() || decoder.isError()) {
+                console.log(decoder.resultError());
+                return false;
+            }
+
+            const result = decoder.resultRegistryType();
+            const ur = result.toUR();
+            if (ur.type === 'crypto-hdkey') {
+                await this.keyringController.submitQRHardwareCryptoHDKey(
+                    ur.cbor.toString('hex')
+                );
+            } else {
+                await this.keyringController.submitQRHardwareCryptoAccount(
+                    ur.cbor.toString('hex')
+                );
+            }
+            return false;
+        } catch (err) {
+            console.log(err);
+            return false;
+        }
     }
 
     private async hardwareQrSubmitSignature({
-        requestId,
-        cbor,
-    }: SubmitQRHardwareSignatureMessage): Promise<void> {
-        this.keyringController.submitQRHardwareSignature(requestId, cbor);
+        qr,
+    }: SubmitQRHardwareSignatureMessage): Promise<boolean> {
+        this.keyringController.submitQRHardwareSignature('requestId', 'cbor');
+        return true;
     }
 
-    private async hardwareQrCancelSync({}: CancelSyncQRHardwareMessage): Promise<void> {
+    private async hardwareQrCancelSync({}: CancelSyncQRHardwareMessage): Promise<boolean> {
         this.keyringController.cancelSyncQRHardware();
+        return true;
     }
 
-    private async hardwareQrCancelSignRequest({}: CancelQRHardwareSignRequestMessage): Promise<void> {
+    private async hardwareQrCancelSignRequest({}: CancelQRHardwareSignRequestMessage): Promise<boolean> {
         this.keyringController.cancelQRHardwareSignRequest();
+        return true;
     }
 
     /*

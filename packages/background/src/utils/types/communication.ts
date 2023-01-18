@@ -221,8 +221,7 @@ enum WALLET {
     HARDWARE_IS_LINKED = 'HARDWARE_IS_LINKED',
     SET_DEFAULT_GAS = 'SET_DEFAULT_GAS',
     // qr hardware devices
-    HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY = 'HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY',
-    HARDWARE_QR_SUBMIT_CRYPTO_ACCOUNT = 'HARDWARE_QR_SUBMIT_CRYPTO_ACCOUNT',
+    HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT = 'HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT',
     HARDWARE_QR_SUBMIT_SIGNATURE = 'HARDWARE_QR_SUBMIT_SIGNATURE',
     HARDWARE_QR_CANCEL_SYNC = 'HARDWARE_QR_CANCEL_SYNC',
     HARDWARE_QR_CANCEL_SIGN_REQUEST = 'HARDWARE_QR_CANCEL_SIGN_REQUEST',
@@ -532,25 +531,21 @@ export interface RequestSignatures {
         RequestGenerateOnDemandReleaseNotes,
         ReleaseNote[]
     ];
-    [Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY]: [
-        SubmitQRHardwareCryptoHDKeyMessage,
-        void
-    ];
-    [Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_ACCOUNT]: [
-        SubmitQRHardwareCryptoAccountMessage,
-        void
+    [Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT]: [
+        SubmitQRHardwareCryptoHDKeyOrAccountMessage,
+        boolean
     ];
     [Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE]: [
         SubmitQRHardwareSignatureMessage,
-        void
+        boolean
     ];
     [Messages.WALLET.HARDWARE_QR_CANCEL_SYNC]: [
         CancelSyncQRHardwareMessage,
-        void
+        boolean
     ];
     [Messages.WALLET.HARDWARE_QR_CANCEL_SIGN_REQUEST]: [
         CancelQRHardwareSignRequestMessage,
-        void
+        boolean
     ];
 }
 
@@ -1089,15 +1084,11 @@ export interface WindowTransportResponseMessage
     origin: Origin;
 }
 
-export interface SubmitQRHardwareCryptoHDKeyMessage {
-    cbor: string;
-}
-export interface SubmitQRHardwareCryptoAccountMessage {
-    cbor: string;
+export interface SubmitQRHardwareCryptoHDKeyOrAccountMessage {
+    qr: string;
 }
 export interface SubmitQRHardwareSignatureMessage {
-    requestId: string;
-    cbor: string;
+    qr: string;
 }
 export interface CancelSyncQRHardwareMessage {}
 export interface CancelQRHardwareSignRequestMessage {}

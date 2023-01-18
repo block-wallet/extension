@@ -1355,37 +1355,30 @@ export const removeHardwareWallet = async (
     return sendMessage(Messages.WALLET.HARDWARE_REMOVE, { device })
 }
 
-export const hardwareQrSubmitCryptoHdKey = async (
-    cbor: string
-): Promise<void> => {
-    return sendMessage(Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY, {
-        cbor,
-    })
-}
-
-export const hardwareQrSubmitCryptoAccount = async (
-    cbor: string
-): Promise<void> => {
-    return sendMessage(Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_ACCOUNT, {
-        cbor,
-    })
+export const hardwareQrSubmitCryptoHdKeyOrAccount = async (
+    qr: string
+): Promise<boolean> => {
+    return sendMessage(
+        Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT,
+        {
+            qr,
+        }
+    )
 }
 
 export const hardwareQrSubmitSignature = async (
-    requestId: string,
-    cbor: string
-): Promise<void> => {
+    qr: string
+): Promise<boolean> => {
     return sendMessage(Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE, {
-        requestId,
-        cbor,
+        qr,
     })
 }
 
-export const hardwareQrCancelSync = async (): Promise<void> => {
+export const hardwareQrCancelSync = async (): Promise<boolean> => {
     return sendMessage(Messages.WALLET.HARDWARE_QR_CANCEL_SYNC)
 }
 
-export const hardwareQrCancelSignRequest = async (): Promise<void> => {
+export const hardwareQrCancelSignRequest = async (): Promise<boolean> => {
     return sendMessage(Messages.WALLET.HARDWARE_QR_CANCEL_SYNC)
 }
 

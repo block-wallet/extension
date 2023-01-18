@@ -1,4 +1,7 @@
-import { connectHardwareWallet } from "../../context/commActions"
+import {
+    connectHardwareWallet,
+    hardwareQrSubmitCryptoHdKeyOrAccount,
+} from "../../context/commActions"
 import { Devices } from "../../context/commTypes"
 import { requestConnectDevice } from "../../context/util/requestConnectDevice"
 import useAsyncInvoke from "./useAsyncInvoke"
@@ -14,6 +17,13 @@ const executeConnect = async (vendor: Devices): Promise<boolean> => {
         }
     } else if (vendor == Devices.KEYSTONE) {
         // TODO (KEYSTONE): Here we should read the qr with the camera
+        const UR =
+            "UR:CRYPTO-HDKEY/PTAOWKAXHDCLAXAMLSDSDSFSYLLTFLGAAYLDFTBNMWRDPAHLPTJSFDOSDPONAAEENYHKMOYLREJLGOAAHDCXSEJORFDRBNSKKBESEHPMLDMTCYPMRSBNDRKBIDKIFLSSWLTIESDRHKTSZTHGHHINAHTAADEHOEADCSFNAOAEAMTAADDYOTADLNCSDWYKCSFNYKAEYKAOCYZCTEHDWKAXAXATTAADDYOEADLRAEWKLAWKAXAEAYCYPFKPEOASASISGRIHKKJKJYJLJTIHBKJOHSIAIAJLKPJTJYDMJKJYHSJTIEHSJPIEKBJZJTYN"
+
+        const submissionOk = await hardwareQrSubmitCryptoHdKeyOrAccount(UR)
+        if (!submissionOk) {
+            return Promise.resolve(false)
+        }
     }
     try {
         return await connectHardwareWallet(vendor)

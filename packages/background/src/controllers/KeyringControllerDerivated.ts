@@ -754,20 +754,32 @@ export default class KeyringControllerDerivated extends KeyringController {
         }
     }
 
+    // TODO(KEYSTONE): write some js docs
+
     // qr hardware devices
-    submitQRHardwareCryptoHDKey(cbor: string) {
+    async submitQRHardwareCryptoHDKey(cbor: string) {
+        console.log('submitQRHardwareCryptoHDKey', { cbor });
+        const r = this._qrHardwareKeyring.readKeyring();
         this._qrHardwareKeyring.submitCryptoHDKey(cbor);
+        await r;
+        console.log(this.fullUpdate());
     }
-    submitQRHardwareCryptoAccount(cbor: string) {
+    async submitQRHardwareCryptoAccount(cbor: string) {
+        console.log('submitQRHardwareCryptoAccount', { cbor });
+        const r = this._qrHardwareKeyring.readKeyring();
         this._qrHardwareKeyring.submitCryptoAccount(cbor);
+        await r;
     }
     submitQRHardwareSignature(requestId: string, cbor: string) {
+        console.log('submitQRHardwareSignature', { requestId, cbor });
         this._qrHardwareKeyring.submitSignature(requestId, cbor);
     }
     cancelSyncQRHardware() {
+        console.log('cancelSyncQRHardware');
         this._qrHardwareKeyring.cancelSync();
     }
     cancelQRHardwareSignRequest() {
+        console.log('cancelQRHardwareSignRequest');
         this._qrHardwareKeyring.cancelSignRequest();
     }
 }

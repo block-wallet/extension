@@ -7,13 +7,13 @@ const AllowanceList = ({ allowances }: { allowances: generalAllowances }) => {
         <div>
             {allowances.length > 0 &&
                 allowances.map((accountAllowance) => (
-                    <>
+                    <div key={accountAllowance.groupBy.address}>
                         <span className="text-gray-600">
                             {accountAllowance.groupBy.name}
                         </span>
                         <div className="flex flex-col mb-6">
                             {accountAllowance.allowances.map((allowance) => (
-                                <>
+                                <div key={allowance.allowance.txHash}>
                                     <AllowanceItem
                                         token={
                                             accountAllowance.groupBy.type ===
@@ -34,10 +34,10 @@ const AllowanceList = ({ allowances }: { allowances: generalAllowances }) => {
                                         }
                                     />
                                     <hr />
-                                </>
+                                </div>
                             ))}
                         </div>
-                    </>
+                    </div>
                 ))}
         </div>
     )

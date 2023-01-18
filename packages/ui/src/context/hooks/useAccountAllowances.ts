@@ -21,6 +21,7 @@ export type AllowanceDisplayData = {
     address: string
     name: string
     symbol?: string
+    decimals?: number
     logo: string
     type: AllowancesFilters
 }
@@ -50,6 +51,7 @@ const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
                     name: token.token.name,
                     address: token.token.address,
                     symbol: token.token.symbol,
+                    decimals: token.token.decimals,
                     logo: token.token.logo,
                     type: AllowancesFilters.TOKEN,
                 },
@@ -101,6 +103,7 @@ const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
                                     name: tokenData.name,
                                     logo: tokenData.logo,
                                     symbol: tokenData.symbol,
+                                    decimals: tokenData.decimals,
                                     address: tokenData.address,
                                     type: AllowancesFilters.TOKEN,
                                 },
@@ -120,6 +123,7 @@ const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
                                     name: tokenData.name,
                                     logo: tokenData.logo,
                                     symbol: tokenData.symbol,
+                                    decimals: tokenData.decimals,
                                     address: tokenData.address,
                                     type: AllowancesFilters.TOKEN,
                                 },

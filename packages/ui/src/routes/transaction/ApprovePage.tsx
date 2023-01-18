@@ -56,7 +56,7 @@ import { TransactionAdvancedData } from "@block-wallet/background/controllers/tr
 import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { MaxUint256 } from "@ethersproject/constants"
-import { Token } from "@block-wallet/background/controllers/erc-20/Token"
+import { AllowancePageLocalState } from "../account/AllowancesPage"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
@@ -175,7 +175,10 @@ export interface ApprovePageLocalState {
     assetAddress: string
     minAllowance?: BigNumber
     approveOperation: ApproveOperation
-    nextLocationState: BridgeConfirmPageLocalState | SwapConfirmPageLocalState
+    nextLocationState:
+        | BridgeConfirmPageLocalState
+        | SwapConfirmPageLocalState
+        | AllowancePageLocalState
 }
 
 const ApprovePage: FunctionComponent<{}> = () => {
@@ -508,7 +511,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     customNonce
                 )
             } else {
-                res = await approveAllowance(
+                allowanceResponse = await approveAllowance(
                     assetAllowance,
                     BigNumber.from(assetAllowance),
                     history.location.state.spenderAddress,
@@ -556,12 +559,21 @@ const ApprovePage: FunctionComponent<{}> = () => {
             return
         }
 
-        const pathname =
+        let pathname =
             approveOperation === ApproveOperation.SWAP
                 ? "/swap/confirm"
                 : approveOperation === ApproveOperation.BRIDGE
                 ? "/bridge/confirm"
                 : "/"
+
+        if (approveOperation === ApproveOperation.REVOKE) {
+            const allowanceNextLocationState =
+                nextLocationState as AllowancePageLocalState
+
+            pathname = allowanceNextLocationState.fromAssetDetails
+                ? "/asset/details"
+                : "/accounts/menu/allowances"
+        }
 
         history.push({
             pathname,
@@ -601,12 +613,15 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 })
             }
         } else if (approveOperation === ApproveOperation.REVOKE) {
+            const allowanceNextLocationState =
+                nextLocationState as AllowancePageLocalState
             return () => {
                 history.push({
-                    pathname: "/asset/details",
+                    pathname: allowanceNextLocationState.fromAssetDetails
+                        ? "/asset/details"
+                        : "/accounts/menu/allowances",
                     state: {
-                        address: assetAddress,
-                        tab: "Allowances",
+                        ...nextLocationState,
                         transitionDirection: "right",
                     },
                 })
@@ -770,7 +785,11 @@ const ApprovePage: FunctionComponent<{}> = () => {
         <PopupLayout
             header={
                 <PopupHeader
-                    title={"Allowance"}
+                    title={
+                        BigNumber.from(assetAllowance).isZero()
+                            ? "Revoke Allowance"
+                            : "Allowance"
+                    }
                     disabled={isApproving}
                     onBack={onBack()}
                     networkIndicator

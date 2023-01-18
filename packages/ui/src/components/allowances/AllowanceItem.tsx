@@ -1,27 +1,31 @@
 import { useState } from "react"
 import { TokenAllowance } from "@block-wallet/background/controllers/AccountTrackerController"
-import { BigNumber } from "ethers"
 import { Classes, classnames } from "../../styles"
 import ChevronRightIcon from "../icons/ChevronRightIcon"
 import AllowanceIcon from "./AllowanceIcon"
 import revokeIcon from "../../assets/images/icons/revoke.svg"
 import useIsHovering from "../../util/hooks/useIsHovering"
-import { getAllowanceValue } from "../../util/getAllowanceValue"
 import DetailsDialog from "../dialog/DetailsDialog"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { ApproveOperation } from "../../routes/transaction/ApprovePage"
 import { AllowanceDisplayData } from "../../context/hooks/useAccountAllowances"
+import { AllowancesFilters } from "./AllowancesFilterButton"
+import { AllowancePageLocalState } from "../../routes/account/AllowancesPage"
+import { formatUnits } from "ethers/lib/utils"
+import { formatRounded } from "../../util/formatRounded"
 
 const AllowanceItem = ({
     allowance,
     token,
     spender,
     showToken = false,
+    fromAssetDetails = false,
 }: {
     allowance: TokenAllowance
     token: AllowanceDisplayData
     spender: AllowanceDisplayData
     showToken?: boolean
+    fromAssetDetails?: boolean
 }) => {
     const history = useOnMountHistory()
 
@@ -29,22 +33,36 @@ const AllowanceItem = ({
     const { isHovering: isHoveringButton, getIsHoveringProps } = useIsHovering()
 
     const revoke = () => {
+        const AllowancePageState = {
+            fromAssetDetails: fromAssetDetails,
+            address: token.address,
+            tab: "Allowances",
+            groupBy: showToken
+                ? AllowancesFilters.SPENDER
+                : AllowancesFilters.TOKEN,
+        } as AllowancePageLocalState
+
         history.push({
             pathname: "/transaction/approve",
             state: {
                 assetAddress: token.address,
                 approveOperation: ApproveOperation.REVOKE,
                 spenderAddress: spender.address,
+                nextLocationState: AllowancePageState,
             },
         })
     }
 
     const name = showToken ? token.name : spender.name
 
-    const allowanceValue =
-        getAllowanceValue(BigNumber.from(allowance.value)._hex) +
-        " " +
-        token.symbol
+    const formattedTokenAllowance = formatUnits(
+        allowance.value || "0",
+        token.decimals
+    )
+
+    const roundedTokenAllowance = formatRounded(formattedTokenAllowance, 5)
+
+    const allowanceValue = roundedTokenAllowance + " " + token.symbol
 
     const logo = showToken ? token.logo : spender.logo
 
@@ -60,10 +78,7 @@ const AllowanceItem = ({
         },
         {
             title: "Allowance Value",
-            content:
-                getAllowanceValue(BigNumber.from(allowance.value)._hex) +
-                " " +
-                token?.symbol,
+            content: allowanceValue,
             expandable: true,
         },
         {

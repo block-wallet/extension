@@ -678,7 +678,7 @@ export default class KeyringControllerDerivated extends KeyringController {
     }
 
     // QR Hardware related methods
-    // TODO(REC): Check if these methods are needed
+    // TODO (KEYSTONE): Check if these methods are needed
 
     /**
      * Get qr hardware keyring.

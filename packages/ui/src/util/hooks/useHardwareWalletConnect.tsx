@@ -12,6 +12,8 @@ const executeConnect = async (vendor: Devices): Promise<boolean> => {
         if (!connectionOk) {
             return Promise.resolve(false)
         }
+    } else if (vendor == Devices.KEYSTONE) {
+        // TODO (KEYSTONE): Here we should read the qr with the camera
     }
     try {
         return await connectHardwareWallet(vendor)

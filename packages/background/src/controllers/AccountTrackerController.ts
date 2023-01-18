@@ -15,7 +15,7 @@ import {
 } from './erc-20/TokenController';
 import { Token } from './erc-20/Token';
 import { toChecksumAddress } from 'ethereumjs-util';
-import { TokenOperationsController } from './erc-20/transactions/Transaction';
+import { TokenOperationsController } from './erc-20/transactions/TokenOperationsController';
 import { Mutex } from 'async-mutex';
 import initialState from '../utils/constants/initialState';
 import log from 'loglevel';
@@ -45,10 +45,11 @@ import {
 import { isNativeTokenAddress } from '../utils/token';
 import { WatchedTransactionType } from './transactions/utils/types';
 import { retryHandling } from '../utils/retryHandling';
-import { providers } from 'ethers';
+import { ethers, providers } from 'ethers';
 import { RPCLogsFetcher } from '../utils/rpc/RPCLogsFetcher';
 import { getTokenApprovalLogsTopics } from '../utils/logsQuery';
 import { runPromiseSafely } from '../utils/promises';
+import { MaxUint256 } from '@ethersproject/constants';
 
 export enum AccountStatus {
     ACTIVE = 'ACTIVE',
@@ -60,6 +61,7 @@ export interface AccountBalanceToken {
     balance: BigNumber;
 }
 export interface TokenAllowance {
+    isUnlimited: boolean;
     updatedAt: number;
     value: BigNumber;
     txHash?: string;
@@ -398,7 +400,15 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         newAllowances: NewTokenAllowanceSpendersEventParametersSignature['2']
     ) => {
         const allowances = cloneDeep(account.allowances);
-
+        const networkProvider =
+            this._networkController.getProviderForChainId(chainId);
+        if (!networkProvider) {
+            log.warn(
+                'No network provider for the specified chain id:',
+                chainId
+            );
+            return;
+        }
         if (!allowances[chainId]) {
             allowances[chainId] = { tokens: {} };
         }
@@ -423,7 +433,15 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 if (!token) {
                     continue;
                 }
-                currentToken = token;
+                const totalSupply =
+                    await this._tokenOperationsController.totalSupply(
+                        tokenAddress,
+                        networkProvider
+                    );
+                currentToken = {
+                    ...token,
+                    totalSupply,
+                };
             }
 
             //grab all the new allowances per token address
@@ -442,6 +460,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         );
 
                     newTokenSpendersAllowance[spender] = {
+                        isUnlimited: this._calculateIsUnlimitedAllowance(
+                            currentToken,
+                            spenderAllowance
+                        ),
                         value: spenderAllowance,
                         updatedAt: new Date().getTime(),
                         txHash,
@@ -484,82 +506,93 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         const provider = this._networkController.getProvider();
         const currentAccount =
             this.store.getState().accounts[currentAccountAddress];
-        if (!currentAccount) {
-            return;
-        }
+        try {
+            if (!currentAccount) {
+                return;
+            }
 
-        const chainAllowances = cloneDeep(
-            (currentAccount.allowances || {})[chainId]
-        );
+            const chainAllowances = cloneDeep(
+                (currentAccount.allowances || {})[chainId]
+            );
 
-        if (
-            !chainAllowances ||
-            Object.keys(chainAllowances.tokens).length === 0
-        ) {
-            return;
-        }
+            if (
+                !chainAllowances ||
+                Object.keys(chainAllowances.tokens).length === 0
+            ) {
+                return;
+            }
 
-        for (const tokenAddress in chainAllowances.tokens) {
-            const tokenSpenders =
-                chainAllowances.tokens[tokenAddress].allowances;
-            for (const spender in tokenSpenders) {
-                try {
-                    const allowance =
-                        await this._tokenOperationsController.allowance(
-                            tokenAddress,
-                            currentAccountAddress,
-                            spender
-                        );
-                    const currentAllowanceRecord = tokenSpenders[spender];
-                    let txHash: string | undefined;
-                    let txTime: number | undefined;
+            for (const tokenAddress in chainAllowances.tokens) {
+                const tokenSpenders =
+                    chainAllowances.tokens[tokenAddress].allowances;
+                const currentToken = chainAllowances.tokens[tokenAddress].token;
+                for (const spender in tokenSpenders) {
+                    try {
+                        const allowance =
+                            await this._tokenOperationsController.allowance(
+                                tokenAddress,
+                                currentAccountAddress,
+                                spender
+                            );
+                        const currentAllowanceRecord = tokenSpenders[spender];
+                        let txHash: string | undefined;
+                        let txTime: number | undefined;
 
-                    //if not equal, then store the update to be processed
-                    if (
-                        !allowance.eq(
-                            BigNumber.from(currentAllowanceRecord.value ?? 0)
-                        )
-                    ) {
-                        if (allowance.gt(BigNumber.from(0))) {
-                            //attempt to get new txHash and time
-                            ({ txHash, txTime } =
-                                await this._lookupLastTokenApprovalEventTx(
-                                    currentAccountAddress,
-                                    spender,
-                                    currentAllowanceRecord.txHash,
-                                    provider
-                                ));
+                        //if not equal, then store the update to be processed
+                        if (
+                            !allowance.eq(
+                                BigNumber.from(
+                                    currentAllowanceRecord.value ?? 0
+                                )
+                            )
+                        ) {
+                            if (allowance.gt(BigNumber.from(0))) {
+                                //attempt to get new txHash and time
+                                ({ txHash, txTime } =
+                                    await this._lookupLastTokenApprovalEventTx(
+                                        currentAccountAddress,
+                                        spender,
+                                        currentAllowanceRecord.txHash,
+                                        provider
+                                    ));
+                            }
+                            chainAllowances.tokens[tokenAddress].allowances[
+                                spender
+                            ] = {
+                                isUnlimited:
+                                    this._calculateIsUnlimitedAllowance(
+                                        currentToken,
+                                        allowance
+                                    ),
+                                value: allowance,
+                                txHash,
+                                txTime,
+                                updatedAt: new Date().getTime(),
+                            };
                         }
-                        chainAllowances.tokens[tokenAddress].allowances[
-                            spender
-                        ] = {
-                            value: allowance,
-                            txHash,
-                            txTime,
-                            updatedAt: new Date().getTime(),
-                        };
+                    } catch (e) {
+                        log.warn(
+                            'Error requesting _tokenOperationsController.allowance',
+                            e
+                        );
+                        continue;
                     }
-                } catch (e) {
-                    log.warn(
-                        'Error requesting _tokenOperationsController.allowance',
-                        e
-                    );
-                    continue;
                 }
             }
-        }
 
-        const usrAccountData =
-            this.store.getState().accounts[currentAccountAddress];
-        const newAllowancesState = {
-            ...usrAccountData.allowances,
-            [chainId]: chainAllowances,
-        };
-        this._updateAccountAllowancesState(
-            currentAccountAddress,
-            newAllowancesState
-        );
-        this.store.updateState({ isRefreshingAllowances: false });
+            const usrAccountData =
+                this.store.getState().accounts[currentAccountAddress];
+            const newAllowancesState = {
+                ...usrAccountData.allowances,
+                [chainId]: chainAllowances,
+            };
+            this._updateAccountAllowancesState(
+                currentAccountAddress,
+                newAllowancesState
+            );
+        } finally {
+            this.store.updateState({ isRefreshingAllowances: false });
+        }
     }
 
     private async _handleNewTokenAllowanceSpendersEvents(
@@ -579,10 +612,12 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     newAllowances
                 );
 
-            this._updateAccountAllowancesState(
-                accountAddress,
-                newAccountAllowances
-            );
+            if (newAccountAllowances) {
+                this._updateAccountAllowancesState(
+                    accountAddress,
+                    newAccountAllowances
+                );
+            }
         } finally {
             release();
         }
@@ -674,6 +709,23 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             txHash: newTxHash,
             txTime: newTxTime,
         };
+    }
+
+    private _calculateIsUnlimitedAllowance(
+        currentToken: Token,
+        allowance: BigNumber
+    ) {
+        if (allowance === MaxUint256) {
+            return true;
+        }
+
+        if (currentToken.totalSupply) {
+            return BigNumber.from(currentToken.totalSupply).lte(
+                BigNumber.from(allowance ?? 0)
+            );
+        }
+
+        return false;
     }
 
     /**

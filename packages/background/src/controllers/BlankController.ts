@@ -166,7 +166,7 @@ import {
     TransferTransaction,
     TransferTransactionPopulatedTransactionParams,
 } from './erc-20/transactions/TransferTransaction';
-import { TokenOperationsController } from './erc-20/transactions/Transaction';
+import { TokenOperationsController } from './erc-20/transactions/TokenOperationsController';
 import {
     ProviderEvents,
     ProviderSetupData,
@@ -735,9 +735,7 @@ export default class BlankController extends EventEmitter {
                     request as number
                 );
             case Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES:
-                return this.getAccountNativeTokenBalanceForChain(
-                    request as number
-                );
+                return this.refreshAccountTokenAllowances();
             case Messages.APP.GET_IDLE_TIMEOUT:
                 return this.getIdleTimeout();
             case Messages.APP.SET_IDLE_TIMEOUT:
@@ -1146,7 +1144,7 @@ export default class BlankController extends EventEmitter {
      * It refreshes all the token allownaces for the provided filters
      *
      */
-    public async refreshAccountTokenAllowances(): Promise<void> {
+    private async refreshAccountTokenAllowances(): Promise<void> {
         return this.accountTrackerController.refreshTokenAllowances();
     }
 

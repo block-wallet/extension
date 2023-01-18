@@ -1,3 +1,5 @@
+import { BigNumber } from 'ethers';
+
 export interface IL1Bridge {
     tokenAddress: string;
     bridgeAddress: string;
@@ -32,6 +34,7 @@ export class Token implements IToken {
     symbol: string;
     decimals: number;
     l1Bridge?: IL1Bridge;
+    totalSupply?: BigNumber;
 
     constructor(
         address: string,

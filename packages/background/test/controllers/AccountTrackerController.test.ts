@@ -20,7 +20,7 @@ import {
     TokenControllerProps,
 } from '../../src/controllers/erc-20/TokenController';
 import { PreferencesController } from '../../src/controllers/PreferencesController';
-import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import initialState from '@block-wallet/background/utils/constants/initialState';
 import { getNetworkControllerInstance } from '../mocks/mock-network-instance';
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';

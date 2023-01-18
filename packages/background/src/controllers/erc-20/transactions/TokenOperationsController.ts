@@ -131,4 +131,20 @@ export class TokenOperationsController extends TokenTransactionController {
         const token = new Token(tokenAddress, name, symbol, decimals);
         return { token, fetchFailed };
     }
+
+    /**
+     * Get the erc20 token total supply
+     * @param {string} tokenAddress to chek
+     * @param {string} provider network provider. If it not present, will default to the current network provider.
+     */
+    public async totalSupply(
+        tokenAddress: string,
+        provider: StaticJsonRpcProvider = this._networkController.getProvider()
+    ): Promise<BigNumber> {
+        if (!tokenAddress) {
+            throw tokenAddressParamNotPresentError;
+        }
+        const contract = this.getContract(tokenAddress, provider);
+        return contract.totalSupply();
+    }
 }

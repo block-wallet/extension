@@ -16,7 +16,7 @@ import { TransferTransaction } from '@block-wallet/background/controllers/erc-20
 import { PreferencesController } from '@block-wallet/background/controllers/PreferencesController';
 import { BigNumber } from '@ethersproject/bignumber';
 import { TransactionMeta } from '@block-wallet/background/controllers/transactions/utils/types';
-import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import initialState from '@block-wallet/background/utils/constants/initialState';
 import { mockedPermissionsController } from '../../../mocks/mock-permissions';
 import PermissionsController from '@block-wallet/background/controllers/PermissionsController';

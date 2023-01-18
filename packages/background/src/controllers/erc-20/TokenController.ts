@@ -21,7 +21,7 @@ import {
 import { PreferencesController } from '../PreferencesController';
 import { Mutex } from 'async-mutex';
 import initialState from '../../utils/constants/initialState';
-import { TokenOperationsController } from './transactions/Transaction';
+import { TokenOperationsController } from './transactions/TokenOperationsController';
 import { fillTokenData } from '../../utils/token';
 
 const tokenAddressParamNotPresentError = new Error('token address is required');

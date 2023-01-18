@@ -26,7 +26,7 @@ import {
 } from '@block-wallet/background/utils/types/ethereum';
 import { PreferencesController } from '@block-wallet/background/controllers/PreferencesController';
 import { TokenController } from '../../src/controllers/erc-20/TokenController';
-import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import { TypedTransaction } from '@ethereumjs/tx';
 import { expect } from 'chai';
 import { getNetworkControllerInstance } from '../mocks/mock-network-instance';

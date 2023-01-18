@@ -26,7 +26,7 @@ import {
 import {
     TokenTransactionController,
     TokenTransactionProps,
-} from './Transaction';
+} from './TokenOperationsController';
 import * as transactionUtils from './../../transactions/utils/utils';
 import { INITIAL_NETWORKS } from '../../../utils/constants/networks';
 import { bnGreaterThanZero } from '../../../utils/bnUtils';

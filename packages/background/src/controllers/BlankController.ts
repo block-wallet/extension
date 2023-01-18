@@ -3162,7 +3162,7 @@ export default class BlankController extends EventEmitter {
                     ur.cbor.toString('hex')
                 );
             }
-            return false;
+            return true;
         } catch (err) {
             console.log(err);
             return false;

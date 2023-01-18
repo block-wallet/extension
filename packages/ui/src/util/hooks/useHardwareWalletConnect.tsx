@@ -8,7 +8,10 @@ import useAsyncInvoke from "./useAsyncInvoke"
 import log from "loglevel"
 import useClearStickyStorage from "../../context/hooks/useClearStickyStorage"
 
-const executeConnect = async (vendor: Devices): Promise<boolean> => {
+const executeConnect = async (
+    vendor: Devices,
+    ur?: string
+): Promise<boolean> => {
     // If we add transport type selection, here we should validate if it's WebHID
     if (vendor === Devices.LEDGER) {
         const connectionOk = await requestConnectDevice()
@@ -17,10 +20,9 @@ const executeConnect = async (vendor: Devices): Promise<boolean> => {
         }
     } else if (vendor == Devices.KEYSTONE) {
         // TODO (KEYSTONE): Here we should read the qr with the camera
-        const UR =
-            "UR:CRYPTO-HDKEY/PTAOWKAXHDCLAXAMLSDSDSFSYLLTFLGAAYLDFTBNMWRDPAHLPTJSFDOSDPONAAEENYHKMOYLREJLGOAAHDCXSEJORFDRBNSKKBESEHPMLDMTCYPMRSBNDRKBIDKIFLSSWLTIESDRHKTSZTHGHHINAHTAADEHOEADCSFNAOAEAMTAADDYOTADLNCSDWYKCSFNYKAEYKAOCYZCTEHDWKAXAXATTAADDYOEADLRAEWKLAWKAXAEAYCYPFKPEOASASISGRIHKKJKJYJLJTIHBKJOHSIAIAJLKPJTJYDMJKJYHSJTIEHSJPIEKBJZJTYN"
-
-        const submissionOk = await hardwareQrSubmitCryptoHdKeyOrAccount(UR)
+        const submissionOk = await hardwareQrSubmitCryptoHdKeyOrAccount(
+            ur || ""
+        )
         if (!submissionOk) {
             return Promise.resolve(false)
         }
@@ -38,14 +40,14 @@ const useHardwareWalletConnect = (isReconnecting = false) => {
     const { clear: clearStickyStorage } = useClearStickyStorage()
 
     return {
-        connect: async (vendor: Devices) => {
+        connect: async (vendor: Devices, ur?: string) => {
             // Get rid of the sticky storage data
             // as the user should see the home page after the connection
             // when opening the extension again.
             if (!isReconnecting) {
                 clearStickyStorage()
             }
-            return run(executeConnect(vendor))
+            return run(executeConnect(vendor, ur))
         },
         isLoading,
         isError,

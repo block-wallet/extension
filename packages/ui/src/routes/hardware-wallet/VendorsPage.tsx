@@ -9,8 +9,8 @@ import Divider from "../../components/Divider"
 // Assets & icons
 import ledger from "../../assets/images/icons/ledger.svg"
 import trezor from "../../assets/images/icons/trezor.svg"
-// TODO (KEYSTONE): add a new icon here!
-import keystone from "../../assets/images/icons/trezor.svg"
+import keystone from "../../assets/images/icons/qr_icon.svg"
+// TODO: add a new icon here!
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes } from "../../styles"
 
@@ -21,7 +21,10 @@ const HardwareWalletVendorsPage = () => {
     const [selectedVendor, setSelectedVendor] = useState<Devices>()
     const next = () => {
         history.push({
-            pathname: "/hardware-wallet/connect",
+            pathname:
+                selectedVendor !== Devices.KEYSTONE
+                    ? "/hardware-wallet/connect"
+                    : "/hardware-wallet/keystone-connect",
             state: { vendor: selectedVendor },
         })
     }
@@ -90,6 +93,7 @@ const HardwareWalletVendorsPage = () => {
                             alt="Connect Keystone"
                             className="h-8"
                         />
+                        <span>QR-based</span>
                     </button>
                 </div>
                 <Divider />
@@ -106,7 +110,7 @@ const HardwareWalletVendorsPage = () => {
                         href="https://help.blockwallet.io/hc/en-us/articles/6670542248209-How-to-get-the-Trezor-Hardware-Wallet-"
                         title="How to get a Trezor?"
                     />
-                    {/* TODO (KEYSTONE): Add a link for keystone */}
+                    {/* TODO: Add a link for keystone */}
                     <ExternalLink
                         href="https://help.blockwallet.io/hc/en-us/articles/..."
                         title="How to get a Keystone?"

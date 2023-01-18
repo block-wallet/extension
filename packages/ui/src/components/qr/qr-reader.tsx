@@ -12,6 +12,8 @@ const QrContainer = (props: any) => {
             {scanDelay > 0 && (
                 <>
                     <QrReader
+                        // TODO (KEYSTONE): Complete 'constraints' prop
+                        constraints={{}}
                         scanDelay={scanDelay}
                         onResult={(result: any, error: any) => {
                             if (result) {

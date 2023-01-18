@@ -40,5 +40,5 @@ export const DEVICE_CONNECTION_STEPS: StepData = {
         { label: "Follow steps on Trezor Connect page" },
     ],
     // TODO (KEYSTONE): Complete this.
-    KEYSTONE: [{ label: "some data" }],
+    KEYSTONE: [{ label: "Scan QR Code" }],
 }

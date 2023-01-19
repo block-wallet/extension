@@ -345,12 +345,12 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     ): AccountAllowances {
         //cleanup empty allowances
         return Object.entries(allowances).reduce(
-            (acc, [chainId, allowance]) => {
+            (allowancesAcc, [chainId, allowance]) => {
                 return {
-                    ...acc,
+                    ...allowancesAcc,
                     [chainId]: {
                         tokens: Object.entries(allowance.tokens || {}).reduce(
-                            (acc, [tokenAddress, allowancesRecord]) => {
+                            (tokensAcc, [tokenAddress, allowancesRecord]) => {
                                 const tokenAllowances: Record<
                                     string,
                                     TokenAllowance
@@ -379,11 +379,11 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                 //if there is at least 1 spender
                                 if (Object.keys(tokenAllowances).length > 0) {
                                     return {
-                                        ...acc,
+                                        ...tokensAcc,
                                         [tokenAddress]: allowancesRecord,
                                     };
                                 }
-                                return acc;
+                                return tokensAcc;
                             },
                             {}
                         ),

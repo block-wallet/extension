@@ -433,11 +433,23 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 if (!token) {
                     continue;
                 }
-                const totalSupply =
-                    await this._tokenOperationsController.totalSupply(
+
+                let totalSupply: BigNumber | undefined;
+
+                try {
+                    totalSupply =
+                        await this._tokenOperationsController.totalSupply(
+                            tokenAddress,
+                            networkProvider
+                        );
+                } catch (e) {
+                    log.warn(
+                        'Unable to get total supply of token:',
                         tokenAddress,
-                        networkProvider
+                        e
                     );
+                }
+
                 currentToken = {
                     ...token,
                     totalSupply,

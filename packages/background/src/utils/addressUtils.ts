@@ -1,7 +1,13 @@
 import { toChecksumAddress } from 'ethereumjs-util';
+import { defaultAbiCoder, hexDataLength } from 'ethers/lib/utils';
 
-export function paddedToChecksumAddress(address: string) {
-    if (address.slice(0, 2) === '0x') address = address.slice(2);
-    while (address.slice(0, 2) === '00') address = address.slice(2);
-    return toChecksumAddress('0x' + address);
+export function paddedToChecksumAddress(paddedAddress: string): string {
+    try {
+        return defaultAbiCoder.decode(['address'], paddedAddress)[0] as string;
+    } catch (e) {
+        if (hexDataLength(paddedAddress) === 20) {
+            return toChecksumAddress(paddedAddress);
+        }
+        throw new Error('Invalid address to unpad', e);
+    }
 }

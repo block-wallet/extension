@@ -1564,10 +1564,13 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     ? txTimestamp * 1000
                     : new Date().getTime();
 
-                allowanceEvents[tokenAddress] = [
+                allowanceEvents[tokenAddress.toLowerCase()] = [
                     ...currentSpenders,
                     {
-                        spender: paddedToChecksumAddress(spenderAddress),
+                        spender:
+                            paddedToChecksumAddress(
+                                spenderAddress
+                            ).toLowerCase(),
                         txHash,
                         txTime,
                     },

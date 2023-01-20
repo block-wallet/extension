@@ -4,6 +4,7 @@ import classnames from "classnames"
 import Dialog from "./Dialog"
 import Divider from "../Divider"
 
+import openExternal from "../../assets/images/icons/open_external.svg"
 import CloseIcon from "../icons/CloseIcon"
 import { Classes } from "../../styles"
 
@@ -11,6 +12,7 @@ export type option = {
     title: string | JSX.Element
     content: string | JSX.Element | undefined
     expandable?: boolean
+    link?: string
 }
 
 type TextSizes = "text-base" | "text-lg" | "text-sm" | "text-xs"
@@ -24,6 +26,7 @@ type DetailsDialogProps = {
     open: boolean
     onClose: () => void
     options: option[]
+    expandedByDefault?: boolean
     onOption?: (option: option) => React.ReactNode
     showUndefined?: boolean
 }
@@ -37,11 +40,12 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
     itemContentSize = "text-sm",
     titleSize = "text-lg",
     fixedTitle = false,
+    expandedByDefault = false,
     onOption,
     showUndefined = false,
 }) => {
     const [expends, setExpends] = useState<boolean[]>(
-        new Array(options.length).fill(false)
+        new Array(options.length).fill(expandedByDefault)
     )
 
     const previousLengthRef = useRef(options.length)
@@ -49,7 +53,7 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
     useEffect(() => {
         if (options.length === previousLengthRef.current) return
 
-        setExpends(new Array(options.length).fill(false))
+        setExpends(new Array(options.length).fill(expandedByDefault))
     }, [options])
 
     return (
@@ -109,16 +113,49 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                                         }
                                     >
                                         {typeof option.title === "string" ? (
-                                            <h3
-                                                className={classnames(
-                                                    itemTitleSize,
-                                                    "font-bold"
+                                            <div className="flex flex-row w-full items-center">
+                                                <h3
+                                                    className={classnames(
+                                                        itemTitleSize,
+                                                        "font-bold mr-2"
+                                                    )}
+                                                >
+                                                    {option.title}
+                                                </h3>
+                                                {option.link && (
+                                                    <a
+                                                        href={option.link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        title="Open in explorer"
+                                                    >
+                                                        <img
+                                                            src={openExternal}
+                                                            alt="Open in explorer"
+                                                            className="w-3 h-3"
+                                                        />
+                                                    </a>
                                                 )}
-                                            >
-                                                {option.title}
-                                            </h3>
+                                            </div>
                                         ) : (
-                                            option.title
+                                            <div className="flex flex-row w-full items-center">
+                                                {option.title}
+                                                {option.link && (
+                                                    <a
+                                                        href={option.link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="ml-2"
+                                                        title="Open in explorer"
+                                                    >
+                                                        <img
+                                                            src={openExternal}
+                                                            alt="Open in explorer"
+                                                            className="w-3 h-3"
+                                                        />
+                                                    </a>
+                                                )}
+                                            </div>
                                         )}
                                         <div className="flex w-full">
                                             <p
@@ -160,7 +197,7 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                     </div>
                 </div>
                 <div className="mt-auto w-full">
-                    <div className="-mx-6">
+                    <div className="-mx-3">
                         <Divider />
                     </div>
                     <button

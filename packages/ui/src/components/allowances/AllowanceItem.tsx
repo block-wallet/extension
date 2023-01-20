@@ -13,6 +13,8 @@ import { AllowancesFilters } from "./AllowancesFilterButton"
 import { AllowancePageLocalState } from "../../routes/account/AllowancesPage"
 import { formatUnits } from "ethers/lib/utils"
 import { formatRounded } from "../../util/formatRounded"
+import { generateExplorerLink } from "../../util/getExplorer"
+import { useBlankState } from "../../context/background/backgroundHooks"
 
 const AllowanceItem = ({
     allowance,
@@ -28,6 +30,7 @@ const AllowanceItem = ({
     fromAssetDetails?: boolean
 }) => {
     const history = useOnMountHistory()
+    const { selectedNetwork, availableNetworks } = useBlankState()!
 
     const [open, setOpen] = useState(false)
     const { isHovering: isHoveringButton, getIsHoveringProps } = useIsHovering()
@@ -62,17 +65,38 @@ const AllowanceItem = ({
 
     const roundedTokenAllowance = formatRounded(formattedTokenAllowance, 5)
 
-    const allowanceValue = roundedTokenAllowance + " " + token.symbol
+    const allowanceValue = allowance.isUnlimited
+        ? `Unlimited ${token.symbol}`
+        : `${roundedTokenAllowance} ${token.symbol}`
 
     const logo = showToken ? token.logo : spender.logo
 
     const options = [
+        {
+            title: "Transaction Hash",
+            link: allowance.txHash
+                ? generateExplorerLink(
+                      availableNetworks,
+                      selectedNetwork,
+                      allowance.txHash!,
+                      "tx"
+                  )
+                : undefined,
+            content: allowance.txHash,
+            expandable: true,
+        },
         {
             title: "Spender Name",
             content: spender.name,
         },
         {
             title: "Spender Address",
+            link: generateExplorerLink(
+                availableNetworks,
+                selectedNetwork,
+                spender.address,
+                "address"
+            ),
             content: spender.address,
             expandable: true,
         },
@@ -95,6 +119,12 @@ const AllowanceItem = ({
         },
         {
             title: "Token Address",
+            link: generateExplorerLink(
+                availableNetworks,
+                selectedNetwork,
+                token.address,
+                "address"
+            ),
             content: token.address,
             expandable: true,
         },
@@ -106,9 +136,10 @@ const AllowanceItem = ({
                 if (!isHoveringButton) setOpen(true)
             }}
             className={classnames(
-                "flex flex-row items-center justify-between py-4 mr-1 transition duration-300 cursor-pointer -ml-6 px-6",
+                "flex flex-row items-center justify-between py-4 mr-1 transition duration-300 -ml-6 px-6",
                 !isHoveringButton &&
-                    "hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50"
+                    !open &&
+                    "hover:cursor-pointer hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50"
             )}
             style={{ width: "calc(100% + 3rem)" }}
         >
@@ -123,6 +154,7 @@ const AllowanceItem = ({
                     setOpen(false)
                 }}
                 options={options}
+                expandedByDefault
             />
             <div className="flex flex-row items-center">
                 <AllowanceIcon name={name} logo={logo} />

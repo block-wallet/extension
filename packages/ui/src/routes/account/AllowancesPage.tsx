@@ -132,8 +132,7 @@ const AllowancesPage = () => {
                             <div className="font-normal text-xs text-white-500">
                                 Token allowance is a function that grants
                                 permissions <br /> to access and use funds by
-                                DApps. Your token <br /> allowances should be
-                                reviewed periodically. <br />
+                                DApps. <br />
                                 Click on this icon to learn more.
                             </div>
                         ),
@@ -178,11 +177,7 @@ const AllowancesPage = () => {
                     <div className="flex-1">
                         <SearchInput
                             inputClassName="!h-12"
-                            placeholder={`Search ${
-                                groupBy === AllowancesFilters.SPENDER
-                                    ? "spenders"
-                                    : "tokens"
-                            }`}
+                            placeholder={`Search`}
                             onChange={(event) => setSearch(event.target.value)}
                             debounced
                             defaultValue={search}
@@ -198,9 +193,13 @@ const AllowancesPage = () => {
                     />
                 </div>
                 {showEmptyState && (
-                    <EmptyState title="No allowances" className="p-6 mt-16">
-                        The allowances you are searching for does not exist. Try
-                        adjusting your search.
+                    <EmptyState
+                        title={search ? "No results" : "No allowances"}
+                        className="p-6 mt-16"
+                    >
+                        {search
+                            ? "The allowances you are searching for does not exist. Try adjusting your search."
+                            : "You currently have no allowances. Make sure you are on the right network."}
                     </EmptyState>
                 )}
             </div>

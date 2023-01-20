@@ -2,6 +2,7 @@ import { TokenAllowance } from "@block-wallet/background/controllers/AccountTrac
 import { useSelectedAccount } from "./useSelectedAccount"
 import { useSelectedNetwork } from "./useSelectedNetwork"
 import { AllowancesFilters } from "../../components/allowances/AllowancesFilterButton"
+import { isValidAddress } from "ethereumjs-util"
 
 type AllowanceWithData = {
     allowance: TokenAllowance
@@ -137,9 +138,58 @@ const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
     }
 
     if (search) {
-        allowancesArr = allowancesArr.filter((allowance) =>
-            allowance.groupBy.name.toLowerCase().includes(search.toLowerCase())
-        )
+        if (isValidAddress(search)) {
+            allowancesArr = allowancesArr.filter((allowance, index) => {
+                // Return the group (token or spender) if the group address is the same
+                if (
+                    allowance.groupBy.address
+                        .toLowerCase()
+                        .includes(search.toLowerCase())
+                )
+                    return true
+
+                // Filter the allowances of a group (spender or token) and show the group with only matched allowances
+                let filteredAllowances = allowancesArr[index].allowances.filter(
+                    (allowance) =>
+                        allowance.displayData.address
+                            .toLowerCase()
+                            .includes(search.toLowerCase())
+                )
+                allowancesArr[index].allowances = filteredAllowances
+                return filteredAllowances.length !== 0
+            })
+        } else {
+            allowancesArr = allowancesArr.filter((allowance, index) => {
+                // Filter the groups (token or spender) by the group name or symbol
+                if (
+                    allowance.groupBy.name
+                        .toLowerCase()
+                        .includes(search.toLowerCase())
+                )
+                    return true
+                if (
+                    allowance.groupBy.symbol &&
+                    allowance.groupBy.symbol
+                        .toLowerCase()
+                        .includes(search.toLowerCase())
+                )
+                    return true
+
+                // Filter the allowances of a group (spender or token) by name or symbol and show the group with only matched allowances > 0
+                let filteredAllowances = allowancesArr[index].allowances.filter(
+                    (allowance) =>
+                        allowance.displayData.name
+                            .toLowerCase()
+                            .includes(search.toLowerCase()) ||
+                        (allowance.displayData.symbol &&
+                            allowance.displayData.symbol
+                                .toLowerCase()
+                                .includes(search.toLowerCase()))
+                )
+                allowancesArr[index].allowances = filteredAllowances
+                return filteredAllowances.length !== 0
+            })
+        }
     }
 
     return allowancesArr

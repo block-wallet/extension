@@ -9,7 +9,10 @@ const AllowanceList = ({ allowances }: { allowances: generalAllowances }) => {
                 allowances.map((accountAllowance) => (
                     <div key={accountAllowance.groupBy.address}>
                         <span className="text-gray-600">
-                            {accountAllowance.groupBy.name}
+                            {accountAllowance.groupBy.type ===
+                            AllowancesFilters.TOKEN
+                                ? `${accountAllowance.groupBy.symbol} - ${accountAllowance.groupBy.name}`
+                                : accountAllowance.groupBy.name}
                         </span>
                         <div className="flex flex-col mb-6">
                             {accountAllowance.allowances.map((allowance) => (

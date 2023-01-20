@@ -377,9 +377,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                     {}
                                 );
                                 //if there is at least 1 spender
-                                if (
-                                    Object.keys(allowancesGTZero).length > 0
-                                ) {
+                                if (Object.keys(allowancesGTZero).length > 0) {
                                     return {
                                         ...tokensAcc,
                                         [tokenAddress]: {

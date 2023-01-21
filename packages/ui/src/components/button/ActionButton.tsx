@@ -22,7 +22,14 @@ export const ActionButton: FunctionComponent<{
                     className={classnames(Classes.buttonIcon)}
                 />
             ) : (
-                <div className={classnames(Classes.buttonIcon)}>{icon}</div>
+                <div
+                    className={classnames(
+                        Classes.buttonIcon,
+                        "flex items-center"
+                    )}
+                >
+                    {icon}
+                </div>
             )}
             {label}
         </Link>

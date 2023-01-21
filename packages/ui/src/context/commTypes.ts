@@ -223,6 +223,7 @@ export enum TransactionCategories {
     CONTRACT_DEPLOYMENT = "contractDeployment",
     CONTRACT_INTERACTION = "contractInteraction",
     TOKEN_METHOD_APPROVE = "approve",
+    TOKEN_METHOD_REVOKE = "revoke",
     TOKEN_METHOD_TRANSFER = "transfer",
     TOKEN_METHOD_INCOMING_TRANSFER = "incoming_transfer",
     TOKEN_METHOD_TRANSFER_FROM = "transferfrom",

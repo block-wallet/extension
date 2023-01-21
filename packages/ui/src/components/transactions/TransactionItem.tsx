@@ -41,6 +41,7 @@ import {
     getBridgePendingMessage,
 } from "../../util/bridgeUtils"
 import TransactionDetails from "./TransactionDetails"
+import { useTokensList } from "../../context/hooks/useTokensList"
 
 const transactionMessages = {
     [TransactionCategories.BLANK_DEPOSIT]: "Privacy Pool Deposit",
@@ -49,7 +50,8 @@ const transactionMessages = {
     [TransactionCategories.SENT_ETHER]: "Sent Ether",
     [TransactionCategories.CONTRACT_DEPLOYMENT]: "Deploy Contract",
     [TransactionCategories.CONTRACT_INTERACTION]: "Contract Interaction",
-    [TransactionCategories.TOKEN_METHOD_APPROVE]: "Token Approval",
+    [TransactionCategories.TOKEN_METHOD_APPROVE]: "Allowance Approval",
+    [TransactionCategories.TOKEN_METHOD_REVOKE]: "Revoke Allowance",
     [TransactionCategories.TOKEN_METHOD_TRANSFER]: "Token Transfer",
     [TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER]: "Received Token",
     [TransactionCategories.TOKEN_METHOD_TRANSFER_FROM]: "Token Transfer From",
@@ -62,8 +64,9 @@ const transactionMessages = {
 
 const pendingTransactionMessages: { [x: string]: string } = {
     [TransactionCategories.CONTRACT_DEPLOYMENT]: "Deploying Contract",
-    [TransactionCategories.TOKEN_METHOD_APPROVE]: "Approving Tokens",
-    [TransactionCategories.TOKEN_METHOD_TRANSFER]: "Transfering Tokens",
+    [TransactionCategories.TOKEN_METHOD_APPROVE]: "Approving Allowance",
+    [TransactionCategories.TOKEN_METHOD_REVOKE]: "Revoking Allowance",
+    [TransactionCategories.TOKEN_METHOD_TRANSFER]: "Transferring Tokens",
 }
 
 const getTransactionMessage = (
@@ -140,6 +143,9 @@ const transactionIcons = {
     [TransactionCategories.CONTRACT_DEPLOYMENT]: <FiUpload />,
     [TransactionCategories.CONTRACT_INTERACTION]: <FaExchangeAlt />,
     [TransactionCategories.TOKEN_METHOD_APPROVE]: (
+        <RiCopperCoinFill size="1.5rem" />
+    ),
+    [TransactionCategories.TOKEN_METHOD_REVOKE]: (
         <RiCopperCoinFill size="1.5rem" />
     ),
     [TransactionCategories.TOKEN_METHOD_TRANSFER]: (
@@ -401,9 +407,9 @@ const TransactionItem: React.FC<{
     transaction: RichedTransactionMeta
     index: number
 }> = ({ index, transaction }) => {
+    const { currentNetworkTokens } = useTokensList()
     const {
         transactionParams: { value, hash },
-        transactionCategory,
         methodSignature,
         status,
         time,
@@ -427,16 +433,35 @@ const TransactionItem: React.FC<{
 
     const [hasDetails, setHasDetails] = useState(false)
 
+    const approvalToken =
+        transaction.transactionCategory ===
+            TransactionCategories.TOKEN_METHOD_APPROVE &&
+        transaction.transactionReceipt?.to &&
+        currentNetworkTokens.find(
+            (token) =>
+                token.token.address === transaction.transactionReceipt?.to
+        )?.token
+
     const txHash = hash
-    const transfer = transferType ?? {
+    let transfer = transferType ?? {
         amount: value ? value : BigNumber.from("0"),
         currency: networkNativeCurrency.symbol,
         decimals: networkNativeCurrency.decimals,
         logo: defaultNetworkLogo,
     }
+    // Change transaction logo to the approval Token Logo if it's an approval transaction
+    if (approvalToken) transfer.logo = approvalToken.logo
 
     const isBlankWithdraw: boolean =
-        transactionCategory === "blankWithdrawal" ? true : false
+        transaction.transactionCategory === "blankWithdrawal" ? true : false
+
+    // Change transaction category to Revoke if it's an approve action with zero allowance
+    const transactionCategory =
+        transaction.transactionCategory ===
+            TransactionCategories.TOKEN_METHOD_APPROVE &&
+        BigNumber.from(transaction.advancedData?.allowance).eq(0)
+            ? TransactionCategories.TOKEN_METHOD_REVOKE
+            : transaction.transactionCategory
 
     const label = getTransactionLabel(
         status,

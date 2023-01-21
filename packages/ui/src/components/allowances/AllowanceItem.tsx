@@ -83,7 +83,6 @@ const AllowanceItem = ({
                   )
                 : undefined,
             content: allowance.txHash,
-            expandable: true,
         },
         {
             title: "Spender Name",
@@ -98,12 +97,10 @@ const AllowanceItem = ({
                 "address"
             ),
             content: spender.address,
-            expandable: true,
         },
         {
             title: "Allowance Value",
             content: allowanceValue,
-            expandable: true,
         },
         {
             title: "Last Updated",
@@ -126,7 +123,6 @@ const AllowanceItem = ({
                 "address"
             ),
             content: token.address,
-            expandable: true,
         },
     ]
 

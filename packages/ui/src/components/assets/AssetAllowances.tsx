@@ -2,6 +2,8 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import AllowanceItem from "../allowances/AllowanceItem"
 import useAccountAllowances from "../../context/hooks/useAccountAllowances"
 import { AllowancesFilters } from "../allowances/AllowancesFilterButton"
+import { ActionButton } from "../button/ActionButton"
+import GearIcon from "../../components/icons/GearIcon"
 
 const AssetAllowances = () => {
     const history = useOnMountHistory()
@@ -31,6 +33,13 @@ const AssetAllowances = () => {
                     You have no allowances for this token.
                 </span>
             )}
+            <div className="flex flex-col w-full mt-4">
+                <ActionButton
+                    icon={<GearIcon />}
+                    label="Manage Allowances"
+                    to="/accounts/menu/allowances"
+                />
+            </div>
         </>
     )
 }

@@ -84,7 +84,7 @@ const AllowancesPage = () => {
     }
 
     useEffect(() => {
-        const allowancesToRevoke = history.location.state.toRevoke
+        const allowancesToRevoke = history.location.state?.toRevoke
         if (allowancesToRevoke && allowancesToRevoke.length > 0) {
             setTimeout(() => {
                 history.push({
@@ -102,7 +102,7 @@ const AllowancesPage = () => {
                 })
             }, 500)
         }
-    }, [history.location.state.toRevoke])
+    }, [history.location.state?.toRevoke])
 
     const refetchAllowances = () => {
         refreshTokenAllowances()

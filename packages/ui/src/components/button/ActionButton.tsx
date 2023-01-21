@@ -1,10 +1,10 @@
 import classnames from "classnames"
-import { FunctionComponent } from "react"
+import { FunctionComponent, ReactElement } from "react"
 import { Link } from "react-router-dom"
 import { Classes } from "../../styles"
 
 export const ActionButton: FunctionComponent<{
-    icon: string
+    icon: string | JSX.Element
     label: string
     to: string
     state?: any
@@ -15,11 +15,15 @@ export const ActionButton: FunctionComponent<{
             to={{ pathname: to, state: state }}
             draggable={false}
         >
-            <img
-                src={icon}
-                alt={label}
-                className={classnames(Classes.buttonIcon)}
-            />
+            {typeof icon === "string" ? (
+                <img
+                    src={icon}
+                    alt={label}
+                    className={classnames(Classes.buttonIcon)}
+                />
+            ) : (
+                <div className={classnames(Classes.buttonIcon)}>{icon}</div>
+            )}
             {label}
         </Link>
     )

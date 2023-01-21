@@ -15,6 +15,9 @@ import ConfirmDialog from "../../components/dialog/ConfirmDialog"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { ApproveOperation } from "../transaction/ApprovePage"
 import { refreshTokenAllowances } from "../../context/commActions"
+import WaitingDialog, {
+    useWaitingDialog,
+} from "../../components/dialog/WaitingDialog"
 
 export type AllowancePageLocalState = {
     fromAssetDetails: boolean
@@ -38,12 +41,13 @@ const AllowancesPage = () => {
     const [showEmptyState, setShowEmptyState] = useState(false)
     const [confirmRevokeAll, setConfirmRevokeAll] = useState(false)
     const [confirmRefresh, setConfirmRefresh] = useState(false)
-
+    const [isRefreshDisabled, setIsRefreshDisabled] = useState(false)
     const [groupBy, setGroupBy] = useState<AllowancesFilters>(
         history.location.state?.groupBy || AllowancesFilters.SPENDER
     )
 
     const allowances = useAccountAllowances(groupBy, search)!
+    const { isOpen, status, dispatch } = useWaitingDialog()
 
     const revokeAll = () => {
         let allowancesToRevoke: allowancesToRevoke = []
@@ -104,8 +108,14 @@ const AllowancesPage = () => {
         }
     }, [history.location.state?.toRevoke])
 
-    const refetchAllowances = () => {
-        refreshTokenAllowances()
+    const refetchAllowances = async () => {
+        if (!isRefreshDisabled) {
+            setIsRefreshDisabled(true)
+            setTimeout(() => {
+                setIsRefreshDisabled(false)
+            }, 5 * 60 * 1000)
+            await refreshTokenAllowances()
+        }
     }
 
     const onFilterChange = (filter: AllowancesFilters) => {
@@ -117,7 +127,6 @@ const AllowancesPage = () => {
     }
 
     useEffect(() => {
-        console.log("allowances", allowances)
         setShowEmptyState(allowances.length === 0)
     }, [allowances])
 
@@ -167,10 +176,36 @@ const AllowancesPage = () => {
                 message="Your token allowances are refreshed automatically. If you think they are not up to date, you can manually refresh them once every 5 minutes."
                 open={confirmRefresh}
                 onClose={() => setConfirmRefresh(false)}
-                onConfirm={() => {
-                    setConfirmRefresh(false)
-                    refetchAllowances()
+                onConfirm={async () => {
+                    dispatch({
+                        type: "open",
+                        payload: { status: "loading" },
+                    })
+                    await refetchAllowances()
+                    dispatch({
+                        type: "setStatus",
+                        payload: { status: "success" },
+                    })
                 }}
+            />
+            <WaitingDialog
+                status={status}
+                open={isOpen}
+                titles={{
+                    loading: "Refreshing allowances...",
+                    error: "Error",
+                    success: "Success!",
+                }}
+                texts={{
+                    loading:
+                        "Please wait while the allowances is being refreshed...",
+                    error: "There was an error while refreshing your allowances",
+                    success: `Refresh allowances was successful.`,
+                }}
+                onDone={() => {
+                    dispatch({ type: "close" })
+                }}
+                timeout={1100}
             />
             <div className="w-76 w-full p-6 bg-white fixed z-0 flex flex-col">
                 <div className="flex flex-row space-x-2">
@@ -190,6 +225,7 @@ const AllowancesPage = () => {
                     />
                     <AllowancesRefetchButton
                         onClick={() => setConfirmRefresh(true)}
+                        disabled={isRefreshDisabled}
                     />
                 </div>
                 {showEmptyState && (

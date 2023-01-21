@@ -1,34 +1,41 @@
+import classnames from "classnames"
 import { useEffect, useState } from "react"
 import Icon, { IconName } from "../ui/Icon"
 import OutlinedButton from "../ui/OutlinedButton"
 
-const AllowancesFilterButton = ({ onClick }: { onClick: () => void }) => {
-    const [isRefetching, setIsRefetching] = useState(false)
+const AllowancesFilterButton = ({
+    onClick,
+    disabled = false,
+}: {
+    onClick: () => void
+    disabled?: boolean
+}) => {
+    const [showDisabledAnim, setShowDisabledAnim] = useState(false)
 
-    const onCLickHandler = () => {
-        setIsRefetching(true)
-        onClick()
+    const onClickHandler = () => {
+        if (!disabled) onClick()
+        else setShowDisabledAnim(true)
     }
 
     useEffect(() => {
-        if (isRefetching) {
+        if (showDisabledAnim) {
             setTimeout(() => {
-                setIsRefetching(false)
-            }, 1000)
+                setShowDisabledAnim(false)
+            }, 2000)
         }
-    }, [isRefetching])
+    }, [showDisabledAnim])
 
     return (
         <div className="relative text-sm text-primary-300">
-            <OutlinedButton className="w-auto" onClick={onCLickHandler}>
-                <Icon
-                    name={IconName.REFETCH}
-                    className={
-                        isRefetching
-                            ? "text-primary-300 transition-colors animate-[spin_1s]"
-                            : ""
-                    }
-                />
+            <OutlinedButton
+                className={classnames(
+                    "w-auto",
+                    showDisabledAnim &&
+                        "text-red-200 border-red-500 transition-colors animate-[pulse_2s] hover-none"
+                )}
+                onClick={onClickHandler}
+            >
+                <Icon name={IconName.REFETCH} />
             </OutlinedButton>
         </div>
     )

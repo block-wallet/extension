@@ -321,7 +321,10 @@ export default class KeyringControllerDerivated extends KeyringController {
                 );
             }
             keyring.setHdPath(hdPath);
-            if (!keyring.isUnlocked()) await keyring.unlock();
+
+            if (device !== Devices.KEYSTONE) {
+                if (!keyring.isUnlocked()) await keyring.unlock();
+            }
         }
     }
 
@@ -350,13 +353,15 @@ export default class KeyringControllerDerivated extends KeyringController {
         const keyringType = this._getKeyringTypeFromDevice(device);
         let keyring = await this.getKeyringFromDevice(device);
 
-        console.log(keyring);
-
         // If the keyring doesn't exist, create it
         if (!keyring) {
-            keyring = await this.addNewKeyring(keyringType, {
-                hdPath: this._HDPathForDevice(device),
-            });
+            if (device === Devices.KEYSTONE) {
+                keyring = await this.addNewKeyring(keyringType);
+            } else {
+                keyring = await this.addNewKeyring(keyringType, {
+                    hdPath: this._HDPathForDevice(device),
+                });
+            }
             // Prevents manifest error, research if we can avoid this
             device === Devices.TREZOR &&
                 (await new Promise((resolve) => setTimeout(resolve, 5000)));
@@ -376,10 +381,10 @@ export default class KeyringControllerDerivated extends KeyringController {
         }
 
         // Return whether we connected and unlocked the keyring successfully
-        if (keyring.isUnlocked) {
-            return keyring.isUnlocked();
+        if (device === Devices.KEYSTONE) {
+            return keyring.initialized;
         } else {
-            return keyring.unlockedAccount === 1;
+            return keyring.isUnlocked();
         }
     }
 
@@ -732,17 +737,26 @@ export default class KeyringControllerDerivated extends KeyringController {
     ): Promise<{ balance: string; address: string; index: number }[]> {
         try {
             const keyring = await this.getOrAddQRKeyring();
+            const currentPage = (await keyring.serialize()).page;
+
             let accounts;
-            switch (page) {
-                case -1:
-                    accounts = await keyring.getPreviousPage();
-                    break;
-                case 1:
-                    accounts = await keyring.getNextPage();
-                    break;
-                default:
-                    accounts = await keyring.getFirstPage();
+            if (page > currentPage) {
+                // increments
+                for (let i = 1; i < page - currentPage; i++) {
+                    await keyring.getNextPage();
+                }
+                accounts = await keyring.getNextPage();
+            } else if (page < currentPage) {
+                // decrements
+                for (let i = 1; i < currentPage - page; i++) {
+                    await keyring.getPreviousPage();
+                }
+                accounts = await keyring.getPreviousPage();
+            } else {
+                await keyring.getNextPage();
+                accounts = await keyring.getPreviousPage();
             }
+
             return accounts.map((account: any) => {
                 return {
                     ...account,
@@ -759,17 +773,20 @@ export default class KeyringControllerDerivated extends KeyringController {
     // qr hardware devices
     async submitQRHardwareCryptoHDKey(cbor: string) {
         console.log('submitQRHardwareCryptoHDKey', { cbor });
-        const r = this._qrHardwareKeyring.readKeyring();
+        const read = this._qrHardwareKeyring.readKeyring();
         this._qrHardwareKeyring.submitCryptoHDKey(cbor);
-        await r;
-        console.log(this.fullUpdate());
+        await read;
+        this.fullUpdate();
     }
+
     async submitQRHardwareCryptoAccount(cbor: string) {
         console.log('submitQRHardwareCryptoAccount', { cbor });
         const r = this._qrHardwareKeyring.readKeyring();
         this._qrHardwareKeyring.submitCryptoAccount(cbor);
         await r;
+        this.fullUpdate();
     }
+
     submitQRHardwareSignature(requestId: string, cbor: string) {
         console.log('submitQRHardwareSignature', { requestId, cbor });
         this._qrHardwareKeyring.submitSignature(requestId, cbor);

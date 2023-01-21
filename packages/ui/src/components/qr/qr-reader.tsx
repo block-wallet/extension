@@ -17,7 +17,6 @@ const QrContainer = (props: any) => {
                         scanDelay={scanDelay}
                         onResult={(result: any, error: any) => {
                             if (result) {
-                                console.log({ result })
                                 setScanDelay(0)
                                 props.onRead(result?.text)
                             }

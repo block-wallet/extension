@@ -1219,8 +1219,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
 
             // Check if the keyring is unlocked, if not unlock it
-            if (!keyring.isUnlocked()) {
-                await keyring.unlock();
+            if (device !== Devices.KEYSTONE) {
+                if (!keyring.isUnlocked()) {
+                    await keyring.unlock();
+                }
             }
 
             keyring.perPage = pageSize;

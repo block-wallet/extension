@@ -1,8 +1,8 @@
-import { generalAllowances } from "../../context/hooks/useAccountAllowances"
+import { GroupedAllowances } from "../../context/hooks/useAccountAllowances"
 import AllowanceItem from "./AllowanceItem"
 import { AllowancesFilters } from "./AllowancesFilterButton"
 
-const AllowanceList = ({ allowances }: { allowances: generalAllowances }) => {
+const AllowanceList = ({ allowances }: { allowances: GroupedAllowances }) => {
     return (
         <div>
             {allowances.length > 0 &&

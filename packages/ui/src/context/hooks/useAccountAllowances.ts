@@ -4,11 +4,6 @@ import { useSelectedNetwork } from "./useSelectedNetwork"
 import { AllowancesFilters } from "../../components/allowances/AllowancesFilterButton"
 import { isValidAddress } from "ethereumjs-util"
 
-type AllowanceWithData = {
-    allowance: TokenAllowance
-    displayData: AllowanceDisplayData
-}
-
 /**
  * The data to display in the allowance List Item
  *
@@ -16,6 +11,8 @@ type AllowanceWithData = {
  * @param name The name of the spender or the token
  * @param logo The logo of the spender or the token
  * @param type The type of the data (spender or token)
+ * @param symbol? The symbol of the token
+ * @param decimals? The decimals of the token
  *
  **/
 export type AllowanceDisplayData = {
@@ -27,10 +24,22 @@ export type AllowanceDisplayData = {
     type: AllowancesFilters
 }
 
-export type generalAllowances = {
+type AllowanceWithData = {
+    allowance: TokenAllowance
+    displayData: AllowanceDisplayData
+}
+
+export type GroupedAllowances = {
     groupBy: AllowanceDisplayData
     allowances: AllowanceWithData[]
 }[]
+
+type SpenderAllowances = {
+    [spenderAddress: string]: {
+        groupBy: AllowanceDisplayData
+        allowances: AllowanceWithData[]
+    }
+}
 
 /**
  *
@@ -42,157 +51,151 @@ export type generalAllowances = {
 const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
     const account = useSelectedAccount()!
     const selectedNetwork = useSelectedNetwork()!
+
     const allowances = account.allowances[selectedNetwork.chainId]
-    let allowancesArr: generalAllowances = []
-    if (!allowances || !allowances.tokens) return allowancesArr
+
+    let groupedAllowancesArr: GroupedAllowances = []
+
+    if (!allowances || !allowances.tokens) return groupedAllowancesArr
+
     if (groupBy === AllowancesFilters.TOKEN) {
-        allowancesArr = Object.entries(allowances.tokens).map(([, token]) => {
-            return {
-                groupBy: {
+        groupedAllowancesArr = Object.entries(allowances.tokens).reduce(
+            (acc: GroupedAllowances, [, token]) => {
+                const tokenData = {
                     name: token.token.name,
                     address: token.token.address,
                     symbol: token.token.symbol,
                     decimals: token.token.decimals,
                     logo: token.token.logo,
                     type: AllowancesFilters.TOKEN,
-                },
-                allowances: Object.entries(token.allowances).map(
+                }
+                const allowancesData = Object.entries(token.allowances).map(
                     ([spenderAddress, allowance]) => {
                         return {
                             displayData: {
                                 name: "UniSwap",
-                                address: spenderAddress,
+                                address:
+                                    spenderAddress ===
+                                    "0x216b4b4ba9f3e719726886d34a177484278bfcae"
+                                        ? "UniSwap"
+                                        : "QuickSwap",
                                 logo: "",
                                 type: AllowancesFilters.SPENDER,
                             },
                             allowance,
                         }
                     }
-                ),
-            }
-        }) as generalAllowances
+                )
+                acc.push({ groupBy: tokenData, allowances: allowancesData })
+                return acc
+            },
+            []
+        )
     } else {
-        let allowancesBySpender: any = {}
-
-        Object.values(allowances.tokens).map((token) => {
-            let tokenData = token.token
-            Object.entries(token.allowances).map((allowance) => {
-                const spenderAddress = allowance[0]
-                const spenderAllowance = allowance[1]
-
-                if (!allowancesBySpender[spenderAddress]) {
-                    allowancesBySpender[spenderAddress] = {
-                        groupBy: {
-                            name:
-                                spenderAddress ===
-                                "0x1111111254fb6c44bAC0beD2854e76F90643097d"
-                                    ? "UniSwap"
-                                    : "QuickSwap",
-                            address: spenderAddress,
-                            logo: "",
-                            type: AllowancesFilters.SPENDER,
-                        },
-                    }
-                    allowancesBySpender[spenderAddress] = {
-                        ...allowancesBySpender[spenderAddress],
-                        allowances: [
-                            {
-                                allowance: {
-                                    ...spenderAllowance,
-                                },
-                                displayData: {
-                                    name: tokenData.name,
-                                    logo: tokenData.logo,
-                                    symbol: tokenData.symbol,
-                                    decimals: tokenData.decimals,
-                                    address: tokenData.address,
-                                    type: AllowancesFilters.TOKEN,
-                                },
-                            },
-                        ],
-                    }
-                } else {
-                    allowancesBySpender[spenderAddress] = {
-                        ...allowancesBySpender[spenderAddress],
-                        allowances: [
-                            ...allowancesBySpender[spenderAddress].allowances,
-                            {
-                                allowance: {
-                                    ...spenderAllowance,
-                                },
-                                displayData: {
-                                    name: tokenData.name,
-                                    logo: tokenData.logo,
-                                    symbol: tokenData.symbol,
-                                    decimals: tokenData.decimals,
-                                    address: tokenData.address,
-                                    type: AllowancesFilters.TOKEN,
-                                },
-                            },
-                        ],
-                    }
+        const allowancesBySpender = Object.values(allowances.tokens).reduce(
+            (spenderAllowancesAcc: SpenderAllowances, token) => {
+                const tokenData = token.token
+                const displayData = {
+                    name: tokenData.name,
+                    logo: tokenData.logo,
+                    symbol: tokenData.symbol,
+                    decimals: tokenData.decimals,
+                    address: tokenData.address,
+                    type: AllowancesFilters.TOKEN,
                 }
-            })
-        })
-        allowancesArr = Object.values(allowancesBySpender) as generalAllowances
+                Object.entries(token.allowances).forEach(
+                    ([spenderAddress, spenderAllowance]) => {
+                        if (!spenderAllowancesAcc[spenderAddress]) {
+                            spenderAllowancesAcc[spenderAddress] = {
+                                groupBy: {
+                                    name:
+                                        spenderAddress ===
+                                        "0x216b4b4ba9f3e719726886d34a177484278bfcae"
+                                            ? "UniSwap"
+                                            : "QuickSwap",
+                                    address: spenderAddress,
+                                    logo: "",
+                                    type: AllowancesFilters.SPENDER,
+                                },
+                                allowances: [],
+                            }
+                        }
+                        spenderAllowancesAcc[spenderAddress].allowances.push({
+                            allowance: { ...spenderAllowance },
+                            displayData,
+                        })
+                    }
+                )
+                return spenderAllowancesAcc
+            },
+            {}
+        )
+
+        groupedAllowancesArr = Object.values(
+            allowancesBySpender
+        ) as GroupedAllowances
     }
 
     if (search) {
         if (isValidAddress(search)) {
-            allowancesArr = allowancesArr.filter((allowance, index) => {
-                // Return the group (token or spender) if the group address is the same
-                if (
-                    allowance.groupBy.address
-                        .toLowerCase()
-                        .includes(search.toLowerCase())
-                )
-                    return true
-
-                // Filter the allowances of a group (spender or token) and show the group with only matched allowances
-                let filteredAllowances = allowancesArr[index].allowances.filter(
-                    (allowance) =>
-                        allowance.displayData.address
+            groupedAllowancesArr = groupedAllowancesArr.filter(
+                (groupedAllowances) => {
+                    // Return the group (token or spender) if the group address is the same
+                    if (
+                        groupedAllowances.groupBy.address
                             .toLowerCase()
                             .includes(search.toLowerCase())
-                )
-                allowancesArr[index].allowances = filteredAllowances
-                return filteredAllowances.length !== 0
-            })
-        } else {
-            allowancesArr = allowancesArr.filter((allowance, index) => {
-                // Filter the groups (token or spender) by the group name or symbol
-                if (
-                    allowance.groupBy.name
-                        .toLowerCase()
-                        .includes(search.toLowerCase())
-                )
-                    return true
-                if (
-                    allowance.groupBy.symbol &&
-                    allowance.groupBy.symbol
-                        .toLowerCase()
-                        .includes(search.toLowerCase())
-                )
-                    return true
+                    )
+                        return true
 
-                // Filter the allowances of a group (spender or token) by name or symbol and show the group with only matched allowances > 0
-                let filteredAllowances = allowancesArr[index].allowances.filter(
-                    (allowance) =>
-                        allowance.displayData.name
-                            .toLowerCase()
-                            .includes(search.toLowerCase()) ||
-                        (allowance.displayData.symbol &&
-                            allowance.displayData.symbol
+                    // Filter the allowances of a group (spender or token) and show the group with only matched allowances
+                    groupedAllowances.allowances =
+                        groupedAllowances.allowances.filter((allowance) =>
+                            allowance.displayData.address
                                 .toLowerCase()
-                                .includes(search.toLowerCase()))
-                )
-                allowancesArr[index].allowances = filteredAllowances
-                return filteredAllowances.length !== 0
-            })
+                                .includes(search.toLowerCase())
+                        )
+
+                    return groupedAllowances.allowances.length !== 0
+                }
+            )
+        } else {
+            groupedAllowancesArr = groupedAllowancesArr.filter(
+                (groupedAllowances) => {
+                    // Filter the groups (token or spender) by the group name or symbol
+                    if (
+                        groupedAllowances.groupBy.name
+                            .toLowerCase()
+                            .includes(search.toLowerCase())
+                    )
+                        return true
+                    if (
+                        groupedAllowances.groupBy.symbol &&
+                        groupedAllowances.groupBy.symbol
+                            .toLowerCase()
+                            .includes(search.toLowerCase())
+                    )
+                        return true
+
+                    // Filter the allowances of a group (spender or token) by name or symbol and show the group with only matched allowances > 0
+                    groupedAllowances.allowances =
+                        groupedAllowances.allowances.filter(
+                            (allowance) =>
+                                allowance.displayData.name
+                                    .toLowerCase()
+                                    .includes(search.toLowerCase()) ||
+                                (allowance.displayData.symbol &&
+                                    allowance.displayData.symbol
+                                        .toLowerCase()
+                                        .includes(search.toLowerCase()))
+                        )
+                    return groupedAllowances.allowances.length !== 0
+                }
+            )
         }
     }
 
-    return allowancesArr
+    return groupedAllowancesArr
 }
 
 export default useAccountAllowances

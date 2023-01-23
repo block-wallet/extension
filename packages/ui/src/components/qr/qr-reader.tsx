@@ -1,7 +1,5 @@
 import { useState } from "react"
 import { QrReader } from "react-qr-reader"
-import { Devices } from "../../context/commTypes"
-import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
 const QrContainer = (props: any) => {
     const [scanDelay, setScanDelay] = useState(500)
@@ -13,17 +11,12 @@ const QrContainer = (props: any) => {
                     {/* TODO (KEYSTONE): This component generates some warnings */}
                     <QrReader
                         // TODO (KEYSTONE): Complete 'constraints' prop
-                        constraints={{}}
+                        constraints={{ facingMode: "environment" }}
                         scanDelay={scanDelay}
                         onResult={(result: any, error: any) => {
-                            if (result) {
-                                console.log({ result })
+                            if (!!result) {
                                 setScanDelay(0)
                                 props.onRead(result?.text)
-                            }
-
-                            if (error) {
-                                console.info(error)
                             }
                         }}
                     />

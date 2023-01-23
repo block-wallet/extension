@@ -1,9 +1,6 @@
 import AssetAmountDisplay from "../../components/assets/AssetAmountDisplay"
-import ClickableText from "../../components/button/ClickableText"
-import Divider from "../../components/Divider"
 import GasPriceComponent from "../../components/transactions/GasPriceComponent"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
-import LoadingDialog from "../../components/dialog/LoadingDialog"
 import NetworkDisplay from "../../components/network/NetworkDisplay"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
@@ -40,7 +37,6 @@ import { isHardwareWallet } from "../../util/account"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import { useHasSufficientBalance } from "../../context/hooks/useHasSufficientBalance"
-import { useInProgressAllowanceTransaction } from "../../context/hooks/useInProgressAllowanceTransaction"
 import { useInProgressInternalTransaction } from "../../context/hooks/useInProgressInternalTransaction"
 import { useUserSettings } from "../../context/hooks/useUserSettings"
 import { useLocationRecovery } from "../../util/hooks/useLocationRecovery"
@@ -354,6 +350,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 maxFeePerGas: isEIP1559Compatible
                     ? selectedFees.maxFeePerGas
                     : undefined,
+                gasLimit: selectedGasLimit,
             }
 
             await executeBridge(txParams)
@@ -661,6 +658,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                         }}
                         isParentLoading={isGasLoading}
                         disabled={isGasLoading}
+                        minGasLimit={
+                            transactionRequest
+                                ? transactionRequest.gasLimit
+                                : undefined
+                        }
                         displayOnlyMaxValue
                     />
                 ) : (

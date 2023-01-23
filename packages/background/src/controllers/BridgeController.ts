@@ -115,6 +115,7 @@ export interface BridgeTransaction extends BridgeParameters {
     customNonce?: number;
     flashbots?: boolean;
     gasPrice?: BigNumber;
+    gasLimit?: BigNumber;
     maxFeePerGas?: BigNumber;
     maxPriorityFeePerGas?: BigNumber;
 }
@@ -590,6 +591,7 @@ export default class BridgeController extends BaseController<
             gasPrice,
             maxFeePerGas,
             maxPriorityFeePerGas,
+            gasLimit,
             params: {
                 transactionRequest,
                 fromToken,
@@ -622,7 +624,9 @@ export default class BridgeController extends BaseController<
                         maxFeePerGas: maxFeePerGas
                             ? BigNumber.from(maxFeePerGas)
                             : undefined,
-                        gasLimit: BigNumber.from(transactionRequest.gasLimit),
+                        gasLimit: BigNumber.from(
+                            gasLimit ?? transactionRequest.gasLimit
+                        ),
                         nonce: customNonce,
                     },
                     origin: 'blank',

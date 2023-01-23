@@ -297,7 +297,9 @@ const HardwareWalletAccountsPage = () => {
                         HDPaths[vendor].find((p) => p.default)?.path ||
                         BIP44_PATH
                     }
-                    disabled={state.gettingAccounts}
+                    disabled={
+                        state.gettingAccounts || vendor == Devices.KEYSTONE
+                    }
                     vendor={vendor}
                     setHDPath={updateHDPath}
                 />

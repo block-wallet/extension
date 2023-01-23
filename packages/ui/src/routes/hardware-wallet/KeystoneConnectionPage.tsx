@@ -7,8 +7,6 @@ import classnames from "classnames"
 import { Classes } from "../../styles"
 import useHardwareWalletConnect from "../../util/hooks/useHardwareWalletConnect"
 import { useState } from "react"
-import ConnectDeviceStepsLayout from "./ConnectDeviceStepsLayout"
-import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
 import { DEVICE_CONNECTION_STEPS } from "../../util/connectionStepUtils"
 
 const KeystoneConnectionPage = () => {
@@ -19,6 +17,7 @@ const KeystoneConnectionPage = () => {
     const { connect, isLoading } = useHardwareWalletConnect(true)
     const [deviceNotReady, setDeviceNotReady] = useState(false)
 
+    // TODO (KEYSTONE): It seems that the camera component nevet unmounts and this keeps executing
     const onQRRead = async (qr: string) => {
         const resultOk = await connect(vendor, qr)
         if (resultOk) {
@@ -57,27 +56,6 @@ const KeystoneConnectionPage = () => {
                 childrenClass={"items-center w-3/5"}
                 buttonClass={"w-full flex space-x-5"}
             >
-                {/* <ConnectDeviceStepsLayout
-                    title="Before We Get Started"
-                    subtitle={`Make sure you complete these ${deviceSteps.length} steps before you continue.`}
-                    isLoading={isLoading}
-                    onConnect={onConnect}
-                    steps={deviceSteps}
-                />
-                <HardwareDeviceNotLinkedDialog
-                    showReconnect={false}
-                    fullScreen
-                    vendor={vendor}
-                    onDone={() => {
-                        setDeviceNotReady(false)
-                        onConnect()
-                    }}
-                    isOpen={deviceNotReady}
-                    useClickOutside={false}
-                    cancelButton={true}
-                    onCancel={() => setDeviceNotReady(false)}
-                /> */}
-
                 <QrContainer onRead={onQRRead} />
             </HardwareWalletSetupLayout>
         </>

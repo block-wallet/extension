@@ -45,11 +45,12 @@ import {
 import { isNativeTokenAddress } from '../utils/token';
 import { WatchedTransactionType } from './transactions/utils/types';
 import { retryHandling } from '../utils/retryHandling';
-import { ethers, providers } from 'ethers';
+import { providers } from 'ethers';
 import { RPCLogsFetcher } from '../utils/rpc/RPCLogsFetcher';
 import { getTokenApprovalLogsTopics } from '../utils/logsQuery';
 import { runPromiseSafely } from '../utils/promises';
 import { MaxUint256 } from '@ethersproject/constants';
+import { ContractDetails, fetchContractDetails } from '../utils/contractsInfo';
 
 export enum AccountStatus {
     ACTIVE = 'ACTIVE',
@@ -66,6 +67,7 @@ export interface TokenAllowance {
     value: BigNumber;
     txHash?: string;
     txTime?: number;
+    spender?: ContractDetails;
 }
 export interface AccountBalanceTokens {
     [address: string]: AccountBalanceToken;
@@ -474,6 +476,11 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             spender
                         );
 
+                    const contractInfo = await fetchContractDetails(
+                        chainId,
+                        spender
+                    );
+
                     newTokenSpendersAllowance[spender] = {
                         isUnlimited: this._calculateIsUnlimitedAllowance(
                             currentToken,
@@ -483,12 +490,14 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         updatedAt: new Date().getTime(),
                         txHash,
                         txTime,
+                        spender: contractInfo,
                     };
                 } catch (e) {
                     log.warn(
                         `Error fetching spender: ${spender} allowance for token ${tokenAddress}`,
                         e
                     );
+                    continue;
                 }
             }
 

@@ -8,6 +8,6 @@ export function paddedToChecksumAddress(paddedAddress: string): string {
         if (hexDataLength(paddedAddress) === 20) {
             return toChecksumAddress(paddedAddress);
         }
-        throw new Error('Invalid address to unpad', e);
+        throw new Error('Invalid address to unpad');
     }
 }

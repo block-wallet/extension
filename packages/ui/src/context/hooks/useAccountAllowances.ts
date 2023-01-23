@@ -1,8 +1,10 @@
+import { isValidAddress } from "ethereumjs-util"
 import { TokenAllowance } from "@block-wallet/background/controllers/AccountTrackerController"
+
 import { useSelectedAccount } from "./useSelectedAccount"
 import { useSelectedNetwork } from "./useSelectedNetwork"
+
 import { AllowancesFilters } from "../../components/allowances/AllowancesFilterButton"
-import { isValidAddress } from "ethereumjs-util"
 
 /**
  * The data to display in the allowance List Item
@@ -46,6 +48,7 @@ type SpenderAllowances = {
  * Gets the allowances for the selected account of the selected network grouped by the Spender or the Token
  *
  * @param groupBy The filter to group the allowances by
+ * @param search? The search string to filter the allowances
  * @returns The allowances grouped by the selected filter
  */
 const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
@@ -61,14 +64,17 @@ const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
     if (groupBy === AllowancesFilters.TOKEN) {
         groupedAllowancesArr = Object.entries(allowances.tokens).reduce(
             (acc: GroupedAllowances, [, token]) => {
+                const { name, logo, symbol, decimals, address } = token.token
+
                 const tokenData = {
-                    name: token.token.name,
-                    address: token.token.address,
-                    symbol: token.token.symbol,
-                    decimals: token.token.decimals,
-                    logo: token.token.logo,
+                    name,
+                    logo,
+                    symbol,
+                    decimals,
+                    address,
                     type: AllowancesFilters.TOKEN,
                 }
+
                 const allowancesData = Object.entries(token.allowances).map(
                     ([spenderAddress, allowance]) => {
                         return {
@@ -94,15 +100,17 @@ const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
     } else {
         const allowancesBySpender = Object.values(allowances.tokens).reduce(
             (spenderAllowancesAcc: SpenderAllowances, token) => {
-                const tokenData = token.token
+                const { name, logo, symbol, decimals, address } = token.token
+
                 const displayData = {
-                    name: tokenData.name,
-                    logo: tokenData.logo,
-                    symbol: tokenData.symbol,
-                    decimals: tokenData.decimals,
-                    address: tokenData.address,
+                    name,
+                    logo,
+                    symbol,
+                    decimals,
+                    address,
                     type: AllowancesFilters.TOKEN,
                 }
+
                 Object.entries(token.allowances).forEach(
                     ([spenderAddress, spenderAllowance]) => {
                         if (!spenderAllowancesAcc[spenderAddress]) {

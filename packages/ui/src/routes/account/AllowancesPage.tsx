@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState } from "react"
+
+import { refreshTokenAllowances } from "../../context/commActions"
+import { ApproveOperation } from "../transaction/ApprovePage"
+import useAccountAllowances from "../../context/hooks/useAccountAllowances"
+import { useOnMountHistory } from "../../context/hooks/useOnMount"
+
 import AllowancesFilterButton, {
     AllowancesFilters,
 } from "../../components/allowances/AllowancesFilterButton"
@@ -10,11 +16,7 @@ import AllowancesRefetchButton from "../../components/allowances/AllowancesRefet
 import AllowanceList from "../../components/allowances/AllowanceList"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
-import useAccountAllowances from "../../context/hooks/useAccountAllowances"
 import ConfirmDialog from "../../components/dialog/ConfirmDialog"
-import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import { ApproveOperation } from "../transaction/ApprovePage"
-import { refreshTokenAllowances } from "../../context/commActions"
 import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
@@ -51,27 +53,21 @@ const AllowancesPage = () => {
 
     const revokeAll = () => {
         let allowancesToRevoke: allowancesToRevoke = []
-        if (groupBy === AllowancesFilters.SPENDER) {
-            allowances.forEach((spenderAllowances) => {
-                const spenderAddress = spenderAllowances.groupBy.address
-                spenderAllowances.allowances.forEach((allowance) => {
-                    allowancesToRevoke.push({
-                        assetAddress: allowance.displayData.address,
-                        spenderAddress: spenderAddress,
-                    })
+        allowances.forEach((groupedAllowances) => {
+            groupedAllowances.allowances.forEach((allowance) => {
+                allowancesToRevoke.push({
+                    assetAddress:
+                        groupBy === AllowancesFilters.SPENDER
+                            ? allowance.displayData.address
+                            : groupedAllowances.groupBy.address,
+                    spenderAddress:
+                        groupBy === AllowancesFilters.SPENDER
+                            ? groupedAllowances.groupBy.address
+                            : allowance.displayData.address,
                 })
             })
-        } else {
-            allowances.forEach((tokenAllowances) => {
-                const assetAddress = tokenAllowances.groupBy.address
-                tokenAllowances.allowances.forEach((allowance) => {
-                    allowancesToRevoke.push({
-                        assetAddress: assetAddress,
-                        spenderAddress: allowance.displayData.address,
-                    })
-                })
-            })
-        }
+        })
+
         history.push({
             pathname: "/transaction/approve",
             state: {

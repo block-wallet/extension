@@ -9,15 +9,22 @@ const AssetAllowances = () => {
     const history = useOnMountHistory()
     const tokenAddress: string = history.location.state.address
 
-    const tokenAllowances = useAccountAllowances(AllowancesFilters.TOKEN)!.find(
-        (allowance) => allowance.groupBy.address === tokenAddress
-    )
+    const tokenAllowances = useAccountAllowances(
+        AllowancesFilters.TOKEN,
+        tokenAddress
+    )[0]
 
     return (
         <>
-            {tokenAllowances && tokenAllowances.allowances?.length > 0 ? (
-                tokenAllowances.allowances.map((allowance) => (
-                    <div key={allowance.allowance.txHash}>
+            {tokenAllowances?.allowances?.length > 0 ? (
+                tokenAllowances.allowances.map((allowance, index) => (
+                    <div
+                        key={
+                            allowance.allowance.txHash ||
+                            allowance.displayData.address
+                        }
+                    >
+                        {index > 0 ? <hr /> : null}
                         <AllowanceItem
                             allowance={allowance.allowance}
                             token={tokenAllowances.groupBy}
@@ -25,7 +32,6 @@ const AssetAllowances = () => {
                             showToken={false}
                             fromAssetDetails={true}
                         />
-                        <hr />
                     </div>
                 ))
             ) : (

@@ -1,20 +1,23 @@
 import { useState } from "react"
+import { formatUnits } from "ethers/lib/utils"
 import { TokenAllowance } from "@block-wallet/background/controllers/AccountTrackerController"
 import { Classes, classnames } from "../../styles"
-import ChevronRightIcon from "../icons/ChevronRightIcon"
-import AllowanceIcon from "./AllowanceIcon"
-import revokeIcon from "../../assets/images/icons/revoke.svg"
-import useIsHovering from "../../util/hooks/useIsHovering"
-import DetailsDialog from "../dialog/DetailsDialog"
-import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import { ApproveOperation } from "../../routes/transaction/ApprovePage"
+
+import { useBlankState } from "../../context/background/backgroundHooks"
 import { AllowanceDisplayData } from "../../context/hooks/useAccountAllowances"
+import { useOnMountHistory } from "../../context/hooks/useOnMount"
+import useIsHovering from "../../util/hooks/useIsHovering"
+import { generateExplorerLink } from "../../util/getExplorer"
+import { formatRounded } from "../../util/formatRounded"
+import { ApproveOperation } from "../../routes/transaction/ApprovePage"
+
+import DetailsDialog from "../dialog/DetailsDialog"
 import { AllowancesFilters } from "./AllowancesFilterButton"
 import { AllowancePageLocalState } from "../../routes/account/AllowancesPage"
-import { formatUnits } from "ethers/lib/utils"
-import { formatRounded } from "../../util/formatRounded"
-import { generateExplorerLink } from "../../util/getExplorer"
-import { useBlankState } from "../../context/background/backgroundHooks"
+
+import AllowanceIcon from "./AllowanceIcon"
+import ChevronRightIcon from "../icons/ChevronRightIcon"
+import revokeIcon from "../../assets/images/icons/revoke.svg"
 
 const AllowanceItem = ({
     allowance,
@@ -132,12 +135,11 @@ const AllowanceItem = ({
                 if (!isHoveringButton) setOpen(true)
             }}
             className={classnames(
-                "flex flex-row items-center justify-between py-4 mr-1 transition duration-300 -ml-6 px-6",
+                "flex flex-row items-center justify-between py-4 mr-1 transition duration-300 -ml-6 px-6 w-[calc(100%+3rem)]",
                 !isHoveringButton &&
                     !open &&
                     "hover:cursor-pointer hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50"
             )}
-            style={{ width: "calc(100% + 3rem)" }}
         >
             <DetailsDialog
                 open={open}

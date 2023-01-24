@@ -5,6 +5,7 @@ import { useSelectedAccount } from "./useSelectedAccount"
 import { useSelectedNetwork } from "./useSelectedNetwork"
 
 import { AllowancesFilters } from "../../components/allowances/AllowancesFilterButton"
+import { formatHashLastChars } from "../../util/formatAccount"
 
 /**
  * The data to display in the allowance List Item
@@ -22,6 +23,7 @@ export type AllowanceDisplayData = {
     name: string
     symbol?: string
     decimals?: number
+    websiteURL?: string
     logo: string
     type: AllowancesFilters
 }
@@ -79,13 +81,14 @@ const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
                     ([spenderAddress, allowance]) => {
                         return {
                             displayData: {
-                                name: "UniSwap",
-                                address:
-                                    spenderAddress ===
-                                    "0x216b4b4ba9f3e719726886d34a177484278bfcae"
-                                        ? "UniSwap"
-                                        : "QuickSwap",
-                                logo: "",
+                                name:
+                                    allowance.spender?.name ||
+                                    `Spender ${formatHashLastChars(
+                                        spenderAddress
+                                    )}`,
+                                address: spenderAddress,
+                                logo: allowance.spender?.logoURI || "",
+                                websiteURL: allowance.spender?.websiteURL || "",
                                 type: AllowancesFilters.SPENDER,
                             },
                             allowance,
@@ -117,12 +120,16 @@ const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
                             spenderAllowancesAcc[spenderAddress] = {
                                 groupBy: {
                                     name:
-                                        spenderAddress ===
-                                        "0x216b4b4ba9f3e719726886d34a177484278bfcae"
-                                            ? "UniSwap"
-                                            : "QuickSwap",
+                                        spenderAllowance.spender?.name ||
+                                        `Spender ${formatHashLastChars(
+                                            spenderAddress
+                                        )}`,
                                     address: spenderAddress,
-                                    logo: "",
+                                    logo:
+                                        spenderAllowance.spender?.logoURI || "",
+                                    websiteURL:
+                                        spenderAllowance.spender?.websiteURL ||
+                                        "",
                                     type: AllowancesFilters.SPENDER,
                                 },
                                 allowances: [],

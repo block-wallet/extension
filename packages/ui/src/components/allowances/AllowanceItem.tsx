@@ -102,6 +102,10 @@ const AllowanceItem = ({
             content: spender.address,
         },
         {
+            title: "Spender Website",
+            content: spender.websiteURL,
+        },
+        {
             title: "Allowance Value",
             content: allowanceValue,
         },

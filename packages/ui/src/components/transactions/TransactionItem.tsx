@@ -455,6 +455,15 @@ const TransactionItem: React.FC<{
     const isBlankWithdraw: boolean =
         transaction.transactionCategory === "blankWithdrawal" ? true : false
 
+    // TODO: Test and Remove if not required
+    if (
+        transaction.transactionCategory ===
+        TransactionCategories.TOKEN_METHOD_APPROVE
+    ) {
+        if (!transfer.amount) {
+            transfer.amount = BigNumber.from("0")
+        }
+    }
     // Change transaction category to Revoke if it's an approve action with zero allowance
     const transactionCategory =
         transaction.transactionCategory ===

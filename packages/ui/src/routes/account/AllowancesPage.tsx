@@ -49,6 +49,15 @@ const AllowancesPage = () => {
     )
 
     const allowances = useAccountAllowances(groupBy, search)!
+
+    const [toRevokeCount, setToRevokeCount] = useState(
+        allowances.reduce(
+            (count, groupedAllowances) =>
+                count + groupedAllowances.allowances.length,
+            0
+        )
+    )
+
     const { isOpen, status, dispatch } = useWaitingDialog()
 
     const revokeAll = () => {
@@ -123,6 +132,13 @@ const AllowancesPage = () => {
     }
 
     useEffect(() => {
+        setToRevokeCount(
+            allowances.reduce(
+                (count, groupedAllowances) =>
+                    count + groupedAllowances.allowances.length,
+                0
+            )
+        )
         setShowEmptyState(allowances.length === 0)
     }, [allowances])
 
@@ -135,10 +151,7 @@ const AllowancesPage = () => {
                         link: "https://academy.bit2me.com/en/que-es-token-allowance/#:~:text=This%20standard%20defined%20the%20basic,contained%20in%20a%20given%20address.",
                         content: (
                             <div className="font-normal text-xs text-white-500">
-                                Token allowance is a function that grants
-                                permissions <br /> to access and use funds by
-                                DApps. <br />
-                                Click on this icon to learn more.
+                                Click to learn about allowances.
                             </div>
                         ),
                     }}
@@ -159,7 +172,7 @@ const AllowancesPage = () => {
         >
             <ConfirmDialog
                 title="Revoke All Allowances"
-                message={`You will revoke all the currently visible allowances (${allowances.length}). You will need to confirm each action in sequence.`}
+                message={`You will revoke all the currently visible allowances (${toRevokeCount}). You will need to confirm each action in sequence.`}
                 open={confirmRevokeAll}
                 onClose={() => setConfirmRevokeAll(false)}
                 onConfirm={() => {

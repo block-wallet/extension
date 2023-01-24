@@ -4,6 +4,7 @@ import useAccountAllowances from "../../context/hooks/useAccountAllowances"
 import { AllowancesFilters } from "../allowances/AllowancesFilterButton"
 import { ActionButton } from "../button/ActionButton"
 import GearIcon from "../../components/icons/GearIcon"
+import { isNativeTokenAddress } from "../../util/tokenUtils"
 
 const AssetAllowances = () => {
     const history = useOnMountHistory()
@@ -13,6 +14,10 @@ const AssetAllowances = () => {
         AllowancesFilters.TOKEN,
         tokenAddress
     )[0]
+
+    const emptyMessage = isNativeTokenAddress(tokenAddress)
+        ? "Native tokens do not require allowances. You can access all your allowances via the button below."
+        : "You have no allowances for this token."
 
     return (
         <>
@@ -36,7 +41,7 @@ const AssetAllowances = () => {
                 ))
             ) : (
                 <span className="text-sm text-gray-500 pt-4 mx-auto">
-                    You have no allowances for this token.
+                    {emptyMessage}
                 </span>
             )}
             <div className="flex flex-col w-full mt-4">

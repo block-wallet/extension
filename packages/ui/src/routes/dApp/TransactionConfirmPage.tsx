@@ -113,8 +113,14 @@ const TransactionConfirm: React.FC<{
     transactionCount: number
 }> = ({ transactionId, transactionCount }) => {
     //Hooks
-    const { accounts, nativeCurrency, localeInfo, selectedAddress, settings, defaultGasOption } =
-        useBlankState()!
+    const {
+        accounts,
+        nativeCurrency,
+        localeInfo,
+        selectedAddress,
+        settings,
+        defaultGasOption,
+    } = useBlankState()!
     const {
         state: { exchangeRates, networkNativeCurrency },
     } = useExchangeRatesState()

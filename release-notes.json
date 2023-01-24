@@ -466,6 +466,41 @@
                 }
             ],
             "version": "0.5.4"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Default Gas setting. Set your preferred gas fee priority level for all future transactions."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improved spam filtering for automatic token additions."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Increased the frequency of updates for asset balances."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Fixed password validation issues on the onboarding flow."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed transaction filtering issue on the Asset page."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.5.5"
         }
     ]
 }

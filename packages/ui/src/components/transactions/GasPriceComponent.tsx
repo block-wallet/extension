@@ -1,4 +1,4 @@
-import { FunctionComponent, useRef, useState, useEffect } from "react"
+import { FunctionComponent, useRef, useState, useEffect, useMemo } from "react"
 import classnames from "classnames"
 import { BigNumber } from "@ethersproject/bignumber"
 
@@ -50,6 +50,7 @@ interface GasComponentProps {
     gasFees: TransactionFeeData
     selectedOption: GasPriceOption
     options: GasPriceOption[]
+    minGasLimit?: string
     setSelectedGas: (option: GasPriceOption) => void
     getGasOption: (label: string, gasFees: TransactionFeeData) => GasPriceOption
 }
@@ -161,15 +162,21 @@ const GasSelectorBasic = (props: GasComponentProps) => {
 }
 
 // Schema
-const schema = yup.object({
-    gasLimit: makeStringNumberFormField("Gas limit is required", false),
-    maxPriorityFeePerGas: makeStringNumberFormField(
-        "Max tip is required",
-        true
-    ),
-    maxFeePerGas: makeStringNumberFormField("Max fee is required", false),
-})
-type GasAdvancedForm = InferType<typeof schema>
+const schemaBuilder = ({ minGasLimit }: { minGasLimit?: string } = {}) =>
+    yup.object({
+        gasLimit: makeStringNumberFormField("Gas limit is required", false, {
+            min: [
+                parseInt(minGasLimit ?? "0"),
+                `Gas limit can't be lower than ${parseInt(minGasLimit ?? "0")}`,
+            ],
+        }),
+        maxPriorityFeePerGas: makeStringNumberFormField(
+            "Max tip is required",
+            true
+        ),
+        maxFeePerGas: makeStringNumberFormField("Max fee is required", false),
+    })
+type GasAdvancedForm = InferType<ReturnType<typeof schemaBuilder>>
 
 // Advanced tab. Allows users to enter manual fee values.
 const GasSelectorAdvanced = (props: GasComponentProps) => {
@@ -193,6 +200,14 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
     const averageTip = BigNumber.from(
         gasPricesLevels.average.maxPriorityFeePerGas
     )
+
+    const schema = useMemo(() => {
+        return schemaBuilder({ minGasLimit: props.minGasLimit })
+    }, [props.minGasLimit])
+
+    const [gasLimitWarning, setGasLimitWarning] = useState("")
+    const [tipWarning, setTipWarning] = useState("")
+    const [maxFeeWarning, setMaxFeeWarning] = useState("")
 
     const {
         register,
@@ -237,16 +252,20 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
         setValue("maxFeePerGas", formatUnits(defaultFees.maxFeePerGas!, "gwei"))
     }
 
+    const validateGasLimit = (gasLimit?: BigNumber) => {
+        setGasLimitWarning(
+            gasLimit?.lt(defaultFees.gasLimit!)
+                ? `Gas limit lower than suggested (${defaultFees.gasLimit})`
+                : ""
+        )
+    }
+
     const validateFees = (fees: TransactionFeeData) => {
         clearErrors("maxFeePerGas")
 
         const baseFee = BigNumber.from(baseFeePerGas)
 
-        setGasLimitWarning(
-            fees.gasLimit?.lt(defaultFees.gasLimit!)
-                ? "Gas limit lower than suggested"
-                : ""
-        )
+        validateGasLimit(fees.gasLimit)
 
         setMaxFeeWarning(
             fees.maxFeePerGas?.lt(baseFee.add(fees.maxPriorityFeePerGas!))
@@ -288,7 +307,6 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
 
     const handleBlur = () => {
         const values = getValues()
-
         const fees: TransactionFeeData = {
             gasLimit: BigNumber.from(
                 values.gasLimit === "" ? "0" : values.gasLimit
@@ -322,10 +340,6 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
         setSelectedGas(custom)
     })
 
-    const [gasLimitWarning, setGasLimitWarning] = useState("")
-    const [tipWarning, setTipWarning] = useState("")
-    const [maxFeeWarning, setMaxFeeWarning] = useState("")
-
     return (
         <div className="flex flex-col w-full">
             <div className="flex flex-col w-full space-y-3 px-3 pb-3">
@@ -335,7 +349,9 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                     </label>
                     <input
                         type="text"
-                        {...register("gasLimit")}
+                        {...register("gasLimit", {
+                            pattern: /[0-9]/g,
+                        })}
                         className={classnames(
                             Classes.inputBordered,
                             "w-full",
@@ -349,6 +365,11 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                         autoComplete="off"
                         onKeyDown={handleKeyDown}
                         onInput={handleChangeAmountWei((value) => {
+                            //If there was a warning, then check whether we need to clean it or not.
+                            //If there weren't, lets validate that onBlur to avoid showing and clearing error everytime.
+                            if (gasLimitWarning) {
+                                validateGasLimit(BigNumber.from(value ?? "0"))
+                            }
                             setValue("gasLimit", value, {
                                 shouldValidate: true,
                             })
@@ -389,7 +410,9 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                     <EndLabel label="GWEI">
                         <input
                             type="text"
-                            {...register("maxPriorityFeePerGas")}
+                            {...register("maxPriorityFeePerGas", {
+                                pattern: /[0-9.]/g,
+                            })}
                             className={classnames(
                                 Classes.inputBordered,
                                 "w-full",
@@ -446,7 +469,9 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                     <EndLabel label="GWEI">
                         <input
                             type="text"
-                            {...register("maxFeePerGas")}
+                            {...register("maxFeePerGas", {
+                                pattern: /[0-9.]/g,
+                            })}
                             className={classnames(
                                 Classes.inputBordered,
                                 "w-full",
@@ -539,6 +564,7 @@ const GasPriceComponent: FunctionComponent<{
     isParentLoading?: boolean
     showEstimationError?: boolean
     displayOnlyMaxValue?: boolean
+    minGasLimit?: string
 }> = ({
     defaultGas,
     setGas,
@@ -546,6 +572,7 @@ const GasPriceComponent: FunctionComponent<{
     disabled,
     showEstimationError,
     displayOnlyMaxValue = false,
+    minGasLimit,
 }) => {
     //Popup variables
     const ref = useRef(null)
@@ -897,6 +924,7 @@ const GasPriceComponent: FunctionComponent<{
                                 setShowEstimationWarning(false)
                                 setActive(false)
                             }}
+                            minGasLimit={minGasLimit}
                             getGasOption={getGasOption}
                         />
                     </div>

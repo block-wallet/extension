@@ -72,6 +72,7 @@ interface GasTabProps {
     selectedGasPrice: TransactionSpeedOption
     defaultGasLimit: BigNumber
     defaultGasPrice: BigNumber
+    minGasLimit?: number
     setUserChanged: (userChanged: boolean) => void
     handlePriceSelection: (price: TransactionSpeedOption) => void
     getSpeedOption: (
@@ -502,7 +503,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
     const [userChanged, setUserChanged] = useState<boolean>(false)
 
     // Tabs variables
-    // if network is configured to not show gas levels or received gas does not match with average, default is advanced tab.
+    // if network is configured to noxt show gas levels or received gas does not match with average, default is advanced tab.
     const [tab, setTab] = useState(
         tabs[!showGasLevels || !defaultLevel ? 1 : 0]
     )

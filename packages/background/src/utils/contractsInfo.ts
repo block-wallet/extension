@@ -1,4 +1,5 @@
 import { toChecksumAddress } from 'ethereumjs-util';
+import http from './http';
 import { retryHandling } from './retryHandling';
 
 const CONTRACTS_URL =
@@ -21,9 +22,9 @@ export async function fetchContractDetails(
     address: string
 ): Promise<ContractDetails | undefined> {
     try {
-        const response = await retryHandling(
+        const responseText = await retryHandling<string>(
             () =>
-                fetch(
+                http.get(
                     `${CONTRACTS_URL}/${chainId}/${toChecksumAddress(
                         address
                     )}.json`
@@ -31,8 +32,8 @@ export async function fetchContractDetails(
             200,
             3
         );
-        const file = await response.text();
-        const contractDetails = JSON.parse(file) as ContractDetails;
+
+        const contractDetails = JSON.parse(responseText) as ContractDetails;
 
         if (!contractDetails) {
             return contractDetails;

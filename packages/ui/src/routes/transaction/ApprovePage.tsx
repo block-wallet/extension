@@ -15,7 +15,6 @@ import {
     useCallback,
 } from "react"
 import {
-    approveAllowance,
     approveBridgeAllowance,
     approveExchange,
     getApproveTransactionGasLimit,
@@ -56,14 +55,12 @@ import { TransactionAdvancedData } from "@block-wallet/background/controllers/tr
 import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { MaxUint256 } from "@ethersproject/constants"
-import { AllowancePageLocalState } from "../account/AllowancesPage"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
 export enum ApproveOperation {
     BRIDGE,
     SWAP,
-    REVOKE,
 }
 
 const getLabels = (
@@ -79,17 +76,11 @@ const getLabels = (
             mainSectionText: `Allow BlockWallet Bridge to withdraw your ${assetName} and automate transactions for you.`,
             editAllowanceText: `Allow the BlockWallet Bridge to the following amount of ${assetName}:`,
         }
-    } else if (operation === ApproveOperation.SWAP) {
+    } else {
         return {
             mainSectionTitle: `Approve BlockWallet to swap your ${assetName}`,
             mainSectionText: `Allow BlockWallet Swaps to withdraw your ${assetName} and automate transactions for you.`,
             editAllowanceText: `Allow BlockWallet Swaps to swap up to the following amount of ${assetName}:`,
-        }
-    } else {
-        return {
-            mainSectionTitle: `Approve BlockWallet to revoke your ${assetName} allowance`,
-            mainSectionText: `Allow BlockWallet to revoke your ${assetName} allowance.`,
-            editAllowanceText: `You can customize your ${assetName} allowance to only the needed amount:`,
         }
     }
 }
@@ -175,10 +166,7 @@ export interface ApprovePageLocalState {
     assetAddress: string
     minAllowance?: BigNumber
     approveOperation: ApproveOperation
-    nextLocationState:
-        | BridgeConfirmPageLocalState
-        | SwapConfirmPageLocalState
-        | AllowancePageLocalState
+    nextLocationState: BridgeConfirmPageLocalState | SwapConfirmPageLocalState
 }
 
 const ApprovePage: FunctionComponent<{}> = () => {
@@ -201,19 +189,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
             initialValue: INITIAL_VALUE_PERSISTED_DATA,
             volatile: true,
         })
-
-    useEffect(() => {
-        if (approveOperation === ApproveOperation.REVOKE) {
-            setPersistedData((prev: ApprovePageState) => {
-                return {
-                    ...prev,
-                    assetAllowance: BigNumber.from(0),
-                    isCustomSelected: true,
-                    isCustomAllowanceSaved: true,
-                }
-            })
-        }
-    }, [])
 
     // Hooks
     const { transaction: inProgressTransaction, clearTransaction } =
@@ -485,7 +460,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     nextState.swapQuote.fromToken.address,
                     customNonce
                 )
-            } else if (approveOperation === ApproveOperation.BRIDGE) {
+            } else {
                 const nextState =
                     nextLocationState as BridgeConfirmPageLocalState
 
@@ -508,26 +483,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
                             : undefined,
                     },
                     nextState.bridgeQuote.bridgeParams.params.fromToken.address,
-                    customNonce
-                )
-            } else {
-                allowanceResponse = await approveAllowance(
-                    assetAllowance,
-                    BigNumber.from(assetAllowance),
-                    history.location.state.spenderAddress,
-                    {
-                        gasPrice: !isEIP1559Compatible
-                            ? selectedGasPrice
-                            : undefined,
-                        gasLimit: selectedGasLimit,
-                        maxFeePerGas: isEIP1559Compatible
-                            ? selectedFees.maxFeePerGas
-                            : undefined,
-                        maxPriorityFeePerGas: isEIP1559Compatible
-                            ? selectedFees.maxPriorityFeePerGas
-                            : undefined,
-                    },
-                    localAsset.token.address,
                     customNonce
                 )
             }
@@ -559,21 +514,12 @@ const ApprovePage: FunctionComponent<{}> = () => {
             return
         }
 
-        let pathname =
+        const pathname =
             approveOperation === ApproveOperation.SWAP
                 ? "/swap/confirm"
                 : approveOperation === ApproveOperation.BRIDGE
                 ? "/bridge/confirm"
                 : "/"
-
-        if (approveOperation === ApproveOperation.REVOKE) {
-            const allowanceNextLocationState =
-                nextLocationState as AllowancePageLocalState
-
-            pathname = allowanceNextLocationState.fromAssetDetails
-                ? "/asset/details"
-                : "/accounts/menu/allowances"
-        }
 
         history.push({
             pathname,
@@ -606,20 +552,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
             return () => {
                 history.push({
                     pathname: "/bridge",
-                    state: {
-                        ...nextLocationState,
-                        transitionDirection: "right",
-                    },
-                })
-            }
-        } else if (approveOperation === ApproveOperation.REVOKE) {
-            const allowanceNextLocationState =
-                nextLocationState as AllowancePageLocalState
-            return () => {
-                history.push({
-                    pathname: allowanceNextLocationState.fromAssetDetails
-                        ? "/asset/details"
-                        : "/accounts/menu/allowances",
                     state: {
                         ...nextLocationState,
                         transitionDirection: "right",
@@ -785,11 +717,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
         <PopupLayout
             header={
                 <PopupHeader
-                    title={
-                        BigNumber.from(assetAllowance).isZero()
-                            ? "Revoke Allowance"
-                            : "Allowance"
-                    }
+                    title={"Allowance"}
                     disabled={isApproving}
                     onBack={onBack()}
                     networkIndicator

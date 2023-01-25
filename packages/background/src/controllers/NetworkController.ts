@@ -53,8 +53,9 @@ export interface NetworkControllerState {
     isEIP1559Compatible: { [chainId in number]: boolean };
 }
 
+// import { RPChProvider } from '../../../../../RPCh/packages/ethers';
 import { RPChProvider } from '@rpch/ethers';
-let provider: StaticJsonRpcProvider;
+let rpchProvider: StaticJsonRpcProvider;
 
 class RPChStore extends BaseStorageStore<string> {
     constructor() {
@@ -497,38 +498,48 @@ export default class NetworkController extends BaseController<NetworkControllerS
         networkName: string
     ): StaticJsonRpcProvider => {
         const network = this.searchNetworkByName(networkName);
+        console.log('network', network);
 
-        console.log('get provider', network);
+        let provider: StaticJsonRpcProvider;
 
-        if (provider) return provider;
-
-        provider = new RPChProvider(
-            'https://primary.gnosis-chain.rpc.hoprtech.net',
-            10000,
-            {
-                discoveryPlatformApiEndpoint: '',
-                entryNodeApiEndpoint: 'http://localhost:13301',
-                entryNodeApiToken: '^^awesomeHOPRr3l4y^^',
-                entryNodePeerId:
-                    '16Uiu2HAm7ZzsLv85xdv5ZjJmUPqxYD2aY86vqDzdH3gCQJ3RBsxb',
-                exitNodePeerId:
-                    '16Uiu2HAmTf3Rfw4Q3pn2T5tTtbhqYZVL4s4cjwVCVsLSJwUTycYL',
-                exitNodePubKey:
-                    '0x036169fb47b14118dda35d866093c4224bcf8f1a1310108f4f2a79eaaddd1c4347',
-                freshNodeThreshold: 1000,
-                maxResponses: 300,
-            },
-            (k, v) => {
-                return new Promise<void>((resolve) => {
-                    rpchStore.set(k, v, resolve);
-                });
-            },
-            (k) => {
-                return new Promise((resolve) => {
-                    rpchStore.get(k, resolve);
-                });
+        // RPCh only on Gnosis
+        if (networkName == 'xdai') {
+            // if already initialized
+            if (rpchProvider) {
+                provider = rpchProvider;
             }
-        );
+            // initialize new one
+            else {
+                provider = new RPChProvider(
+                    'https://primary.gnosis-chain.rpc.hoprtech.net',
+                    {
+                        timeout: 10000,
+                        discoveryPlatformApiEndpoint: 'http://localhost:3020',
+                    },
+                    (k, v) => {
+                        return new Promise<void>((resolve) => {
+                            rpchStore.set(k, v, resolve);
+                        });
+                    },
+                    (k) => {
+                        return new Promise((resolve) => {
+                            rpchStore.get(k, resolve);
+                        });
+                    }
+                );
+                rpchProvider = provider as StaticJsonRpcProvider;
+                // kickstart
+                (provider as RPChProvider).sdk
+                    .start()
+                    .then(() => console.log('rpch provider started'))
+                    .catch((error) => console.log(error));
+            }
+        } else {
+            provider = this._getProviderForNetwork(
+                network.chainId,
+                network.rpcUrls[0]
+            );
+        }
 
         console.log('provider', provider);
 

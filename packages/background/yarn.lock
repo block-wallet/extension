@@ -834,12 +834,12 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@rpch/common@0.1.3":
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/@rpch/common/-/common-0.1.3.tgz#253e8a6cf37455f887d9955e625777c606c83fe5"
-  integrity sha512-5pgNW8fk5E6VY5Wz+GYqRSg2VTNSicRukotIrSNAmNbT6o76aD1WTk8SKe5kZwa8kvay4FbKhkD5pAc2K5u5mQ==
+"@rpch/common@0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@rpch/common/-/common-0.1.5.tgz#07f91e37a193ccc8e8edfa51538555432e7f895f"
+  integrity sha512-fZMS5BV4sZpNkPw1POzq/OBcmJgF9FOqlYdzfanPiAHqZh1AIw3K7R5nc3jIo5iyNihT/BHjqcIMXXt5NY3cug==
   dependencies:
-    "@rpch/crypto-bridge" "0.1.3"
+    "@rpch/crypto-bridge" "0.1.5"
     cross-fetch "^3.1.5"
     debug "^4.3.4"
     ethers "^5.7.2"
@@ -847,10 +847,10 @@
     peer-id "^0.16.0"
     ws "^8.11.0"
 
-"@rpch/crypto-bridge@0.1.3":
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/@rpch/crypto-bridge/-/crypto-bridge-0.1.3.tgz#80fa7fbb26b547509994d62c519dd8dcfd27bf14"
-  integrity sha512-WEy6sjnWw5/RkKfRXv2PHYfV2uEQE2aDkcx6/ixiaTE0kBMLcTi6JPxBj4A6G+7LxEpD7dQ1WC8Y46ZfQ8f7ug==
+"@rpch/crypto-bridge@0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@rpch/crypto-bridge/-/crypto-bridge-0.1.5.tgz#64f371ccf211b706836eeeccd4997f636a2b4947"
+  integrity sha512-lk5Y8AzpCbjoVytKa3Hl24KJrxlbgj1p2OYff3g5yGxd60Q2gdZzv9CdgaQsVYGairI396xHUCDgTyjXXoeWRw==
   dependencies:
     "@rpch/crypto" "^0.3.0"
 
@@ -859,21 +859,22 @@
   resolved "https://registry.yarnpkg.com/@rpch/crypto/-/crypto-0.3.0.tgz#dc427b80135040e2eca24a3670fac142719fdab9"
   integrity sha512-pJIUYpePLXEE3an54s5f1jVgbMNOSpS+AGvpDwqbrCU5+AMRgFbSvoqik771qeoY+j09bbv3maDKUn57/eU6Og==
 
-"@rpch/ethers@0.1.3":
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/@rpch/ethers/-/ethers-0.1.3.tgz#1962c3285e5af0c2883c99cb34bd26f15c4a0e8f"
-  integrity sha512-ztwiM2/no5+DEWFCXx4g/D376T2jtKTEHYW0GBKMCWlB7ijRDKatKChI35kr9JfRPdKfmoJPN3c4qTDSewKDEA==
+"@rpch/ethers@^0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@rpch/ethers/-/ethers-0.1.5.tgz#b58d163063064f57e3a848b9aac8f713298a1ec2"
+  integrity sha512-y5soVPPV3h+wShPUm8RXcgEYN17ok152Q4a7HvkHY3TDEgkK48TxfIbdZLXtrVCHU48GQ+BbTR0GWHXGqePb2A==
   dependencies:
-    "@rpch/common" "0.1.3"
-    "@rpch/sdk" "0.1.3"
+    "@rpch/common" "0.1.5"
+    "@rpch/sdk" "0.1.5"
 
-"@rpch/sdk@0.1.3":
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/@rpch/sdk/-/sdk-0.1.3.tgz#c6684d7d9871e2548092704c7fc3a9034104027f"
-  integrity sha512-5MqEbaBhKLGqtHm7DQK9P7boGYPar7zxIY2jtZK7lT/TTFQaKu14Jfg9vOx5ttEjuKAptbpu+7MHKiFxit46QQ==
+"@rpch/sdk@0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@rpch/sdk/-/sdk-0.1.5.tgz#1d887078f3bc26cd5fdf7eefa759ebd274e9e209"
+  integrity sha512-gzNUdrmQTzTPM37N7bEFPSUyWBHbqErVLTPO6dMB1E8eG7358FGKWWzvIaiyB0JiWp1tsjvjRQIMjZiP5yopqA==
   dependencies:
-    "@rpch/common" "0.1.3"
-    "@rpch/crypto-bridge" "0.1.3"
+    "@rpch/common" "0.1.5"
+    "@rpch/crypto-bridge" "0.1.5"
+    cross-fetch "^3.1.5"
     peer-id "^0.16.0"
 
 "@scure/base@~1.1.0":

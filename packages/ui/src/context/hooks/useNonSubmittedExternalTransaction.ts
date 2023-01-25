@@ -16,13 +16,29 @@ interface UnapprovedTransaction {
 }
 
 export const useNonSubmittedExternalTransaction = (): UnapprovedTransaction => {
+    return useNonSubmittedTransaction()
+}
+
+export const useNonSubmittedCombinedTransaction = (): UnapprovedTransaction => {
+    return useNonSubmittedTransaction(false)
+}
+
+/**
+ * Returns the first unapproved transaction
+ * @param externalOnly - if true, returns only external transactions otherwise returns external and blank transactions
+ * @returns - first unapproved transaction
+ */
+const useNonSubmittedTransaction = (
+    externalOnly = true
+): UnapprovedTransaction => {
     const { transactions } = useBlankState()!
     const { isEIP1559Compatible } = useSelectedNetwork()
     const { gasPricesLevels } = useGasPriceData()
 
     const nonSubmittedTransactions = getNonSubmittedTransactions(
         transactions,
-        true
+        externalOnly,
+        !externalOnly
     )
 
     // Gets first unapproved transaction

@@ -466,6 +466,26 @@ export const addNewSendTransaction = async (
 }
 
 /**
+ * Adds a new unapproved Approve transaction
+ *
+ * @param tokenAddress The token address
+ * @param spenderAddress The spender address
+ * @param allowance The allowance amount
+ * @returns The transaction object created
+ */
+export const addNewApproveTransaction = async (
+    tokenAddress: string,
+    spenderAddress: string,
+    allowance: BigNumber
+): Promise<TransactionMeta> => {
+    return sendMessage(Messages.TRANSACTION.ADD_NEW_APPROVE_TRANSACTION, {
+        tokenAddress,
+        spenderAddress,
+        allowance,
+    })
+}
+
+/**
  * Updates the gas on an existing unapproved Send transaction
  *
  * @param transactionId The transaction id

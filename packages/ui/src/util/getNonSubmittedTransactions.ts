@@ -1,9 +1,17 @@
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 import { TransactionStatus } from "../context/commTypes"
 
+/**
+ * Returns a list of non submitted transactions
+ * @param transactions - list of transactions
+ * @param external - if true, returns only external transactions otherwise returns only blank transactions
+ * @param combined - if true, returns all transactions regardless of origin (external or blank)
+ * @returns
+ */
 export const getNonSubmittedTransactions = (
     transactions: TransactionMeta[],
-    external = true
+    external = true,
+    combined = false
 ) => {
     const validStates = [
         TransactionStatus.UNAPPROVED,
@@ -12,8 +20,12 @@ export const getNonSubmittedTransactions = (
     ]
     const filteredTransactions = transactions.filter(
         (t) =>
-            (external ? t.origin !== "blank" : t.origin === "blank") &&
-            validStates.includes(t.status)
+            validStates.includes(t.status) &&
+            (!combined
+                ? external
+                    ? t.origin !== "blank"
+                    : t.origin === "blank"
+                : true)
     )
 
     const nonSubmittedTransactions = filteredTransactions.reduce(

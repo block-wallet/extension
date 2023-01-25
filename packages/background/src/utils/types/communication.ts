@@ -178,6 +178,7 @@ enum UD {
 
 enum TRANSACTION {
     ADD_NEW_SEND_TRANSACTION = 'ADD_NEW_SEND_TRANSACTION',
+    ADD_NEW_APPROVE_TRANSACTION = 'ADD_NEW_APPROVE_TRANSACTION',
     UPDATE_SEND_TRANSACTION_GAS = 'UPDATE_SEND_TRANSACTION_GAS',
     APPROVE_SEND_TRANSACTION = 'APPROVE_SEND_TRANSACTION',
     GET_SEND_TRANSACTION_RESULT = 'GET_SEND_TRANSACTION_RESULT',
@@ -403,6 +404,10 @@ export interface RequestSignatures {
     [Messages.TRANSACTION.SEND_ETHER]: [RequestSendEther, string];
     [Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION]: [
         RequestAddAsNewSendTransaction,
+        TransactionMeta
+    ];
+    [Messages.TRANSACTION.ADD_NEW_APPROVE_TRANSACTION]: [
+        RequestAddAsNewApproveTransaction,
         TransactionMeta
     ];
     [Messages.TRANSACTION.UPDATE_SEND_TRANSACTION_GAS]: [
@@ -882,6 +887,12 @@ export interface RequestAddAsNewSendTransaction {
     to: string;
     value: BigNumber;
     feeData: TransactionFeeData;
+}
+
+export interface RequestAddAsNewApproveTransaction {
+    tokenAddress: string;
+    spenderAddress: string;
+    allowance: BigNumber;
 }
 
 export interface RequestUpdateSendTransactionGas {

@@ -50,7 +50,7 @@ import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { useUserSettings } from "../../context/hooks/useUserSettings"
 import { yupResolver } from "@hookform/resolvers/yup"
-import { useNonSubmittedExternalTransaction } from "../../context/hooks/useNonSubmittedExternalTransaction"
+import { useNonSubmittedCombinedTransaction } from "../../context/hooks/useNonSubmittedExternalTransaction"
 import useDebouncedState from "../../util/hooks/useDebouncedState"
 import { useTransactionById } from "../../context/hooks/useTransactionById"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
@@ -61,6 +61,7 @@ import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceL
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { canUserSubmitTransaction } from "../../util/transactionUtils"
 import { MaxUint256 } from "@ethersproject/constants"
+import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
 const UNKNOWN_BALANCE = "UNKNOWN_BALANCE"
 const UNLIMITED_ALLOWANCE = MaxUint256
@@ -133,8 +134,11 @@ export interface ApproveAssetProps {
 }
 
 const ApproveAssetPage = () => {
+    const history = useOnMountHistory()
+    const from = history.location?.state?.from
+    const fromState = history.location?.state?.fromState
     const { transaction: nextTransaction, transactionCount } =
-        useNonSubmittedExternalTransaction()
+        useNonSubmittedCombinedTransaction()
     const route = useNextRequestRoute()
     const [currentTx, setCurrentTx] = useDebouncedState<TransactionMeta>(
         nextTransaction,
@@ -153,7 +157,11 @@ const ApproveAssetPage = () => {
             TransactionCategories.TOKEN_METHOD_APPROVE ||
         currentTx.advancedData?.tokenId
     ) {
-        return <Redirect to={route} />
+        return (
+            <Redirect
+                to={{ pathname: from ? from : route, state: fromState }}
+            />
+        )
     } else {
         return (
             <ApproveAsset

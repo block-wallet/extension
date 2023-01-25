@@ -1,3 +1,4 @@
+import { BigNumber } from "ethers"
 import { useState } from "react"
 import { formatUnits } from "ethers/lib/utils"
 import { TokenAllowance } from "@block-wallet/background/controllers/AccountTrackerController"
@@ -6,16 +7,16 @@ import { Classes, classnames } from "../../styles"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { AllowanceDisplayData } from "../../context/hooks/useAccountAllowances"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
+import { addNewApproveTransaction } from "../../context/commActions"
 import useIsHovering from "../../util/hooks/useIsHovering"
 import { generateExplorerLink } from "../../util/getExplorer"
 import { formatRounded } from "../../util/formatRounded"
-import { ApproveOperation } from "../../routes/transaction/ApprovePage"
 
-import DetailsDialog from "../dialog/DetailsDialog"
 import { AllowancesFilters } from "./AllowancesFilterButton"
-import { AllowancePageLocalState } from "../../routes/account/AllowancesPage"
-
+import { TabLabels } from "../assets/ActivityAllowancesView"
+import DetailsDialog from "../dialog/DetailsDialog"
 import AllowanceIcon from "./AllowanceIcon"
+
 import ChevronRightIcon from "../icons/ChevronRightIcon"
 import revokeIcon from "../../assets/images/icons/revoke.svg"
 
@@ -36,25 +37,29 @@ const AllowanceItem = ({
     const { selectedNetwork, availableNetworks } = useBlankState()!
 
     const [open, setOpen] = useState(false)
+
     const { isHovering: isHoveringButton, getIsHoveringProps } = useIsHovering()
 
-    const revoke = () => {
-        const AllowancePageState = {
-            fromAssetDetails: fromAssetDetails,
-            address: token.address,
-            tab: "Allowances",
-            groupBy: showToken
-                ? AllowancesFilters.SPENDER
-                : AllowancesFilters.TOKEN,
-        } as AllowancePageLocalState
+    const revoke = async () => {
+        await addNewApproveTransaction(
+            token.address,
+            spender.address,
+            BigNumber.from(0)
+        )
 
         history.push({
-            pathname: "/transaction/approve",
+            pathname: "/approveAsset",
             state: {
-                assetAddress: token.address,
-                approveOperation: ApproveOperation.REVOKE,
-                spenderAddress: spender.address,
-                nextLocationState: AllowancePageState,
+                from: fromAssetDetails
+                    ? "/asset/details"
+                    : "/accounts/menu/allowances",
+                fromState: {
+                    groupBy: showToken
+                        ? AllowancesFilters.SPENDER
+                        : AllowancesFilters.TOKEN,
+                    address: token.address,
+                    tab: TabLabels.ALLOWANCES,
+                },
             },
         })
     }

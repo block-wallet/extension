@@ -108,6 +108,7 @@ import type {
     RequestSetDefaultGas,
     RequestCalculateApproveTransactionGasLimit,
     RequestApproveAllowance,
+    RequestAddAsNewApproveTransaction,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -115,7 +116,10 @@ import { BigNumber } from '@ethersproject/bignumber';
 import BlankStorageStore from '../infrastructure/stores/BlankStorageStore';
 import { Flatten } from '../utils/types/helpers';
 import { Messages } from '../utils/types/communication';
-import { TransactionMeta } from './transactions/utils/types';
+import {
+    TransactionCategories,
+    TransactionMeta,
+} from './transactions/utils/types';
 import {
     BlankAppState,
     BlankAppUIState,
@@ -225,6 +229,7 @@ import RemoteConfigsController, {
     RemoteConfigsControllerState,
 } from './RemoteConfigsController';
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
+import { hexZeroPad } from 'ethers/lib/utils';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -882,6 +887,10 @@ export default class BlankController extends EventEmitter {
             case Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION:
                 return this.addAsNewSendTransaction(
                     request as RequestAddAsNewSendTransaction
+                );
+            case Messages.TRANSACTION.ADD_NEW_APPROVE_TRANSACTION:
+                return this.addAsNewApproveTransaction(
+                    request as RequestAddAsNewApproveTransaction
                 );
             case Messages.TRANSACTION.UPDATE_SEND_TRANSACTION_GAS:
                 return this.updateSendTransactionGas(
@@ -2148,6 +2157,44 @@ export default class BlankController extends EventEmitter {
                 feeData
             );
         }
+    }
+
+    /**
+     * Generate an unapproved approve transaction
+     *
+     * @param tokenAddress erc20 token address
+     * @param spenderAddress spender address
+     * @param allowance  allowance amount
+     * @returns transaction object
+     */
+    private async addAsNewApproveTransaction({
+        tokenAddress,
+        spenderAddress,
+        allowance,
+    }: RequestAddAsNewApproveTransaction): Promise<TransactionMeta> {
+        const paddedSpender = hexZeroPad(spenderAddress, 32).slice(2);
+        const paddedAllowance = hexZeroPad(
+            BigNumber.from(allowance)._hex,
+            32
+        ).slice(2);
+        const { transactionMeta, result } =
+            await this.transactionController.addTransaction({
+                transaction: {
+                    value: BigNumber.from('0'),
+                    to: tokenAddress,
+                    from: this.preferencesController
+                        .getSelectedAddress()
+                        .toLowerCase(),
+                    data: `0x095ea7b3${paddedSpender}${paddedAllowance}`,
+                },
+                origin: 'blank',
+                customCategory: TransactionCategories.TOKEN_METHOD_APPROVE,
+            });
+
+        // As we don't care about the result here, ignore errors in transaction result
+        result.catch(() => {});
+
+        return transactionMeta;
     }
 
     /**

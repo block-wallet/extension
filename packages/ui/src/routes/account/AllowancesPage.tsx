@@ -1,7 +1,10 @@
+import { BigNumber } from "ethers"
 import { useEffect, useRef, useState } from "react"
 
-import { refreshTokenAllowances } from "../../context/commActions"
-import { ApproveOperation } from "../transaction/ApprovePage"
+import {
+    addNewApproveTransaction,
+    refreshTokenAllowances,
+} from "../../context/commActions"
 import useAccountAllowances from "../../context/hooks/useAccountAllowances"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
@@ -60,7 +63,7 @@ const AllowancesPage = () => {
 
     const { isOpen, status, dispatch } = useWaitingDialog()
 
-    const revokeAll = () => {
+    const revokeAll = async () => {
         let allowancesToRevoke: allowancesToRevoke = []
         allowances.forEach((groupedAllowances) => {
             groupedAllowances.allowances.forEach((allowance) => {
@@ -77,41 +80,23 @@ const AllowancesPage = () => {
             })
         })
 
+        await Promise.all(
+            allowancesToRevoke.map((allowance) =>
+                addNewApproveTransaction(
+                    allowance.assetAddress,
+                    allowance.spenderAddress,
+                    BigNumber.from(0)
+                )
+            )
+        )
         history.push({
-            pathname: "/transaction/approve",
+            pathname: "/approveAsset",
             state: {
-                assetAddress: allowancesToRevoke[0].assetAddress,
-                approveOperation: ApproveOperation.REVOKE,
-                spenderAddress: allowancesToRevoke[0].spenderAddress,
-                nextLocationState: {
-                    fromAssetDetails: false,
-                    groupBy: groupBy,
-                    toRevoke: allowancesToRevoke.slice(1),
-                } as AllowancePageLocalState,
+                from: "/accounts/menu/allowances",
+                fromState: { groupBy },
             },
         })
     }
-
-    useEffect(() => {
-        const allowancesToRevoke = history.location.state?.toRevoke
-        if (allowancesToRevoke && allowancesToRevoke.length > 0) {
-            setTimeout(() => {
-                history.push({
-                    pathname: "/transaction/approve",
-                    state: {
-                        assetAddress: allowancesToRevoke[0].assetAddress,
-                        approveOperation: ApproveOperation.REVOKE,
-                        spenderAddress: allowancesToRevoke[0].spenderAddress,
-                        nextLocationState: {
-                            fromAssetDetails: false,
-                            groupBy: groupBy,
-                            toRevoke: allowancesToRevoke.slice(1),
-                        } as AllowancePageLocalState,
-                    },
-                })
-            }, 500)
-        }
-    }, [history.location.state?.toRevoke])
 
     const refetchAllowances = async () => {
         if (!isRefreshDisabled) {

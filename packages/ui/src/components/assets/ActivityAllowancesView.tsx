@@ -9,7 +9,7 @@ import HorizontalSelect from "../input/HorizontalSelect"
 import AssetActivity from "./AssetActivity"
 import AssetAllowances from "./AssetAllowances"
 
-enum TabLabels {
+export enum TabLabels {
     ACTIVITY = "Activity",
     ALLOWANCES = "Allowances",
 }

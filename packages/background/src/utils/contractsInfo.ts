@@ -1,5 +1,5 @@
 import { toChecksumAddress } from 'ethereumjs-util';
-import http from './http';
+import http, { RequestError } from './http';
 import { retryHandling } from './retryHandling';
 
 const CONTRACTS_URL =
@@ -30,7 +30,11 @@ export async function fetchContractDetails(
                     )}.json`
                 ),
             200,
-            3
+            3,
+            (e: Error) => {
+                //if it is not found, then abort.
+                return (e as RequestError).status !== 404;
+            }
         );
 
         const contractDetails = JSON.parse(responseText) as ContractDetails;

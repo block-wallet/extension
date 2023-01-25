@@ -10,6 +10,7 @@ import {
     RPCChainConfig,
 } from './rpcConfigBuilder';
 import { isNil } from 'lodash';
+import { fetchBlockWithRetries } from '../blockFetch';
 
 export class RPCLogsFetcher {
     private readonly chainId: number;
@@ -172,4 +173,33 @@ export class RPCLogsFetcher {
 
         return Math.max(lastBlockQueried, oldestSafeBlock);
     };
+
+    /**
+     * getLogTimestampInMilliseconds
+     * Returns the log timestamp in milliseconds. If the log comes from the API, then the `timeStamp` property will be filled.
+     * Otherwise, it fetches the block when the log appears and returns its timestamp
+     * @param log
+     * @returns log timestamp in millis
+     */
+    public async getLogTimestampInMilliseconds(
+        log: Log,
+        retries = 20
+    ): Promise<number | undefined> {
+        //API logs return the hexadecimal timestamp
+        const logTimestamp: string = (log as any).timeStamp;
+        //some networks returns the log timestamp
+        let txTimestamp = logTimestamp ? parseInt(logTimestamp) : undefined;
+        if (!txTimestamp) {
+            const block = await fetchBlockWithRetries(
+                log.blockNumber,
+                this.provider,
+                retries
+            );
+            if (block) {
+                txTimestamp = block.timestamp;
+            }
+        }
+
+        return txTimestamp ? txTimestamp * 1000 : undefined;
+    }
 }

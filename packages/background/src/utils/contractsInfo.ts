@@ -10,6 +10,12 @@ export interface ContractDetails {
     websiteURL: string;
 }
 
+function ensureURLWithProtocol(url: string): string {
+    return url.startsWith('http') || url.startsWith('https')
+        ? url
+        : `https://${url}`;
+}
+
 export async function fetchContractDetails(
     chainId: number,
     address: string
@@ -26,7 +32,18 @@ export async function fetchContractDetails(
             3
         );
         const file = await response.text();
-        return JSON.parse(file) as ContractDetails;
+        const contractDetails = JSON.parse(file) as ContractDetails;
+
+        if (!contractDetails) {
+            return contractDetails;
+        }
+
+        return {
+            ...contractDetails,
+            logoURI: contractDetails.logoURI
+                ? ensureURLWithProtocol(contractDetails.logoURI)
+                : contractDetails.logoURI,
+        };
     } catch (e) {
         return undefined;
     }

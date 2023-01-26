@@ -20,8 +20,7 @@ export const DEVICE_RECONNECTION_WARNING_STEPS: StepData = {
         { label: "Only a single Trezor is plugged in" },
         { label: "You have followed the steps on Trezor Connect page" },
     ],
-    // TODO (KEYSTONE): Complete this.
-    KEYSTONE: [{ label: "some data" }],
+    KEYSTONE: [{ label: "Show Keystone QR code to camera" }],
 }
 
 export const DEVICE_CONNECTION_STEPS: StepData = {
@@ -39,6 +38,5 @@ export const DEVICE_CONNECTION_STEPS: StepData = {
         { label: 'Click "Continue" below' },
         { label: "Follow steps on Trezor Connect page" },
     ],
-    // TODO (KEYSTONE): Complete this.
-    KEYSTONE: [{ label: "Scan QR Code" }],
+    KEYSTONE: [{ label: "Show Keystone QR code to camera." }],
 }

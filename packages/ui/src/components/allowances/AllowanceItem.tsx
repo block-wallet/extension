@@ -37,31 +37,36 @@ const AllowanceItem = ({
     const { selectedNetwork, availableNetworks } = useBlankState()!
 
     const [open, setOpen] = useState(false)
+    const [isRevokeDisabled, setIsRevokeDisabled] = useState(false)
 
     const { isHovering: isHoveringButton, getIsHoveringProps } = useIsHovering()
 
     const revoke = async () => {
-        await addNewApproveTransaction(
-            token.address,
-            spender.address,
-            BigNumber.from(0)
-        )
+        if (!isRevokeDisabled) {
+            setIsRevokeDisabled(true)
 
-        history.push({
-            pathname: "/approveAsset",
-            state: {
-                from: fromAssetDetails
-                    ? "/asset/details"
-                    : "/accounts/menu/allowances",
-                fromState: {
-                    groupBy: showToken
-                        ? AllowancesFilters.SPENDER
-                        : AllowancesFilters.TOKEN,
-                    address: token.address,
-                    tab: TabLabels.ALLOWANCES,
+            await addNewApproveTransaction(
+                token.address,
+                spender.address,
+                BigNumber.from(0)
+            )
+
+            history.push({
+                pathname: "/approveAsset",
+                state: {
+                    from: fromAssetDetails
+                        ? "/asset/details"
+                        : "/accounts/menu/allowances",
+                    fromState: {
+                        groupBy: showToken
+                            ? AllowancesFilters.SPENDER
+                            : AllowancesFilters.TOKEN,
+                        address: token.address,
+                        tab: TabLabels.ALLOWANCES,
+                    },
                 },
-            },
-        })
+            })
+        }
     }
 
     const name = showToken ? token.name : spender.name

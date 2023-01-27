@@ -33,6 +33,7 @@ export interface AdvancedSettingsProps {
     display?: AdvancedSettingsDisplay
     label?: string
     transactionGasLimit?: BigNumber
+    buttonDisplay?: boolean
 }
 
 export const defaultAdvancedSettings: Required<TransactionAdvancedData> = {
@@ -100,6 +101,9 @@ type AdvancedSettingsFormData = InferType<
  * @param setAdvancedSettings Parent set state callback
  * @param defaultSettings Default advanced settings
  * @param display Custom display options
+ * @param label Label for the button
+ * @param transactionGasLimit Gas limit for the transaction in BigNumber
+ * @param buttonDisplay Whether to display the button or just a clickable text
  */
 export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
     address,
@@ -109,6 +113,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
     display = defaultSettingsDisplay,
     label = "Advanced Settings",
     transactionGasLimit = BigNumber.from(21000),
+    buttonDisplay = true,
 }) => {
     const { chainId } = useSelectedNetwork()
     const isFlashbotsAvailable = chainId === 1
@@ -338,13 +343,25 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
 
     return (
         <>
-            <OutlinedButton
-                onClick={() => setIsOpen(true)}
-                className="w-full py-3"
-            >
-                <span className="font-bold text-sm">{label}</span>
-                <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
-            </OutlinedButton>
+            {buttonDisplay ? (
+                <OutlinedButton
+                    onClick={() => setIsOpen(true)}
+                    className="w-full py-3"
+                >
+                    <span className="font-bold text-sm">{label}</span>
+                    <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
+                </OutlinedButton>
+            ) : (
+                <div className="flex flex-col items-end">
+                    <span
+                        className="text-xs font-bold text-primary-300 cursor-pointer hover:underline"
+                        onClick={() => setIsOpen(true)}
+                    >
+                        {label}
+                    </span>
+                </div>
+            )}
+
             <Dialog open={isOpen}>
                 <div className="absolute top-0 right-0 p-5 z-40">
                     <div

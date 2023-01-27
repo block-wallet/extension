@@ -1,11 +1,13 @@
 import useTokenTransactions from "../../util/hooks/useTokenTransactions"
 import TransactionsList from "../transactions/TransactionsList"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
+import useGetAssetByTokenAddress from "../../util/hooks/useGetAssetByTokenAddress"
 
 const AssetActivity = () => {
     const history: any = useOnMountHistory()
-    const tokenAddress = history.location.state.address
-    const tokenTransactions = useTokenTransactions(tokenAddress)
+    const tokenAddress: string = history.location.state.address
+    const token = useGetAssetByTokenAddress(tokenAddress)?.token
+    const tokenTransactions = useTokenTransactions(token)
 
     return (
         <>

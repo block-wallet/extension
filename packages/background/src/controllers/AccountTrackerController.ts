@@ -51,6 +51,7 @@ import { getTokenApprovalLogsTopics } from '../utils/logsQuery';
 import { runPromiseSafely } from '../utils/promises';
 import { MaxUint256 } from '@ethersproject/constants';
 import { ContractDetails, fetchContractDetails } from '../utils/contractsInfo';
+import { getMaxBlockBatchSize } from '../utils/rpc/rpcConfigBuilder';
 
 export enum AccountStatus {
     ACTIVE = 'ACTIVE',
@@ -687,7 +688,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         txTime?: number;
     }> {
         let newTxHash = undefined;
-        const newTxTime = undefined;
+        let newTxTime = undefined;
+        const rpcLogsFetcher = new RPCLogsFetcher(provider);
+
         const lastMinedBlock = this._blockUpdatesController.getBlockNumber();
         let queryFromBlock = 0;
         //fetch new txHash
@@ -704,10 +707,16 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 log.warn('Error getting old allowance transaction by hash', e);
             }
             if (!queryFromBlock) {
-                queryFromBlock = this._blockUpdatesController.getBlockNumber();
+                //Query only one batch in case we don't have the queryFromBlock
+                queryFromBlock = Math.max(
+                    this._blockUpdatesController.getBlockNumber() -
+                        getMaxBlockBatchSize(
+                            this._networkController.network.chainId
+                        ),
+                    0
+                );
             }
 
-            const rpcLogsFetcher = new RPCLogsFetcher(provider);
             const logs = await runPromiseSafely(
                 rpcLogsFetcher.getLogsFromChainInBatch(
                     {
@@ -726,6 +735,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 const lastLog = logs[logs.length - 1];
                 if (lastLog.transactionHash !== lastTxHash) {
                     newTxHash = lastLog.transactionHash;
+                    newTxTime =
+                        await rpcLogsFetcher.getLogTimestampInMilliseconds(
+                            lastLog
+                        );
                 }
             }
         }

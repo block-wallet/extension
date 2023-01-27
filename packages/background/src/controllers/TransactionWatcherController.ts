@@ -28,7 +28,6 @@ import {
     WatchedTransactionType,
 } from './transactions/utils/types';
 import { Block, Log } from '@ethersproject/abstract-provider';
-import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { SignedTransaction } from './erc-20/transactions/SignedTransaction';
 import { TransactionArgument } from './transactions/ContractSignatureParser';
 import { showIncomingTransactionNotification } from '../utils/notifications';
@@ -695,7 +694,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     const allowanceEvents =
                         await this._generateAllowanceEventsFromLogs(
                             approvalLogs || [],
-                            provider,
+                            rpcLogsFetcher,
                             transactionType
                         );
 
@@ -1531,7 +1530,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
     private async _generateAllowanceEventsFromLogs(
         allowancesLogs: Log[],
-        provider: StaticJsonRpcProvider,
+        rpcLogsFetcher: RPCLogsFetcher,
         transactionType: WatchedTransactionType
     ): Promise<TokenAllowanceEvent> {
         const allowanceEvents: TokenAllowanceEvent = {};
@@ -1539,30 +1538,14 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             if (
                 log.topics[0] === getAllowanceSignatureForType(transactionType)
             ) {
-                //API logs return the hexadecimal timestamp
-                const logTimestamp: string = (log as any).timeStamp;
-                //some networks returns the log timestamp
-                let txTimestamp = logTimestamp
-                    ? parseInt(logTimestamp)
-                    : undefined;
-                if (!txTimestamp) {
-                    const block = await fetchBlockWithRetries(
-                        log.blockNumber,
-                        provider,
-                        3
-                    );
-                    if (block) {
-                        txTimestamp = block.timestamp;
-                    }
-                }
+                const txTimestamp =
+                    await rpcLogsFetcher.getLogTimestampInMilliseconds(log);
 
                 const [, , spenderAddress] = log.topics;
                 const tokenAddress = log.address;
                 const txHash = log.transactionHash;
                 const currentSpenders = allowanceEvents[tokenAddress] || [];
-                const txTime = txTimestamp
-                    ? txTimestamp * 1000
-                    : new Date().getTime();
+                const txTime = txTimestamp ?? new Date().getTime();
 
                 allowanceEvents[tokenAddress.toLowerCase()] = [
                     ...currentSpenders,

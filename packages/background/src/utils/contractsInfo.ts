@@ -1,4 +1,5 @@
 import { toChecksumAddress } from 'ethereumjs-util';
+import http, { RequestError } from './http';
 import { retryHandling } from './retryHandling';
 
 const CONTRACTS_URL =
@@ -10,23 +11,44 @@ export interface ContractDetails {
     websiteURL: string;
 }
 
+function ensureURLWithProtocol(url: string): string {
+    return url.startsWith('http') || url.startsWith('https')
+        ? url
+        : `https://${url}`;
+}
+
 export async function fetchContractDetails(
     chainId: number,
     address: string
 ): Promise<ContractDetails | undefined> {
     try {
-        const response = await retryHandling(
+        const responseText = await retryHandling<string>(
             () =>
-                fetch(
+                http.get(
                     `${CONTRACTS_URL}/${chainId}/${toChecksumAddress(
                         address
                     )}.json`
                 ),
             200,
-            3
+            3,
+            (e: Error) => {
+                //if it is not found, then abort.
+                return (e as RequestError).status !== 404;
+            }
         );
-        const file = await response.text();
-        return JSON.parse(file) as ContractDetails;
+
+        const contractDetails = JSON.parse(responseText) as ContractDetails;
+
+        if (!contractDetails) {
+            return contractDetails;
+        }
+
+        return {
+            ...contractDetails,
+            logoURI: contractDetails.logoURI
+                ? ensureURLWithProtocol(contractDetails.logoURI)
+                : contractDetails.logoURI,
+        };
     } catch (e) {
         return undefined;
     }

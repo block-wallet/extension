@@ -51,7 +51,7 @@ function getChainBatchMultiplier(chainId: number): number {
  * @param chainId
  * @returns
  */
-function getMaxBlockBatchSize(chainId: number): number {
+export function getMaxBlockBatchSize(chainId: number): number {
     switch (chainId) {
         case 1:
         case 5:

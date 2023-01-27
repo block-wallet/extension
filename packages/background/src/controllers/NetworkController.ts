@@ -590,11 +590,19 @@ export default class NetworkController extends BaseController<NetworkControllerS
             // the network seems to be eip1559 but eth_feeHistory is not available.
             if (baseFeePerGas) {
                 try {
-                    await provider.send('eth_feeHistory', [
+                    const feeHistory = await provider.send('eth_feeHistory', [
                         '0x1',
                         'latest',
                         [50],
                     ]);
+                    if (
+                        !feeHistory ||
+                        (!feeHistory.baseFeePerGas && !feeHistory.reward)
+                    ) {
+                        throw new Error(
+                            `eth_feeHistory is not fully supported by chain ${chainId}`
+                        );
+                    }
                 } catch {
                     baseFeePerGas = undefined;
                 }

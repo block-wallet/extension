@@ -105,13 +105,13 @@ describe('Network controller', function () {
             );
             feeHistoryStub.onFirstCall().returns(
                 new Promise((resolve) => {
-                    resolve({});
+                    resolve({ baseFeePerGas: {}, rewards: [] });
                 })
             );
 
             providerStub.onSecondCall().returns(
                 new Promise((resolve) => {
-                    resolve({ baseFeePerGas: undefined } as Block);
+                    resolve({} as Block);
                 })
             );
 
@@ -177,7 +177,7 @@ describe('Network controller', function () {
             );
             feeHistoryStub.onFirstCall().returns(
                 new Promise((resolve) => {
-                    resolve({});
+                    resolve({ baseFeePerGas: {}, rewards: [] });
                 })
             );
 
@@ -206,7 +206,7 @@ describe('Network controller', function () {
             );
             feeHistoryStub.onFirstCall().returns(
                 new Promise((resolve) => {
-                    resolve({});
+                    resolve({ baseFeePerGas: {}, rewards: [] });
                 })
             );
 

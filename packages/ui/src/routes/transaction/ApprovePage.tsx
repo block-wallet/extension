@@ -1,9 +1,7 @@
-import * as yup from "yup"
 import AccountIcon from "../../components/icons/AccountIcon"
 import Divider from "../../components/Divider"
 import ErrorMessage from "../../components/error/ErrorMessage"
 import GasPriceComponent from "../../components/transactions/GasPriceComponent"
-import MiniCheckmark from "../../components/icons/MiniCheckmark"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
@@ -26,19 +24,15 @@ import { APPROVE_GAS_COST } from "../../util/constants"
 import { AdvancedSettings } from "../../components/transactions/AdvancedSettings"
 import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
-import { Classes, classnames } from "../../styles/classes"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
-import { InferType } from "yup"
 import { formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
 import { formatUnits, parseUnits } from "@ethersproject/units"
 import { getAccountColor } from "../../util/getAccountColor"
-import { useForm } from "react-hook-form"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
-import { yupResolver } from "@hookform/resolvers/yup"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
@@ -55,6 +49,7 @@ import { TransactionAdvancedData } from "@block-wallet/background/controllers/tr
 import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { MaxUint256 } from "@ethersproject/constants"
+import AmountInput from "../../components/transactions/AmountInput"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
@@ -66,100 +61,28 @@ export enum ApproveOperation {
 const getLabels = (
     operation: ApproveOperation,
     assetName: string
-): Record<
-    "mainSectionTitle" | "mainSectionText" | "editAllowanceText",
-    string
-> => {
+): Record<"mainSectionTitle" | "mainSectionText", string> => {
     if (operation === ApproveOperation.BRIDGE) {
         return {
             mainSectionTitle: `Approve BlockWallet to bridge your ${assetName}`,
             mainSectionText: `Allow BlockWallet Bridge to withdraw your ${assetName} and automate transactions for you.`,
-            editAllowanceText: `Allow the BlockWallet Bridge to the following amount of ${assetName}:`,
         }
     } else {
         return {
             mainSectionTitle: `Approve BlockWallet to swap your ${assetName}`,
             mainSectionText: `Allow BlockWallet Swaps to withdraw your ${assetName} and automate transactions for you.`,
-            editAllowanceText: `Allow BlockWallet Swaps to swap up to the following amount of ${assetName}:`,
         }
     }
 }
 
 interface ApprovePageState {
     assetAllowance: BigNumber
-    isCustomSelected: boolean
-    isCustomAllowanceSaved: boolean
     submitted: boolean
 }
 
 const INITIAL_VALUE_PERSISTED_DATA = {
     assetAllowance: UNLIMITED_ALLOWANCE,
-    isCustomSelected: false,
-    isCustomAllowanceSaved: false,
     submitted: false,
-}
-
-// Schema
-const GetAllowanceYupSchema = (
-    isCustomSelected: boolean,
-    tokenDecimals: number,
-    minAllowance: BigNumber
-) => {
-    return yup.object({
-        customAllowance: yup.string().when([], {
-            is: () => isCustomSelected,
-            then: yup
-                .string()
-                .test(
-                    "req",
-                    "Please enter a custom limit",
-                    (value?: string) => {
-                        if (!value) return false
-                        return true
-                    }
-                )
-                .test(
-                    "decimals",
-                    "Custom limit has too many decimal numbers",
-                    (value?: string) => {
-                        if (!value) return false
-                        if (!value.includes(".")) return true
-
-                        const valueDecimals = value.split(".")[1].length
-
-                        return valueDecimals <= tokenDecimals
-                    }
-                )
-                .test(
-                    "too-low",
-                    "Custom limit is less than the minimum required",
-                    (value?: string) => {
-                        if (!value) return false
-                        try {
-                            const parsed = parseUnits(value, tokenDecimals)
-
-                            return minAllowance.lte(parsed)
-                        } catch (error) {
-                            return false
-                        }
-                    }
-                )
-                .test(
-                    "too-large",
-                    "Custom limit is larger than the unlimited allowance",
-                    (value?: string) => {
-                        if (!value) return false
-                        try {
-                            const parsed = parseUnits(value, tokenDecimals)
-
-                            return UNLIMITED_ALLOWANCE.gte(parsed)
-                        } catch (error) {
-                            return false
-                        }
-                    }
-                ),
-        }),
-    })
 }
 
 export interface ApprovePageLocalState {
@@ -205,8 +128,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
     const selectedAccount = useSelectedAccount()
     const { chainId, isEIP1559Compatible } = useSelectedNetwork()
-    const { availableNetworks, selectedNetwork, defaultGasOption } =
-        useBlankState()!
+    const { defaultGasOption } = useBlankState()!
     const { nativeToken } = useTokensList()
     const { gasPricesLevels } = useGasPriceData()
     const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
@@ -229,30 +151,14 @@ const ApprovePage: FunctionComponent<{}> = () => {
             }
         )
 
-    // Local state
-    const setIsCustomSelected = (isCustomSelected: boolean) => {
-        setPersistedData((prev: ApprovePageState) => {
-            return {
-                ...prev,
-                isCustomSelected,
-            }
-        })
-    }
+    const { assetAllowance } = persistedData || INITIAL_VALUE_PERSISTED_DATA
 
-    const { isCustomSelected, assetAllowance, isCustomAllowanceSaved } =
-        persistedData || INITIAL_VALUE_PERSISTED_DATA
-
-    const [isEditAllowanceSection, setIsEditAllowanceSection] =
-        useState<boolean>(false)
     const [isGasUpdating, setIsGasUpdating] = useState<boolean>(false)
     const [hasBalance, setHasBalance] = useState<boolean>(false)
     const [customNonce, setCustomNonce] = useState<number | undefined>()
 
     // Set data
-    const network = availableNetworks[selectedNetwork.toUpperCase()]
     const isApproving = status === "loading" && isOpen
-    const minimumAllowance = BigNumber.from(minAllowance || 0)
-    const hasMinAllowance = minimumAllowance.gt(BigNumber.from(0))
     const labels = getLabels(
         approveOperation,
         selectedAccount.balances[chainId].tokens[assetAddress].token.symbol
@@ -264,66 +170,12 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const assetName = localAsset.token.symbol
     const assetDecimals = localAsset.token.decimals
 
-    // Validation
-    const schema = GetAllowanceYupSchema(
-        isCustomSelected,
-        assetDecimals,
-        minimumAllowance
+    const [isAllowanceValid, setIsAllowanceValid] = useState(true)
+    const [allowanceAmount, setAllowanceAmount] = useState(
+        minAllowance
+            ? formatUnits(minAllowance, assetDecimals)
+            : formatUnits(UNLIMITED_ALLOWANCE, assetDecimals)
     )
-    type CustomAllowanceForm = InferType<typeof schema>
-
-    const {
-        register,
-        handleSubmit,
-        setValue,
-
-        formState: { errors },
-    } = useForm<CustomAllowanceForm>({
-        resolver: yupResolver(schema),
-    })
-
-    const shouldShowError = errors.customAllowance && isCustomSelected
-
-    // Set field value on section update
-    useEffect(() => {
-        if (!isEditAllowanceSection) {
-            return
-        }
-
-        let defaultAllowance: BigNumber | null = null
-
-        if (isCustomSelected && isCustomAllowanceSaved) {
-            defaultAllowance = BigNumber.from(assetAllowance)
-        } else if (hasMinAllowance) {
-            defaultAllowance = minimumAllowance
-        }
-
-        if (defaultAllowance) {
-            const parsedAllowance = formatUnits(defaultAllowance, assetDecimals)
-
-            setValue("customAllowance", parsedAllowance, {
-                shouldValidate: true,
-            })
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isEditAllowanceSection])
-
-    const handleChangeAllowance = (event: any) => {
-        let value = event.target.value
-
-        value = value
-            .replace(",", ".")
-            .replace(/[^0-9.]/g, "")
-            .replace(/(\..*?)\..*/g, "$1")
-
-        if (!value || value === ".") {
-            value = ""
-        }
-
-        setValue("customAllowance", value, {
-            shouldValidate: true,
-        })
-    }
 
     const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
         useCheckAccountDeviceLinked()
@@ -390,28 +242,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedGasLimit, feePerGas, nativeToken.balance])
 
-    // Form submit
-    const saveAllowance = handleSubmit(async (values: CustomAllowanceForm) => {
-        if (!isCustomSelected) {
-            setPersistedData((prev: ApprovePageState) => ({
-                ...prev,
-                assetAllowance: UNLIMITED_ALLOWANCE,
-                isCustomAllowanceSaved: false,
-            }))
-        } else if (values.customAllowance) {
-            setPersistedData((prev: ApprovePageState) => ({
-                ...prev,
-                assetAllowance: parseUnits(
-                    values.customAllowance || "",
-                    assetDecimals
-                ),
-                isCustomAllowanceSaved: true,
-            }))
-        }
-
-        setIsEditAllowanceSection(false)
-    })
-
     // Submit
     const onSubmit = async () => {
         dispatch({ type: "open", payload: { status: "loading" } })
@@ -442,7 +272,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
             if (approveOperation === ApproveOperation.SWAP) {
                 const nextState = nextLocationState as SwapConfirmPageLocalState
                 allowanceResponse = await approveExchange(
-                    assetAllowance,
+                    parseUnits(allowanceAmount, assetDecimals),
                     BigNumber.from(nextState.swapQuote.fromTokenAmount),
                     ExchangeType.SWAP_1INCH,
                     {
@@ -465,7 +295,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     nextLocationState as BridgeConfirmPageLocalState
 
                 allowanceResponse = await approveBridgeAllowance(
-                    assetAllowance,
+                    parseUnits(allowanceAmount, assetDecimals),
                     BigNumber.from(
                         nextState.bridgeQuote.bridgeParams.params.fromAmount
                     ),
@@ -531,13 +361,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
     }
 
     const onBack = () => {
-        if (isEditAllowanceSection) {
-            return () => {
-                setIsEditAllowanceSection(false)
-                setIsCustomSelected(isCustomAllowanceSaved ? true : false)
-            }
-        }
-
         if (approveOperation === ApproveOperation.SWAP) {
             return () => {
                 history.push({
@@ -569,8 +392,21 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     {labels.mainSectionText}
                 </p>
             </div>
-            <Divider />
             <div className="flex flex-col space-y-3 px-6 pt-4">
+                <AmountInput
+                    tokenDecimals={assetDecimals}
+                    tokenName={assetName}
+                    defaultValue={
+                        minAllowance
+                            ? BigNumber.from(minAllowance)._hex
+                            : BigNumber.from(assetAllowance)._hex
+                    }
+                    onChange={setAllowanceAmount}
+                    isAllowance
+                    setIsValid={setIsAllowanceValid}
+                    minimumAmount={minAllowance}
+                />
+
                 <label className="text-sm text-gray-600">Gas Price</label>
                 {!isEIP1559Compatible ? (
                     <GasPriceSelector
@@ -618,99 +454,13 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     ) => {
                         setCustomNonce(newSettings.customNonce)
                     }}
+                    buttonDisplay={false}
                 />
-                <div
-                    className="text-xs font-bold text-primary-300 cursor-pointer hover:underline"
-                    onClick={() => setIsEditAllowanceSection(true)}
-                >
-                    Set custom allowance
-                </div>
                 <ErrorMessage>
                     {hasBalance ? undefined : "Insufficient funds"}
                 </ErrorMessage>
             </div>
         </>
-    )
-
-    const editAllowanceSection = (
-        <div className="flex flex-col space-y-3 px-6 pt-4">
-            <p className="text-gray-500 text-sm pb-1">
-                {labels.editAllowanceText}
-            </p>
-            <div
-                className="relative flex flex-col p-3 rounded-md border border-gray-200 cursor-pointer"
-                onClick={() => {
-                    setIsCustomSelected(false)
-                }}
-            >
-                <div
-                    className={classnames(
-                        "absolute mr-6 right-0 top-6",
-                        isCustomSelected ? "hidden" : "visible"
-                    )}
-                >
-                    <MiniCheckmark fill="#1673FF" />
-                </div>
-                <p
-                    className={classnames(
-                        "text-sm font-bold",
-                        !isCustomSelected && "text-primary-300"
-                    )}
-                >
-                    Unlimited
-                </p>
-                <p className="text-gray-500 text-xs pt-1 pb-2">
-                    Grant unlimited allowance
-                </p>
-                <p
-                    className={classnames(
-                        "text-sm",
-                        isCustomSelected && "text-gray-400"
-                    )}
-                >{`${Number(
-                    formatUnits(UNLIMITED_ALLOWANCE, assetDecimals)
-                )} ${assetName}`}</p>
-            </div>
-            <div
-                className="relative flex flex-col p-3 rounded-md border border-gray-200 cursor-pointer"
-                onClick={() => {
-                    setIsCustomSelected(true)
-                }}
-            >
-                <div
-                    className={classnames(
-                        "absolute mr-6 right-0 top-6",
-                        isCustomSelected ? "visible" : "hidden"
-                    )}
-                >
-                    <MiniCheckmark fill="#1673FF" />
-                </div>
-                <p
-                    className={classnames(
-                        "text-sm font-bold",
-                        isCustomSelected && "text-primary-300"
-                    )}
-                >
-                    Custom Limit
-                </p>
-                <p className="text-gray-500 text-xs pt-1 pb-2">
-                    Set a custom spend limit
-                </p>
-                <input
-                    type="text"
-                    {...register("customAllowance")}
-                    className={classnames(
-                        Classes.inputBordered,
-                        !isCustomSelected && "text-gray-400",
-                        shouldShowError && "border-red-400 focus:border-red-600"
-                    )}
-                    autoComplete="off"
-                    onInput={handleChangeAllowance}
-                    placeholder="Enter custom allowance"
-                />
-                <ErrorMessage>{errors.customAllowance?.message}</ErrorMessage>
-            </div>
-        </div>
     )
 
     return (
@@ -726,20 +476,14 @@ const ApprovePage: FunctionComponent<{}> = () => {
             }
             footer={
                 <PopupFooter>
-                    {isEditAllowanceSection ? (
-                        <ButtonWithLoading
-                            label="Save"
-                            type="submit"
-                            onClick={saveAllowance}
-                        />
-                    ) : (
-                        <ButtonWithLoading
-                            label="Approve"
-                            isLoading={isApproving}
-                            disabled={!hasBalance || isGasUpdating}
-                            onClick={onSubmit}
-                        />
-                    )}
+                    <ButtonWithLoading
+                        label="Approve"
+                        isLoading={isApproving}
+                        disabled={
+                            !hasBalance || isGasUpdating || !isAllowanceValid
+                        }
+                        onClick={onSubmit}
+                    />
                 </PopupFooter>
             }
         >
@@ -793,7 +537,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 </p>
             </div>
             <Divider />
-            {isEditAllowanceSection ? editAllowanceSection : mainSection}
+            {mainSection}
             <HardwareDeviceNotLinkedDialog
                 isOpen={isDeviceUnlinked}
                 onDone={resetDeviceLinkStatus}

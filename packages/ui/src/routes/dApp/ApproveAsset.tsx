@@ -1,11 +1,8 @@
-import * as yup from "yup"
 import AccountIcon from "../../components/icons/AccountIcon"
 import CheckBoxDialog from "../../components/dialog/CheckboxDialog"
 import Divider from "../../components/Divider"
-import ErrorMessage from "../../components/error/ErrorMessage"
 import GasPriceComponent from "../../components/transactions/GasPriceComponent"
 import LoadingOverlay from "../../components/loading/LoadingOverlay"
-import MiniCheckmark from "../../components/icons/MiniCheckmark"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
@@ -23,9 +20,8 @@ import { AdvancedSettings } from "../../components/transactions/AdvancedSettings
 import { AiFillInfoCircle } from "react-icons/ai"
 import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
-import { Classes, classnames } from "../../styles/classes"
+import { Classes } from "../../styles/classes"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
-import { InferType } from "yup"
 import { Redirect } from "react-router-dom"
 import {
     TransactionAdvancedData,
@@ -36,20 +32,17 @@ import {
     TransactionCategories,
 } from "../../context/commTypes"
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
-import { capitalize } from "../../util/capitalize"
 import { formatHash, formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
-import { formatUnits, parseUnits } from "@ethersproject/units"
+import { formatUnits } from "@ethersproject/units"
 import { getAddress } from "@ethersproject/address"
 import { getAccountColor } from "../../util/getAccountColor"
 import { parseAllowance } from "../../util/approval"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import { useForm } from "react-hook-form"
 import { useSelectedAccountBalance } from "../../context/hooks/useSelectedAccountBalance"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { useUserSettings } from "../../context/hooks/useUserSettings"
-import { yupResolver } from "@hookform/resolvers/yup"
 import { useNonSubmittedCombinedTransaction } from "../../context/hooks/useNonSubmittedExternalTransaction"
 import useDebouncedState from "../../util/hooks/useDebouncedState"
 import { useTransactionById } from "../../context/hooks/useTransactionById"
@@ -60,73 +53,10 @@ import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDevic
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { canUserSubmitTransaction } from "../../util/transactionUtils"
-import { MaxUint256 } from "@ethersproject/constants"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
+import AmountInput from "../../components/transactions/AmountInput"
 
 const UNKNOWN_BALANCE = "UNKNOWN_BALANCE"
-const UNLIMITED_ALLOWANCE = MaxUint256
-
-// Schema
-const GetAllowanceYupSchema = (
-    isCustomSelected: boolean,
-    tokenDecimals: number
-) => {
-    return yup.object({
-        customAllowance: yup.string().when([], {
-            is: () => isCustomSelected,
-            then: yup
-                .string()
-                .test(
-                    "req",
-                    "Please enter a custom limit",
-                    (value?: string) => {
-                        if (!value) return false
-                        return true
-                    }
-                )
-                .test(
-                    "decimals",
-                    "Custom limit has too many decimal numbers",
-                    (value?: string) => {
-                        if (!value) return false
-                        if (!value.includes(".")) return true
-
-                        const valueDecimals = value.split(".")[1].length
-
-                        return valueDecimals <= tokenDecimals
-                    }
-                )
-                .test(
-                    "too-low",
-                    "Custom limit is less than the minimum allowance",
-                    (value?: string) => {
-                        if (!value) return false
-                        try {
-                            const parsed = parseUnits(value, tokenDecimals)
-
-                            return parsed.gte(BigNumber.from(0))
-                        } catch (error) {
-                            return false
-                        }
-                    }
-                )
-                .test(
-                    "too-large",
-                    "Custom limit is larger than the unlimited allowance",
-                    (value?: string) => {
-                        if (!value) return false
-                        try {
-                            const parsed = parseUnits(value, tokenDecimals)
-
-                            return UNLIMITED_ALLOWANCE.gte(parsed)
-                        } catch (error) {
-                            return false
-                        }
-                    }
-                ),
-        }),
-    })
-}
 
 export interface ApproveAssetProps {
     transactionId: string
@@ -206,10 +136,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     // Local state
     const [tokenName, setTokenName] = useState("")
     const [tokenLogo, setTokenLogo] = useState("")
-    const [isEditAllowancePage, setIsEditAllowancePage] = useState(false)
-    const [isCustomSelected, setIsCustomSelected] = useState(false)
-    const [customAllowance, setCustomAllowance] = useState("")
-    const [isCustomAllowanceSaved, setIsCustomAllowanceSaved] = useState(false)
+
     const [accountWarningClosed, setAccountWarningClosed] = useState(false)
     const [assetBalance, setAssetBalance] = useState("0.0")
     const [isLoading, setIsLoading] = useState(transaction.loadingGasValues)
@@ -251,6 +178,11 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const tokenAddress = params.to!
     const tokenDecimals = transaction.advancedData?.decimals!
     const defaultAllowance = transaction.advancedData?.allowance!
+
+    const [allowance, setAllowance] = useState(
+        formatUnits(defaultAllowance, tokenDecimals)
+    )
+    const [isAllowanceValid, setIsAllowanceValid] = useState(true)
 
     const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
         useTransactionWaitingDialog(
@@ -340,11 +272,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 closeDialog()
                 return
             }
-
             await confirmTransaction(transaction.id, transactionGas, {
-                customAllowance: isCustomAllowanceSaved
-                    ? parseAllowance(customAllowance, tokenDecimals)
-                    : undefined,
+                customAllowance: parseAllowance(allowance, tokenDecimals),
                 customNonce: transactionAdvancedData.customNonce,
             })
         } catch (error) {}
@@ -375,105 +304,93 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         })
     }
 
-    // Validator
-    const schema = GetAllowanceYupSchema(isCustomSelected, tokenDecimals)
-    type CustomAllowanceForm = InferType<typeof schema>
-
-    const {
-        register,
-        handleSubmit,
-        setValue,
-
-        formState: { errors },
-    } = useForm<CustomAllowanceForm>({
-        resolver: yupResolver(schema),
-    })
-
-    const handleChangeAllowance = (event: any) => {
-        let value = event.target.value
-
-        value = value
-            .replace(",", ".")
-            .replace(/[^0-9.]/g, "")
-            .replace(/(\..*?)\..*/g, "$1")
-
-        if (!value || value === ".") {
-            value = ""
-        }
-
-        setValue("customAllowance", value, {
-            shouldValidate: true,
-        })
-    }
-
-    const handleFocus = (event: any) => {
-        if (isCustomAllowanceSaved) {
-            setValue("customAllowance", customAllowance, {
-                shouldValidate: true,
-            })
-        }
-    }
-
-    const onSubmit = handleSubmit(async (values: CustomAllowanceForm) => {
-        if (isCustomSelected) {
-            setCustomAllowance(values.customAllowance!)
-        }
-        setIsCustomAllowanceSaved(isCustomSelected)
-        setIsEditAllowancePage(false)
-    })
-
     const origin = (
         <span className="inline-block" title={transaction.origin}>
             {formatName(transaction.origin, 30)}
         </span>
     )
+    const fromBlockWallet = transaction.origin === "blank"
+    const isRevoke = allowance === "0.0" || allowance === "0"
 
+    const mainSectionTitle = fromBlockWallet ? (
+        <>
+            Approve BlockWallet to {isRevoke ? "revoke" : "change"} your{" "}
+            {tokenName} Allowance
+        </>
+    ) : (
+        <>
+            Allow {origin} to access your {tokenName}
+        </>
+    )
+
+    const mainSectionText = fromBlockWallet ? (
+        <>
+            {isRevoke
+                ? `Allow BlockWallet to prevent any withdrawal or automated transactions of your ${tokenName}.`
+                : `Allow BlockWallet to limit any withdrawal or automated transactions of your ${tokenName}.`}
+        </>
+    ) : (
+        <>
+            By granting this permission, you are allowing {origin} to withdraw
+            your {tokenName} and automate transactions for you.
+        </>
+    )
     const mainSection = (
         <>
             <div className="px-6 py-3">
                 <p className="text-sm font-bold pb-3 break-word">
-                    Allow {origin} to access your {tokenName}
+                    {mainSectionTitle}
                 </p>
                 <p className="text-sm text-gray-500 break-word">
-                    By granting this permission, you are allowing {origin} to
-                    withdraw your {tokenName} and automate transactions for you.
+                    {mainSectionText}
                 </p>
             </div>
-            <Divider />
-            <div className="flex flex-col space-y-2 px-6 py-3">
-                <label className="text-sm text-gray-600">Gas Price</label>
-                {!isEIP1559Compatible ? (
-                    <GasPriceSelector
-                        defaultLevel={defaultGasOption || "medium"}
-                        defaultGasLimit={defaultGas.gasLimit!}
-                        defaultGasPrice={defaultGas.gasPrice!}
-                        setGasPriceAndLimit={(gasPrice, gasLimit) => {
-                            setTransactionGas({ gasPrice, gasLimit })
-                        }}
-                        showEstimationError={gasEstimationFailed}
-                        isParentLoading={isLoading}
-                    />
-                ) : (
-                    <GasPriceComponent
-                        defaultGas={{
-                            defaultLevel: defaultGasOption || "medium",
-                            feeData: {
-                                gasLimit: defaultGas.gasLimit,
-                                maxFeePerGas: defaultGas.maxFeePerGas!,
-                                maxPriorityFeePerGas:
-                                    defaultGas.maxPriorityFeePerGas!,
-                            },
-                        }}
-                        setGas={(gasFees) => {
-                            setTransactionGas({
-                                ...gasFees,
-                            })
-                        }}
-                        showEstimationError={gasEstimationFailed}
-                        isParentLoading={isLoading}
-                        displayOnlyMaxValue
-                    />
-                )}
+            <div className="flex flex-col space-y-3 px-6 py-3">
+                <AmountInput
+                    onChange={(value) => setAllowance(value)}
+                    setIsValid={(value) => setIsAllowanceValid(value)}
+                    isAllowance
+                    tokenDecimals={tokenDecimals}
+                    tokenName={tokenName}
+                    defaultValue={defaultAllowance}
+                />
+                <div className="flex flex-col">
+                    <label className="text-sm text-gray-600 mb-2">
+                        Gas Price
+                    </label>
+                    {!isEIP1559Compatible ? (
+                        <GasPriceSelector
+                            defaultLevel={defaultGasOption || "medium"}
+                            defaultGasLimit={defaultGas.gasLimit!}
+                            defaultGasPrice={defaultGas.gasPrice!}
+                            setGasPriceAndLimit={(gasPrice, gasLimit) => {
+                                setTransactionGas({ gasPrice, gasLimit })
+                            }}
+                            showEstimationError={gasEstimationFailed}
+                            isParentLoading={isLoading}
+                        />
+                    ) : (
+                        <GasPriceComponent
+                            defaultGas={{
+                                defaultLevel: defaultGasOption || "medium",
+                                feeData: {
+                                    gasLimit: defaultGas.gasLimit,
+                                    maxFeePerGas: defaultGas.maxFeePerGas!,
+                                    maxPriorityFeePerGas:
+                                        defaultGas.maxPriorityFeePerGas!,
+                                },
+                            }}
+                            setGas={(gasFees) => {
+                                setTransactionGas({
+                                    ...gasFees,
+                                })
+                            }}
+                            showEstimationError={gasEstimationFailed}
+                            isParentLoading={isLoading}
+                            displayOnlyMaxValue
+                        />
+                    )}
+                </div>
                 <AdvancedSettings
                     address={checksumFromAddress}
                     advancedSettings={transactionAdvancedData}
@@ -485,15 +402,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                             flashbots: newSettings.flashbots,
                         })
                     }}
+                    buttonDisplay={false}
                 />
-                <div className="flex flex-col items-end">
-                    <span
-                        className="text-xs font-bold text-primary-300 cursor-pointer hover:underline"
-                        onClick={() => setIsEditAllowancePage(true)}
-                    >
-                        Set custom allowance
-                    </span>
-                </div>
                 <div className="text-xs text-red-500">
                     {!hasBalance && "Insufficient funds."}
                 </div>
@@ -501,103 +411,13 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         </>
     )
 
-    const editAllowanceSection = (
-        <div className="flex flex-col space-y-3 px-6 pt-4">
-            <p className="text-gray-500 text-sm pb-1">
-                {`Allow ${transaction.origin} to withdraw and spend up to the following amount:`}
-            </p>
-            <div
-                className="relative flex flex-col p-3 rounded-md border border-gray-200 cursor-pointer"
-                onClick={() => {
-                    setIsCustomSelected(false)
-                }}
-            >
-                <div
-                    className={classnames(
-                        "absolute mr-6 right-0 top-6",
-                        isCustomSelected ? "hidden" : "visible"
-                    )}
-                >
-                    <MiniCheckmark fill="#1673FF" />
-                </div>
-                <p
-                    className={classnames(
-                        "text-sm font-bold",
-                        !isCustomSelected && "text-primary-300"
-                    )}
-                >
-                    {defaultAllowance === UNLIMITED_ALLOWANCE._hex
-                        ? "Unlimited"
-                        : "Requested"}
-                </p>
-                <p className="text-gray-500 text-xs pt-1 pb-2">
-                    Spend limit requested
-                </p>
-                <p
-                    className={classnames(
-                        "text-sm",
-                        isCustomSelected && "text-gray-400"
-                    )}
-                >{`${Number(
-                    formatUnits(defaultAllowance, tokenDecimals)
-                )} ${tokenName}`}</p>
-            </div>
-            <div
-                className="relative flex flex-col p-3 rounded-md border border-gray-200 cursor-pointer"
-                onClick={() => {
-                    setIsCustomSelected(true)
-                }}
-            >
-                <div
-                    className={classnames(
-                        "absolute mr-6 right-0 top-6",
-                        isCustomSelected ? "visible" : "hidden"
-                    )}
-                >
-                    <MiniCheckmark fill="#1673FF" />
-                </div>
-                <p
-                    className={classnames(
-                        "text-sm font-bold",
-                        isCustomSelected && "text-primary-300"
-                    )}
-                >
-                    Custom Limit
-                </p>
-                <p className="text-gray-500 text-xs pt-1 pb-2">
-                    Enter custom max spend limit
-                </p>
-                <input
-                    type="text"
-                    {...register("customAllowance")}
-                    className={classnames(
-                        Classes.inputBordered,
-                        !isCustomSelected && "text-gray-400",
-                        errors.customAllowance &&
-                            "border-red-400 focus:border-red-600"
-                    )}
-                    autoComplete="off"
-                    onInput={handleChangeAllowance}
-                    placeholder={
-                        isCustomAllowanceSaved
-                            ? customAllowance
-                            : "Enter custom limit..."
-                    }
-                    onFocus={handleFocus}
-                />
-                <ErrorMessage>{errors.customAllowance?.message}</ErrorMessage>
-            </div>
-        </div>
-    )
-
     return (
         <PopupLayout
             header={
                 <PopupHeader
                     close={false}
-                    title={isEditAllowancePage ? "Edit allowance" : "Approval"}
-                    backButton={isEditAllowancePage}
-                    onBack={() => setIsEditAllowancePage(false)}
+                    backButton={false}
+                    title={"Allowance"}
                     networkIndicator
                 >
                     {transactionCount > 1 && (
@@ -612,6 +432,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                                         ? "transactions"
                                         : "transaction"
                                 }`}
+                                className="-translate-x-2/3"
                             />
                         </div>
                     )}
@@ -619,36 +440,25 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
             }
             footer={
                 <PopupFooter>
-                    {isEditAllowancePage ? (
+                    <>
                         <ButtonWithLoading
-                            label="Save"
-                            type="submit"
-                            onClick={onSubmit}
+                            buttonClass={Classes.liteButton}
+                            label="Reject"
+                            disabled={
+                                !canUserSubmitTransaction(transaction.status)
+                            }
+                            onClick={reject}
                         />
-                    ) : (
-                        <>
-                            <ButtonWithLoading
-                                buttonClass={Classes.liteButton}
-                                label="Reject"
-                                disabled={
-                                    !canUserSubmitTransaction(
-                                        transaction.status
-                                    )
-                                }
-                                onClick={reject}
-                            />
-                            <ButtonWithLoading
-                                label="Approve"
-                                disabled={
-                                    !hasBalance ||
-                                    !canUserSubmitTransaction(
-                                        transaction.status
-                                    )
-                                }
-                                onClick={approve}
-                            />
-                        </>
-                    )}
+                        <ButtonWithLoading
+                            label="Approve"
+                            disabled={
+                                !hasBalance ||
+                                !canUserSubmitTransaction(transaction.status) ||
+                                !isAllowanceValid
+                            }
+                            onClick={approve}
+                        />
+                    </>
                 </PopupFooter>
             }
         >
@@ -751,7 +561,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 </div>
             </div>
             <Divider />
-            {isEditAllowancePage ? editAllowanceSection : mainSection}
+            {mainSection}
             <HardwareDeviceNotLinkedDialog
                 isOpen={isDeviceUnlinked}
                 onDone={resetDeviceLinkStatus}

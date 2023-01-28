@@ -34,6 +34,7 @@ export interface AdvancedSettingsProps {
     label?: string
     transactionGasLimit?: BigNumber
     buttonDisplay?: boolean
+    transactionId?: string
 }
 
 export const defaultAdvancedSettings: Required<TransactionAdvancedData> = {
@@ -103,7 +104,8 @@ type AdvancedSettingsFormData = InferType<
  * @param display Custom display options
  * @param label Label for the button
  * @param transactionGasLimit Gas limit for the transaction in BigNumber
- * @param buttonDisplay Whether to display the button or just a clickable text
+ * @param buttonDisplay Whether to display the button or just a clickable text to open the dialog
+ * @param transactionId Transaction ID to refetch the nonce if ID changes
  */
 export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
     address,
@@ -114,6 +116,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
     label = "Advanced Settings",
     transactionGasLimit = BigNumber.from(21000),
     buttonDisplay = true,
+    transactionId,
 }) => {
     const { chainId } = useSelectedNetwork()
     const isFlashbotsAvailable = chainId === 1
@@ -299,7 +302,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
         fetch()
 
         // eslint-disable-next-line
-    }, [])
+    }, [transactionId])
 
     useEffect(() => {
         if (isOpen) {

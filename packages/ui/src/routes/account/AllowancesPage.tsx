@@ -64,31 +64,28 @@ const AllowancesPage = () => {
     const { isOpen, status, dispatch } = useWaitingDialog()
 
     const revokeAll = async () => {
-        let allowancesToRevoke: allowancesToRevoke = []
-        allowances.forEach((groupedAllowances) => {
-            groupedAllowances.allowances.forEach((allowance) => {
-                allowancesToRevoke.push({
-                    assetAddress:
-                        groupBy === AllowancesFilters.SPENDER
-                            ? allowance.displayData.address
-                            : groupedAllowances.groupBy.address,
-                    spenderAddress:
-                        groupBy === AllowancesFilters.SPENDER
-                            ? groupedAllowances.groupBy.address
-                            : allowance.displayData.address,
-                })
-            })
-        })
+        const groupedBySpender = groupBy === AllowancesFilters.SPENDER
+        const allowancesToRevoke = allowances.flatMap((groupedAllowances) =>
+            groupedAllowances.allowances.map((allowance) => ({
+                assetAddress: groupedBySpender
+                    ? allowance.displayData.address
+                    : groupedAllowances.groupBy.address,
+                spenderAddress: groupedBySpender
+                    ? groupedAllowances.groupBy.address
+                    : allowance.displayData.address,
+            }))
+        )
 
         await Promise.all(
-            allowancesToRevoke.map((allowance) =>
+            allowancesToRevoke.map(({ assetAddress, spenderAddress }) =>
                 addNewApproveTransaction(
-                    allowance.assetAddress,
-                    allowance.spenderAddress,
+                    assetAddress,
+                    spenderAddress,
                     BigNumber.from(0)
                 )
             )
         )
+
         history.push({
             pathname: "/approveAsset",
             state: {
@@ -133,7 +130,7 @@ const AllowancesPage = () => {
                 <PopupHeader
                     title="Allowances"
                     tooltip={{
-                        link: "https://academy.bit2me.com/en/que-es-token-allowance/#:~:text=This%20standard%20defined%20the%20basic,contained%20in%20a%20given%20address.",
+                        link: "https://help.blockwallet.io/hc/en-us/articles/12519699592081",
                         content: (
                             <div className="font-normal text-xs text-white-500">
                                 Click to learn about allowances.

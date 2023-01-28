@@ -170,6 +170,10 @@ const AmountInput = ({
         }
     }, [])
 
+    useEffect(() => {
+        setAmount(formatUnits(defaultValue, tokenDecimals))
+    }, [defaultValue])
+
     return (
         <div className={classnames("flex flex-col")}>
             <div className="flex flex-row">

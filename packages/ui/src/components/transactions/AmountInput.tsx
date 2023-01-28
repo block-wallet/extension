@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import classnames from "classnames"
-import { BigNumber } from "ethers"
-import { formatUnits, parseUnits } from "ethers/lib/utils"
+import { BigNumber } from "@ethersproject/bignumber"
+import { formatUnits, parseUnits } from "@ethersproject/units"
 import { MaxUint256 } from "@ethersproject/constants"
 import * as yup from "yup"
 

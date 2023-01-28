@@ -1,13 +1,14 @@
-import AccountIcon from "../../components/icons/AccountIcon"
-import CheckBoxDialog from "../../components/dialog/CheckboxDialog"
-import Divider from "../../components/Divider"
-import GasPriceComponent from "../../components/transactions/GasPriceComponent"
-import LoadingOverlay from "../../components/loading/LoadingOverlay"
-import PopupFooter from "../../components/popup/PopupFooter"
-import PopupHeader from "../../components/popup/PopupHeader"
-import PopupLayout from "../../components/popup/PopupLayout"
 import { useState, useEffect, FunctionComponent, useCallback } from "react"
-import Tooltip from "../../components/label/Tooltip"
+import { Redirect } from "react-router-dom"
+import { formatUnits } from "@ethersproject/units"
+import { getAddress } from "@ethersproject/address"
+import { BigNumber } from "@ethersproject/bignumber"
+import { AiFillInfoCircle } from "react-icons/ai"
+
+import {
+    TransactionAdvancedData,
+    TransactionMeta,
+} from "@block-wallet/background/controllers/transactions/utils/types"
 import useNextRequestRoute from "../../context/hooks/useNextRequestRoute"
 import {
     confirmTransaction,
@@ -16,45 +17,50 @@ import {
     searchTokenInAssetsList,
     setUserSettings,
 } from "../../context/commActions"
-import { AdvancedSettings } from "../../components/transactions/AdvancedSettings"
-import { AiFillInfoCircle } from "react-icons/ai"
-import { BigNumber } from "@ethersproject/bignumber"
-import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
-import { Classes } from "../../styles/classes"
-import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
-import { Redirect } from "react-router-dom"
-import {
-    TransactionAdvancedData,
-    TransactionMeta,
-} from "@block-wallet/background/controllers/transactions/utils/types"
 import {
     HardwareWalletOpTypes,
     TransactionCategories,
 } from "../../context/commTypes"
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
-import { formatHash, formatName } from "../../util/formatAccount"
-import { formatRounded } from "../../util/formatRounded"
-import { formatUnits } from "@ethersproject/units"
-import { getAddress } from "@ethersproject/address"
-import { getAccountColor } from "../../util/getAccountColor"
-import { parseAllowance } from "../../util/approval"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { useSelectedAccountBalance } from "../../context/hooks/useSelectedAccountBalance"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { useUserSettings } from "../../context/hooks/useUserSettings"
 import { useNonSubmittedCombinedTransaction } from "../../context/hooks/useNonSubmittedExternalTransaction"
-import useDebouncedState from "../../util/hooks/useDebouncedState"
 import { useTransactionById } from "../../context/hooks/useTransactionById"
+import { useOnMountHistory } from "../../context/hooks/useOnMount"
+import useAccountAllowances from "../../context/hooks/useAccountAllowances"
+import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
+
+import AccountIcon from "../../components/icons/AccountIcon"
+import CheckBoxDialog from "../../components/dialog/CheckboxDialog"
+import Divider from "../../components/Divider"
+import GasPriceComponent from "../../components/transactions/GasPriceComponent"
+import LoadingOverlay from "../../components/loading/LoadingOverlay"
+import PopupFooter from "../../components/popup/PopupFooter"
+import PopupHeader from "../../components/popup/PopupHeader"
+import PopupLayout from "../../components/popup/PopupLayout"
+import Tooltip from "../../components/label/Tooltip"
+import { AllowancesFilters } from "../../components/allowances/AllowancesFilterButton"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
+import { AdvancedSettings } from "../../components/transactions/AdvancedSettings"
+import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
+import { Classes } from "../../styles/classes"
+import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
+import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
+import AmountInput from "../../components/transactions/AmountInput"
+
+import { formatHash, formatName } from "../../util/formatAccount"
+import { formatRounded } from "../../util/formatRounded"
+import { getAccountColor } from "../../util/getAccountColor"
+import { parseAllowance } from "../../util/approval"
+import useDebouncedState from "../../util/hooks/useDebouncedState"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import { DAPP_FEEDBACK_WINDOW_TIMEOUT } from "../../util/constants"
-import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
-import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { canUserSubmitTransaction } from "../../util/transactionUtils"
-import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import AmountInput from "../../components/transactions/AmountInput"
+import { generateExplorerLink } from "../../util/getExplorer"
 
 const UNKNOWN_BALANCE = "UNKNOWN_BALANCE"
 
@@ -107,8 +113,14 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     transactionId,
 }) => {
     // Hooks
-    const { accounts, selectedAddress, settings, defaultGasOption } =
-        useBlankState()!
+    const {
+        selectedNetwork,
+        availableNetworks,
+        accounts,
+        selectedAddress,
+        settings,
+        defaultGasOption,
+    } = useBlankState()!
     const { chainId, isEIP1559Compatible } = useSelectedNetwork()
     const { hideAddressWarning } = useUserSettings()
     const selectedAccountBalance = useSelectedAccountBalance()
@@ -122,6 +134,24 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
 
     // At this point transactionId is ensured.
     const transaction = txById!
+
+    // Get the spender address from the transaction data param
+    const spenderAddress =
+        "0x" + transaction.transactionParams?.data?.slice(34, 74)
+
+    const spenderAddressExplorerLink = generateExplorerLink(
+        availableNetworks,
+        selectedNetwork,
+        spenderAddress,
+        "address"
+    )
+
+    // Get the spender name from the allowances list
+    const spenderName =
+        transaction.origin === "blank"
+            ? useAccountAllowances(AllowancesFilters.SPENDER, spenderAddress)[0]
+                  .groupBy.name
+            : undefined
 
     // Detect if the transaction was triggered using an address different to the active one
     const checksumFromAddress = getAddress(params.from!)
@@ -315,7 +345,15 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const mainSectionTitle = fromBlockWallet ? (
         <>
             Approve BlockWallet to {isRevoke ? "revoke" : "change"} your{" "}
-            {tokenName} Allowance
+            {tokenName} Allowance for{" "}
+            <a
+                href={spenderAddressExplorerLink}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary-300 hover:underline"
+            >
+                {spenderName}
+            </a>
         </>
     ) : (
         <>
@@ -326,8 +364,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const mainSectionText = fromBlockWallet ? (
         <>
             {isRevoke
-                ? `Allow BlockWallet to prevent any withdrawal or automated transactions of your ${tokenName}.`
-                : `Allow BlockWallet to limit any withdrawal or automated transactions of your ${tokenName}.`}
+                ? `Allow BlockWallet to prevent any withdrawal or automated transactions of your ${tokenName} by ${spenderName}.`
+                : `Allow BlockWallet to limit any withdrawal or automated transactions of your ${tokenName} by ${spenderName}.`}
         </>
     ) : (
         <>

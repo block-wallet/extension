@@ -1,6 +1,6 @@
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { useState } from "react"
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import { TokenAllowance } from "@block-wallet/background/controllers/AccountTrackerController"
 import { Classes, classnames } from "../../styles"
 

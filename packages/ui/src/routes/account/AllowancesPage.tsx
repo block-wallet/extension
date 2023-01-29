@@ -23,6 +23,7 @@ import ConfirmDialog from "../../components/dialog/ConfirmDialog"
 import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
+import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 
 export type AllowancePageLocalState = {
     fromAssetDetails: boolean
@@ -46,7 +47,20 @@ const AllowancesPage = () => {
     const [showEmptyState, setShowEmptyState] = useState(false)
     const [confirmRevokeAll, setConfirmRevokeAll] = useState(false)
     const [confirmRefresh, setConfirmRefresh] = useState(false)
-    const [isRefreshDisabled, setIsRefreshDisabled] = useState(false)
+    const [persistedData, setPersistedData] = useLocalStorageState(
+        "allowances.refresh",
+        {
+            initialValue: {
+                lastTriggered: 0,
+            },
+            volatile: false,
+        }
+    )
+
+    // check if passed 5 minutes since last refresh from the persisted data
+    const isRefreshDisabled: boolean =
+        persistedData.lastTriggered + 5 * 60 * 1000 > Date.now()
+
     const [groupBy, setGroupBy] = useState<AllowancesFilters>(
         history.location.state?.groupBy || AllowancesFilters.SPENDER
     )
@@ -97,10 +111,9 @@ const AllowancesPage = () => {
 
     const refetchAllowances = async () => {
         if (!isRefreshDisabled) {
-            setIsRefreshDisabled(true)
-            setTimeout(() => {
-                setIsRefreshDisabled(false)
-            }, 5 * 60 * 1000)
+            setPersistedData({
+                lastTriggered: Date.now(),
+            })
             await refreshTokenAllowances()
         }
     }

@@ -26,14 +26,23 @@ const AllowancesFilterButton = ({
     }, [showDisabledAnim])
 
     return (
-        <div className="relative text-sm text-primary-300">
+        <div
+            className="relative text-sm text-primary-300"
+            title={
+                disabled
+                    ? "Refresh is disabled. Try again in 5 minutes."
+                    : "Refresh Allowances"
+            }
+        >
             <OutlinedButton
                 className={classnames(
                     "w-auto",
                     showDisabledAnim &&
-                        "text-red-200 border-red-500 transition-colors animate-[pulse_2s] hover-none"
+                        "text-red-200 border-red-500 transition-colors animate-[pulse_2s]",
+                    disabled && " disabled:pointer-events-none"
                 )}
                 onClick={onClickHandler}
+                disabled={showDisabledAnim}
             >
                 <Icon name={IconName.REFETCH} />
             </OutlinedButton>

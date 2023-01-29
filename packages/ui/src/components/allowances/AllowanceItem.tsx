@@ -15,7 +15,7 @@ import { formatRounded } from "../../util/formatRounded"
 import { AllowancesFilters } from "./AllowancesFilterButton"
 import { TabLabels } from "../assets/ActivityAllowancesView"
 import DetailsDialog from "../dialog/DetailsDialog"
-import AllowanceIcon from "./AllowanceIcon"
+import TokenLogo from "../token/TokenLogo"
 
 import ChevronRightIcon from "../icons/ChevronRightIcon"
 import revokeIcon from "../../assets/images/icons/revoke.svg"
@@ -169,7 +169,7 @@ const AllowanceItem = ({
                 expandedByDefault
             />
             <div className="flex flex-row items-center">
-                <AllowanceIcon name={name} logo={logo} />
+                <TokenLogo name={name} logo={logo} className="w-9 h-9" />
                 <div className="flex flex-col ml-2">
                     <span
                         className="text-sm font-bold truncate w-36"

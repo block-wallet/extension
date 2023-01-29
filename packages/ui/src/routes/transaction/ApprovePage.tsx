@@ -397,9 +397,9 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     tokenDecimals={assetDecimals}
                     tokenName={assetName}
                     defaultValue={
-                        minAllowance
-                            ? BigNumber.from(minAllowance)._hex
-                            : BigNumber.from(assetAllowance)._hex
+                        BigNumber.from(
+                            parseUnits(allowanceAmount, assetDecimals)
+                        )._hex
                     }
                     onChange={setAllowanceAmount}
                     isAllowance

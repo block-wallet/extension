@@ -135,7 +135,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     // At this point transactionId is ensured.
     const transaction = txById!
 
-    // Get the spender address from the transaction data param
+    // Get the spender address from the approve transaction data param
     const spenderAddress =
         "0x" + transaction.transactionParams?.data?.slice(34, 74)
 
@@ -339,10 +339,10 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
             {formatName(transaction.origin, 30)}
         </span>
     )
-    const fromBlockWallet = transaction.origin === "blank"
-    const isRevoke = allowance === "0.0" || allowance === "0"
+    const isFromBlockWallet = transaction.origin === "blank"
+    const isRevoke = parseFloat(allowance) === 0
 
-    const mainSectionTitle = fromBlockWallet ? (
+    const mainSectionTitle = isFromBlockWallet ? (
         <>
             Approve BlockWallet to {isRevoke ? "revoke" : "change"} your{" "}
             {tokenName} Allowance for{" "}
@@ -361,11 +361,10 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         </>
     )
 
-    const mainSectionText = fromBlockWallet ? (
+    const mainSectionText = isFromBlockWallet ? (
         <>
-            {isRevoke
-                ? `Allow BlockWallet to prevent any withdrawal or automated transactions of your ${tokenName} by ${spenderName}.`
-                : `Allow BlockWallet to limit any withdrawal or automated transactions of your ${tokenName} by ${spenderName}.`}
+            Allow BlockWallet to {isRevoke ? "prevent" : "limit"} any withdrawal
+            or automated transactions of your {tokenName} by {spenderName}.
         </>
     ) : (
         <>

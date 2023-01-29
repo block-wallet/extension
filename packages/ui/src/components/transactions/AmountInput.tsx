@@ -116,10 +116,12 @@ const AmountInput = ({
     const schema = getAmountYupSchema(isAllowance, tokenDecimals, minimumAmount)
 
     const handleChangeAmount = (value: string) => {
-        value = value
-            .replace(",", ".")
-            .replace(/[^0-9.]/g, "")
-            .replace(/(\..*?)\..*/g, "$1")
+        // Replace commas with periods
+        value = value.replace(",", ".")
+        // Remove everything that is not a number or period
+        value = value.replace(/[^0-9.]/g, "")
+        // Remove all periods except the first one
+        value = value.replace(/(\..*?)\..*/g, "$1")
 
         if (!value || value === ".") {
             value = ""
@@ -153,6 +155,11 @@ const AmountInput = ({
             const input: any = inputRef.current
             if (input) input.focus()
         }, 0)
+    }
+
+    const setMaxValue = () => {
+        setUsingMax(true)
+        handleChangeAmount(formatUnits(maxValue, tokenDecimals))
     }
 
     // Adjust input cursor position
@@ -257,9 +264,9 @@ const AmountInput = ({
                         }}
                         value={`${amount} ${tokenName}`}
                         title={`${amount} ${tokenName}`}
-                        onInput={(e: any) => handleChangeAmount(e.target.value)}
-                        onClick={() => {
+                        onInput={(e: any) => {
                             adjustInputCursor(amount.length)
+                            handleChangeAmount(e.target.value)
                         }}
                     />
                 </div>
@@ -277,10 +284,7 @@ const AmountInput = ({
                                 setUsingMax(false)
                                 resetAllowanceValue()
                             } else {
-                                setUsingMax(true)
-                                handleChangeAmount(
-                                    formatUnits(maxValue, tokenDecimals)
-                                )
+                                setMaxValue()
                             }
                         }}
                     >

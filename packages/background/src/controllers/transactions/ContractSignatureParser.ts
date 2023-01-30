@@ -3,7 +3,6 @@ import log from 'loglevel';
 import { Contract } from '@ethersproject/contracts';
 import { Interface, Fragment } from '@ethersproject/abi';
 import { TransactionDescription } from '@ethersproject/abi';
-import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import httpClient, { RequestError } from '../../utils/http';
 import { sleep } from '../../utils/sleep';
 import { MILISECOND } from '../../utils/constants/time';
@@ -114,36 +113,17 @@ type FourByteResponse = {
  * Class to fetch & parse method signature names from Etherscan API, 4bytes API or Signature Registry contract.
  */
 export class ContractSignatureParser {
-    private signatureRegistry: Contract | undefined;
+    private signatureRegistry: Contract;
 
     constructor(
         private readonly _networkController: NetworkController,
         private readonly customChainId?: number
     ) {
-        this._setSignatureRegistry();
-    }
-
-    /**
-     * It tries to set the signature registry contract for the current network.
-     */
-    private _setSignatureRegistry() {
-        try {
-            let provider: StaticJsonRpcProvider | undefined;
-            if (this.customChainId) {
-                provider = this._networkController.getProviderForChainId(
-                    this.customChainId
-                );
-            } else {
-                provider = this._networkController.getProvider();
-            }
-            this.signatureRegistry = new Contract(
-                SIGNATURE_REGISTRY_CONTRACT.address,
-                SIGNATURE_REGISTRY_CONTRACT.abi,
-                provider
-            );
-        } catch (error) {
-            log.warn('error setting signatureRegistry', error);
-        }
+        this.signatureRegistry = new Contract(
+            SIGNATURE_REGISTRY_CONTRACT.address,
+            SIGNATURE_REGISTRY_CONTRACT.abi,
+            this._networkController.getProviderFromName('mainnet')
+        );
     }
 
     /**
@@ -319,10 +299,6 @@ export class ContractSignatureParser {
         const getSignatureInContract = async (): Promise<
             string[] | undefined
         > => {
-            if (!this.signatureRegistry) {
-                return undefined;
-            }
-
             try {
                 // If there's no result check on the on chain contract
                 const onchainResult: string[] =

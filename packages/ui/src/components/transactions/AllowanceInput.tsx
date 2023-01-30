@@ -11,13 +11,12 @@ import ErrorMessage from "../error/ErrorMessage"
 const UNLIMITED_ALLOWANCE = MaxUint256
 
 // Schema
-const getAmountYupSchema = (
-    isAllowance: boolean,
+const getAllowanceAmountYupSchema = (
     tokenDecimals: number,
     minAllowance: BigNumber
 ) => {
     return yup.object({
-        amount: yup
+        allowanceAmount: yup
             .string()
             .test(
                 "req",
@@ -72,50 +71,44 @@ const getAmountYupSchema = (
 
 /**
  *
- * Amount input component
+ * Allowance Amount input component
  *
  * @param onChange - function to call when the input changes
  * @param setIsValid - function to set if the input is valid or invalid
  * @param tokenDecimals - token decimals
  * @param tokenName - token name
- * @param maxValue - max value for the input
  * @param defaultValue - default value for the input
- * @param isAllowance - if the input is for an token allowance or amount
- * @param minimumAmount - minimum amount for the input (used for validations)
+ * @param minimumAllowance - minimum allowance for the input (used for validations)
  *
  */
-const AmountInput = ({
+const AllowanceInput = ({
     onChange,
     setIsValid,
     tokenDecimals,
     tokenName,
-    maxValue = UNLIMITED_ALLOWANCE.toHexString(),
     defaultValue,
-    isAllowance = false,
-    minimumAmount = BigNumber.from(0),
+    minimumAllowance = BigNumber.from(0),
 }: {
     onChange: (value: string) => void
     setIsValid: (value: boolean) => void
     tokenDecimals: number
     tokenName: string
-    maxValue?: string
     defaultValue: string
-    isAllowance?: boolean
-    minimumAmount?: BigNumber
+    minimumAllowance?: BigNumber
 }) => {
-    const [amount, setAmount] = useState(
+    const [allowanceAmount, setAllowanceAmount] = useState(
         formatUnits(defaultValue, tokenDecimals)
     )
     const [error, setError] = useState("")
 
-    const [usingMax, setUsingMax] = useState(false)
+    const [usingUnlimited, setUsingUnlimited] = useState(false)
     const [inputFocus, setInputFocus] = useState(false)
     const inputRef = useRef(null)
 
     // Validator
-    const schema = getAmountYupSchema(isAllowance, tokenDecimals, minimumAmount)
+    const schema = getAllowanceAmountYupSchema(tokenDecimals, minimumAllowance)
 
-    const handleChangeAmount = (value: string) => {
+    const handleChangeAllowanceAmount = (value: string) => {
         // Replace commas with periods
         value = value.replace(",", ".")
         // Remove everything that is not a number or period
@@ -127,14 +120,14 @@ const AmountInput = ({
             value = ""
         }
         validate(value)
-        setAmount(value)
+        setAllowanceAmount(value)
         adjustInputCursor(value.length)
         onChange(value)
     }
 
     const validate = (value: string) => {
         schema
-            .validate({ amount: value })
+            .validate({ allowanceAmount: value })
             .then(() => {
                 setError("")
                 setIsValid(true)
@@ -146,7 +139,7 @@ const AmountInput = ({
     }
 
     const resetAllowanceValue = () => {
-        handleChangeAmount("")
+        handleChangeAllowanceAmount("")
         focusOnInput()
     }
 
@@ -157,9 +150,11 @@ const AmountInput = ({
         }, 0)
     }
 
-    const setMaxValue = () => {
-        setUsingMax(true)
-        handleChangeAmount(formatUnits(maxValue, tokenDecimals))
+    const setUnlimitedValue = () => {
+        setUsingUnlimited(true)
+        handleChangeAllowanceAmount(
+            formatUnits(UNLIMITED_ALLOWANCE.toHexString(), tokenDecimals)
+        )
     }
 
     // Adjust input cursor position
@@ -171,14 +166,13 @@ const AmountInput = ({
     }
 
     useEffect(() => {
-        // If is allowance amount & allowance is unlimited, set usingMax to true
-        if (BigNumber.from(maxValue).eq(defaultValue)) {
-            setUsingMax(true)
+        if (BigNumber.from(UNLIMITED_ALLOWANCE).eq(defaultValue)) {
+            setUsingUnlimited(true)
         }
     }, [])
 
     useEffect(() => {
-        setAmount(formatUnits(defaultValue, tokenDecimals))
+        setAllowanceAmount(formatUnits(defaultValue, tokenDecimals))
     }, [defaultValue])
 
     return (
@@ -186,10 +180,10 @@ const AmountInput = ({
             <div className="flex flex-row">
                 <div className="flex items-start w-1/3">
                     <label
-                        htmlFor="amount"
+                        htmlFor="allowanceAmount"
                         className="mb-2 text-sm text-gray-600"
                     >
-                        {isAllowance ? "Allowance" : "Amount"}
+                        Allowance
                     </label>
                 </div>
             </div>
@@ -203,7 +197,7 @@ const AmountInput = ({
                 )}
             >
                 <div className="flex flex-col items-start">
-                    {usingMax && isAllowance && (
+                    {usingUnlimited && (
                         <div
                             className={classnames(
                                 Classes.blueSectionInput,
@@ -213,7 +207,7 @@ const AmountInput = ({
                                 formatUnits(UNLIMITED_ALLOWANCE, tokenDecimals)
                             )} ${tokenName}`}
                             onClick={() => {
-                                setUsingMax(false)
+                                setUsingUnlimited(false)
                                 resetAllowanceValue()
                             }}
                         >
@@ -224,34 +218,42 @@ const AmountInput = ({
                     )}
 
                     <input
-                        id="amount"
+                        id="allowanceAmount"
                         type="text"
                         ref={inputRef}
                         className={classnames(
                             Classes.blueSectionInput,
                             "mb-0 text-sm",
-                            usingMax && isAllowance && "hidden"
+                            usingUnlimited && "hidden"
                         )}
                         placeholder={`0 ${tokenName}`}
                         autoComplete="off"
                         autoFocus={false}
                         onFocus={() => {
-                            adjustInputCursor(amount.length)
-                            setUsingMax(false)
+                            adjustInputCursor(allowanceAmount.length)
+                            setUsingUnlimited(false)
                             setInputFocus(true)
                         }}
                         onBlur={() => setInputFocus(false)}
                         onKeyDown={(e) => {
                             if (e.key === "Backspace") {
-                                let newAmount = amount.slice(0, -1)
+                                let newAllowanceAmount = allowanceAmount.slice(
+                                    0,
+                                    -1
+                                )
 
-                                if (newAmount[newAmount.length - 1] === ".") {
-                                    newAmount = newAmount.slice(0, -1)
+                                if (
+                                    newAllowanceAmount[
+                                        newAllowanceAmount.length - 1
+                                    ] === "."
+                                ) {
+                                    newAllowanceAmount =
+                                        newAllowanceAmount.slice(0, -1)
                                 }
 
-                                handleChangeAmount(newAmount)
+                                handleChangeAllowanceAmount(newAllowanceAmount)
                             }
-                            setUsingMax(false)
+                            setUsingUnlimited(false)
                             const amt = Number(e.currentTarget.value)
                             if (
                                 !isNaN(Number(e.key)) &&
@@ -262,11 +264,11 @@ const AmountInput = ({
                                 e.stopPropagation()
                             }
                         }}
-                        value={`${amount} ${tokenName}`}
-                        title={`${amount} ${tokenName}`}
+                        value={`${allowanceAmount} ${tokenName}`}
+                        title={`${allowanceAmount} ${tokenName}`}
                         onInput={(e: any) => {
-                            adjustInputCursor(amount.length)
-                            handleChangeAmount(e.target.value)
+                            adjustInputCursor(allowanceAmount.length)
+                            handleChangeAllowanceAmount(e.target.value)
                         }}
                     />
                 </div>
@@ -274,21 +276,21 @@ const AmountInput = ({
                     <span
                         className={classnames(
                             "float-right rounded-md cursor-pointer border p-1",
-                            usingMax
+                            usingUnlimited
                                 ? "bg-primary-300 border-primary-300 text-white hover:bg-blue-600 hover:border-blue-600"
                                 : "bg-blue-200 border-blue-200 hover:bg-blue-300 hover:border-blue-300"
                         )}
                         title={`Use max value possible.`}
                         onClick={() => {
-                            if (usingMax) {
-                                setUsingMax(false)
+                            if (usingUnlimited) {
+                                setUsingUnlimited(false)
                                 resetAllowanceValue()
                             } else {
-                                setMaxValue()
+                                setUnlimitedValue()
                             }
                         }}
                     >
-                        {isAllowance ? "Unlimited" : "Max"}
+                        Unlimited
                     </span>
                 </div>
             </div>
@@ -299,4 +301,4 @@ const AmountInput = ({
     )
 }
 
-export default AmountInput
+export default AllowanceInput

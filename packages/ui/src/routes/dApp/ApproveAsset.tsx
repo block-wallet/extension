@@ -49,7 +49,7 @@ import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes } from "../../styles/classes"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
-import AmountInput from "../../components/transactions/AmountInput"
+import AllowanceInput from "../../components/transactions/AllowanceInput"
 
 import { formatHash, formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
@@ -383,10 +383,9 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 </p>
             </div>
             <div className="flex flex-col space-y-3 px-6 py-3">
-                <AmountInput
+                <AllowanceInput
                     onChange={(value) => setAllowance(value)}
                     setIsValid={(value) => setIsAllowanceValid(value)}
-                    isAllowance
                     tokenDecimals={tokenDecimals}
                     tokenName={tokenName}
                     defaultValue={defaultAllowance}

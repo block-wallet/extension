@@ -49,7 +49,7 @@ import { TransactionAdvancedData } from "@block-wallet/background/controllers/tr
 import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { MaxUint256 } from "@ethersproject/constants"
-import AmountInput from "../../components/transactions/AmountInput"
+import AllowanceInput from "../../components/transactions/AllowanceInput"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
@@ -393,18 +393,13 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 </p>
             </div>
             <div className="flex flex-col space-y-3 px-6 pt-4">
-                <AmountInput
+                <AllowanceInput
                     tokenDecimals={assetDecimals}
                     tokenName={assetName}
-                    defaultValue={
-                        BigNumber.from(
-                            parseUnits(allowanceAmount, assetDecimals)
-                        )._hex
-                    }
+                    defaultValue={BigNumber.from(minAllowance)._hex}
                     onChange={setAllowanceAmount}
-                    isAllowance
                     setIsValid={setIsAllowanceValid}
-                    minimumAmount={minAllowance}
+                    minimumAllowance={minAllowance}
                 />
 
                 <label className="text-sm text-gray-600">Gas Price</label>

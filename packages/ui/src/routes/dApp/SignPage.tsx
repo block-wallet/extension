@@ -194,7 +194,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
         if (domain.chainId) {
             const networkName = getNetworkNameFromChainId(
                 availableNetworks,
-                domain.chainId
+                Number(domain.chainId)
             )
             parsedDomain[2] += ` (${networkName})`
         }
@@ -259,10 +259,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
             )
         }
 
-        if (
-            method === "eth_signTypedData" ||
-            method === "eth_signTypedData_v1"
-        ) {
+        if (method === "eth_signTypedData_v1") {
             const v1Data = data as V1TypedData[]
             return (
                 <>

@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { PopulatedTransaction } from '@ethersproject/contracts';
-import { TransactionDescription } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
-import { LogDescription, ParamType } from '@ethersproject/abi';
+import {
+    LogDescription,
+    ParamType,
+    TransactionDescription,
+} from '@ethersproject/abi';
 import { PreferencesController } from '../../PreferencesController';
 import {
     TransactionController,

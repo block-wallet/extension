@@ -109,6 +109,7 @@ const normalizeParams = <TSignatureType extends SignatureMethods>(
 ): SignatureParams<TSignatureType> => {
     if (
         method === JSONRPCMethod.eth_sign ||
+        method === JSONRPCMethod.eth_signTypedData ||
         method === JSONRPCMethod.eth_signTypedData_v3 ||
         method === JSONRPCMethod.eth_signTypedData_v4
     ) {
@@ -138,10 +139,7 @@ export const validateTypedData = <
     method: TSignatureMethod,
     params: SignatureParams<TSignatureMethod>
 ): void | number => {
-    if (
-        method === JSONRPCMethod.eth_signTypedData ||
-        method === JSONRPCMethod.eth_signTypedData_v1
-    ) {
+    if (method === JSONRPCMethod.eth_signTypedData_v1) {
         if (!Array.isArray(params.data)) {
             throw new Error('Data must be an array');
         }

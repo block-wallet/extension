@@ -53,7 +53,7 @@ export type DappRequestType = keyof DappRequestParams;
 export interface DappRequestConfirmOptions {
     [DappReq.ASSET]: WatchAssetConfirmParams;
     [DappReq.ADD_ETHEREUM_CHAIN]: AddEthereumChainConfirmParams;
-    [DappReq.SIGNING]: undefined; // TODO(REC): This is wrong
+    [DappReq.SIGNING]: undefined;
     [DappReq.SWITCH_NETWORK]: undefined;
 }
 

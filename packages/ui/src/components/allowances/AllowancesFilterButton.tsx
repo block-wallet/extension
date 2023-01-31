@@ -1,5 +1,4 @@
-import { Fragment, useState } from "react"
-import Badge from "../ui/Badge"
+import { Fragment } from "react"
 import Dropdown from "../ui/Dropdown/Dropdown"
 import { DropdownOutlinedIconButton } from "../ui/Dropdown/DropdownButton"
 import { IconName } from "../ui/Icon"
@@ -21,12 +20,10 @@ const AllowancesFilterButton = ({
     filter: AllowancesFilters
     onChangeFilter: (newFilter: AllowancesFilters) => void
 }) => {
-    const [showBadge, setShowBadge] = useState(false)
     return (
         <div className="relative text-sm text-primary-300">
             <Dropdown
                 onClickItem={(selected) => {
-                    setShowBadge(true)
                     onChangeFilter(selected)
                 }}
             >
@@ -52,7 +49,6 @@ const AllowancesFilterButton = ({
                     })}
                 </Dropdown.Menu>
             </Dropdown>
-            {showBadge && <Badge>{filter[0]}</Badge>}
         </div>
     )
 }

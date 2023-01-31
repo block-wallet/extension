@@ -2366,7 +2366,7 @@ export class TransactionController extends BaseController<
         } catch (error) {
             // Probably not an erc20 transaction
             log.debug(error);
-            return undefined;
+            return TransactionCategories.CONTRACT_INTERACTION;
         }
     }
 

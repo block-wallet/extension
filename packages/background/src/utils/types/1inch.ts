@@ -34,7 +34,7 @@ export const REFERRER_ADDRESS = '0x3110a855333bfb922aeCB1B3542ba2fdE28d204F';
 export const GAS_LIMIT_INCREASE = 1.25;
 
 // Base endpoint
-export const ONEINCH_SWAPS_ENDPOINT = 'https://api.1inch.exchange/v5.0/';
+export const ONEINCH_SWAPS_ENDPOINT = 'https://api-blockwallet.1inch.io/v5.0/';
 
 // This address makes reference to the native asset
 export const ONEINCH_NATIVE_ADDRESS =

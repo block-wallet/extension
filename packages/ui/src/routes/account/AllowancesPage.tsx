@@ -229,7 +229,6 @@ const AllowancesPage = () => {
                     />
                     <AllowancesRefetchButton
                         onClick={() => setConfirmRefresh(true)}
-                        disabled={isRefreshDisabled}
                     />
                 </div>
                 {showEmptyState && (

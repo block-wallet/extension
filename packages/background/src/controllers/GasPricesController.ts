@@ -274,106 +274,121 @@ export class GasPricesController extends BaseController<GasPricesControllerState
         if (
             this._isEth_feeHistorySupportedByChain(chainId, isEIP1559Compatible)
         ) {
-            const latestBlock = await this._networkController.getLatestBlock(
-                provider
-            );
+            try {
+                const latestBlock =
+                    await this._networkController.getLatestBlock(provider);
 
-            // Get gasLimit of the last block
-            const blockGasLimit: BigNumber = BigNumber.from(
-                latestBlock.gasLimit
-            );
-
-            // Get blockBaseFee of the last block
-            const blockBaseFee: BigNumber = BigNumber.from(
-                latestBlock.baseFeePerGas
-            );
-
-            // Get eth_feeHistory
-            // gets 10%, 25% and 50% percentile fee history of txs included in last 5 blocks
-            const feeHistory: FeeHistory = await provider.send(
-                'eth_feeHistory',
-                ['0x5', 'latest', [10, 25, 65]]
-            );
-
-            // last element in array is the next block after the latest (estimated)
-            let estimatedBaseFee = blockBaseFee;
-            if (feeHistory.baseFeePerGas) {
-                estimatedBaseFee = BigNumber.from(
-                    feeHistory.baseFeePerGas[
-                        feeHistory.baseFeePerGas.length - 1
-                    ]
+                // Get gasLimit of the last block
+                const blockGasLimit: BigNumber = BigNumber.from(
+                    latestBlock.gasLimit
                 );
-            }
 
-            const rewardsSlow: BigNumber[] = [];
-            const rewardsAverage: BigNumber[] = [];
-            const rewardsFast: BigNumber[] = [];
+                // Get blockBaseFee of the last block
+                const blockBaseFee: BigNumber = BigNumber.from(
+                    latestBlock.baseFeePerGas
+                );
 
-            // add all rewards to rewards array
-            if (feeHistory.reward) {
-                for (let i = 0; i < feeHistory.reward.length; i++) {
-                    rewardsSlow.push(BigNumber.from(feeHistory.reward[i][0]));
-                    rewardsAverage.push(
-                        BigNumber.from(feeHistory.reward[i][1])
+                // Get eth_feeHistory
+                // gets 10%, 25% and 50% percentile fee history of txs included in last 5 blocks
+                const feeHistory: FeeHistory = await provider.send(
+                    'eth_feeHistory',
+                    ['0x5', 'latest', [10, 25, 65]]
+                );
+
+                // last element in array is the next block after the latest (estimated)
+                let estimatedBaseFee = blockBaseFee;
+                if (feeHistory.baseFeePerGas) {
+                    estimatedBaseFee = BigNumber.from(
+                        feeHistory.baseFeePerGas[
+                            feeHistory.baseFeePerGas.length - 1
+                        ]
                     );
-                    rewardsFast.push(BigNumber.from(feeHistory.reward[i][2]));
                 }
+
+                const rewardsSlow: BigNumber[] = [];
+                const rewardsAverage: BigNumber[] = [];
+                const rewardsFast: BigNumber[] = [];
+
+                // add all rewards to rewards array
+                if (feeHistory.reward) {
+                    for (let i = 0; i < feeHistory.reward.length; i++) {
+                        rewardsSlow.push(
+                            BigNumber.from(feeHistory.reward[i][0])
+                        );
+                        rewardsAverage.push(
+                            BigNumber.from(feeHistory.reward[i][1])
+                        );
+                        rewardsFast.push(
+                            BigNumber.from(feeHistory.reward[i][2])
+                        );
+                    }
+                } else {
+                    rewardsSlow.push(estimatedBaseFee.add(BigNumber.from(1)));
+                    rewardsAverage.push(estimatedBaseFee.mul(125).div(100));
+                    rewardsFast.push(estimatedBaseFee.mul(150).div(100));
+                }
+
+                // sort rewards array lowest to highest
+                rewardsSlow.sort();
+                rewardsAverage.sort();
+                rewardsFast.sort();
+
+                // choose middle tip as suggested tip
+                const maxPriorityFeePerGasSlow = rewardsSlow[0];
+                const maxPriorityFeePerGasAverage =
+                    rewardsAverage[Math.floor(rewardsAverage.length / 2)];
+                const maxPriorityFeePerGasFast =
+                    rewardsFast[rewardsFast.length - 1];
+
+                const maxFeePerGasSlow = BigNumber.from(
+                    maxPriorityFeePerGasSlow
+                ).add(estimatedBaseFee);
+                const maxFeePerGasAverage = BigNumber.from(
+                    maxPriorityFeePerGasAverage
+                ).add(estimatedBaseFee);
+                const maxFeePerGasFast = BigNumber.from(
+                    maxPriorityFeePerGasFast
+                ).add(estimatedBaseFee);
+
+                // Parsing the gas result considering the EIP1559 status
+                gasPriceData = {
+                    blockGasLimit: blockGasLimit,
+                    baseFee: BigNumber.from(blockBaseFee),
+                    estimatedBaseFee: BigNumber.from(estimatedBaseFee),
+                    gasPricesLevels: {
+                        slow: {
+                            gasPrice: null,
+                            maxFeePerGas: BigNumber.from(maxFeePerGasSlow),
+                            maxPriorityFeePerGas: BigNumber.from(
+                                maxPriorityFeePerGasSlow
+                            ),
+                            lastBaseFeePerGas: BigNumber.from(blockBaseFee),
+                        },
+                        average: {
+                            gasPrice: null,
+                            maxFeePerGas: BigNumber.from(maxFeePerGasAverage),
+                            maxPriorityFeePerGas: BigNumber.from(
+                                maxPriorityFeePerGasAverage
+                            ),
+                            lastBaseFeePerGas: BigNumber.from(blockBaseFee),
+                        },
+                        fast: {
+                            gasPrice: null,
+                            maxFeePerGas: BigNumber.from(maxFeePerGasFast),
+                            maxPriorityFeePerGas: BigNumber.from(
+                                maxPriorityFeePerGasFast
+                            ),
+                            lastBaseFeePerGas: BigNumber.from(blockBaseFee),
+                        },
+                    },
+                };
+            } catch (error) {
+                log.warn(
+                    'Error fetching EIP1559 gas prices from chain, fallbacking to legacy gas price fetch',
+                    error
+                );
+                return this._fetchFeeDataFromChain(chainId, false, provider);
             }
-
-            // sort rewards array lowest to highest
-            rewardsSlow.sort();
-            rewardsAverage.sort();
-            rewardsFast.sort();
-
-            // choose middle tip as suggested tip
-            const maxPriorityFeePerGasSlow = rewardsSlow[0];
-            const maxPriorityFeePerGasAverage =
-                rewardsAverage[Math.floor(rewardsAverage.length / 2)];
-            const maxPriorityFeePerGasFast =
-                rewardsFast[rewardsFast.length - 1];
-
-            const maxFeePerGasSlow = BigNumber.from(
-                maxPriorityFeePerGasSlow
-            ).add(estimatedBaseFee);
-            const maxFeePerGasAverage = BigNumber.from(
-                maxPriorityFeePerGasAverage
-            ).add(estimatedBaseFee);
-            const maxFeePerGasFast = BigNumber.from(
-                maxPriorityFeePerGasFast
-            ).add(estimatedBaseFee);
-
-            // Parsing the gas result considering the EIP1559 status
-            gasPriceData = {
-                blockGasLimit: blockGasLimit,
-                baseFee: BigNumber.from(blockBaseFee),
-                estimatedBaseFee: BigNumber.from(estimatedBaseFee),
-                gasPricesLevels: {
-                    slow: {
-                        gasPrice: null,
-                        maxFeePerGas: BigNumber.from(maxFeePerGasSlow),
-                        maxPriorityFeePerGas: BigNumber.from(
-                            maxPriorityFeePerGasSlow
-                        ),
-                        lastBaseFeePerGas: BigNumber.from(blockBaseFee),
-                    },
-                    average: {
-                        gasPrice: null,
-                        maxFeePerGas: BigNumber.from(maxFeePerGasAverage),
-                        maxPriorityFeePerGas: BigNumber.from(
-                            maxPriorityFeePerGasAverage
-                        ),
-                        lastBaseFeePerGas: BigNumber.from(blockBaseFee),
-                    },
-                    fast: {
-                        gasPrice: null,
-                        maxFeePerGas: BigNumber.from(maxFeePerGasFast),
-                        maxPriorityFeePerGas: BigNumber.from(
-                            maxPriorityFeePerGasFast
-                        ),
-                        lastBaseFeePerGas: BigNumber.from(blockBaseFee),
-                    },
-                },
-            };
         } else {
             const latestBlock = await this._networkController.getLatestBlock(
                 provider

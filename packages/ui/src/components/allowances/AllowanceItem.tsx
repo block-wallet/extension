@@ -12,10 +12,10 @@ import useIsHovering from "../../util/hooks/useIsHovering"
 import { generateExplorerLink } from "../../util/getExplorer"
 import { formatRounded } from "../../util/formatRounded"
 
+import { AssetIcon } from "../AssetsList"
 import { AllowancesFilters } from "./AllowancesFilterButton"
 import { TabLabels } from "../assets/ActivityAllowancesView"
 import DetailsDialog from "../dialog/DetailsDialog"
-import TokenLogo from "../token/TokenLogo"
 
 import ChevronRightIcon from "../icons/ChevronRightIcon"
 import revokeIcon from "../../assets/images/icons/revoke.svg"
@@ -169,7 +169,7 @@ const AllowanceItem = ({
                 expandedByDefault
             />
             <div className="flex flex-row items-center">
-                <TokenLogo name={name} logo={logo} className="w-9 h-9" />
+                <AssetIcon asset={{ logo: logo, symbol: name }} />
                 <div className="flex flex-col ml-2">
                     <span
                         className="text-sm font-bold truncate w-36"

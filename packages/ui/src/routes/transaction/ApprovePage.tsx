@@ -50,6 +50,8 @@ import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { MaxUint256 } from "@ethersproject/constants"
 import AllowanceInput from "../../components/transactions/AllowanceInput"
+import useAccountAllowances from "../../context/hooks/useAccountAllowances"
+import { AllowancesFilters } from "../../components/allowances/AllowancesFilterButton"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
@@ -61,16 +63,21 @@ export enum ApproveOperation {
 const getLabels = (
     operation: ApproveOperation,
     assetName: string
-): Record<"mainSectionTitle" | "mainSectionText", string> => {
+): Record<
+    "mainSectionTitle" | "mainSectionApproveText" | "mainSectionRevokeText",
+    string
+> => {
     if (operation === ApproveOperation.BRIDGE) {
         return {
-            mainSectionTitle: `Approve BlockWallet to bridge your ${assetName}`,
-            mainSectionText: `Allow BlockWallet Bridge to withdraw your ${assetName} and automate transactions for you.`,
+            mainSectionTitle: `Set ${assetName} Allowance`,
+            mainSectionApproveText: `This will let BlockWallet Bridges withdraw and automate ${assetName} transactions for you.`,
+            mainSectionRevokeText: `BlockWallet Bridges will not be able to access your ${assetName} anymore.`,
         }
     } else {
         return {
-            mainSectionTitle: `Approve BlockWallet to swap your ${assetName}`,
-            mainSectionText: `Allow BlockWallet Swaps to withdraw your ${assetName} and automate transactions for you.`,
+            mainSectionTitle: `Set ${assetName} Allowance`,
+            mainSectionApproveText: `This will let BlockWallet Swaps withdraw and automate ${assetName} transactions for you.`,
+            mainSectionRevokeText: `BlockWallet Swaps will not be able to access your ${assetName} anymore.`,
         }
     }
 }
@@ -203,6 +210,27 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const [selectedGasLimit, setSelectedGasLimit] = useState(
         BigNumber.from(APPROVE_GAS_COST)
     )
+
+    let currentAllowanceValue: BigNumber | undefined
+    let isCurrentAllowanceUnlimited: boolean | undefined
+    if (approveOperation === ApproveOperation.BRIDGE) {
+        const nextState = nextLocationState as BridgeConfirmPageLocalState
+
+        const currentSpenderAllowances = useAccountAllowances(
+            AllowancesFilters.SPENDER,
+            nextState.bridgeQuote.bridgeParams.params.spender
+        )[0]
+
+        const currentAllowance = currentSpenderAllowances?.allowances?.find(
+            (allowance) =>
+                allowance.displayData.address.toLowerCase() ===
+                nextState.bridgeQuote.bridgeParams.params.fromToken.address.toLowerCase()
+        )
+
+        currentAllowanceValue = currentAllowance?.allowance?.value
+
+        isCurrentAllowanceUnlimited = currentAllowance?.allowance?.isUnlimited
+    }
 
     // Fees
     useEffect(() => {
@@ -384,13 +412,38 @@ const ApprovePage: FunctionComponent<{}> = () => {
         }
     }
 
+    const isRevoke = parseFloat(allowanceAmount) === 0
+
     const mainSection = (
         <>
             <div className="flex flex-col space-y-3 px-6 py-4">
                 <p className="text-sm font-bold">{labels.mainSectionTitle}</p>
                 <p className="text-sm text-gray-500">
-                    {labels.mainSectionText}
+                    {isRevoke
+                        ? labels.mainSectionRevokeText
+                        : labels.mainSectionApproveText}
                 </p>
+                {currentAllowanceValue && (
+                    <p
+                        className="flex items-center space-x-1 text-sm text-gray-500 break-word mt-2"
+                        title={`${Number(
+                            formatUnits(currentAllowanceValue, assetDecimals)
+                        )} ${assetName}`}
+                    >
+                        <span>Current allowance:</span>
+                        {isCurrentAllowanceUnlimited ? (
+                            <span className="text-xl"> &#8734;</span>
+                        ) : (
+                            <span>
+                                {formatUnits(
+                                    currentAllowanceValue,
+                                    assetDecimals
+                                )}
+                            </span>
+                        )}
+                        <span>{assetName}</span>
+                    </p>
+                )}
             </div>
             <div className="flex flex-col space-y-3 px-6 pt-4">
                 <AllowanceInput
@@ -472,7 +525,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
-                        label="Approve"
+                        label={isRevoke ? "Revoke" : "Approve"}
                         isLoading={isApproving}
                         disabled={
                             !hasBalance || isGasUpdating || !isAllowanceValid

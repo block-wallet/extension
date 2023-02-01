@@ -146,13 +146,6 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         "address"
     )
 
-    // Get the spender name from the allowances list
-    const spenderName =
-        transaction.origin === "blank"
-            ? useAccountAllowances(AllowancesFilters.SPENDER, spenderAddress)[0]
-                  .groupBy.name
-            : undefined
-
     // Detect if the transaction was triggered using an address different to the active one
     const checksumFromAddress = getAddress(params.from!)
     const differentAddress = checksumFromAddress !== selectedAddress
@@ -213,6 +206,30 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         formatUnits(defaultAllowance, tokenDecimals)
     )
     const [isAllowanceValid, setIsAllowanceValid] = useState(true)
+
+    const currentSpenderAllowances = useAccountAllowances(
+        AllowancesFilters.SPENDER,
+        spenderAddress
+    )
+
+    // Get the spender name from the allowances list
+    const spenderName =
+        currentSpenderAllowances.length > 0 &&
+        currentSpenderAllowances[0]?.groupBy?.name
+
+    const currentAllowance =
+        currentSpenderAllowances.length > 0 &&
+        currentSpenderAllowances[0]?.allowances?.find(
+            (allowance) =>
+                allowance.displayData.address.toLowerCase() ===
+                tokenAddress.toLowerCase()
+        )
+
+    const currentAllowanceValue =
+        currentAllowance && currentAllowance?.allowance?.value
+
+    const isCurrentAllowanceUnlimited =
+        currentAllowance && currentAllowance?.allowance?.isUnlimited
 
     const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
         useTransactionWaitingDialog(
@@ -342,47 +359,75 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const isFromBlockWallet = transaction.origin === "blank"
     const isRevoke = parseFloat(allowance) === 0
 
-    const mainSectionTitle = isFromBlockWallet ? (
+    const mainSectionTitle = `Set ${tokenName} Allowance`
+
+    const mainSectionText = isRevoke ? (
         <>
-            Approve BlockWallet to {isRevoke ? "revoke" : "change"} your{" "}
-            {tokenName} Allowance for{" "}
-            <a
-                href={spenderAddressExplorerLink}
-                target="_blank"
-                rel="noreferrer"
-                className="text-primary-300 hover:underline"
-            >
-                {spenderName}
-            </a>
+            {isFromBlockWallet ? (
+                <a
+                    href={spenderAddressExplorerLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary-300 hover:underline"
+                >
+                    {spenderName}
+                </a>
+            ) : (
+                origin
+            )}{" "}
+            will not be able to access your {tokenName} anymore.
         </>
     ) : (
         <>
-            Allow {origin} to access your {tokenName}
+            This will let{" "}
+            {isFromBlockWallet ? (
+                <a
+                    href={spenderAddressExplorerLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary-300 hover:underline"
+                >
+                    {spenderName}
+                </a>
+            ) : (
+                origin
+            )}{" "}
+            withdraw and automate {tokenName} transactions for you.
         </>
     )
 
-    const mainSectionText = isFromBlockWallet ? (
-        <>
-            Allow BlockWallet to {isRevoke ? "prevent" : "limit"} any withdrawal
-            or automated transactions of your {tokenName} by {spenderName}.
-        </>
-    ) : (
-        <>
-            By granting this permission, you are allowing {origin} to withdraw
-            your {tokenName} and automate transactions for you.
-        </>
-    )
     const mainSection = (
         <>
             <div className="px-6 py-3">
-                <p className="text-sm font-bold pb-3 break-word">
+                <p className="text-sm font-bold pb-2 break-word">
                     {mainSectionTitle}
                 </p>
                 <p className="text-sm text-gray-500 break-word">
                     {mainSectionText}
                 </p>
+                {currentAllowanceValue && (
+                    <p
+                        className="flex items-center space-x-1 text-sm text-gray-500 break-word mt-2"
+                        title={`${Number(
+                            formatUnits(currentAllowanceValue, tokenDecimals)
+                        )} ${tokenName}`}
+                    >
+                        <span>Current allowance:</span>
+                        {isCurrentAllowanceUnlimited ? (
+                            <span className="text-xl"> &#8734;</span>
+                        ) : (
+                            <span>
+                                {formatUnits(
+                                    currentAllowanceValue,
+                                    tokenDecimals
+                                )}
+                            </span>
+                        )}
+                        <span>{tokenName}</span>
+                    </p>
+                )}
             </div>
-            <div className="flex flex-col space-y-3 px-6 py-3">
+            <div className="flex flex-col space-y-3 px-6 pb-3">
                 <AllowanceInput
                     onChange={(value) => setAllowance(value)}
                     setIsValid={(value) => setIsAllowanceValid(value)}
@@ -487,7 +532,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                             onClick={reject}
                         />
                         <ButtonWithLoading
-                            label="Approve"
+                            label={isRevoke ? "Revoke" : "Approve"}
                             disabled={
                                 !hasBalance ||
                                 !canUserSubmitTransaction(transaction.status) ||

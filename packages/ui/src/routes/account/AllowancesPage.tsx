@@ -60,9 +60,8 @@ const AllowancesPage = () => {
     const timeToDisableRefresh = 5 * 60 * 1000
 
     // check if passed 5 minutes since last refresh from the persisted data
-    const isRefreshDisabled: boolean = useMemo(() => {
-        return persistedData.lastTriggered + timeToDisableRefresh > Date.now()
-    }, [persistedData])
+    const isRefreshDisabled: boolean =
+        persistedData.lastTriggered + timeToDisableRefresh > Date.now()
 
     const [secondsRemaining, setSecondsRemaining] = useState(
         Math.ceil(
@@ -240,7 +239,7 @@ const AllowancesPage = () => {
                 onDone={() => {
                     dispatch({ type: "close" })
                 }}
-                timeout={1100}
+                timeout={1000}
             />
             <div className="w-76 w-full p-6 bg-white fixed z-0 flex flex-col">
                 <div className="flex flex-row space-x-2">

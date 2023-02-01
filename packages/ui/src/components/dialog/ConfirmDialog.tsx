@@ -10,7 +10,17 @@ const ConfirmDialog: FunctionComponent<{
     open: boolean
     onClose: () => void
     onConfirm: () => void
-}> = ({ title, message, open, onClose, onConfirm }) => {
+    isConfirmDisabled?: boolean // if true, confirm button is disabled
+    confirmDisabledText?: string // if isConfirmDisabled is true, this text is shown on the confirm button
+}> = ({
+    title,
+    message,
+    open,
+    onClose,
+    onConfirm,
+    isConfirmDisabled = false,
+    confirmDisabledText,
+}) => {
     return (
         <Dialog open={open} onClickOutside={onClose} className="px-6">
             <div>
@@ -49,9 +59,16 @@ const ConfirmDialog: FunctionComponent<{
                                 onConfirm()
                                 onClose()
                             }}
-                            className={classnames(Classes.button)}
+                            className={classnames(
+                                Classes.button,
+                                isConfirmDisabled &&
+                                    "bg-gray-900 border-gray-900 opacity-50"
+                            )}
+                            disabled={isConfirmDisabled}
                         >
-                            Confirm
+                            {isConfirmDisabled && confirmDisabledText
+                                ? confirmDisabledText
+                                : "Confirm"}
                         </button>
                     </div>
                 </div>

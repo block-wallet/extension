@@ -1,5 +1,5 @@
 import { BigNumber } from "@ethersproject/bignumber"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
     addNewApproveTransaction,
@@ -57,9 +57,37 @@ const AllowancesPage = () => {
         }
     )
 
+    const timeToDisableRefresh = 5 * 60 * 1000
+
     // check if passed 5 minutes since last refresh from the persisted data
-    const isRefreshDisabled: boolean =
-        persistedData.lastTriggered + 5 * 60 * 1000 > Date.now()
+    const isRefreshDisabled: boolean = useMemo(() => {
+        return persistedData.lastTriggered + timeToDisableRefresh > Date.now()
+    }, [persistedData])
+
+    const [secondsRemaining, setSecondsRemaining] = useState(
+        Math.ceil(
+            (persistedData.lastTriggered + timeToDisableRefresh - Date.now()) /
+                1000
+        )
+    )
+
+    const refreshTimerText = useMemo(() => {
+        return `${(Math.floor(secondsRemaining / 60) % 60)
+            .toString()
+            .padStart(2, "0")}:${(secondsRemaining % 60)
+            .toString()
+            .padStart(2, "0")}`
+    }, [secondsRemaining])
+
+    useEffect(() => {
+        // if refresh is disabled, start a timer to update the seconds remaining
+        if (!isRefreshDisabled) return
+        const intervalId = setInterval(() => {
+            setSecondsRemaining(secondsRemaining - 1)
+        }, 1000)
+        // clear the interval when the component unmounts
+        return () => clearInterval(intervalId)
+    }, [secondsRemaining])
 
     const [groupBy, setGroupBy] = useState<AllowancesFilters>(
         history.location.state?.groupBy || AllowancesFilters.SPENDER
@@ -115,6 +143,7 @@ const AllowancesPage = () => {
                 lastTriggered: Date.now(),
             })
             await refreshTokenAllowances()
+            setSecondsRemaining(timeToDisableRefresh / 1000)
         }
     }
 
@@ -191,6 +220,8 @@ const AllowancesPage = () => {
                         payload: { status: "success" },
                     })
                 }}
+                isConfirmDisabled={isRefreshDisabled}
+                confirmDisabledText={refreshTimerText}
             />
             <WaitingDialog
                 status={status}

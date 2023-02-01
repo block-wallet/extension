@@ -62,6 +62,8 @@ import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceL
 import { canUserSubmitTransaction } from "../../util/transactionUtils"
 import { generateExplorerLink } from "../../util/getExplorer"
 
+import unknownTokenIcon from "../../assets/images/unknown_token.svg"
+
 const UNKNOWN_BALANCE = "UNKNOWN_BALANCE"
 
 export interface ApproveAssetProps {
@@ -613,11 +615,16 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                             {`${formatName(assetBalance, 18)}`}
                         </span>
                         <img
-                            src={tokenLogo}
+                            src={tokenLogo || unknownTokenIcon}
+                            onError={(e) => {
+                                ;(e.target as any).onerror = null
+                                ;(e.target as any).src = unknownTokenIcon
+                            }}
                             alt={tokenName}
                             width="14px"
                             draggable={false}
                             className="ml-1"
+                            title={tokenName}
                         />
                     </div>
                     <div className="flex flex-row items-center mt-1">
@@ -633,11 +640,16 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                             )}
                         </span>
                         <img
-                            src={nativeToken.token.logo}
+                            src={nativeToken.token.logo || unknownTokenIcon}
+                            onError={(e) => {
+                                ;(e.target as any).onerror = null
+                                ;(e.target as any).src = unknownTokenIcon
+                            }}
                             alt={nativeToken.token.symbol}
                             width="14px"
                             draggable={false}
                             className="ml-1"
+                            title={nativeToken.token.symbol}
                         />
                     </div>
                 </div>

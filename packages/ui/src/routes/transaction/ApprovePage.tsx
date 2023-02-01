@@ -25,7 +25,7 @@ import { AdvancedSettings } from "../../components/transactions/AdvancedSettings
 import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
-import { formatName } from "../../util/formatAccount"
+import { formatHash, formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
 import { formatUnits, parseUnits } from "@ethersproject/units"
 import { getAccountColor } from "../../util/getAccountColor"
@@ -52,6 +52,9 @@ import { MaxUint256 } from "@ethersproject/constants"
 import AllowanceInput from "../../components/transactions/AllowanceInput"
 import useAccountAllowances from "../../context/hooks/useAccountAllowances"
 import { AllowancesFilters } from "../../components/allowances/AllowancesFilterButton"
+import { useSelectedAccountBalance } from "../../context/hooks/useSelectedAccountBalance"
+
+import unknownTokenIcon from "../../assets/images/unknown_token.svg"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
@@ -132,6 +135,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+    const selectedAccountBalance = useSelectedAccountBalance()
 
     const selectedAccount = useSelectedAccount()
     const { chainId, isEIP1559Compatible } = useSelectedNetwork()
@@ -176,6 +180,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const assetBalance = localAsset.balance
     const assetName = localAsset.token.symbol
     const assetDecimals = localAsset.token.decimals
+    const assetLogo = localAsset.token.logo
 
     const [isAllowanceValid, setIsAllowanceValid] = useState(true)
     const [allowanceAmount, setAllowanceAmount] = useState(
@@ -567,22 +572,59 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     <span className="text-sm font-bold">
                         {formatName(selectedAccount.name, 15)}
                     </span>
-                    <span className="text-xs text-gray-600">
-                        {formatRounded(
-                            formatUnits(
-                                nativeToken.balance || "0",
-                                nativeToken.token.decimals
-                            )
-                        )}
-                        {` ${nativeToken.token.symbol}`}
+                    <span
+                        className="text-xs text-gray-600 truncate"
+                        title={selectedAccount.address}
+                    >
+                        {formatHash(selectedAccount.address)}
                     </span>
                 </div>
-                <p className="ml-auto text-sm text-gray-600">
-                    {formatRounded(
-                        formatUnits(assetBalance || "0", assetDecimals)
-                    )}
-                    {` ${assetName}`}
-                </p>
+                <div className="ml-auto flex flex-col items-end space-x-1">
+                    <div className="flex flex-row items-center">
+                        <span className="text-xs text-gray-600 truncate">
+                            {`${formatRounded(
+                                formatUnits(assetBalance || "0", assetDecimals)
+                            )}`}
+                        </span>
+                        <img
+                            src={assetLogo || unknownTokenIcon}
+                            onError={(e) => {
+                                ;(e.target as any).onerror = null
+                                ;(e.target as any).src = unknownTokenIcon
+                            }}
+                            alt={assetName}
+                            width="14px"
+                            draggable={false}
+                            className="ml-1"
+                            title={assetName}
+                        />
+                    </div>
+                    <div className="flex flex-row items-center mt-1">
+                        <span className="text-xs text-gray-600 truncate">
+                            {formatName(
+                                formatRounded(
+                                    formatUnits(
+                                        selectedAccountBalance || "0",
+                                        nativeToken.token.decimals
+                                    )
+                                ),
+                                18
+                            )}
+                        </span>
+                        <img
+                            src={nativeToken.token.logo || unknownTokenIcon}
+                            onError={(e) => {
+                                ;(e.target as any).onerror = null
+                                ;(e.target as any).src = unknownTokenIcon
+                            }}
+                            alt={nativeToken.token.symbol}
+                            width="14px"
+                            draggable={false}
+                            className="ml-1"
+                            title={nativeToken.token.symbol}
+                        />
+                    </div>
+                </div>
             </div>
             <Divider />
             {mainSection}

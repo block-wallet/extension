@@ -303,7 +303,7 @@ const AllowanceInput = ({
                 <div className="flex space-x-2">
                     <span
                         className={classnames(
-                            "float-right rounded-md cursor-pointer border p-1",
+                            "w-16 text-center float-right rounded-md cursor-pointer border p-1",
                             usingRevoke
                                 ? "bg-primary-300 border-primary-300 text-white hover:bg-blue-600 hover:border-blue-600"
                                 : "bg-blue-200 border-blue-200 hover:bg-blue-300 hover:border-blue-300"
@@ -323,7 +323,7 @@ const AllowanceInput = ({
                     </span>
                     <span
                         className={classnames(
-                            "float-right rounded-md cursor-pointer border p-1",
+                            "w-16 text-center float-right rounded-md cursor-pointer border p-1",
                             usingUnlimited
                                 ? "bg-primary-300 border-primary-300 text-white hover:bg-blue-600 hover:border-blue-600"
                                 : "bg-blue-200 border-blue-200 hover:bg-blue-300 hover:border-blue-300"

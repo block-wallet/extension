@@ -28,7 +28,7 @@ const getAllowanceAmountYupSchema = (
             )
             .test(
                 "decimals",
-                "Custom limit has too many decimal numbers",
+                "Value has too many decimal numbers",
                 (value?: string) => {
                     if (!value) return false
                     if (!value.includes(".")) return true
@@ -40,7 +40,7 @@ const getAllowanceAmountYupSchema = (
             )
             .test(
                 "too-low",
-                "Custom limit is less than the minimum allowance",
+                "Value is less than the minimum allowance",
                 (value?: string) => {
                     if (!value) return false
                     try {
@@ -54,7 +54,7 @@ const getAllowanceAmountYupSchema = (
             )
             .test(
                 "too-large",
-                "Custom limit is larger than the unlimited allowance",
+                "Value is larger than the unlimited allowance",
                 (value?: string) => {
                     if (!value) return false
                     try {
@@ -102,6 +102,8 @@ const AllowanceInput = ({
     const [error, setError] = useState("")
 
     const [usingUnlimited, setUsingUnlimited] = useState(false)
+    const [usingRevoke, setUsingRevoke] = useState(false)
+
     const [inputFocus, setInputFocus] = useState(false)
     const inputRef = useRef(null)
 
@@ -121,6 +123,14 @@ const AllowanceInput = ({
         }
         validate(value)
         setAllowanceAmount(value)
+
+        const isRevoke = parseFloat(value) === 0
+        const isUnlimited =
+            parseFloat(value) ===
+            parseFloat(formatUnits(UNLIMITED_ALLOWANCE, tokenDecimals))
+
+        setUsingRevoke(isRevoke)
+        setUsingUnlimited(isUnlimited)
         adjustInputCursor(value.length)
         onChange(value)
     }
@@ -150,13 +160,6 @@ const AllowanceInput = ({
         }, 0)
     }
 
-    const setUnlimitedValue = () => {
-        setUsingUnlimited(true)
-        handleChangeAllowanceAmount(
-            formatUnits(UNLIMITED_ALLOWANCE.toHexString(), tokenDecimals)
-        )
-    }
-
     // Adjust input cursor position
     const adjustInputCursor = (position: number) => {
         setTimeout(() => {
@@ -166,13 +169,13 @@ const AllowanceInput = ({
     }
 
     useEffect(() => {
-        if (BigNumber.from(UNLIMITED_ALLOWANCE).eq(defaultValue)) {
-            setUsingUnlimited(true)
-        }
-    }, [])
+        const isUnlimited = BigNumber.from(UNLIMITED_ALLOWANCE).eq(defaultValue)
+        const isRevoke = BigNumber.from(0).eq(defaultValue)
 
-    useEffect(() => {
+        setUsingRevoke(isRevoke)
+        setUsingUnlimited(isUnlimited)
         setAllowanceAmount(formatUnits(defaultValue, tokenDecimals))
+        // Needed in dependency array to update the input value when the defaultValue changes if there is multiple allowance approvals in the queue
     }, [defaultValue])
 
     return (
@@ -196,7 +199,7 @@ const AllowanceInput = ({
                     error && "border-red-400"
                 )}
             >
-                <div className="flex flex-col items-start">
+                <div className="flex flex-col items-start w-2/5">
                     {usingUnlimited && (
                         <div
                             className={classnames(
@@ -207,7 +210,6 @@ const AllowanceInput = ({
                                 formatUnits(UNLIMITED_ALLOWANCE, tokenDecimals)
                             )} ${tokenName}`}
                             onClick={() => {
-                                setUsingUnlimited(false)
                                 resetAllowanceValue()
                             }}
                         >
@@ -231,7 +233,6 @@ const AllowanceInput = ({
                         autoFocus={false}
                         onFocus={() => {
                             adjustInputCursor(allowanceAmount.length)
-                            setUsingUnlimited(false)
                             setInputFocus(true)
                         }}
                         onBlur={() => setInputFocus(false)}
@@ -253,7 +254,6 @@ const AllowanceInput = ({
 
                                 handleChangeAllowanceAmount(newAllowanceAmount)
                             }
-                            setUsingUnlimited(false)
                             const amt = Number(e.currentTarget.value)
                             if (
                                 !isNaN(Number(e.key)) &&
@@ -272,7 +272,27 @@ const AllowanceInput = ({
                         }}
                     />
                 </div>
-                <div className="w-1/5">
+                <div className="flex space-x-2">
+                    <span
+                        className={classnames(
+                            "float-right rounded-md cursor-pointer border p-1",
+                            usingRevoke
+                                ? "bg-primary-300 border-primary-300 text-white hover:bg-blue-600 hover:border-blue-600"
+                                : "bg-blue-200 border-blue-200 hover:bg-blue-300 hover:border-blue-300"
+                        )}
+                        title={`Revoke value`}
+                        onClick={() => {
+                            if (usingRevoke) {
+                                resetAllowanceValue()
+                            } else {
+                                handleChangeAllowanceAmount(
+                                    formatUnits(0, tokenDecimals)
+                                )
+                            }
+                        }}
+                    >
+                        Revoke
+                    </span>
                     <span
                         className={classnames(
                             "float-right rounded-md cursor-pointer border p-1",
@@ -280,13 +300,17 @@ const AllowanceInput = ({
                                 ? "bg-primary-300 border-primary-300 text-white hover:bg-blue-600 hover:border-blue-600"
                                 : "bg-blue-200 border-blue-200 hover:bg-blue-300 hover:border-blue-300"
                         )}
-                        title={`Use max value possible.`}
+                        title={`Unlimited value`}
                         onClick={() => {
                             if (usingUnlimited) {
-                                setUsingUnlimited(false)
                                 resetAllowanceValue()
                             } else {
-                                setUnlimitedValue()
+                                handleChangeAllowanceAmount(
+                                    formatUnits(
+                                        UNLIMITED_ALLOWANCE.toHexString(),
+                                        tokenDecimals
+                                    )
+                                )
                             }
                         }}
                     >

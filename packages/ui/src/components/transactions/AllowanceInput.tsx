@@ -4,9 +4,12 @@ import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits, parseUnits } from "@ethersproject/units"
 import { MaxUint256 } from "@ethersproject/constants"
 import * as yup from "yup"
+import { AiFillInfoCircle } from "react-icons/ai"
 
 import { Classes } from "../../styles"
 import ErrorMessage from "../error/ErrorMessage"
+import Dialog from "../dialog/Dialog"
+import CloseIcon from "../icons/CloseIcon"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
@@ -69,6 +72,24 @@ const getAllowanceAmountYupSchema = (
     })
 }
 
+const optionsText = [
+    {
+        title: "Unlimited:",
+        description:
+            "Spender can automate any transaction with any amount. Best for frequent actions.",
+    },
+    {
+        title: "Custom:",
+        description:
+            "Specify the max value the spender can automate each time. Best for one time use.",
+    },
+    {
+        title: "Revoke:",
+        description:
+            "Set allowance to 0. Spender will no longer be able to automate your transactions.",
+    },
+]
+
 /**
  *
  * Allowance Amount input component
@@ -103,6 +124,8 @@ const AllowanceInput = ({
 
     const [usingUnlimited, setUsingUnlimited] = useState(false)
     const [usingRevoke, setUsingRevoke] = useState(false)
+
+    const [showOptionsInfo, setShowOptionsInfo] = useState(false)
 
     const [inputFocus, setInputFocus] = useState(false)
     const inputRef = useRef(null)
@@ -181,13 +204,18 @@ const AllowanceInput = ({
     return (
         <div className={classnames("flex flex-col")}>
             <div className="flex flex-row">
-                <div className="flex items-start w-1/3">
+                <div className="flex items-center w-1/3 mb-1">
                     <label
                         htmlFor="allowanceAmount"
-                        className="mb-2 text-sm text-gray-600"
+                        className="text-sm text-gray-600"
                     >
                         Allowance
                     </label>
+                    <AiFillInfoCircle
+                        size={25}
+                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                        onClick={() => setShowOptionsInfo(true)}
+                    />
                 </div>
             </div>
 
@@ -321,6 +349,45 @@ const AllowanceInput = ({
             <div className={`${error ? "pl-1" : null}`}>
                 <ErrorMessage>{error}</ErrorMessage>
             </div>
+            <Dialog
+                open={showOptionsInfo}
+                onClickOutside={() => setShowOptionsInfo(false)}
+            >
+                <span className="absolute top-0 right-0 p-4 z-50">
+                    <div
+                        onClick={() => setShowOptionsInfo(false)}
+                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                    >
+                        <CloseIcon size="10" />
+                    </div>
+                </span>
+                <div className="flex flex-col w-full space-y-2">
+                    <div className="z-10 flex flex-row items-center p-2 bg-white bg-opacity-75">
+                        <h2 className="px-2 pr-0 text-lg font-bold">
+                            Allowance Options
+                        </h2>
+                    </div>
+                    <div className="px-4 space-y-2 text-black pb-2">
+                        <h3 className="text-md font-medium">
+                            Allowances let DApps automate transactions for you.
+                            These are your options.
+                        </h3>
+                        {optionsText.map((item, index) => (
+                            <div
+                                className="flex flex-col space-y-1"
+                                key={index}
+                            >
+                                <h4 className="text-black font-semibold">
+                                    {item.title}
+                                </h4>
+                                <p className="text-gray-600">
+                                    {item.description}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </Dialog>
         </div>
     )
 }

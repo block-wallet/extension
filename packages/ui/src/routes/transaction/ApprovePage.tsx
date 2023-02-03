@@ -580,7 +580,12 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     </span>
                 </div>
                 <div className="ml-auto flex flex-col items-end space-x-1">
-                    <div className="flex flex-row items-center">
+                    <div
+                        className="flex flex-row items-center"
+                        title={`${formatRounded(
+                            formatUnits(assetBalance || "0", assetDecimals)
+                        )} ${assetName}`}
+                    >
                         <span className="text-xs text-gray-600 truncate">
                             {`${formatRounded(
                                 formatUnits(assetBalance || "0", assetDecimals)
@@ -596,10 +601,20 @@ const ApprovePage: FunctionComponent<{}> = () => {
                             width="14px"
                             draggable={false}
                             className="ml-1"
-                            title={assetName}
                         />
                     </div>
-                    <div className="flex flex-row items-center mt-1">
+                    <div
+                        className="flex flex-row items-center mt-1"
+                        title={`${formatName(
+                            formatRounded(
+                                formatUnits(
+                                    selectedAccountBalance || "0",
+                                    nativeToken.token.decimals
+                                )
+                            ),
+                            18
+                        )} ${nativeToken.token.symbol}`}
+                    >
                         <span className="text-xs text-gray-600 truncate">
                             {formatName(
                                 formatRounded(
@@ -621,7 +636,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
                             width="14px"
                             draggable={false}
                             className="ml-1"
-                            title={nativeToken.token.symbol}
                         />
                     </div>
                 </div>

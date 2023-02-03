@@ -29,10 +29,10 @@ const AssetAllowances = () => {
                             allowance.displayData.address
                         }
                     >
-                        {index > 0 ? <hr /> : null}
+                        {index > 0 && <hr />}
                         <AllowanceItem
                             allowance={allowance.allowance}
-                            token={tokenAllowances.groupBy}
+                            token={tokenAllowances?.groupBy}
                             spender={allowance.displayData}
                             showToken={false}
                             fromAssetDetails={true}

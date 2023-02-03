@@ -111,6 +111,9 @@ import type {
     SubmitQRHardwareSignatureMessage,
     CancelSyncQRHardwareMessage,
     CancelQRHardwareSignRequestMessage,
+    GetQRHardwareMessageSignRequestMessage,
+    GetQRHardwareTypedMessageSignRequestMessage,
+    GetQRHardwareETHSignRequestMessage,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -226,7 +229,10 @@ import RemoteConfigsController, {
     RemoteConfigsControllerState,
 } from './RemoteConfigsController';
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
-import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
+import {
+    EthSignRequest,
+    URRegistryDecoder,
+} from '@keystonehq/bc-ur-registry-eth';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -1031,6 +1037,21 @@ export default class BlankController extends EventEmitter {
                 return this.hardwareQrSubmitCryptoHdKeyOrAccount(
                     request as SubmitQRHardwareCryptoHDKeyOrAccountMessage
                 );
+
+            case Messages.WALLET.HARDWARE_QR_GET_ETH_SIGNATURE_REQUEST:
+                return this.hardwareQrETHSignRequest(
+                    request as GetQRHardwareETHSignRequestMessage
+                );
+            case Messages.WALLET.HARDWARE_QR_GET_MESSAGE_SIGNATURE_REQUEST:
+                return this.hardwareQrMessageSignRequest(
+                    request as GetQRHardwareMessageSignRequestMessage
+                );
+            case Messages.WALLET
+                .HARDWARE_QR_GET_TYPED_MESSAGE_SIGNATURE_REQUEST:
+                return this.hardwareQrTypedMessageSignRequest(
+                    request as GetQRHardwareTypedMessageSignRequestMessage
+                );
+
             case Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE:
                 return this.hardwareQrSubmitSignature(
                     request as SubmitQRHardwareSignatureMessage
@@ -3142,7 +3163,6 @@ export default class BlankController extends EventEmitter {
         try {
             const decoder = new URRegistryDecoder();
             if (!decoder.receivePart(qr)) {
-                console.log('urRegistryDecoder.receivePart(qr) === false');
                 return false;
             }
 
@@ -3164,8 +3184,60 @@ export default class BlankController extends EventEmitter {
             }
             return true;
         } catch (err) {
-            console.log(err);
+            log.error(err);
             return false;
+        }
+    }
+
+    private async hardwareQrETHSignRequest({
+        ethTx,
+        _fromAddress,
+    }: GetQRHardwareETHSignRequestMessage): Promise<string> {
+        console.log('hardwareQrETHSignRequest', { ethTx, _fromAddress });
+        try {
+            return await this.keyringController.getQRETHSignRequest(
+                ethTx,
+                _fromAddress
+            );
+        } catch (err) {
+            log.error(err);
+            return '';
+        }
+    }
+
+    private async hardwareQrMessageSignRequest({
+        from,
+        data,
+    }: GetQRHardwareMessageSignRequestMessage): Promise<string> {
+        console.log('hardwareQrMessageSignRequest', { from, data });
+        try {
+            return await this.keyringController.getQRMessageSignRequest({
+                from,
+                data,
+            });
+        } catch (err) {
+            log.error(err);
+            return '';
+        }
+    }
+
+    private async hardwareQrTypedMessageSignRequest({
+        from,
+        data,
+        version,
+    }: GetQRHardwareTypedMessageSignRequestMessage): Promise<string> {
+        console.log('hardwareQrTypedMessageSignRequest', { from, data });
+        try {
+            return await this.keyringController.getQRTypedMessageSignRequest(
+                {
+                    from,
+                    data,
+                },
+                { version }
+            );
+        } catch (err) {
+            log.error(err);
+            return '';
         }
     }
 

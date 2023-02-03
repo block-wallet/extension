@@ -19,6 +19,10 @@ import {
     IKeyringState as IQRKeyringState,
     MetaMaskKeyring as QRHardwareKeyring,
 } from '@keystonehq/metamask-airgapped-keyring';
+import { DataType, EthSignRequest } from '@keystonehq/bc-ur-registry-eth';
+
+import rlp from 'rlp';
+import { v4 } from 'uuid';
 
 /**
  * Available keyring types
@@ -632,32 +636,6 @@ export default class KeyringControllerDerivated extends KeyringController {
     ): Promise<string> {
         return this._mutex.runExclusive(async () => {
             try {
-                const keyring = await this.getKeyringFromDevice(
-                    Devices.KEYSTONE
-                );
-                if (keyring) {
-                    const address = normalizeAddress(msgParams.from);
-                    const qrAccounts = await keyring.getAccounts();
-                    if (
-                        qrAccounts.findIndex(
-                            (qrAddress: string) =>
-                                qrAddress.toLowerCase() ===
-                                address.toLowerCase()
-                        ) !== -1
-                    ) {
-                        const messageParamsClone = { ...msgParams };
-                        if (
-                            opts.version !== SignTypedDataVersion.V1 &&
-                            typeof messageParamsClone.data === 'string'
-                        ) {
-                            messageParamsClone.data = JSON.parse(
-                                messageParamsClone.data
-                            );
-                        }
-                        return super.signTypedMessage(messageParamsClone, opts);
-                    }
-                }
-
                 return super.signTypedMessage(msgParams, opts);
             } catch (error) {
                 throw new Error(
@@ -772,19 +750,149 @@ export default class KeyringControllerDerivated extends KeyringController {
 
     // qr hardware devices
     async submitQRHardwareCryptoHDKey(cbor: string) {
-        console.log('submitQRHardwareCryptoHDKey', { cbor });
-        const read = this._qrHardwareKeyring.readKeyring();
-        this._qrHardwareKeyring.submitCryptoHDKey(cbor);
-        await read;
-        this.fullUpdate();
+        return this._mutex.runExclusive(async () => {
+            console.log('submitQRHardwareCryptoHDKey', { cbor });
+            const read = this._qrHardwareKeyring.readKeyring();
+            this._qrHardwareKeyring.submitCryptoHDKey(cbor);
+            await read;
+            this.fullUpdate();
+        });
     }
 
     async submitQRHardwareCryptoAccount(cbor: string) {
-        console.log('submitQRHardwareCryptoAccount', { cbor });
-        const r = this._qrHardwareKeyring.readKeyring();
-        this._qrHardwareKeyring.submitCryptoAccount(cbor);
-        await r;
-        this.fullUpdate();
+        return this._mutex.runExclusive(async () => {
+            console.log('submitQRHardwareCryptoAccount', { cbor });
+            const r = this._qrHardwareKeyring.readKeyring();
+            this._qrHardwareKeyring.submitCryptoAccount(cbor);
+            await r;
+            this.fullUpdate();
+        });
+    }
+
+    /**
+     * Generates a ETH Sign request to be signed with a QR device
+     *
+     *
+     * @param {TypedTransaction} ethTx - The transaction to sign.
+     * @param {string} _fromAddress - The transaction 'from' address.
+     * @returns {Promise<string>} The transaction sign request object QR as string.
+     */
+    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+    public async getQRETHSignRequest(
+        ethTx: TypedTransaction,
+        _fromAddress: string
+    ): Promise<string> {
+        return this._mutex.runExclusive(async () => {
+            const dataType =
+                ethTx.type === 0
+                    ? DataType.transaction
+                    : DataType.typedTransaction;
+
+            let messageToSign;
+            if (ethTx.type === 0) {
+                messageToSign = rlp.encode(ethTx.getMessageToSign(false));
+            } else {
+                messageToSign = ethTx.getMessageToSign(false);
+            }
+
+            const hdPath = await this._qrHardwareKeyring._pathFromAddress(
+                _fromAddress
+            );
+            const chainId = ethTx.common.chainId();
+            const requestId = v4();
+            const xfp = (this._qrHardwareKeyring as any)['xfp'];
+
+            const ethSignRequest = EthSignRequest.constructETHRequest(
+                messageToSign as Buffer,
+                dataType,
+                hdPath,
+                xfp,
+                requestId,
+                Number(chainId),
+                _fromAddress
+            );
+
+            return ethSignRequest.toUREncoder().nextPart();
+        });
+    }
+
+    /**
+     * Generates a message sign request to be signed with a QR device
+     *
+     *
+     * @param {Object} msgParams - The message parameters to sign.
+     * @returns {Promise<string>} The message sign request object QR as string.
+     */
+    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+    public async getQRMessageSignRequest(msgParams: {
+        from: string;
+        data: string;
+    }): Promise<string> {
+        return this._mutex.runExclusive(async () => {
+            const dataHex = Buffer.from(msgParams.data, 'hex');
+            const requestId = v4();
+            const xfp = (this._qrHardwareKeyring as any)['xfp'];
+            const hdPath = await this._qrHardwareKeyring._pathFromAddress(
+                msgParams.from
+            );
+
+            const ethSignRequest = EthSignRequest.constructETHRequest(
+                dataHex,
+                DataType.personalMessage,
+                hdPath,
+                xfp,
+                requestId,
+                undefined,
+                msgParams.from
+            );
+
+            return ethSignRequest.toUREncoder().nextPart();
+        });
+    }
+
+    /**
+     * Generates a typed message sign request to be signed with a QR device
+     *
+     *
+     * @param {Object} msgParams - The message parameters to sign.
+     * @returns {Promise<string>} The typed message sign request object QR as string.
+     */
+    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+    public async getQRTypedMessageSignRequest(
+        msgParams: {
+            from: string;
+            data: any;
+        },
+        opts: {
+            version: 'V1' | 'V3' | 'V4';
+        }
+    ): Promise<string> {
+        return this._mutex.runExclusive(async () => {
+            if (
+                opts.version !== SignTypedDataVersion.V1 &&
+                typeof msgParams.data === 'string'
+            ) {
+                msgParams.data = JSON.parse(msgParams.data);
+            }
+            const dataHex = Buffer.from(msgParams.data, 'hex');
+            const requestId = v4();
+            const xfp = (this._qrHardwareKeyring as any)['xfp'];
+            const hdPath = await this._qrHardwareKeyring._pathFromAddress(
+                msgParams.from
+            );
+
+            const ethSignRequest = EthSignRequest.constructETHRequest(
+                dataHex,
+                DataType.typedData,
+                hdPath,
+                xfp,
+                requestId,
+                undefined,
+                msgParams.from
+            );
+
+            return ethSignRequest.toUREncoder().nextPart();
+        });
     }
 
     submitQRHardwareSignature(requestId: string, cbor: string) {

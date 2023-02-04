@@ -569,7 +569,6 @@ export class GasPricesController extends BaseController<GasPricesControllerState
             }
         } catch (error) {
             log.error('error calling chain fees service', error);
-            return undefined;
         }
         return undefined;
     }

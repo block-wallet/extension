@@ -1263,7 +1263,7 @@ describe('GasPrices Controller', () => {
                 networkController.getProvider(),
                 'send'
             );
-            providerStub.onFirstCall().returns(
+            providerStub.returns(
                 new Promise<any>((resolve) => {
                     resolve({
                         baseFeePerGas: [BigNumber.from('110000')],
@@ -1559,7 +1559,7 @@ describe('GasPrices Controller', () => {
                 networkController.getProvider(),
                 'send'
             );
-            providerStub.onFirstCall().returns(
+            providerStub.returns(
                 new Promise<any>((resolve) => {
                     resolve({
                         baseFeePerGas: [BigNumber.from('110000')],

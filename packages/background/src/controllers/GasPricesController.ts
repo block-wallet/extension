@@ -15,9 +15,13 @@ import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
 import httpClient from '../utils/http';
+import { MILISECOND } from '../utils/constants/time';
+import { retryHandling } from '../utils/retryHandling';
 
 const CHAIN_FEE_DATA_SERVICE_URL = 'https://chain-fee.blockwallet.io/v1';
 const BLOCKS_TO_WAIT_BEFORE_CHECKING_FOR_CHAIN_SUPPORT = 100;
+const API_CALLS_DELAY = 100 * MILISECOND;
+const API_CALLS_RETRIES = 5;
 
 export enum GasPriceLevelsEnum {
     SLOW = 'slow',
@@ -450,11 +454,16 @@ export class GasPricesController extends BaseController<GasPricesControllerState
         // Fetch the service to detect if the chain has support.
         try {
             // If the chain has support request the service
-            const feeDataResponse = await httpClient.get<FeeDataResponse>(
-                `${CHAIN_FEE_DATA_SERVICE_URL}/fee_data`,
-                {
-                    c: chainId,
-                }
+            const feeDataResponse = await retryHandling(
+                () =>
+                    httpClient.get<FeeDataResponse>(
+                        `${CHAIN_FEE_DATA_SERVICE_URL}/fee_data`,
+                        {
+                            c: chainId,
+                        }
+                    ),
+                API_CALLS_DELAY,
+                API_CALLS_RETRIES
             );
 
             if (feeDataResponse) {

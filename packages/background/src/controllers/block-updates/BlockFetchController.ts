@@ -4,10 +4,14 @@ import log from 'loglevel';
 import { BaseController } from '../../infrastructure/BaseController';
 import NetworkController from '../NetworkController';
 import httpClient, { RequestError } from '../../utils/http';
+import { retryHandling } from '../../utils/retryHandling';
+import { MILISECOND } from '../../utils/constants/time';
 
 export const BLOCKS_TO_WAIT_BEFORE_CHECHKING_FOR_CHAIN_SUPPORT = 100;
 const OFF_CHAIN_BLOCK_FETCH_SERVICE_URL = 'https://chain-fee.blockwallet.io/v1';
 const OFF_CHAIN_BLOCK_FETCH_SERVICE_MAX_REPEATED_BLOCKS_TOLERANCE = 100;
+const API_CALLS_DELAY = 100 * MILISECOND;
+const API_CALLS_RETRIES = 5;
 
 export interface BlockFetchData {
     offChainSupport: boolean;
@@ -364,11 +368,16 @@ export class OffChainBlockFetchService {
      */
     public async fetchBlockNumber(chainId: number): Promise<number> {
         try {
-            const blockDataResponse = await httpClient.get<{
-                bn: string;
-            }>(`${OFF_CHAIN_BLOCK_FETCH_SERVICE_URL}/bn`, {
-                c: chainId,
-            });
+            const blockDataResponse = await retryHandling(
+                () =>
+                    httpClient.get<{
+                        bn: string;
+                    }>(`${OFF_CHAIN_BLOCK_FETCH_SERVICE_URL}/bn`, {
+                        c: chainId,
+                    }),
+                API_CALLS_DELAY,
+                API_CALLS_RETRIES
+            );
 
             if (!blockDataResponse) {
                 throw new Error('empty response');

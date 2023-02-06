@@ -14,16 +14,16 @@ export class RequestError extends Error {
 const GET = 'GET';
 const POST = 'POST';
 
-function parseResponseBody<T>(response: Response): Promise<T> {
-    const isJson = response.headers
-        .get('content-type')
-        ?.includes('application/json');
+function isJsonResponse(r: Response) {
+    return r.headers.get('content-type')?.includes('application/json');
+}
 
-    if (isJson) {
+function parseResponseBody<T>(response: Response): Promise<T | string> {
+    if (isJsonResponse(response)) {
         return response.json() as Promise<T>;
     }
 
-    return response.text() as Promise<T>;
+    return response.text() as Promise<string>;
 }
 
 const fetchWithTimeout = async (
@@ -83,11 +83,7 @@ const request = async <T>(
     }
 
     // If response is not ok, check if content-type is json before converting.
-    const json = response.headers
-        .get('content-type')
-        ?.includes('application/json');
-
-    const data = json && (await response.json());
+    const data = isJsonResponse(response) && (await response.json());
 
     // Check if there's an 'error' or err' key in the response
     const errMessage =

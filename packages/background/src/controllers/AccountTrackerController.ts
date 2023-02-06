@@ -63,11 +63,17 @@ export interface AccountBalanceToken {
     balance: BigNumber;
 }
 export interface TokenAllowance {
+    //Whether the allowance is the unlimited value (MaxUnit256) or it is bigger than the token total supply
     isUnlimited: boolean;
+    //Stores the last time we checked the spender allowance.
+    //This property does not store the last time the allowance was updated in the contract.
     updatedAt: number;
+    //Allowance value
     value: BigNumber;
+    //Hash of the transaction that last updated the allowance
     txHash?: string;
     txTime?: number;
+    //Spender information
     spender?: ContractDetails;
 }
 export interface AccountBalanceTokens {
@@ -231,7 +237,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     );
                 } catch (err) {
                     log.warn(
-                        'An error ocurred while updating the accouns',
+                        'An error ocurred while updating the accounts',
                         err.message
                     );
                 }
@@ -547,6 +553,11 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 return;
             }
 
+            const contractDetailsCache: Record<
+                string,
+                Awaited<ReturnType<typeof fetchContractDetails>>
+            > = {};
+
             for (const tokenAddress in chainAllowances.tokens) {
                 const tokenSpenders =
                     chainAllowances.tokens[tokenAddress].allowances;
@@ -560,10 +571,12 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                 spender
                             );
                         const currentAllowanceRecord = tokenSpenders[spender];
-                        let txHash: string | undefined;
-                        let txTime: number | undefined;
+                        let txHash: string | undefined =
+                            currentAllowanceRecord.txHash;
+                        let txTime: number | undefined =
+                            currentAllowanceRecord.txTime;
 
-                        //if not equal, then store the update to be processed
+                        //If allowance has changed, then lookup for the new txHash and time.
                         if (
                             !allowance.eq(
                                 BigNumber.from(
@@ -581,20 +594,52 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                         provider
                                     ));
                             }
-                            chainAllowances.tokens[tokenAddress].allowances[
-                                spender
-                            ] = {
-                                isUnlimited:
-                                    this._calculateIsUnlimitedAllowance(
-                                        currentToken,
-                                        allowance
-                                    ),
-                                value: allowance,
-                                txHash,
-                                txTime,
-                                updatedAt: new Date().getTime(),
-                            };
                         }
+
+                        let contractDetails: Awaited<
+                            ReturnType<typeof fetchContractDetails>
+                        > = contractDetailsCache[spender];
+
+                        try {
+                            //Reftech spender contract details if we hadn't fetch it
+                            if (!contractDetails) {
+                                contractDetails = await fetchContractDetails(
+                                    chainId,
+                                    spender
+                                );
+                                contractDetailsCache[spender] = contractDetails;
+                            }
+                        } catch (e) {
+                            log.warn('Error fetching contract details', e);
+                        }
+
+                        const newSpenderInfo = {
+                            logoURI:
+                                contractDetails?.logoURI ||
+                                currentAllowanceRecord.spender?.logoURI,
+                            name:
+                                contractDetails?.name ||
+                                currentAllowanceRecord.spender?.name,
+                            websiteURL:
+                                contractDetails?.websiteURL ||
+                                currentAllowanceRecord.spender?.websiteURL,
+                        };
+
+                        chainAllowances.tokens[tokenAddress].allowances[
+                            spender
+                        ] = {
+                            isUnlimited: this._calculateIsUnlimitedAllowance(
+                                currentToken,
+                                allowance
+                            ),
+                            value: allowance,
+                            txHash,
+                            txTime,
+                            updatedAt: new Date().getTime(),
+                            spender: newSpenderInfo.name
+                                ? (newSpenderInfo as ContractDetails)
+                                : undefined,
+                        };
                     } catch (e) {
                         log.warn(
                             'Error requesting _tokenOperationsController.allowance',

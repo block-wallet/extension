@@ -7,8 +7,8 @@ const CONTRACTS_URL =
 
 export interface ContractDetails {
     name: string;
-    logoURI: string;
-    websiteURL: string;
+    logoURI?: string;
+    websiteURL?: string;
 }
 
 function ensureURLWithProtocol(url: string): string {

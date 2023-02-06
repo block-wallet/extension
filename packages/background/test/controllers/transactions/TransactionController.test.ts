@@ -30,6 +30,7 @@ import BlockUpdatesController from '@block-wallet/background/controllers/block-u
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TokenController } from '@block-wallet/background/controllers/erc-20/TokenController';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
 
 // TODO: Test gas override
 
@@ -123,11 +124,12 @@ describe('Transactions Controller', () => {
                 gasPricesController,
                 tokenController,
                 blockUpdatesController,
+                mockKeyringController,
                 {
                     transactions: [],
                     txSignTimeout: 0,
                 },
-                async (ethTx: TypedTransaction) => {
+                async (_: string, ethTx: TypedTransaction) => {
                     const privateKey = Buffer.from(
                         mockedAccounts.goerli[0].key,
                         'hex'
@@ -455,11 +457,12 @@ describe('Transactions Controller', () => {
                 gasPricesController,
                 tokenController,
                 blockUpdatesController,
+                mockKeyringController,
                 {
                     transactions: [],
                     txSignTimeout: 0,
                 },
-                async (ethTx: TypedTransaction) => {
+                async (_: string, ethTx: TypedTransaction) => {
                     const privateKey = Buffer.from(
                         mockedAccounts.goerli[0].key,
                         'hex'
@@ -1776,11 +1779,12 @@ describe('Transactions Controller', () => {
                 gasPricesController,
                 tokenController,
                 blockUpdatesController,
+                mockKeyringController,
                 {
                     transactions: [],
                     txSignTimeout: 0,
                 },
-                async (ethTx: TypedTransaction) => {
+                async (_: string, ethTx: TypedTransaction) => {
                     const privateKey = Buffer.from(
                         mockedAccounts.goerli[0].key,
                         'hex'

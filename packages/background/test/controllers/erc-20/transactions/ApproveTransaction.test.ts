@@ -29,6 +29,7 @@ import { getNetworkControllerInstance } from '../../../mocks/mock-network-instan
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
 
 describe('ApproveTransaction implementation', function () {
     const daiAddress = '0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60';
@@ -94,11 +95,12 @@ describe('ApproveTransaction implementation', function () {
             gasPricesController,
             tokenController,
             blockUpdatesController,
+            mockKeyringController,
             {
                 transactions: [],
                 txSignTimeout: 0,
             },
-            async (ethTx: TypedTransaction) => {
+            async (_: string, ethTx: TypedTransaction) => {
                 const privateKey = Buffer.from(accounts.goerli[0].key, 'hex');
                 return Promise.resolve(ethTx.sign(privateKey));
             },

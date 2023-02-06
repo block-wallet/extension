@@ -17,6 +17,7 @@ import { isTransactionOrRequestAwaitingSigning } from "./transactionUtils"
  * @param status The transaction/signing request status
  * @returns The message to display when awaiting signing
  */
+// TODO (KEYSTONE): Add a proper message for keystone flow.
 export const getAwaitingSigningMessage = (
     accountType: AccountType,
     status: TransactionStatus | DappRequestSigningStatus,

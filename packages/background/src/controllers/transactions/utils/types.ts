@@ -97,6 +97,12 @@ export interface TransactionMeta {
     originId?: string;
     exchangeParams?: ExchangeParams;
     bridgeParams?: BridgeTransactionParams;
+    qrParams?: QRTransactionParams;
+}
+
+export interface QRTransactionParams {
+    requestId: string;
+    qrSignRequest: string;
 }
 
 export interface BridgeTransactionParams {
@@ -222,4 +228,10 @@ export interface TransactionAdvancedData {
     customNonce?: number;
     flashbots?: boolean;
     slippage?: number;
+}
+
+export interface SignatureData {
+    r: Buffer;
+    s: Buffer;
+    v: bigint;
 }

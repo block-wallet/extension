@@ -113,7 +113,6 @@ import type {
     CancelQRHardwareSignRequestMessage,
     GetQRHardwareMessageSignRequestMessage,
     GetQRHardwareTypedMessageSignRequestMessage,
-    GetQRHardwareETHSignRequestMessage,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -229,10 +228,7 @@ import RemoteConfigsController, {
     RemoteConfigsControllerState,
 } from './RemoteConfigsController';
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
-import {
-    EthSignRequest,
-    URRegistryDecoder,
-} from '@keystonehq/bc-ur-registry-eth';
+import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -378,8 +374,11 @@ export default class BlankController extends EventEmitter {
             this.gasPricesController,
             this.tokenController,
             this.blockUpdatesController,
+            this.keyringController,
             initState.TransactionController,
-            this.keyringController.signTransaction.bind(this.keyringController)
+            this.keyringController.signEthTransaction.bind(
+                this.keyringController
+            )
         );
 
         this.privacyController = new PrivacyAsyncController({
@@ -1036,11 +1035,6 @@ export default class BlankController extends EventEmitter {
             case Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT:
                 return this.hardwareQrSubmitCryptoHdKeyOrAccount(
                     request as SubmitQRHardwareCryptoHDKeyOrAccountMessage
-                );
-
-            case Messages.WALLET.HARDWARE_QR_GET_ETH_SIGNATURE_REQUEST:
-                return this.hardwareQrETHSignRequest(
-                    request as GetQRHardwareETHSignRequestMessage
                 );
             case Messages.WALLET.HARDWARE_QR_GET_MESSAGE_SIGNATURE_REQUEST:
                 return this.hardwareQrMessageSignRequest(
@@ -3189,22 +3183,6 @@ export default class BlankController extends EventEmitter {
         }
     }
 
-    private async hardwareQrETHSignRequest({
-        ethTx,
-        _fromAddress,
-    }: GetQRHardwareETHSignRequestMessage): Promise<string> {
-        console.log('hardwareQrETHSignRequest', { ethTx, _fromAddress });
-        try {
-            return await this.keyringController.getQRETHSignRequest(
-                ethTx,
-                _fromAddress
-            );
-        } catch (err) {
-            log.error(err);
-            return '';
-        }
-    }
-
     private async hardwareQrMessageSignRequest({
         from,
         data,
@@ -3242,10 +3220,33 @@ export default class BlankController extends EventEmitter {
     }
 
     private async hardwareQrSubmitSignature({
+        requestId,
         qr,
     }: SubmitQRHardwareSignatureMessage): Promise<boolean> {
-        this.keyringController.submitQRHardwareSignature('requestId', 'cbor');
-        return true;
+        console.log('hardwareQrSubmitSignature', { qr });
+        try {
+            const decoder = new URRegistryDecoder();
+            if (!decoder.receivePart(qr)) {
+                return false;
+            }
+
+            if (!decoder.isSuccess() || decoder.isError()) {
+                console.log(decoder.resultError());
+                return false;
+            }
+
+            const result = decoder.resultRegistryType();
+            const ur = result.toUR();
+
+            this.keyringController.submitQRHardwareSignature(
+                requestId,
+                ur.cbor
+            );
+            return true;
+        } catch (err) {
+            log.error(err);
+            return false;
+        }
     }
 
     private async hardwareQrCancelSync({}: CancelSyncQRHardwareMessage): Promise<boolean> {

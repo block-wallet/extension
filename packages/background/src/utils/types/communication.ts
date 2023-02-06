@@ -1104,6 +1104,7 @@ export interface SubmitQRHardwareCryptoHDKeyOrAccountMessage {
     qr: string;
 }
 export interface SubmitQRHardwareSignatureMessage {
+    requestId: string;
     qr: string;
 }
 export interface CancelSyncQRHardwareMessage {}

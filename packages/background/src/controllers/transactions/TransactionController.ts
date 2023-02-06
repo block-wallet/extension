@@ -20,6 +20,7 @@ import { v4 as uuid } from 'uuid';
 import { Mutex } from 'async-mutex';
 import {
     MetaType,
+    QRTransactionParams,
     TransactionCategories,
     TransactionEvents,
     TransactionMeta,
@@ -65,6 +66,9 @@ import {
 } from '../../utils/hardware';
 import { NFTContract } from '../erc-721/NFTContract';
 import httpClient from '../../utils/http';
+import KeyringControllerDerivated, {
+    KeyringControllerEvents,
+} from '../KeyringControllerDerivated';
 
 /**
  * It indicates the amount of blocks to wait after marking
@@ -271,14 +275,17 @@ export class TransactionController extends BaseController<
         private readonly _gasPricesController: GasPricesController,
         private readonly _tokenController: TokenController,
         private readonly _blockUpdatesController: BlockUpdatesController,
+        private readonly _keyringController: KeyringControllerDerivated,
         initialState: TransactionControllerState,
         /**
          * Method used to sign transactions
          */
         public sign: (
+            transactionId: string,
             transaction: TypedTransaction,
             from: string
         ) => Promise<TypedTransaction>,
+
         public config: {
             txHistoryLimit: number;
         } = {
@@ -347,9 +354,37 @@ export class TransactionController extends BaseController<
             this._blockUpdatesCallback
         );
 
+        // Subscription to QR signature requests
+        this._keyringController.on(
+            KeyringControllerEvents.QR_SIGNATURE_REQUEST_GENERATED,
+            this.updateTransactionQRSignatureRequest
+        );
+
         // Show browser notification on transaction status update
         this.subscribeNotifications();
     }
+
+    // Sets a qrSignRequest in a transaction meta object
+    private updateTransactionQRSignatureRequest = async (
+        transactionId: string,
+        requestId: string,
+        qrSignRequest: string
+    ) => {
+        const transactionMeta = this.getTransaction(transactionId);
+        if (transactionMeta) {
+            transactionMeta.qrParams = {
+                requestId,
+                qrSignRequest,
+            } as QRTransactionParams;
+
+            console.log('transaction controller', 'qr sign request set', {
+                transactionId,
+                qrParams: transactionMeta.qrParams,
+            });
+
+            this.updateTransaction(transactionMeta);
+        }
+    };
 
     /**
      * _blockUpdatesCallback
@@ -829,6 +864,9 @@ export class TransactionController extends BaseController<
         let provider: StaticJsonRpcProvider;
 
         if (!transactionMeta) {
+            // Release approve lock
+            releaseLock();
+
             throw new Error('The specified transaction does not exist');
         }
 
@@ -1018,7 +1056,7 @@ export class TransactionController extends BaseController<
                     timeoutRef = setTimeout(() => {
                         reject(new SignTimeoutError());
                     }, txTimeout);
-                    this.sign(unsignedEthTx, from)
+                    this.sign(transactionId, unsignedEthTx, from)
                         .then(resolve)
                         .catch(reject)
                         .finally(__clearTimeouts);
@@ -1047,10 +1085,18 @@ export class TransactionController extends BaseController<
             txParams
         );
 
+        console.log('transaction controller', 'calling signWithTimeout');
+
         const signedTx = await this.signWithTimeout(
             transactionId,
             unsignedEthTx,
             from
+        );
+
+        console.log(
+            'transaction controller',
+            'signWithTimeout result',
+            signedTx
         );
 
         // Add r,s,v values

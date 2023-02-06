@@ -36,6 +36,7 @@ import { TypedTransaction } from '@ethereumjs/tx';
 import { mockedPermissionsController } from 'test/mocks/mock-permissions';
 import { GasPricesController } from '@block-wallet/background/controllers/GasPricesController';
 import PermissionsController from '@block-wallet/background/controllers/PermissionsController';
+import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
 
 describe('AccountTracker controller implementation', function () {
     const accounts = {
@@ -106,11 +107,12 @@ describe('AccountTracker controller implementation', function () {
             gasPricesController,
             tokenController,
             blockUpdatesController,
+            mockKeyringController,
             {
                 transactions: [],
                 txSignTimeout: 0,
             },
-            async (ethTx: TypedTransaction) => {
+            async (_: string, ethTx: TypedTransaction) => {
                 const privateKey = Buffer.from(accounts.goerli[0].key, 'hex');
                 return Promise.resolve(ethTx.sign(privateKey));
             },

@@ -253,7 +253,7 @@ jobs:
 
       - name: Install ImageMagick (needed for convert)
         run: |
-          apt install -y imagemagick
+          apt update && apt install -y imagemagick --fix-missing
 
       - name: Cut the screenshot
         run: |

@@ -139,8 +139,8 @@ describe('Transactions Controller', () => {
 
             sinon
                 .stub(
-                    transactionController['_contractSignatureParser'],
-                    'lookup'
+                    transactionController['_contractSignatureParser'] as any,
+                    '_lookup'
                 )
                 .returns(Promise.resolve(['multicall(bytes[] data)']));
         });
@@ -951,15 +951,15 @@ describe('Transactions Controller', () => {
         it('Should determine different transaction categories correctly', async () => {
             sinon
                 .stub(
-                    transactionController['_contractSignatureParser'],
-                    'lookup'
+                    transactionController['_contractSignatureParser'] as any,
+                    '_lookup'
                 )
                 .returns(Promise.resolve(['multicall(uint256,bytes[])']));
 
             sinon
                 .stub(
-                    transactionController['_contractSignatureParser'],
-                    'fetchABIFromEtherscan'
+                    transactionController['_contractSignatureParser'] as any,
+                    '_fetchABIFromEtherscan'
                 )
                 .returns(Promise.resolve(undefined));
 
@@ -1792,8 +1792,8 @@ describe('Transactions Controller', () => {
 
             sinon
                 .stub(
-                    transactionController['_contractSignatureParser'],
-                    'lookup'
+                    transactionController['_contractSignatureParser'] as any,
+                    '_lookup'
                 )
                 .returns(Promise.resolve(['multicall(bytes[] data)']));
         });

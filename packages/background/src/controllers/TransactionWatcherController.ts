@@ -71,7 +71,6 @@ export interface TransactionsWatched {
 }
 
 export interface TokenAllowanceEventWatched {
-    events: TokenAllowanceEvent;
     lastBlockQueried: number;
 }
 
@@ -298,7 +297,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         }
 
         return {
-            events: {},
             lastBlockQueried: 0,
         } as TokenAllowanceEventWatched;
     }
@@ -394,19 +392,15 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         if (!(address in state.tokenAllowanceEvents[chainId])) {
             state.tokenAllowanceEvents[chainId][address] = {
                 txlist: {
-                    events: {},
                     lastBlockQueried: 0,
                 },
                 token1155tx: {
-                    events: {},
                     lastBlockQueried: 0,
                 },
                 tokentx: {
-                    events: {},
                     lastBlockQueried: 0,
                 },
                 tokennfttx: {
-                    events: {},
                     lastBlockQueried: 0,
                 },
             };
@@ -414,21 +408,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
         if (!(type in state.transactions[chainId][address])) {
             state.tokenAllowanceEvents[chainId][address][type] = {
-                events: {},
                 lastBlockQueried: 0,
-            };
-        }
-
-        for (const tokenAddress in eventsWatched.events) {
-            const previousRecord =
-                state.tokenAllowanceEvents[chainId][address][type].events[
-                    tokenAddress
-                ] || {};
-            state.tokenAllowanceEvents[chainId][address][type].events[
-                tokenAddress
-            ] = {
-                ...previousRecord,
-                ...eventsWatched.events[tokenAddress],
             };
         }
 
@@ -559,10 +539,10 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                         }
                     }
 
-                    if (fetchEtherscanApi) {
+                    if (fetchEtherscanApi && etherscanApiUrl) {
                         try {
                             const etherscanFetcher = new EtherscanFetcher(
-                                etherscanApiUrl!
+                                etherscanApiUrl
                             );
                             const result = await this._getTransactionsFromAPI(
                                 etherscanFetcher,
@@ -707,7 +687,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                     }
 
                     this.setAllowancesState(chainId, address, transactionType, {
-                        events: allowanceEvents,
                         lastBlockQueried: currentBlock,
                     });
 

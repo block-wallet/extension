@@ -8,7 +8,7 @@ import { Classes } from "../../styles"
 
 interface Props {
     onBack: () => void
-    onSuccess: () => void
+    onSuccess: (qrSignature: string) => void
 }
 
 const SendSignReadQR: FC<Props> = ({ onBack, onSuccess }) => {
@@ -19,28 +19,11 @@ const SendSignReadQR: FC<Props> = ({ onBack, onSuccess }) => {
         const resultOk = await connect()
         setDeviceNotReady(!resultOk)
         if (resultOk) {
-            onSuccess
+            onSuccess(qr)
         }
     }
 
     return (
-        // <PopupLayout
-        //     header={
-        //         <PopupHeader
-        //             title=""
-        //             networkIndicator
-        //             keepState
-        //             onBack={onBack}
-        //         />
-        //     }
-        // >
-        //     <div className="pt-8 px-8 flex w-full">
-        //         <span className=" px-6 text-base leading-relaxed text-center text-gray-600 w-full">
-
-        //         </span>
-        //     </div>
-
-        // </PopupLayout>
         <div className="flex flex-col items-center justify-center">
             QR Signature
             {

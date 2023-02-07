@@ -19,6 +19,7 @@ import { secondsToMMSS } from "../../util/time"
 import { QRTransactionParams } from "@block-wallet/background/controllers/transactions/utils/types"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import TransactionQR from "../../components/qr/TransactionQR"
+import { hardwareQrSubmitSignature } from "../commActions"
 
 const messages: {
     [key in HardwareWalletOpTypes]: {
@@ -188,6 +189,7 @@ export const useTransactionWaitingDialog = (
         defaultStatus: "idle",
     })
     const txTimeout = useTransactionTimeout()
+
     useEffect(() => {
         if (transaction?.status) {
             console.log("Transaccion estado:")
@@ -202,9 +204,26 @@ export const useTransactionWaitingDialog = (
                     transaction?.status,
                     operation
                 )
+                const handleQRSignatureProvided = (qrSignature: string) => {
+                    if (transaction.qrParams) {
+                        hardwareQrSubmitSignature(
+                            transaction.qrParams.requestId,
+                            qrSignature
+                        )
+                    } else {
+                        useCallback(
+                            () =>
+                                dispatch({
+                                    type: "close",
+                                }),
+                            [dispatch]
+                        )
+                    }
+                }
                 console.log("useTransactionWaitingDialog", {
                     qrParanms: transaction.qrParams,
                 })
+
                 dispatch({
                     type: "open",
                     payload: {
@@ -212,32 +231,46 @@ export const useTransactionWaitingDialog = (
                         titles: { loading: message.titles.confirming },
                         texts: {
                             loading: isHardwareWallet(accountType) ? (
-                                <WaitingHWConfirmation
-                                    message={
-                                        hwDeviceMessage ??
-                                        message.texts.confirming
-                                    }
-                                    operation={operation}
-                                    reject={callbacks.reject}
-                                    txTime={transaction?.epochTime}
-                                    txTimeout={txTimeout}
-                                />
+                                getDeviceFromAccountType(accountType) !==
+                                Devices.KEYSTONE ? (
+                                    <WaitingHWConfirmation
+                                        message={
+                                            hwDeviceMessage ??
+                                            message.texts.confirming
+                                        }
+                                        operation={operation}
+                                        reject={callbacks.reject}
+                                        txTime={transaction?.epochTime}
+                                        txTimeout={txTimeout}
+                                    />
+                                ) : (
+                                    <TransactionQR
+                                        qrParams={transaction.qrParams}
+                                        onBack={() =>
+                                            dispatch({ type: "close" })
+                                        }
+                                        onQRSignatureProvided={(
+                                            qrSignature: string
+                                        ) => {
+                                            if (transaction.qrParams) {
+                                                hardwareQrSubmitSignature(
+                                                    transaction.qrParams
+                                                        .requestId,
+                                                    qrSignature
+                                                )
+                                            } else {
+                                                useCallback(
+                                                    () =>
+                                                        dispatch({
+                                                            type: "close",
+                                                        }),
+                                                    [dispatch]
+                                                )
+                                            }
+                                        }}
+                                    />
+                                )
                             ) : (
-                                // <TransactionQR
-                                //     QRValue={"UN QR DE PRUEBA"}
-                                //     onBack={
-                                //         () => {
-                                //             console.log("Atras")
-                                //         }
-                                //         //     useCallback(
-                                //         //     () => dispatch({ type: "close" }),
-                                //         //     [dispatch]
-                                //         // )
-                                //     }
-                                //     onQRSignatureProvided={() => {
-                                //         console.log("Tengo la firma")
-                                //     }}
-                                // />
                                 message.texts.confirming
                             ),
                         },
@@ -297,43 +330,6 @@ export const useTransactionWaitingDialog = (
                     },
                 })
             }
-        } else if (
-            getDeviceFromAccountType(accountType) === Devices.KEYSTONE &&
-            operation === HardwareWalletOpTypes.SIGN_TRANSACTION
-        ) {
-            dispatch({
-                type: "open",
-                payload: {
-                    status: "loading",
-                    texts: {
-                        loading: (
-                            <TransactionQR
-                                QRValue={"UN QR DE PRUEBA"}
-                                onBack={
-                                    () => {
-                                        console.log("Atras")
-                                    }
-                                    //     useCallback(
-                                    //     () => dispatch({ type: "close" }),
-                                    //     [dispatch]
-                                    // )
-                                }
-                                onQRSignatureProvided={() => {
-                                    console.log("Tengo la firma")
-                                }}
-                            />
-                        ),
-                    },
-                    gifs: {
-                        loading: isHardwareWallet(accountType) ? (
-                            <AnimatedIcon
-                                className="w-12 h-12 m-auto"
-                                icon={AnimatedIconName.DeviceInteraction}
-                            />
-                        ) : undefined,
-                    },
-                },
-            })
         }
     }, [
         transaction?.id,

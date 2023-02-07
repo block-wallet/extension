@@ -186,9 +186,6 @@ const PopupPage = () => {
                                     fill={getAccountColor(checksumAddress)}
                                 />
                             </Link>
-                            <Link to="/send/transaction-qr">
-                                A navegar a QR
-                            </Link>
                             <Tooltip
                                 className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-bold bg-gray-900 text-white"
                                 content={

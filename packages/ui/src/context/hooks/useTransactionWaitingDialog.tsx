@@ -204,22 +204,6 @@ export const useTransactionWaitingDialog = (
                     transaction?.status,
                     operation
                 )
-                const handleQRSignatureProvided = (qrSignature: string) => {
-                    if (transaction.qrParams) {
-                        hardwareQrSubmitSignature(
-                            transaction.qrParams.requestId,
-                            qrSignature
-                        )
-                    } else {
-                        useCallback(
-                            () =>
-                                dispatch({
-                                    type: "close",
-                                }),
-                            [dispatch]
-                        )
-                    }
-                }
                 console.log("useTransactionWaitingDialog", {
                     qrParanms: transaction.qrParams,
                 })

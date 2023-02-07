@@ -25,38 +25,31 @@ const SendSignReadQR: FC<Props> = ({ onBack, onSuccess }) => {
 
     return (
         <div className="flex flex-col items-center justify-center">
-            QR Signature
-            {
-                <div className="mt-2">
-                    <Divider />
-                    <div className="mt-2 text-xs">
-                        <div className="mt-1">
-                            <span>
-                                Please scan your Keystone QR code. The blur
-                                effect does not affect the scanning ability.
-                            </span>
-                            <br />
-                            <div className="items-center">
-                                <QrContainer
-                                    onRead={onQRRead}
-                                    deviceNotReady={deviceNotReady}
-                                />
-                            </div>
-                            <Divider />
-                            <div>
-                                <ButtonWithLoading
-                                    label="Cancel"
-                                    buttonClass={classnames(
-                                        Classes.liteButton,
-                                        "h-6"
-                                    )}
-                                    onClick={onBack}
-                                />
-                            </div>
+            <div className="mt-2">
+                <div className="mt-2 text-xs">
+                    <div className="mt-1">
+                        <span>
+                            Please scan your Keystone QR code. The blur effect
+                            does not affect the scanning ability.
+                        </span>
+                        <br />
+                        <div className="items-center">
+                            <QrContainer
+                                onRead={onQRRead}
+                                deviceNotReady={deviceNotReady}
+                            />
+                        </div>
+                        <Divider />
+                        <div className="flex w-full space-x-2 mt-3">
+                            <ButtonWithLoading
+                                label="Cancel"
+                                buttonClass={Classes.darkButton}
+                                onClick={onBack}
+                            />
                         </div>
                     </div>
                 </div>
-            }
+            </div>
         </div>
     )
 }

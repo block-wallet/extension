@@ -96,6 +96,7 @@ const AllowanceItem = ({
                     "tx"
                 ),
             content: allowance.txHash,
+            copyable: true,
         },
         {
             title: "Last Updated",
@@ -118,10 +119,12 @@ const AllowanceItem = ({
                 "address"
             ),
             content: spender.address,
+            copyable: true,
         },
         {
             title: "Spender Website",
             content: spender.websiteURL,
+            copyable: true,
         },
         {
             title: "Allowance Value",
@@ -144,6 +147,7 @@ const AllowanceItem = ({
                 "address"
             ),
             content: token.address,
+            copyable: true,
         },
     ]
 

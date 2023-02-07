@@ -7,12 +7,15 @@ import Divider from "../Divider"
 import openExternal from "../../assets/images/icons/open_external.svg"
 import CloseIcon from "../icons/CloseIcon"
 import { Classes } from "../../styles"
+import useCopyToClipboard from "../../util/hooks/useCopyToClipboard"
+import CopyTooltip from "../label/СopyToClipboardTooltip"
 
 export type option = {
     title: string | JSX.Element
     content: string | JSX.Element | undefined
-    expandable?: boolean
+    expandable?: boolean // if true, full content will be shown on click otherwise only first line
     link?: string
+    copyable?: boolean // if true, content will be copied to clipboard on click. preferably not used with expandable
 }
 
 type TextSizes = "text-base" | "text-lg" | "text-sm" | "text-xs"
@@ -26,7 +29,7 @@ type DetailsDialogProps = {
     open: boolean
     onClose: () => void
     options: option[]
-    expandedByDefault?: boolean
+    expandedByDefault?: boolean // if true, all options will be expanded by default
     onOption?: (option: option) => React.ReactNode
     showUndefined?: boolean
 }
@@ -47,6 +50,8 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
     const [expends, setExpends] = useState<boolean[]>(
         new Array(options.length).fill(expandedByDefault)
     )
+
+    const { onCopy, copied } = useCopyToClipboard()
 
     const previousLengthRef = useRef(options.length)
 
@@ -157,7 +162,22 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                                                 )}
                                             </div>
                                         )}
-                                        <div className="flex w-full">
+                                        <div
+                                            className={classnames(
+                                                "flex w-full",
+                                                option.copyable &&
+                                                    "cursor-pointer group relative"
+                                            )}
+                                            onClick={(_) => {
+                                                if (
+                                                    option.copyable &&
+                                                    typeof option.content ===
+                                                        "string"
+                                                ) {
+                                                    onCopy(option.content)
+                                                }
+                                            }}
+                                        >
                                             <p
                                                 className={classnames(
                                                     itemContentSize,
@@ -190,6 +210,7 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                                             >
                                                 {option.content ?? "N/A"}
                                             </p>
+                                            <CopyTooltip copied={copied} />
                                         </div>
                                     </div>
                                 )

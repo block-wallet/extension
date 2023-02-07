@@ -43,15 +43,13 @@ import {
 import TransactionDetails from "./TransactionDetails"
 import { useTokensList } from "../../context/hooks/useTokensList"
 
-const transactionMessages = {
+const TRANSACTION_STATIC_MESSAGES = {
     [TransactionCategories.BLANK_DEPOSIT]: "Privacy Pool Deposit",
     [TransactionCategories.BLANK_WITHDRAWAL]: "Privacy Pool Withdraw",
     [TransactionCategories.INCOMING]: "Received Ether",
     [TransactionCategories.SENT_ETHER]: "Sent Ether",
     [TransactionCategories.CONTRACT_DEPLOYMENT]: "Deploy Contract",
     [TransactionCategories.CONTRACT_INTERACTION]: "Contract Interaction",
-    [TransactionCategories.TOKEN_METHOD_APPROVE]: "Allowance Approval",
-    [TransactionCategories.TOKEN_METHOD_REVOKE]: "Revoke Allowance",
     [TransactionCategories.TOKEN_METHOD_TRANSFER]: "Token Transfer",
     [TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER]: "Received Token",
     [TransactionCategories.TOKEN_METHOD_TRANSFER_FROM]: "Token Transfer From",
@@ -62,16 +60,15 @@ const transactionMessages = {
     [TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER]: "Incoming Bridge",
 }
 
-const pendingTransactionMessages: { [x: string]: string } = {
+const PENDING_TRANSACTION_STATIC_MESSAGES: { [x: string]: string } = {
     [TransactionCategories.CONTRACT_DEPLOYMENT]: "Deploying Contract",
-    [TransactionCategories.TOKEN_METHOD_APPROVE]: "Approving Allowance",
-    [TransactionCategories.TOKEN_METHOD_REVOKE]: "Revoking Allowance",
     [TransactionCategories.TOKEN_METHOD_TRANSFER]: "Transferring Tokens",
 }
 
 const getTransactionMessage = (
     category: TransactionCategories,
-    symbol: string
+    symbol: string,
+    advancedData: TransactionMeta["advancedData"]
 ) => {
     const message = (() => {
         switch (category) {
@@ -79,8 +76,16 @@ const getTransactionMessage = (
                 return `Sent ${symbol}`
             case TransactionCategories.INCOMING:
                 return `Received ${symbol}`
+            case TransactionCategories.TOKEN_METHOD_APPROVE:
+                if (
+                    advancedData?.allowance &&
+                    BigNumber.from(advancedData.allowance).eq(0)
+                ) {
+                    return `Allowance Revoke`
+                }
+                return `Allowance Approval`
             default:
-                return transactionMessages[category]
+                return TRANSACTION_STATIC_MESSAGES[category]
         }
     })()
 
@@ -90,14 +95,23 @@ const getTransactionMessage = (
 const getPendingTransactionMessage = (
     category: TransactionCategories,
     metaType: MetaType,
-    symbol: string
+    symbol: string,
+    advancedData: TransactionMeta["advancedData"]
 ) => {
     const message = (() => {
         switch (category) {
             case TransactionCategories.SENT_ETHER:
                 return `Sending ${symbol}`
+            case TransactionCategories.TOKEN_METHOD_APPROVE:
+                if (
+                    advancedData?.allowance &&
+                    BigNumber.from(advancedData.allowance).eq(0)
+                ) {
+                    return `Revoking Allowance`
+                }
+                return `Approving Allowance`
             default:
-                return pendingTransactionMessages[category]
+                return PENDING_TRANSACTION_STATIC_MESSAGES[category]
         }
     })()
 
@@ -143,9 +157,6 @@ const transactionIcons = {
     [TransactionCategories.CONTRACT_DEPLOYMENT]: <FiUpload />,
     [TransactionCategories.CONTRACT_INTERACTION]: <FaExchangeAlt />,
     [TransactionCategories.TOKEN_METHOD_APPROVE]: (
-        <RiCopperCoinFill size="1.5rem" />
-    ),
-    [TransactionCategories.TOKEN_METHOD_REVOKE]: (
         <RiCopperCoinFill size="1.5rem" />
     ),
     [TransactionCategories.TOKEN_METHOD_TRANSFER]: (
@@ -319,7 +330,8 @@ const getTransactionLabel = (
     pendingIndex: number | undefined,
     transactionCategory: TransactionCategories | undefined,
     methodSignature: TransactionMeta["methodSignature"],
-    networkNativeCurrency: { symbol: string }
+    networkNativeCurrency: { symbol: string },
+    advancedData: TransactionMeta["advancedData"]
 ): string => {
     const getCategoryMessage = () => {
         const isPending =
@@ -329,20 +341,20 @@ const getTransactionLabel = (
             return "Transaction"
         }
 
+        const txMessage = getTransactionMessage(
+            transactionCategory,
+            networkNativeCurrency.symbol,
+            advancedData
+        )
+
         return isPending
             ? getPendingTransactionMessage(
                   transactionCategory,
                   metaType,
-                  networkNativeCurrency.symbol
-              ) ||
-                  getTransactionMessage(
-                      transactionCategory,
-                      networkNativeCurrency.symbol
-                  )
-            : getTransactionMessage(
-                  transactionCategory,
-                  networkNativeCurrency.symbol
-              )
+                  networkNativeCurrency.symbol,
+                  advancedData
+              ) || txMessage
+            : txMessage
     }
 
     const defaultCategory = getCategoryMessage()
@@ -422,6 +434,8 @@ const TransactionItem: React.FC<{
         isQueued,
         forceDrop,
         bridgeParams,
+        transactionCategory,
+        advancedData,
     } = transaction
     const bridgeTransactionsData = useGetBridgeTransactionsData(transaction)
 
@@ -464,13 +478,6 @@ const TransactionItem: React.FC<{
             transfer.amount = BigNumber.from("0")
         }
     }
-    // Change transaction category to Revoke if it's an approve action with zero allowance
-    const transactionCategory =
-        transaction.transactionCategory ===
-            TransactionCategories.TOKEN_METHOD_APPROVE &&
-        BigNumber.from(transaction.advancedData?.allowance).eq(0)
-            ? TransactionCategories.TOKEN_METHOD_REVOKE
-            : transaction.transactionCategory
 
     const label = getTransactionLabel(
         status,
@@ -478,7 +485,8 @@ const TransactionItem: React.FC<{
         index,
         transactionCategory,
         methodSignature,
-        networkNativeCurrency
+        networkNativeCurrency,
+        advancedData
     )
 
     const txValueSign = (() => {

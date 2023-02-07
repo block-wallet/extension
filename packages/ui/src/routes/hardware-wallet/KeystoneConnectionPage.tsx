@@ -1,6 +1,6 @@
 import { Devices } from "../../context/commTypes"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import QrContainer from "../../components/qr/qr-reader"
+import QrContainer from "../../components/qr/QRReader"
 import HardwareWalletSetupLayout from "./SetupLayout"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import classnames from "classnames"

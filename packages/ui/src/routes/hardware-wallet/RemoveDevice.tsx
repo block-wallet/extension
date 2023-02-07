@@ -9,6 +9,7 @@ import Divider from "../../components/Divider"
 // Assets & icons
 import ledger from "../../assets/images/icons/ledger.svg"
 import trezor from "../../assets/images/icons/trezor.svg"
+import keystone from "../../assets/images/icons/keystone.svg"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes } from "../../styles"
 
@@ -86,7 +87,7 @@ const HardwareWalletRemoveDevicePage = () => {
                     >
                         <img
                             src={ledger}
-                            alt="Connect Ledger"
+                            alt="Remove Ledger hardware wallet"
                             className="h-8"
                         />
                         {isDeviceImported(Devices.LEDGER)} Accounts
@@ -109,7 +110,7 @@ const HardwareWalletRemoveDevicePage = () => {
                     >
                         <img
                             src={trezor}
-                            alt="Connect Trezor"
+                            alt="Remove Trezor hardware wallet"
                             className="h-8"
                         />
                         {isDeviceImported(Devices.TREZOR)} Accounts
@@ -131,8 +132,8 @@ const HardwareWalletRemoveDevicePage = () => {
                         style={{ height: "120px" }}
                     >
                         <img
-                            src={trezor}
-                            alt="Connect Keyston QR"
+                            src={keystone}
+                            alt="Remove Keystone hardware wallet"
                             className="h-8"
                         />
                         {isDeviceImported(Devices.KEYSTONE)} Accounts

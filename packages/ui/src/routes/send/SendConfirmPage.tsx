@@ -401,7 +401,7 @@ const SendConfirmPage = () => {
                   data.amount.toString(),
                   selectedToken!.token.decimals || DEFAULT_DECIMALS // Default to eth decimals
               )
-
+        console.log("Pasa")
         dispatch({ type: "open", payload: { status: "loading" } })
 
         const isLinked = await checkDeviceIsLinked()

@@ -58,6 +58,7 @@ import ManuallyAddNetwork from "../routes/networks/ManuallyAddNetwork"
 import SetupBridgePage from "../routes/bridge/BridgeSetupPage"
 import BridgeConfirmPage from "../routes/bridge/BridgeConfirmPage"
 import BridgeAfterAddTokenPage from "../routes/bridge/BridgeAfterAddTokenPage"
+import testfileQR from "../routes/testfile"
 
 export const ROUTES_DEFINITION = [
     /* Root */
@@ -110,6 +111,7 @@ export const ROUTES_DEFINITION = [
     },
     /* Send */
     { path: "/send", exact: true, component: SendPage },
+    { path: "/send/transaction-qr", exact: true, component: testfileQR },
     {
         path: "/send/confirm",
         exact: true,

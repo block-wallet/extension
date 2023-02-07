@@ -15,6 +15,7 @@ import { isHardwareWallet } from "../../util/account"
 import { useBlankState } from "../background/backgroundHooks"
 import useCountdown from "../../util/hooks/useCountdown"
 import { secondsToMMSS } from "../../util/time"
+import { QRTransactionParams } from "@block-wallet/background/controllers/transactions/utils/types"
 
 const messages: {
     [key in HardwareWalletOpTypes]: {
@@ -58,6 +59,7 @@ const messages: {
             rejected: "Token Allowance Rejected",
         },
     },
+    // TODO (KEYSTONE): On keystone signature cancel, call cancelQRHardwareSignRequest
     SIGN_CANCEL: {
         texts: {
             confirming: "Trying to cancel the transaction...",
@@ -170,6 +172,7 @@ export const useTransactionWaitingDialog = (
               status: TransactionStatus | DappRequestSigningStatus | undefined
               error: Error | undefined
               epochTime?: number
+              qrParams?: QRTransactionParams
           }
         | undefined,
     operation: HardwareWalletOpTypes,
@@ -191,6 +194,9 @@ export const useTransactionWaitingDialog = (
                     transaction?.status,
                     operation
                 )
+                console.log("useTransactionWaitingDialog", {
+                    qrParanms: transaction.qrParams,
+                })
                 dispatch({
                     type: "open",
                     payload: {
@@ -274,6 +280,7 @@ export const useTransactionWaitingDialog = (
         transaction?.status,
         transaction?.error,
         transaction?.epochTime,
+        transaction?.qrParams,
         dispatch,
         operation,
         accountType,

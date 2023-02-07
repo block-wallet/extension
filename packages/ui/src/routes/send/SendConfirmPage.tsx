@@ -329,6 +329,7 @@ const SendConfirmPage = () => {
                       status: currentTransaction?.status,
                       error: currentTransaction?.error as Error,
                       epochTime: currentTransaction?.approveTime,
+                      qrParams: currentTransaction.qrParams,
                   }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,

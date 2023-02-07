@@ -61,6 +61,7 @@ import {
 } from '@block-wallet/background/controllers/BridgeController';
 import { GasPriceData } from '@block-wallet/background/controllers/GasPricesController';
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
+import { TypedTransaction } from '@ethereumjs/tx';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -225,6 +226,9 @@ enum WALLET {
     HARDWARE_QR_SUBMIT_SIGNATURE = 'HARDWARE_QR_SUBMIT_SIGNATURE',
     HARDWARE_QR_CANCEL_SYNC = 'HARDWARE_QR_CANCEL_SYNC',
     HARDWARE_QR_CANCEL_SIGN_REQUEST = 'HARDWARE_QR_CANCEL_SIGN_REQUEST',
+    HARDWARE_QR_GET_ETH_SIGNATURE_REQUEST = 'HARDWARE_QR_GET_ETH_SIGNATURE_REQUEST',
+    HARDWARE_QR_GET_MESSAGE_SIGNATURE_REQUEST = 'HARDWARE_QR_GET_MESSAGE_SIGNATURE_REQUEST',
+    HARDWARE_QR_GET_TYPED_MESSAGE_SIGNATURE_REQUEST = 'HARDWARE_QR_GET_TYPED_MESSAGE_SIGNATURE_REQUEST',
 }
 
 enum TOKEN {
@@ -546,6 +550,18 @@ export interface RequestSignatures {
     [Messages.WALLET.HARDWARE_QR_CANCEL_SIGN_REQUEST]: [
         CancelQRHardwareSignRequestMessage,
         boolean
+    ];
+    [Messages.WALLET.HARDWARE_QR_GET_ETH_SIGNATURE_REQUEST]: [
+        GetQRHardwareETHSignRequestMessage,
+        string
+    ];
+    [Messages.WALLET.HARDWARE_QR_GET_MESSAGE_SIGNATURE_REQUEST]: [
+        GetQRHardwareMessageSignRequestMessage,
+        string
+    ];
+    [Messages.WALLET.HARDWARE_QR_GET_TYPED_MESSAGE_SIGNATURE_REQUEST]: [
+        GetQRHardwareTypedMessageSignRequestMessage,
+        string
     ];
 }
 
@@ -1088,12 +1104,27 @@ export interface SubmitQRHardwareCryptoHDKeyOrAccountMessage {
     qr: string;
 }
 export interface SubmitQRHardwareSignatureMessage {
+    requestId: string;
     qr: string;
 }
 export interface CancelSyncQRHardwareMessage {}
 export interface CancelQRHardwareSignRequestMessage {}
 
 export interface DismissMessage {}
+
+export interface GetQRHardwareETHSignRequestMessage {
+    ethTx: TypedTransaction;
+    _fromAddress: string;
+}
+export interface GetQRHardwareMessageSignRequestMessage {
+    from: string;
+    data: string;
+}
+export interface GetQRHardwareTypedMessageSignRequestMessage {
+    from: string;
+    data: string;
+    version: 'V1' | 'V3' | 'V4';
+}
 
 export enum Origin {
     BACKGROUND = 'BLANK_BACKGROUND',

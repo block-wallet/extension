@@ -1367,9 +1367,11 @@ export const hardwareQrSubmitCryptoHdKeyOrAccount = async (
 }
 
 export const hardwareQrSubmitSignature = async (
+    requestId: string,
     qr: string
 ): Promise<boolean> => {
     return sendMessage(Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE, {
+        requestId,
         qr,
     })
 }

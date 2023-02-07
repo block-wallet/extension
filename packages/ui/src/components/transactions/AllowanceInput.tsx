@@ -310,13 +310,9 @@ const AllowanceInput = ({
                         )}
                         title={`Revoke value`}
                         onClick={() => {
-                            if (usingRevoke) {
-                                resetAllowanceValue()
-                            } else {
-                                handleChangeAllowanceAmount(
-                                    formatUnits(0, tokenDecimals)
-                                )
-                            }
+                            handleChangeAllowanceAmount(
+                                formatUnits(0, tokenDecimals)
+                            )
                         }}
                     >
                         Revoke
@@ -330,16 +326,12 @@ const AllowanceInput = ({
                         )}
                         title={`Unlimited value`}
                         onClick={() => {
-                            if (usingUnlimited) {
-                                resetAllowanceValue()
-                            } else {
-                                handleChangeAllowanceAmount(
-                                    formatUnits(
-                                        UNLIMITED_ALLOWANCE.toHexString(),
-                                        tokenDecimals
-                                    )
+                            handleChangeAllowanceAmount(
+                                formatUnits(
+                                    UNLIMITED_ALLOWANCE.toHexString(),
+                                    tokenDecimals
                                 )
-                            }
+                            )
                         }}
                     >
                         Unlimited

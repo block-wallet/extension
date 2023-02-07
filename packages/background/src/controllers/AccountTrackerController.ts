@@ -217,14 +217,12 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 this._balanceFetchIntervalController.tick(
                     balanceFetchInterval,
                     async () => {
-                        // Get addresses from state
-                        const addresses = Object.keys(
-                            this.store.getState().accounts
-                        );
+                        const selectedAddress =
+                            this._preferencesController.getSelectedAddress();
 
                         await this.updateAccounts(
                             {
-                                addresses,
+                                addresses: [selectedAddress],
                                 assetAddresses: [],
                             },
                             chainId
@@ -673,6 +671,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         updateAccountsOptions: UpdateAccountsOptions,
         chainId: number = this._networkController.network.chainId
     ): Promise<void> {
+        console.log(new Date(), 'updateAccounts', {
+            chainId,
+            updateAccountsOptions,
+        });
         const { addresses, assetAddresses } = updateAccountsOptions;
         const release = !addresses
             ? await this._mutex.acquire()

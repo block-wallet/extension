@@ -87,14 +87,14 @@ const AllowanceItem = ({
     const options = [
         {
             title: "Transaction Hash",
-            link: allowance.txHash
-                ? generateExplorerLink(
-                      availableNetworks,
-                      selectedNetwork,
-                      allowance.txHash,
-                      "tx"
-                  )
-                : undefined,
+            link:
+                allowance.txHash &&
+                generateExplorerLink(
+                    availableNetworks,
+                    selectedNetwork,
+                    allowance.txHash,
+                    "tx"
+                ),
             content: allowance.txHash,
         },
         {
@@ -105,7 +105,9 @@ const AllowanceItem = ({
         },
         {
             title: "Spender Name",
-            content: spender.name,
+            content: spender.name?.includes("Spender (...")
+                ? undefined
+                : spender.name,
         },
         {
             title: "Spender Address",

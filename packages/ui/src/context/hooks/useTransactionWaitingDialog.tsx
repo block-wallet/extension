@@ -1,7 +1,8 @@
-import { useCallback, useEffect } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useWaitingDialog } from "../../components/dialog/WaitingDialog"
 import {
     AccountType,
+    Devices,
     HardwareWalletOpTypes,
     TransactionStatus,
 } from "../commTypes"
@@ -16,6 +17,8 @@ import { useBlankState } from "../background/backgroundHooks"
 import useCountdown from "../../util/hooks/useCountdown"
 import { secondsToMMSS } from "../../util/time"
 import { QRTransactionParams } from "@block-wallet/background/controllers/transactions/utils/types"
+import { getDeviceFromAccountType } from "../../util/hardwareDevice"
+import TransactionQR from "../../components/qr/TransactionQR"
 
 const messages: {
     [key in HardwareWalletOpTypes]: {
@@ -187,6 +190,11 @@ export const useTransactionWaitingDialog = (
     const txTimeout = useTransactionTimeout()
     useEffect(() => {
         if (transaction?.status) {
+            console.log("Transaccion estado:")
+            console.log(transaction.status)
+            console.log(
+                isTransactionOrRequestAwaitingSigning(transaction.status)
+            )
             if (isTransactionOrRequestAwaitingSigning(transaction.status)) {
                 const message = messages[operation]
                 const hwDeviceMessage = getAwaitingSigningMessage(
@@ -215,6 +223,21 @@ export const useTransactionWaitingDialog = (
                                     txTimeout={txTimeout}
                                 />
                             ) : (
+                                // <TransactionQR
+                                //     QRValue={"UN QR DE PRUEBA"}
+                                //     onBack={
+                                //         () => {
+                                //             console.log("Atras")
+                                //         }
+                                //         //     useCallback(
+                                //         //     () => dispatch({ type: "close" }),
+                                //         //     [dispatch]
+                                //         // )
+                                //     }
+                                //     onQRSignatureProvided={() => {
+                                //         console.log("Tengo la firma")
+                                //     }}
+                                // />
                                 message.texts.confirming
                             ),
                         },
@@ -274,6 +297,43 @@ export const useTransactionWaitingDialog = (
                     },
                 })
             }
+        } else if (
+            getDeviceFromAccountType(accountType) === Devices.KEYSTONE &&
+            operation === HardwareWalletOpTypes.SIGN_TRANSACTION
+        ) {
+            dispatch({
+                type: "open",
+                payload: {
+                    status: "loading",
+                    texts: {
+                        loading: (
+                            <TransactionQR
+                                QRValue={"UN QR DE PRUEBA"}
+                                onBack={
+                                    () => {
+                                        console.log("Atras")
+                                    }
+                                    //     useCallback(
+                                    //     () => dispatch({ type: "close" }),
+                                    //     [dispatch]
+                                    // )
+                                }
+                                onQRSignatureProvided={() => {
+                                    console.log("Tengo la firma")
+                                }}
+                            />
+                        ),
+                    },
+                    gifs: {
+                        loading: isHardwareWallet(accountType) ? (
+                            <AnimatedIcon
+                                className="w-12 h-12 m-auto"
+                                icon={AnimatedIconName.DeviceInteraction}
+                            />
+                        ) : undefined,
+                    },
+                },
+            })
         }
     }, [
         transaction?.id,

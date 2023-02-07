@@ -6,7 +6,7 @@ import PageLayout from "../../components/PageLayout"
 type SetupLayoutProps = {
     title: string
     subtitle: string
-    buttons: React.ReactNode
+    buttons?: React.ReactNode
     childrenClass?: string
     buttonClass?: string
 }
@@ -33,10 +33,14 @@ const HardwareWalletSetupLayout: FC<PropsWithChildren<SetupLayoutProps>> = ({
         <div className={childrenClass ?? "flex flex-col w-full"}>
             {children}
         </div>
-        <Divider />
-        <div className={buttonClass ?? "p-8 w-full flex space-x-5"}>
-            {buttons}
-        </div>
+        {buttons && (
+            <>
+                <Divider />
+                <div className={buttonClass ?? "p-8 w-full flex space-x-5"}>
+                    {buttons}
+                </div>
+            </>
+        )}
     </PageLayout>
 )
 

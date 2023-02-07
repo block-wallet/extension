@@ -9,12 +9,12 @@ import Divider from "../../components/Divider"
 // Assets & icons
 import ledger from "../../assets/images/icons/ledger.svg"
 import trezor from "../../assets/images/icons/trezor.svg"
-import keystone from "../../assets/images/icons/qr_icon.svg"
-// TODO (KEYSTONE): add a new icon here!
+import keystone from "../../assets/images/icons/keystone.svg"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes } from "../../styles"
 
 import HardwareWalletSetupLayout from "./SetupLayout"
+import OpenExplorerIcon from "../../components/icons/OpenExplorerIcon"
 
 const HardwareWalletVendorsPage = () => {
     const history = useOnMountHistory()
@@ -32,14 +32,6 @@ const HardwareWalletVendorsPage = () => {
         <HardwareWalletSetupLayout
             title="Connect Hardware Wallet"
             subtitle="Select a Hardware Wallet you'd like to use with BlockWallet."
-            buttons={
-                <ButtonWithLoading
-                    label={"Continue"}
-                    buttonClass={classnames(Classes.button, "h-14")}
-                    onClick={next}
-                    disabled={!selectedVendor}
-                />
-            }
         >
             <div className="flex flex-col">
                 <div className="flex flex-row space-x-4 items-center justify-evenly p-8">
@@ -88,46 +80,35 @@ const HardwareWalletVendorsPage = () => {
                         )}
                         style={{ height: "120px" }}
                     >
-                        <img
-                            src={keystone}
-                            alt="Connect Keystone"
-                            className="h-8"
-                        />
-                        <span>QR-based</span>
+                        <img src={keystone} alt="Connect Keystone" />
                     </button>
                 </div>
                 <Divider />
-                <div className="w-full flex flex-col p-8 space-y-5">
-                    <ExternalLink
+                <div className="p-8 w-full flex space-x-5">
+                    <ButtonWithLoading
+                        label={"Continue"}
+                        buttonClass={classnames(Classes.button, "h-14")}
+                        onClick={next}
+                        disabled={!selectedVendor}
+                    />
+                </div>
+                <div className="w-full flex-row items-center block text-center">
+                    <a
+                        className="text-black hover:text-primary-300 cursor-pointer inline-block mb-4"
                         href="https://help.blockwallet.io/hc/en-us/articles/6670564432657-How-do-Hardware-Wallets-Work-"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         title="How do Hardware Wallets work?"
-                    />
-                    <ExternalLink
-                        href="https://help.blockwallet.io/hc/en-us/articles/6670519949585-How-to-get-the-Ledger-Hardware-Wallet"
-                        title="How to get a Ledger?"
-                    />
-                    <ExternalLink
-                        href="https://help.blockwallet.io/hc/en-us/articles/6670542248209-How-to-get-the-Trezor-Hardware-Wallet-"
-                        title="How to get a Trezor?"
-                    />
-                    {/* TODO (KEYSTONE): Add a link for keystone */}
-                    <ExternalLink
-                        href="https://help.blockwallet.io/hc/en-us/articles/..."
-                        title="How to get a Keystone?"
-                    />
+                    >
+                        <OpenExplorerIcon className="inline-block" />
+                        <span className="ml-2 font-bold">
+                            How do Hardware Wallets work?
+                        </span>
+                    </a>
                 </div>
             </div>
         </HardwareWalletSetupLayout>
     )
 }
-
-const ExternalLink = ({ href, title }: { href: string; title: string }) => (
-    <div className="flex justify-between w-full text-base font-medium hover:text-primary-300 cursor-pointer">
-        <a href={href} target="_blank" rel="noreferrer">
-            {title}
-        </a>
-        <span>{">"}</span>
-    </div>
-)
 
 export default HardwareWalletVendorsPage

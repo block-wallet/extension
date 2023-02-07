@@ -671,10 +671,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         updateAccountsOptions: UpdateAccountsOptions,
         chainId: number = this._networkController.network.chainId
     ): Promise<void> {
-        console.log(new Date(), 'updateAccounts', {
-            chainId,
-            updateAccountsOptions,
-        });
         const { addresses, assetAddresses } = updateAccountsOptions;
         const release = !addresses
             ? await this._mutex.acquire()

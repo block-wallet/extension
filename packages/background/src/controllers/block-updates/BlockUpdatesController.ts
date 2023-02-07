@@ -107,10 +107,10 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
      */
     public setActiveSubscriptions(
         isUnlocked: boolean,
-        subscriptions: number
+        activeSubscription: boolean
     ): void {
         const prevActiveSubscriptions = this.activeSubscriptions;
-        this.activeSubscriptions = isUnlocked || subscriptions > 0;
+        this.activeSubscriptions = isUnlocked || activeSubscription;
         if (this.activeSubscriptions != prevActiveSubscriptions) {
             this.addNewOnBlockListener();
         }

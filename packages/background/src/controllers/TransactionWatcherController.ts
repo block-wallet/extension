@@ -364,11 +364,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         if (currentBlock <= 0) {
             return;
         }
-        console.log(new Date(), 'fetchTransactions', {
-            chainId,
-            currentBlock,
-            forceChainQuery,
-        });
         return this._mutex.runExclusive(async () => {
             // the execution could be stuck in the mutex for some time,
             // the selected network could change in the wait.

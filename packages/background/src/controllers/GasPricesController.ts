@@ -188,10 +188,6 @@ export class GasPricesController extends BaseController<GasPricesControllerState
         chainId: number = this._networkController.network.chainId
     ): Promise<void> => {
         try {
-            console.log(new Date(), 'updateGasPrices', {
-                chainId,
-                currentBlockNumber,
-            });
             const oldGasPriceLevels = this.getGasPricesLevels(chainId);
             const isEIP1559Compatible =
                 await this._networkController.getEIP1559Compatibility(chainId);

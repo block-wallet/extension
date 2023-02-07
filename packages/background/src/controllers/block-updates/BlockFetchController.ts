@@ -368,7 +368,6 @@ export class OffChainBlockFetchService {
      */
     public async fetchBlockNumber(chainId: number): Promise<number> {
         try {
-            console.log(new Date(), 'fetchBlockNumber', { chainId });
             const blockDataResponse = await retryHandling(
                 () =>
                     httpClient.get<{

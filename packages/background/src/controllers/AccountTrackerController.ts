@@ -49,6 +49,8 @@ import {
     TransactionWatcherControllerEvents,
 } from './TransactionWatcherController';
 import { isNativeTokenAddress } from '../utils/token';
+import TransactionController from './transactions/TransactionController';
+import { TransactionEvents } from './transactions/utils/types';
 
 export interface AccountBalanceToken {
     token: Token;
@@ -134,6 +136,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         private readonly _preferencesController: PreferencesController,
         private readonly _blockUpdatesController: BlockUpdatesController,
         private readonly _transactionWatcherController: TransactionWatcherController,
+        private readonly _transactionController: TransactionController,
         initialState: AccountTrackerState = {
             accounts: {},
             hiddenAccounts: {},
@@ -290,6 +293,19 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         chainId
                     );
                 }
+            }
+        );
+
+        this._transactionController.on(
+            TransactionEvents.NOT_SELECTED_ACCOUNT_TRANSACTION,
+            async (chainId: number, accountAddress: string) => {
+                await this.updateAccounts(
+                    {
+                        addresses: [accountAddress],
+                        assetAddresses: [NATIVE_TOKEN_ADDRESS],
+                    },
+                    chainId
+                );
             }
         );
     }

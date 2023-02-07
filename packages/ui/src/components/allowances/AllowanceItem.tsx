@@ -91,11 +91,17 @@ const AllowanceItem = ({
                 ? generateExplorerLink(
                       availableNetworks,
                       selectedNetwork,
-                      allowance.txHash!,
+                      allowance.txHash,
                       "tx"
                   )
                 : undefined,
             content: allowance.txHash,
+        },
+        {
+            title: "Last Updated",
+            content: allowance.txTime
+                ? new Date(allowance.txTime).toLocaleString()
+                : undefined,
         },
         {
             title: "Spender Name",
@@ -118,10 +124,6 @@ const AllowanceItem = ({
         {
             title: "Allowance Value",
             content: allowanceValue,
-        },
-        {
-            title: "Last Updated",
-            content: new Date(allowance?.updatedAt).toLocaleString(),
         },
         {
             title: "Token Name",

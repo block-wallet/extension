@@ -908,7 +908,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
             return {
                 requestId,
-                qrSignRequest: ethSignRequest.toUREncoder().nextPart(),
+                qrSignRequest: ethSignRequest.toUREncoder(400).nextPart(),
             };
         });
     }

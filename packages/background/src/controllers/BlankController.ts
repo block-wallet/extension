@@ -3235,8 +3235,7 @@ export default class BlankController extends EventEmitter {
                 return false;
             }
 
-            const result = decoder.resultRegistryType();
-            const ur = result.toUR();
+            const ur = decoder.resultUR();
 
             this.keyringController.submitQRHardwareSignature(
                 requestId,

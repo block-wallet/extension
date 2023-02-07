@@ -555,7 +555,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
             const contractDetailsCache: Record<
                 string,
-                Awaited<ReturnType<typeof fetchContractDetails>>
+                ContractDetails | undefined
             > = {};
 
             for (const tokenAddress in chainAllowances.tokens) {
@@ -596,9 +596,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             }
                         }
 
-                        let contractDetails: Awaited<
-                            ReturnType<typeof fetchContractDetails>
-                        > = contractDetailsCache[spender];
+                        let contractDetails: ContractDetails | undefined =
+                            contractDetailsCache[spender];
 
                         try {
                             //Reftech spender contract details if we hadn't fetch it

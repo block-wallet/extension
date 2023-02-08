@@ -106,6 +106,7 @@ import {
 } from '../utils/hardware';
 import { GasPricesController } from './GasPricesController';
 import { bnGreaterThanZero } from '../utils/bnUtils';
+import { recoverAddress } from '@ethersproject/transactions';
 
 export enum BlankProviderEvents {
     SUBSCRIPTION_UPDATE = 'SUBSCRIPTION_UPDATE',
@@ -420,6 +421,8 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 return this._sha3(params);
             case JSONRPCMethod.eth_estimateGas:
                 return this._handleEstimateGas(params as [EstimateGasParams]);
+            case JSONRPCMethod.personal_ecRecover:
+                return this._handlePersonalECRecover(params as [any]);
             default:
                 // If it's a standard json rpc request, forward it to the provider
                 if (ExtProviderMethods.includes(method)) {
@@ -432,6 +435,12 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 }
         }
     };
+
+    private _handlePersonalECRecover(params: any[]): string {
+        const address = recoverAddress(params[0], params[1]);
+        console.log(address);
+        return address;
+    }
 
     private _handleEstimateGas = async (
         params: [EstimateGasParams]

@@ -57,11 +57,11 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
     private addNewOnBlockListener() {
         if (!this.activeSubscriptions) {
             // when there is no active subscriptions (the extension is closed and locked)
-            // the blocks are synced every 5 minutes.
+            // the blocks are synced every 3 minutes.
             this._blockFetchController.addNewOnBlockListener(
                 this._networkController.network.chainId,
                 this._blockUpdates,
-                5 * MINUTE
+                3 * MINUTE
             );
         } else {
             this._blockFetchController.addNewOnBlockListener(

@@ -16,7 +16,8 @@ const UNLIMITED_ALLOWANCE = MaxUint256
 // Schema
 const getAllowanceAmountYupSchema = (
     tokenDecimals: number,
-    minAllowance: BigNumber
+    minAllowance: BigNumber,
+    currentAllowance?: BigNumber
 ) => {
     return yup.object({
         allowanceAmount: yup
@@ -42,8 +43,25 @@ const getAllowanceAmountYupSchema = (
                 }
             )
             .test(
+                "equal-current",
+                "Value is same as the current allowance",
+                (value?: string) => {
+                    if (!value) return false
+                    try {
+                        if (!currentAllowance) return true
+                        const parsed = parseUnits(value, tokenDecimals)
+                        return !BigNumber.from(currentAllowance).eq(parsed)
+                    } catch (error) {
+                        return false
+                    }
+                }
+            )
+            .test(
                 "too-low",
-                "Value is less than the minimum allowance",
+                `Value is less than the minimum allowance (${formatUnits(
+                    minAllowance,
+                    tokenDecimals
+                )})`,
                 (value?: string) => {
                     if (!value) return false
                     try {
@@ -100,6 +118,7 @@ const optionsText = [
  * @param tokenName - token name
  * @param defaultValue - default value for the input
  * @param minimumAllowance - minimum allowance for the input (used for validations)
+ * @param currentAllowance - current allowance (used for validations)
  *
  */
 const AllowanceInput = ({
@@ -109,6 +128,7 @@ const AllowanceInput = ({
     tokenName,
     defaultValue,
     minimumAllowance = BigNumber.from(0),
+    currentAllowance,
 }: {
     onChange: (value: string) => void
     setIsValid: (value: boolean) => void
@@ -116,6 +136,7 @@ const AllowanceInput = ({
     tokenName: string
     defaultValue: string
     minimumAllowance?: BigNumber
+    currentAllowance?: BigNumber
 }) => {
     const [allowanceAmount, setAllowanceAmount] = useState(
         formatUnits(defaultValue, tokenDecimals)
@@ -131,7 +152,11 @@ const AllowanceInput = ({
     const inputRef = useRef(null)
 
     // Validator
-    const schema = getAllowanceAmountYupSchema(tokenDecimals, minimumAllowance)
+    const schema = getAllowanceAmountYupSchema(
+        tokenDecimals,
+        minimumAllowance,
+        currentAllowance
+    )
 
     const handleChangeAllowanceAmount = (value: string) => {
         // Replace commas with periods
@@ -144,7 +169,15 @@ const AllowanceInput = ({
         if (!value || value === ".") {
             value = ""
         }
-        validate(value)
+        schema
+            .validate({ allowanceAmount: value })
+            .then(() => {
+                setError("")
+                setIsValid(true)
+            })
+            .catch(() => {
+                setIsValid(false)
+            })
         setAllowanceAmount(value)
 
         const isRevoke = parseFloat(value) === 0
@@ -263,7 +296,10 @@ const AllowanceInput = ({
                             adjustInputCursor(allowanceAmount.length)
                             setInputFocus(true)
                         }}
-                        onBlur={() => setInputFocus(false)}
+                        onBlur={() => {
+                            setInputFocus(false)
+                            validate(allowanceAmount)
+                        }}
                         onKeyDown={(e) => {
                             if (e.key === "Backspace") {
                                 let newAllowanceAmount = allowanceAmount.slice(
@@ -313,6 +349,7 @@ const AllowanceInput = ({
                             handleChangeAllowanceAmount(
                                 formatUnits(0, tokenDecimals)
                             )
+                            validate(formatUnits(0, tokenDecimals))
                         }}
                     >
                         Revoke
@@ -327,6 +364,12 @@ const AllowanceInput = ({
                         title={`Unlimited value`}
                         onClick={() => {
                             handleChangeAllowanceAmount(
+                                formatUnits(
+                                    UNLIMITED_ALLOWANCE.toHexString(),
+                                    tokenDecimals
+                                )
+                            )
+                            validate(
                                 formatUnits(
                                     UNLIMITED_ALLOWANCE.toHexString(),
                                     tokenDecimals

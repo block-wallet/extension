@@ -373,6 +373,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
             case JSONRPCMethod.eth_requestAccounts:
                 return this._connectionRequest(portId);
             case JSONRPCMethod.eth_sendTransaction:
+                console.log({ method, params });
                 return this._handleSendTransaction(
                     params as [TransactionRequest],
                     portId
@@ -383,11 +384,18 @@ export default class BlankProviderController extends BaseController<BlankProvide
             case JSONRPCMethod.eth_signTypedData_v1:
             case JSONRPCMethod.eth_signTypedData_v3:
             case JSONRPCMethod.eth_signTypedData_v4:
-                return this._handleMessageSigning(
+                console.log({ method, params });
+
+                // eslint-disable-next-line no-case-declarations
+                const res = await this._handleMessageSigning(
                     method,
                     params as RawSignatureData[SignatureMethods],
                     portId
                 );
+
+                console.log({ method, signature: res });
+
+                return res;
             case JSONRPCMethod.eth_subscribe:
                 return this._createSubscription(
                     params as unknown as SubscriptionParams,
@@ -422,7 +430,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
             case JSONRPCMethod.eth_estimateGas:
                 return this._handleEstimateGas(params as [EstimateGasParams]);
             case JSONRPCMethod.personal_ecRecover:
-                return this._handlePersonalECRecover(params as [any]);
+                return this._handlePersonalECRecover(params as string[]);
             default:
                 // If it's a standard json rpc request, forward it to the provider
                 if (ExtProviderMethods.includes(method)) {
@@ -436,7 +444,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
         }
     };
 
-    private _handlePersonalECRecover(params: any[]): string {
+    private _handlePersonalECRecover(params: string[]): string {
         const address = recoverAddress(params[0], params[1]);
         console.log(address);
         return address;

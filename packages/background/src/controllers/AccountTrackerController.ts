@@ -30,7 +30,10 @@ import {
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     Network,
 } from '../utils/constants/networks';
-import { PreferencesController } from './PreferencesController';
+import {
+    PreferencesController,
+    PreferencesControllerEvents,
+} from './PreferencesController';
 import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
@@ -49,6 +52,8 @@ import {
     TransactionWatcherControllerEvents,
 } from './TransactionWatcherController';
 import { isNativeTokenAddress } from '../utils/token';
+import TransactionController from './transactions/TransactionController';
+import { TransactionEvents } from './transactions/utils/types';
 
 export interface AccountBalanceToken {
     token: Token;
@@ -134,6 +139,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         private readonly _preferencesController: PreferencesController,
         private readonly _blockUpdatesController: BlockUpdatesController,
         private readonly _transactionWatcherController: TransactionWatcherController,
+        private readonly _transactionController: TransactionController,
         initialState: AccountTrackerState = {
             accounts: {},
             hiddenAccounts: {},
@@ -217,20 +223,28 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 this._balanceFetchIntervalController.tick(
                     balanceFetchInterval,
                     async () => {
-                        // Get addresses from state
-                        const addresses = Object.keys(
-                            this.store.getState().accounts
-                        );
+                        const selectedAddress =
+                            this._preferencesController.getSelectedAddress();
 
                         await this.updateAccounts(
                             {
-                                addresses,
+                                addresses: [selectedAddress],
                                 assetAddresses: [],
                             },
                             chainId
                         );
                     }
                 );
+            }
+        );
+
+        this._preferencesController.on(
+            PreferencesControllerEvents.SELECTED_ACCOUNT_CHANGED,
+            async (address: string) => {
+                await this.updateAccounts({
+                    addresses: [address],
+                    assetAddresses: [],
+                });
             }
         );
 
@@ -292,6 +306,19 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         chainId
                     );
                 }
+            }
+        );
+
+        this._transactionController.on(
+            TransactionEvents.NOT_SELECTED_ACCOUNT_TRANSACTION,
+            async (chainId: number, accountAddress: string) => {
+                await this.updateAccounts(
+                    {
+                        addresses: [accountAddress],
+                        assetAddresses: [NATIVE_TOKEN_ADDRESS],
+                    },
+                    chainId
+                );
             }
         );
     }

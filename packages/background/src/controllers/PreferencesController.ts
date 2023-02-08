@@ -56,6 +56,9 @@ export interface PreferencesControllerState {
 export interface PreferencesControllerProps {
     initState: PreferencesControllerState;
 }
+export enum PreferencesControllerEvents {
+    SELECTED_ACCOUNT_CHANGED = 'SELECTED_ACCOUNT_CHANGED',
+}
 
 export class PreferencesController extends BaseController<PreferencesControllerState> {
     constructor(props: PreferencesControllerProps) {
@@ -80,6 +83,14 @@ export class PreferencesController extends BaseController<PreferencesControllerS
         if (address) {
             address = toChecksumAddress(address);
         }
+
+        if (address != this.store.getState().selectedAddress) {
+            this.emit(
+                PreferencesControllerEvents.SELECTED_ACCOUNT_CHANGED,
+                address
+            );
+        }
+
         // Update state
         this.store.updateState({ selectedAddress: address });
     }

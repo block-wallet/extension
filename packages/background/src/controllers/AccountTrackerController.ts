@@ -30,7 +30,10 @@ import {
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     Network,
 } from '../utils/constants/networks';
-import { PreferencesController } from './PreferencesController';
+import {
+    PreferencesController,
+    PreferencesControllerEvents,
+} from './PreferencesController';
 import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
@@ -232,6 +235,16 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         );
                     }
                 );
+            }
+        );
+
+        this._preferencesController.on(
+            PreferencesControllerEvents.SELECTED_ACCOUNT_CHANGED,
+            async (address: string) => {
+                await this.updateAccounts({
+                    addresses: [address],
+                    assetAddresses: [],
+                });
             }
         );
 

@@ -1,4 +1,4 @@
-import { CSSProperties, useRef, useState } from "react"
+import { CSSProperties, useState } from "react"
 import { FaExchangeAlt } from "react-icons/fa"
 import { FiUpload } from "react-icons/fi"
 import { RiCopperCoinFill } from "react-icons/ri"
@@ -12,6 +12,8 @@ import { AssetIcon } from "./../AssetsList"
 import Tooltip from "../../components/label/Tooltip"
 import eth from "../../assets/images/icons/ETH.svg"
 import blankLogo from "../../assets/images/logo.svg"
+import unknownTokenIcon from "../../assets/images/unknown_token.svg"
+
 import flashbotsLogo from "../../assets/images/flashbots.png"
 import {
     BridgeSubstatus,
@@ -41,7 +43,8 @@ import {
     getBridgePendingMessage,
 } from "../../util/bridgeUtils"
 import TransactionDetails from "./TransactionDetails"
-import { useTokensList } from "../../context/hooks/useTokensList"
+import { searchTokenInAssetsList } from "../../context/commActions"
+import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 
 const TRANSACTION_STATIC_MESSAGES = {
     [TransactionCategories.BLANK_DEPOSIT]: "Privacy Pool Deposit",
@@ -68,7 +71,8 @@ const PENDING_TRANSACTION_STATIC_MESSAGES: { [x: string]: string } = {
 const getTransactionMessage = (
     category: TransactionCategories,
     symbol: string,
-    advancedData: TransactionMeta["advancedData"]
+    advancedData: TransactionMeta["advancedData"],
+    approvalToken?: Token
 ) => {
     const message = (() => {
         switch (category) {
@@ -81,9 +85,13 @@ const getTransactionMessage = (
                     advancedData?.allowance &&
                     BigNumber.from(advancedData.allowance).eq(0)
                 ) {
-                    return `Allowance Revoke`
+                    return approvalToken
+                        ? `${approvalToken?.symbol} Allowance Revoke`
+                        : `Allowance Revoke`
                 }
-                return `Allowance Approval`
+                return approvalToken
+                    ? `${approvalToken?.symbol} Allowance Approval`
+                    : `Allowance Approval`
             default:
                 return TRANSACTION_STATIC_MESSAGES[category]
         }
@@ -96,7 +104,8 @@ const getPendingTransactionMessage = (
     category: TransactionCategories,
     metaType: MetaType,
     symbol: string,
-    advancedData: TransactionMeta["advancedData"]
+    advancedData: TransactionMeta["advancedData"],
+    approvalToken?: Token
 ) => {
     const message = (() => {
         switch (category) {
@@ -107,9 +116,13 @@ const getPendingTransactionMessage = (
                     advancedData?.allowance &&
                     BigNumber.from(advancedData.allowance).eq(0)
                 ) {
-                    return `Revoking Allowance`
+                    return approvalToken
+                        ? `Revoking ${approvalToken.symbol} Allowance`
+                        : `Revoking Allowance`
                 }
-                return `Approving Allowance`
+                return approvalToken
+                    ? `Approving ${approvalToken.symbol} Allowance`
+                    : `Approving Allowance`
             default:
                 return PENDING_TRANSACTION_STATIC_MESSAGES[category]
         }
@@ -331,7 +344,8 @@ const getTransactionLabel = (
     transactionCategory: TransactionCategories | undefined,
     methodSignature: TransactionMeta["methodSignature"],
     networkNativeCurrency: { symbol: string },
-    advancedData: TransactionMeta["advancedData"]
+    advancedData: TransactionMeta["advancedData"],
+    approvalToken?: Token
 ): string => {
     const getCategoryMessage = () => {
         const isPending =
@@ -344,7 +358,8 @@ const getTransactionLabel = (
         const txMessage = getTransactionMessage(
             transactionCategory,
             networkNativeCurrency.symbol,
-            advancedData
+            advancedData,
+            approvalToken
         )
 
         return isPending
@@ -352,7 +367,8 @@ const getTransactionLabel = (
                   transactionCategory,
                   metaType,
                   networkNativeCurrency.symbol,
-                  advancedData
+                  advancedData,
+                  approvalToken
               ) || txMessage
             : txMessage
     }
@@ -419,7 +435,6 @@ const TransactionItem: React.FC<{
     transaction: RichedTransactionMeta
     index: number
 }> = ({ index, transaction }) => {
-    const { currentNetworkTokens } = useTokensList()
     const {
         transactionParams: { value, hash },
         methodSignature,
@@ -447,14 +462,7 @@ const TransactionItem: React.FC<{
 
     const [hasDetails, setHasDetails] = useState(false)
 
-    const approvalToken =
-        transaction.transactionCategory ===
-            TransactionCategories.TOKEN_METHOD_APPROVE &&
-        transaction.transactionReceipt?.to &&
-        currentNetworkTokens.find(
-            (token) =>
-                token.token.address === transaction.transactionReceipt?.to
-        )?.token
+    const [approvalToken, setApprovalToken] = useState<Token | undefined>()
 
     const txHash = hash
     let transfer = transferType ?? {
@@ -463,17 +471,33 @@ const TransactionItem: React.FC<{
         decimals: networkNativeCurrency.decimals,
         logo: defaultNetworkLogo,
     }
-    // Change transaction logo to the approval Token Logo if it's an approval transaction
-    if (approvalToken) transfer.logo = approvalToken.logo
+
+    if (
+        transactionCategory === TransactionCategories.TOKEN_METHOD_APPROVE &&
+        transaction.transactionParams?.to
+    ) {
+        searchTokenInAssetsList(transaction.transactionParams?.to).then(
+            (searchTokensResponse) => {
+                searchTokensResponse.tokens.length > 0 &&
+                    setApprovalToken(searchTokensResponse.tokens[0])
+            }
+        )
+    }
+
+    //Change transaction logo to the approval Token Logo if it's an approval transaction
+    if (approvalToken) {
+        if (approvalToken.logo) {
+            transfer.logo = approvalToken.logo
+        } else {
+            transfer.logo = unknownTokenIcon
+        }
+    }
 
     const isBlankWithdraw: boolean =
-        transaction.transactionCategory === "blankWithdrawal" ? true : false
+        transactionCategory === "blankWithdrawal" ? true : false
 
     // TODO: Test and Remove if not required
-    if (
-        transaction.transactionCategory ===
-        TransactionCategories.TOKEN_METHOD_APPROVE
-    ) {
+    if (transactionCategory === TransactionCategories.TOKEN_METHOD_APPROVE) {
         if (!transfer.amount) {
             transfer.amount = BigNumber.from("0")
         }
@@ -486,7 +510,8 @@ const TransactionItem: React.FC<{
         transactionCategory,
         methodSignature,
         networkNativeCurrency,
-        advancedData
+        advancedData,
+        approvalToken
     )
 
     const txValueSign = (() => {

@@ -103,14 +103,14 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
      * It sets if there is at least one active subscription to the background
      *
      * @param isUnlocked Whether the extension is unlocked or not
-     * @param subscriptions The number of subscriptions to the background
+     * @param activeSubscription If there is any block wallet instance active.
      */
     public setActiveSubscriptions(
         isUnlocked: boolean,
         activeSubscription: boolean
     ): void {
         const prevActiveSubscriptions = this.activeSubscriptions;
-        this.activeSubscriptions = isUnlocked || activeSubscription;
+        this.activeSubscriptions = isUnlocked && activeSubscription;
         if (this.activeSubscriptions != prevActiveSubscriptions) {
             this.addNewOnBlockListener();
         }

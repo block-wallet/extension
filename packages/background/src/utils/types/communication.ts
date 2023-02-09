@@ -224,11 +224,7 @@ enum WALLET {
     // qr hardware devices
     HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT = 'HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT',
     HARDWARE_QR_SUBMIT_SIGNATURE = 'HARDWARE_QR_SUBMIT_SIGNATURE',
-    HARDWARE_QR_CANCEL_SYNC = 'HARDWARE_QR_CANCEL_SYNC',
     HARDWARE_QR_CANCEL_SIGN_REQUEST = 'HARDWARE_QR_CANCEL_SIGN_REQUEST',
-    HARDWARE_QR_GET_ETH_SIGNATURE_REQUEST = 'HARDWARE_QR_GET_ETH_SIGNATURE_REQUEST',
-    HARDWARE_QR_GET_MESSAGE_SIGNATURE_REQUEST = 'HARDWARE_QR_GET_MESSAGE_SIGNATURE_REQUEST',
-    HARDWARE_QR_GET_TYPED_MESSAGE_SIGNATURE_REQUEST = 'HARDWARE_QR_GET_TYPED_MESSAGE_SIGNATURE_REQUEST',
 }
 
 enum TOKEN {
@@ -543,25 +539,9 @@ export interface RequestSignatures {
         SubmitQRHardwareSignatureMessage,
         boolean
     ];
-    [Messages.WALLET.HARDWARE_QR_CANCEL_SYNC]: [
-        CancelSyncQRHardwareMessage,
-        boolean
-    ];
     [Messages.WALLET.HARDWARE_QR_CANCEL_SIGN_REQUEST]: [
         CancelQRHardwareSignRequestMessage,
         boolean
-    ];
-    [Messages.WALLET.HARDWARE_QR_GET_ETH_SIGNATURE_REQUEST]: [
-        GetQRHardwareETHSignRequestMessage,
-        string
-    ];
-    [Messages.WALLET.HARDWARE_QR_GET_MESSAGE_SIGNATURE_REQUEST]: [
-        GetQRHardwareMessageSignRequestMessage,
-        string
-    ];
-    [Messages.WALLET.HARDWARE_QR_GET_TYPED_MESSAGE_SIGNATURE_REQUEST]: [
-        GetQRHardwareTypedMessageSignRequestMessage,
-        string
     ];
 }
 
@@ -1107,7 +1087,6 @@ export interface SubmitQRHardwareSignatureMessage {
     requestId: string;
     qr: string;
 }
-export interface CancelSyncQRHardwareMessage {}
 export interface CancelQRHardwareSignRequestMessage {}
 
 export interface DismissMessage {}
@@ -1115,15 +1094,6 @@ export interface DismissMessage {}
 export interface GetQRHardwareETHSignRequestMessage {
     ethTx: TypedTransaction;
     _fromAddress: string;
-}
-export interface GetQRHardwareMessageSignRequestMessage {
-    from: string;
-    data: string;
-}
-export interface GetQRHardwareTypedMessageSignRequestMessage {
-    from: string;
-    data: string;
-    version: 'V1' | 'V3' | 'V4';
 }
 
 export enum Origin {

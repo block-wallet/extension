@@ -1376,12 +1376,8 @@ export const hardwareQrSubmitSignature = async (
     })
 }
 
-export const hardwareQrCancelSync = async (): Promise<boolean> => {
-    return sendMessage(Messages.WALLET.HARDWARE_QR_CANCEL_SYNC)
-}
-
 export const hardwareQrCancelSignRequest = async (): Promise<boolean> => {
-    return sendMessage(Messages.WALLET.HARDWARE_QR_CANCEL_SYNC)
+    return sendMessage(Messages.WALLET.HARDWARE_QR_CANCEL_SIGN_REQUEST)
 }
 
 /**

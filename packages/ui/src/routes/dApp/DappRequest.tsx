@@ -2,6 +2,7 @@ import type {
     DappRequestSigningStatus,
     DappSignatureReq,
     NormalizedSwitchEthereumChainParameters,
+    QRSignParams,
     RawSignatureData,
     WatchAssetReq,
 } from "@block-wallet/background/utils/types/ethereum"
@@ -28,7 +29,7 @@ export interface DappRequestProps {
     approveTime?: number
     error?: Error
     siteMetadata: SiteMetadata
-    qrParams: QRTransactionParams
+    qrParams?: QRSignParams
 }
 
 export const DappRequest: FunctionComponent<{
@@ -69,7 +70,7 @@ export const DappRequest: FunctionComponent<{
         siteMetadata: nextRequest.siteMetadata,
         status: nextRequest.status,
         approveTime: nextRequest.approveTime,
-        qrParams: {} as QRTransactionParams, // TODO (KEYSTONE): replace for the real value
+        qrParams: nextRequest.qrParams,
         error: nextRequest.error,
     })
 }

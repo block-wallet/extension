@@ -356,7 +356,7 @@ export class TransactionController extends BaseController<
 
         // Subscription to QR signature requests
         this._keyringController.on(
-            KeyringControllerEvents.QR_SIGNATURE_REQUEST_GENERATED,
+            KeyringControllerEvents.QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED,
             this.updateTransactionQRSignatureRequest
         );
 

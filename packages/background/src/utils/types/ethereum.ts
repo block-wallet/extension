@@ -101,6 +101,16 @@ export interface DappRequest<Type extends DappRequestType> {
      * The time when the request was marked as APPROVED and submitted for signing (only for message signing requests)
      */
     approveTime?: number;
+
+    /**
+     * Params needed for signing the message using a QR device
+     */
+    qrParams?: QRSignParams;
+}
+
+export interface QRSignParams {
+    requestId: string;
+    qrSignRequest: string[];
 }
 
 // EIP-3085

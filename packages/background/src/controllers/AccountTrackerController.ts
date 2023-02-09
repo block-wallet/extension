@@ -401,7 +401,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         return accountInfo;
     }
 
-    // TODO (KEYSTONE): TEST
     /**
      * getAccountTypeFromDevice
      *

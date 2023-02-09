@@ -29,7 +29,13 @@ import rlp from 'rlp';
 import { v4 } from 'uuid';
 import { SignatureData } from './transactions/utils/types';
 import { FeeMarketEIP1559Transaction } from '@ethereumjs/tx';
-import { arrToBufArr, bigIntToBuffer, bufferToBigInt } from '@ethereumjs/util';
+import {
+    arrToBufArr,
+    bigIntToBuffer,
+    bufferToBigInt,
+    bufferToHex,
+} from '@ethereumjs/util';
+import { hexToString } from '../utils/signature';
 
 export enum KeyringControllerEvents {
     QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED = 'QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED',
@@ -190,7 +196,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             KeyringTypes.HD_KEY_TREE
         )[0];
         const serialized = await primaryKeyring.serialize();
-        const seedPhrase = serialized.mnemonic;
+        const seedPhrase = hexToString(bufferToHex(serialized.mnemonic));
 
         return seedPhrase;
     }

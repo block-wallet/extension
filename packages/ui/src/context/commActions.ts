@@ -1490,6 +1490,20 @@ export const getExchangeParameters = async (
 }
 
 /**
+ *  Gets the spender address for the exchange
+ *
+ * @param exchangeType Exchange type
+ *
+ */
+export const getExchangeSpender = async (
+    exchangeType: ExchangeType
+): Promise<string> => {
+    return sendMessage(Messages.EXCHANGE.GET_SPENDER, {
+        exchangeType,
+    })
+}
+
+/**
  * Executes the exchange
  *
  * @param exchangeType Exchange type

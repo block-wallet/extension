@@ -16,6 +16,7 @@ import {
     approveBridgeAllowance,
     approveExchange,
     getApproveTransactionGasLimit,
+    getExchangeSpender,
     getLatestGasPrice,
 } from "../../context/commActions"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
@@ -72,13 +73,15 @@ const getLabels = (
 > => {
     if (operation === ApproveOperation.BRIDGE) {
         return {
-            mainSectionTitle: `Set ${assetName} Allowance`,
+            mainSectionTitle: `BlockWallet is requesting to update
+            your ${assetName} Allowance`,
             mainSectionApproveText: `This will let BlockWallet Bridges withdraw and automate ${assetName} transactions for you.`,
             mainSectionRevokeText: `BlockWallet Bridges will not be able to access your ${assetName} anymore.`,
         }
     } else {
         return {
-            mainSectionTitle: `Set ${assetName} Allowance`,
+            mainSectionTitle: `BlockWallet is requesting to update
+            your ${assetName} Allowance`,
             mainSectionApproveText: `This will let BlockWallet Swaps withdraw and automate ${assetName} transactions for you.`,
             mainSectionRevokeText: `BlockWallet Swaps will not be able to access your ${assetName} anymore.`,
         }
@@ -216,26 +219,63 @@ const ApprovePage: FunctionComponent<{}> = () => {
         BigNumber.from(APPROVE_GAS_COST)
     )
 
-    let currentAllowanceValue: BigNumber | undefined
-    let isCurrentAllowanceUnlimited: boolean | undefined
-    if (approveOperation === ApproveOperation.BRIDGE) {
-        const nextState = nextLocationState as BridgeConfirmPageLocalState
+    const currentAllowances = useAccountAllowances(AllowancesFilters.SPENDER)
 
-        const currentSpenderAllowances = useAccountAllowances(
-            AllowancesFilters.SPENDER,
-            nextState.bridgeQuote.bridgeParams.params.spender
-        )[0]
+    const [currentAllowanceValue, setCurrentAllowanceValue] = useState<
+        BigNumber | undefined
+    >(BigNumber.from(0))
+    const [isCurrentAllowanceUnlimited, setIsCurrentAllowanceUnlimited] =
+        useState<boolean | undefined>()
 
-        const currentAllowance = currentSpenderAllowances?.allowances?.find(
-            (allowance) =>
-                allowance.displayData.address.toLowerCase() ===
-                nextState.bridgeQuote.bridgeParams.params.fromToken.address.toLowerCase()
-        )
+    useEffect(() => {
+        if (approveOperation === ApproveOperation.BRIDGE) {
+            const nextState = nextLocationState as BridgeConfirmPageLocalState
 
-        currentAllowanceValue = currentAllowance?.allowance?.value
+            const currentSpenderAllowances = currentAllowances.find(
+                (allowance) =>
+                    allowance.groupBy.address.toLowerCase() ===
+                    nextState.bridgeQuote.bridgeParams.params.spender.toLowerCase()
+            )
 
-        isCurrentAllowanceUnlimited = currentAllowance?.allowance?.isUnlimited
-    }
+            const currentAllowance = currentSpenderAllowances?.allowances?.find(
+                (allowance) =>
+                    allowance.displayData.address.toLowerCase() ===
+                    nextState.bridgeQuote.bridgeParams.params.fromToken.address.toLowerCase()
+            )
+
+            setCurrentAllowanceValue(
+                currentAllowance?.allowance?.value ?? BigNumber.from(0)
+            )
+            setIsCurrentAllowanceUnlimited(
+                currentAllowance?.allowance?.isUnlimited
+            )
+        } else {
+            const nextState = nextLocationState as SwapConfirmPageLocalState
+            getExchangeSpender(ExchangeType.SWAP_1INCH).then(
+                (spenderAddress) => {
+                    const currentSpenderAllowances = currentAllowances.find(
+                        (allowance) =>
+                            allowance.groupBy.address.toLowerCase() ===
+                            spenderAddress.toLowerCase()
+                    )
+
+                    const currentAllowance =
+                        currentSpenderAllowances?.allowances?.find(
+                            (allowance) =>
+                                allowance.displayData.address.toLowerCase() ===
+                                nextState.swapQuote.fromToken.address.toLowerCase()
+                        )
+
+                    setCurrentAllowanceValue(
+                        currentAllowance?.allowance?.value ?? BigNumber.from(0)
+                    )
+                    setIsCurrentAllowanceUnlimited(
+                        currentAllowance?.allowance?.isUnlimited
+                    )
+                }
+            )
+        }
+    }, [])
 
     // Fees
     useEffect(() => {
@@ -450,7 +490,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     </p>
                 )}
             </div>
-            <div className="flex flex-col space-y-3 px-6 pt-4">
+            <div className="flex flex-col space-y-3 px-6">
                 <AllowanceInput
                     tokenDecimals={assetDecimals}
                     tokenName={assetName}

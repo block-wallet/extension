@@ -106,7 +106,8 @@ import {
 } from '../utils/hardware';
 import { GasPricesController } from './GasPricesController';
 import { bnGreaterThanZero } from '../utils/bnUtils';
-import { recoverAddress } from '@ethersproject/transactions';
+import { recoverPersonalSignature } from '@metamask/eth-sig-util';
+import checksummedAddress from '../utils/checksummedAddress';
 
 export enum BlankProviderEvents {
     SUBSCRIPTION_UPDATE = 'SUBSCRIPTION_UPDATE',
@@ -373,7 +374,6 @@ export default class BlankProviderController extends BaseController<BlankProvide
             case JSONRPCMethod.eth_requestAccounts:
                 return this._connectionRequest(portId);
             case JSONRPCMethod.eth_sendTransaction:
-                console.log({ method, params });
                 return this._handleSendTransaction(
                     params as [TransactionRequest],
                     portId
@@ -384,18 +384,12 @@ export default class BlankProviderController extends BaseController<BlankProvide
             case JSONRPCMethod.eth_signTypedData_v1:
             case JSONRPCMethod.eth_signTypedData_v3:
             case JSONRPCMethod.eth_signTypedData_v4:
-                console.log({ method, params });
-
                 // eslint-disable-next-line no-case-declarations
-                const res = await this._handleMessageSigning(
+                return this._handleMessageSigning(
                     method,
                     params as RawSignatureData[SignatureMethods],
                     portId
                 );
-
-                console.log({ method, signature: res });
-
-                return res;
             case JSONRPCMethod.eth_subscribe:
                 return this._createSubscription(
                     params as unknown as SubscriptionParams,
@@ -445,9 +439,12 @@ export default class BlankProviderController extends BaseController<BlankProvide
     };
 
     private _handlePersonalECRecover(params: string[]): string {
-        const address = recoverAddress(params[0], params[1]);
-        console.log(address);
-        return address;
+        return checksummedAddress(
+            recoverPersonalSignature({
+                data: params[0],
+                signature: params[1],
+            })
+        );
     }
 
     private _handleEstimateGas = async (

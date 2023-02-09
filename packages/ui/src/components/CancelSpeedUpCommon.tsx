@@ -241,6 +241,7 @@ const CancelAndSpeedUpComponent = ({
                       status: replacementTx.status,
                       error: replacementTx.error as Error,
                       epochTime: replacementTx?.approveTime,
+                      qrParams: replacementTx?.qrParams,
                   }
                 : undefined,
             type === "cancel"

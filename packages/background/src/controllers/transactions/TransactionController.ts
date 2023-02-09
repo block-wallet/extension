@@ -368,7 +368,7 @@ export class TransactionController extends BaseController<
     private updateTransactionQRSignatureRequest = async (
         transactionId: string,
         requestId: string,
-        qrSignRequest: string
+        qrSignRequest: string[]
     ) => {
         const transactionMeta = this.getTransaction(transactionId);
         if (transactionMeta) {

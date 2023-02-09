@@ -141,6 +141,7 @@ const SwapPageConfirm: FC<{}> = () => {
                       status: inProgressTransaction.status,
                       error: inProgressTransaction.error as Error,
                       epochTime: inProgressTransaction?.approveTime,
+                      qrParams: inProgressTransaction?.qrParams,
                   }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,

@@ -102,7 +102,7 @@ export interface TransactionMeta {
 
 export interface QRTransactionParams {
     requestId: string;
-    qrSignRequest: string;
+    qrSignRequest: string[];
 }
 
 export interface BridgeTransactionParams {
@@ -231,7 +231,7 @@ export interface TransactionAdvancedData {
 }
 
 export interface SignatureData {
+    v: bigint;
     r: Buffer;
     s: Buffer;
-    v: bigint;
 }

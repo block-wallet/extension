@@ -18,7 +18,7 @@ const TransactionQR: FC<Props> = ({
 
     return !showQrDone ? (
         <TransactionShowQR
-            QRValue={qrParams?.qrSignRequest}
+            QRValues={qrParams?.qrSignRequest}
             onBack={onBack}
             onSuccess={() => {
                 setShowQRDone(true)

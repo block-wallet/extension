@@ -216,6 +216,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                       status: inProgressTransaction?.status,
                       error: inProgressTransaction?.error as Error,
                       epochTime: inProgressTransaction?.approveTime,
+                      qrParams: inProgressTransaction?.qrParams,
                   }
                 : undefined,
             HardwareWalletOpTypes.APPROVE_ALLOWANCE,

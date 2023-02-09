@@ -252,6 +252,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                       status: transaction.status,
                       error: transaction.error as Error,
                       epochTime: transaction?.approveTime,
+                      qrParams: transaction?.qrParams,
                   }
                 : undefined,
             HardwareWalletOpTypes.APPROVE_ALLOWANCE,

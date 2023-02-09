@@ -660,7 +660,7 @@ export default class KeyringControllerDerivated extends KeyringController {
                 } else {
                     return (
                         ethTx as FeeMarketEIP1559Transaction
-                    )._processSignature(v, r, s);
+                    )._processSignature(v + BigInt(27), r, s);
                 }
             } catch (error) {
                 log.error('signature request error', error);
@@ -875,7 +875,7 @@ export default class KeyringControllerDerivated extends KeyringController {
     public async getQRETHSignRequest(
         ethTx: TypedTransaction,
         _fromAddress: string
-    ): Promise<{ requestId: string; qrSignRequest: string }> {
+    ): Promise<{ requestId: string; qrSignRequest: string[] }> {
         return this._mutex.runExclusive(async () => {
             const dataType =
                 ethTx.type === 0
@@ -908,7 +908,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
             return {
                 requestId,
-                qrSignRequest: ethSignRequest.toUREncoder(400).nextPart(),
+                qrSignRequest: ethSignRequest.toUREncoder(200).encodeWhole(),
             };
         });
     }
@@ -1001,11 +1001,11 @@ export default class KeyringControllerDerivated extends KeyringController {
         const ethSignature = ETHSignature.fromCBOR(cbor);
         const signature = ethSignature.getSignature(); // it will return the signature r,s,v
         const slice = Uint8Array.prototype.slice.call(signature);
-        const r = slice.slice(0, 32);
-        const s = slice.slice(32, 64);
-        const v = arrToBufArr(slice.slice(64, 65));
+        const v = bufferToBigInt(arrToBufArr(slice.slice(64, 65)));
+        const r = arrToBufArr(slice.slice(0, 32));
+        const s = arrToBufArr(slice.slice(32, 64));
 
-        const signatureData = { r, s, v };
+        const signatureData: SignatureData = { v, r, s };
 
         console.log('keyring controller', 'EMIT', 'QR_SIGNATURE_SUBMIT', {
             requestId,

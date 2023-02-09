@@ -1,16 +1,39 @@
-import { FC } from "react"
+import { FC, useEffect, useState } from "react"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
 import { Classes } from "../../styles"
 import QRCode from "qrcode.react"
 import Divider from "../Divider"
 
+function sleep(ms: number): Promise<unknown> {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 interface Props {
-    QRValue?: string
+    QRValues?: string[]
     onBack: () => void
     onSuccess: () => void
 }
 
-const TransactionShowQR: FC<Props> = ({ onBack, onSuccess, QRValue }) => {
+const TransactionShowQR: FC<Props> = ({ onBack, onSuccess, QRValues }) => {
+    const [QRValue, setQRValue] = useState("")
+    const [index, setIndex] = useState(0)
+
+    useEffect(() => {
+        setTimeout(() => {
+            if (QRValues && QRValues.length) {
+                if (index < QRValues.length) {
+                    setQRValue(QRValues[index])
+                }
+
+                let newIndex = index + 1
+                if (newIndex >= QRValues.length) {
+                    newIndex = 0
+                }
+                setIndex(newIndex)
+            }
+        }, 1200)
+    }, [QRValue])
+
     return (
         <div className="flex flex-col items-center justify-center">
             <div>

@@ -44,7 +44,7 @@ const getAllowanceAmountYupSchema = (
             )
             .test(
                 "equal-current",
-                "Value is same as the current allowance",
+                "Value is the same as current allowance",
                 (value?: string) => {
                     if (!value) return false
                     try {

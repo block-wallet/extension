@@ -7,9 +7,27 @@ import { AddressBook } from '@block-wallet/background/controllers/AddressBookCon
 import { TransactionControllerState } from '@block-wallet/background/controllers/transactions/TransactionController';
 import { TransactionWatcherControllerState } from '@block-wallet/background/controllers/TransactionWatcherController';
 import { SIGN_TRANSACTION_TIMEOUT } from '@block-wallet/background/utils/constants/time';
+import {
+    AccountStatus,
+    AccountType,
+} from '@block-wallet/background/controllers/AccountTrackerController';
+import { DeepPartial } from '@block-wallet/background/utils/types/helpers';
 
-const persistedState = {
-    TransactionWatcherControllerState: {},
+type newBlankAppState = BlankAppState & {
+    OnboardingController: { newAddedKeyOnLevel2: boolean };
+    PreferencesController: { newAddedKeyOnLevel2: string };
+};
+
+const persistedState: DeepPartial<BlankAppState> = {
+    TransactionWatcherControllerState: {
+        tokenAllowanceEvents: {},
+        transactions: {},
+    },
+    TokenController: {
+        userTokens: {},
+        cachedPopulatedTokens: {},
+        deletedUserTokens: {},
+    },
     BlockFetchController: {
         blockFetchData: {
             1: {
@@ -25,18 +43,27 @@ const persistedState = {
         recentAddresses: {} as AddressBook,
     },
     AccountTrackerController: {
+        isRefreshingAllowances: false,
         isAccountTrackerLoading: false,
         accounts: {
             '0x72fd102eb412de8415ca9a89c0c2a5bd2ecfbdfb': {
                 address: '0x72fd102eb412de8415ca9a89c0c2a5bd2ecfbdfb',
-                balance: BigNumber.from(0),
                 name: 'Account1',
+                accountType: AccountType.HD_ACCOUNT,
+                allowances: {},
+                balances: {},
+                index: 0,
+                status: AccountStatus.ACTIVE,
             },
 
             '0xd7d4e99b3e796a528590f5f6b84c2b2f967e7ccb': {
                 address: '0x72fd102eb412de8415ca9a89c0c2a5bd2ecfbdfb',
-                balance: BigNumber.from(0),
                 name: 'Account2',
+                accountType: AccountType.HD_ACCOUNT,
+                allowances: {},
+                balances: {},
+                index: 0,
+                status: AccountStatus.ACTIVE,
             },
         },
         hiddenAccounts: {},
@@ -64,10 +91,11 @@ const persistedState = {
     },
     ExchangeRatesController: {
         exchangeRates: { ETH: 2786.23, USDT: 1 },
+        isRatesChangingAfterNetworkChange: false,
         networkNativeCurrency: {
             symbol: 'ETH',
             // Default Coingecko id for ETH rates
-            coingeckoCurrencyId: 'ethereum',
+            coingeckoPlatformId: 'ethereum',
         },
     },
     GasPricesController: {
@@ -79,30 +107,22 @@ const persistedState = {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     fast: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                     slow: {
                         gasPrice: null,
                         maxFeePerGas: null,
                         maxPriorityFeePerGas: null,
+                        lastBaseFeePerGas: null,
                     },
                 },
-                feeData: {
-                    gasPrice: null,
-                    maxFeePerGas: null,
-                    maxPriorityFeePerGas: null,
-                },
             },
-        },
-    },
-    IncomingTransactionController: {
-        incomingTransactions: {
-            '0x72fd102eb412de8415ca9a89c0c2a5bd2ecfbdfb': {} as any,
-            '0xd7d4e99b3e796a528590f5f6b84c2b2f967e7ccb': {} as any,
         },
     },
     KeyringController: {
@@ -117,7 +137,6 @@ const persistedState = {
         nativeCurrency: 'GBP',
         selectedAddress: '0x72fd102eb412de8415ca9a89c0c2a5bd2ecfbdfb',
         showTestNetworks: true,
-        userTokens: { USDT: '0xdac17f958d2ee523a2206206994597c13d831ec7' },
     },
     NetworkController: {
         selectedNetwork: 'mainnet',
@@ -130,13 +149,10 @@ const persistedState = {
         transactions: [],
         txSignTimeout: SIGN_TRANSACTION_TIMEOUT,
     },
-    BlockUpdatesController: { blockData: { 5: -1 } },
+    BlockUpdatesController: { blockData: { 5: { blockNumber: -1 } } },
 };
 
-const initialState: BlankAppState & {
-    OnboardingController: { newAddedKeyOnLevel2: boolean };
-    PreferencesController: { newAddedKeyOnLevel2: string };
-} = {
+const initialState: newBlankAppState = {
     TransactionWatcherControllerState: {
         transactions: {},
         tokenAllowanceEvents: {},
@@ -292,10 +308,14 @@ const initialState: BlankAppState & {
 
 describe('State reconciler', () => {
     it('Should reconcile two levels of the persisted state with the initial state correctly', () => {
-        const newState = reconcileState<any>(persistedState, initialState);
+        const newState = reconcileState<newBlankAppState>(
+            persistedState,
+            initialState
+        );
         expect(newState).to.be.deep.equal({
             TransactionWatcherControllerState: {
                 transactions: {},
+                tokenAllowanceEvents: {},
             } as TransactionWatcherControllerState,
             BlockFetchController: {
                 blockFetchData: {
@@ -307,7 +327,9 @@ describe('State reconciler', () => {
                     },
                 },
             },
-            BlockUpdatesController: { blockData: { 5: -1 } },
+            BlockUpdatesController: {
+                blockData: { 5: { blockNumber: -1 } },
+            },
             AddressBookController: {
                 addressBook: {} as AddressBook,
                 recentAddresses: {} as AddressBook,
@@ -318,17 +340,25 @@ describe('State reconciler', () => {
             },
             AccountTrackerController: {
                 isAccountTrackerLoading: false,
+                isRefreshingAllowances: false,
                 accounts: {
                     '0x72fd102eb412de8415ca9a89c0c2a5bd2ecfbdfb': {
                         address: '0x72fd102eb412de8415ca9a89c0c2a5bd2ecfbdfb',
-                        balance: BigNumber.from(0),
                         name: 'Account1',
+                        accountType: AccountType.HD_ACCOUNT,
+                        allowances: {},
+                        balances: {},
+                        index: 0,
+                        status: AccountStatus.ACTIVE,
                     },
-
                     '0xd7d4e99b3e796a528590f5f6b84c2b2f967e7ccb': {
                         address: '0x72fd102eb412de8415ca9a89c0c2a5bd2ecfbdfb',
-                        balance: BigNumber.from(0),
                         name: 'Account2',
+                        accountType: AccountType.HD_ACCOUNT,
+                        allowances: {},
+                        balances: {},
+                        index: 0,
+                        status: AccountStatus.ACTIVE,
                     },
                 },
                 hiddenAccounts: {},
@@ -359,7 +389,7 @@ describe('State reconciler', () => {
                 networkNativeCurrency: {
                     symbol: 'ETH',
                     // Default Coingecko id for ETH rates
-                    coingeckoCurrencyId: 'ethereum',
+                    coingeckoPlatformId: 'ethereum',
                 },
                 isRatesChangingAfterNetworkChange: false,
             },
@@ -372,30 +402,22 @@ describe('State reconciler', () => {
                                 gasPrice: null,
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                             fast: {
                                 gasPrice: null,
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                             slow: {
                                 gasPrice: null,
                                 maxFeePerGas: null,
                                 maxPriorityFeePerGas: null,
+                                lastBaseFeePerGas: null,
                             },
                         },
-                        feeData: {
-                            gasPrice: null,
-                            maxFeePerGas: null,
-                            maxPriorityFeePerGas: null,
-                        },
                     },
-                },
-            },
-            IncomingTransactionController: {
-                incomingTransactions: {
-                    '0x72fd102eb412de8415ca9a89c0c2a5bd2ecfbdfb': {} as any,
-                    '0xd7d4e99b3e796a528590f5f6b84c2b2f967e7ccb': {} as any,
                 },
             },
             KeyringController: {
@@ -422,9 +444,6 @@ describe('State reconciler', () => {
                 nativeCurrency: 'GBP',
                 selectedAddress: '0x72fd102eb412de8415ca9a89c0c2a5bd2ecfbdfb',
                 newAddedKeyOnLevel2: '',
-                userTokens: {
-                    USDT: '0xdac17f958d2ee523a2206206994597c13d831ec7',
-                },
                 antiPhishingImage: '',
                 showTestNetworks: true,
                 showWelcomeMessage: false,
@@ -451,7 +470,6 @@ describe('State reconciler', () => {
             TransactionController: {
                 transactions: [],
                 txSignTimeout: SIGN_TRANSACTION_TIMEOUT,
-                // unapprovedTransactions: {},
             },
             TokenController: {
                 userTokens: {},
@@ -467,6 +485,6 @@ describe('State reconciler', () => {
                     incompatibleSites: [],
                 },
             },
-        });
+        } as newBlankAppState);
     });
 });

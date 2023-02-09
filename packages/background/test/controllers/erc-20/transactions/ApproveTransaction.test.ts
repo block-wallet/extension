@@ -457,11 +457,15 @@ describe('ApproveTransaction implementation', function () {
                 expect(updatedMeta).to.be.not.undefined;
                 expect(updatedMeta!.id).to.be.not.null;
                 expect(updatedMeta!.id).to.be.not.undefined;
-                expect(meta.transactionParams.maxFeePerGas?.eq(2000000)).to.be
-                    .true;
-                expect(meta.transactionParams.maxPriorityFeePerGas?.eq(200000))
+                expect(updatedMeta!.transactionParams.maxFeePerGas?.eq(2000000))
                     .to.be.true;
-                expect(meta.transactionParams.gasLimit?.eq(200000)).to.be.true;
+                expect(
+                    updatedMeta!.transactionParams.maxPriorityFeePerGas?.eq(
+                        200000
+                    )
+                ).to.be.true;
+                expect(updatedMeta!.transactionParams.gasLimit?.eq(200000)).to
+                    .be.true;
             });
         });
 

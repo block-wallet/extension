@@ -1343,7 +1343,7 @@ describe('Transactions Controller', () => {
                 .stub(networkController, 'getEIP1559Compatibility')
                 .returns(Promise.resolve(false));
 
-            const { transactionMeta, result } =
+            const { transactionMeta } =
                 await transactionController.addTransaction({
                     transaction: {
                         from: mockedAccounts.goerli[0].address,

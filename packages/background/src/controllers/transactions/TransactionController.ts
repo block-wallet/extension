@@ -1253,7 +1253,9 @@ export class TransactionController extends BaseController<
             throw new Error('The specified transaction does not exist');
         }
 
-        const oldTransactionI = transactions.indexOf(transactionMeta);
+        const oldTransactionI = transactions.findIndex(
+            (t) => t.id === transactionMeta.id
+        );
 
         if (oldTransactionI === -1) {
             throw new Error("Can't find the old transaction index");
@@ -1469,7 +1471,9 @@ export class TransactionController extends BaseController<
 
         const transactions = [...this.store.getState().transactions];
 
-        const oldTransactionI = transactions.indexOf(transactionMeta);
+        const oldTransactionI = transactions.findIndex(
+            (t) => t.id === transactionMeta.id
+        );
 
         if (oldTransactionI === -1) {
             throw new Error("Can't find the old transaction index");

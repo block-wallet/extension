@@ -1,7 +1,7 @@
 {
     "author": "BlockWallet",
     "background": {
-        "scripts": ["hot-reload.js", "background.js"]
+        "service_worker": "background.js"
     },
     "content_scripts": [
         {
@@ -19,31 +19,31 @@
             "matches": ["*://connect.trezor.io/*/popup.html"]
         }
     ],
-    "browser_action": {
+    "action": {
         "default_popup": "popup.html",
-        "default_title": "[BETA] BlockWallet"
+        "default_title": "[Experimental] BlockWallet"
     },
-    "description": "The first crypto wallet protecting you on Web3 without any compromises.",
+    "description": "The most private, non-custodial cryptocurrency wallet",
     "homepage_url": "https://www.blockwallet.io/",
     "icons": {
         "16": "icons/icon-16.png",
         "48": "icons/icon-48.png",
         "128": "icons/icon-128.png"
     },
-    "content_security_policy": "script-src 'self'; object-src 'self'",
-    "manifest_version": 2,
-    "name": "[BETA] BlockWallet",
-    "permissions": [
-        "activeTab",
-        "storage",
-        "notifications",
-        "https://*.blockwallet.io/*",
-        "https://*.etherscan.io/*",
-        "https://*.bscscan.com/*",
-        "https://*.polygonscan.com/*"
-    ],
-    "short_name": "[BETA] BlockWallet",
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'"
+    },
+    "manifest_version": 3,
+    "name": "[Experimental] BlockWallet",
+    "permissions": ["activeTab", "storage", "notifications", "alarms"],
+    "host_permissions": ["https://*.blockwallet.io/*"],
+    "short_name": "BlockWallet",
     "version": "0.5.6",
     "version_name": "beta",
-    "web_accessible_resources": ["blankProvider.js"]
+    "web_accessible_resources": [
+        {
+            "resources": ["blankProvider.js"],
+            "matches": ["https://*/*"]
+        }
+    ]
 }

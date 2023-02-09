@@ -148,7 +148,8 @@ describe('Address book controller implementation', function () {
             tokenOperationsController,
             preferencesController,
             blockUpdatesController,
-            transactionWatcherController
+            transactionWatcherController,
+            transactionController
         );
 
         bridgeController = new BridgeController(

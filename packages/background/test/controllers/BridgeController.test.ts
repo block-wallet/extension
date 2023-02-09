@@ -194,7 +194,8 @@ describe('Bridge Controller', () => {
                 tokenController,
                 transactionController,
                 { transactions: [], tokenAllowanceEvents: {} }
-            )
+            ),
+            transactionController
         );
 
         bridgeController = new BridgeController(

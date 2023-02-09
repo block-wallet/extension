@@ -4,12 +4,14 @@ import {
     toChecksumAddress,
 } from 'ethereumjs-util';
 import { compareAddresses } from '../controllers/transactions/utils/utils';
-import { IToken } from '../controllers/erc-20/Token';
+import { IToken, Token } from '../controllers/erc-20/Token';
 import {
     ProviderError,
     WatchAssetParameters,
     WatchAssetReq,
 } from './types/ethereum';
+import { BigNumber } from 'ethers';
+import { MaxUint256 } from '@ethersproject/constants';
 
 const IS_BASE64_IMAGE = 'IS_BASE64_IMAGE';
 
@@ -130,3 +132,20 @@ export const fillTokenData = (
         l1Bridge: token.l1Bridge || defaultValues.l1Bridge,
     };
 };
+
+export function isUnlimitedAllowance(
+    currentToken: Token,
+    allowance: BigNumber
+): boolean {
+    if (allowance === MaxUint256) {
+        return true;
+    }
+
+    if (currentToken.totalSupply) {
+        return BigNumber.from(currentToken.totalSupply).lte(
+            BigNumber.from(allowance ?? 0)
+        );
+    }
+
+    return false;
+}

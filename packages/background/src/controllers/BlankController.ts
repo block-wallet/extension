@@ -407,6 +407,7 @@ export default class BlankController extends EventEmitter {
             this.preferencesController,
             this.blockUpdatesController,
             this.transactionWatcherController,
+            this.transactionController,
             initState.AccountTrackerController
         );
 

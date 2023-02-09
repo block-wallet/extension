@@ -11,6 +11,7 @@ import {
 } from './rpcConfigBuilder';
 import { isNil } from 'lodash';
 import { fetchBlockWithRetries } from '../blockFetch';
+import { unixTimestampToJSTimestamp } from '../timestamp';
 
 export class RPCLogsFetcher {
     private readonly chainId: number;
@@ -200,6 +201,6 @@ export class RPCLogsFetcher {
             }
         }
 
-        return txTimestamp ? txTimestamp * 1000 : undefined;
+        return unixTimestampToJSTimestamp(txTimestamp);
     }
 }

@@ -44,6 +44,7 @@ import {
     getOutgoingERC20LogsTopics,
     getTokenApprovalLogsTopics,
 } from '../utils/logsQuery';
+import { unixTimestampToJSTimestamp } from '../utils/timestamp';
 
 interface TokenAllowanceEvent {
     [tokenAddress: string]: {
@@ -1130,7 +1131,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         chainId: number,
         block: Block
     ) => {
-        const timestamp = block.timestamp * 1000;
+        const timestamp = unixTimestampToJSTimestamp(block.timestamp);
 
         const addresses = this.store.getState().transactions[chainId];
         for (const address in addresses) {
@@ -1145,7 +1146,10 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                 for (const transactionHash in transactions.transactions) {
                     const tx = transactions.transactions[transactionHash];
 
-                    if (tx.transactionReceipt?.blockNumber === block.number) {
+                    if (
+                        tx.transactionReceipt?.blockNumber === block.number &&
+                        timestamp
+                    ) {
                         tx.time = timestamp;
                         tx.submittedTime = timestamp;
                         tx.confirmationTime = timestamp;
@@ -1325,7 +1329,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             tx.contractAddress = toChecksumAddress(tx.contractAddress);
         }
 
-        const time = Number(tx.timeStamp) * 1000;
+        const time = unixTimestampToJSTimestamp(Number(tx.timeStamp));
 
         const isIncomming =
             !this._sameAddress(tx.from, address) &&

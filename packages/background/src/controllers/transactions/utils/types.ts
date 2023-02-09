@@ -8,7 +8,7 @@ import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Transaction } from '@ethersproject/transactions';
 import { CurrencyAmountPair } from '../../privacy/types';
-import { IToken } from '../../erc-20/Token';
+import { IToken, Token } from '../../erc-20/Token';
 import { ExchangeParams } from '../../SwapController';
 import { ContractMethodSignature } from '../ContractSignatureParser';
 
@@ -130,6 +130,7 @@ export interface BridgeTransactionParams {
 export interface ApproveAllowanceParams {
     spenderAddress: string;
     allowanceValue: BigNumber;
+    token: Token;
 }
 
 export interface uiTransactionParams extends TransactionParams {

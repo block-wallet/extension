@@ -19,7 +19,10 @@ import { secondsToMMSS } from "../../util/time"
 import { QRTransactionParams } from "@block-wallet/background/controllers/transactions/utils/types"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import TransactionQR from "../../components/qr/TransactionQR"
-import { hardwareQrSubmitSignature } from "../commActions"
+import {
+    hardwareQrCancelSignRequest,
+    hardwareQrSubmitSignature,
+} from "../commActions"
 
 const messages: {
     [key in HardwareWalletOpTypes]: {
@@ -185,18 +188,16 @@ export const useTransactionWaitingDialog = (
         reject: () => void
     }
 ) => {
+    const keystoneVendor =
+        getDeviceFromAccountType(accountType) === Devices.KEYSTONE
     const { texts, titles, dispatch, status, isOpen, gifs } = useWaitingDialog({
         defaultStatus: "idle",
     })
+
     const txTimeout = useTransactionTimeout()
 
     useEffect(() => {
         if (transaction?.status) {
-            console.log("Transaccion estado:")
-            console.log(transaction.status)
-            console.log(
-                isTransactionOrRequestAwaitingSigning(transaction.status)
-            )
             if (isTransactionOrRequestAwaitingSigning(transaction.status)) {
                 const message = messages[operation]
                 const hwDeviceMessage = getAwaitingSigningMessage(
@@ -204,9 +205,6 @@ export const useTransactionWaitingDialog = (
                     transaction?.status,
                     operation
                 )
-                console.log("useTransactionWaitingDialog", {
-                    qrParanms: transaction.qrParams,
-                })
 
                 dispatch({
                     type: "open",
@@ -215,8 +213,7 @@ export const useTransactionWaitingDialog = (
                         titles: { loading: message.titles.confirming },
                         texts: {
                             loading: isHardwareWallet(accountType) ? (
-                                getDeviceFromAccountType(accountType) !==
-                                Devices.KEYSTONE ? (
+                                !keystoneVendor ? (
                                     <WaitingHWConfirmation
                                         message={
                                             hwDeviceMessage ??
@@ -230,9 +227,10 @@ export const useTransactionWaitingDialog = (
                                 ) : (
                                     <TransactionQR
                                         qrParams={transaction.qrParams}
-                                        onBack={() =>
-                                            dispatch({ type: "close" })
-                                        }
+                                        onBack={() => {
+                                            callbacks.reject()
+                                            hardwareQrCancelSignRequest()
+                                        }}
                                         onQRSignatureProvided={(
                                             qrSignature: string
                                         ) => {
@@ -243,13 +241,8 @@ export const useTransactionWaitingDialog = (
                                                     qrSignature
                                                 )
                                             } else {
-                                                useCallback(
-                                                    () =>
-                                                        dispatch({
-                                                            type: "close",
-                                                        }),
-                                                    [dispatch]
-                                                )
+                                                callbacks.reject()
+                                                hardwareQrCancelSignRequest()
                                             }
                                         }}
                                     />

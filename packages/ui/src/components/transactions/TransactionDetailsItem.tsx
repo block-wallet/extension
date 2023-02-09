@@ -50,15 +50,36 @@ const TransactionDetailItem: FC<{ item: DetailedItem }> = ({ item }) => {
                                 : undefined
                         }
                     >
-                        {item.value && isNativeValue
-                            ? item.decimals
-                                ? `${formatNumberLength(
-                                      item.value as string,
-                                      item.decimals,
-                                      false
-                                  )} ${item.unitName ?? ""}`
-                                : `${item.value} ${item.unitName ?? ""}`
-                            : item.value}
+                        {item.link ? (
+                            <a
+                                href={item.link}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-blue-500"
+                            >
+                                {item.value && isNativeValue
+                                    ? item.decimals
+                                        ? `${formatNumberLength(
+                                              item.value as string,
+                                              item.decimals,
+                                              false
+                                          )} ${item.unitName ?? ""}`
+                                        : `${item.value} ${item.unitName ?? ""}`
+                                    : item.value}
+                            </a>
+                        ) : item.value && isNativeValue ? (
+                            item.decimals ? (
+                                `${formatNumberLength(
+                                    item.value as string,
+                                    item.decimals,
+                                    false
+                                )} ${item.unitName ?? ""}`
+                            ) : (
+                                `${item.value} ${item.unitName ?? ""}`
+                            )
+                        ) : (
+                            item.value
+                        )}
                     </span>
                 </GenericTooltip>
             )}

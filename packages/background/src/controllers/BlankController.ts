@@ -109,6 +109,7 @@ import type {
     RequestCalculateApproveTransactionGasLimit,
     RequestApproveAllowance,
     RequestAddAsNewApproveTransaction,
+    RequestGetExchangeSpender,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -782,6 +783,10 @@ export default class BlankController extends EventEmitter {
             case Messages.EXCHANGE.GET_EXCHANGE:
                 return this.getExchangeParameters(
                     request as RequestGetExchange
+                );
+            case Messages.EXCHANGE.GET_SPENDER:
+                return this.getExchangeSpender(
+                    request as RequestGetExchangeSpender
                 );
             case Messages.EXCHANGE.EXECUTE:
                 return this.executeExchange(request as RequestExecuteExchange);
@@ -1672,6 +1677,18 @@ export default class BlankController extends EventEmitter {
             exchangeType,
             exchangeParams
         );
+    }
+
+    /**
+     * Fetch the spender address for the specified exchange
+     *
+     * @param exchangeType Exchange type
+     *
+     */
+    private async getExchangeSpender({
+        exchangeType,
+    }: RequestGetExchangeSpender): Promise<string> {
+        return this.swapController.getSpender(exchangeType);
     }
 
     /**

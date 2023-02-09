@@ -229,7 +229,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
 
     const currentAllowanceValue = currentAllowance
         ? currentAllowance?.allowance?.value
-        : undefined
+        : BigNumber.from("0")
 
     const isCurrentAllowanceUnlimited =
         currentAllowance && currentAllowance?.allowance?.isUnlimited
@@ -356,46 +356,47 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
 
     const origin = (
         <span className="inline-block" title={transaction.origin}>
-            {formatName(transaction.origin, 30)}
+            {formatName(transaction.origin, 27)}
         </span>
     )
     const isFromBlockWallet = transaction.origin === "blank"
     const isRevoke = parseFloat(allowance) === 0
 
-    const mainSectionTitle = `Set ${tokenName} Allowance`
-
-    const mainSectionText = isRevoke ? (
+    const mainSectionTitle = (
         <>
-            {isFromBlockWallet ? (
-                <a
-                    href={spenderAddressExplorerLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary-300 hover:underline"
-                >
-                    {spenderName}
-                </a>
-            ) : (
-                origin
-            )}{" "}
-            will not be able to access your {tokenName} anymore.
+            {isFromBlockWallet ? "BlockWallet" : origin} is requesting to update
+            your {tokenName} Allowance
         </>
-    ) : (
+    )
+
+    const mainSectionText = (
         <>
-            This will let{" "}
-            {isFromBlockWallet ? (
-                <a
-                    href={spenderAddressExplorerLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-primary-300 hover:underline"
-                >
-                    {spenderName}
-                </a>
+            {isRevoke ? (
+                <>
+                    <a
+                        href={spenderAddressExplorerLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary-300 hover:underline"
+                    >
+                        {spenderName}
+                    </a>{" "}
+                    will not be able to access your {tokenName} anymore.
+                </>
             ) : (
-                origin
-            )}{" "}
-            withdraw and automate {tokenName} transactions for you.
+                <>
+                    This will let{" "}
+                    <a
+                        href={spenderAddressExplorerLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary-300 hover:underline"
+                    >
+                        {spenderName}
+                    </a>{" "}
+                    withdraw and automate {tokenName} transactions for you.
+                </>
+            )}
         </>
     )
 

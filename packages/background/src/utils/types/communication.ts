@@ -110,6 +110,7 @@ enum EXCHANGE {
     APPROVE = 'APPROVE_EXCHANGE',
     GET_QUOTE = 'GET_EXCHANGE_QUOTE',
     GET_EXCHANGE = 'GET_EXCHANGE',
+    GET_SPENDER = 'GET_SPENDER',
     EXECUTE = 'EXECUTE_EXCHANGE',
 }
 
@@ -326,6 +327,7 @@ export interface RequestSignatures {
     [Messages.EXCHANGE.APPROVE]: [RequestApproveExchange, boolean];
     [Messages.EXCHANGE.GET_QUOTE]: [RequestGetExchangeQuote, SwapQuote];
     [Messages.EXCHANGE.GET_EXCHANGE]: [RequestGetExchange, SwapParameters];
+    [Messages.EXCHANGE.GET_SPENDER]: [RequestGetExchangeSpender, string];
     [Messages.EXCHANGE.EXECUTE]: [RequestExecuteExchange, string];
     [Messages.EXTERNAL.REQUEST]: [RequestExternalRequest, unknown];
     [Messages.EXTERNAL.SETUP_PROVIDER]: [undefined, ProviderSetupData];
@@ -642,6 +644,10 @@ export interface RequestGetExchangeQuote {
 export interface RequestGetExchange {
     exchangeType: ExchangeType;
     exchangeParams: OneInchSwapRequestParams;
+}
+
+export interface RequestGetExchangeSpender {
+    exchangeType: ExchangeType;
 }
 
 export interface RequestExecuteExchange {

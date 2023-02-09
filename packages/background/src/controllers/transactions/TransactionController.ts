@@ -521,6 +521,20 @@ export class TransactionController extends BaseController<
                     `Externally initiated transaction has no permission to make transaction with account ${transaction.from}.`
                 );
             }
+
+            // If the from account is different than the select account
+            // we have to update its balance.
+            const selectedAccount = this._preferencesController
+                .getSelectedAddress()
+                .toLowerCase();
+
+            if (transaction.from.toLowerCase() !== selectedAccount) {
+                this.emit(
+                    TransactionEvents.NOT_SELECTED_ACCOUNT_TRANSACTION,
+                    transaction.chainId || chainId,
+                    toChecksumAddress(transaction.from)
+                );
+            }
         }
 
         if (!transactionCategory) {

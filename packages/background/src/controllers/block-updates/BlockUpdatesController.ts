@@ -57,11 +57,11 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
     private addNewOnBlockListener() {
         if (!this.activeSubscriptions) {
             // when there is no active subscriptions (the extension is closed and locked)
-            // the blocks are synced every 5 minutes.
+            // the blocks are synced every 3 minutes.
             this._blockFetchController.addNewOnBlockListener(
                 this._networkController.network.chainId,
                 this._blockUpdates,
-                5 * MINUTE
+                3 * MINUTE
             );
         } else {
             this._blockFetchController.addNewOnBlockListener(
@@ -103,14 +103,14 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
      * It sets if there is at least one active subscription to the background
      *
      * @param isUnlocked Whether the extension is unlocked or not
-     * @param subscriptions The number of subscriptions to the background
+     * @param activeSubscription If there is any block wallet instance active.
      */
     public setActiveSubscriptions(
         isUnlocked: boolean,
-        subscriptions: number
+        activeSubscription: boolean
     ): void {
         const prevActiveSubscriptions = this.activeSubscriptions;
-        this.activeSubscriptions = isUnlocked || subscriptions > 0;
+        this.activeSubscriptions = isUnlocked && activeSubscription;
         if (this.activeSubscriptions != prevActiveSubscriptions) {
             this.addNewOnBlockListener();
         }

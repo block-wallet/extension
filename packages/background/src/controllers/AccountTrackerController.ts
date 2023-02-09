@@ -1255,7 +1255,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             keyring.perPage = pageSize;
             let deviceAccounts: [] = [];
 
-            // TODO(KEYSTONE): this does not work for keystone, I believe. Keystone does not support getPage
             if (device === Devices.KEYSTONE) {
                 deviceAccounts = (await this._keyringController.getQRPage(
                     pageIndex

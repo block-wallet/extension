@@ -651,7 +651,6 @@ export default class KeyringControllerDerivated extends KeyringController {
         }
     }
 
-    // TODO(REC): This method + Keystone
     /**
      * Sign Message
      *
@@ -708,7 +707,6 @@ export default class KeyringControllerDerivated extends KeyringController {
         }
     }
 
-    // TODO(REC): This method + Keystone
     /**
      * Sign Personal Message
      *
@@ -772,7 +770,6 @@ export default class KeyringControllerDerivated extends KeyringController {
         }
     }
 
-    // TODO(REC): This method + Keystone
     /**
      * Sign Typed Data
      * (EIP712 https://github.com/ethereum/EIPs/pull/712#issuecomment-329988454)

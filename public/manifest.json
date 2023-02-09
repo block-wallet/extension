@@ -1,20 +1,12 @@
 {
     "author": "BlockWallet",
     "background": {
-        "scripts": [
-            "hot-reload.js",
-            "background.js"
-        ]
+        "scripts": ["hot-reload.js", "background.js"]
     },
     "content_scripts": [
         {
-            "js": [
-                "content.js"
-            ],
-            "matches": [
-                "http://*/*",
-                "https://*/*"
-            ],
+            "js": ["content.js"],
+            "matches": ["http://*/*", "https://*/*"],
             "exclude_matches": [
                 "https://block-wallet.github.io/eth-ledger-bridge-keyring/*",
                 "https://connect.trezor.io/*"
@@ -23,17 +15,13 @@
             "all_frames": true
         },
         {
-            "js": [
-                "vendor/trezor/trezor-content.js"
-            ],
-            "matches": [
-                "*://connect.trezor.io/*/popup.html"
-            ]
+            "js": ["vendor/trezor/trezor-content.js"],
+            "matches": ["*://connect.trezor.io/*/popup.html"]
         }
     ],
     "browser_action": {
         "default_popup": "popup.html",
-        "default_title": "BlockWallet"
+        "default_title": "[BETA] BlockWallet"
     },
     "description": "The first crypto wallet protecting you on Web3 without any compromises.",
     "homepage_url": "https://www.blockwallet.io/",
@@ -44,7 +32,7 @@
     },
     "content_security_policy": "script-src 'self'; object-src 'self'",
     "manifest_version": 2,
-    "name": "BlockWallet",
+    "name": "[BETA] BlockWallet",
     "permissions": [
         "activeTab",
         "storage",
@@ -54,9 +42,8 @@
         "https://*.bscscan.com/*",
         "https://*.polygonscan.com/*"
     ],
-    "short_name": "BlockWallet",
+    "short_name": "[BETA] BlockWallet",
     "version": "0.5.6",
-    "web_accessible_resources": [
-        "blankProvider.js"
-    ]
+    "version_name": "beta",
+    "web_accessible_resources": ["blankProvider.js"]
 }

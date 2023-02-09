@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 // Explicitly disabled no-empty-pattern on this file as some actions need generic param typing but receive empty objects.
 /* eslint-disable no-empty-pattern */
-import type {
+import {
     ExternalEventSubscription,
     MessageTypes,
     RequestAccountCreate,
@@ -110,6 +110,7 @@ import type {
     RequestApproveAllowance,
     RequestAddAsNewApproveTransaction,
     RequestGetExchangeSpender,
+    Origin,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -408,6 +409,7 @@ export default class BlankController extends EventEmitter {
             this.preferencesController,
             this.blockUpdatesController,
             this.transactionWatcherController,
+            this.transactionController,
             initState.AccountTrackerController
         );
 
@@ -546,8 +548,14 @@ export default class BlankController extends EventEmitter {
      * Manages controllers updates
      */
     private manageControllers() {
-        // Get active subscriptions
-        const activeSubscriptions = Object.keys(this.subscriptions).length;
+        // Get active subscription
+        let activeSubscription = false;
+        for (const key in this.subscriptions) {
+            if (this.subscriptions[key].name === Origin.EXTENSION) {
+                activeSubscription = true;
+                break;
+            }
+        }
 
         // Check if app is unlocked
         const isAppUnlocked =
@@ -555,7 +563,7 @@ export default class BlankController extends EventEmitter {
 
         this.blockUpdatesController.setActiveSubscriptions(
             isAppUnlocked,
-            activeSubscriptions
+            activeSubscription
         );
     }
 

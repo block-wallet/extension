@@ -11,6 +11,7 @@ export const ButtonWithLoading: FunctionComponent<{
     to?: string
     buttonClass?: string
     formId?: string
+    spinnerSize?: string
 }> = ({
     type,
     onClick,
@@ -20,13 +21,17 @@ export const ButtonWithLoading: FunctionComponent<{
     to,
     buttonClass,
     formId = undefined,
+    spinnerSize = "24",
 }) => {
     const children = (
         <>
             {!isLoading ? (
                 label
             ) : (
-                <Spinner color={buttonClass ? "black" : "white"} size="24" />
+                <Spinner
+                    color={buttonClass ? "black" : "white"}
+                    size={spinnerSize || "24"}
+                />
             )}
         </>
     )

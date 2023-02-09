@@ -1,5 +1,5 @@
 import { BigNumber } from "@ethersproject/bignumber"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { formatUnits } from "@ethersproject/units"
 import { TokenAllowance } from "@block-wallet/background/controllers/AccountTrackerController"
 import { Classes, classnames } from "../../styles"
@@ -19,6 +19,8 @@ import DetailsDialog from "../dialog/DetailsDialog"
 
 import ChevronRightIcon from "../icons/ChevronRightIcon"
 import revokeIcon from "../../assets/images/icons/revoke.svg"
+import { ButtonWithLoading } from "../button/ButtonWithLoading"
+import { TokenAllowanceStatus } from "../../context/commTypes"
 
 const AllowanceItem = ({
     allowance,
@@ -35,6 +37,9 @@ const AllowanceItem = ({
 }) => {
     const history = useOnMountHistory()
     const { selectedNetwork, availableNetworks } = useBlankState()!
+
+    const isPendingUpdate =
+        allowance.status === TokenAllowanceStatus.AWAITING_TRANSACTION_RESULT
 
     const [open, setOpen] = useState(false)
     const [isRevokeDisabled, setIsRevokeDisabled] = useState(false)
@@ -195,23 +200,40 @@ const AllowanceItem = ({
             </div>
 
             <div className="flex flex-row items-center pr-2">
-                <button
-                    {...getIsHoveringProps()}
-                    onClick={revoke}
-                    className={classnames(
-                        Classes.smallButton,
-                        "flex space-x-2 font-semibold mr-4"
-                    )}
-                >
-                    <img
-                        width="13"
-                        height="13"
-                        src={revokeIcon}
-                        alt="Revoke"
-                        className="mr-2"
+                {isPendingUpdate ? (
+                    <ButtonWithLoading
+                        isLoading={true}
+                        label="Updating"
+                        spinnerSize="12"
+                        buttonClass={classnames(
+                            Classes.smallButton,
+                            "w-20",
+                            "mr-4",
+                            "text-white bg-blue-200 pointer-events-none border-blue-200"
+                        )}
                     />
-                    Revoke
-                </button>
+                ) : (
+                    <button
+                        {...getIsHoveringProps()}
+                        onClick={revoke}
+                        className={classnames(
+                            Classes.smallButton,
+                            "flex space-x-2 font-semibold mr-4",
+                            "w-20"
+                        )}
+                        disabled={isPendingUpdate}
+                    >
+                        <img
+                            width="13"
+                            height="13"
+                            src={revokeIcon}
+                            alt="Revoke"
+                            className="mr-2"
+                        />
+                        Revoke
+                    </button>
+                )}
+
                 <ChevronRightIcon />
             </div>
         </div>

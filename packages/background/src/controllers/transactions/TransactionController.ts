@@ -65,6 +65,9 @@ import {
 } from '../../utils/hardware';
 import { NFTContract } from '../erc-721/NFTContract';
 import httpClient from '../../utils/http';
+import { fetchBlockWithRetries } from '../../utils/blockFetch';
+import { unixTimestampToJSTimestamp } from '../../utils/timestamp';
+import { cloneDeep } from 'lodash';
 
 /**
  * It indicates the amount of blocks to wait after marking
@@ -521,6 +524,20 @@ export class TransactionController extends BaseController<
                     `Externally initiated transaction has no permission to make transaction with account ${transaction.from}.`
                 );
             }
+
+            // If the from account is different than the select account
+            // we have to update its balance.
+            const selectedAccount = this._preferencesController
+                .getSelectedAddress()
+                .toLowerCase();
+
+            if (transaction.from.toLowerCase() !== selectedAccount) {
+                this.emit(
+                    TransactionEvents.NOT_SELECTED_ACCOUNT_TRANSACTION,
+                    transaction.chainId || chainId,
+                    toChecksumAddress(transaction.from)
+                );
+            }
         }
 
         if (!transactionCategory) {
@@ -558,7 +575,7 @@ export class TransactionController extends BaseController<
                 });
 
                 // Get value
-                const { _value } = erc20Approve.getDataArguments(
+                const { _value, _spender } = erc20Approve.getDataArguments(
                     transaction.data!
                 );
 
@@ -567,9 +584,17 @@ export class TransactionController extends BaseController<
                     transaction.to!
                 );
 
-                if (!tokens[0]) {
+                const token = tokens[0];
+
+                if (!token) {
                     throw new Error('Failed fetching token data');
                 }
+
+                transactionMeta.approveAllowanceParams = {
+                    allowanceValue: BigNumber.from(_value._hex),
+                    spenderAddress: _spender,
+                    token,
+                };
 
                 if (!tokens[0].decimals) {
                     // Check if it is an NFT
@@ -920,8 +945,17 @@ export class TransactionController extends BaseController<
             // Update transaction
             this.updateTransaction(transactionMeta);
 
+            // Refresh current tx.
+            // Otherwise, we will modify current state reference and
+            // the status update transition event will not be fired
+            const refreshedTx = this.getTransaction(transactionMeta.id);
+
+            if (!refreshedTx) {
+                throw new Error('Transaction not found');
+            }
+
             // Send transaction
-            await this.submitTransaction(provider, transactionMeta);
+            await this.submitTransaction(provider, refreshedTx);
         } catch (error) {
             // Check for HW flow cancellation
             if (this.isTransactionRejected(transactionID)) {
@@ -1961,8 +1995,17 @@ export class TransactionController extends BaseController<
                     }
 
                     meta.status = TransactionStatus.CONFIRMED;
+                    let unixTimestamp: number | undefined = txObj.timestamp;
+                    if (!unixTimestamp && txObj.blockNumber) {
+                        const block = await fetchBlockWithRetries(
+                            txObj.blockNumber,
+                            provider
+                        );
+                        unixTimestamp = block?.timestamp;
+                    }
+
                     meta.confirmationTime =
-                        txObj.timestamp && txObj.timestamp * 1000; // Unix timestamp to Java Script timestamp
+                        unixTimestampToJSTimestamp(unixTimestamp);
 
                     // Emit confirmation events
                     this.emit(TransactionEvents.STATUS_UPDATE, meta);
@@ -2115,9 +2158,10 @@ export class TransactionController extends BaseController<
      * @param {number} transactionId
      */
     public getTransaction(transactionId: string): TransactionMeta | undefined {
-        return this.store
+        const transaction = this.store
             .getState()
             .transactions.find((t) => t.id === transactionId);
+        return transaction ? cloneDeep(transaction) : transaction;
     }
 
     /**

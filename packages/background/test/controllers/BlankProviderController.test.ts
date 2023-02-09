@@ -239,7 +239,8 @@ describe('Blank Provider Controller', function () {
             tokenOperationsController,
             preferencesController,
             blockUpdatesController,
-            transactionWatcherController
+            transactionWatcherController,
+            transactionController
         );
 
         blankProviderController = new BlankProviderController(

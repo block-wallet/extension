@@ -136,7 +136,8 @@ describe('AccountTracker controller implementation', function () {
             tokenOperationsController,
             preferencesController,
             blockUpdatesController,
-            transactionWatcherController
+            transactionWatcherController,
+            transactionController
         );
     });
 

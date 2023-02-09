@@ -227,8 +227,9 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 tokenAddress.toLowerCase()
         )
 
-    const currentAllowanceValue =
-        currentAllowance && currentAllowance?.allowance?.value
+    const currentAllowanceValue = currentAllowance
+        ? currentAllowance?.allowance?.value
+        : undefined
 
     const isCurrentAllowanceUnlimited =
         currentAllowance && currentAllowance?.allowance?.isUnlimited
@@ -436,6 +437,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     tokenDecimals={tokenDecimals}
                     tokenName={tokenName}
                     defaultValue={defaultAllowance}
+                    currentAllowance={currentAllowanceValue}
                 />
                 <div className="flex flex-col">
                     <label className="text-sm text-gray-600 mb-2">

@@ -458,6 +458,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     onChange={setAllowanceAmount}
                     setIsValid={setIsAllowanceValid}
                     minimumAllowance={minAllowance}
+                    currentAllowance={currentAllowanceValue}
                 />
 
                 <label className="text-sm text-gray-600">Gas Price</label>

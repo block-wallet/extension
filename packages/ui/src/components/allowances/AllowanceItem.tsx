@@ -92,15 +92,16 @@ const AllowanceItem = ({
     const options = [
         {
             title: "Transaction Hash",
-            link: allowance.txHash
-                ? generateExplorerLink(
-                      availableNetworks,
-                      selectedNetwork,
-                      allowance.txHash,
-                      "tx"
-                  )
-                : undefined,
+            link:
+                allowance.txHash &&
+                generateExplorerLink(
+                    availableNetworks,
+                    selectedNetwork,
+                    allowance.txHash,
+                    "tx"
+                ),
             content: allowance.txHash,
+            copyable: true,
         },
         {
             title: "Last Updated",
@@ -110,7 +111,9 @@ const AllowanceItem = ({
         },
         {
             title: "Spender Name",
-            content: spender.name,
+            content: spender.name?.includes("Spender (...")
+                ? undefined
+                : spender.name,
         },
         {
             title: "Spender Address",
@@ -121,10 +124,12 @@ const AllowanceItem = ({
                 "address"
             ),
             content: spender.address,
+            copyable: true,
         },
         {
             title: "Spender Website",
             content: spender.websiteURL,
+            copyable: true,
         },
         {
             title: "Allowance Value",
@@ -147,6 +152,7 @@ const AllowanceItem = ({
                 "address"
             ),
             content: token.address,
+            copyable: true,
         },
     ]
 

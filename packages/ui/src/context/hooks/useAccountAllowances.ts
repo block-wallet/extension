@@ -24,7 +24,7 @@ export type AllowanceDisplayData = {
     symbol?: string
     decimals?: number
     websiteURL?: string
-    logo: string
+    logo?: string
     type: AllowancesFilters
 }
 
@@ -81,14 +81,16 @@ const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
                     ([spenderAddress, allowance]) => {
                         return {
                             displayData: {
-                                name:
-                                    allowance.spender?.name ||
-                                    `Spender ${formatHashLastChars(
-                                        spenderAddress
-                                    )}`,
+                                name: allowance.spender?.name
+                                    ? `${
+                                          allowance.spender?.name
+                                      } ${formatHashLastChars(spenderAddress)}`
+                                    : `Spender ${formatHashLastChars(
+                                          spenderAddress
+                                      )}`,
                                 address: spenderAddress,
-                                logo: allowance.spender?.logoURI || "",
-                                websiteURL: allowance.spender?.websiteURL || "",
+                                logo: allowance.spender?.logoURI,
+                                websiteURL: allowance.spender?.websiteURL,
                                 type: AllowancesFilters.SPENDER,
                             },
                             allowance,
@@ -119,17 +121,19 @@ const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
                         if (!spenderAllowancesAcc[spenderAddress]) {
                             spenderAllowancesAcc[spenderAddress] = {
                                 groupBy: {
-                                    name:
-                                        spenderAllowance.spender?.name ||
-                                        `Spender ${formatHashLastChars(
-                                            spenderAddress
-                                        )}`,
+                                    name: spenderAllowance.spender?.name
+                                        ? `${
+                                              spenderAllowance.spender?.name
+                                          } ${formatHashLastChars(
+                                              spenderAddress
+                                          )}`
+                                        : `Spender ${formatHashLastChars(
+                                              spenderAddress
+                                          )}`,
                                     address: spenderAddress,
-                                    logo:
-                                        spenderAllowance.spender?.logoURI || "",
+                                    logo: spenderAllowance.spender?.logoURI,
                                     websiteURL:
-                                        spenderAllowance.spender?.websiteURL ||
-                                        "",
+                                        spenderAllowance.spender?.websiteURL,
                                     type: AllowancesFilters.SPENDER,
                                 },
                                 allowances: [],

@@ -30,7 +30,10 @@ import {
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     Network,
 } from '../utils/constants/networks';
-import { PreferencesController } from './PreferencesController';
+import {
+    PreferencesController,
+    PreferencesControllerEvents,
+} from './PreferencesController';
 import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
@@ -271,20 +274,28 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 this._balanceFetchIntervalController.tick(
                     balanceFetchInterval,
                     async () => {
-                        // Get addresses from state
-                        const addresses = Object.keys(
-                            this.store.getState().accounts
-                        );
+                        const selectedAddress =
+                            this._preferencesController.getSelectedAddress();
 
                         await this.updateAccounts(
                             {
-                                addresses,
+                                addresses: [selectedAddress],
                                 assetAddresses: [],
                             },
                             chainId
                         );
                     }
                 );
+            }
+        );
+
+        this._preferencesController.on(
+            PreferencesControllerEvents.SELECTED_ACCOUNT_CHANGED,
+            async (address: string) => {
+                await this.updateAccounts({
+                    addresses: [address],
+                    assetAddresses: [],
+                });
             }
         );
 
@@ -358,6 +369,19 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     args[0],
                     args[1],
                     args[2]
+                );
+            }
+        );
+
+        this._transactionController.on(
+            TransactionEvents.NOT_SELECTED_ACCOUNT_TRANSACTION,
+            async (chainId: number, accountAddress: string) => {
+                await this.updateAccounts(
+                    {
+                        addresses: [accountAddress],
+                        assetAddresses: [NATIVE_TOKEN_ADDRESS],
+                    },
+                    chainId
                 );
             }
         );

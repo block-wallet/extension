@@ -56,36 +56,13 @@ import { AllowancesFilters } from "../../components/allowances/AllowancesFilterB
 import { useSelectedAccountBalance } from "../../context/hooks/useSelectedAccountBalance"
 
 import unknownTokenIcon from "../../assets/images/unknown_token.svg"
+import { generateExplorerLink } from "../../util/getExplorer"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
 export enum ApproveOperation {
     BRIDGE,
     SWAP,
-}
-
-const getLabels = (
-    operation: ApproveOperation,
-    assetName: string
-): Record<
-    "mainSectionTitle" | "mainSectionApproveText" | "mainSectionRevokeText",
-    string
-> => {
-    if (operation === ApproveOperation.BRIDGE) {
-        return {
-            mainSectionTitle: `BlockWallet is requesting to update
-            your ${assetName} Allowance`,
-            mainSectionApproveText: `This will let BlockWallet Bridges withdraw and automate ${assetName} transactions for you.`,
-            mainSectionRevokeText: `BlockWallet Bridges will not be able to access your ${assetName} anymore.`,
-        }
-    } else {
-        return {
-            mainSectionTitle: `BlockWallet is requesting to update
-            your ${assetName} Allowance`,
-            mainSectionApproveText: `This will let BlockWallet Swaps withdraw and automate ${assetName} transactions for you.`,
-            mainSectionRevokeText: `BlockWallet Swaps will not be able to access your ${assetName} anymore.`,
-        }
-    }
 }
 
 interface ApprovePageState {
@@ -142,7 +119,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
     const selectedAccount = useSelectedAccount()
     const { chainId, isEIP1559Compatible } = useSelectedNetwork()
-    const { defaultGasOption } = useBlankState()!
+    const { defaultGasOption, selectedNetwork, availableNetworks } =
+        useBlankState()!
     const { nativeToken } = useTokensList()
     const { gasPricesLevels } = useGasPriceData()
     const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
@@ -173,10 +151,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
     // Set data
     const isApproving = status === "loading" && isOpen
-    const labels = getLabels(
-        approveOperation,
-        selectedAccount.balances[chainId].tokens[assetAddress].token.symbol
-    )
 
     // Get asset object
     const localAsset = selectedAccount.balances[chainId].tokens[assetAddress]
@@ -227,14 +201,21 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const [isCurrentAllowanceUnlimited, setIsCurrentAllowanceUnlimited] =
         useState<boolean | undefined>()
 
+    const [spenderName, setSpenderName] = useState<string | undefined>()
+
+    const [spenderAddressExplorerLink, setSpenderAddressExplorerLink] =
+        useState<string | undefined>()
+
     useEffect(() => {
         if (approveOperation === ApproveOperation.BRIDGE) {
             const nextState = nextLocationState as BridgeConfirmPageLocalState
 
+            const spenderAddress =
+                nextState.bridgeQuote.bridgeParams.params.spender.toLowerCase()
+
             const currentSpenderAllowances = currentAllowances.find(
                 (allowance) =>
-                    allowance.groupBy.address.toLowerCase() ===
-                    nextState.bridgeQuote.bridgeParams.params.spender.toLowerCase()
+                    allowance.groupBy.address.toLowerCase() === spenderAddress
             )
 
             const currentAllowance = currentSpenderAllowances?.allowances?.find(
@@ -248,6 +229,17 @@ const ApprovePage: FunctionComponent<{}> = () => {
             )
             setIsCurrentAllowanceUnlimited(
                 currentAllowance?.allowance?.isUnlimited
+            )
+
+            setSpenderName(currentSpenderAllowances?.groupBy.name ?? "Unknown")
+
+            setSpenderAddressExplorerLink(
+                generateExplorerLink(
+                    availableNetworks,
+                    selectedNetwork,
+                    spenderAddress,
+                    "address"
+                )
             )
         } else {
             const nextState = nextLocationState as SwapConfirmPageLocalState
@@ -271,6 +263,17 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     )
                     setIsCurrentAllowanceUnlimited(
                         currentAllowance?.allowance?.isUnlimited
+                    )
+                    setSpenderName(
+                        currentSpenderAllowances?.groupBy.name ?? "Unknown"
+                    )
+                    setSpenderAddressExplorerLink(
+                        generateExplorerLink(
+                            availableNetworks,
+                            selectedNetwork,
+                            spenderAddress,
+                            "address"
+                        )
                     )
                 }
             )
@@ -459,15 +462,42 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
     const isRevoke = parseFloat(allowanceAmount) === 0
 
+    const mainSectionText = (
+        <>
+            {isRevoke ? (
+                <>
+                    <a
+                        href={spenderAddressExplorerLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary-300 hover:underline"
+                    >
+                        {spenderName}
+                    </a>{" "}
+                    will not be able to access your {assetName} anymore.
+                </>
+            ) : (
+                <>
+                    This will let{" "}
+                    <a
+                        href={spenderAddressExplorerLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary-300 hover:underline"
+                    >
+                        {spenderName}
+                    </a>{" "}
+                    withdraw and automate {assetName} transactions for you.
+                </>
+            )}
+        </>
+    )
+
     const mainSection = (
         <>
             <div className="flex flex-col space-y-3 px-6 py-4">
-                <p className="text-sm font-bold">{labels.mainSectionTitle}</p>
-                <p className="text-sm text-gray-500">
-                    {isRevoke
-                        ? labels.mainSectionRevokeText
-                        : labels.mainSectionApproveText}
-                </p>
+                <p className="text-sm font-bold">{`BlockWallet is requesting to update your ${assetName} Allowance`}</p>
+                <p className="text-sm text-gray-500">{mainSectionText}</p>
                 {currentAllowanceValue && (
                     <p
                         className="flex items-center space-x-1 text-sm text-gray-500 break-word mt-2"

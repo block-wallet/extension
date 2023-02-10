@@ -1,6 +1,6 @@
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits } from "@ethersproject/units"
-import { FunctionComponent, useMemo, useState } from "react"
+import { FunctionComponent, useMemo } from "react"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { getAccountColor } from "../../util/getAccountColor"
 import Divider from "../Divider"
@@ -8,7 +8,11 @@ import AccountIcon from "../icons/AccountIcon"
 import { TransactionDetailsTabProps } from "./TransactionDetails"
 import arrowRight from "../../assets/images/icons/arrow_right_black.svg"
 import CopyTooltip from "../label/СopyToClipboardTooltip"
-import { formatHash, formatName } from "../../util/formatAccount"
+import {
+    formatHash,
+    formatHashLastChars,
+    formatName,
+} from "../../util/formatAccount"
 import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
 import { useAddressBook } from "../../context/hooks/useAddressBook"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
@@ -27,14 +31,6 @@ import { resolveTransactionTo } from "../../util/transactionUtils"
 import { useMultipleCopyToClipboard } from "../../util/hooks/useCopyToClipboard"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
 import { BsFileEarmarkText } from "react-icons/bs"
-import useAccountAllowances from "../../context/hooks/useAccountAllowances"
-import { AllowancesFilters } from "../allowances/AllowancesFilterButton"
-import { useTokensList } from "../../context/hooks/useTokensList"
-import { MaxUint256 } from "@ethersproject/constants"
-import { searchTokenInAssetsList } from "../../context/commActions"
-import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-
-const UnlimitedValue = MaxUint256
 
 export const TransactionDetailsBasic: FunctionComponent<
     TransactionDetailsTabProps & { nonce?: number }
@@ -45,10 +41,6 @@ export const TransactionDetailsBasic: FunctionComponent<
     const addressBook = useAddressBook()
     const transaction = _transaction as TransactionMeta
     const { onCopy, copied } = useMultipleCopyToClipboard()
-    const { currentNetworkTokens } = useTokensList()
-    const accountAllowances = useAccountAllowances(AllowancesFilters.SPENDER)
-
-    const [tokenData, setTokenData] = useState<Token | undefined>(undefined)
 
     const details = useMemo(() => {
         const isConfirmed = transaction.status === TransactionStatus.CONFIRMED
@@ -83,7 +75,7 @@ export const TransactionDetailsBasic: FunctionComponent<
             | undefined
         )[] = []
 
-        //Allowance Details
+        //Approve Allowance Details
         if (
             transaction.transactionCategory ===
             TransactionCategories.TOKEN_METHOD_APPROVE
@@ -93,52 +85,14 @@ export const TransactionDetailsBasic: FunctionComponent<
                 "0x" + transaction.transactionParams?.data?.slice(34, 74)
 
             const tokenAddress =
-                transaction.transactionReceipt?.to ||
+                transaction.approveAllowanceParams?.token?.address ||
                 transaction.transactionParams?.to
 
-            const spenderAllowances = accountAllowances.find(
-                (allowance) =>
-                    allowance.groupBy.address.toLowerCase() ===
-                    spenderAddress.toLowerCase()
-            )
+            const spenderData = transaction.approveAllowanceParams?.spenderInfo
+            const tokenData = transaction.approveAllowanceParams?.token
+            const isUnlimited = transaction.approveAllowanceParams?.isUnlimited
 
-            const spenderData = spenderAllowances?.groupBy
-
-            let token = currentNetworkTokens.find(
-                (token) =>
-                    tokenAddress &&
-                    token.token.address.toLowerCase() ===
-                        tokenAddress.toLowerCase()
-            )?.token
-
-            if (!tokenData && token) {
-                setTokenData(token)
-            }
-
-            if (!tokenData && !token && tokenAddress) {
-                searchTokenInAssetsList(tokenAddress).then(
-                    (searchTokensResponse) => {
-                        searchTokensResponse.tokens.length > 0
-                            ? setTokenData(searchTokensResponse.tokens[0])
-                            : setTokenData(undefined)
-                    }
-                )
-            }
-
-            let isUnlimited
-            if (tokenData?.totalSupply && transaction.advancedData?.allowance) {
-                isUnlimited = BigNumber.from(tokenData?.totalSupply).lte(
-                    transaction.advancedData?.allowance
-                )
-            }
-            if (
-                transaction.advancedData?.allowance &&
-                UnlimitedValue.eq(transaction.advancedData?.allowance)
-            ) {
-                isUnlimited = true
-            }
-
-            // Allowance
+            // Allowance Value
             if (transaction.advancedData?.allowance) {
                 details.push({
                     label: "Allowance",
@@ -153,22 +107,13 @@ export const TransactionDetailsBasic: FunctionComponent<
                 })
             }
 
-            // Spender
-            if (spenderData) {
+            if (spenderAddress) {
+                // Spender
                 details.push({
                     label: "Spender",
-                    value: spenderData.name,
-                    link: generateExplorerLink(
-                        state.availableNetworks,
-                        state.selectedNetwork,
-                        spenderData.address,
-                        "address"
-                    ),
-                })
-            } else {
-                details.push({
-                    label: "Spender",
-                    value: spenderAddress,
+                    value: spenderData
+                        ? spenderData.name
+                        : `Spender ${formatHashLastChars(spenderAddress)}`,
                     link: generateExplorerLink(
                         state.availableNetworks,
                         state.selectedNetwork,
@@ -177,23 +122,11 @@ export const TransactionDetailsBasic: FunctionComponent<
                     ),
                 })
             }
-
             // Token
-            if (tokenData) {
+            if (tokenAddress) {
                 details.push({
                     label: "Token",
-                    value: tokenData.name,
-                    link: generateExplorerLink(
-                        state.availableNetworks,
-                        state.selectedNetwork,
-                        tokenData.address,
-                        "address"
-                    ),
-                })
-            } else if (tokenAddress) {
-                details.push({
-                    label: "Token",
-                    value: tokenAddress,
+                    value: tokenData ? tokenData.name : tokenAddress,
                     link: generateExplorerLink(
                         state.availableNetworks,
                         state.selectedNetwork,

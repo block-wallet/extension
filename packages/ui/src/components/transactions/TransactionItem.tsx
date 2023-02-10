@@ -43,8 +43,7 @@ import {
     getBridgePendingMessage,
 } from "../../util/bridgeUtils"
 import TransactionDetails from "./TransactionDetails"
-import { searchTokenInAssetsList } from "../../context/commActions"
-import { Token } from "@block-wallet/background/controllers/erc-20/Token"
+import { formatUnits } from "ethers/lib/utils"
 
 const TRANSACTION_STATIC_MESSAGES = {
     [TransactionCategories.BLANK_DEPOSIT]: "Privacy Pool Deposit",
@@ -71,8 +70,7 @@ const PENDING_TRANSACTION_STATIC_MESSAGES: { [x: string]: string } = {
 const getTransactionMessage = (
     category: TransactionCategories,
     symbol: string,
-    advancedData: TransactionMeta["advancedData"],
-    approvalToken?: Token
+    advancedData: TransactionMeta["advancedData"]
 ) => {
     const message = (() => {
         switch (category) {
@@ -85,13 +83,9 @@ const getTransactionMessage = (
                     advancedData?.allowance &&
                     BigNumber.from(advancedData.allowance).eq(0)
                 ) {
-                    return approvalToken
-                        ? `${approvalToken?.symbol} Allowance Revoke`
-                        : `Allowance Revoke`
+                    return `Allowance Revoke`
                 }
-                return approvalToken
-                    ? `${approvalToken?.symbol} Allowance Approval`
-                    : `Allowance Approval`
+                return `Allowance Approval`
             default:
                 return TRANSACTION_STATIC_MESSAGES[category]
         }
@@ -104,8 +98,7 @@ const getPendingTransactionMessage = (
     category: TransactionCategories,
     metaType: MetaType,
     symbol: string,
-    advancedData: TransactionMeta["advancedData"],
-    approvalToken?: Token
+    advancedData: TransactionMeta["advancedData"]
 ) => {
     const message = (() => {
         switch (category) {
@@ -116,13 +109,9 @@ const getPendingTransactionMessage = (
                     advancedData?.allowance &&
                     BigNumber.from(advancedData.allowance).eq(0)
                 ) {
-                    return approvalToken
-                        ? `Revoking ${approvalToken.symbol} Allowance`
-                        : `Revoking Allowance`
+                    return `Revoking Allowance`
                 }
-                return approvalToken
-                    ? `Approving ${approvalToken.symbol} Allowance`
-                    : `Approving Allowance`
+                return `Approving Allowance`
             default:
                 return PENDING_TRANSACTION_STATIC_MESSAGES[category]
         }
@@ -344,8 +333,7 @@ const getTransactionLabel = (
     transactionCategory: TransactionCategories | undefined,
     methodSignature: TransactionMeta["methodSignature"],
     networkNativeCurrency: { symbol: string },
-    advancedData: TransactionMeta["advancedData"],
-    approvalToken?: Token
+    advancedData: TransactionMeta["advancedData"]
 ): string => {
     const getCategoryMessage = () => {
         const isPending =
@@ -358,8 +346,7 @@ const getTransactionLabel = (
         const txMessage = getTransactionMessage(
             transactionCategory,
             networkNativeCurrency.symbol,
-            advancedData,
-            approvalToken
+            advancedData
         )
 
         return isPending
@@ -367,8 +354,7 @@ const getTransactionLabel = (
                   transactionCategory,
                   metaType,
                   networkNativeCurrency.symbol,
-                  advancedData,
-                  approvalToken
+                  advancedData
               ) || txMessage
             : txMessage
     }
@@ -462,8 +448,6 @@ const TransactionItem: React.FC<{
 
     const [hasDetails, setHasDetails] = useState(false)
 
-    const [approvalToken, setApprovalToken] = useState<Token | undefined>()
-
     const txHash = hash
     let transfer = transferType ?? {
         amount: value ? value : BigNumber.from("0"),
@@ -472,32 +456,27 @@ const TransactionItem: React.FC<{
         logo: defaultNetworkLogo,
     }
 
-    if (
-        transactionCategory === TransactionCategories.TOKEN_METHOD_APPROVE &&
-        transaction.transactionParams?.to
-    ) {
-        searchTokenInAssetsList(transaction.transactionParams?.to).then(
-            (searchTokensResponse) => {
-                searchTokensResponse.tokens.length > 0 &&
-                    setApprovalToken(searchTokensResponse.tokens[0])
-            }
-        )
-    }
-
-    //Change transaction logo to the approval Token Logo if it's an approval transaction
-    if (approvalToken) {
-        if (approvalToken.logo) {
-            transfer.logo = approvalToken.logo
-        } else {
-            transfer.logo = unknownTokenIcon
-        }
-    }
-
     const isBlankWithdraw: boolean =
         transactionCategory === "blankWithdrawal" ? true : false
 
-    // TODO: Test and Remove if not required
-    if (transactionCategory === TransactionCategories.TOKEN_METHOD_APPROVE) {
+    const isAllowanceApproval =
+        transactionCategory === TransactionCategories.TOKEN_METHOD_APPROVE
+
+    const approvalToken = isAllowanceApproval
+        ? transaction.approveAllowanceParams?.token
+        : undefined
+
+    if (isAllowanceApproval) {
+        console.log(transaction.approveAllowanceParams)
+        //Change transaction logo to the approval Token Logo if it's an approval transaction
+        if (approvalToken) {
+            if (approvalToken.logo) {
+                transfer.logo = approvalToken.logo
+            } else {
+                transfer.logo = unknownTokenIcon
+            }
+        }
+        // TODO: Test and Remove if not required
         if (!transfer.amount) {
             transfer.amount = BigNumber.from("0")
         }
@@ -510,8 +489,7 @@ const TransactionItem: React.FC<{
         transactionCategory,
         methodSignature,
         networkNativeCurrency,
-        advancedData,
-        approvalToken
+        advancedData
     )
 
     const txValueSign = (() => {
@@ -708,8 +686,58 @@ const TransactionItem: React.FC<{
                         )}
                     </div>
 
+                    {/* Allowance */}
+                    {isAllowanceApproval &&
+                        approvalToken &&
+                        transaction.approveAllowanceParams?.allowanceValue && (
+                            <div
+                                className={classNames(
+                                    "flex flex-col items-end self-start"
+                                )}
+                                style={amountCss}
+                            >
+                                <div
+                                    className={classnames(
+                                        "w-full flex justify-end",
+                                        transaction.approveAllowanceParams
+                                            .isUnlimited
+                                            ? "-mt-1"
+                                            : null
+                                    )}
+                                    title={`${Number(
+                                        formatUnits(
+                                            transaction.approveAllowanceParams
+                                                .allowanceValue,
+                                            approvalToken.decimals
+                                        )
+                                    )} ${approvalToken.symbol}`}
+                                >
+                                    <span
+                                        className={classNames(
+                                            "text-sm font-bold text-right mr-1 truncate max-w-[130px]"
+                                        )}
+                                    >
+                                        {transaction.approveAllowanceParams
+                                            .isUnlimited ? (
+                                            <span className="text-lg">
+                                                &#8734;
+                                            </span>
+                                        ) : (
+                                            `${formatUnits(
+                                                transaction
+                                                    .approveAllowanceParams
+                                                    .allowanceValue,
+                                                approvalToken.decimals
+                                            )}`
+                                        )}{" "}
+                                        {approvalToken.symbol}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
                     {/* Amount */}
-                    {transfer.amount && (
+                    {!isAllowanceApproval && transfer.amount && (
                         <div
                             className={classNames("flex flex-col items-end")}
                             style={amountCss}

@@ -6,6 +6,8 @@ import ExpandableText from "../ExpandableText"
 import { formatNumberLength } from "../../util/formatNumberLength"
 import GenericTooltip from "../label/GenericTooltip"
 
+import openIcon from "../../assets/images/icons/open_external.svg"
+
 const TransactionDetailItem: FC<{ item: DetailedItem }> = ({ item }) => {
     const isNativeValue =
         typeof item.value === "string" || typeof item.value === "number"
@@ -55,7 +57,7 @@ const TransactionDetailItem: FC<{ item: DetailedItem }> = ({ item }) => {
                                 href={item.link}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-blue-500"
+                                className="text-blue-500 flex items-center"
                             >
                                 {item.value && isNativeValue
                                     ? item.decimals
@@ -66,6 +68,11 @@ const TransactionDetailItem: FC<{ item: DetailedItem }> = ({ item }) => {
                                           )} ${item.unitName ?? ""}`
                                         : `${item.value} ${item.unitName ?? ""}`
                                     : item.value}
+                                <img
+                                    src={openIcon}
+                                    alt="Open icon"
+                                    className="w-3 h-3 ml-2"
+                                />
                             </a>
                         ) : item.value && isNativeValue ? (
                             item.decimals ? (

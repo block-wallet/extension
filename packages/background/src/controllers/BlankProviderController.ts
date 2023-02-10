@@ -108,6 +108,8 @@ import {
 } from '../utils/hardware';
 import { GasPricesController } from './GasPricesController';
 import { bnGreaterThanZero } from '../utils/bnUtils';
+import { recoverPersonalSignature } from '@metamask/eth-sig-util';
+import checksummedAddress from '../utils/checksummedAddress';
 
 export enum BlankProviderEvents {
     SUBSCRIPTION_UPDATE = 'SUBSCRIPTION_UPDATE',
@@ -384,6 +386,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
             case JSONRPCMethod.eth_signTypedData_v1:
             case JSONRPCMethod.eth_signTypedData_v3:
             case JSONRPCMethod.eth_signTypedData_v4:
+                // eslint-disable-next-line no-case-declarations
                 return this._handleMessageSigning(
                     method,
                     params as RawSignatureData[SignatureMethods],
@@ -422,6 +425,8 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 return this._sha3(params);
             case JSONRPCMethod.eth_estimateGas:
                 return this._handleEstimateGas(params as [EstimateGasParams]);
+            case JSONRPCMethod.personal_ecRecover:
+                return this._handlePersonalECRecover(params as string[]);
             default:
                 // If it's a standard json rpc request, forward it to the provider
                 if (ExtProviderMethods.includes(method)) {
@@ -434,6 +439,15 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 }
         }
     };
+
+    private _handlePersonalECRecover(params: string[]): string {
+        return checksummedAddress(
+            recoverPersonalSignature({
+                data: params[0],
+                signature: params[1],
+            })
+        );
+    }
 
     private _handleEstimateGas = async (
         params: [EstimateGasParams]

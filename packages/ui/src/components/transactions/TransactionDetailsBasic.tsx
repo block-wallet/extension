@@ -92,7 +92,6 @@ export const TransactionDetailsBasic: FunctionComponent<
             const tokenData = transaction.approveAllowanceParams?.token
             const isUnlimited = transaction.approveAllowanceParams?.isUnlimited
 
-            // Allowance Value
             if (transaction.advancedData?.allowance) {
                 details.push({
                     label: "Allowance",
@@ -108,7 +107,6 @@ export const TransactionDetailsBasic: FunctionComponent<
             }
 
             if (spenderAddress) {
-                // Spender
                 details.push({
                     label: "Spender",
                     value: spenderData
@@ -122,7 +120,7 @@ export const TransactionDetailsBasic: FunctionComponent<
                     ),
                 })
             }
-            // Token
+
             if (tokenAddress) {
                 details.push({
                     label: "Token",

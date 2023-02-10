@@ -26,7 +26,11 @@ import { AdvancedSettings } from "../../components/transactions/AdvancedSettings
 import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
-import { formatHash, formatName } from "../../util/formatAccount"
+import {
+    formatHash,
+    formatHashLastChars,
+    formatName,
+} from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
 import { formatUnits, parseUnits } from "@ethersproject/units"
 import { getAccountColor } from "../../util/getAccountColor"
@@ -195,16 +199,15 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
     const currentAllowances = useAccountAllowances(AllowancesFilters.SPENDER)
 
-    const [currentAllowanceValue, setCurrentAllowanceValue] = useState<
-        BigNumber | undefined
-    >(BigNumber.from(0))
+    const [currentAllowanceValue, setCurrentAllowanceValue] =
+        useState<BigNumber>(BigNumber.from(0))
     const [isCurrentAllowanceUnlimited, setIsCurrentAllowanceUnlimited] =
         useState<boolean | undefined>()
 
-    const [spenderName, setSpenderName] = useState<string | undefined>()
+    const [spenderName, setSpenderName] = useState<string>()
 
     const [spenderAddressExplorerLink, setSpenderAddressExplorerLink] =
-        useState<string | undefined>()
+        useState<string>()
 
     useEffect(() => {
         if (approveOperation === ApproveOperation.BRIDGE) {
@@ -231,7 +234,10 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 currentAllowance?.allowance?.isUnlimited
             )
 
-            setSpenderName(currentSpenderAllowances?.groupBy.name ?? "Unknown")
+            setSpenderName(
+                currentSpenderAllowances?.groupBy.name ??
+                    `Spender ${formatHashLastChars(spenderAddress)}`
+            )
 
             setSpenderAddressExplorerLink(
                 generateExplorerLink(
@@ -265,7 +271,8 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         currentAllowance?.allowance?.isUnlimited
                     )
                     setSpenderName(
-                        currentSpenderAllowances?.groupBy.name ?? "Unknown"
+                        currentSpenderAllowances?.groupBy.name ??
+                            `Spender ${formatHashLastChars(spenderAddress)}`
                     )
                     setSpenderAddressExplorerLink(
                         generateExplorerLink(

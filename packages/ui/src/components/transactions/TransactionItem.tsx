@@ -467,7 +467,6 @@ const TransactionItem: React.FC<{
         : undefined
 
     if (isAllowanceApproval) {
-        console.log(transaction.approveAllowanceParams)
         //Change transaction logo to the approval Token Logo if it's an approval transaction
         if (approvalToken) {
             if (approvalToken.logo) {

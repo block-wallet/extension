@@ -51,7 +51,11 @@ import { GasPriceSelector } from "../../components/transactions/GasPriceSelector
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
 import AllowanceInput from "../../components/transactions/AllowanceInput"
 
-import { formatHash, formatName } from "../../util/formatAccount"
+import {
+    formatHash,
+    formatHashLastChars,
+    formatName,
+} from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
 import { getAccountColor } from "../../util/getAccountColor"
 import { parseAllowance } from "../../util/approval"
@@ -137,9 +141,13 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     // At this point transactionId is ensured.
     const transaction = txById!
 
-    // Get the spender address from the approve transaction data param
     const spenderAddress =
+        transaction.approveAllowanceParams?.spenderAddress ??
         "0x" + transaction.transactionParams?.data?.slice(34, 74)
+
+    const spenderName =
+        transaction.approveAllowanceParams?.spenderInfo?.name ??
+        `Spender ${formatHashLastChars(spenderAddress)}`
 
     const spenderAddressExplorerLink = generateExplorerLink(
         availableNetworks,
@@ -213,11 +221,6 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         AllowancesFilters.SPENDER,
         spenderAddress
     )
-
-    // Get the spender name from the allowances list
-    const spenderName =
-        currentSpenderAllowances.length > 0 &&
-        currentSpenderAllowances[0]?.groupBy?.name
 
     const currentAllowance =
         currentSpenderAllowances.length > 0 &&

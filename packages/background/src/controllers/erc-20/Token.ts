@@ -43,7 +43,8 @@ export class Token implements IToken {
         decimals: number,
         type?: string,
         logo?: string,
-        l1Bridge?: IL1Bridge
+        l1Bridge?: IL1Bridge,
+        totalSupply?: BigNumber
     ) {
         this.address = address;
         this.name = name;
@@ -53,6 +54,7 @@ export class Token implements IToken {
         this.decimals = decimals;
         this.l1Bridge = l1Bridge;
         this.decimals = decimals;
+        this.totalSupply = totalSupply;
     }
 }
 

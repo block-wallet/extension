@@ -68,6 +68,8 @@ import httpClient from '../../utils/http';
 import { fetchBlockWithRetries } from '../../utils/blockFetch';
 import { unixTimestampToJSTimestamp } from '../../utils/timestamp';
 import { cloneDeep } from 'lodash';
+import { isUnlimitedAllowance } from '../../utils/token';
+import { fetchContractDetails } from '../../utils/contractsInfo';
 
 /**
  * It indicates the amount of blocks to wait after marking
@@ -568,58 +570,12 @@ export class TransactionController extends BaseController<
                 transactionCategory ===
                 TransactionCategories.TOKEN_METHOD_APPROVE
             ) {
-                const erc20Approve = new ApproveTransaction({
-                    networkController: this._networkController,
-                    transactionController: this,
-                    preferencesController: this._preferencesController,
-                });
-
-                // Get value
-                const { _value, _spender } = erc20Approve.getDataArguments(
-                    transaction.data!
-                );
-
-                // Get token data
-                const { tokens } = await this._tokenController.search(
-                    transaction.to!
-                );
-
-                const token = tokens[0];
-
-                if (!token) {
-                    throw new Error('Failed fetching token data');
-                }
-
-                transactionMeta.approveAllowanceParams = {
-                    allowanceValue: BigNumber.from(_value._hex),
-                    spenderAddress: _spender,
-                    token,
-                };
-
-                if (!tokens[0].decimals) {
-                    // Check if it is an NFT
-                    const nftContract = new NFTContract({
-                        networkController: this._networkController,
-                    });
-
-                    const tokenURI = await nftContract.tokenURI(
-                        transaction.to!,
-                        _value
+                const { advancedData, approveAllowanceParams } =
+                    await this._resolveTransactionAllowanceParameters(
+                        transactionMeta
                     );
-
-                    if (tokenURI) {
-                        transactionMeta.advancedData = {
-                            tokenId: _value,
-                        };
-                    } else {
-                        throw new Error('Failed fetching token data');
-                    }
-                } else {
-                    transactionMeta.advancedData = {
-                        decimals: tokens[0].decimals,
-                        allowance: _value._hex,
-                    };
-                }
+                transactionMeta.advancedData = advancedData;
+                transactionMeta.approveAllowanceParams = approveAllowanceParams;
             }
 
             // Push transaction so extension can trigger window without waiting for gas values
@@ -665,6 +621,85 @@ export class TransactionController extends BaseController<
         }
 
         return { result, transactionMeta };
+    }
+
+    private async _resolveTransactionAllowanceParameters(
+        transactionMeta: TransactionMeta
+    ): Promise<{
+        approveAllowanceParams: TransactionMeta['approveAllowanceParams'];
+        advancedData: TransactionMeta['advancedData'];
+    }> {
+        let approveAllowanceParams:
+            | TransactionMeta['approveAllowanceParams']
+            | undefined;
+        let advancedData: TransactionMeta['advancedData'] | undefined;
+        if (
+            transactionMeta.transactionCategory ===
+            TransactionCategories.TOKEN_METHOD_APPROVE
+        ) {
+            const erc20Approve = new ApproveTransaction({
+                networkController: this._networkController,
+                transactionController: this,
+                preferencesController: this._preferencesController,
+            });
+
+            // Get value
+            const { _value, _spender } = erc20Approve.getDataArguments(
+                transactionMeta.transactionParams.data!
+            );
+
+            // Get token data
+            const token =
+                await this._tokenController.searchTokenWithTotalSupply(
+                    transactionMeta.transactionParams.to!
+                );
+
+            if (!token) {
+                throw new Error('Failed fetching token data');
+            }
+
+            const contractDetails = await fetchContractDetails(
+                this._networkController.network.chainId,
+                _spender
+            );
+
+            approveAllowanceParams = {
+                allowanceValue: _value,
+                isUnlimited: isUnlimitedAllowance(token, _value),
+                spenderAddress: _spender,
+                spenderInfo: contractDetails,
+                token,
+            };
+
+            if (!token.decimals) {
+                // Check if it is an NFT
+                const nftContract = new NFTContract({
+                    networkController: this._networkController,
+                });
+
+                const tokenURI = await nftContract.tokenURI(
+                    transactionMeta.transactionParams.to!,
+                    _value
+                );
+
+                if (tokenURI) {
+                    advancedData = {
+                        tokenId: _value,
+                    };
+                } else {
+                    throw new Error('Failed fetching token data');
+                }
+            } else {
+                advancedData = {
+                    decimals: token.decimals,
+                    allowance: _value._hex,
+                };
+            }
+        }
+        return {
+            advancedData,
+            approveAllowanceParams,
+        };
     }
 
     private async getGasPricesValues(
@@ -878,6 +913,19 @@ export class TransactionController extends BaseController<
                 // Get new nonce
                 nonceLock = await this._nonceTracker.getNonceLock(from!);
                 txNonce = nonceLock.nextNonce;
+            }
+
+            // Update approve parameters
+            if (
+                transactionMeta.transactionCategory ===
+                TransactionCategories.TOKEN_METHOD_APPROVE
+            ) {
+                const { advancedData, approveAllowanceParams } =
+                    await this._resolveTransactionAllowanceParameters(
+                        transactionMeta
+                    );
+                transactionMeta.advancedData = advancedData;
+                transactionMeta.approveAllowanceParams = approveAllowanceParams;
             }
 
             transactionMeta.status = status;

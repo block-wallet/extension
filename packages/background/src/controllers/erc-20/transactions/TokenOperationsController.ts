@@ -117,18 +117,28 @@ export class TokenOperationsController extends TokenTransactionController {
         let symbol = '';
         let decimals = 18;
         let fetchFailed = false;
-
+        let totalSupply: BigNumber | undefined;
         try {
             const contract = this.getContract(tokenAddress, networkProvider);
             name = await contract.name();
             symbol = await contract.symbol();
             decimals = parseFloat((await contract.decimals()) as string);
+            totalSupply = await contract.totalSupply();
         } catch (error) {
             log.error(error.message || error);
             fetchFailed = true;
         }
 
-        const token = new Token(tokenAddress, name, symbol, decimals);
+        const token = new Token(
+            tokenAddress,
+            name,
+            symbol,
+            decimals,
+            undefined,
+            undefined,
+            undefined,
+            totalSupply ? BigNumber.from(totalSupply) : undefined
+        );
         return { token, fetchFailed };
     }
 

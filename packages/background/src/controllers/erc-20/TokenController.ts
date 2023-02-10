@@ -482,21 +482,25 @@ export class TokenController extends BaseController<TokenControllerState> {
      * @param tokenAddress
      * @param accountAddress
      * @param chainId
+     * @param forceUpdate forces blockchain query
      * @returns
      */
     private async _populateTokenData(
         tokenAddress: string,
         accountAddress?: string,
-        chainId?: number
+        chainId?: number,
+        forceUpdate = false
     ): Promise<FetchTokenResponse> {
         tokenAddress = toChecksumAddress(tokenAddress);
 
-        // Check cached tokens
-        const token = (await this.getCachedPopulatedTokens(chainId))[
-            tokenAddress
-        ];
-        if (token) {
-            return { token, fetchFailed: false };
+        if (!forceUpdate) {
+            // Check cached tokens
+            const token = (await this.getCachedPopulatedTokens(chainId))[
+                tokenAddress
+            ];
+            if (token) {
+                return { token, fetchFailed: false };
+            }
         }
 
         // Tries to fetch token data from chain
@@ -666,6 +670,32 @@ export class TokenController extends BaseController<TokenControllerState> {
      */
     public clearTokens(): void {
         this.store.setState(initialState.TokenController);
+    }
+
+    public async searchTokenWithTotalSupply(
+        tokenAddress: string
+    ): Promise<Token> {
+        const { tokens } = await this.search(tokenAddress);
+        if (!tokens[0]) {
+            throw new Error('Token does not exist');
+        }
+        let token = tokens[0];
+        if (!token.totalSupply) {
+            const updatedToken = await this._populateTokenData(
+                tokenAddress,
+                this._preferencesController.getSelectedAddress(),
+                this._networkController.network.chainId,
+                true
+            );
+            if (updatedToken.token.totalSupply) {
+                token = updatedToken.token;
+            }
+        }
+
+        if (!token.totalSupply) {
+            throw new Error('Unable to get token total supply');
+        }
+        return token;
     }
 
     /**

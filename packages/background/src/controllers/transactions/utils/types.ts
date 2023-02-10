@@ -11,6 +11,7 @@ import { CurrencyAmountPair } from '../../privacy/types';
 import { IToken, Token } from '../../erc-20/Token';
 import { ExchangeParams } from '../../SwapController';
 import { ContractMethodSignature } from '../ContractSignatureParser';
+import { ContractDetails } from '../../../utils/contractsInfo';
 
 /**
  * TransactionParams../../privacy/types
@@ -130,6 +131,8 @@ export interface BridgeTransactionParams {
 export interface ApproveAllowanceParams {
     spenderAddress: string;
     allowanceValue: BigNumber;
+    isUnlimited: boolean;
+    spenderInfo?: ContractDetails;
     token: Token;
 }
 

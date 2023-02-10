@@ -1274,7 +1274,7 @@ export default class BlankController extends EventEmitter {
         this.transactionController.resetTransactionsByAddress(address);
         this.permissionsController.revokeAllPermissionsOfAccount(address);
         await this.keyringController.removeAccount(address);
-        this.transactionWatcherController.resetTransactionsByAddress(address);
+        this.transactionWatcherController.resetStateByAddress(address);
         this.bridgeController.resetBridgeTransactionsByAddress(address);
         this.tokenController.resetTokensByAccount(address);
 
@@ -1292,9 +1292,7 @@ export default class BlankController extends EventEmitter {
         // Reset account
         await Promise.all([
             this.transactionController.resetTransactionsByAddress(address),
-            this.transactionWatcherController.resetTransactionsByAddress(
-                address
-            ),
+            this.transactionWatcherController.resetStateByAddress(address),
             this.tokenController.resetTokensByAccount(address),
             this.permissionsController.revokeAllPermissionsOfAccount(address),
             this.accountTrackerController.resetAccount(address),

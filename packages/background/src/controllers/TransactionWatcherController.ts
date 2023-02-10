@@ -288,18 +288,23 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         type: WatchedTransactionType
     ): TokenAllowanceEventWatched {
         const state = this.store.getState() || {};
+        let allowanceState: TokenAllowanceEventWatched | undefined;
 
         if (state.tokenAllowanceEvents) {
             if (chainId in state.tokenAllowanceEvents) {
                 if (address in state.tokenAllowanceEvents[chainId]) {
-                    return state.tokenAllowanceEvents[chainId][address][type];
+                    allowanceState =
+                        state.tokenAllowanceEvents[chainId][address][type];
                 }
             }
         }
 
-        return {
-            lastBlockQueried: 0,
-        } as TokenAllowanceEventWatched;
+        return (
+            allowanceState ||
+            ({
+                lastBlockQueried: 0,
+            } as TokenAllowanceEventWatched)
+        );
     }
 
     /**
@@ -444,10 +449,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
      * Remove the transactions data of an account.
      * @param address
      */
-    public resetTransactionsByAddress = async (
-        address: string
-    ): Promise<void> => {
-        const transactions = this.store.getState().transactions;
+    public resetStateByAddress = async (address: string): Promise<void> => {
+        const { transactions, tokenAllowanceEvents } = this.store.getState();
         let anyUpdate = false;
         for (const c in transactions) {
             const chainId = parseInt(c);
@@ -460,9 +463,23 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             }
         }
 
+        for (const strChain in tokenAllowanceEvents) {
+            const chainId = parseInt(strChain);
+            if (address in tokenAllowanceEvents[chainId]) {
+                for (const type in tokenAllowanceEvents[chainId][address]) {
+                    const trasactionType = type as WatchedTransactionType;
+                    tokenAllowanceEvents[chainId][address][trasactionType] = {
+                        lastBlockQueried: 0,
+                    };
+                    anyUpdate = true;
+                }
+            }
+        }
+
         if (anyUpdate) {
             this.store.updateState({
                 transactions,
+                tokenAllowanceEvents,
             });
         }
     };

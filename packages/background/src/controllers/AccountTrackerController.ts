@@ -617,14 +617,15 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             return;
         }
 
-        const chainAllowances = this._getAccountChainAllowances(
-            account,
-            chainId
-        ).tokens;
+        if (!allowances[chainId]) {
+            allowances[chainId] = { tokens: {} };
+        }
+
+        const chainTokenAllowances = allowances[chainId].tokens;
 
         for (const tokenAddress in newAllowances) {
-            let currentToken = chainAllowances[tokenAddress]
-                ? chainAllowances[tokenAddress].token
+            let currentToken = chainTokenAllowances[tokenAddress]
+                ? chainTokenAllowances[tokenAddress].token
                 : undefined;
 
             //check whether we need to fetch the token data or not
@@ -650,7 +651,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 {};
             for (const spenderTransaction of newSpendersTransactions) {
                 const tokenAllowances =
-                    chainAllowances[tokenAddress]?.allowances;
+                    chainTokenAllowances[tokenAddress]?.allowances;
                 const { spender, txHash, txTime } = spenderTransaction;
 
                 //means that this record is already updated.
@@ -1803,6 +1804,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     public resetAccount(address: string): void {
         const stateAccounts = this.store.getState().accounts;
         stateAccounts[address].balances = {};
+        stateAccounts[address].allowances = {};
 
         this.store.updateState({
             accounts: stateAccounts,

@@ -56,11 +56,11 @@ const TransactionShowQR: FC<Props> = ({ onBack, onSuccess, QRValues }) => {
                             <div className="flex w-full space-x-2 mt-3">
                                 <ButtonWithLoading
                                     label="Cancel"
-                                    buttonClass={Classes.darkButton}
+                                    buttonClass={Classes.whiteButton}
                                     onClick={onBack}
                                 />
                                 <ButtonWithLoading
-                                    label="Get signature"
+                                    label="Request"
                                     buttonClass={Classes.button}
                                     onClick={onSuccess}
                                 />

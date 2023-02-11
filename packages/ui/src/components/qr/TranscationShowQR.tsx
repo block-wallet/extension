@@ -44,13 +44,11 @@ const TransactionShowQR: FC<Props> = ({ onBack, onSuccess, QRValues }) => {
                             {QRValue ? (
                                 <QRCode
                                     value={QRValue}
-                                    size={260}
+                                    size={256}
                                     includeMargin={true}
                                 />
                             ) : (
-                                <div>
-                                    <span>Missing QR code</span>
-                                </div>
+                                <div className="w-64 h-64"></div>
                             )}
                             <Divider />
                             <div className="flex w-full space-x-2 mt-3">

@@ -3,7 +3,7 @@
     "version": "1.0.2",
     "private": true,
     "dependencies": {
-        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.26",
+        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.27",
         "@block-wallet/eth-ledger-bridge-keyring": "https://github.com/block-wallet/eth-ledger-bridge-keyring",
         "@block-wallet/explorer-link": "https://github.com/block-wallet/explorer-link#v2.2.2",
         "@block-wallet/remote-configs": "https://github.com/block-wallet/remote-configs#v1.1.0",

@@ -643,6 +643,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     );
                     continue;
                 }
+                this._tokenController.attemptAddToken(tokenAddress, chainId);
             }
 
             //grab all the new allowances per token address

@@ -231,7 +231,6 @@ import RemoteConfigsController, {
     RemoteConfigsControllerState,
 } from './RemoteConfigsController';
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
-import { hexZeroPad } from 'ethers/lib/utils';
 
 export interface BlankControllerProps {
     initState: BlankAppState;

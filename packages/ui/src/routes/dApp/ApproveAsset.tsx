@@ -215,6 +215,11 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const [allowance, setAllowance] = useState(
         formatUnits(defaultAllowance, tokenDecimals)
     )
+    useEffect(() => {
+        // To reset the default value if there is multiple queued transactions
+        setAllowance(formatUnits(defaultAllowance, tokenDecimals))
+    }, [defaultAllowance])
+
     const [isAllowanceValid, setIsAllowanceValid] = useState(true)
 
     const currentSpenderAllowances = useAccountAllowances(

@@ -2195,11 +2195,19 @@ export default class BlankController extends EventEmitter {
         spenderAddress,
         allowance,
     }: RequestAddAsNewApproveTransaction): Promise<TransactionMeta> {
-        const paddedSpender = hexZeroPad(spenderAddress, 32).slice(2);
-        const paddedAllowance = hexZeroPad(
-            BigNumber.from(allowance)._hex,
-            32
-        ).slice(2);
+        const approveTransaction = new ApproveTransaction({
+            transactionController: this.transactionController,
+            preferencesController: this.preferencesController,
+            networkController: this.networkController,
+        });
+
+        const populatedApproveTransaction =
+            await approveTransaction.populateTransaction({
+                tokenAddress,
+                spender: spenderAddress,
+                amount: BigNumber.from(allowance),
+            });
+
         const { transactionMeta, result } =
             await this.transactionController.addTransaction({
                 transaction: {
@@ -2208,7 +2216,7 @@ export default class BlankController extends EventEmitter {
                     from: this.preferencesController
                         .getSelectedAddress()
                         .toLowerCase(),
-                    data: `0x095ea7b3${paddedSpender}${paddedAllowance}`,
+                    data: populatedApproveTransaction.data,
                 },
                 origin: 'blank',
                 customCategory: TransactionCategories.TOKEN_METHOD_APPROVE,

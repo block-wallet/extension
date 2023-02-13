@@ -212,7 +212,7 @@ const AllowancesPage = () => {
                 }}
                 timeout={1000}
             />
-            <div className="w-76 w-full p-6 bg-white fixed z-1 flex flex-col">
+            <div className="w-76 w-full p-6 bg-white fixed z-10 flex flex-col">
                 <div className="flex flex-row space-x-2">
                     <div className="flex-1">
                         <SearchInput

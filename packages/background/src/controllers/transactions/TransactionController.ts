@@ -489,138 +489,143 @@ export class TransactionController extends BaseController<
         customCategory,
         originId,
     }: AddTransactionParams): Promise<Result> {
-        const { chainId } = this._networkController.network;
-        const transactions = [...this.store.getState().transactions];
-        let transactionCategory: TransactionCategories | undefined =
-            customCategory;
-
-        transaction.chainId = chainId;
-        transaction = normalizeTransaction(transaction);
-        validateTransaction(transaction);
-
-        if (origin === 'blank') {
-            // Check if the selected
-            const selectedAccount = this._preferencesController
-                .getSelectedAddress()
-                .toLowerCase();
-            if (transaction.from !== selectedAccount) {
-                throw new Error(
-                    'Internally initiated transaction is using invalid account.'
-                );
-            }
-        } else {
-            if (!transaction.from) {
-                throw new Error(
-                    'Externally initiated transaction has undefined "from" parameter.'
-                );
-            }
-
-            const hasPermission =
-                this._permissionsController.accountHasPermissions(
-                    origin,
-                    transaction.from
-                );
-
-            if (!hasPermission) {
-                throw new Error(
-                    `Externally initiated transaction has no permission to make transaction with account ${transaction.from}.`
-                );
-            }
-
-            // If the from account is different than the select account
-            // we have to update its balance.
-            const selectedAccount = this._preferencesController
-                .getSelectedAddress()
-                .toLowerCase();
-
-            if (transaction.from.toLowerCase() !== selectedAccount) {
-                this.emit(
-                    TransactionEvents.NOT_SELECTED_ACCOUNT_TRANSACTION,
-                    transaction.chainId || chainId,
-                    toChecksumAddress(transaction.from)
-                );
-            }
-        }
-
-        if (!transactionCategory) {
-            transactionCategory = this.resolveTransactionCategory(
-                transaction.data,
-                transaction.to
-            );
-        }
-
-        let transactionMeta: TransactionMeta = {
-            id: uuid(),
-            chainId,
-            origin,
-            status: TransactionStatus.UNAPPROVED,
-            time: Date.now(),
-            transactionParams: transaction,
-            transactionCategory,
-            verifiedOnBlockchain: false,
-            loadingGasValues: true,
-            blocksDropCount: 0,
-            metaType: MetaType.REGULAR,
-            originId,
-        };
-
+        const release = await this.mutex.acquire();
         try {
-            // Check for approve
-            if (
-                transactionCategory ===
-                TransactionCategories.TOKEN_METHOD_APPROVE
-            ) {
-                const { advancedData, approveAllowanceParams } =
-                    await this._resolveTransactionAllowanceParameters(
-                        transactionMeta
+            const { chainId } = this._networkController.network;
+            const transactions = [...this.store.getState().transactions];
+            let transactionCategory: TransactionCategories | undefined =
+                customCategory;
+
+            transaction.chainId = chainId;
+            transaction = normalizeTransaction(transaction);
+            validateTransaction(transaction);
+
+            if (origin === 'blank') {
+                // Check if the selected
+                const selectedAccount = this._preferencesController
+                    .getSelectedAddress()
+                    .toLowerCase();
+                if (transaction.from !== selectedAccount) {
+                    throw new Error(
+                        'Internally initiated transaction is using invalid account.'
                     );
-                transactionMeta.advancedData = advancedData;
-                transactionMeta.approveAllowanceParams = approveAllowanceParams;
+                }
+            } else {
+                if (!transaction.from) {
+                    throw new Error(
+                        'Externally initiated transaction has undefined "from" parameter.'
+                    );
+                }
+
+                const hasPermission =
+                    this._permissionsController.accountHasPermissions(
+                        origin,
+                        transaction.from
+                    );
+
+                if (!hasPermission) {
+                    throw new Error(
+                        `Externally initiated transaction has no permission to make transaction with account ${transaction.from}.`
+                    );
+                }
+
+                // If the from account is different than the select account
+                // we have to update its balance.
+                const selectedAccount = this._preferencesController
+                    .getSelectedAddress()
+                    .toLowerCase();
+
+                if (transaction.from.toLowerCase() !== selectedAccount) {
+                    this.emit(
+                        TransactionEvents.NOT_SELECTED_ACCOUNT_TRANSACTION,
+                        transaction.chainId || chainId,
+                        toChecksumAddress(transaction.from)
+                    );
+                }
             }
 
-            // Push transaction so extension can trigger window without waiting for gas values
-            transactions.push(transactionMeta);
+            if (!transactionCategory) {
+                transactionCategory = this.resolveTransactionCategory(
+                    transaction.data,
+                    transaction.to
+                );
+            }
 
+            let transactionMeta: TransactionMeta = {
+                id: uuid(),
+                chainId,
+                origin,
+                status: TransactionStatus.UNAPPROVED,
+                time: Date.now(),
+                transactionParams: transaction,
+                transactionCategory,
+                verifiedOnBlockchain: false,
+                loadingGasValues: true,
+                blocksDropCount: 0,
+                metaType: MetaType.REGULAR,
+                originId,
+            };
+
+            try {
+                // Check for approve
+                if (
+                    transactionCategory ===
+                    TransactionCategories.TOKEN_METHOD_APPROVE
+                ) {
+                    const { advancedData, approveAllowanceParams } =
+                        await this._resolveTransactionAllowanceParameters(
+                            transactionMeta
+                        );
+                    transactionMeta.advancedData = advancedData;
+                    transactionMeta.approveAllowanceParams =
+                        approveAllowanceParams;
+                }
+
+                // Push transaction so extension can trigger window without waiting for gas values
+                transactions.push(transactionMeta);
+
+                this.store.updateState({
+                    transactions: this.trimTransactionsForState(transactions),
+                });
+
+                // Estimate gas
+                const { gasLimit, estimationSucceeded } =
+                    await this.estimateGas(transactionMeta);
+                transactionMeta.transactionParams.gasLimit = gasLimit;
+                transactionMeta.gasEstimationFailed = !estimationSucceeded;
+
+                // Get default gas prices values
+                transactionMeta = await this.getGasPricesValues(
+                    transactionMeta,
+                    chainId
+                );
+
+                transactionMeta.loadingGasValues = false;
+            } catch (error) {
+                this.failTransaction(transactionMeta, error);
+                return Promise.reject(error);
+            }
+
+            const result: Promise<string> = this.waitForTransactionResult(
+                transactionMeta.id,
+                waitForConfirmation
+            );
+
+            // Update transactions list again as we modified transactionMeta ref (pushed into `transactions`)
             this.store.updateState({
                 transactions: this.trimTransactionsForState(transactions),
             });
 
-            // Estimate gas
-            const { gasLimit, estimationSucceeded } = await this.estimateGas(
-                transactionMeta
-            );
-            transactionMeta.transactionParams.gasLimit = gasLimit;
-            transactionMeta.gasEstimationFailed = !estimationSucceeded;
+            if (!transactionCategory) {
+                this.setTransactionCategory(transactionMeta.id);
+            } else {
+                this.setMethodSignature(transactionMeta.id);
+            }
 
-            // Get default gas prices values
-            transactionMeta = await this.getGasPricesValues(
-                transactionMeta,
-                chainId
-            );
-
-            transactionMeta.loadingGasValues = false;
-        } catch (error) {
-            this.failTransaction(transactionMeta, error);
-            return Promise.reject(error);
+            return { result, transactionMeta };
+        } finally {
+            release();
         }
-
-        const result: Promise<string> = this.waitForTransactionResult(
-            transactionMeta.id,
-            waitForConfirmation
-        );
-
-        // Update transactions list again as we modified transactionMeta ref (pushed into `transactions`)
-        this.store.updateState({
-            transactions: this.trimTransactionsForState(transactions),
-        });
-
-        if (!transactionCategory) {
-            this.setTransactionCategory(transactionMeta.id);
-        } else {
-            this.setMethodSignature(transactionMeta.id);
-        }
-
-        return { result, transactionMeta };
     }
 
     private async _resolveTransactionAllowanceParameters(

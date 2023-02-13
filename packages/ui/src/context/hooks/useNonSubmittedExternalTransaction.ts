@@ -2,7 +2,10 @@ import {
     TransactionMeta,
     uiTransactionParams,
 } from "@block-wallet/background/controllers/transactions/utils/types"
-import { getNonSubmittedTransactions } from "../../util/getNonSubmittedTransactions"
+import {
+    getNonSubmittedTransactions,
+    TransactionOrigin,
+} from "../../util/getNonSubmittedTransactions"
 import { getUITransactionParams } from "../../util/transactionUtils"
 import { useBlankState } from "../background/backgroundHooks"
 import { useGasPriceData } from "./useGasPriceData"
@@ -37,8 +40,7 @@ const useNonSubmittedTransaction = (
 
     const nonSubmittedTransactions = getNonSubmittedTransactions(
         transactions,
-        externalOnly,
-        !externalOnly
+        externalOnly ? TransactionOrigin.EXTERNAL_ONLY : TransactionOrigin.ALL
     )
 
     // Gets first unapproved transaction

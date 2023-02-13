@@ -231,7 +231,7 @@ describe('OffChainBlockFetchService', () => {
             expect(_recurrentFetch).not.equal(undefined);
             expect(_recurrentFetch).not.equal(null);
 
-            await wait(200);
+            await wait(2000);
             loopActivated = false;
 
             await errorsPromise;

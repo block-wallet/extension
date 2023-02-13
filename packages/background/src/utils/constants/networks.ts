@@ -94,24 +94,24 @@ export interface ActionsTimeInterval {
 
 // If the interval is < than blockNumberPull the action will happend 'every new block'.
 export const ACTIONS_TIME_INTERVALS_DEFAULT_VALUES = {
-    blockNumberPull: 15 * SECOND,
-    balanceFetch: 30 * SECOND,
-    gasPricesUpdate: 8 * SECOND,
+    blockNumberPull: 45 * SECOND,
+    balanceFetch: 80 * SECOND,
+    gasPricesUpdate: 30 * SECOND,
     exchangeRatesFetch: 1 * MINUTE,
-    transactionsStatusesUpdate: 8 * SECOND,
-    providerSubscriptionsUpdate: 8 * SECOND,
-    transactionWatcherUpdate: 45 * SECOND,
+    transactionsStatusesUpdate: 15 * SECOND,
+    providerSubscriptionsUpdate: 15 * SECOND,
+    transactionWatcherUpdate: 90 * SECOND,
 };
 
 export const FAST_TIME_INTERVALS_DEFAULT_VALUES = {
     ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     ...{
-        blockNumberPull: 6 * SECOND,
-        balanceFetch: 20 * SECOND,
-        gasPricesUpdate: 3 * SECOND,
-        transactionsStatusesUpdate: 3 * SECOND,
-        providerSubscriptionsUpdate: 3 * SECOND,
-        transactionWatcherUpdate: 30 * SECOND,
+        blockNumberPull: 20 * SECOND,
+        balanceFetch: 30 * SECOND,
+        gasPricesUpdate: 10 * SECOND,
+        transactionsStatusesUpdate: 6 * SECOND,
+        providerSubscriptionsUpdate: 6 * SECOND,
+        transactionWatcherUpdate: 45 * SECOND,
     },
 };
 
@@ -571,7 +571,7 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,
-        rpcUrls: [`https://prealpha.scroll.io/l1`],
+        rpcUrls: [`https://scroll-l1-testnet-node.blockwallet.io`],
         blockExplorerUrls: ['https://l1scan.scroll.io/'],
         blockExplorerName: 'Scroll L1 Explorer',
         actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
@@ -601,7 +601,7 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,
-        rpcUrls: [`https://prealpha.scroll.io/l2`],
+        rpcUrls: [`https://scroll-l2-testnet-node.blockwallet.io`],
         blockExplorerUrls: ['https://l2scan.scroll.io/'],
         blockExplorerName: 'Scroll L2 Explorer',
         actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },

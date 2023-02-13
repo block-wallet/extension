@@ -1,9 +1,6 @@
 import AssetAmountDisplay from "../../components/assets/AssetAmountDisplay"
-import ClickableText from "../../components/button/ClickableText"
-import Divider from "../../components/Divider"
 import GasPriceComponent from "../../components/transactions/GasPriceComponent"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
-import LoadingDialog from "../../components/dialog/LoadingDialog"
 import NetworkDisplay from "../../components/network/NetworkDisplay"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
@@ -19,9 +16,10 @@ import {
     HardwareWalletOpTypes,
     QuoteFeeStatus,
     TransactionCategories,
+    TransactionStatus,
 } from "../../context/commTypes"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { classnames, Classes } from "../../styles"
+import { classnames } from "../../styles"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import {
     executeBridge,
@@ -39,7 +37,6 @@ import { isHardwareWallet } from "../../util/account"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import { useHasSufficientBalance } from "../../context/hooks/useHasSufficientBalance"
-import { useInProgressAllowanceTransaction } from "../../context/hooks/useInProgressAllowanceTransaction"
 import { useInProgressInternalTransaction } from "../../context/hooks/useInProgressInternalTransaction"
 import { useUserSettings } from "../../context/hooks/useUserSettings"
 import { useLocationRecovery } from "../../util/hooks/useLocationRecovery"
@@ -82,6 +79,9 @@ import BridgeNotFoundQuoteDetails from "../../components/transactions/BridgeNotF
 import { useSelectedAccountHasEnoughNativeTokensToSend } from "../../context/hooks/useSelectedAccountHasEnoughNativeTokensToSend"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
 import { WithRequired } from "@block-wallet/background/utils/types/helpers"
+import useAwaitAllowanceTransactionDialog from "../../context/hooks/useAwaitAllowanceTransactionDialog"
+import { useTransactionById } from "../../context/hooks/useTransactionById"
+import WaitingAllowanceTransactionDialog from "../../components/dialog/WaitingAllowanceTransactionDialog"
 export interface BridgeConfirmPageLocalState {
     amount: string
     bridgeQuote: GetBridgeQuoteResponse
@@ -89,6 +89,7 @@ export interface BridgeConfirmPageLocalState {
     routes: IBridgeRoute[]
     token: Token
     fromAssetPage?: boolean
+    allowanceTransactionId?: string
 }
 
 // 20s
@@ -97,7 +98,7 @@ const DEFAULT_BRIDGE_SLIPPAGE = 3
 
 const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const history = useOnMountHistory()
-    const { bridgeQuote, network, token } = useMemo(
+    const { bridgeQuote, network, token, allowanceTransactionId } = useMemo(
         () => history.location.state as BridgeConfirmPageLocalState,
         [history.location.state]
     )
@@ -125,9 +126,20 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         useInProgressInternalTransaction({
             categories: [TransactionCategories.BRIDGE],
         })
-    const inProgressAllowanceTransaction = useInProgressAllowanceTransaction(
-        token.address
+
+    const { transaction: allowanceTransaction } = useTransactionById(
+        allowanceTransactionId
     )
+
+    const isInProgressAllowanceTransaction = allowanceTransaction
+        ? allowanceTransaction.status !== TransactionStatus.CONFIRMED
+        : false
+
+    const {
+        status: allowanceTxDialogStatus,
+        isOpen: allowanceTxDialogIsOpen,
+        closeDialog: closeAllowanceTxDialog,
+    } = useAwaitAllowanceTransactionDialog(allowanceTransaction)
 
     useEffect(() => {
         // Redirect to homepage if there is no pending transaction
@@ -137,7 +149,8 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const { availableNetworks, selectedNetwork } = useBlankState()!
+    const { availableNetworks, selectedNetwork, defaultGasOption } =
+        useBlankState()!
     const { gasPricesLevels } = useGasPriceData()
     const { isEIP1559Compatible } = useSelectedNetwork()
     const selectedAccount = useSelectedAccount()
@@ -294,7 +307,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     }, [])
 
     const idleScreen =
-        !inProgressAllowanceTransaction?.id && !inProgressTransaction?.id
+        !isInProgressAllowanceTransaction && !inProgressTransaction?.id
     const bridgeWarningMessage =
         checkNativeTokensInDestinationNetwork &&
         !isLoadingSelectedAccountHasEnoughNativeTokensToSend &&
@@ -337,6 +350,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 maxFeePerGas: isEIP1559Compatible
                     ? selectedFees.maxFeePerGas
                     : undefined,
+                gasLimit: selectedGasLimit,
             }
 
             await executeBridge(txParams)
@@ -387,7 +401,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     useEffect(() => {
         let isValidFetch = true
         let timeoutRef: NodeJS.Timeout
-        if (!shouldFetchBridgeParams || inProgressAllowanceTransaction?.id) {
+        if (!shouldFetchBridgeParams || isInProgressAllowanceTransaction) {
             setTimeoutStart(undefined)
             return
         }
@@ -458,7 +472,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         fromToken.address,
         toChainId,
         toToken.address,
-        inProgressAllowanceTransaction?.id,
+        isInProgressAllowanceTransaction,
         selectedAccount.address,
         shouldFetchBridgeParams,
     ])
@@ -485,7 +499,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     <ButtonWithLoading
                         label="Bridge"
                         isLoading={
-                            error || !!inProgressAllowanceTransaction
+                            error || isInProgressAllowanceTransaction
                                 ? false
                                 : !quote ||
                                   isGasLoading ||
@@ -499,22 +513,20 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 </PopupFooter>
             }
         >
-            <LoadingDialog
-                open={!!inProgressAllowanceTransaction}
-                title={"Waiting for allowance transaction..."}
-                message={
-                    <div className="flex flex-col space-y-2 items-center">
-                        <span>Your bridge is being prepared, please wait.</span>
-                        <Divider />
-                        <span className="text-xs">
-                            {"You can wait here until it is done or "}
-                            <ClickableText onClick={() => history.push("/")}>
-                                bridge later
-                            </ClickableText>
-                            {" when the token approval is completed."}
-                        </span>
-                    </div>
+            <WaitingAllowanceTransactionDialog
+                status={allowanceTxDialogStatus}
+                isOpen={allowanceTxDialogIsOpen}
+                onSuccess={closeAllowanceTxDialog}
+                onError={() =>
+                    history.push({
+                        pathname: "/bridge",
+                        state: {
+                            ...history.location.state,
+                            allowanceTransactionId: undefined,
+                        },
+                    })
                 }
+                operation="bridge"
             />
             <WaitingDialog
                 open={isOpen}
@@ -631,7 +643,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 {isEIP1559Compatible ? (
                     <GasPriceComponent
                         defaultGas={{
-                            defaultLevel: "medium",
+                            defaultLevel: defaultGasOption || "medium",
                             feeData: {
                                 gasLimit: defaultGas.gasLimit,
                             },
@@ -646,10 +658,16 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                         }}
                         isParentLoading={isGasLoading}
                         disabled={isGasLoading}
+                        minGasLimit={
+                            transactionRequest
+                                ? transactionRequest.gasLimit
+                                : undefined
+                        }
                         displayOnlyMaxValue
                     />
                 ) : (
                     <GasPriceSelector
+                        defaultLevel={defaultGasOption || "medium"}
                         defaultGasLimit={defaultGas.gasLimit}
                         defaultGasPrice={defaultGas.gasPrice}
                         setGasPriceAndLimit={(gasPrice, gasLimit) => {

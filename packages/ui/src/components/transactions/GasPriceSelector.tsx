@@ -57,6 +57,7 @@ export type TransactionSpeedOption = {
 interface GasPriceSelectorProps {
     defaultGasLimit: BigNumber
     defaultGasPrice: BigNumber
+    defaultLevel: "low" | "medium" | "high"
     setGasPriceAndLimit: (gasPrice: BigNumber, gasLimit: BigNumber) => void
     disabled?: boolean
     isParentLoading?: boolean
@@ -70,6 +71,7 @@ interface GasTabProps {
     selectedGasPrice: TransactionSpeedOption
     defaultGasLimit: BigNumber
     defaultGasPrice: BigNumber
+    minGasLimit?: number
     setUserChanged: (userChanged: boolean) => void
     handlePriceSelection: (price: TransactionSpeedOption) => void
     getSpeedOption: (
@@ -434,6 +436,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
     const {
         defaultGasLimit,
         defaultGasPrice,
+        defaultLevel,
         setGasPriceAndLimit,
         disabled,
         isParentLoading = props.isParentLoading ?? false,
@@ -496,16 +499,9 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
     const [userChanged, setUserChanged] = useState<boolean>(false)
 
     // Tabs variables
-    // if network is configured to not show gas levels or received gas does not match with average, default is advanced tab.
+    // if network is configured to noxt show gas levels or received gas does not match with average, default is advanced tab.
     const [tab, setTab] = useState(
-        tabs[
-            !showGasLevels ||
-            !defaultGasPrice.eq(
-                BigNumber.from(gasPricesLevels.average.gasPrice)
-            )
-                ? 1
-                : 0
-        ]
+        tabs[!showGasLevels || !defaultLevel ? 1 : 0]
     )
     const TabComponent = tab.component
     //Recalculate options on gas change
@@ -532,11 +528,14 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
 
         //Default selected checks if received default price is equals average to select it, otherwise sets custom value.
         if (!isLoaded) {
-            if (showGasLevels && defaultGasPrice.eq(speedOptions[1].gasPrice)) {
-                setSelectedGasPrice(speedOptions[1])
+            if (showGasLevels && defaultLevel) {
+                const defaultOption = speedOptions.find(
+                    (o) => o.label === defaultLevel
+                )!
+                setSelectedGasPrice(defaultOption)
                 setGasPriceAndLimit(
-                    speedOptions[1].gasPrice,
-                    speedOptions[1].gasLimit
+                    defaultOption.gasPrice,
+                    defaultOption.gasLimit
                 )
                 setTab(tabs[0])
             } else {

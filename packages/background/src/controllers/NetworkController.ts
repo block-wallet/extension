@@ -302,6 +302,11 @@ export default class NetworkController extends BaseController<NetworkControllerS
         newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
         newNetworks[networkKey].test = updates.test;
         this.networks = newNetworks;
+
+        // If network is currently selected & rpc is changed, update provider by resetting the network (only available if provider is down)
+        if (this.network.chainId === chainId && updates.rpcUrls) {
+            this.setNetwork(this.network.name);
+        }
         return;
     }
 
@@ -585,11 +590,19 @@ export default class NetworkController extends BaseController<NetworkControllerS
             // the network seems to be eip1559 but eth_feeHistory is not available.
             if (baseFeePerGas) {
                 try {
-                    await provider.send('eth_feeHistory', [
+                    const feeHistory = await provider.send('eth_feeHistory', [
                         '0x1',
                         'latest',
                         [50],
                     ]);
+                    if (
+                        !feeHistory ||
+                        (!feeHistory.baseFeePerGas && !feeHistory.reward)
+                    ) {
+                        throw new Error(
+                            `eth_feeHistory is not fully supported by chain ${chainId}`
+                        );
+                    }
                 } catch {
                     baseFeePerGas = undefined;
                 }

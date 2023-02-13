@@ -12,6 +12,7 @@ export interface IToken {
     symbol: string;
     decimals: number;
     l1Bridge?: IL1Bridge;
+    totalSupply?: BigNumber;
 }
 
 export type IAccountTokens = {
@@ -55,6 +56,19 @@ export class Token implements IToken {
         this.l1Bridge = l1Bridge;
         this.decimals = decimals;
         this.totalSupply = totalSupply;
+    }
+
+    static new(token: IToken): Token {
+        return new Token(
+            token.address,
+            token.name,
+            token.symbol,
+            token.decimals,
+            token.type,
+            token.logo,
+            token.l1Bridge,
+            token.totalSupply
+        );
     }
 }
 

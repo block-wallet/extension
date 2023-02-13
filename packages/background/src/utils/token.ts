@@ -149,3 +149,22 @@ export function isUnlimitedAllowance(
 
     return false;
 }
+
+export function mergeTokens(
+    baseToken: Token | IToken,
+    mergeToken: Token | IToken
+): Token | IToken {
+    if (!mergeToken) {
+        return baseToken;
+    }
+    return {
+        address: baseToken.address || mergeToken.address,
+        name: baseToken.name || mergeToken.name,
+        symbol: baseToken.symbol || mergeToken.symbol,
+        decimals: baseToken.decimals || mergeToken.decimals,
+        logo: baseToken.logo || mergeToken.logo,
+        type: baseToken.type || mergeToken.type,
+        l1Bridge: baseToken.l1Bridge || mergeToken.l1Bridge,
+        totalSupply: baseToken.totalSupply || mergeToken.totalSupply,
+    };
+}

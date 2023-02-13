@@ -22,7 +22,7 @@ import { PreferencesController } from '../PreferencesController';
 import { Mutex } from 'async-mutex';
 import initialState from '../../utils/constants/initialState';
 import { TokenOperationsController } from './transactions/TokenOperationsController';
-import { fillTokenData } from '../../utils/token';
+import { fillTokenData, mergeTokens } from '../../utils/token';
 
 const tokenAddressParamNotPresentError = new Error('token address is required');
 const tokenAddressInvalidError = new Error(
@@ -493,14 +493,14 @@ export class TokenController extends BaseController<TokenControllerState> {
     ): Promise<FetchTokenResponse> {
         tokenAddress = toChecksumAddress(tokenAddress);
 
-        if (!forceUpdate) {
-            // Check cached tokens
-            const token = (await this.getCachedPopulatedTokens(chainId))[
-                tokenAddress
-            ];
-            if (token) {
-                return { token, fetchFailed: false };
-            }
+        // Check cached tokens
+        const token = (await this.getCachedPopulatedTokens(chainId))[
+            tokenAddress
+        ];
+
+        //If force update is activated, do not return
+        if (token && !forceUpdate) {
+            return { token, fetchFailed: false };
         }
 
         // Tries to fetch token data from chain
@@ -529,8 +529,11 @@ export class TokenController extends BaseController<TokenControllerState> {
             const cachedPopulatedTokens = await this.getCachedPopulatedTokens(
                 chainId
             );
-            cachedPopulatedTokens[tokenAddress] = fetchTokenResponse.token;
 
+            cachedPopulatedTokens[tokenAddress] = mergeTokens(
+                fetchTokenResponse.token,
+                token || {}
+            );
             await this._updateState(
                 userTokens,
                 deletedUserTokens,
@@ -676,10 +679,11 @@ export class TokenController extends BaseController<TokenControllerState> {
         tokenAddress: string
     ): Promise<Token> {
         const { tokens } = await this.search(tokenAddress);
-        if (!tokens[0]) {
+        let token = tokens[0];
+
+        if (!token) {
             throw new Error('Token does not exist');
         }
-        let token = tokens[0];
         if (!token.totalSupply) {
             const updatedToken = await this._populateTokenData(
                 tokenAddress,
@@ -688,7 +692,7 @@ export class TokenController extends BaseController<TokenControllerState> {
                 true
             );
             if (updatedToken.token.totalSupply) {
-                token = updatedToken.token;
+                token = mergeTokens(updatedToken.token, token);
             }
         }
 

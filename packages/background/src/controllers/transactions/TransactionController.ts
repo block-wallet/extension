@@ -915,7 +915,7 @@ export class TransactionController extends BaseController<
                 txNonce = nonceLock.nextNonce;
             }
 
-            // Update approve parameters
+            // Update approve parameters since the user could have changed the allowance value
             if (
                 transactionMeta.transactionCategory ===
                 TransactionCategories.TOKEN_METHOD_APPROVE
@@ -926,6 +926,11 @@ export class TransactionController extends BaseController<
                     );
                 transactionMeta.advancedData = advancedData;
                 transactionMeta.approveAllowanceParams = approveAllowanceParams;
+                const methodSignature =
+                    this._contractSignatureParser.getERC20MethodSignature(
+                        transactionMeta.transactionParams.data!
+                    );
+                transactionMeta.methodSignature = methodSignature;
             }
 
             transactionMeta.status = status;

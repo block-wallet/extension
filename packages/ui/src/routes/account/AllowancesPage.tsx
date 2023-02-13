@@ -77,9 +77,23 @@ const AllowancesPage = () => {
         )
     )
 
-    const { isOpen, status, dispatch } = useWaitingDialog()
+    const {
+        isOpen: isRefreshingAllowances,
+        status: refreshingAllowancesStatus,
+        dispatch: refreshingAllowancesDispatch,
+    } = useWaitingDialog()
+
+    const {
+        isOpen: isRevokingAllowances,
+        status: revokingAllowancesStatus,
+        dispatch: revokingAllowancesDispatch,
+    } = useWaitingDialog()
 
     const revokeAll = async () => {
+        revokingAllowancesDispatch({
+            type: "open",
+            payload: { status: "loading" },
+        })
         const groupedBySpender = groupBy === AllowancesFilters.SPENDER
         const allowancesToRevoke = allowances.flatMap((groupedAllowances) =>
             groupedAllowances.allowances.map((allowance) => ({
@@ -181,12 +195,12 @@ const AllowancesPage = () => {
                 open={confirmRefresh}
                 onClose={() => setConfirmRefresh(false)}
                 onConfirm={async () => {
-                    dispatch({
+                    refreshingAllowancesDispatch({
                         type: "open",
                         payload: { status: "loading" },
                     })
                     await refetchAllowances()
-                    dispatch({
+                    refreshingAllowancesDispatch({
                         type: "setStatus",
                         payload: { status: "success" },
                     })
@@ -194,8 +208,8 @@ const AllowancesPage = () => {
                 confirmDisabledUntil={refreshDisabledUntil}
             />
             <WaitingDialog
-                status={status}
-                open={isOpen}
+                status={refreshingAllowancesStatus}
+                open={isRefreshingAllowances}
                 titles={{
                     loading: "Refreshing allowances...",
                     error: "Error",
@@ -208,7 +222,26 @@ const AllowancesPage = () => {
                     success: `Refresh allowances was successful.`,
                 }}
                 onDone={() => {
-                    dispatch({ type: "close" })
+                    refreshingAllowancesDispatch({ type: "close" })
+                }}
+                timeout={1000}
+            />
+            <WaitingDialog
+                status={revokingAllowancesStatus}
+                open={isRevokingAllowances}
+                titles={{
+                    loading: "Preparing transactions...",
+                    error: "Error",
+                    success: "Success!",
+                }}
+                texts={{
+                    loading:
+                        "Please wait while we prepare and queue your allowance revokes...",
+                    error: "There was an error while revoking your allowances",
+                    success: `Refresh allowances was successful.`,
+                }}
+                onDone={() => {
+                    revokingAllowancesDispatch({ type: "close" })
                 }}
                 timeout={1000}
             />

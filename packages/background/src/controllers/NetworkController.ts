@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import Common from '@ethereumjs/common';
 import { BaseController } from '../infrastructure/BaseController';
+import BaseStorageStore from '../infrastructure/stores/BaseStorageStore';
 import {
     Network,
     Networks,
@@ -51,7 +52,17 @@ export interface NetworkControllerState {
     isProviderNetworkOnline: boolean;
     isEIP1559Compatible: { [chainId in number]: boolean };
 }
+import { RPChProvider } from '../../../../../RPCh/packages/ethers';
+// import { RPChProvider } from '@rpch/ethers';
+let rpchProvider: StaticJsonRpcProvider;
 
+class RPChStore extends BaseStorageStore<string> {
+    constructor() {
+        super('rpch');
+    }
+}
+const rpchStore = new RPChStore();
+const GNOSIS_HOPR_NETWORK_DESC = 'Gnosis on HOPR';
 export default class NetworkController extends BaseController<NetworkControllerState> {
     public static readonly CURRENT_HARDFORK: string = 'london';
     private provider: StaticJsonRpcProvider;
@@ -686,7 +697,46 @@ export default class NetworkController extends BaseController<NetworkControllerS
             const network = this.networks[key];
 
             // Instantiate provider and wait until it's ready
-            const newNetworkProvider = this.getProviderFromName(network.name);
+            let newNetworkProvider: StaticJsonRpcProvider;
+            if (network.desc === GNOSIS_HOPR_NETWORK_DESC) {
+                // load rpch
+                // if already initialized
+                if (rpchProvider) {
+                    newNetworkProvider = rpchProvider;
+                }
+                // initialize new one
+                else {
+                    newNetworkProvider = new RPChProvider(
+                        'https://primary.gnosis-chain.rpc.hoprtech.net',
+                        {
+                            timeout: 10000,
+                            discoveryPlatformApiEndpoint:
+                                'http://localhost:3020',
+                            client: 'blockwallet',
+                        },
+                        (k, v) => {
+                            return new Promise<void>((resolve) => {
+                                rpchStore.set(k, v, resolve);
+                            });
+                        },
+                        (k) => {
+                            return new Promise((resolve) => {
+                                rpchStore.get(k, resolve);
+                            });
+                        }
+                    );
+                    rpchProvider = newNetworkProvider as StaticJsonRpcProvider;
+                    // kickstart
+                    try {
+                        await (newNetworkProvider as RPChProvider).sdk.start();
+                        console.log('rpch provider started');
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+            } else {
+                newNetworkProvider = this.getProviderFromName(network.name);
+            }
 
             // Update provider listeners
             this._updateListeners(newNetworkProvider);

@@ -110,7 +110,7 @@ export const TransactionDetailsBasic: FunctionComponent<
                 details.push({
                     label: "Spender",
                     value: spenderData
-                        ? spenderData.name
+                        ? formatName(spenderData.name, 18)
                         : `Spender ${formatHashLastChars(spenderAddress)}`,
                     link: generateExplorerLink(
                         state.availableNetworks,
@@ -124,7 +124,9 @@ export const TransactionDetailsBasic: FunctionComponent<
             if (tokenAddress) {
                 details.push({
                     label: "Token",
-                    value: tokenData ? tokenData.name : tokenAddress,
+                    value: tokenData
+                        ? formatName(tokenData.name, 18)
+                        : tokenAddress,
                     link: generateExplorerLink(
                         state.availableNetworks,
                         state.selectedNetwork,

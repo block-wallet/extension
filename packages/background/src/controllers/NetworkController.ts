@@ -502,7 +502,53 @@ export default class NetworkController extends BaseController<NetworkControllerS
         networkName: string
     ): StaticJsonRpcProvider => {
         const network = this.searchNetworkByName(networkName);
-        return this._getProviderForNetwork(network.chainId, network.rpcUrls[0]);
+        console.log('network', network);
+
+        let provider: StaticJsonRpcProvider;
+
+        // RPCh only on Gnosis
+        if (networkName == 'xdai') {
+            // if already initialized
+            if (rpchProvider) {
+                provider = rpchProvider;
+            }
+            // initialize new one
+            else {
+                provider = new RPChProvider(
+                    'https://primary.gnosis-chain.rpc.hoprtech.net',
+                    {
+                        timeout: 10000,
+                        discoveryPlatformApiEndpoint: 'http://localhost:3020',
+                        client: 'blockwallet',
+                    },
+                    (k, v) => {
+                        return new Promise<void>((resolve) => {
+                            rpchStore.set(k, v, resolve);
+                        });
+                    },
+                    (k) => {
+                        return new Promise((resolve) => {
+                            rpchStore.get(k, resolve);
+                        });
+                    }
+                );
+                rpchProvider = provider as StaticJsonRpcProvider;
+                // kickstart
+                (provider as RPChProvider).sdk
+                    .start()
+                    .then(() => console.log('rpch provider started'))
+                    .catch((error) => console.log(error));
+            }
+        } else {
+            provider = this._getProviderForNetwork(
+                network.chainId,
+                network.rpcUrls[0]
+            );
+        }
+
+        console.log('provider', provider);
+
+        return provider;
     };
 
     /**
@@ -697,46 +743,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             const network = this.networks[key];
 
             // Instantiate provider and wait until it's ready
-            let newNetworkProvider: StaticJsonRpcProvider;
-            if (network.desc === GNOSIS_HOPR_NETWORK_DESC) {
-                // load rpch
-                // if already initialized
-                if (rpchProvider) {
-                    newNetworkProvider = rpchProvider;
-                }
-                // initialize new one
-                else {
-                    newNetworkProvider = new RPChProvider(
-                        'https://primary.gnosis-chain.rpc.hoprtech.net',
-                        {
-                            timeout: 10000,
-                            discoveryPlatformApiEndpoint:
-                                'http://localhost:3020',
-                            client: 'blockwallet',
-                        },
-                        (k, v) => {
-                            return new Promise<void>((resolve) => {
-                                rpchStore.set(k, v, resolve);
-                            });
-                        },
-                        (k) => {
-                            return new Promise((resolve) => {
-                                rpchStore.get(k, resolve);
-                            });
-                        }
-                    );
-                    rpchProvider = newNetworkProvider as StaticJsonRpcProvider;
-                    // kickstart
-                    try {
-                        await (newNetworkProvider as RPChProvider).sdk.start();
-                        console.log('rpch provider started');
-                    } catch (e) {
-                        console.error(e);
-                    }
-                }
-            } else {
-                newNetworkProvider = this.getProviderFromName(network.name);
-            }
+            const newNetworkProvider = this.getProviderFromName(network.name);
 
             // Update provider listeners
             this._updateListeners(newNetworkProvider);

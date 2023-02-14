@@ -643,7 +643,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     );
                     continue;
                 }
-                this._tokenController.attemptAddToken(tokenAddress, chainId);
             }
 
             //grab all the new allowances per token address
@@ -679,6 +678,14 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             spender,
                             networkProvider
                         );
+
+                    // Add token to the user's assets of tracked tokens if the allowance is greater than 0
+                    if (!spenderAllowance.eq(0)) {
+                        this._tokenController.attemptAddToken(
+                            tokenAddress,
+                            chainId
+                        );
+                    }
 
                     let contractInfo: ContractDetails | undefined =
                         contractDetailsCache[spender];

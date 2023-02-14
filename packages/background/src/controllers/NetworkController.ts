@@ -507,7 +507,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         let provider: StaticJsonRpcProvider;
 
         // RPCh only on Gnosis
-        if (networkName == 'xdai') {
+        if (network.desc === GNOSIS_HOPR_NETWORK_DESC) {
             // if already initialized
             if (rpchProvider) {
                 provider = rpchProvider;
@@ -539,6 +539,10 @@ export default class NetworkController extends BaseController<NetworkControllerS
                     .then(() => console.log('rpch provider started'))
                     .catch((error) => console.log(error));
             }
+            // provider = this._getProviderForNetwork(
+            //     network.chainId,
+            //     network.rpcUrls[0]
+            // );
         } else {
             provider = this._getProviderForNetwork(
                 network.chainId,

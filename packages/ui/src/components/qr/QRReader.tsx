@@ -1,6 +1,12 @@
 import { QrReader } from "react-qr-reader"
 
-const QrContainer = (props: any) => {
+interface Props {
+    deviceNotReady: boolean
+    className?: string
+    onRead: (qr: string) => Promise<void>
+}
+
+const QrContainer = (props: Props) => {
     return (
         <>
             {!props.deviceNotReady && (
@@ -14,6 +20,7 @@ const QrContainer = (props: any) => {
                                     props.onRead(result?.text)
                                 }
                             }}
+                            className={props.className}
                         />
                     </div>
                 </>

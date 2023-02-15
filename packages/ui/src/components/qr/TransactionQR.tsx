@@ -29,6 +29,7 @@ const TransactionQR: FC<Props> = ({
             onBack={() => {
                 setShowQRDone(false)
             }}
+            onCancel={onBack}
             onSuccess={onQRSignatureProvided}
         />
     )

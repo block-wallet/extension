@@ -39,7 +39,9 @@ const TransactionShowQR: FC<Props> = ({ onBack, onSuccess, QRValues }) => {
             <div>
                 <div className="mt-2 text-xs">
                     <div className="mt-1">
-                        <span>Please scan your Keystone QR code.</span>
+                        <span>
+                            Please scan the QR code using your Keystone.
+                        </span>
                         <div className="items-center">
                             {QRValue ? (
                                 <QRCode

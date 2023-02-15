@@ -8,10 +8,11 @@ import { Classes } from "../../styles"
 
 interface Props {
     onBack: () => void
+    onCancel: () => void
     onSuccess: (qrSignature: string) => void
 }
 
-const SendSignReadQR: FC<Props> = ({ onBack, onSuccess }) => {
+const SendSignReadQR: FC<Props> = ({ onBack, onCancel, onSuccess }) => {
     const { connect } = useVideoDeviceConnect(true)
     const [deviceNotReady, setDeviceNotReady] = useState(false)
 
@@ -25,27 +26,32 @@ const SendSignReadQR: FC<Props> = ({ onBack, onSuccess }) => {
 
     return (
         <div className="flex flex-col items-center justify-center">
-            <div className="mt-2">
+            <div>
                 <div className="mt-2 text-xs">
                     <div className="mt-1">
                         <span>
                             Please scan your Keystone QR code. The blur effect
-                            does not affect the scanning ability.
+                            does not affect the scanning.
                         </span>
-                        <br />
                         <div className="items-center">
                             <QrContainer
                                 onRead={onQRRead}
                                 deviceNotReady={deviceNotReady}
+                                className="w-64 h-64"
                             />
-                        </div>
-                        <Divider />
-                        <div className="flex w-full space-x-2 mt-3">
-                            <ButtonWithLoading
-                                label="Cancel"
-                                buttonClass={Classes.darkButton}
-                                onClick={onBack}
-                            />
+                            <Divider />
+                            <div className="flex w-full space-x-2 mt-3">
+                                <ButtonWithLoading
+                                    label="Return"
+                                    buttonClass={Classes.whiteButton}
+                                    onClick={onBack}
+                                />
+                                <ButtonWithLoading
+                                    label="Cancel"
+                                    buttonClass={Classes.darkButton}
+                                    onClick={onCancel}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

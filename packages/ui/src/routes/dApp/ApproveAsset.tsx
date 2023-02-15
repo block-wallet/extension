@@ -372,8 +372,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
 
     const mainSectionTitle = (
         <>
-            {isFromBlockWallet ? "BlockWallet" : origin} is requesting to update
-            your {tokenName} Allowance
+            {isFromBlockWallet ? "You are about" : <>{origin} is requesting</>}{" "}
+            to update your {tokenName} allowance
         </>
     )
 

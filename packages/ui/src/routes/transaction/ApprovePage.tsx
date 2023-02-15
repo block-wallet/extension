@@ -503,7 +503,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const mainSection = (
         <>
             <div className="flex flex-col space-y-3 px-6 py-4">
-                <p className="text-sm font-bold">{`BlockWallet is requesting to update your ${assetName} Allowance`}</p>
+                <p className="text-sm font-bold">{`You are about to update your ${assetName} allowance`}</p>
                 <p className="text-sm text-gray-500">{mainSectionText}</p>
                 {currentAllowanceValue && (
                     <p

@@ -47,7 +47,7 @@ const HighPriceImpactExplained: FC<
                     )}`}
                 </div>
                 <div className="mt-2">
-                    <span className="font-bold">You get</span>
+                    <span className="font-bold text-black">You get</span>
                     <br />
                     {`${formatToken(
                         toToken.token,

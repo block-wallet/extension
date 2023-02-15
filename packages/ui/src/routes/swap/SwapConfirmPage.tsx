@@ -77,7 +77,7 @@ import useAwaitAllowanceTransactionDialog from "../../context/hooks/useAwaitAllo
 import WaitingAllowanceTransactionDialog from "../../components/dialog/WaitingAllowanceTransactionDialog"
 import ErrorMessage from "../../components/error/ErrorMessage"
 import Alert from "../../components/ui/Alert"
-import PriceImpactDialog from "../../components/swaps/HighPriceImpactDialog"
+import PriceImpactDialog from "../../components/swaps/PriceImpactDialog"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token

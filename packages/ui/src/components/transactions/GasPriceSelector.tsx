@@ -585,7 +585,8 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
             <div
                 className={classnames(
                     Classes.blueSection,
-                    active && Classes.blueSectionActive
+                    active && Classes.blueSectionActive,
+                    disabled && "pointer-events-none"
                 )}
                 onClick={() =>
                     !disabled &&
@@ -639,7 +640,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                 open={showEstimationWarning}
                 onDone={() => setShowEstimationWarning(false)}
                 title="Gas estimation failed"
-                message="There was an error estimating fee values. This transaction might fail when confirmed."
+                message="The provided gas estimation could be incorrect. Please review gas settings before submitting."
             />
             <Dialog open={active} onClickOutside={() => setActive(false)}>
                 <span className="absolute top-0 right-0 p-4 z-50">

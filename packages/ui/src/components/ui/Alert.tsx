@@ -1,8 +1,9 @@
 import classnames from "classnames"
-import { PropsWithChildren } from "react"
+import { MouseEventHandler, PropsWithChildren } from "react"
 interface AlertProps {
     type: "error" | "warn" | "info"
     className?: string
+    onClick?: () => any
 }
 
 const CLASSES_BY_TYPE = {
@@ -21,12 +22,14 @@ const CLASSES_BY_TYPE = {
 }
 const Alert: React.FC<PropsWithChildren<AlertProps>> = ({
     type,
+    onClick,
     children,
     className,
 }) => {
     const classes = CLASSES_BY_TYPE[type]
     return (
         <div
+            onClick={onClick}
             className={classnames(
                 classes.background,
                 "opacity-90 rounded-md w-full p-4 flex space-x-2 items-center font-bold justify-center",

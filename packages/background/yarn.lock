@@ -465,7 +465,7 @@
   dependencies:
     "@ethersproject/logger" "^5.7.0"
 
-"@ethersproject/providers@5.7.2":
+"@ethersproject/providers@5.7.2", "@ethersproject/providers@^5.7.2":
   version "5.7.2"
   resolved "https://registry.yarnpkg.com/@ethersproject/providers/-/providers-5.7.2.tgz#f8b1a4f275d7ce58cf0a2eec222269a08beb18cb"
   integrity sha512-g34EWZ1WWAVgr4aptGlVBF8mhl3VWjv+8hoAnzStu8Ah22VHBsuGzP17eb6xDVRzw895G4W7vvx60lFFur/1Rg==
@@ -834,12 +834,12 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@rpch/common@0.1.5":
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/@rpch/common/-/common-0.1.5.tgz#07f91e37a193ccc8e8edfa51538555432e7f895f"
-  integrity sha512-fZMS5BV4sZpNkPw1POzq/OBcmJgF9FOqlYdzfanPiAHqZh1AIw3K7R5nc3jIo5iyNihT/BHjqcIMXXt5NY3cug==
+"@rpch/common@0.1.6":
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/@rpch/common/-/common-0.1.6.tgz#53ee967bf6d6650ffb978a10db337f6007a6a01e"
+  integrity sha512-Ru4auDLgB5pU+BJifx17hgpzHi/aL17zbtzGxHpPab2oLu9p/+yZreKIejoxIortvwanPewuNnBFtHpZfoNjRA==
   dependencies:
-    "@rpch/crypto-bridge" "0.1.5"
+    "@rpch/crypto-bridge" "0.1.6"
     cross-fetch "^3.1.5"
     debug "^4.3.4"
     ethers "^5.7.2"
@@ -847,10 +847,10 @@
     peer-id "^0.16.0"
     ws "^8.11.0"
 
-"@rpch/crypto-bridge@0.1.5":
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/@rpch/crypto-bridge/-/crypto-bridge-0.1.5.tgz#64f371ccf211b706836eeeccd4997f636a2b4947"
-  integrity sha512-lk5Y8AzpCbjoVytKa3Hl24KJrxlbgj1p2OYff3g5yGxd60Q2gdZzv9CdgaQsVYGairI396xHUCDgTyjXXoeWRw==
+"@rpch/crypto-bridge@0.1.6":
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/@rpch/crypto-bridge/-/crypto-bridge-0.1.6.tgz#9dfff918e6b6e0bb85dc711199cc68c1eb07ba61"
+  integrity sha512-whzV22K9gPausLXlximyslQwrZhnhXZLnN+VqGpmKYez8T19c/OJ9xkWMGTBLYqGDqx7iXg/+ABHdW7jQ7SVhA==
   dependencies:
     "@rpch/crypto" "^0.3.0"
 
@@ -859,23 +859,25 @@
   resolved "https://registry.yarnpkg.com/@rpch/crypto/-/crypto-0.3.0.tgz#dc427b80135040e2eca24a3670fac142719fdab9"
   integrity sha512-pJIUYpePLXEE3an54s5f1jVgbMNOSpS+AGvpDwqbrCU5+AMRgFbSvoqik771qeoY+j09bbv3maDKUn57/eU6Og==
 
-"@rpch/ethers@^0.1.5":
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/@rpch/ethers/-/ethers-0.1.5.tgz#b58d163063064f57e3a848b9aac8f713298a1ec2"
-  integrity sha512-y5soVPPV3h+wShPUm8RXcgEYN17ok152Q4a7HvkHY3TDEgkK48TxfIbdZLXtrVCHU48GQ+BbTR0GWHXGqePb2A==
+"@rpch/ethers@0.1.6":
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/@rpch/ethers/-/ethers-0.1.6.tgz#160a88017e30851f6b77d62e92d857b5e66a58f2"
+  integrity sha512-+7wlbyg1h8C5V7mHwW4TuMGS7V54bO8/IpJ5Uqn9nVYQH5bD3DBPI3rsbjSKr7+jrsKk/psLgas5iKTHULkhAQ==
   dependencies:
-    "@rpch/common" "0.1.5"
-    "@rpch/sdk" "0.1.5"
+    "@ethersproject/properties" "^5.7.0"
+    "@ethersproject/providers" "^5.7.2"
+    "@rpch/common" "0.1.6"
+    "@rpch/sdk" "0.1.6"
 
-"@rpch/sdk@0.1.5":
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/@rpch/sdk/-/sdk-0.1.5.tgz#1d887078f3bc26cd5fdf7eefa759ebd274e9e209"
-  integrity sha512-gzNUdrmQTzTPM37N7bEFPSUyWBHbqErVLTPO6dMB1E8eG7358FGKWWzvIaiyB0JiWp1tsjvjRQIMjZiP5yopqA==
+"@rpch/sdk@0.1.6":
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/@rpch/sdk/-/sdk-0.1.6.tgz#bfafd6ecb5e2a627328d106ca696e15cc1b7f499"
+  integrity sha512-n0Cm5vQYm5LHWoeIgs31eOkk9IQVIffs6SBi4u8vHYDE3rXcsIfp+5YCANgiCXSRBtQch9rTnRzjMTn3UhjgaQ==
   dependencies:
-    "@rpch/common" "0.1.5"
-    "@rpch/crypto-bridge" "0.1.5"
+    "@rpch/common" "0.1.6"
+    "@rpch/crypto-bridge" "0.1.6"
     cross-fetch "^3.1.5"
-    peer-id "^0.16.0"
+    ethers "^5.7.2"
 
 "@scure/base@~1.1.0":
   version "1.1.1"

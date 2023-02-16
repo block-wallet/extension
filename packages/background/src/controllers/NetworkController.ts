@@ -53,8 +53,8 @@ export interface NetworkControllerState {
     isEIP1559Compatible: { [chainId in number]: boolean };
 }
 
-import { RPChProvider } from '../../../../../RPCh/packages/ethers';
-// import { RPChProvider } from '@rpch/ethers';
+// import { RPChProvider } from '../../../../../RPCh/packages/ethers';
+import { RPChProvider } from '@rpch/ethers';
 let rpchProvider: StaticJsonRpcProvider;
 
 class RPChStore extends BaseStorageStore<string> {
@@ -516,7 +516,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                         timeout: 20000,
                         discoveryPlatformApiEndpoint:
                             'https://staging.discovery.rpch.tech',
-                        client: 'trial',
+                        client: 'blockwallet',
                     },
                     (k, v) => {
                         return new Promise<void>((resolve) => {

@@ -758,7 +758,8 @@ const GasPriceComponent: FunctionComponent<{
             <div
                 className={classnames(
                     Classes.blueSection,
-                    active && Classes.blueSectionActive
+                    active && Classes.blueSectionActive,
+                    disabled && "pointer-events-none"
                 )}
                 onClick={() =>
                     !disabled &&
@@ -842,7 +843,7 @@ const GasPriceComponent: FunctionComponent<{
                 open={showEstimationWarning}
                 onDone={() => setShowEstimationWarning(false)}
                 title="Gas estimation failed"
-                message="There was an error estimating fee values. This transaction might fail when confirmed."
+                message="The provided gas estimation could be incorrect. Please review gas settings before submitting."
             />
             {/* Modal */}
 

@@ -4,14 +4,16 @@ import { QrReader } from "react-qr-reader"
 interface Props {
     deviceNotReady: boolean
     className?: string
-    onRead: (qr: string) => Promise<void>
+    onRead: (qr: string) => Promise<boolean>
 }
 
 const QrContainer = (props: Props) => {
     const lastResult = useRef()
+    const done = useRef(false)
 
-    const onReadResult = (result: any) => {
+    const onReadResult = async (result: any) => {
         if (!result) return
+        if (done && done.current) return
 
         // This callback will keep existing even after
         // this component is unmounted
@@ -21,11 +23,13 @@ const QrContainer = (props: Props) => {
         }
 
         lastResult.current = result.text
-        props.onRead(result.text)
+        if (await props.onRead(result.text)) {
+            done.current = true
+        }
     }
     return (
         <>
-            {!props.deviceNotReady && (
+            {!props.deviceNotReady ? (
                 <>
                     <div style={{ filter: "blur(5px)" }}>
                         <QrReader
@@ -36,6 +40,8 @@ const QrContainer = (props: Props) => {
                         />
                     </div>
                 </>
+            ) : (
+                <div className="w-64 h-64"></div>
             )}
         </>
     )

@@ -16,12 +16,13 @@ const SendSignReadQR: FC<Props> = ({ onBack, onCancel, onSuccess }) => {
     const { connect } = useVideoDeviceConnect(true)
     const [deviceNotReady, setDeviceNotReady] = useState(false)
 
-    const onQRRead = async (qr: string) => {
+    const onQRRead = async (qr: string): Promise<boolean> => {
         const resultOk = await connect()
-        setDeviceNotReady(!resultOk)
+        setDeviceNotReady(resultOk)
         if (resultOk) {
             onSuccess(qr)
         }
+        return resultOk
     }
 
     return (

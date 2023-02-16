@@ -309,11 +309,14 @@ export const useTransactionWaitingDialog = (
             }
         }
     }, [
+        !transaction,
         transaction?.id,
         transaction?.status,
         transaction?.error,
         transaction?.epochTime,
         transaction?.qrParams,
+        transaction?.qrParams?.requestId,
+        transaction?.qrParams?.qrSignRequest,
         dispatch,
         operation,
         accountType,

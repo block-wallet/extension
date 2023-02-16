@@ -615,11 +615,10 @@ export default class KeyringControllerDerivated extends KeyringController {
                 _fromAddress
             );
 
-            console.log(
-                'keyring controller',
-                'QR_SIGNATURE_REQUEST_GENERATED',
-                { transactionId, signRequest }
-            );
+            console.log('keyring controller QR_SIGNATURE_REQUEST_GENERATED', {
+                transactionId,
+                signRequest,
+            });
 
             this.emit(
                 KeyringControllerEvents.QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED,
@@ -689,7 +688,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
             const signRequest = await this.getQRMessageSignRequest(msgParams);
 
-            console.log('keyring controller', 'signMessage', { signRequest });
+            console.log('keyring controller signMessage', { signRequest });
 
             this.emit(
                 KeyringControllerEvents.QR_MESSAGE_SIGNATURE_REQUEST_GENERATED,
@@ -699,11 +698,11 @@ export default class KeyringControllerDerivated extends KeyringController {
 
             const { v, r, s } = await this.QRsignatureSubmission(signRequest);
 
-            console.log('keyring controller', 'signMessage', { v, r, s });
+            console.log('keyring controller signMessage', { v, r, s });
 
             const sig = concatSig(bigIntToBuffer(v), r, s);
 
-            console.log('keyring controller', 'signMessage', { sig });
+            console.log('keyring controller signMessage sig', { sig });
 
             return sig;
         } else {
@@ -746,7 +745,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
             const signRequest = await this.getQRMessageSignRequest(msgParams);
 
-            console.log('keyring controller', 'signPersonalMessage', {
+            console.log('keyring controller signPersonalMessage', {
                 signRequest,
             });
 
@@ -758,7 +757,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
             const { v, r, s } = await this.QRsignatureSubmission(signRequest);
 
-            console.log('keyring controller', 'signPersonalMessage', {
+            console.log('keyring controller signPersonalMessage', {
                 v,
                 r,
                 s,
@@ -766,7 +765,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
             const sig = concatSig(bigIntToBuffer(v), r, s);
 
-            console.log('keyring controller', 'signPersonalMessage', { sig });
+            console.log('keyring controller signPersonalMessage sig', { sig });
 
             return sig;
         } else {
@@ -811,7 +810,7 @@ export default class KeyringControllerDerivated extends KeyringController {
                 opts
             );
 
-            console.log('keyring controller', 'signTypedMessage', {
+            console.log('keyring controller signTypedMessage', {
                 signRequest,
             });
 
@@ -823,7 +822,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
             const { v, r, s } = await this.QRsignatureSubmission(signRequest);
 
-            console.log('keyring controller', 'signTypedMessage', {
+            console.log('keyring controller signTypedMessage', {
                 v,
                 r,
                 s,
@@ -831,7 +830,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
             const sig = concatSig(bigIntToBuffer(v), r, s);
 
-            console.log('keyring controller', 'signTypedMessage', { sig });
+            console.log('keyring controller signTypedMessage sig', { sig });
 
             return sig;
         } else {
@@ -1094,15 +1093,11 @@ export default class KeyringControllerDerivated extends KeyringController {
             this.on(
                 KeyringControllerEvents.QR_SIGNATURE_SUBMIT,
                 (_requestId: string, signatureData: SignatureData) => {
-                    console.log(
-                        'keyring controller',
-                        'get',
-                        'QR_SIGNATURE_SUBMIT',
-                        {
-                            _requestId,
-                            signatureData,
-                        }
-                    );
+                    console.log('keyring controller get QR_SIGNATURE_SUBMIT', {
+                        _requestId,
+                        signatureData,
+                        signRequest,
+                    });
 
                     if (_requestId === signRequest.requestId) {
                         this.removeAllListeners(
@@ -1126,7 +1121,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @param cbor
      */
     public submitQRHardwareSignature(requestId: string, cbor: Buffer) {
-        console.log('keyring controller', 'submitQRHardwareSignature', {
+        console.log('keyring controller submitQRHardwareSignature', {
             requestId,
             cbor: cbor.toString('hex'),
         });
@@ -1140,7 +1135,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
         const signatureData: SignatureData = { v, r, s };
 
-        console.log('keyring controller', 'EMIT', 'QR_SIGNATURE_SUBMIT', {
+        console.log('keyring controller EMIT QR_SIGNATURE_SUBMIT', {
             requestId,
             signatureData,
         });

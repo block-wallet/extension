@@ -950,6 +950,9 @@ export class TransactionController extends BaseController<
                 from!
             );
 
+            // remove QR
+            transactionMeta.qrParams = undefined;
+
             // Check for HW flow cancellation
             if (this.isTransactionRejected(transactionID)) {
                 return;

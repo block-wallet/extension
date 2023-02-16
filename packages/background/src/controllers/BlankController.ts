@@ -351,18 +351,6 @@ export default class BlankController extends EventEmitter {
             this.keyringController
         );
 
-        this.exchangeRatesController = new ExchangeRatesController(
-            initState.ExchangeRatesController,
-            this.preferencesController,
-            this.networkController,
-            this.blockUpdatesController,
-            () => {
-                return this.accountTrackerController.getAccountTokens(
-                    this.preferencesController.getSelectedAddress()
-                );
-            }
-        );
-
         this.transactionController = new TransactionController(
             this.networkController,
             this.preferencesController,
@@ -404,6 +392,14 @@ export default class BlankController extends EventEmitter {
             this.transactionWatcherController,
             this.transactionController,
             initState.AccountTrackerController
+        );
+
+        this.exchangeRatesController = new ExchangeRatesController(
+            initState.ExchangeRatesController,
+            this.preferencesController,
+            this.networkController,
+            this.blockUpdatesController,
+            this.accountTrackerController
         );
 
         this.blankProviderController = new BlankProviderController(

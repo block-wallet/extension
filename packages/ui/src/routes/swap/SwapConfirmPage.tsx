@@ -37,6 +37,7 @@ import {
 } from "../../context/commTypes"
 import {
     calcExchangeRate,
+    calculatePricePercentageImpact,
     isSwapNativeTokenAddress,
     populateExchangeTransaction,
 } from "../../util/exchangeUtils"
@@ -74,6 +75,9 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import { useTransactionById } from "../../context/hooks/useTransactionById"
 import useAwaitAllowanceTransactionDialog from "../../context/hooks/useAwaitAllowanceTransactionDialog"
 import WaitingAllowanceTransactionDialog from "../../components/dialog/WaitingAllowanceTransactionDialog"
+import ErrorMessage from "../../components/error/ErrorMessage"
+import Alert from "../../components/ui/Alert"
+import PriceImpactDialog from "../../components/swaps/PriceImpactDialog"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token
@@ -83,16 +87,22 @@ export interface SwapConfirmPageLocalState {
     allowanceTransactionId?: string
 }
 
+const NOT_ENOUGH_BALANCE_ERROR =
+    "Balance too low to cover swap and gas cost. Please review gas configuration."
+
 // 15s
 const QUOTE_REFRESH_TIMEOUT = 1000 * 15
+const PRICE_IMPACT_THRESHOLD = 0.1
 
 const SwapPageConfirm: FC<{}> = () => {
     const history = useOnMountHistory()
+    const { exchangeRates } = useBlankState()!
     const { fromToken, swapQuote, toToken, allowanceTransactionId } = useMemo(
         () => history.location.state as SwapConfirmPageLocalState,
         [history.location.state]
     )
-
+    const [isPriceImpactDialogOpened, setIsPriceImpactDialogOpened] =
+        useState<boolean>(false)
     const [timeoutStart, setTimeoutStart] = useState<number | undefined>(
         undefined
     )
@@ -178,6 +188,23 @@ const SwapPageConfirm: FC<{}> = () => {
     const [advancedSettings, setAdvancedSettings] = useState<
         WithRequired<TransactionAdvancedData, "slippage">
     >(defaultAdvancedSettings)
+
+    const pricePercentageImpact = useMemo(() => {
+        if (swapParameters) {
+            return calculatePricePercentageImpact(
+                exchangeRates,
+                {
+                    token: swapParameters.fromToken,
+                    amount: BigNumber.from(swapParameters.fromTokenAmount ?? 0),
+                },
+                {
+                    token: swapParameters.toToken,
+                    amount: BigNumber.from(swapParameters.toTokenAmount ?? 0),
+                }
+            )
+        }
+        return undefined
+    }, [swapParameters, exchangeRates])
 
     // Gas
     const [defaultGas, setDefaultGas] = useState<{
@@ -289,6 +316,7 @@ const SwapPageConfirm: FC<{}> = () => {
 
     const updateSwapParameters = useCallback(async () => {
         setError(undefined)
+        setIsFetchingSwaps(true)
         const params: OneInchSwapRequestParams = {
             fromAddress: selectedAccount.address,
             fromTokenAddress: swapQuote.fromToken.address,
@@ -296,17 +324,16 @@ const SwapPageConfirm: FC<{}> = () => {
             amount: swapQuote.fromTokenAmount,
             slippage: advancedSettings.slippage,
         }
-        setIsFetchingSwaps(true)
         try {
             const swapParams = await getExchangeParameters(
                 ExchangeType.SWAP_1INCH,
                 params
             )
             setSwapParameters(swapParams)
-            setTimeoutStart(new Date().getTime())
         } catch (error) {
             setError(capitalize(error.message || "Error fetching swap"))
         } finally {
+            setTimeoutStart(new Date().getTime())
             setIsFetchingSwaps(false)
         }
     }, [
@@ -320,7 +347,7 @@ const SwapPageConfirm: FC<{}> = () => {
     // Initialize gas
     useEffect(() => {
         const setGas = async () => {
-            if (!swapParameters && error) {
+            if ((!swapParameters && error) || !hasBalance) {
                 setIsGasLoading(false)
             }
             if (swapParameters && isGasInitialized.current === false) {
@@ -350,22 +377,26 @@ const SwapPageConfirm: FC<{}> = () => {
         setGas()
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [swapParameters, error])
+    }, [swapParameters, error, hasBalance])
 
     useEffect(() => {
         if (!shouldFetchSwapParams || isInProgressAllowanceTransaction) {
             setTimeoutStart(undefined)
             return
         }
-        //first render, run function manually
-        updateSwapParameters()
-        let intervalRef = setInterval(
-            updateSwapParameters,
-            QUOTE_REFRESH_TIMEOUT
-        )
+
+        let timeoutRef: ReturnType<typeof setTimeout>
+
+        async function fetchParams() {
+            await updateSwapParameters()
+            timeoutRef = setTimeout(fetchParams, QUOTE_REFRESH_TIMEOUT)
+        }
+
+        fetchParams()
+
         // Cleanup timer
         return () => {
-            intervalRef && clearInterval(intervalRef)
+            timeoutRef && clearTimeout(timeoutRef)
         }
     }, [
         updateSwapParameters,
@@ -382,6 +413,18 @@ const SwapPageConfirm: FC<{}> = () => {
             swapParameters?.toTokenAmount || swapQuote.toTokenAmount
         )
     }, [swapParameters?.toTokenAmount, swapQuote.toTokenAmount])
+
+    let errMessage = error
+
+    //Override to custom error.
+    if (!hasBalance && swapParameters) {
+        errMessage = NOT_ENOUGH_BALANCE_ERROR
+    }
+
+    const priceImpactWarning =
+        pricePercentageImpact !== undefined
+            ? pricePercentageImpact > PRICE_IMPACT_THRESHOLD
+            : !!swapParameters
 
     return (
         <PopupLayout
@@ -402,17 +445,9 @@ const SwapPageConfirm: FC<{}> = () => {
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
-                        label={
-                            error
-                                ? error
-                                : hasBalance
-                                ? `Swap`
-                                : isSwappingNativeToken
-                                ? "You don't have enough funds to cover the swap and the gas costs."
-                                : "Insufficient funds"
-                        }
+                        label="Swap"
                         isLoading={
-                            error || isInProgressAllowanceTransaction
+                            errMessage || isInProgressAllowanceTransaction
                                 ? false
                                 : !swapParameters ||
                                   isGasLoading ||
@@ -420,12 +455,7 @@ const SwapPageConfirm: FC<{}> = () => {
                                   isSwapping
                         }
                         onClick={onSubmit}
-                        disabled={!!error || !hasBalance}
-                        buttonClass={classnames(
-                            error || !hasBalance
-                                ? `${Classes.redButton} opacity-100`
-                                : ""
-                        )}
+                        disabled={!!errMessage}
                     />
                 </PopupFooter>
             }
@@ -501,7 +531,23 @@ const SwapPageConfirm: FC<{}> = () => {
                 rate={rate}
                 threshold={advancedSettings.slippage}
             />
-            <div className="flex flex-col px-6 py-3">
+            {swapParameters && (
+                <PriceImpactDialog
+                    isOpen={isPriceImpactDialogOpened}
+                    fromToken={{
+                        token: swapParameters.fromToken,
+                        amount: BigNumber.from(swapParameters.fromTokenAmount),
+                    }}
+                    toToken={{
+                        token: swapParameters.toToken,
+                        amount: BigNumber.from(swapParameters.toTokenAmount),
+                    }}
+                    onClose={() => setIsPriceImpactDialogOpened(false)}
+                    priceImpactPercentage={pricePercentageImpact}
+                />
+            )}
+
+            <div className="flex flex-col px-6 py-3 h-full">
                 {/* From Token */}
                 <AssetAmountDisplay
                     asset={fromToken}
@@ -512,7 +558,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 />
 
                 {/* Divider */}
-                <div className="pt-8">
+                <div className="pt-5">
                     <hr className="-mx-5" />
                     <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-grey-200 bg-white z-10">
                         <img
@@ -532,7 +578,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 />
 
                 {/* Rates */}
-                <p className="text-sm py-2 leading-loose text-gray-500 uppercase text-center w-full">
+                <p className="text-sm py-1 leading-loose text-gray-500 uppercase text-center w-full">
                     {`1 ${fromToken.symbol} = ${formatNumberLength(
                         formatRounded(exchangeRate.toFixed(10), 8),
                         10
@@ -540,7 +586,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 </p>
 
                 {/* Gas */}
-                <p className="text-sm text-gray-600 pb-2 pt-1">Gas Price</p>
+                <p className="text-sm text-gray-600 pb-1 pt-0.5">Gas Price</p>
                 {isEIP1559Compatible ? (
                     <GasPriceComponent
                         defaultGas={{
@@ -557,8 +603,13 @@ const SwapPageConfirm: FC<{}> = () => {
                                     gasFees.maxPriorityFeePerGas!,
                             })
                         }}
+                        minGasLimit={
+                            swapParameters
+                                ? swapParameters.tx.gas.toString()
+                                : undefined
+                        }
                         isParentLoading={isGasLoading}
-                        disabled={isGasLoading}
+                        disabled={isGasLoading || !swapParameters}
                         displayOnlyMaxValue
                     />
                 ) : (
@@ -571,7 +622,7 @@ const SwapPageConfirm: FC<{}> = () => {
                             setSelectedGasLimit(gasLimit)
                         }}
                         isParentLoading={isGasLoading}
-                        disabled={isGasLoading}
+                        disabled={isGasLoading || !swapParameters}
                     />
                 )}
 
@@ -614,10 +665,53 @@ const SwapPageConfirm: FC<{}> = () => {
                         <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
                     </OutlinedButton>
                 </div>
-
-                {remainingSuffix && (
-                    <RefreshLabel value={remainingSuffix} className="mt-3" />
-                )}
+                <div className="h-full flex flex-col justify-end space-y-3">
+                    {isFetchingSwaps ? (
+                        <div />
+                    ) : (
+                        <>
+                            {errMessage ? (
+                                <ErrorMessage>{errMessage}</ErrorMessage>
+                            ) : priceImpactWarning ? (
+                                <Alert
+                                    type="warn"
+                                    className={classnames(
+                                        "p-2",
+                                        "font-bold",
+                                        "cursor-pointer hover:opacity-50",
+                                        "text-left"
+                                    )}
+                                    onClick={() =>
+                                        setIsPriceImpactDialogOpened(true)
+                                    }
+                                >
+                                    <span>
+                                        {pricePercentageImpact ? (
+                                            <span>
+                                                High price impact! More than{" "}
+                                                {(
+                                                    pricePercentageImpact * 100
+                                                ).toFixed(2)}
+                                                % loss
+                                            </span>
+                                        ) : (
+                                            <span>
+                                                Unable to calculate the price
+                                                impact
+                                            </span>
+                                        )}
+                                    </span>
+                                </Alert>
+                            ) : null}
+                            {remainingSuffix && (
+                                <RefreshLabel
+                                    value={remainingSuffix}
+                                    className="pb-1"
+                                />
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
         </PopupLayout>
     )

@@ -47,6 +47,21 @@ interface AssetSelectionProps {
 const ZERO_BN = BigNumber.from(0)
 const SEARCH_LIMIT = 20
 
+function mergeAssetList(
+    baseList: TokenWithBalance[],
+    mergeList: TokenWithBalance[]
+): TokenWithBalance[] {
+    const baseListAddresses = baseList.map(({ token }) =>
+        token.address.toLowerCase()
+    )
+    return baseList.concat(
+        mergeList.filter(
+            ({ token }) =>
+                !baseListAddresses.includes(token.address.toLowerCase())
+        )
+    )
+}
+
 export const AssetSelection: FC<AssetSelectionProps> = ({
     onAssetChange,
     selectedAssetList,
@@ -84,7 +99,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
         const searchAll = async () => {
             // If there is no search return the list of swapped assets
             if (!search) {
-                setSearchResult(swappedAssetList)
+                setSearchResult(mergeAssetList(swappedAssetList, assetList))
                 return
             }
 

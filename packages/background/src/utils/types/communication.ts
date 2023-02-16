@@ -145,6 +145,7 @@ enum NETWORK {
     EDIT_NETWORKS_ORDER = 'EDIT_NETWORKS_ORDER',
     REMOVE_NETWORK = 'REMOVE_NETWORK',
     GET_SPECIFIC_CHAIN_DETAILS = 'GET_SPECIFIC_CHAIN_DETAILS',
+    GET_DEFAULT_RPC = 'GET_DEFAULT_RPC',
     GET_RPC_CHAIN_ID = 'GET_RPC_CHAIN_ID',
     SEARCH_CHAINS = 'SEARCH_CHAINS',
 }
@@ -369,6 +370,10 @@ export interface RequestSignatures {
     [Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS]: [
         RequestGetChainData,
         ChainListItem
+    ];
+    [Messages.NETWORK.GET_DEFAULT_RPC]: [
+        RequestGetChainData,
+        string | undefined
     ];
     [Messages.NETWORK.GET_RPC_CHAIN_ID]: [RequestGetRpcChainId, number];
     [Messages.NETWORK.SEARCH_CHAINS]: [

@@ -944,6 +944,15 @@ export const getSpecificChainDetails = async (chainId: number) => {
 }
 
 /**
+ * Gets the default rpc url for the specified chain
+ * @param chainId The chainId of the network to fetch the details from
+ * @returns The default rpc url for the specified chain
+ */
+export const getDefaultRpc = async (chainId: number) => {
+    return sendMessage(Messages.NETWORK.GET_DEFAULT_RPC, { chainId })
+}
+
+/**
  * Adds a new network.
  *
  * @param networkInput The network information to be added.

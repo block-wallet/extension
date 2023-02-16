@@ -528,6 +528,37 @@
                 }
             ],
             "version": "0.5.6"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Improved swaps messages and warnings."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added option to restore default RPCs."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Networking performance improvements."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed wallet loading state."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.5.7"
         }
     ]
 }

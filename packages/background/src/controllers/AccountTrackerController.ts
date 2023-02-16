@@ -171,6 +171,7 @@ export enum AccountTrackerEvents {
     ACCOUNT_ADDED = 'ACCOUNT_ADDED',
     ACCOUNT_REMOVED = 'ACCOUNT_REMOVED',
     CLEARED_ACCOUNTS = 'CLEARED_ACCOUNTS',
+    BALANCE_UPDATED = 'BALANCE_UPDATED',
 }
 
 export interface UpdateAccountsOptions {
@@ -1654,6 +1655,13 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 },
             },
         });
+
+        this.emit(
+            AccountTrackerEvents.BALANCE_UPDATED,
+            chainId,
+            accountAddress,
+            assetAddressToGetBalance
+        );
     }
 
     /**

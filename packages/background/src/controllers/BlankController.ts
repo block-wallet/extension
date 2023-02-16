@@ -212,7 +212,7 @@ import { toError } from '../utils/toError';
 import { getCustomRpcChainId } from '../utils/ethereumChain';
 import { getChainListItem, searchChainsByTerm } from '../utils/chainlist';
 import { ChainListItem } from '@block-wallet/chains-assets';
-import { Network } from '../utils/constants/networks';
+import { INITIAL_NETWORKS, Network } from '../utils/constants/networks';
 
 import { generateOnDemandReleaseNotes } from '../utils/userPreferences';
 import { TransactionWatcherController } from './TransactionWatcherController';
@@ -357,18 +357,6 @@ export default class BlankController extends EventEmitter {
             this.keyringController
         );
 
-        this.exchangeRatesController = new ExchangeRatesController(
-            initState.ExchangeRatesController,
-            this.preferencesController,
-            this.networkController,
-            this.blockUpdatesController,
-            () => {
-                return this.accountTrackerController.getAccountTokens(
-                    this.preferencesController.getSelectedAddress()
-                );
-            }
-        );
-
         this.transactionController = new TransactionController(
             this.networkController,
             this.preferencesController,
@@ -410,6 +398,14 @@ export default class BlankController extends EventEmitter {
             this.transactionWatcherController,
             this.transactionController,
             initState.AccountTrackerController
+        );
+
+        this.exchangeRatesController = new ExchangeRatesController(
+            initState.ExchangeRatesController,
+            this.preferencesController,
+            this.networkController,
+            this.blockUpdatesController,
+            this.accountTrackerController
         );
 
         this.blankProviderController = new BlankProviderController(
@@ -840,6 +836,8 @@ export default class BlankController extends EventEmitter {
                 return this.removeNetwork(request as RequestRemoveNetwork);
             case Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS:
                 return this.getChainData(request as RequestGetChainData);
+            case Messages.NETWORK.GET_DEFAULT_RPC:
+                return this.getChainDefaultRpc(request as RequestGetChainData);
             case Messages.NETWORK.GET_RPC_CHAIN_ID:
                 return this.getRpcChainId(request as RequestGetRpcChainId);
             case Messages.NETWORK.SEARCH_CHAINS:
@@ -1955,6 +1953,18 @@ export default class BlankController extends EventEmitter {
      */
     private async getChainData({ chainId }: RequestGetChainData) {
         return getChainListItem(chainId);
+    }
+
+    /**
+     * getChainDefaultRpc
+     *
+     * @param chainId chain identifier of the network
+     * @returns default rpc url of the network
+     */
+    private async getChainDefaultRpc({ chainId }: RequestGetChainData) {
+        return Object.values(INITIAL_NETWORKS).find(
+            (network) => network.chainId === chainId
+        )?.defaultRpcUrl;
     }
 
     /**

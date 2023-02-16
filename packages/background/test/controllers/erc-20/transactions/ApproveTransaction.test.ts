@@ -29,6 +29,7 @@ import { getNetworkControllerInstance } from '../../../mocks/mock-network-instan
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
+import { IAccountTokens } from '@block-wallet/background/controllers/erc-20/Token';
 
 describe('ApproveTransaction implementation', function () {
     const daiAddress = '0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60';
@@ -74,7 +75,23 @@ describe('ApproveTransaction implementation', function () {
 
         tokenController = new TokenController(
             {
-                userTokens: {} as any,
+                userTokens: {
+                    [preferencesController.getSelectedAddress()]: {
+                        [networkController.network.chainId]: {
+                            [daiAddress]: {
+                                address: daiAddress,
+                                decimals: 18,
+                                logo: '',
+                                name: 'DAI',
+                                symbol: 'DAI',
+                                type: 'ERC20',
+                                totalSupply: BigNumber.from(
+                                    '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+                                ),
+                            },
+                        },
+                    },
+                } as IAccountTokens,
                 deletedUserTokens: {} as any,
                 cachedPopulatedTokens: {} as any,
             },

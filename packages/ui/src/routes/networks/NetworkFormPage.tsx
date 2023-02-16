@@ -150,17 +150,8 @@ const NetworkFormPage = ({
         if (!network?.chainId) return
         getDefaultRpc(network?.chainId).then((defaultRpc) => {
             setDefaultRpcUrl(defaultRpc)
-            if (defaultRpc === network?.rpcUrl) {
-                setIsUsingDefaultRPC(true)
-            }
         })
     }, [])
-
-    const [isUsingDefaultRPC, setIsUsingDefaultRPC] = useState<boolean>(
-        !!defaultRpcUrl &&
-            !!network?.rpcUrl &&
-            defaultRpcUrl === network?.rpcUrl
-    )
 
     const {
         register,
@@ -192,10 +183,7 @@ const NetworkFormPage = ({
         symbol: watchCurrencySymbol,
     } = watchedFields
 
-    useEffect(() => {
-        const isDefaultRPC = !!defaultRpcUrl && watchRPCUrl === defaultRpcUrl
-        setIsUsingDefaultRPC(isDefaultRPC)
-    }, [watchRPCUrl])
+    const isUsingDefaultRPC = !!defaultRpcUrl && watchRPCUrl === defaultRpcUrl
 
     useEffect(() => {
         let ref: NodeJS.Timeout | null = null
@@ -551,7 +539,6 @@ const NetworkFormPage = ({
                                 <span
                                     className="text-xs font-bold text-primary-300 cursor-pointer hover:underline"
                                     onClick={() => {
-                                        setIsUsingDefaultRPC(true)
                                         setValue("rpcUrl", defaultRpcUrl)
                                     }}
                                 >

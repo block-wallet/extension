@@ -74,7 +74,7 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
             };
         }
     ) {
-        super(initState);
+        super({ ...initState, isRatesChangingAfterNetworkChange: false });
 
         this._exchangeRateFetchIntervalController =
             new ActionIntervalController(this._networkController);

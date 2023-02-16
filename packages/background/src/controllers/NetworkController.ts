@@ -57,7 +57,12 @@ export default class NetworkController extends BaseController<NetworkControllerS
     private provider: StaticJsonRpcProvider;
 
     constructor(initialState: NetworkControllerState) {
-        super(initialState);
+        super({
+            ...initialState,
+            isNetworkChanging: false,
+            isProviderNetworkOnline: true,
+            isUserNetworkOnline: true,
+        });
 
         this.provider = this.getProviderFromName(
             initialState.selectedNetwork || 'goerli'

@@ -74,7 +74,7 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         private readonly _blockUpdatesController: BlockUpdatesController,
         private readonly _accountTrackerController: AccountTrackerController
     ) {
-        super(initState);
+        super({ ...initState, isRatesChangingAfterNetworkChange: false });
 
         this._exchangeRateFetchIntervalController =
             new ActionIntervalController(this._networkController);

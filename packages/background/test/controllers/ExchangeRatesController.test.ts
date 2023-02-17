@@ -1,32 +1,29 @@
 import { expect } from 'chai';
-import {
-    mockExchangeRatesController,
-    mockExchangeRatesControllerARS,
-} from '../mocks/mock-exchangerates';
+import { getExchangeRateMockController } from '../mocks/mock-exchangerates';
 import { ExchangeRatesController } from '@block-wallet/background/controllers/ExchangeRatesController';
 import sinon from 'sinon';
 
 describe('Exchange Rates Controller', function () {
     let exchangeRatesController: ExchangeRatesController;
     let exchangeRatesControllerARS: ExchangeRatesController;
-
-    this.beforeAll(() => {
-        exchangeRatesController = mockExchangeRatesController;
-        exchangeRatesControllerARS = mockExchangeRatesControllerARS;
-        sinon
+    const exchangeRateSandox = sinon.createSandbox();
+    before(() => {
+        exchangeRatesController = getExchangeRateMockController('USD');
+        exchangeRatesControllerARS = getExchangeRateMockController('ARS');
+        exchangeRateSandox
             .stub(exchangeRatesController as any, '_getTokenRates')
             .returns(Promise.resolve([]));
     });
 
     afterEach(function () {
-        sinon.restore();
+        exchangeRateSandox.restore();
     });
 
     it('ETH-USD - it should feed the exchangeRates object', async function () {
         expect(exchangeRatesController.store.getState().exchangeRates).to.be
             .empty;
 
-        sinon
+        exchangeRateSandox
             .stub(exchangeRatesController['_exchangeRateService'], 'getRate')
             .returns(Promise.resolve(1225));
 
@@ -39,20 +36,22 @@ describe('Exchange Rates Controller', function () {
     });
 
     it('ETH-ARS - it should feed the exchangeRates object', async function () {
-        sinon.stub(exchangeRatesControllerARS as any, '_getTokenRates').returns(
-            Promise.resolve(
-                Promise.resolve({
-                    '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': {
-                        usd: 1.001,
-                    },
-                    '0xdac17f958d2ee523a2206206994597c13d831ec7': {
-                        usd: 1.001,
-                    },
-                })
-            )
-        );
+        exchangeRateSandox
+            .stub(exchangeRatesControllerARS as any, '_getTokenRates')
+            .returns(
+                Promise.resolve(
+                    Promise.resolve({
+                        '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': {
+                            usd: 1.001,
+                        },
+                        '0xdac17f958d2ee523a2206206994597c13d831ec7': {
+                            usd: 1.001,
+                        },
+                    })
+                )
+            );
 
-        sinon
+        exchangeRateSandox
             .stub(exchangeRatesControllerARS['_exchangeRateService'], 'getRate')
             .returns(Promise.resolve(50000));
 
@@ -65,10 +64,10 @@ describe('Exchange Rates Controller', function () {
     });
 
     it('AVX-USD - it should feed the exchangeRates object', async function () {
-        sinon
+        exchangeRateSandox
             .stub(exchangeRatesController.store.getState(), 'exchangeRates')
             .value({ ['AVX']: 0 });
-        sinon
+        exchangeRateSandox
             .stub(
                 exchangeRatesController.store.getState(),
                 'networkNativeCurrency'
@@ -77,11 +76,11 @@ describe('Exchange Rates Controller', function () {
                 symbol: 'AVX',
                 coingeckoPlatformId: '333999',
             });
-        sinon
+        exchangeRateSandox
             .stub(exchangeRatesController as any, '_getTokenRates')
             .returns(Promise.resolve([]));
 
-        sinon
+        exchangeRateSandox
             .stub(exchangeRatesController['_exchangeRateService'], 'getRate')
             .returns(Promise.resolve(125));
 

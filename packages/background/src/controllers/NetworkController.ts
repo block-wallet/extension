@@ -57,11 +57,19 @@ export default class NetworkController extends BaseController<NetworkControllerS
     private provider: StaticJsonRpcProvider;
 
     constructor(initialState: NetworkControllerState) {
-        super(initialState);
+        super({
+            ...initialState,
+            isNetworkChanging: false,
+            isProviderNetworkOnline: true,
+            isUserNetworkOnline: true,
+        });
 
         this.provider = this.getProviderFromName(
             initialState.selectedNetwork || 'goerli'
         );
+
+        //check provider's status
+        this._updateProviderNetworkStatus();
 
         // Set the error handler for the provider to check for network status
         this.provider.on('error', this._updateProviderNetworkStatus);
@@ -707,23 +715,18 @@ export default class NetworkController extends BaseController<NetworkControllerS
             // check for eip1559 compatibility
             await this.getEIP1559Compatibility(network.chainId, true);
 
-            // Set the isNetworkChanging flag to false
-            this.store.updateState({
-                isNetworkChanging: false,
-            });
-
-            // Emit NETWORK_CHANGE event
-            this.emit(NetworkEvents.NETWORK_CHANGE, this.network);
-
             // Return network change success
             return true;
         } catch (error) {
-            // Set the isNetworkChanging flag to false
-            this.store.updateState({ isNetworkChanging: false });
-
             // If an error was thrown
             // return network change failure
             return false;
+        } finally {
+            // Set the isNetworkChanging flag to false
+            this.store.updateState({ isNetworkChanging: false });
+
+            // Emit NETWORK_CHANGE event
+            this.emit(NetworkEvents.NETWORK_CHANGE, this.network);
         }
     }
 

@@ -78,6 +78,8 @@ const AssetDetailsPage = () => {
         }
     }
 
+    const disabledActions = !isSendEnabled || !state.isUserNetworkOnline
+
     return (
         <PopupLayout
             header={
@@ -225,16 +227,13 @@ const AssetDetailsPage = () => {
                                 draggable={false}
                                 className={classnames(
                                     "flex flex-col items-center space-y-2 group",
-                                    (!isSendEnabled ||
-                                        !state.isUserNetworkOnline) &&
-                                        "pointer-events-none"
+                                    disabledActions && "pointer-events-none"
                                 )}
                             >
                                 <div
                                     className={classnames(
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        !isSendEnabled ||
-                                            !state.isUserNetworkOnline
+                                        disabledActions
                                             ? "bg-gray-300"
                                             : "bg-primary-300"
                                     )}
@@ -260,25 +259,29 @@ const AssetDetailsPage = () => {
                                 draggable={false}
                                 className={classnames(
                                     "flex flex-col items-center space-y-2 group",
-                                    (!isSendEnabled ||
-                                        !state.isUserNetworkOnline) &&
-                                        "pointer-events-none"
+                                    disabledActions && "pointer-events-none"
                                 )}
                             >
                                 <div
                                     className={classnames(
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        !isSendEnabled ||
-                                            !state.isUserNetworkOnline
+                                        disabledActions
                                             ? "bg-gray-300"
                                             : "bg-primary-300"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
-                                    <AnimatedIcon
-                                        icon={AnimatedIconName.Bridge}
-                                        className="cursor-pointer"
-                                    />
+                                    {disabledActions ? (
+                                        <Icon
+                                            name={IconName.DISABLED_BRIDGE}
+                                            size="xl"
+                                        />
+                                    ) : (
+                                        <AnimatedIcon
+                                            icon={AnimatedIconName.Bridge}
+                                            className="cursor-pointer"
+                                        />
+                                    )}
                                 </div>
                                 <span className="text-xs font-medium">
                                     Bridge

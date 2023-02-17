@@ -1,6 +1,6 @@
 import { addHexPrefix, isHexString, isValidAddress } from 'ethereumjs-util';
 import { BigNumber } from '@ethersproject/bignumber';
-import { TransactionParams, TransactionType } from './types';
+import { TransactionMeta, TransactionParams, TransactionType } from './types';
 import ensNamehash from 'eth-ens-namehash';
 import {
     FeeMarketEIP1559Values,
@@ -356,4 +356,23 @@ export function normalizeEnsName(ensName: string): string | null {
         }
     }
     return null;
+}
+
+export function resolveAllownaceParamsFromTransaction(
+    transactionMeta: TransactionMeta
+): { spenderAddress: string; tokenAddress: string } | undefined {
+    let tokenAddress: string | undefined = transactionMeta.transactionParams.to;
+    let spenderAddress: string | undefined;
+    if (transactionMeta.approveAllowanceParams) {
+        spenderAddress = transactionMeta.approveAllowanceParams.spenderAddress;
+        tokenAddress =
+            transactionMeta.approveAllowanceParams.token?.address ||
+            tokenAddress;
+    }
+    return spenderAddress && tokenAddress
+        ? {
+              spenderAddress: spenderAddress.toLowerCase(),
+              tokenAddress: tokenAddress.toLowerCase(),
+          }
+        : undefined;
 }

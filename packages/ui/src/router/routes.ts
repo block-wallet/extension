@@ -27,6 +27,7 @@ import AddEthereumChain from "../routes/dApp/AddEthereumChain"
 import LockTimeout from "../routes/settings/LockTimeout"
 import AccountMenu from "../components/account/AccountMenu"
 import ResetAccountPage from "../routes/account/ResetAccountPage"
+import AllowancesPage from "../routes/account/AllowancesPage"
 import EditAccountPage from "../routes/account/EditAccountPage"
 import WatchAssetPage from "../routes/dApp/WatchAsset"
 import SpeedUpPage from "../routes/transaction/SpeedUpPage"
@@ -107,6 +108,11 @@ export const ROUTES_DEFINITION = [
         path: "/accounts/menu/reset",
         exact: true,
         component: ResetAccountPage,
+    },
+    {
+        path: "/accounts/menu/allowances",
+        exact: true,
+        component: AllowancesPage,
     },
     /* Send */
     { path: "/send", exact: true, component: SendPage },

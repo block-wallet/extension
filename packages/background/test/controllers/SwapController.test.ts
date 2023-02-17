@@ -18,7 +18,7 @@ import {
     TransactionStatus,
 } from '@block-wallet/background/controllers/transactions/utils/types';
 import { PreferencesController } from '../../src/controllers/PreferencesController';
-import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import { expect } from 'chai';
 import { expectThrowsAsync } from 'test/utils/expectThrowsAsync.test';
 import { getNetworkControllerInstance } from '../mocks/mock-network-instance';

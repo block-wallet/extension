@@ -15,6 +15,7 @@ import { RightChevronIcon } from "../icons/RightChevronIcon"
 import ImportIcon from "../icons/ImportIcon"
 import ClockIcon from "../icons/ClockIcon"
 import SwitchIcon from "../icons/SwitchIcon"
+import RefetchIcon from "../icons/RefetchIcon"
 import DisabledBridgeIcon from "../icons/DisabledBridgeIcon"
 
 export enum IconName {
@@ -34,6 +35,7 @@ export enum IconName {
     IMPORT = "IMPORT",
     CLOCK = "CLOCK",
     SWITCH = "SWITCH",
+    REFETCH = "REFETCH",
     DISABLED_BRIDGE = "DISABLED_BRIDGE",
 }
 
@@ -63,6 +65,7 @@ const ICONS = {
     [IconName.RIGHT_CHEVRON]: RightChevronIcon,
     [IconName.CLOCK]: ClockIcon,
     [IconName.SWITCH]: SwitchIcon,
+    [IconName.REFETCH]: RefetchIcon,
     [IconName.DISABLED_BRIDGE]: DisabledBridgeIcon,
 }
 

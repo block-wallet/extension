@@ -11,7 +11,7 @@ import {
     TokenOperationsController,
     TokenTransactionController,
     TokenTransactionProps,
-} from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+} from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import { getNetworkControllerInstance } from 'test/mocks/mock-network-instance';
 
 describe('Transaction', function () {
@@ -155,9 +155,11 @@ describe('Transaction', function () {
 
         describe('populateTokenData', function () {
             it('Should fail - token address not present', () => {
-                tokenOperationsController.fetchTokenDataFromChain('').catch((e) => {
-                    expect(e).equal(tokenAddressParamNotPresentError);
-                });
+                tokenOperationsController
+                    .fetchTokenDataFromChain('')
+                    .catch((e) => {
+                        expect(e).equal(tokenAddressParamNotPresentError);
+                    });
             });
             it('Should populate token data', () => {
                 const tokenAddress =
@@ -165,7 +167,7 @@ describe('Transaction', function () {
                 tokenOperationsController
                     .fetchTokenDataFromChain(tokenAddress)
                     .then((fetchTokenResult) => {
-                        const token = fetchTokenResult.token
+                        const token = fetchTokenResult.token;
                         expect(token).to.be.not.null;
                         expect(token.address).equal(tokenAddress);
                         expect(token.name).equal('USDC');
@@ -179,7 +181,7 @@ describe('Transaction', function () {
                 tokenOperationsController
                     .fetchTokenDataFromChain(tokenAddress)
                     .then((fetchTokenResult) => {
-                        const token = fetchTokenResult.token
+                        const token = fetchTokenResult.token;
                         expect(token).to.be.not.null;
                         expect(token.address).equal(tokenAddress);
                         expect(token.name).equal('');

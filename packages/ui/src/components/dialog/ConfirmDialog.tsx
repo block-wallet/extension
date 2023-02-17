@@ -1,5 +1,5 @@
 import classnames from "classnames"
-import { FunctionComponent } from "react"
+import { FunctionComponent, useEffect, useMemo, useState } from "react"
 import { Classes } from "../../styles"
 import CloseIcon from "../icons/CloseIcon"
 import Dialog from "./Dialog"
@@ -10,7 +10,48 @@ const ConfirmDialog: FunctionComponent<{
     open: boolean
     onClose: () => void
     onConfirm: () => void
-}> = ({ title, message, open, onClose, onConfirm }) => {
+    isConfirmDisabled?: boolean // if true, confirm button is disabled
+    confirmDisabledUntil?: Date // if set, confirm button is disabled until this time (no need to use isConfirmDisabled in this case)
+}> = ({
+    title,
+    message,
+    open,
+    onClose,
+    onConfirm,
+    isConfirmDisabled = false,
+    confirmDisabledUntil,
+}) => {
+    const [secondsRemaining, setSecondsRemaining] = useState(0)
+
+    const isButtonDisabled = useMemo(() => {
+        return isConfirmDisabled || secondsRemaining > 0
+    }, [isConfirmDisabled, secondsRemaining])
+
+    const refreshTimerText = useMemo(() => {
+        return `${(Math.floor(secondsRemaining / 60) % 60)
+            .toString()
+            .padStart(2, "0")}:${(secondsRemaining % 60)
+            .toString()
+            .padStart(2, "0")}`
+    }, [secondsRemaining])
+
+    useEffect(() => {
+        // if confirm is disabled and confirmDisabledUntil is defined , start a timer to update the seconds remaining
+        if (!isButtonDisabled || !confirmDisabledUntil) return
+        const intervalId = setInterval(() => {
+            setSecondsRemaining(secondsRemaining - 1)
+        }, 1000)
+        // clear the interval when the component unmounts
+        return () => clearInterval(intervalId)
+    }, [secondsRemaining])
+
+    useEffect(() => {
+        if (!confirmDisabledUntil) return
+        setSecondsRemaining(
+            Math.ceil((confirmDisabledUntil.getTime() - Date.now()) / 1000)
+        )
+    }, [confirmDisabledUntil])
+
     return (
         <Dialog open={open} onClickOutside={onClose} className="px-6">
             <div>
@@ -45,13 +86,21 @@ const ConfirmDialog: FunctionComponent<{
                         </button>
                         <button
                             onClick={(e) => {
+                                if (isButtonDisabled) return
                                 e.stopPropagation()
                                 onConfirm()
                                 onClose()
                             }}
-                            className={classnames(Classes.button)}
+                            className={classnames(
+                                Classes.button,
+                                isButtonDisabled &&
+                                    "bg-gray-900 border-gray-900 opacity-50"
+                            )}
+                            disabled={isButtonDisabled}
                         >
-                            Confirm
+                            {isButtonDisabled && refreshTimerText
+                                ? refreshTimerText
+                                : "Confirm"}
                         </button>
                     </div>
                 </div>

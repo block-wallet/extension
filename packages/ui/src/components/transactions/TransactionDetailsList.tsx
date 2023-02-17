@@ -10,6 +10,7 @@ export interface DetailedItem {
     decimals?: number
     unitName?: string
     info?: string
+    link?: string // Not to be used with expandable
 }
 
 type TransactionDetailItem = DetailedItem | undefined

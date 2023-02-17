@@ -3,11 +3,13 @@ import classnames from "classnames"
 interface OutlinedButtonProps {
     onClick?: (e: any) => void
     className?: string
+    disabled?: boolean
 }
 const OutlinedButton: FC<PropsWithChildren<OutlinedButtonProps>> = ({
     onClick,
     className = "",
     children,
+    disabled = false,
 }) => {
     return (
         <button
@@ -18,6 +20,7 @@ const OutlinedButton: FC<PropsWithChildren<OutlinedButtonProps>> = ({
                 className
             )}
             onClick={onClick}
+            disabled={disabled}
         >
             {children}
         </button>

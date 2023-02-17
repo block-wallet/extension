@@ -106,7 +106,7 @@ export default class SwapController extends BaseController<
         exchangeType: ExchangeType,
         tokenAddress: string
     ): Promise<boolean> => {
-        const spender = await this._getSpender(exchangeType);
+        const spender = await this.getSpender(exchangeType);
         return this._tokenAllowanceController.checkTokenAllowance(
             account,
             amount,
@@ -133,7 +133,7 @@ export default class SwapController extends BaseController<
         tokenAddress: string,
         customNonce?: number
     ): Promise<boolean> => {
-        const spender = await this._getSpender(exchangeType);
+        const spender = await this.getSpender(exchangeType);
         return this._tokenAllowanceController.approveAllowance(
             allowance,
             amount,
@@ -196,6 +196,33 @@ export default class SwapController extends BaseController<
             return swapPromise;
         } else {
             throw new Error('Exchange type not supported');
+        }
+    };
+
+    /**
+     * Returns the spender to be approved for the asset transfer for the
+     * specified exchange type
+     *
+     * @param exchangeType
+     */
+    public getSpender = async (exchangeType: ExchangeType): Promise<string> => {
+        const { chainId } = this._networkController.network;
+
+        try {
+            if (exchangeType === ExchangeType.SWAP_1INCH) {
+                // 1Inch router contract address
+                const res = await retryHandling<OneInchSpenderRes>(() =>
+                    httpClient.get<OneInchSpenderRes>(
+                        `${ONEINCH_SWAPS_ENDPOINT}${chainId}/approve/spender`
+                    )
+                );
+
+                return res.address;
+            } else {
+                throw new Error('Exchange type not supported');
+            }
+        } catch (error) {
+            throw new Error('Unable to fetch exchange spender');
         }
     };
 
@@ -359,35 +386,6 @@ export default class SwapController extends BaseController<
             return result;
         } catch (error) {
             throw new Error('Error executing 1Inch Swap');
-        }
-    };
-
-    /**
-     * Returns the spender to be approved for the asset transfer for the
-     * specified exchange type
-     *
-     * @param exchangeType
-     */
-    private _getSpender = async (
-        exchangeType: ExchangeType
-    ): Promise<string> => {
-        const { chainId } = this._networkController.network;
-
-        try {
-            if (exchangeType === ExchangeType.SWAP_1INCH) {
-                // 1Inch router contract address
-                const res = await retryHandling<OneInchSpenderRes>(() =>
-                    httpClient.get<OneInchSpenderRes>(
-                        `${ONEINCH_SWAPS_ENDPOINT}${chainId}/approve/spender`
-                    )
-                );
-
-                return res.address;
-            } else {
-                throw new Error('Exchange type not supported');
-            }
-        } catch (error) {
-            throw new Error('Unable to fetch exchange spender');
         }
     };
 }

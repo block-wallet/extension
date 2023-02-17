@@ -7,6 +7,7 @@ import httpClient, { RequestError } from '../../utils/http';
 import { sleep } from '../../utils/sleep';
 import { MILISECOND } from '../../utils/constants/time';
 import { retryHandling } from '../../utils/retryHandling';
+import erc20Abi from '../erc-20/abi';
 
 const MAX_REQUEST_RETRY = 20;
 const API_CALLS_DELAY = 500 * MILISECOND;
@@ -114,6 +115,7 @@ type FourByteResponse = {
  */
 export class ContractSignatureParser {
     private signatureRegistry: Contract;
+    protected _erc20Interface: Interface = new Interface(erc20Abi);
 
     constructor(
         private readonly _networkController: NetworkController,
@@ -124,6 +126,22 @@ export class ContractSignatureParser {
             SIGNATURE_REGISTRY_CONTRACT.abi,
             this._networkController.getProviderFromName('mainnet')
         );
+    }
+
+    public getERC20MethodSignature(
+        data: string
+    ): ContractMethodSignature | undefined {
+        try {
+            const parsedTransaction = this._erc20Interface.parseTransaction({
+                data,
+            });
+
+            if (parsedTransaction) {
+                return this._parseTransactionDescription(parsedTransaction);
+            }
+        } catch (e) {
+            log.warn('Error parsing transaction from contractABI');
+        }
     }
 
     /**

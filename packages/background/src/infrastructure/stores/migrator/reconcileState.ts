@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
+
+import { DeepPartial } from '@block-wallet/background/utils/types/helpers';
+
 /**
  * Merges the persisted state with the new initial state
  *
@@ -7,7 +10,7 @@
  * @returns The merged state
  */
 export default function reconcileState<S extends { [key: string]: any }>(
-    persistedState: S,
+    persistedState: DeepPartial<S>,
     initialState: S
 ): S {
     const newState: any = { ...initialState };

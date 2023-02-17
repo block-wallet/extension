@@ -66,7 +66,6 @@ const messages: {
             rejected: "Token Allowance Rejected",
         },
     },
-    // TODO (KEYSTONE): On keystone signature cancel, call cancelQRHardwareSignRequest
     SIGN_CANCEL: {
         texts: {
             confirming: "Trying to cancel the transaction...",

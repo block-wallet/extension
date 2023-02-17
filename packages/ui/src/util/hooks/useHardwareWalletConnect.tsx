@@ -19,7 +19,6 @@ const executeConnect = async (
             return Promise.resolve(false)
         }
     } else if (vendor == Devices.KEYSTONE) {
-        // TODO (KEYSTONE): Here we should read the qr with the camera
         const submissionOk = await hardwareQrSubmitCryptoHdKeyOrAccount(
             ur || ""
         )

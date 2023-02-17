@@ -10,9 +10,11 @@ import {
 import log from 'loglevel';
 import {
     addHexPrefix,
+    bigIntToBuffer,
     bigIntToHex,
     bufferToHex,
     isValidAddress,
+    isValidSignature,
     toChecksumAddress,
 } from '@ethereumjs/util';
 import { TransactionFactory, TypedTransaction } from '@ethereumjs/tx';
@@ -1112,6 +1114,19 @@ export class TransactionController extends BaseController<
             (!signedTx.v && signedTx.v?.toString() !== '0')
         )
             throw new Error('An error while signing the transaction ocurred');
+
+        if (
+            !isValidSignature(
+                signedTx.v,
+                bigIntToBuffer(signedTx.r),
+                bigIntToBuffer(signedTx.s)
+            )
+        ) {
+            throw new Error('An error while signing the transaction ocurred');
+        }
+
+        // recover and validate the address from the signature
+        signedTx.getSenderAddress();
 
         return signedTx;
     }

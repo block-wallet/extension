@@ -18,8 +18,8 @@ const SendSignReadQR: FC<Props> = ({ onBack, onCancel, onSuccess }) => {
 
     const onQRRead = async (qr: string): Promise<boolean> => {
         const resultOk = await connect()
-        setDeviceNotReady(resultOk)
         if (resultOk) {
+            setDeviceNotReady(resultOk)
             onSuccess(qr)
         }
         return resultOk

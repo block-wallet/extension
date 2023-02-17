@@ -18,14 +18,13 @@ const KeystoneConnectionPage = () => {
     const onQRRead = async (qr: string) => {
         const resultOk = await connect(vendor, qr)
         if (resultOk) {
-            setDeviceNotReady(false)
+            setDeviceNotReady(resultOk)
             history.push({
                 pathname: "/hardware-wallet/accounts",
                 state: { vendor },
             })
-        } else {
-            setDeviceNotReady(true)
         }
+        return resultOk
     }
 
     return (

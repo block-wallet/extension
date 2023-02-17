@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { ITokens, Token } from '../../../src/controllers/erc-20/Token';
 import NetworkController from '../../../src/controllers/NetworkController';
 import sinon from 'sinon';
-import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import { toChecksumAddress } from 'ethereumjs-util';
 import { getNetworkControllerInstance } from '../../mocks/mock-network-instance';
 import { PreferencesController } from '@block-wallet/background/controllers/PreferencesController';
@@ -336,7 +336,9 @@ describe('Token controller implementation', function () {
             expect(addresses.has('0x6B175474E89094C44Da98b954EedeAC495271d0F'))
                 .to.be.true;
 
-            const { tokens: dai_2 } = await tokenController.search('Dai Stablecoin');
+            const { tokens: dai_2 } = await tokenController.search(
+                'Dai Stablecoin'
+            );
             expect(dai_2[0]).to.be.not.null;
             expect(dai_2[0]).to.be.not.undefined;
             expect(dai_2[0].address).equal(

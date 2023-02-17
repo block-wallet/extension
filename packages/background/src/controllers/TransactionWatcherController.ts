@@ -32,7 +32,7 @@ import { Block, Filter, Log } from '@ethersproject/abstract-provider';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { SignedTransaction } from './erc-20/transactions/SignedTransaction';
 import { TransactionArgument } from './transactions/ContractSignatureParser';
-import { showIncomingTransactionNotification } from '../utils/notifications';
+import { showTransactionNotification } from '../utils/notifications';
 import { checkIfNotAllowedError } from '../utils/ethersError';
 import TransactionController from './transactions/TransactionController';
 import httpClient from '../utils/http';
@@ -174,29 +174,18 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
         // Show incoming transaction notification
         this.on(
-            'INCOMING_TRANSACTION',
+            TransactionWatcherControllerEvents.INCOMING_TRANSACTION,
             async (
-                chainId: number,
-                address: string,
-                transactionType: TransactionTypeEnum
+                _chainId: number,
+                _address: string,
+                _transactionType: TransactionTypeEnum,
+                txMeta: TransactionMeta
             ) => {
-                let section:
-                    | ''
-                    | 'tokentxns'
-                    | 'tokentxnsErc721'
-                    | 'tokentxnsErc1155' = '';
-                switch (transactionType) {
-                    case TransactionTypeEnum.ERC20:
-                        section = 'tokentxns';
-                        break;
-                    case TransactionTypeEnum.ERC721:
-                        section = 'tokentxnsErc721';
-                        break;
-                    case TransactionTypeEnum.ERC1155:
-                        section = 'tokentxnsErc1155';
-                        break;
-                }
-                showIncomingTransactionNotification(address, chainId, section);
+                if (
+                    this._preferencesController.settings
+                        .subscribedToNotifications
+                )
+                    showTransactionNotification(txMeta);
             }
         );
 
@@ -1443,7 +1432,8 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                         TransactionWatcherControllerEvents.INCOMING_TRANSACTION,
                         chainId,
                         address,
-                        transactionType
+                        transactionType,
+                        newTransactions[transactionHash]
                     );
                     break;
                 }

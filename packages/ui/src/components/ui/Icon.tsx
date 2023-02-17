@@ -16,6 +16,8 @@ import ImportIcon from "../icons/ImportIcon"
 import ClockIcon from "../icons/ClockIcon"
 import SwitchIcon from "../icons/SwitchIcon"
 import RefetchIcon from "../icons/RefetchIcon"
+import DisabledBridgeIcon from "../icons/DisabledBridgeIcon"
+
 export enum IconName {
     PENCIL = "PENCIL",
     GROUP = "GROUP",
@@ -34,6 +36,7 @@ export enum IconName {
     CLOCK = "CLOCK",
     SWITCH = "SWITCH",
     REFETCH = "REFETCH",
+    DISABLED_BRIDGE = "DISABLED_BRIDGE",
 }
 
 type ProfileType = "default" | "selected" | "danger" | "disabled"
@@ -41,7 +44,7 @@ type ProfileType = "default" | "selected" | "danger" | "disabled"
 interface IconProps {
     name: IconName
     profile?: ProfileType
-    size?: "sm" | "md" | "lg" | "xl"
+    size?: "sm" | "md" | "lg" | "xl" | "xxl"
     className?: string
 }
 
@@ -63,6 +66,7 @@ const ICONS = {
     [IconName.CLOCK]: ClockIcon,
     [IconName.SWITCH]: SwitchIcon,
     [IconName.REFETCH]: RefetchIcon,
+    [IconName.DISABLED_BRIDGE]: DisabledBridgeIcon,
 }
 
 const STROKED_ICONS = [IconName.RIGHT_CHEVRON]
@@ -89,7 +93,8 @@ const SIZES = {
     sm: "!w-3 !h-3",
     md: "!w-4 !h-4",
     lg: "!w-5 !h-5",
-    xl: "!w-20 !h-20",
+    xl: "!w-8 !h-8",
+    xxl: "!w-20 !h-20",
 }
 
 const Icon: React.FC<IconProps> = ({ name, profile, size, className }) => {

@@ -65,6 +65,11 @@ import {
 } from '../../utils/hardware';
 import { NFTContract } from '../erc-721/NFTContract';
 import httpClient from '../../utils/http';
+import { fetchBlockWithRetries } from '../../utils/blockFetch';
+import { unixTimestampToJSTimestamp } from '../../utils/timestamp';
+import { cloneDeep } from 'lodash';
+import { isUnlimitedAllowance } from '../../utils/token';
+import { fetchContractDetails } from '../../utils/contractsInfo';
 
 /**
  * It indicates the amount of blocks to wait after marking
@@ -487,176 +492,222 @@ export class TransactionController extends BaseController<
         customCategory,
         originId,
     }: AddTransactionParams): Promise<Result> {
-        const { chainId } = this._networkController.network;
-        const transactions = [...this.store.getState().transactions];
-        let transactionCategory: TransactionCategories | undefined =
-            customCategory;
-
-        transaction.chainId = chainId;
-        transaction = normalizeTransaction(transaction);
-        validateTransaction(transaction);
-
-        if (origin === 'blank') {
-            // Check if the selected
-            const selectedAccount = this._preferencesController
-                .getSelectedAddress()
-                .toLowerCase();
-            if (transaction.from !== selectedAccount) {
-                throw new Error(
-                    'Internally initiated transaction is using invalid account.'
-                );
-            }
-        } else {
-            if (!transaction.from) {
-                throw new Error(
-                    'Externally initiated transaction has undefined "from" parameter.'
-                );
-            }
-
-            const hasPermission =
-                this._permissionsController.accountHasPermissions(
-                    origin,
-                    transaction.from
-                );
-
-            if (!hasPermission) {
-                throw new Error(
-                    `Externally initiated transaction has no permission to make transaction with account ${transaction.from}.`
-                );
-            }
-
-            // If the from account is different than the select account
-            // we have to update its balance.
-            const selectedAccount = this._preferencesController
-                .getSelectedAddress()
-                .toLowerCase();
-
-            if (transaction.from.toLowerCase() !== selectedAccount) {
-                this.emit(
-                    TransactionEvents.NOT_SELECTED_ACCOUNT_TRANSACTION,
-                    transaction.chainId || chainId,
-                    toChecksumAddress(transaction.from)
-                );
-            }
-        }
-
-        if (!transactionCategory) {
-            transactionCategory = this.resolveTransactionCategory(
-                transaction.data,
-                transaction.to
-            );
-        }
-
-        let transactionMeta: TransactionMeta = {
-            id: uuid(),
-            chainId,
-            origin,
-            status: TransactionStatus.UNAPPROVED,
-            time: Date.now(),
-            transactionParams: transaction,
-            transactionCategory,
-            verifiedOnBlockchain: false,
-            loadingGasValues: true,
-            blocksDropCount: 0,
-            metaType: MetaType.REGULAR,
-            originId,
-        };
-
+        const release = await this.mutex.acquire();
         try {
-            // Check for approve
-            if (
-                transactionCategory ===
-                TransactionCategories.TOKEN_METHOD_APPROVE
-            ) {
-                const erc20Approve = new ApproveTransaction({
-                    networkController: this._networkController,
-                    transactionController: this,
-                    preferencesController: this._preferencesController,
-                });
+            const { chainId } = this._networkController.network;
+            const transactions = [...this.store.getState().transactions];
+            let transactionCategory: TransactionCategories | undefined =
+                customCategory;
 
-                // Get value
-                const { _value } = erc20Approve.getDataArguments(
-                    transaction.data!
-                );
+            transaction.chainId = chainId;
+            transaction = normalizeTransaction(transaction);
+            validateTransaction(transaction);
 
-                // Get token data
-                const { tokens } = await this._tokenController.search(
-                    transaction.to!
-                );
-
-                if (!tokens[0]) {
-                    throw new Error('Failed fetching token data');
+            if (origin === 'blank') {
+                // Check if the selected
+                const selectedAccount = this._preferencesController
+                    .getSelectedAddress()
+                    .toLowerCase();
+                if (transaction.from !== selectedAccount) {
+                    throw new Error(
+                        'Internally initiated transaction is using invalid account.'
+                    );
+                }
+            } else {
+                if (!transaction.from) {
+                    throw new Error(
+                        'Externally initiated transaction has undefined "from" parameter.'
+                    );
                 }
 
-                if (!tokens[0].decimals) {
-                    // Check if it is an NFT
-                    const nftContract = new NFTContract({
-                        networkController: this._networkController,
-                    });
-
-                    const tokenURI = await nftContract.tokenURI(
-                        transaction.to!,
-                        _value
+                const hasPermission =
+                    this._permissionsController.accountHasPermissions(
+                        origin,
+                        transaction.from
                     );
 
-                    if (tokenURI) {
-                        transactionMeta.advancedData = {
-                            tokenId: _value,
-                        };
-                    } else {
-                        throw new Error('Failed fetching token data');
-                    }
-                } else {
-                    transactionMeta.advancedData = {
-                        decimals: tokens[0].decimals,
-                        allowance: _value._hex,
-                    };
+                if (!hasPermission) {
+                    throw new Error(
+                        `Externally initiated transaction has no permission to make transaction with account ${transaction.from}.`
+                    );
+                }
+
+                // If the from account is different than the select account
+                // we have to update its balance.
+                const selectedAccount = this._preferencesController
+                    .getSelectedAddress()
+                    .toLowerCase();
+
+                if (transaction.from.toLowerCase() !== selectedAccount) {
+                    this.emit(
+                        TransactionEvents.NOT_SELECTED_ACCOUNT_TRANSACTION,
+                        transaction.chainId || chainId,
+                        toChecksumAddress(transaction.from)
+                    );
                 }
             }
 
-            // Push transaction so extension can trigger window without waiting for gas values
-            transactions.push(transactionMeta);
+            if (!transactionCategory) {
+                transactionCategory = this.resolveTransactionCategory(
+                    transaction.data,
+                    transaction.to
+                );
+            }
 
+            let transactionMeta: TransactionMeta = {
+                id: uuid(),
+                chainId,
+                origin,
+                status: TransactionStatus.UNAPPROVED,
+                time: Date.now(),
+                transactionParams: transaction,
+                transactionCategory,
+                verifiedOnBlockchain: false,
+                loadingGasValues: true,
+                blocksDropCount: 0,
+                metaType: MetaType.REGULAR,
+                originId,
+            };
+
+            try {
+                // Check for approve
+                if (
+                    transactionCategory ===
+                    TransactionCategories.TOKEN_METHOD_APPROVE
+                ) {
+                    const { advancedData, approveAllowanceParams } =
+                        await this._resolveTransactionAllowanceParameters(
+                            transactionMeta
+                        );
+                    transactionMeta.advancedData = advancedData;
+                    transactionMeta.approveAllowanceParams =
+                        approveAllowanceParams;
+                }
+
+                // Push transaction so extension can trigger window without waiting for gas values
+                transactions.push(transactionMeta);
+
+                this.store.updateState({
+                    transactions: this.trimTransactionsForState(transactions),
+                });
+
+                // Estimate gas
+                const { gasLimit, estimationSucceeded } =
+                    await this.estimateGas(transactionMeta);
+                transactionMeta.transactionParams.gasLimit = gasLimit;
+                transactionMeta.gasEstimationFailed = !estimationSucceeded;
+
+                // Get default gas prices values
+                transactionMeta = await this.getGasPricesValues(
+                    transactionMeta,
+                    chainId
+                );
+
+                transactionMeta.loadingGasValues = false;
+            } catch (error) {
+                this.failTransaction(transactionMeta, error);
+                return Promise.reject(error);
+            }
+
+            const result: Promise<string> = this.waitForTransactionResult(
+                transactionMeta.id,
+                waitForConfirmation
+            );
+
+            // Update transactions list again as we modified transactionMeta ref (pushed into `transactions`)
             this.store.updateState({
                 transactions: this.trimTransactionsForState(transactions),
             });
 
-            // Estimate gas
-            const { gasLimit, estimationSucceeded } = await this.estimateGas(
-                transactionMeta
-            );
-            transactionMeta.transactionParams.gasLimit = gasLimit;
-            transactionMeta.gasEstimationFailed = !estimationSucceeded;
+            if (!transactionCategory) {
+                this.setTransactionCategory(transactionMeta.id);
+            } else {
+                this.setMethodSignature(transactionMeta.id);
+            }
 
-            // Get default gas prices values
-            transactionMeta = await this.getGasPricesValues(
-                transactionMeta,
-                chainId
-            );
-
-            transactionMeta.loadingGasValues = false;
-        } catch (error) {
-            this.failTransaction(transactionMeta, error);
-            return Promise.reject(error);
+            return { result, transactionMeta };
+        } finally {
+            release();
         }
+    }
 
-        const result: Promise<string> = this.waitForTransactionResult(
-            transactionMeta.id,
-            waitForConfirmation
-        );
+    private async _resolveTransactionAllowanceParameters(
+        transactionMeta: TransactionMeta
+    ): Promise<{
+        approveAllowanceParams: TransactionMeta['approveAllowanceParams'];
+        advancedData: TransactionMeta['advancedData'];
+    }> {
+        let approveAllowanceParams:
+            | TransactionMeta['approveAllowanceParams']
+            | undefined;
+        let advancedData: TransactionMeta['advancedData'] | undefined;
+        if (
+            transactionMeta.transactionCategory ===
+            TransactionCategories.TOKEN_METHOD_APPROVE
+        ) {
+            const erc20Approve = new ApproveTransaction({
+                networkController: this._networkController,
+                transactionController: this,
+                preferencesController: this._preferencesController,
+            });
 
-        // Update transactions list again as we modified transactionMeta ref (pushed into `transactions`)
-        this.store.updateState({
-            transactions: this.trimTransactionsForState(transactions),
-        });
+            // Get value
+            const { _value, _spender } = erc20Approve.getDataArguments(
+                transactionMeta.transactionParams.data!
+            );
 
-        if (!transactionCategory) {
-            this.setTransactionCategory(transactionMeta.id);
-        } else {
-            this.setMethodSignature(transactionMeta.id);
+            // Get token data
+            const token =
+                await this._tokenController.searchTokenWithTotalSupply(
+                    transactionMeta.transactionParams.to!
+                );
+
+            if (!token) {
+                throw new Error('Failed fetching token data');
+            }
+
+            const contractDetails = await fetchContractDetails(
+                this._networkController.network.chainId,
+                _spender
+            );
+
+            approveAllowanceParams = {
+                allowanceValue: _value,
+                isUnlimited: isUnlimitedAllowance(token, _value),
+                spenderAddress: _spender,
+                spenderInfo: contractDetails,
+                token,
+            };
+
+            if (!token.decimals) {
+                // Check if it is an NFT
+                const nftContract = new NFTContract({
+                    networkController: this._networkController,
+                });
+
+                const tokenURI = await nftContract.tokenURI(
+                    transactionMeta.transactionParams.to!,
+                    _value
+                );
+
+                if (tokenURI) {
+                    advancedData = {
+                        tokenId: _value,
+                    };
+                } else {
+                    throw new Error('Failed fetching token data');
+                }
+            } else {
+                advancedData = {
+                    decimals: token.decimals,
+                    allowance: _value._hex,
+                };
+            }
         }
-
-        return { result, transactionMeta };
+        return {
+            advancedData,
+            approveAllowanceParams,
+        };
     }
 
     private async getGasPricesValues(
@@ -872,6 +923,24 @@ export class TransactionController extends BaseController<
                 txNonce = nonceLock.nextNonce;
             }
 
+            // Update approve parameters since the user could have changed the allowance value
+            if (
+                transactionMeta.transactionCategory ===
+                TransactionCategories.TOKEN_METHOD_APPROVE
+            ) {
+                const { advancedData, approveAllowanceParams } =
+                    await this._resolveTransactionAllowanceParameters(
+                        transactionMeta
+                    );
+                transactionMeta.advancedData = advancedData;
+                transactionMeta.approveAllowanceParams = approveAllowanceParams;
+                const methodSignature =
+                    this._contractSignatureParser.getERC20MethodSignature(
+                        transactionMeta.transactionParams.data!
+                    );
+                transactionMeta.methodSignature = methodSignature;
+            }
+
             transactionMeta.status = status;
             transactionMeta.transactionParams.nonce = txNonce;
             transactionMeta.transactionParams.chainId = chainId;
@@ -937,8 +1006,17 @@ export class TransactionController extends BaseController<
             // Update transaction
             this.updateTransaction(transactionMeta);
 
+            // Refresh current tx.
+            // Otherwise, we will modify current state reference and
+            // the status update transition event will not be fired
+            const refreshedTx = this.getTransaction(transactionMeta.id);
+
+            if (!refreshedTx) {
+                throw new Error('Transaction not found');
+            }
+
             // Send transaction
-            await this.submitTransaction(provider, transactionMeta);
+            await this.submitTransaction(provider, refreshedTx);
         } catch (error) {
             // Check for HW flow cancellation
             if (this.isTransactionRejected(transactionID)) {
@@ -1236,7 +1314,9 @@ export class TransactionController extends BaseController<
             throw new Error('The specified transaction does not exist');
         }
 
-        const oldTransactionI = transactions.indexOf(transactionMeta);
+        const oldTransactionI = transactions.findIndex(
+            (t) => t.id === transactionMeta.id
+        );
 
         if (oldTransactionI === -1) {
             throw new Error("Can't find the old transaction index");
@@ -1452,7 +1532,9 @@ export class TransactionController extends BaseController<
 
         const transactions = [...this.store.getState().transactions];
 
-        const oldTransactionI = transactions.indexOf(transactionMeta);
+        const oldTransactionI = transactions.findIndex(
+            (t) => t.id === transactionMeta.id
+        );
 
         if (oldTransactionI === -1) {
             throw new Error("Can't find the old transaction index");
@@ -1978,8 +2060,17 @@ export class TransactionController extends BaseController<
                     }
 
                     meta.status = TransactionStatus.CONFIRMED;
+                    let unixTimestamp: number | undefined = txObj.timestamp;
+                    if (!unixTimestamp && txObj.blockNumber) {
+                        const block = await fetchBlockWithRetries(
+                            txObj.blockNumber,
+                            provider
+                        );
+                        unixTimestamp = block?.timestamp;
+                    }
+
                     meta.confirmationTime =
-                        txObj.timestamp && txObj.timestamp * 1000; // Unix timestamp to Java Script timestamp
+                        unixTimestampToJSTimestamp(unixTimestamp);
 
                     // Emit confirmation events
                     this.emit(TransactionEvents.STATUS_UPDATE, meta);
@@ -2132,9 +2223,10 @@ export class TransactionController extends BaseController<
      * @param {number} transactionId
      */
     public getTransaction(transactionId: string): TransactionMeta | undefined {
-        return this.store
+        const transaction = this.store
             .getState()
             .transactions.find((t) => t.id === transactionId);
+        return transaction ? cloneDeep(transaction) : transaction;
     }
 
     /**

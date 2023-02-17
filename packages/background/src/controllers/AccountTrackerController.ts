@@ -15,7 +15,7 @@ import {
 } from './erc-20/TokenController';
 import { Token } from './erc-20/Token';
 import { toChecksumAddress } from 'ethereumjs-util';
-import { TokenOperationsController } from './erc-20/transactions/Transaction';
+import { TokenOperationsController } from './erc-20/transactions/TokenOperationsController';
 import { Mutex } from 'async-mutex';
 import initialState from '../utils/constants/initialState';
 import log from 'loglevel';
@@ -39,25 +39,58 @@ import BlockUpdatesController, {
 } from './block-updates/BlockUpdatesController';
 import { ActionIntervalController } from './block-updates/ActionIntervalController';
 import { Devices } from '../utils/types/hardware';
+import checksummedAddress from '../utils/checksummedAddress';
+import {
+    TransactionWatcherController,
+    TransactionWatcherControllerEvents,
+    NewTokenAllowanceSpendersEventParametersSignature,
+} from './TransactionWatcherController';
+import { isNativeTokenAddress, isUnlimitedAllowance } from '../utils/token';
+import {
+    TransactionCategories,
+    TransactionEvents,
+    TransactionMeta,
+    TransactionStatus,
+    WatchedTransactionType,
+} from './transactions/utils/types';
+import { retryHandling } from '../utils/retryHandling';
+import { providers } from 'ethers';
+import { RPCLogsFetcher } from '../utils/rpc/RPCLogsFetcher';
+import { getTokenApprovalLogsTopics } from '../utils/logsQuery';
+import { runPromiseSafely } from '../utils/promises';
+import { ContractDetails, fetchContractDetails } from '../utils/contractsInfo';
+import { getMaxBlockBatchSize } from '../utils/rpc/rpcConfigBuilder';
+import TransactionController from './transactions/TransactionController';
+import { resolveAllownaceParamsFromTransaction } from './transactions/utils/utils';
 
 export enum AccountStatus {
     ACTIVE = 'ACTIVE',
     HIDDEN = 'HIDDEN',
 }
 
-import checksummedAddress from '../utils/checksummedAddress';
-import {
-    TransactionTypeEnum,
-    TransactionWatcherController,
-    TransactionWatcherControllerEvents,
-} from './TransactionWatcherController';
-import { isNativeTokenAddress } from '../utils/token';
-import TransactionController from './transactions/TransactionController';
-import { TransactionEvents } from './transactions/utils/types';
+export enum TokenAllowanceStatus {
+    UPDATED = 'UPDATED',
+    AWAITING_TRANSACTION_RESULT = 'AWAITING_TRANSACTION_RESULT',
+}
 
 export interface AccountBalanceToken {
     token: Token;
     balance: BigNumber;
+}
+export interface TokenAllowance {
+    status: 'AWAITING_TRANSACTION_RESULT' | 'UPDATED';
+    //Whether the allowance is the unlimited value (MaxUnit256) or it is bigger than the token total supply
+    isUnlimited: boolean;
+    //Stores the last time we checked the spender allowance.
+    //This property does not store the last time the allowance was updated in the contract.
+    updatedAt: number;
+    //Allowance value
+    value: BigNumber;
+    //Hash of the transaction that last updated the allowance
+    txHash?: string;
+    txTime?: number;
+    //Spender information
+    spender?: ContractDetails;
 }
 export interface AccountBalanceTokens {
     [address: string]: AccountBalanceToken;
@@ -67,9 +100,24 @@ export interface AccountBalance {
     tokens: AccountBalanceTokens;
 }
 
-export interface AccountBalances {
-    [chainId: number]: AccountBalance;
+export interface AccountAllowance {
+    tokens: {
+        [address: string]: {
+            token: Token;
+            allowances: {
+                [spenderAddress: string]: TokenAllowance;
+            };
+        };
+    };
 }
+
+export type AccountBalances = {
+    [chainId: number]: AccountBalance;
+};
+
+export type AccountAllowances = {
+    [chainId: number]: AccountAllowance;
+};
 
 /**
  * The type of the added account
@@ -87,6 +135,7 @@ export interface AccountInfo {
     index: number; // for sorting purposes
     accountType: AccountType; // indicates if it was derivated from the seed phrase (false) or imported (true)
     balances: AccountBalances;
+    allowances: AccountAllowances; //account allowances per chain, token and spender.
     status: AccountStatus; //account info metadata calculated in the UI from the hiddenAccounts
 }
 
@@ -115,12 +164,14 @@ export interface AccountTrackerState {
     accounts: Accounts;
     hiddenAccounts: Accounts;
     isAccountTrackerLoading: boolean;
+    isRefreshingAllowances: boolean;
 }
 
 export enum AccountTrackerEvents {
     ACCOUNT_ADDED = 'ACCOUNT_ADDED',
     ACCOUNT_REMOVED = 'ACCOUNT_REMOVED',
     CLEARED_ACCOUNTS = 'CLEARED_ACCOUNTS',
+    BALANCE_UPDATED = 'BALANCE_UPDATED',
 }
 
 export interface UpdateAccountsOptions {
@@ -143,6 +194,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         initialState: AccountTrackerState = {
             accounts: {},
             hiddenAccounts: {},
+            isRefreshingAllowances: false,
             isAccountTrackerLoading: false,
         }
     ) {
@@ -203,7 +255,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     );
                 } catch (err) {
                     log.warn(
-                        'An error ocurred while updating the accouns',
+                        'An error ocurred while updating the accounts',
                         err.message
                     );
                 }
@@ -253,9 +305,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             async (
                 chainId: number,
                 address: string,
-                transactionType: TransactionTypeEnum
+                transactionType: WatchedTransactionType
             ) => {
-                if (transactionType === TransactionTypeEnum.Native) {
+                if (transactionType === WatchedTransactionType.Native) {
                     await this.updateAccounts(
                         {
                             addresses: [address],
@@ -309,6 +361,19 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
         );
 
+        this._transactionWatcherController.on(
+            TransactionWatcherControllerEvents.NEW_KNOWN_TOKEN_ALLOWANCE_SPENDERS,
+            async (
+                ...args: NewTokenAllowanceSpendersEventParametersSignature
+            ) => {
+                await this._handleNewTokenAllowanceSpendersEvents(
+                    args[0],
+                    args[1],
+                    args[2]
+                );
+            }
+        );
+
         this._transactionController.on(
             TransactionEvents.NOT_SELECTED_ACCOUNT_TRANSACTION,
             async (chainId: number, accountAddress: string) => {
@@ -321,6 +386,641 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 );
             }
         );
+
+        this._transactionController.on(
+            TransactionEvents.STATUS_UPDATE,
+            (transactionMeta: TransactionMeta) => {
+                if (
+                    transactionMeta.transactionCategory !==
+                    TransactionCategories.TOKEN_METHOD_APPROVE
+                ) {
+                    return;
+                }
+                return this._onApprovalTransactionUpdate(transactionMeta);
+            }
+        );
+    }
+
+    /**
+     * _getAccountChainAllowances
+     * Retrieves all the chain allowances in a safer way.
+     * @param account
+     * @param chainId
+     * @returns AccountAllowance
+     */
+    private _getAccountChainAllowances(
+        account: AccountInfo,
+        chainId: number
+    ): AccountAllowance {
+        const allowances = cloneDeep(account.allowances);
+        if (!allowances[chainId]) {
+            return { tokens: {} };
+        }
+
+        return allowances[chainId];
+    }
+
+    /**
+     * _onAllowanceTransactionUpdate
+     * In case an approval transaction is fired using the wallet, this method transition the allowance record between PENDING and UPDATED.
+     * When the approval transaction is mined, this method simulates the a new token allowance event to force its update and avoid delays in the UI.
+     * @param account
+     * @param chainId
+     * @returns AccountAllowance
+     */
+    private _onApprovalTransactionUpdate(
+        transactionMeta: TransactionMeta,
+        accountAddress = this._preferencesController.getSelectedAddress(),
+        chainId = this._networkController.network.chainId
+    ) {
+        const params = resolveAllownaceParamsFromTransaction(transactionMeta);
+
+        if (!params) {
+            log.warn(
+                'Unable to resolve spender and token address from transaction',
+                transactionMeta
+            );
+            return;
+        }
+
+        const { accounts, hiddenAccounts } = this.store.getState();
+        const account =
+            accounts[accountAddress] || hiddenAccounts[accountAddress];
+        const chainTokenAllowances: AccountAllowance['tokens'] =
+            this._getAccountChainAllowances(account, chainId).tokens;
+        const { spenderAddress, tokenAddress } = params;
+        if (transactionMeta.status !== TransactionStatus.CONFIRMED) {
+            //Do not update state if there is no previous record of this allowance.
+            if (
+                !chainTokenAllowances[tokenAddress] ||
+                !chainTokenAllowances[tokenAddress].allowances[spenderAddress]
+            ) {
+                return;
+            }
+            chainTokenAllowances[tokenAddress].allowances[
+                spenderAddress
+            ].status =
+                transactionMeta.status === TransactionStatus.SUBMITTED
+                    ? TokenAllowanceStatus.AWAITING_TRANSACTION_RESULT
+                    : TokenAllowanceStatus.UPDATED;
+            this._updateAccountAllowancesState(accountAddress, {
+                ...account.allowances,
+                [chainId]: { tokens: chainTokenAllowances },
+            });
+        } else if (transactionMeta.transactionParams.hash) {
+            const event: NewTokenAllowanceSpendersEventParametersSignature['2'] =
+                {
+                    [tokenAddress]: [
+                        {
+                            spender: spenderAddress,
+                            txHash: transactionMeta.transactionParams.hash,
+                            txTime:
+                                transactionMeta.confirmationTime ||
+                                transactionMeta.submittedTime ||
+                                new Date().getTime(),
+                        },
+                    ],
+                };
+            this._handleNewTokenAllowanceSpendersEvents(
+                chainId,
+                accountAddress,
+                event
+            );
+        }
+    }
+
+    /**
+     * _cleanupAllowancesBeforeStore
+     * Cleans up the allowances state before storing to avoid saving allowances with 0 and empty objects.
+     * @param account
+     * @param chainId
+     * @returns AccountAllowance
+     */
+    private _cleanupAllowancesBeforeStore(
+        allowances: AccountAllowances
+    ): AccountAllowances {
+        //cleanup empty allowances
+        return Object.entries(allowances).reduce(
+            (allowancesAcc, [chainId, allowance]) => {
+                return {
+                    ...allowancesAcc,
+                    [chainId]: {
+                        tokens: Object.entries(allowance.tokens || {}).reduce(
+                            (tokensAcc, [tokenAddress, allowancesRecord]) => {
+                                const allowancesGTZero: Record<
+                                    string,
+                                    TokenAllowance
+                                > = Object.entries(
+                                    allowancesRecord.allowances || {}
+                                ).reduce(
+                                    (
+                                        acc,
+                                        [spenderAddress, allowanceRecord]
+                                    ) => {
+                                        if (
+                                            BigNumber.from(
+                                                allowanceRecord.value ?? 0
+                                            ).gt(0)
+                                        ) {
+                                            return {
+                                                ...acc,
+                                                [spenderAddress]:
+                                                    allowanceRecord,
+                                            };
+                                        }
+                                        return acc;
+                                    },
+                                    {}
+                                );
+                                //if there is at least 1 spender
+                                if (Object.keys(allowancesGTZero).length > 0) {
+                                    return {
+                                        ...tokensAcc,
+                                        [tokenAddress]: {
+                                            allowances: allowancesGTZero,
+                                            token: allowancesRecord.token,
+                                        },
+                                    };
+                                }
+                                return tokensAcc;
+                            },
+                            {}
+                        ),
+                    },
+                };
+            },
+            {}
+        );
+    }
+
+    /**
+     * _resolveToken
+     * Resolves the token data along with its total supply
+     * @param account
+     * @param chainId
+     * @returns AccountAllowance
+     */
+    private async _resolveToken(
+        tokenAddress: string,
+        accountAddress: string,
+        chainId: number,
+        networkProvider: StaticJsonRpcProvider
+    ): Promise<Token | undefined> {
+        const { tokens } = await this._tokenController.search(
+            tokenAddress,
+            true,
+            accountAddress,
+            chainId
+        );
+
+        const token = tokens.length ? tokens[0] : undefined;
+        if (!token) {
+            return undefined;
+        }
+
+        let totalSupply: BigNumber | undefined;
+
+        try {
+            totalSupply = await this._tokenOperationsController.totalSupply(
+                tokenAddress,
+                networkProvider
+            );
+        } catch (e) {
+            log.warn('Unable to get total supply of token:', tokenAddress, e);
+        }
+
+        return {
+            ...token,
+            totalSupply,
+        };
+    }
+
+    /**
+     * _getUpdatedAccountAllowancesFromEvent
+     * Returns the updated account allowances based on the allowances recognized in the event.
+     * @param account
+     * @param chainId
+     * @returns AccountAllowance
+     */
+    private _getUpdatedAccountAllowancesFromEvent = async (
+        chainId: number,
+        account: AccountInfo,
+        newAllowances: NewTokenAllowanceSpendersEventParametersSignature['2']
+    ) => {
+        const allowances = cloneDeep(account.allowances);
+        const networkProvider =
+            this._networkController.getProviderForChainId(chainId);
+        if (!networkProvider) {
+            log.warn(
+                'No network provider for the specified chain id:',
+                chainId
+            );
+            return;
+        }
+
+        if (!allowances[chainId]) {
+            allowances[chainId] = { tokens: {} };
+        }
+
+        const chainTokenAllowances = allowances[chainId].tokens;
+
+        for (const tokenAddress in newAllowances) {
+            let currentToken = chainTokenAllowances[tokenAddress]
+                ? chainTokenAllowances[tokenAddress].token
+                : undefined;
+
+            //check whether we need to fetch the token data or not
+            if (!currentToken) {
+                currentToken = await this._resolveToken(
+                    tokenAddress,
+                    account.address,
+                    chainId,
+                    networkProvider
+                );
+                if (!currentToken) {
+                    log.warn(
+                        'Unable to resolve token with address',
+                        tokenAddress
+                    );
+                    continue;
+                }
+            }
+
+            //grab all the new allowances per token address
+            const newSpendersTransactions = newAllowances[tokenAddress];
+            const newTokenSpendersAllowance: Record<string, TokenAllowance> =
+                {};
+            for (const spenderTransaction of newSpendersTransactions) {
+                const tokenAllowances =
+                    chainTokenAllowances[tokenAddress]?.allowances;
+                const { spender, txHash, txTime } = spenderTransaction;
+
+                //means that this record is already updated.
+                if (
+                    tokenAllowances &&
+                    tokenAllowances[spender] &&
+                    (tokenAllowances[spender].txHash || '').toLowerCase() ===
+                        txHash.toLowerCase()
+                ) {
+                    continue;
+                }
+
+                const contractDetailsCache: Record<
+                    string,
+                    ContractDetails | undefined
+                > = {};
+
+                try {
+                    //fetch spender allowance
+                    const spenderAllowance =
+                        await this._tokenOperationsController.allowance(
+                            tokenAddress,
+                            account.address,
+                            spender,
+                            networkProvider
+                        );
+
+                    // Add token to the user's assets of tracked tokens if the allowance is greater than 0
+                    if (!spenderAllowance.eq(0)) {
+                        this._tokenController.attemptAddToken(
+                            tokenAddress,
+                            chainId
+                        );
+                    }
+
+                    let contractInfo: ContractDetails | undefined =
+                        contractDetailsCache[spender];
+
+                    if (!contractInfo) {
+                        contractInfo = await fetchContractDetails(
+                            chainId,
+                            spender
+                        );
+                    }
+
+                    newTokenSpendersAllowance[spender] = {
+                        isUnlimited: isUnlimitedAllowance(
+                            currentToken,
+                            spenderAllowance
+                        ),
+                        value: spenderAllowance,
+                        updatedAt: new Date().getTime(),
+                        txHash,
+                        txTime,
+                        status: TokenAllowanceStatus.UPDATED,
+                        spender: contractInfo,
+                    };
+                } catch (e) {
+                    log.warn(
+                        `Error fetching spender: ${spender} allowance for token ${tokenAddress}`,
+                        e
+                    );
+                    continue;
+                }
+            }
+
+            const currentTokenSpenders =
+                allowances[chainId].tokens[tokenAddress] || {};
+
+            allowances[chainId] = {
+                ...allowances[chainId],
+                tokens: {
+                    ...allowances[chainId].tokens,
+                    [tokenAddress]: {
+                        token: currentToken,
+                        allowances: {
+                            ...currentTokenSpenders.allowances,
+                            ...newTokenSpendersAllowance,
+                        },
+                    },
+                },
+            };
+        }
+
+        return allowances;
+    };
+
+    /**
+     * refreshTokenAllowances
+     * Refreshes all the token allowances present in the state for the current chain id and account address.
+     * This method does not discover new spender, it just fetches the allowances in case we missed some update.
+     * Also, this method tries to fetch the spender details to either set or update it.
+     * @param args Arguments fired by the event
+     */
+    public async refreshTokenAllowances() {
+        this.store.updateState({ isRefreshingAllowances: true });
+        const currentAccountAddress =
+            this._preferencesController.getSelectedAddress();
+        const { chainId } = this._networkController.network;
+        const provider = this._networkController.getProvider();
+        const currentAccount =
+            this.store.getState().accounts[currentAccountAddress];
+        try {
+            if (!currentAccount) {
+                return;
+            }
+
+            const chainAllowances = cloneDeep(
+                (currentAccount.allowances || {})[chainId]
+            );
+
+            if (
+                !chainAllowances ||
+                Object.keys(chainAllowances.tokens).length === 0
+            ) {
+                return;
+            }
+
+            const contractDetailsCache: Record<
+                string,
+                ContractDetails | undefined
+            > = {};
+
+            for (const tokenAddress in chainAllowances.tokens) {
+                const tokenSpenders =
+                    chainAllowances.tokens[tokenAddress].allowances;
+                const currentToken = chainAllowances.tokens[tokenAddress].token;
+                for (const spender in tokenSpenders) {
+                    try {
+                        const allowance =
+                            await this._tokenOperationsController.allowance(
+                                tokenAddress,
+                                currentAccountAddress,
+                                spender
+                            );
+
+                        let contractDetails: ContractDetails | undefined =
+                            contractDetailsCache[spender];
+
+                        //Reftech spender contract details if we hadn't fetch it
+                        if (!contractDetails) {
+                            contractDetails = await fetchContractDetails(
+                                chainId,
+                                spender
+                            );
+                            contractDetailsCache[spender] = contractDetails;
+                        }
+
+                        const currentAllowanceRecord = tokenSpenders[spender];
+                        let txHash: string | undefined =
+                            currentAllowanceRecord.txHash;
+                        let txTime: number | undefined =
+                            currentAllowanceRecord.txTime;
+
+                        //If allowance has changed, then lookup for the new txHash and time.
+                        if (
+                            !allowance.eq(
+                                BigNumber.from(
+                                    currentAllowanceRecord.value ?? 0
+                                )
+                            )
+                        ) {
+                            if (allowance.gt(BigNumber.from(0))) {
+                                //attempt to get new txHash and time
+                                ({ txHash, txTime } =
+                                    await this._lookupLastTokenApprovalEventTx(
+                                        currentAccountAddress,
+                                        spender,
+                                        currentAllowanceRecord.txHash,
+                                        provider
+                                    ));
+                            }
+                        }
+
+                        const newSpenderInfo = {
+                            logoURI:
+                                contractDetails?.logoURI ||
+                                currentAllowanceRecord.spender?.logoURI,
+                            name:
+                                contractDetails?.name ||
+                                currentAllowanceRecord.spender?.name,
+                            websiteURL:
+                                contractDetails?.websiteURL ||
+                                currentAllowanceRecord.spender?.websiteURL,
+                        };
+
+                        chainAllowances.tokens[tokenAddress].allowances[
+                            spender
+                        ] = {
+                            status: TokenAllowanceStatus.UPDATED,
+                            isUnlimited: isUnlimitedAllowance(
+                                currentToken,
+                                allowance
+                            ),
+                            value: allowance,
+                            txHash,
+                            txTime,
+                            updatedAt: new Date().getTime(),
+                            spender: newSpenderInfo.name
+                                ? (newSpenderInfo as ContractDetails)
+                                : undefined,
+                        };
+                    } catch (e) {
+                        log.warn(
+                            'Error requesting _tokenOperationsController.allowance',
+                            e
+                        );
+                        continue;
+                    }
+                }
+            }
+
+            const usrAccountData =
+                this.store.getState().accounts[currentAccountAddress];
+            const newAllowancesState = {
+                ...usrAccountData.allowances,
+                [chainId]: chainAllowances,
+            };
+            this._updateAccountAllowancesState(
+                currentAccountAddress,
+                newAllowancesState
+            );
+        } finally {
+            this.store.updateState({ isRefreshingAllowances: false });
+        }
+    }
+
+    /**
+     * _handleNewTokenAllowanceSpendersEvents
+     * Handles the token allowances event and fetches the token allowance for every spender specified in the parameters.
+     * @param args Arguments fired by the event
+     */
+    private async _handleNewTokenAllowanceSpendersEvents(
+        ...args: NewTokenAllowanceSpendersEventParametersSignature
+    ) {
+        const release = await this._mutex.acquire();
+        const [chainId, accountAddress, newAllowances] = args;
+        const { accounts, hiddenAccounts } = this.store.getState();
+        const account =
+            accounts[accountAddress] || hiddenAccounts[accountAddress];
+
+        try {
+            const newAccountAllowances =
+                await this._getUpdatedAccountAllowancesFromEvent(
+                    chainId,
+                    account,
+                    newAllowances
+                );
+
+            if (newAccountAllowances) {
+                this._updateAccountAllowancesState(
+                    accountAddress,
+                    newAccountAllowances
+                );
+            }
+        } finally {
+            release();
+        }
+    }
+
+    private _updateAccountAllowancesState(
+        accountAddress: string,
+        newAllowances: AccountAllowances
+    ): void {
+        const { accounts, hiddenAccounts } = this.store.getState();
+        const cleanedAllowances =
+            this._cleanupAllowancesBeforeStore(newAllowances);
+        if (accountAddress in accounts) {
+            this.store.updateState({
+                accounts: {
+                    ...this.store.getState().accounts,
+                    [accountAddress]: {
+                        ...this.store.getState().accounts[accountAddress],
+                        allowances: cleanedAllowances,
+                    },
+                },
+            });
+        } else if (accountAddress in hiddenAccounts) {
+            this.store.updateState({
+                hiddenAccounts: {
+                    ...this.store.getState().hiddenAccounts,
+                    [accountAddress]: {
+                        ...this.store.getState().hiddenAccounts[accountAddress],
+                        allowances: cleanedAllowances,
+                    },
+                },
+            });
+        }
+    }
+
+    /**
+     * _lookupLastTokenApprovalEventTx
+     * This method lookups the transaction that fired the last token approval event for a certain token address and spedner.
+     * Using the last known transaction, retrieves its block to limit the query size.
+     * @param accountAddress
+     * @param spenderAddress
+     * @param lastTxHash
+     * @param provider
+     * @returns
+     */
+    private async _lookupLastTokenApprovalEventTx(
+        accountAddress: string,
+        spenderAddress: string,
+        lastTxHash: string | undefined,
+        provider: StaticJsonRpcProvider
+    ): Promise<{
+        txHash?: string;
+        txTime?: number;
+    }> {
+        let newTxHash = undefined;
+        let newTxTime = undefined;
+        const rpcLogsFetcher = new RPCLogsFetcher(provider);
+
+        const lastMinedBlock = this._blockUpdatesController.getBlockNumber();
+        let queryFromBlock = 0;
+        //fetch new txHash
+        if (lastTxHash) {
+            try {
+                const oldTtransaction =
+                    await retryHandling<providers.TransactionResponse>(() =>
+                        provider.getTransaction(lastTxHash)
+                    );
+                if (oldTtransaction.blockNumber) {
+                    queryFromBlock = oldTtransaction.blockNumber;
+                }
+            } catch (e) {
+                log.warn('Error getting old allowance transaction by hash', e);
+            }
+            if (!queryFromBlock) {
+                //Query only one batch in case we don't have the queryFromBlock
+                queryFromBlock = Math.max(
+                    this._blockUpdatesController.getBlockNumber() -
+                        getMaxBlockBatchSize(
+                            this._networkController.network.chainId
+                        ),
+                    0
+                );
+            }
+
+            const logs = await runPromiseSafely(
+                rpcLogsFetcher.getLogsInBatch(
+                    {
+                        topics: getTokenApprovalLogsTopics(
+                            accountAddress,
+                            WatchedTransactionType.ERC20,
+                            spenderAddress
+                        ),
+                        toBlock: lastMinedBlock,
+                        fromBlock: queryFromBlock,
+                    },
+                    lastMinedBlock
+                )
+            );
+            if (logs && logs.length) {
+                const lastLog = logs[logs.length - 1];
+                if (lastLog.transactionHash !== lastTxHash) {
+                    newTxHash = lastLog.transactionHash;
+                    newTxTime =
+                        await rpcLogsFetcher.getLogTimestampInMilliseconds(
+                            lastLog
+                        );
+                }
+            }
+        }
+        return {
+            txHash: newTxHash,
+            txTime: newTxTime,
+        };
     }
 
     /**
@@ -340,6 +1040,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             index: 0, // first account
             balances: {},
             status: AccountStatus.ACTIVE,
+            allowances: {},
         };
 
         this.store.updateState({
@@ -381,6 +1082,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             accountType: AccountType.HD_ACCOUNT,
             balances: {},
             status: AccountStatus.ACTIVE,
+            allowances: {},
         };
         trackedAccounts[newAccount] = accountInfo;
 
@@ -451,6 +1153,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 index: accountIndex,
                 balances: {},
                 status: AccountStatus.ACTIVE,
+                allowances: {},
             };
             updatedAccounts.push(accountInfo);
 
@@ -511,6 +1214,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             index: accountIndex,
             balances: {},
             status: AccountStatus.ACTIVE,
+            allowances: {},
         };
         trackedAccounts[newAccount] = accountInfo;
 
@@ -951,6 +1655,13 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 },
             },
         });
+
+        this.emit(
+            AccountTrackerEvents.BALANCE_UPDATED,
+            chainId,
+            accountAddress,
+            assetAddressToGetBalance
+        );
     }
 
     /**
@@ -1109,6 +1820,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     public resetAccount(address: string): void {
         const stateAccounts = this.store.getState().accounts;
         stateAccounts[address].balances = {};
+        stateAccounts[address].allowances = {};
 
         this.store.updateState({
             accounts: stateAccounts,

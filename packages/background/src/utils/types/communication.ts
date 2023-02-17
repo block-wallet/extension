@@ -74,6 +74,7 @@ enum ACCOUNT {
     SELECT = 'SELECT_ACCOUNT',
     GET_BALANCE = 'GET_ACCOUNT_BALANCE',
     HIDE = 'HIDE_ACCOUNT',
+    REFRESH_TOKEN_ALLOWANCES = 'REFRESH_TOKEN_ALLOWANCES',
     UNHIDE = 'UNHIDE_ACCOUNT',
     GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
 }
@@ -109,6 +110,7 @@ enum EXCHANGE {
     APPROVE = 'APPROVE_EXCHANGE',
     GET_QUOTE = 'GET_EXCHANGE_QUOTE',
     GET_EXCHANGE = 'GET_EXCHANGE',
+    GET_SPENDER = 'GET_SPENDER',
     EXECUTE = 'EXECUTE_EXCHANGE',
 }
 
@@ -143,6 +145,7 @@ enum NETWORK {
     EDIT_NETWORKS_ORDER = 'EDIT_NETWORKS_ORDER',
     REMOVE_NETWORK = 'REMOVE_NETWORK',
     GET_SPECIFIC_CHAIN_DETAILS = 'GET_SPECIFIC_CHAIN_DETAILS',
+    GET_DEFAULT_RPC = 'GET_DEFAULT_RPC',
     GET_RPC_CHAIN_ID = 'GET_RPC_CHAIN_ID',
     SEARCH_CHAINS = 'SEARCH_CHAINS',
 }
@@ -177,6 +180,7 @@ enum UD {
 
 enum TRANSACTION {
     ADD_NEW_SEND_TRANSACTION = 'ADD_NEW_SEND_TRANSACTION',
+    ADD_NEW_APPROVE_TRANSACTION = 'ADD_NEW_APPROVE_TRANSACTION',
     UPDATE_SEND_TRANSACTION_GAS = 'UPDATE_SEND_TRANSACTION_GAS',
     APPROVE_SEND_TRANSACTION = 'APPROVE_SEND_TRANSACTION',
     GET_SEND_TRANSACTION_RESULT = 'GET_SEND_TRANSACTION_RESULT',
@@ -233,6 +237,7 @@ enum TOKEN {
     SEND_TOKEN = 'SEND_TOKEN',
     POPULATE_TOKEN_DATA = 'POPULATE_TOKEN_DATA',
     SEARCH_TOKEN = 'SEARCH_TOKEN',
+    APPROVE_ALLOWANCE = 'APPROVE_ALLOWANCE',
 }
 
 enum ADDRESS_BOOK {
@@ -293,6 +298,7 @@ export interface RequestSignatures {
     [Messages.ACCOUNT.RENAME]: [RequestAccountRename, boolean];
     [Messages.ACCOUNT.SELECT]: [RequestAccountSelect, boolean];
     [Messages.ACCOUNT.GET_BALANCE]: [string, BigNumber];
+    [Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES]: [void, void];
     [Messages.ACCOUNT.GET_NATIVE_TOKEN_BALANCE]: [
         number,
         BigNumber | undefined
@@ -322,6 +328,7 @@ export interface RequestSignatures {
     [Messages.EXCHANGE.APPROVE]: [RequestApproveExchange, boolean];
     [Messages.EXCHANGE.GET_QUOTE]: [RequestGetExchangeQuote, SwapQuote];
     [Messages.EXCHANGE.GET_EXCHANGE]: [RequestGetExchange, SwapParameters];
+    [Messages.EXCHANGE.GET_SPENDER]: [RequestGetExchangeSpender, string];
     [Messages.EXCHANGE.EXECUTE]: [RequestExecuteExchange, string];
     [Messages.EXTERNAL.REQUEST]: [RequestExternalRequest, unknown];
     [Messages.EXTERNAL.SETUP_PROVIDER]: [undefined, ProviderSetupData];
@@ -364,6 +371,10 @@ export interface RequestSignatures {
         RequestGetChainData,
         ChainListItem
     ];
+    [Messages.NETWORK.GET_DEFAULT_RPC]: [
+        RequestGetChainData,
+        string | undefined
+    ];
     [Messages.NETWORK.GET_RPC_CHAIN_ID]: [RequestGetRpcChainId, number];
     [Messages.NETWORK.SEARCH_CHAINS]: [
         RequestSearchChains,
@@ -400,6 +411,10 @@ export interface RequestSignatures {
     [Messages.TRANSACTION.SEND_ETHER]: [RequestSendEther, string];
     [Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION]: [
         RequestAddAsNewSendTransaction,
+        TransactionMeta
+    ];
+    [Messages.TRANSACTION.ADD_NEW_APPROVE_TRANSACTION]: [
+        RequestAddAsNewApproveTransaction,
         TransactionMeta
     ];
     [Messages.TRANSACTION.UPDATE_SEND_TRANSACTION_GAS]: [
@@ -457,6 +472,7 @@ export interface RequestSignatures {
     [Messages.TOKEN.SEND_TOKEN]: [RequestSendToken, string];
     [Messages.TOKEN.POPULATE_TOKEN_DATA]: [RequestPopulateTokenData, Token];
     [Messages.TOKEN.SEARCH_TOKEN]: [RequestSearchToken, SearchTokensResponse];
+    [Messages.TOKEN.APPROVE_ALLOWANCE]: [RequestApproveAllowance, boolean];
     [Messages.EXTERNAL.EVENT_SUBSCRIPTION]: [
         undefined,
         boolean,
@@ -635,12 +651,24 @@ export interface RequestGetExchange {
     exchangeParams: OneInchSwapRequestParams;
 }
 
+export interface RequestGetExchangeSpender {
+    exchangeType: ExchangeType;
+}
+
 export interface RequestExecuteExchange {
     exchangeType: ExchangeType;
     exchangeParams: SwapTransaction;
 }
 
 export interface RequestApproveBridgeAllowance {
+    allowance: BigNumber;
+    amount: BigNumber;
+    spenderAddress: string;
+    feeData: TransactionFeeData;
+    tokenAddress: string;
+    customNonce?: number;
+}
+export interface RequestApproveAllowance {
     allowance: BigNumber;
     amount: BigNumber;
     spenderAddress: string;
@@ -870,6 +898,12 @@ export interface RequestAddAsNewSendTransaction {
     to: string;
     value: BigNumber;
     feeData: TransactionFeeData;
+}
+
+export interface RequestAddAsNewApproveTransaction {
+    tokenAddress: string;
+    spenderAddress: string;
+    allowance: BigNumber;
 }
 
 export interface RequestUpdateSendTransactionGas {

@@ -1,23 +1,28 @@
 import { RequestError } from './http';
 
 const EXACT_MATCH_ERRORS = ['Insufficient liquidity', 'Cannot estimate'];
+const NOT_ENOUGH_BALANCE = `Balance too low to cover swap and gas cost.`;
 
 const MAPPED_ERRORS: { regex: RegExp; errorMessage: string }[] = [
     {
         regex: /balance for gas fee/i,
-        errorMessage: "You don't have enough balance for covering gas costs.",
+        errorMessage: NOT_ENOUGH_BALANCE,
+    },
+    {
+        regex: /may not have enough ETH balance/i,
+        errorMessage: NOT_ENOUGH_BALANCE,
     },
     {
         regex: /forget about miner fee./i,
-        errorMessage: "You don't have enough balance for covering gas costs.",
+        errorMessage: NOT_ENOUGH_BALANCE,
     },
     {
         regex: /enough balance/i,
-        errorMessage: 'Insufficient funds.',
+        errorMessage: NOT_ENOUGH_BALANCE,
     },
     {
         regex: /not enough/i,
-        errorMessage: 'Insufficient funds.',
+        errorMessage: NOT_ENOUGH_BALANCE,
     },
     {
         regex: /enough allowance/i,

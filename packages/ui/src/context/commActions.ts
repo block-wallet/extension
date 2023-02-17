@@ -466,6 +466,26 @@ export const addNewSendTransaction = async (
 }
 
 /**
+ * Adds a new unapproved Approve transaction
+ *
+ * @param tokenAddress The token address
+ * @param spenderAddress The spender address
+ * @param allowance The allowance amount
+ * @returns The transaction object created
+ */
+export const addNewApproveTransaction = async (
+    tokenAddress: string,
+    spenderAddress: string,
+    allowance: BigNumber
+): Promise<TransactionMeta> => {
+    return sendMessage(Messages.TRANSACTION.ADD_NEW_APPROVE_TRANSACTION, {
+        tokenAddress,
+        spenderAddress,
+        allowance,
+    })
+}
+
+/**
  * Updates the gas on an existing unapproved Send transaction
  *
  * @param transactionId The transaction id
@@ -657,7 +677,7 @@ export const sendToken = async (
  */
 export const searchTokenInAssetsList = async (
     query: string,
-    exact?: boolean,
+    exact?: boolean
 ): Promise<SearchTokensResponse> => {
     return sendMessage(Messages.TOKEN.SEARCH_TOKEN, {
         query,
@@ -675,6 +695,34 @@ export const populateTokenData = async (
 ): Promise<Token> => {
     return sendMessage(Messages.TOKEN.POPULATE_TOKEN_DATA, {
         tokenAddress,
+    })
+}
+
+/**
+ * Submits an approval transaction to setup asset allowance
+ *
+ * @param allowance User selected allowance
+ * @param amount Exchange amount
+ * @param spenderAddress The spender address for the allowance
+ * @param feeData Transaction gas fee data
+ * @param tokenAddress Asset token address
+ * @param customNonce Custom transaction nonce
+ */
+export const approveAllowance = async (
+    allowance: BigNumber,
+    amount: BigNumber,
+    spenderAddress: string,
+    feeData: TransactionFeeData,
+    tokenAddress: string,
+    customNonce?: number
+): Promise<boolean> => {
+    return sendMessage(Messages.TOKEN.APPROVE_ALLOWANCE, {
+        allowance,
+        amount,
+        spenderAddress,
+        feeData,
+        tokenAddress,
+        customNonce,
     })
 }
 
@@ -893,6 +941,15 @@ export const removeNetwork = async (chainId: number) => {
  */
 export const getSpecificChainDetails = async (chainId: number) => {
     return sendMessage(Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS, { chainId })
+}
+
+/**
+ * Gets the default rpc url for the specified chain
+ * @param chainId The chainId of the network to fetch the details from
+ * @returns The default rpc url for the specified chain
+ */
+export const getDefaultRpc = async (chainId: number) => {
+    return sendMessage(Messages.NETWORK.GET_DEFAULT_RPC, { chainId })
 }
 
 /**
@@ -1149,9 +1206,9 @@ export const toggleDefaultBrowserWallet = async (
 }
 
 /**
-* Updates the default gas option preference
-* @param defaultGasOption default gas option
-*/
+ * Updates the default gas option preference
+ * @param defaultGasOption default gas option
+ */
 export const setDefaultGasPreference = async (
     defaultGasOption: "low" | "medium" | "high"
 ): Promise<void> => {
@@ -1355,6 +1412,10 @@ export const removeHardwareWallet = async (
     return sendMessage(Messages.WALLET.HARDWARE_REMOVE, { device })
 }
 
+export const refreshTokenAllowances = (): Promise<void> => {
+    return sendMessage(Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES)
+}
+
 /**
  * Checks if the given account has enough allowance to make the exchange
  *
@@ -1434,6 +1495,20 @@ export const getExchangeParameters = async (
     return sendMessage(Messages.EXCHANGE.GET_EXCHANGE, {
         exchangeType,
         exchangeParams,
+    })
+}
+
+/**
+ *  Gets the spender address for the exchange
+ *
+ * @param exchangeType Exchange type
+ *
+ */
+export const getExchangeSpender = async (
+    exchangeType: ExchangeType
+): Promise<string> => {
+    return sendMessage(Messages.EXCHANGE.GET_SPENDER, {
+        exchangeType,
     })
 }
 

@@ -8,7 +8,11 @@ import AccountIcon from "../icons/AccountIcon"
 import { TransactionDetailsTabProps } from "./TransactionDetails"
 import arrowRight from "../../assets/images/icons/arrow_right_black.svg"
 import CopyTooltip from "../label/СopyToClipboardTooltip"
-import { formatHash, formatName } from "../../util/formatAccount"
+import {
+    formatHash,
+    formatHashLastChars,
+    formatName,
+} from "../../util/formatAccount"
 import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
 import { useAddressBook } from "../../context/hooks/useAddressBook"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
@@ -66,9 +70,93 @@ export const TransactionDetailsBasic: FunctionComponent<
                   expandable?: boolean
                   decimals?: number
                   unitName?: string
+                  link?: string
               }
             | undefined
         )[] = []
+
+        //Approve Allowance Details
+        if (
+            transaction.transactionCategory ===
+            TransactionCategories.TOKEN_METHOD_APPROVE
+        ) {
+            const spenderAddress =
+                transaction.approveAllowanceParams?.spenderAddress ||
+                "0x" + transaction.transactionParams?.data?.slice(34, 74)
+
+            const tokenAddress =
+                transaction.approveAllowanceParams?.token?.address ||
+                transaction.transactionParams?.to
+
+            const spenderData = transaction.approveAllowanceParams?.spenderInfo
+            const tokenData = transaction.approveAllowanceParams?.token
+            const isUnlimited = transaction.approveAllowanceParams?.isUnlimited
+
+            if (transaction.advancedData?.allowance) {
+                details.push({
+                    label: "Allowance",
+                    value: isUnlimited
+                        ? "Unlimited"
+                        : formatUnits(
+                              bnOr0(transaction.advancedData?.allowance),
+                              transaction.advancedData?.decimals
+                          ),
+                    decimals: transaction.advancedData?.decimals,
+                    unitName: tokenData && tokenData?.symbol,
+                })
+            }
+
+            if (spenderAddress) {
+                details.push({
+                    label: "Spender",
+                    value: spenderData
+                        ? formatName(spenderData.name, 18)
+                        : `Spender ${formatHashLastChars(spenderAddress)}`,
+                    link: generateExplorerLink(
+                        state.availableNetworks,
+                        state.selectedNetwork,
+                        spenderAddress,
+                        "address"
+                    ),
+                })
+            }
+
+            if (tokenAddress) {
+                details.push({
+                    label: "Token",
+                    value: tokenData
+                        ? formatName(tokenData.name, 18)
+                        : tokenAddress,
+                    link: generateExplorerLink(
+                        state.availableNetworks,
+                        state.selectedNetwork,
+                        tokenAddress,
+                        "address"
+                    ),
+                })
+            }
+
+            if (gasLimit.gt(0)) {
+                let txFee = BigNumber.from(0)
+
+                if (maxPriorityFeePerGas.gt(0) && maxFeePerGas.gt(0)) {
+                    txFee = maxFeePerGas.mul(gasLimit)
+                } else if (gasPrice.gt(0)) {
+                    txFee = gasPrice.mul(gasLimit)
+                }
+
+                if (txFee.gt(0)) {
+                    details.push({
+                        label: "Transaction fee",
+                        value: formatUnits(txFee, nativeCurrency.decimals),
+                        decimals: 10,
+                        unitName: nativeCurrency.symbol,
+                    })
+                }
+            }
+
+            return details
+        }
 
         // Swap details
         if (

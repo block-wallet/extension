@@ -1,5 +1,5 @@
 import { id } from '@ethersproject/hash';
-import { hexZeroPad } from 'ethers/lib/utils';
+import { hexZeroPad } from '@ethersproject/bytes';
 import { WatchedTransactionType } from '../controllers/transactions/utils/types';
 
 type ChainTopics = (string | null)[];
@@ -15,7 +15,7 @@ const TOKEN_ALLOWACE_SIGNATURES: { [type in WatchedTransactionType]: string } =
     {
         txlist: '',
         tokentx: id('Approval(address,address,uint256)'),
-        token1155tx: 'ApprovalForAll(address,address,bool)',
+        token1155tx: id('ApprovalForAll(address,address,bool)'),
         tokennfttx: id('Approval(address,address,uint256)'), //maybe add ApprovalForAll(address,address,bool)??
     };
 

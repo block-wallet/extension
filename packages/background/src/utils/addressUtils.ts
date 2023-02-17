@@ -1,5 +1,6 @@
 import { toChecksumAddress } from 'ethereumjs-util';
-import { defaultAbiCoder, hexDataLength } from 'ethers/lib/utils';
+import { defaultAbiCoder } from '@ethersproject/abi';
+import { hexDataLength } from '@ethersproject/bytes';
 
 export function paddedToChecksumAddress(paddedAddress: string): string {
     try {

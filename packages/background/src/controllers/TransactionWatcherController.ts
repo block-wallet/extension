@@ -808,7 +808,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         const chainLastMinedBlock =
             this._blockUpdatesController.getBlockNumber();
 
-        const incoming = await rpcLogsFetcher.getLogsFromChainInBatch(
+        const incoming = await rpcLogsFetcher.getLogsInBatch(
             {
                 fromBlock: lastBlockQueried,
                 toBlock: currentBlock,
@@ -818,7 +818,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
             chainLastMinedBlock
         );
 
-        const outgoing = await rpcLogsFetcher.getLogsFromChainInBatch(
+        const outgoing = await rpcLogsFetcher.getLogsInBatch(
             {
                 fromBlock: lastBlockQueried,
                 toBlock: currentBlock,
@@ -855,7 +855,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
 
         const lastMinedBlock = this._blockUpdatesController.getBlockNumber();
 
-        const logs = await rpcLogsFetcher.getLogsFromChainInBatch(
+        const logs = await rpcLogsFetcher.getLogsInBatch(
             {
                 fromBlock: lastBlockQueried,
                 toBlock: currentBlock,

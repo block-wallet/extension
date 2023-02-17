@@ -2,7 +2,7 @@ import { isNativeTokenAddress } from "../tokenUtils"
 import { RichedTransactionMeta } from "../transactionUtils"
 import useTransactions from "./useTransactions"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 
 const useTokenTransactions = (token: Token | undefined) => {
     if (!token) {

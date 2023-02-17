@@ -993,7 +993,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
 
             const logs = await runPromiseSafely(
-                rpcLogsFetcher.getLogsFromChainInBatch(
+                rpcLogsFetcher.getLogsInBatch(
                     {
                         topics: getTokenApprovalLogsTopics(
                             accountAddress,

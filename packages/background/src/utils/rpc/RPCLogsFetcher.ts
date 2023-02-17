@@ -27,7 +27,7 @@ export class RPCLogsFetcher {
      * @param toBlock end block of the query
      * @returns
      */
-    public async batchedChainQuery(
+    public async batchedQuery(
         fromBlock: number,
         toBlock: number,
         chunkExecutor: (
@@ -49,11 +49,18 @@ export class RPCLogsFetcher {
         }
     }
 
-    private _getBlockAsNumber(block: string | number): number {
-        return typeof block === 'string' ? parseInt(block) : block;
+    private _getBlockAsNumber(
+        block: string | number | 'latest'
+    ): Promise<number> {
+        if (block === 'latest') {
+            return this.provider.getBlockNumber();
+        }
+        return Promise.resolve(
+            typeof block === 'string' ? parseInt(block) : block
+        );
     }
 
-    public async getLogsFromChainInBatch(
+    public async getLogsInBatch(
         filter: Filter,
         lastMinedBlock?: number
     ): Promise<Log[]> {
@@ -62,21 +69,27 @@ export class RPCLogsFetcher {
             throw new Error('You must specify a block range.');
         }
 
-        const fromBlock = this._getBlockAsNumber(filter.fromBlock);
+        let lastBlock = lastMinedBlock;
 
-        const toBlock = this._getBlockAsNumber(filter.toBlock);
+        if (!lastBlock) {
+            lastBlock = await this.provider.getBlockNumber();
+        }
 
-        await this.batchedChainQuery(
+        const fromBlock = await this._getBlockAsNumber(filter.fromBlock);
+
+        const toBlock = await this._getBlockAsNumber(filter.toBlock);
+
+        await this.batchedQuery(
             fromBlock,
             toBlock,
             async (chunkFromBlock, chunkToBlock) => {
-                const newLogs = await this.getLogsFromChain(
+                const newLogs = await this._getLogs(
                     {
                         ...filter,
                         fromBlock: chunkFromBlock,
                         toBlock: chunkToBlock,
                     },
-                    lastMinedBlock
+                    lastBlock as number
                 );
                 logs = logs.concat(newLogs);
             }
@@ -90,21 +103,19 @@ export class RPCLogsFetcher {
      * @param provider
      * @returns
      */
-    public getLogsFromChain = async (
+    private _getLogs = async (
         filter: Filter,
-        lastMinedBlock?: number
+        lastMinedBlock: number
     ): Promise<Log[]> => {
         let logs: Log[] = [];
 
-        let lastBlock = lastMinedBlock;
-
-        if (!lastBlock) {
-            lastBlock = await this.provider.getBlockNumber();
-        }
-
         // check to block
-        if (filter.toBlock && lastBlock > 0 && filter.toBlock > lastBlock) {
-            filter.toBlock = lastBlock;
+        if (
+            filter.toBlock &&
+            lastMinedBlock > 0 &&
+            filter.toBlock > lastMinedBlock
+        ) {
+            filter.toBlock = lastMinedBlock;
         }
 
         try {
@@ -122,23 +133,23 @@ export class RPCLogsFetcher {
             const fromBlock = parseInt((filter.fromBlock as string) || '0');
             if (toBlock - fromBlock > 1) {
                 return [
-                    ...(await this.getLogsFromChain(
+                    ...(await this._getLogs(
                         {
                             ...filter,
                             toBlock: Math.ceil(
                                 fromBlock + (toBlock - fromBlock) / 2
                             ),
                         },
-                        lastBlock
+                        lastMinedBlock
                     )),
-                    ...(await this.getLogsFromChain(
+                    ...(await this._getLogs(
                         {
                             ...filter,
                             fromBlock: Math.ceil(
                                 fromBlock + (toBlock - fromBlock) / 2 + 1
                             ),
                         },
-                        lastBlock
+                        lastMinedBlock
                     )),
                 ];
             } else {

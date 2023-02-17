@@ -1,5 +1,5 @@
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
-import { Filter, Log } from '@ethersproject/abstract-provider';
+import { Filter, Log, BlockTag } from '@ethersproject/abstract-provider';
 import { SECOND } from '../constants/time';
 import log from 'loglevel';
 import { checkIfNotAllowedError } from '../ethersError';
@@ -12,6 +12,8 @@ import {
 import { isNil } from 'lodash';
 import { fetchBlockWithRetries } from '../blockFetch';
 import { unixTimestampToJSTimestamp } from '../timestamp';
+
+const BLOCK_TAGS = ['latest', 'safe', 'finished'];
 
 export class RPCLogsFetcher {
     private readonly chainId: number;
@@ -49,14 +51,12 @@ export class RPCLogsFetcher {
         }
     }
 
-    private _getBlockAsNumber(
-        block: string | number | 'latest'
-    ): Promise<number> {
-        if (block === 'latest') {
+    private _getBlockAsNumber(blockTag: BlockTag): Promise<number> {
+        if (typeof blockTag === 'string' && BLOCK_TAGS.includes(blockTag)) {
             return this.provider.getBlockNumber();
         }
         return Promise.resolve(
-            typeof block === 'string' ? parseInt(block) : block
+            typeof blockTag === 'string' ? parseInt(blockTag) : blockTag
         );
     }
 

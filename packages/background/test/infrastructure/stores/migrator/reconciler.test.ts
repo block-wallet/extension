@@ -208,6 +208,7 @@ const initialState: BlankAppState & {
         settings: {
             hideAddressWarning: false,
             subscribedToReleaseaNotes: true,
+            subscribedToNotifications: true,
             useAntiPhishingProtection: true,
             defaultBrowserWallet: true,
             hideEstimatedGasExceedsThresholdWarning: false,
@@ -221,7 +222,7 @@ const initialState: BlankAppState & {
         filters: {
             account: [],
         },
-        defaultGasOption: "medium"
+        defaultGasOption: 'medium',
     },
     TransactionController: {
         transactions: [],
@@ -429,6 +430,7 @@ describe('State reconciler', () => {
                 showDefaultWalletPreferences: false,
                 popupTab: 'activity',
                 settings: {
+                    subscribedToNotifications: true,
                     subscribedToReleaseaNotes: true,
                     hideAddressWarning: false,
                     useAntiPhishingProtection: true,
@@ -444,7 +446,7 @@ describe('State reconciler', () => {
                 filters: {
                     account: [],
                 },
-                defaultGasOption: 'medium'
+                defaultGasOption: 'medium',
             },
             TransactionController: {
                 transactions: [],

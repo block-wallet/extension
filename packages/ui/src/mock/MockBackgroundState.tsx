@@ -423,6 +423,7 @@ export const initBackgroundState: BackgroundStateType = {
         popupTab: "activity",
         settings: {
             hideAddressWarning: false,
+            subscribedToNotifications: true,
             subscribedToReleaseaNotes: false,
             useAntiPhishingProtection: false,
             defaultBrowserWallet: true,

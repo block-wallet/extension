@@ -147,6 +147,7 @@ const initialState: BlankAppState = {
         settings: {
             hideAddressWarning: false, // Shown by default,
             subscribedToReleaseaNotes: true,
+            subscribedToNotifications: true,
             useAntiPhishingProtection: true,
             defaultBrowserWallet: true,
             hideEstimatedGasExceedsThresholdWarning: false, // Shown by default,

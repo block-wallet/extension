@@ -3144,7 +3144,6 @@ export default class BlankController extends EventEmitter {
     private async hardwareQrSubmitCryptoHdKeyOrAccount({
         qr,
     }: SubmitQRHardwareCryptoHDKeyOrAccountMessage): Promise<boolean> {
-        console.log('hardwareQrSubmitCryptoHdKeyOrAccount', { qr });
         try {
             const decoder = new URRegistryDecoder();
             if (!decoder.receivePart(qr)) {
@@ -3152,8 +3151,7 @@ export default class BlankController extends EventEmitter {
             }
 
             if (!decoder.isSuccess() || decoder.isError()) {
-                console.log(decoder.resultError());
-                return false;
+                throw new Error(decoder.resultError());
             }
 
             const result = decoder.resultRegistryType();
@@ -3178,7 +3176,6 @@ export default class BlankController extends EventEmitter {
         requestId,
         qr,
     }: SubmitQRHardwareSignatureMessage): Promise<boolean> {
-        console.log('hardwareQrSubmitSignature', { qr });
         try {
             const decoder = new URRegistryDecoder();
             if (!decoder.receivePart(qr)) {
@@ -3186,8 +3183,7 @@ export default class BlankController extends EventEmitter {
             }
 
             if (!decoder.isSuccess() || decoder.isError()) {
-                console.log(decoder.resultError());
-                return false;
+                throw new Error(decoder.resultError());
             }
 
             const ur = decoder.resultUR();

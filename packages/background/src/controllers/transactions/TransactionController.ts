@@ -377,11 +377,6 @@ export class TransactionController extends BaseController<
                 qrSignRequest,
             } as QRTransactionParams;
 
-            console.log('transaction controller', 'qr sign request set', {
-                transactionId,
-                qrParams: transactionMeta.qrParams,
-            });
-
             this.updateTransaction(transactionMeta);
         }
     };
@@ -1102,18 +1097,10 @@ export class TransactionController extends BaseController<
             txParams
         );
 
-        console.log('transaction controller', 'calling signWithTimeout');
-
         const signedTx = await this.signWithTimeout(
             transactionId,
             unsignedEthTx,
             from
-        );
-
-        console.log(
-            'transaction controller',
-            'signWithTimeout result',
-            signedTx
         );
 
         // Add r,s,v values

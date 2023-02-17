@@ -67,6 +67,7 @@ import { rejectTransaction } from "../../context/commActions"
 import { getValueByKey } from "../../util/objectUtils"
 import { AddressDisplay } from "../../components/addressBook/AddressDisplay"
 import { useAccountNameByAddress } from "../../context/hooks/useAccountNameByAddress"
+import log from "loglevel"
 
 // Schema
 const GetAmountYupSchema = (
@@ -646,7 +647,7 @@ const SendConfirmPage = () => {
                     gasLimit: BigNumber.from(gasLimit),
                 })
             } catch (error) {
-                console.log("error ", error)
+                log.error("error ", error)
             } finally {
                 setIsGasLoading(false)
             }

@@ -1119,7 +1119,9 @@ export class TransactionController extends BaseController<
             !isValidSignature(
                 signedTx.v,
                 bigIntToBuffer(signedTx.r),
-                bigIntToBuffer(signedTx.s)
+                bigIntToBuffer(signedTx.s),
+                undefined,
+                BigInt(this._networkController.network.chainId)
             )
         ) {
             throw new Error('An error while signing the transaction ocurred');

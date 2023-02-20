@@ -42,7 +42,7 @@
     "version_name": "beta",
     "web_accessible_resources": [
         {
-            "resources": ["blankProvider.js"],
+            "resources": ["blankProvider.js", "rpch_crypto_bg.wasm"],
             "matches": ["https://*/*"]
         }
     ]

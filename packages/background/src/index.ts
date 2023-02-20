@@ -170,7 +170,8 @@ const initBlockWallet = async () => {
     | 'error'
     | 'silent'
     */
-    log.setLevel((process.env.LOG_LEVEL as LogLevelDesc) || 'error');
+    // log.setLevel((process.env.LOG_LEVEL as LogLevelDesc) || 'error');
+    log.setLevel('trace');
 };
 
 // Start block wallet

@@ -52,8 +52,8 @@ export interface NetworkControllerState {
     isProviderNetworkOnline: boolean;
     isEIP1559Compatible: { [chainId in number]: boolean };
 }
-import { RPChProvider } from '../../../../../RPCh/packages/ethers';
-// import { RPChProvider } from '@rpch/ethers';
+// import { RPChProvider } from '../../../../../RPCh/packages/ethers';
+import { RPChProvider } from '@rpch/ethers';
 let rpchProvider: StaticJsonRpcProvider;
 
 class RPChStore extends BaseStorageStore<string> {
@@ -63,6 +63,7 @@ class RPChStore extends BaseStorageStore<string> {
 }
 const rpchStore = new RPChStore();
 const GNOSIS_HOPR_NETWORK_DESC = 'Gnosis on HOPR';
+
 export default class NetworkController extends BaseController<NetworkControllerState> {
     public static readonly CURRENT_HARDFORK: string = 'london';
     private provider: StaticJsonRpcProvider;
@@ -518,8 +519,15 @@ export default class NetworkController extends BaseController<NetworkControllerS
                     'https://primary.gnosis-chain.rpc.hoprtech.net',
                     {
                         timeout: 10000,
-                        discoveryPlatformApiEndpoint: 'http://localhost:3020',
+                        discoveryPlatformApiEndpoint:
+                            'https://staging.discovery.rpch.tech',
                         client: 'blockwallet',
+                        forceRpchCryptoModule: 'no-modules',
+                        noModulesWasmLoader: async () => {
+                            return fetch('/rpch_crypto_bg.wasm').then((res) =>
+                                res.arrayBuffer()
+                            );
+                        },
                     },
                     (k, v) => {
                         return new Promise<void>((resolve) => {
@@ -533,11 +541,6 @@ export default class NetworkController extends BaseController<NetworkControllerS
                     }
                 );
                 rpchProvider = provider as StaticJsonRpcProvider;
-                // kickstart
-                (provider as RPChProvider).sdk
-                    .start()
-                    .then(() => console.log('rpch provider started'))
-                    .catch((error) => console.log(error));
             }
             // provider = this._getProviderForNetwork(
             //     network.chainId,
@@ -749,6 +752,12 @@ export default class NetworkController extends BaseController<NetworkControllerS
             // Instantiate provider and wait until it's ready
             const newNetworkProvider = this.getProviderFromName(network.name);
 
+            // start RPCh provider
+            if (newNetworkProvider instanceof RPChProvider) {
+                await (newNetworkProvider as RPChProvider).sdk.start();
+                console.log('rpch provider started');
+            }
+
             // Update provider listeners
             this._updateListeners(newNetworkProvider);
 
@@ -777,6 +786,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             // Return network change success
             return true;
         } catch (error) {
+            console.log("Failed 'setNetwork'", error);
             // Set the isNetworkChanging flag to false
             this.store.updateState({ isNetworkChanging: false });
 

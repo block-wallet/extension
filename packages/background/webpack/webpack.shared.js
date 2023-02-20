@@ -26,14 +26,6 @@ const plugins = [
     }),
     new webpack.IgnorePlugin({ resourceRegExp: /^worker_threads$/ }),
     new webpack.IgnorePlugin({ resourceRegExp: /^fs$/ }),
-    // ignore 'crypto-bridge/nodejs' library
-    new webpack.IgnorePlugin({
-        resourceRegExp: /^@rpch\/crypto-bridge\/nodejs$/,
-    }),
-    // ignore 'ws' library
-    new webpack.IgnorePlugin({
-        resourceRegExp: /^ws$/,
-    }),
     new ESLintWebpackPlugin({
         extensions: ['ts'],
         eslintPath: require.resolve('eslint'),

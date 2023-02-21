@@ -7,7 +7,7 @@ interface Props {
     onRead: (qr: string) => Promise<boolean>
 }
 
-const QrContainer = (props: Props) => {
+const QrContainer : FC<Props> = ({ deviceNotReady, className, onRead }) => {
     const lastResult = useRef()
     const done = useRef(false)
 

@@ -1151,6 +1151,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 execPromise
                     .then((data) => {
                         __clearTimeouts();
+                        __clearListeners();
                         const { dappRequests } = this.store.getState();
                         if (reqId in dappRequests) {
                             // At this point the promise has been already rejected by the setInterval function.
@@ -1165,6 +1166,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
                     })
                     .catch((e) => {
                         __clearTimeouts();
+                        __clearListeners();
                         const { dappRequests } = this.store.getState();
                         if (reqId in dappRequests) {
                             reject(e);

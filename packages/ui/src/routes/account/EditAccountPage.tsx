@@ -21,7 +21,7 @@ const editAccountSchema = yup.object().shape({
         .string()
         .trim()
         .required("Please enter an account name")
-        .max(40, "Account name is too long"),
+        .max(20, "Account name is too long"),
 })
 type editAccountFormData = { accountName: string }
 const EditAccountPage = () => {

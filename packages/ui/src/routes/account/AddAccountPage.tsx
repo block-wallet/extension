@@ -20,7 +20,7 @@ import useNewAccountHelper from "./useNewAccountHelper"
 
 // Schema
 const createAccountSchema = yup.object({
-    accountName: yup.string().max(40, "Account name is too long"),
+    accountName: yup.string().max(20, "Account name is too long"),
 })
 type createAccountFormData = { accountName: string }
 

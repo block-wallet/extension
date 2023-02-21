@@ -96,9 +96,8 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
 
     const history = useHistory()
 
-    const internalAccountsNumber = accounts.filter(
-        (account) =>
-            isInternalAccount(account.accountType) && isActiveAccount(account)
+    const accountsNumber = accounts.filter((account) =>
+        isActiveAccount(account)
     ).length
 
     const getAccountOptions = (account: AccountInfo) => {
@@ -116,7 +115,7 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                 {
                     optionType: AccountMenuOptionType.HIDE_ACCOUNT,
                     handler: hideAccount,
-                    disabled: internalAccountsNumber === 1,
+                    disabled: accountsNumber === 1,
                 },
             ]
         }
@@ -124,6 +123,7 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
             {
                 optionType: AccountMenuOptionType.REMOVE_ACCOUNT,
                 handler: removeAccount,
+                disabled: accountsNumber === 1,
             },
         ]
     }

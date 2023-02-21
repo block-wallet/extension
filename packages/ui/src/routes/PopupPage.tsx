@@ -60,7 +60,10 @@ const AccountDisplay = () => {
             className="relative flex flex-col group"
             onClick={copy}
         >
-            <span className="text-sm font-bold" data-testid="account-name">
+            <span
+                className="text-sm font-bold truncate max-w-[96px]"
+                data-testid="account-name"
+            >
                 {formatName(account.name, 18)}
             </span>
             <span className="text-xs text-gray-600 truncate">

@@ -1197,6 +1197,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
             }
         } finally {
             __clearTimeouts();
+            __clearListeners();
 
             // Resolve the handleDapRequest callback only if the request
             // did not have an unexpected error

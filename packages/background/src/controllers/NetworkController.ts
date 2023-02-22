@@ -26,6 +26,7 @@ import { cloneDeep } from 'lodash';
 import { checkIfRateLimitError } from '../utils/ethersError';
 import { getChainListItem } from '../utils/chainlist';
 import { FEATURES } from '../utils/constants/features';
+import { INITIAL_NETWORKS } from '../utils/constants/networks';
 import {
     formatAndValidateRpcURL,
     getUrlWithoutTrailingSlash,
@@ -62,7 +63,6 @@ class RPChStore extends BaseStorageStore<string> {
     }
 }
 const rpchStore = new RPChStore();
-const GNOSIS_HOPR_NETWORK_DESC = 'Gnosis on HOPR';
 
 export default class NetworkController extends BaseController<NetworkControllerState> {
     public static readonly CURRENT_HARDFORK: string = 'london';
@@ -516,7 +516,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         let provider: StaticJsonRpcProvider;
 
         // RPCh only on Gnosis
-        if (network.desc === GNOSIS_HOPR_NETWORK_DESC) {
+        if (network.name === INITIAL_NETWORKS.GNOSIS_RPCH.name) {
             // if already initialized
             if (rpchProvider) {
                 provider = rpchProvider;
@@ -550,10 +550,6 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 );
                 rpchProvider = provider as StaticJsonRpcProvider;
             }
-            // provider = this._getProviderForNetwork(
-            //     network.chainId,
-            //     network.rpcUrls[0]
-            // );
         } else {
             provider = this._getProviderForNetwork(
                 network.chainId,

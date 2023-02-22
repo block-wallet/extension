@@ -411,9 +411,9 @@ export const INITIAL_NETWORKS: Networks = {
         },
         nativelySupported: true,
     },
-    GNOSIS_HOPR: {
-        name: 'Gnosis_HOPR',
-        desc: 'Gnosis on HOPR',
+    GNOSIS_RPCH: {
+        name: 'Gnosis_RPCh',
+        desc: 'Gnosis on RPCh',
         chainId: 100,
         networkVersion: '100',
         nativeCurrency: {

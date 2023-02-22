@@ -1,4 +1,4 @@
-import { useRef } from "react"
+import { FC, useRef } from "react"
 import { QrReader } from "react-qr-reader"
 
 interface Props {
@@ -7,7 +7,7 @@ interface Props {
     onRead: (qr: string) => Promise<boolean>
 }
 
-const QrContainer : FC<Props> = ({ deviceNotReady, className, onRead }) => {
+const QrContainer: FC<Props> = ({ deviceNotReady, className, onRead }) => {
     const lastResult = useRef()
     const done = useRef(false)
 
@@ -23,20 +23,20 @@ const QrContainer : FC<Props> = ({ deviceNotReady, className, onRead }) => {
         }
 
         lastResult.current = result.text
-        if (await props.onRead(result.text)) {
+        if (await onRead(result.text)) {
             done.current = true
         }
     }
     return (
         <>
-            {!props.deviceNotReady ? (
+            {!deviceNotReady ? (
                 <>
                     <div style={{ filter: "blur(5px)" }}>
                         <QrReader
                             constraints={{ facingMode: "environment" }}
                             scanDelay={250}
                             onResult={onReadResult}
-                            className={props.className}
+                            className={className}
                         />
                     </div>
                 </>

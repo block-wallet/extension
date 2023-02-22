@@ -26,13 +26,13 @@ import {
     TokenController,
     TokenControllerProps,
 } from '@block-wallet/background/controllers/erc-20/TokenController';
-import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
 import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
 import { mockedPermissionsController } from './mock-permissions';
 import { TypedTransaction } from '@ethereumjs/tx';
 import { GasPricesController } from '@block-wallet/background/controllers/GasPricesController';
 import { BigNumber } from 'ethers';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import { mockKeyringController } from './mock-keyring-controller';
 
 let exchangeRatesControllerETH: ExchangeRatesControllerState;
@@ -136,6 +136,7 @@ transactionWatcherController = new TransactionWatcherController(
     transactionController,
     {
         transactions: {},
+        tokenAllowanceEvents: {},
     }
 );
 
@@ -162,6 +163,7 @@ accountTrackerControllerState = {
     accounts: {
         [ACCOUNT_ADDRESS]: {
             name: 'Account 1',
+            allowances: {},
             index: 1,
             status: AccountStatus.ACTIVE,
             address: ACCOUNT_ADDRESS,

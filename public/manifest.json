@@ -55,7 +55,7 @@
         "https://*.polygonscan.com/*"
     ],
     "short_name": "BlockWallet",
-    "version": "0.5.7",
+    "version": "0.6.0",
     "web_accessible_resources": [
         "blankProvider.js"
     ]

@@ -49,6 +49,7 @@ import { BaseController } from '../infrastructure/BaseController';
 import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
 import { fillTokenData, isNativeTokenAddress } from '../utils/token';
 import { AccountTrackerController } from './AccountTrackerController';
+import { unixTimestampToJSTimestamp } from '../utils/timestamp';
 const TIMEOUT_FETCH_RECEIVING_TX = 2 * HOUR;
 const STATUS_API_CALLS_DELAY = 30 * SECOND;
 const BRIDGE_STATUS_INVALID_MAX_COUNT = 10;
@@ -1031,8 +1032,9 @@ export default class BridgeController extends BaseController<
                 receivingChainIdProvider
             );
             if (block) {
-                //transform to miliseconds
-                txConfirmationTime = block.timestamp * 1000;
+                txConfirmationTime = unixTimestampToJSTimestamp(
+                    block.timestamp
+                );
             }
         }
 

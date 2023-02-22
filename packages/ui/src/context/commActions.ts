@@ -466,6 +466,26 @@ export const addNewSendTransaction = async (
 }
 
 /**
+ * Adds a new unapproved Approve transaction
+ *
+ * @param tokenAddress The token address
+ * @param spenderAddress The spender address
+ * @param allowance The allowance amount
+ * @returns The transaction object created
+ */
+export const addNewApproveTransaction = async (
+    tokenAddress: string,
+    spenderAddress: string,
+    allowance: BigNumber
+): Promise<TransactionMeta> => {
+    return sendMessage(Messages.TRANSACTION.ADD_NEW_APPROVE_TRANSACTION, {
+        tokenAddress,
+        spenderAddress,
+        allowance,
+    })
+}
+
+/**
  * Updates the gas on an existing unapproved Send transaction
  *
  * @param transactionId The transaction id
@@ -675,6 +695,34 @@ export const populateTokenData = async (
 ): Promise<Token> => {
     return sendMessage(Messages.TOKEN.POPULATE_TOKEN_DATA, {
         tokenAddress,
+    })
+}
+
+/**
+ * Submits an approval transaction to setup asset allowance
+ *
+ * @param allowance User selected allowance
+ * @param amount Exchange amount
+ * @param spenderAddress The spender address for the allowance
+ * @param feeData Transaction gas fee data
+ * @param tokenAddress Asset token address
+ * @param customNonce Custom transaction nonce
+ */
+export const approveAllowance = async (
+    allowance: BigNumber,
+    amount: BigNumber,
+    spenderAddress: string,
+    feeData: TransactionFeeData,
+    tokenAddress: string,
+    customNonce?: number
+): Promise<boolean> => {
+    return sendMessage(Messages.TOKEN.APPROVE_ALLOWANCE, {
+        allowance,
+        amount,
+        spenderAddress,
+        feeData,
+        tokenAddress,
+        customNonce,
     })
 }
 
@@ -1364,6 +1412,10 @@ export const removeHardwareWallet = async (
     return sendMessage(Messages.WALLET.HARDWARE_REMOVE, { device })
 }
 
+export const refreshTokenAllowances = (): Promise<void> => {
+    return sendMessage(Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES)
+}
+
 export const hardwareQrSubmitCryptoHdKeyOrAccount = async (
     qr: string
 ): Promise<boolean> => {
@@ -1468,6 +1520,20 @@ export const getExchangeParameters = async (
     return sendMessage(Messages.EXCHANGE.GET_EXCHANGE, {
         exchangeType,
         exchangeParams,
+    })
+}
+
+/**
+ *  Gets the spender address for the exchange
+ *
+ * @param exchangeType Exchange type
+ *
+ */
+export const getExchangeSpender = async (
+    exchangeType: ExchangeType
+): Promise<string> => {
+    return sendMessage(Messages.EXCHANGE.GET_SPENDER, {
+        exchangeType,
     })
 }
 

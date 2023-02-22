@@ -28,8 +28,10 @@ import { TypedTransaction } from '@ethereumjs/tx';
 import { getNetworkControllerInstance } from '../../../mocks/mock-network-instance';
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
-import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
+import { IAccountTokens } from '@block-wallet/background/controllers/erc-20/Token';
 import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
+
 
 describe('ApproveTransaction implementation', function () {
     const daiAddress = '0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60';
@@ -75,7 +77,23 @@ describe('ApproveTransaction implementation', function () {
 
         tokenController = new TokenController(
             {
-                userTokens: {} as any,
+                userTokens: {
+                    [preferencesController.getSelectedAddress()]: {
+                        [networkController.network.chainId]: {
+                            [daiAddress]: {
+                                address: daiAddress,
+                                decimals: 18,
+                                logo: '',
+                                name: 'DAI',
+                                symbol: 'DAI',
+                                type: 'ERC20',
+                                totalSupply: BigNumber.from(
+                                    '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+                                ),
+                            },
+                        },
+                    },
+                } as IAccountTokens,
                 deletedUserTokens: {} as any,
                 cachedPopulatedTokens: {} as any,
             },
@@ -459,11 +477,15 @@ describe('ApproveTransaction implementation', function () {
                 expect(updatedMeta).to.be.not.undefined;
                 expect(updatedMeta!.id).to.be.not.null;
                 expect(updatedMeta!.id).to.be.not.undefined;
-                expect(meta.transactionParams.maxFeePerGas?.eq(2000000)).to.be
-                    .true;
-                expect(meta.transactionParams.maxPriorityFeePerGas?.eq(200000))
+                expect(updatedMeta!.transactionParams.maxFeePerGas?.eq(2000000))
                     .to.be.true;
-                expect(meta.transactionParams.gasLimit?.eq(200000)).to.be.true;
+                expect(
+                    updatedMeta!.transactionParams.maxPriorityFeePerGas?.eq(
+                        200000
+                    )
+                ).to.be.true;
+                expect(updatedMeta!.transactionParams.gasLimit?.eq(200000)).to
+                    .be.true;
             });
         });
 

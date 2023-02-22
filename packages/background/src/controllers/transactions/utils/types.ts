@@ -8,9 +8,10 @@ import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Transaction } from '@ethersproject/transactions';
 import { CurrencyAmountPair } from '../../privacy/types';
-import { IToken } from '../../erc-20/Token';
+import { IToken, Token } from '../../erc-20/Token';
 import { ExchangeParams } from '../../SwapController';
 import { ContractMethodSignature } from '../ContractSignatureParser';
+import { ContractDetails } from '../../../utils/contractsInfo';
 
 /**
  * TransactionParams../../privacy/types
@@ -97,6 +98,7 @@ export interface TransactionMeta {
     originId?: string;
     exchangeParams?: ExchangeParams;
     bridgeParams?: BridgeTransactionParams;
+    approveAllowanceParams?: ApproveAllowanceParams;
 }
 
 export interface BridgeTransactionParams {
@@ -124,6 +126,14 @@ export interface BridgeTransactionParams {
     effectiveToChainId?: number;
     startTime?: number;
     endTime?: number;
+}
+
+export interface ApproveAllowanceParams {
+    spenderAddress: string;
+    allowanceValue: BigNumber;
+    isUnlimited: boolean;
+    spenderInfo?: ContractDetails;
+    token: Token;
 }
 
 export interface uiTransactionParams extends TransactionParams {
@@ -223,4 +233,11 @@ export interface TransactionAdvancedData {
     customNonce?: number;
     flashbots?: boolean;
     slippage?: number;
+}
+
+export enum WatchedTransactionType {
+    Native = 'txlist',
+    ERC20 = 'tokentx',
+    ERC721 = 'tokennfttx',
+    ERC1155 = 'token1155tx',
 }

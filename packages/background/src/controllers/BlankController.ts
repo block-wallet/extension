@@ -107,6 +107,9 @@ import {
     RequestAccountReset,
     RequestSetDefaultGas,
     RequestCalculateApproveTransactionGasLimit,
+    RequestApproveAllowance,
+    RequestAddAsNewApproveTransaction,
+    RequestGetExchangeSpender,
     Origin,
 } from '../utils/types/communication';
 
@@ -115,7 +118,10 @@ import { BigNumber } from '@ethersproject/bignumber';
 import BlankStorageStore from '../infrastructure/stores/BlankStorageStore';
 import { Flatten } from '../utils/types/helpers';
 import { Messages } from '../utils/types/communication';
-import { TransactionMeta } from './transactions/utils/types';
+import {
+    TransactionCategories,
+    TransactionMeta,
+} from './transactions/utils/types';
 import {
     BlankAppState,
     BlankAppUIState,
@@ -166,7 +172,7 @@ import {
     TransferTransaction,
     TransferTransactionPopulatedTransactionParams,
 } from './erc-20/transactions/TransferTransaction';
-import { TokenOperationsController } from './erc-20/transactions/Transaction';
+import { TokenOperationsController } from './erc-20/transactions/TokenOperationsController';
 import {
     ProviderEvents,
     ProviderSetupData,
@@ -737,6 +743,8 @@ export default class BlankController extends EventEmitter {
                 return this.getAccountNativeTokenBalanceForChain(
                     request as number
                 );
+            case Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES:
+                return this.refreshAccountTokenAllowances();
             case Messages.APP.GET_IDLE_TIMEOUT:
                 return this.getIdleTimeout();
             case Messages.APP.SET_IDLE_TIMEOUT:
@@ -778,6 +786,10 @@ export default class BlankController extends EventEmitter {
             case Messages.EXCHANGE.GET_EXCHANGE:
                 return this.getExchangeParameters(
                     request as RequestGetExchange
+                );
+            case Messages.EXCHANGE.GET_SPENDER:
+                return this.getExchangeSpender(
+                    request as RequestGetExchangeSpender
                 );
             case Messages.EXCHANGE.EXECUTE:
                 return this.executeExchange(request as RequestExecuteExchange);
@@ -886,6 +898,10 @@ export default class BlankController extends EventEmitter {
                 return this.addAsNewSendTransaction(
                     request as RequestAddAsNewSendTransaction
                 );
+            case Messages.TRANSACTION.ADD_NEW_APPROVE_TRANSACTION:
+                return this.addAsNewApproveTransaction(
+                    request as RequestAddAsNewApproveTransaction
+                );
             case Messages.TRANSACTION.UPDATE_SEND_TRANSACTION_GAS:
                 return this.updateSendTransactionGas(
                     request as RequestUpdateSendTransactionGas
@@ -955,6 +971,10 @@ export default class BlankController extends EventEmitter {
             case Messages.TOKEN.DELETE_CUSTOM_TOKEN:
                 return this.deleteCustomToken(
                     request as RequestDeleteCustomToken
+                );
+            case Messages.TOKEN.APPROVE_ALLOWANCE:
+                return this.approveAllowance(
+                    request as RequestApproveAllowance
                 );
             case Messages.TOKEN.ADD_CUSTOM_TOKENS:
                 return this.addCustomTokens(request as RequestAddCustomTokens);
@@ -1138,6 +1158,16 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * refreshAccountTokenAllowances
+     *
+     * It refreshes all the token allownaces for the provided filters
+     *
+     */
+    private async refreshAccountTokenAllowances(): Promise<void> {
+        return this.accountTrackerController.refreshTokenAllowances();
+    }
+
+    /**
      * Adds a new account to the default (first) HD seed phrase Keyring.
      *
      */
@@ -1241,7 +1271,7 @@ export default class BlankController extends EventEmitter {
         this.transactionController.resetTransactionsByAddress(address);
         this.permissionsController.revokeAllPermissionsOfAccount(address);
         await this.keyringController.removeAccount(address);
-        this.transactionWatcherController.resetTransactionsByAddress(address);
+        this.transactionWatcherController.resetStateByAddress(address);
         this.bridgeController.resetBridgeTransactionsByAddress(address);
         this.tokenController.resetTokensByAccount(address);
 
@@ -1259,9 +1289,7 @@ export default class BlankController extends EventEmitter {
         // Reset account
         await Promise.all([
             this.transactionController.resetTransactionsByAddress(address),
-            this.transactionWatcherController.resetTransactionsByAddress(
-                address
-            ),
+            this.transactionWatcherController.resetStateByAddress(address),
             this.tokenController.resetTokensByAccount(address),
             this.permissionsController.revokeAllPermissionsOfAccount(address),
             this.accountTrackerController.resetAccount(address),
@@ -1273,7 +1301,7 @@ export default class BlankController extends EventEmitter {
             assetAddresses: [NATIVE_TOKEN_ADDRESS],
         });
         // Refetch transactions
-        this.transactionWatcherController.fetchTransactions();
+        this.transactionWatcherController.fetchAccountOnChainEvents();
     }
 
     /**
@@ -1652,6 +1680,18 @@ export default class BlankController extends EventEmitter {
             exchangeType,
             exchangeParams
         );
+    }
+
+    /**
+     * Fetch the spender address for the specified exchange
+     *
+     * @param exchangeType Exchange type
+     *
+     */
+    private async getExchangeSpender({
+        exchangeType,
+    }: RequestGetExchangeSpender): Promise<string> {
+        return this.swapController.getSpender(exchangeType);
     }
 
     /**
@@ -2152,6 +2192,52 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * Generate an unapproved approve transaction
+     *
+     * @param tokenAddress erc20 token address
+     * @param spenderAddress spender address
+     * @param allowance  allowance amount
+     * @returns transaction object
+     */
+    private async addAsNewApproveTransaction({
+        tokenAddress,
+        spenderAddress,
+        allowance,
+    }: RequestAddAsNewApproveTransaction): Promise<TransactionMeta> {
+        const approveTransaction = new ApproveTransaction({
+            transactionController: this.transactionController,
+            preferencesController: this.preferencesController,
+            networkController: this.networkController,
+        });
+
+        const populatedApproveTransaction =
+            await approveTransaction.populateTransaction({
+                tokenAddress,
+                spender: spenderAddress,
+                amount: BigNumber.from(allowance),
+            });
+
+        const { transactionMeta, result } =
+            await this.transactionController.addTransaction({
+                transaction: {
+                    value: BigNumber.from('0'),
+                    to: tokenAddress,
+                    from: this.preferencesController
+                        .getSelectedAddress()
+                        .toLowerCase(),
+                    data: populatedApproveTransaction.data,
+                },
+                origin: 'blank',
+                customCategory: TransactionCategories.TOKEN_METHOD_APPROVE,
+            });
+
+        // As we don't care about the result here, ignore errors in transaction result
+        result.catch(() => {});
+
+        return transactionMeta;
+    }
+
+    /**
      * Update the gas for a send transaction
      *
      * @param transactionId of the transaction meta to update
@@ -2476,7 +2562,7 @@ export default class BlankController extends EventEmitter {
         await this.networkController.setNetwork(network);
 
         // reconstruct past erc20 transfers
-        this.transactionWatcherController.fetchTransactions();
+        this.transactionWatcherController.fetchAccountOnChainEvents();
 
         // Create and assign to the Wallet an anti phishing image
         this.preferencesController.assignNewPhishingPreventionImage(
@@ -2710,6 +2796,34 @@ export default class BlankController extends EventEmitter {
             accountAddress,
             chainId,
             false
+        );
+    }
+
+    /**
+     * Submits an approval transaction to setup asset allowance
+     *
+     * @param allowance User selected allowance
+     * @param amount Exchange amount
+     * @param spenderAddress The spender address
+     * @param feeData Transaction gas fee data
+     * @param tokenAddress Asset token address
+     * @param customNonce Custom transaction nonce
+     */
+    private async approveAllowance({
+        allowance,
+        amount,
+        spenderAddress,
+        feeData,
+        tokenAddress,
+        customNonce,
+    }: RequestApproveAllowance): Promise<boolean> {
+        return this.tokenAllowanceController.approveAllowance(
+            BigNumber.from(allowance),
+            BigNumber.from(amount),
+            spenderAddress,
+            feeData,
+            tokenAddress,
+            customNonce
         );
     }
 

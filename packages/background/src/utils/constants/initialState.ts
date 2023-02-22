@@ -97,7 +97,10 @@ export type BlankAppStoreConfig<S> = {
 };
 
 const initialState: BlankAppState = {
-    TransactionWatcherControllerState: { transactions: {} },
+    TransactionWatcherControllerState: {
+        transactions: {},
+        tokenAllowanceEvents: {},
+    },
     BlockFetchController: {
         blockFetchData: {
             1: {
@@ -116,6 +119,7 @@ const initialState: BlankAppState = {
     AccountTrackerController: {
         accounts: {},
         hiddenAccounts: {},
+        isRefreshingAllowances: false,
         isAccountTrackerLoading: false,
     },
     AppStateController: {

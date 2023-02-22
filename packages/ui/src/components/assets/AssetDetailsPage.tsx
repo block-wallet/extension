@@ -9,7 +9,6 @@ import { classnames } from "../../styles"
 import { formatRounded } from "../../util/formatRounded"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetAssetByTokenAddress from "../../util/hooks/useGetAssetByTokenAddress"
-import useTokenTransactions from "../../util/hooks/useTokenTransactions"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
 import { AssetIcon } from "../AssetsList"
@@ -20,7 +19,6 @@ import openExternal from "../../assets/images/icons/open_external.svg"
 import PopupHeader from "../popup/PopupHeader"
 import PopupLayout from "../popup/PopupLayout"
 import TokenSummary from "../token/TokenSummary"
-import TransactionsList from "../transactions/TransactionsList"
 
 import log from "loglevel"
 import ConfirmDialog from "../dialog/ConfirmDialog"
@@ -29,6 +27,7 @@ import SuccessDialog from "../dialog/SuccessDialog"
 import { formatName } from "../../util/formatAccount"
 import Icon, { IconName } from "../ui/Icon"
 import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
+import ActivityAllowancesView from "./ActivityAllowancesView"
 
 const AssetDetailsPage = () => {
     const state = useBlankState()!
@@ -43,7 +42,6 @@ const AssetDetailsPage = () => {
         useSelectedNetwork()
     const asset = useGetAssetByTokenAddress(address)
     const isNative = isNativeTokenAddress(address)
-    const tokenTransactions = useTokenTransactions(asset?.token)
 
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [isRemoving, setIsRemoving] = useState(false)
@@ -290,15 +288,7 @@ const AssetDetailsPage = () => {
                         )}
                     </TokenSummary.Actions>
                 </TokenSummary>
-                <div className="flex flex-col flex-1 w-full space-y-0 border-t border-gray-200">
-                    {tokenTransactions.length > 0 ? (
-                        <TransactionsList transactions={tokenTransactions} />
-                    ) : (
-                        <span className="text-sm text-gray-500 pt-4 mx-auto">
-                            You have no transactions.
-                        </span>
-                    )}
-                </div>
+                <ActivityAllowancesView />
             </div>
         </PopupLayout>
     )

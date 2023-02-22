@@ -145,7 +145,7 @@ const initialState: BlankAppState = {
         showDefaultWalletPreferences: false,
         localeInfo: 'en-US',
         nativeCurrency: 'usd',
-        showTestNetworks: true,
+        showTestNetworks: false,
         antiPhishingImage: '',
         popupTab: 'activity',
         settings: {
@@ -184,7 +184,7 @@ const initialState: BlankAppState = {
         },
     },
     NetworkController: {
-        selectedNetwork: 'goerli',
+        selectedNetwork: 'mainnet',
         availableNetworks: INITIAL_NETWORKS,
         isNetworkChanging: false,
         isUserNetworkOnline: true,

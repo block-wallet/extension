@@ -21,7 +21,7 @@
     ],
     "action": {
         "default_popup": "popup.html",
-        "default_title": "[Experimental] BlockWallet"
+        "default_title": "BlockWallet"
     },
     "description": "The most private, non-custodial cryptocurrency wallet",
     "homepage_url": "https://www.blockwallet.io/",
@@ -34,7 +34,7 @@
         "extension_pages": "script-src 'self'; object-src 'self'"
     },
     "manifest_version": 3,
-    "name": "[Experimental] BlockWallet",
+    "name": "BlockWallet",
     "permissions": [
         "activeTab",
         "storage",

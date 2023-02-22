@@ -28,9 +28,6 @@ const WelcomeInfo: FC<WelcomeInfoProps> = ({ onDismiss }) => {
                     <Info.Title>Welcome to BlockWallet!</Info.Title>
                     <div className="p-1 pt-6">
                         <Info.List>
-                            <Info.Item type="warn">
-                                EXPERIMENTAL VERSION, USE AT YOUR OWN RISK
-                            </Info.Item>
                             {settings.defaultBrowserWallet ? (
                                 <Info.Item type="success">
                                     BlockWallet is your default browser wallet

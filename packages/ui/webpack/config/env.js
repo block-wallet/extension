@@ -91,6 +91,7 @@ function getClientEnvironment(publicUrl) {
                 // It is defined here so it is available in the webpackHotDevClient.
                 FAST_REFRESH: process.env.FAST_REFRESH !== "false",
                 VERSION: require("../../../../public/manifest.json").version,
+                VERSION_NAME: require("../../../../public/manifest.json").version_name,
             }
         )
     // Stringify all values so we can feed into webpack DefinePlugin

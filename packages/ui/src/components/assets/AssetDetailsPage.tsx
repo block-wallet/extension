@@ -1,4 +1,4 @@
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { deleteCustomToken } from "../../context/commActions"
@@ -43,7 +43,7 @@ const AssetDetailsPage = () => {
         useSelectedNetwork()
     const asset = useGetAssetByTokenAddress(address)
     const isNative = isNativeTokenAddress(address)
-    const tokenTransactions = useTokenTransactions(asset?.token?.symbol)
+    const tokenTransactions = useTokenTransactions(asset?.token)
 
     const [confirmOpen, setConfirmOpen] = useState(false)
     const [isRemoving, setIsRemoving] = useState(false)
@@ -78,13 +78,15 @@ const AssetDetailsPage = () => {
         }
     }
 
+    const disabledActions = !isSendEnabled || !state.isUserNetworkOnline
+
     return (
         <PopupLayout
             header={
                 <PopupHeader
                     onBack={() => history.push("/home")}
                     title={`${formatName(account.name, 14)} - ${formatName(
-                        token.name,
+                        token.symbol,
                         12
                     )}`}
                     close={false}
@@ -166,9 +168,12 @@ const AssetDetailsPage = () => {
             />
 
             <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 space-y-6 overflow-auto hide-scroll">
-                <TokenSummary minHeight="13rem">
-                    <TokenSummary.Balances>
+                <TokenSummary minHeight="13rem" className="mt-2">
+                    <TokenSummary.Balances className="mt-2">
                         <AssetIcon filled asset={token} />
+                        <TokenSummary.TokenName>
+                            {token.name}
+                        </TokenSummary.TokenName>
                         <TokenSummary.TokenBalance
                             className="flex flex-row space-x-1"
                             title={`${formattedTokenBalance} ${token.symbol}`}
@@ -189,7 +194,7 @@ const AssetDetailsPage = () => {
                             )}
                         </TokenSummary.ExchangeRateBalance>
                     </TokenSummary.Balances>
-                    <TokenSummary.Actions>
+                    <TokenSummary.Actions className="mb-4">
                         <Link
                             to={{
                                 pathname: "/send",
@@ -222,16 +227,13 @@ const AssetDetailsPage = () => {
                                 draggable={false}
                                 className={classnames(
                                     "flex flex-col items-center space-y-2 group",
-                                    (!isSendEnabled ||
-                                        !state.isUserNetworkOnline) &&
-                                        "pointer-events-none"
+                                    disabledActions && "pointer-events-none"
                                 )}
                             >
                                 <div
                                     className={classnames(
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        !isSendEnabled ||
-                                            !state.isUserNetworkOnline
+                                        disabledActions
                                             ? "bg-gray-300"
                                             : "bg-primary-300"
                                     )}
@@ -257,25 +259,29 @@ const AssetDetailsPage = () => {
                                 draggable={false}
                                 className={classnames(
                                     "flex flex-col items-center space-y-2 group",
-                                    (!isSendEnabled ||
-                                        !state.isUserNetworkOnline) &&
-                                        "pointer-events-none"
+                                    disabledActions && "pointer-events-none"
                                 )}
                             >
                                 <div
                                     className={classnames(
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        !isSendEnabled ||
-                                            !state.isUserNetworkOnline
+                                        disabledActions
                                             ? "bg-gray-300"
                                             : "bg-primary-300"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
-                                    <AnimatedIcon
-                                        icon={AnimatedIconName.Bridge}
-                                        className="cursor-pointer"
-                                    />
+                                    {disabledActions ? (
+                                        <Icon
+                                            name={IconName.DISABLED_BRIDGE}
+                                            size="xl"
+                                        />
+                                    ) : (
+                                        <AnimatedIcon
+                                            icon={AnimatedIconName.Bridge}
+                                            className="cursor-pointer"
+                                        />
+                                    )}
                                 </div>
                                 <span className="text-xs font-medium">
                                     Bridge

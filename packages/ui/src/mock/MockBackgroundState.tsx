@@ -367,7 +367,6 @@ export const initBackgroundState: BackgroundStateType = {
                 },
             ],
         },
-        blockData: { 5: { blockNumber: -1 } },
         areDepositsPending: false,
         areWithdrawalsPending: false,
         pendingDeposits: {
@@ -420,6 +419,7 @@ export const initBackgroundState: BackgroundStateType = {
         showTestNetworks: true,
         showWelcomeMessage: false,
         showDefaultWalletPreferences: false,
+        defaultGasOption: "medium",
         popupTab: "activity",
         settings: {
             hideAddressWarning: false,

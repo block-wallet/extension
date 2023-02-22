@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-case-declarations */
 import { EventEmitter } from 'events';
-import { BigNumber, constants } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { Zero } from '@ethersproject/constants';
 import {
     StaticJsonRpcProvider,
     TransactionReceipt,
@@ -225,8 +226,8 @@ export const CANCEL_RATE = {
  * Multiplier used to determine a transaction's increased gas fee during speed up
  */
 export const SPEED_UP_RATE = {
-    numerator: 11,
-    denominator: 10,
+    numerator: 3,
+    denominator: 2,
 };
 
 /**
@@ -520,6 +521,20 @@ export class TransactionController extends BaseController<
                     `Externally initiated transaction has no permission to make transaction with account ${transaction.from}.`
                 );
             }
+
+            // If the from account is different than the select account
+            // we have to update its balance.
+            const selectedAccount = this._preferencesController
+                .getSelectedAddress()
+                .toLowerCase();
+
+            if (transaction.from.toLowerCase() !== selectedAccount) {
+                this.emit(
+                    TransactionEvents.NOT_SELECTED_ACCOUNT_TRANSACTION,
+                    transaction.chainId || chainId,
+                    toChecksumAddress(transaction.from)
+                );
+            }
         }
 
         if (!transactionCategory) {
@@ -562,15 +577,15 @@ export class TransactionController extends BaseController<
                 );
 
                 // Get token data
-                const tokenData = await this._tokenController.search(
+                const { tokens } = await this._tokenController.search(
                     transaction.to!
                 );
 
-                if (!tokenData[0]) {
+                if (!tokens[0]) {
                     throw new Error('Failed fetching token data');
                 }
 
-                if (!tokenData[0].decimals) {
+                if (!tokens[0].decimals) {
                     // Check if it is an NFT
                     const nftContract = new NFTContract({
                         networkController: this._networkController,
@@ -590,7 +605,7 @@ export class TransactionController extends BaseController<
                     }
                 } else {
                     transactionMeta.advancedData = {
-                        decimals: tokenData[0].decimals,
+                        decimals: tokens[0].decimals,
                         allowance: _value._hex,
                     };
                 }
@@ -1143,28 +1158,41 @@ export class TransactionController extends BaseController<
         const rate =
             type === SpeedUpCancel.CANCEL ? CANCEL_RATE : SPEED_UP_RATE;
 
+        // Docs: https://docs.ethers.org/v5/single-page/#/v5/api/utils/logger/-%23-errors--replacement-underpriced
         if (txType !== TransactionType.FEE_MARKET_EIP1559) {
-            const gasPrice = BnMultiplyByFraction(
+            let gasPrice = BnMultiplyByFraction(
                 transactionMeta.transactionParams.gasPrice!,
                 rate.numerator,
                 rate.denominator
             );
+
+            if (type == SpeedUpCancel.SPEED_UP) {
+                gasPrice = gasPrice.add(1);
+            }
+
             return {
                 gasPrice: gasPrice.gt(fast.gasPrice ?? BigNumber.from(0))
                     ? gasPrice
                     : fast.gasPrice!,
             };
         } else {
-            const maxFeePerGas = BnMultiplyByFraction(
+            let maxFeePerGas = BnMultiplyByFraction(
                 transactionMeta.transactionParams.maxFeePerGas!,
                 rate.numerator,
                 rate.denominator
             );
-            const maxPriorityFeePerGas = BnMultiplyByFraction(
+            if (type == SpeedUpCancel.SPEED_UP) {
+                maxFeePerGas = maxFeePerGas.add(1);
+            }
+
+            let maxPriorityFeePerGas = BnMultiplyByFraction(
                 transactionMeta.transactionParams.maxPriorityFeePerGas!,
                 rate.numerator,
                 rate.denominator
             );
+            if (type == SpeedUpCancel.SPEED_UP) {
+                maxPriorityFeePerGas = maxPriorityFeePerGas.add(1);
+            }
 
             return {
                 maxPriorityFeePerGas: maxPriorityFeePerGas.gt(
@@ -1245,7 +1273,7 @@ export class TransactionController extends BaseController<
                 type,
                 nonce: transactionMeta.transactionParams.nonce,
                 to: transactionMeta.transactionParams.from,
-                value: constants.Zero,
+                value: Zero,
             };
         } else {
             // maxFeePerGas (EIP1559)
@@ -1277,7 +1305,7 @@ export class TransactionController extends BaseController<
                 type,
                 nonce: transactionMeta.transactionParams.nonce,
                 to: transactionMeta.transactionParams.from,
-                value: constants.Zero,
+                value: Zero,
             };
         }
 
@@ -1602,33 +1630,33 @@ export class TransactionController extends BaseController<
     public async queryTransactionStatuses(
         currentBlockNumber: number
     ): Promise<void> {
-        const transactions = [...this.store.getState().transactions];
         const { chainId } = this._networkController.network;
+        const transactions = this.store
+            .getState()
+            .transactions.filter((meta: TransactionMeta) => {
+                return meta.chainId === chainId && !meta.verifiedOnBlockchain;
+            });
 
         for (let i = 0; i < transactions.length; i++) {
             const meta = transactions[i];
-            const txBelongsToCurrentChain = meta.chainId === chainId;
-
-            if (!meta.verifiedOnBlockchain && txBelongsToCurrentChain) {
-                const result = await runPromiseSafely(
-                    this.blockchainTransactionStateReconciler(
-                        meta,
-                        currentBlockNumber
-                    )
-                );
-                if (result) {
-                    const [reconciledTx, updateRequired] = result;
-                    if (updateRequired) {
-                        const newTransactions = [
-                            ...this.store.getState().transactions,
-                        ];
-                        const tx = newTransactions.indexOf(meta);
-                        if (tx) {
-                            newTransactions[tx] = reconciledTx;
-                            this.store.updateState({
-                                transactions: newTransactions,
-                            });
-                        }
+            const result = await runPromiseSafely(
+                this.blockchainTransactionStateReconciler(
+                    meta,
+                    currentBlockNumber
+                )
+            );
+            if (result) {
+                const [reconciledTx, updateRequired] = result;
+                if (updateRequired) {
+                    const newTransactions = [
+                        ...this.store.getState().transactions,
+                    ];
+                    const tx = newTransactions.indexOf(meta);
+                    if (tx) {
+                        newTransactions[tx] = reconciledTx;
+                        this.store.updateState({
+                            transactions: newTransactions,
+                        });
                     }
                 }
             }
@@ -1765,7 +1793,7 @@ export class TransactionController extends BaseController<
         });
     }
 
-    public wipeTransactionsByAddress(address: string): void {
+    public resetTransactionsByAddress(address: string): void {
         const newTransactions = this.store
             .getState()
             .transactions.filter(
@@ -2215,7 +2243,7 @@ export class TransactionController extends BaseController<
 
         // 2. If this is a contract address, safely estimate gas using RPC
         estimatedTransaction.value =
-            typeof value === 'undefined' ? constants.Zero : value;
+            typeof value === 'undefined' ? Zero : value;
 
         // Estimate Gas
         try {
@@ -2346,7 +2374,7 @@ export class TransactionController extends BaseController<
         } catch (error) {
             // Probably not an erc20 transaction
             log.debug(error);
-            return undefined;
+            return TransactionCategories.CONTRACT_INTERACTION;
         }
     }
 

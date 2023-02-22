@@ -1,8 +1,8 @@
 import { useState } from "react"
 import classnames from "classnames"
 import { Link, useHistory } from "react-router-dom"
-import { formatUnits } from "ethers/lib/utils"
-import { BigNumber } from "ethers"
+import { formatUnits } from "@ethersproject/units"
+import { BigNumber } from "@ethersproject/bignumber"
 import { BiCircle } from "react-icons/bi"
 
 // Components
@@ -34,14 +34,18 @@ import { session } from "../context/setup"
 import { useConnectedSite } from "../context/hooks/useConnectedSite"
 import { useTokensList } from "../context/hooks/useTokensList"
 
+// Utils
+import { useSelectedAddressWithChainIdChecksum } from "../util/hooks/useSelectedAddressWithChainIdChecksum"
+
 // Assets
 import TokenSummary from "../components/token/TokenSummary"
 import GasPricesInfo from "../components/gas/GasPricesInfo"
 import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
+import TransparentOverlay from "../components/loading/TransparentOverlay"
+import Icon, { IconName } from "../components/ui/Icon"
 
 const AccountDisplay = () => {
-    const blankState = useBlankState()!
-    const accountAddress = blankState.selectedAddress
+    const accountAddress = useSelectedAddressWithChainIdChecksum()
     const account = useSelectedAccount()
     const [copied, setCopied] = useState(false)
     const copy = async () => {
@@ -144,15 +148,16 @@ const PopupPage = () => {
     const error = (useHistory().location.state as { error: string })?.error
     const state = useBlankState()!
     const history = useHistory()
-    const account = useSelectedAccount()
     const { nativeToken } = useTokensList()
     const { nativeCurrency, isSendEnabled, isSwapEnabled, isBridgeEnabled } =
         useSelectedNetwork()
-
+    const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
 
     const isLoading =
         state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+
+    const disabledActions = !isSendEnabled || !state.isUserNetworkOnline
 
     return (
         <PageLayout screen className="max-h-screen popup-layout">
@@ -165,6 +170,7 @@ const PopupPage = () => {
                 }}
                 onDone={() => setHasErrorDialog(false)}
             />
+            {state.isNetworkChanging && <TransparentOverlay />}
             <div
                 className="absolute top-0 left-0 z-10 flex flex-col items-start w-full p-6 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
                 style={{ backdropFilter: "blur(4px)" }}
@@ -180,7 +186,7 @@ const PopupPage = () => {
                             >
                                 <AccountIcon
                                     className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
-                                    fill={getAccountColor(account?.address)}
+                                    fill={getAccountColor(checksumAddress)}
                                 />
                             </Link>
                             <Tooltip
@@ -244,7 +250,7 @@ const PopupPage = () => {
                         </GenericTooltip>
                         <DAppConnection />
                     </div>
-                    <TokenSummary>
+                    <TokenSummary className="p-4">
                         <TokenSummary.Balances>
                             <TokenSummary.TokenBalance
                                 title={
@@ -288,13 +294,13 @@ const PopupPage = () => {
                                 draggable={false}
                                 className={classnames(
                                     "flex flex-col items-center space-y-2 group",
-                                    !isSendEnabled && "pointer-events-none"
+                                    disabledActions && "pointer-events-none"
                                 )}
                             >
                                 <div
                                     className={classnames(
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        !isSendEnabled
+                                        disabledActions
                                             ? "bg-gray-300"
                                             : "bg-primary-300"
                                     )}
@@ -323,16 +329,13 @@ const PopupPage = () => {
                                     draggable={false}
                                     className={classnames(
                                         "flex flex-col items-center space-y-2 group",
-                                        (!isSendEnabled ||
-                                            !state.isUserNetworkOnline) &&
-                                            "pointer-events-none"
+                                        disabledActions && "pointer-events-none"
                                     )}
                                 >
                                     <div
                                         className={classnames(
                                             "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                            !isSendEnabled ||
-                                                !state.isUserNetworkOnline
+                                            disabledActions
                                                 ? "bg-gray-300"
                                                 : "bg-primary-300"
                                         )}
@@ -362,16 +365,13 @@ const PopupPage = () => {
                                     draggable={false}
                                     className={classnames(
                                         "flex flex-col items-center space-y-2 group",
-                                        (!isSendEnabled ||
-                                            !state.isUserNetworkOnline) &&
-                                            "pointer-events-none"
+                                        disabledActions && "pointer-events-none"
                                     )}
                                 >
                                     <div
                                         className={classnames(
                                             "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                            !isSendEnabled ||
-                                                !state.isUserNetworkOnline
+                                            disabledActions
                                                 ? "bg-gray-300"
                                                 : "bg-primary-300"
                                         )}
@@ -387,10 +387,23 @@ const PopupPage = () => {
                                                 />
                                             </div>
                                         ) : (
-                                            <AnimatedIcon
-                                                icon={AnimatedIconName.Bridge}
-                                                className="cursor-pointer"
-                                            />
+                                            <>
+                                                {disabledActions ? (
+                                                    <Icon
+                                                        name={
+                                                            IconName.DISABLED_BRIDGE
+                                                        }
+                                                        size="xl"
+                                                    />
+                                                ) : (
+                                                    <AnimatedIcon
+                                                        icon={
+                                                            AnimatedIconName.Bridge
+                                                        }
+                                                        className="cursor-pointer"
+                                                    />
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                     <span className="text-xs font-medium">

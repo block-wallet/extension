@@ -1,4 +1,4 @@
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { DEFAULT_DECIMALS } from "./constants"
 import { convertAmount } from "./convertAmount"
 

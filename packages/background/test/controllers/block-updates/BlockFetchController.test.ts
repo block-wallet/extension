@@ -7,7 +7,7 @@ import BlockFetchController, {
 } from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import sinon from 'sinon';
 import { getNetworkControllerInstance } from 'test/mocks/mock-network-instance';
-import { ethers } from 'ethers';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import httpClient, { RequestError } from './../../../src/utils/http';
 
 const wait = (ms: number) => {
@@ -231,7 +231,7 @@ describe('OffChainBlockFetchService', () => {
             expect(_recurrentFetch).not.equal(undefined);
             expect(_recurrentFetch).not.equal(null);
 
-            await wait(200);
+            await wait(2000);
             loopActivated = false;
 
             await errorsPromise;
@@ -493,7 +493,7 @@ describe('BlockFetchController', () => {
 
             sinon.stub(networkController, 'getProvider').returns({
                 pollingInterval: 0,
-            } as ethers.providers.StaticJsonRpcProvider);
+            } as StaticJsonRpcProvider);
 
             sinon.stub(networkController, 'addOnBlockListener').returns();
             sinon.stub(networkController, 'removeAllOnBlockListener').returns();
@@ -550,7 +550,7 @@ describe('BlockFetchController', () => {
 
             sinon.stub(networkController, 'getProvider').returns({
                 pollingInterval: 0,
-            } as ethers.providers.StaticJsonRpcProvider);
+            } as StaticJsonRpcProvider);
 
             let blockListenerCallBack: (
                 blockNumber: number,

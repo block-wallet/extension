@@ -24,14 +24,14 @@ import WaitingDialog from "../../components/dialog/WaitingDialog"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { APPROVE_GAS_COST } from "../../util/constants"
 import { AdvancedSettings } from "../../components/transactions/AdvancedSettings"
-import { BigNumber, ethers } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes, classnames } from "../../styles/classes"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import { InferType } from "yup"
 import { formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
-import { formatUnits, parseUnits } from "ethers/lib/utils"
+import { formatUnits, parseUnits } from "@ethersproject/units"
 import { getAccountColor } from "../../util/getAccountColor"
 import { useForm } from "react-hook-form"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
@@ -54,8 +54,9 @@ import { ExchangeType } from "../../context/commTypes"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
 import { useBlankState } from "../../context/background/backgroundHooks"
+import { MaxUint256 } from "@ethersproject/constants"
 
-const UNLIMITED_ALLOWANCE = ethers.constants.MaxUint256
+const UNLIMITED_ALLOWANCE = MaxUint256
 
 export enum ApproveOperation {
     BRIDGE,
@@ -204,10 +205,10 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
     const selectedAccount = useSelectedAccount()
     const { chainId, isEIP1559Compatible } = useSelectedNetwork()
-    const { availableNetworks, selectedNetwork } = useBlankState()!
+    const { availableNetworks, selectedNetwork, defaultGasOption } =
+        useBlankState()!
     const { nativeToken } = useTokensList()
     const { gasPricesLevels } = useGasPriceData()
-
     const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
         useTransactionWaitingDialog(
             inProgressTransaction
@@ -436,12 +437,11 @@ const ApprovePage: FunctionComponent<{}> = () => {
         }
 
         try {
-            let res: boolean = false
+            let allowanceResponse: boolean
 
             if (approveOperation === ApproveOperation.SWAP) {
                 const nextState = nextLocationState as SwapConfirmPageLocalState
-
-                res = await approveExchange(
+                allowanceResponse = await approveExchange(
                     assetAllowance,
                     BigNumber.from(nextState.swapQuote.fromTokenAmount),
                     ExchangeType.SWAP_1INCH,
@@ -464,7 +464,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 const nextState =
                     nextLocationState as BridgeConfirmPageLocalState
 
-                res = await approveBridgeAllowance(
+                allowanceResponse = await approveBridgeAllowance(
                     assetAllowance,
                     BigNumber.from(
                         nextState.bridgeQuote.bridgeParams.params.fromAmount
@@ -487,7 +487,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 )
             }
 
-            if (res) {
+            if (allowanceResponse) {
                 dispatch({
                     type: "setStatus",
                     payload: { status: "success" },
@@ -523,7 +523,10 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
         history.push({
             pathname,
-            state: nextLocationState,
+            state: {
+                ...nextLocationState,
+                allowanceTransactionId: inProgressTransaction?.id,
+            },
         })
     }
 
@@ -571,6 +574,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 <label className="text-sm text-gray-600">Gas Price</label>
                 {!isEIP1559Compatible ? (
                     <GasPriceSelector
+                        defaultLevel={defaultGasOption || "medium"}
                         defaultGasLimit={defaultGas.gasLimit}
                         defaultGasPrice={defaultGas.gasPrice}
                         setGasPriceAndLimit={(gasPrice, gasLimit) => {
@@ -583,7 +587,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 ) : (
                     <GasPriceComponent
                         defaultGas={{
-                            defaultLevel: "medium",
+                            defaultLevel: defaultGasOption || "medium",
                             feeData: {
                                 gasLimit: defaultGas.gasLimit,
                             },

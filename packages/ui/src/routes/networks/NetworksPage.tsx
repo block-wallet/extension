@@ -1,5 +1,8 @@
 import { DndProvider } from "react-dnd"
 
+import { keccak256 } from "@ethersproject/keccak256"
+import { toUtf8Bytes } from "@ethersproject/strings"
+
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { useCallback, useEffect, useState } from "react"
 
@@ -11,11 +14,10 @@ import { ActionButton } from "../../components/button/ActionButton"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { editNetworksOrder } from "../../context/commActions"
 import { sortNetworksByOrder } from "../../util/networkUtils"
-import { ethers } from "ethers"
-import { getAccountColor } from "../../util/getAccountColor"
 import { Network } from "@block-wallet/background/utils/constants/networks"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { editNetworkOrder } from "@block-wallet/background/utils/types/communication"
+import { getNetworkColor } from "../../util/getNetworkColor"
 
 interface NetworkInfo extends Network {
     color: string
@@ -102,13 +104,7 @@ const NetworksPage = () => {
                     if (!current.enable) {
                         return acc
                     }
-                    const color = getAccountColor(
-                        ethers.utils.keccak256(
-                            ethers.utils.toUtf8Bytes(
-                                current.name || current.desc
-                            )
-                        )
-                    )
+                    const color = getNetworkColor(current)
                     const netInfo: NetworkInfo = {
                         ...current,
                         color,

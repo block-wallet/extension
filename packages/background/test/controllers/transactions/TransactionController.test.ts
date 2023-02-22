@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import { BigNumber, providers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import sinon from 'sinon';
 import { TypedTransaction } from '@ethereumjs/tx';
 import {
@@ -138,8 +139,8 @@ describe('Transactions Controller', () => {
 
             sinon
                 .stub(
-                    transactionController['_contractSignatureParser'],
-                    'lookup'
+                    transactionController['_contractSignatureParser'] as any,
+                    '_lookup'
                 )
                 .returns(Promise.resolve(['multicall(bytes[] data)']));
         });
@@ -368,10 +369,7 @@ describe('Transactions Controller', () => {
     });
 
     describe('Transactions', () => {
-        let mockedProvider: sinon.SinonStub<
-            [],
-            providers.StaticJsonRpcProvider
-        >;
+        let mockedProvider: sinon.SinonStub<[], StaticJsonRpcProvider>;
 
         beforeEach(() => {
             networkController = getNetworkControllerInstance();
@@ -935,7 +933,7 @@ describe('Transactions Controller', () => {
                 transactionController.store.getState().transactions.length
             ).to.be.equal(3);
 
-            transactionController.wipeTransactionsByAddress(
+            transactionController.resetTransactionsByAddress(
                 mockedAccounts['goerli'][0].address
             );
 
@@ -953,15 +951,15 @@ describe('Transactions Controller', () => {
         it('Should determine different transaction categories correctly', async () => {
             sinon
                 .stub(
-                    transactionController['_contractSignatureParser'],
-                    'lookup'
+                    transactionController['_contractSignatureParser'] as any,
+                    '_lookup'
                 )
                 .returns(Promise.resolve(['multicall(uint256,bytes[])']));
 
             sinon
                 .stub(
-                    transactionController['_contractSignatureParser'],
-                    'fetchABIFromEtherscan'
+                    transactionController['_contractSignatureParser'] as any,
+                    '_fetchABIFromEtherscan'
                 )
                 .returns(Promise.resolve(undefined));
 
@@ -1327,10 +1325,10 @@ describe('Transactions Controller', () => {
             expect(transactions.length).to.be.equal(2);
             expect(
                 transactions[1].transactionParams.maxFeePerGas?.toString()
-            ).to.be.equal('220000000000');
+            ).to.be.equal('300000000001');
             expect(
                 transactions[1].transactionParams.maxPriorityFeePerGas?.toString()
-            ).to.be.equal('1100000000');
+            ).to.be.equal('1500000001');
         });
 
         it('Should speed up a legacy pre EIP-1559 transaction correctly', async () => {
@@ -1363,7 +1361,7 @@ describe('Transactions Controller', () => {
             expect(transactions.length).to.be.equal(2);
             expect(
                 transactions[1].transactionParams.gasPrice?.toString()
-            ).to.be.equal('1100000000');
+            ).to.be.equal('1500000001');
         });
 
         it('Should keep the transaction status as submitted while pending confirmation', async () => {
@@ -1794,8 +1792,8 @@ describe('Transactions Controller', () => {
 
             sinon
                 .stub(
-                    transactionController['_contractSignatureParser'],
-                    'lookup'
+                    transactionController['_contractSignatureParser'] as any,
+                    '_lookup'
                 )
                 .returns(Promise.resolve(['multicall(bytes[] data)']));
         });

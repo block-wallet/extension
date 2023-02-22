@@ -13,7 +13,7 @@ import {
     AssetListType,
     AssetSelection,
 } from "../../components/assets/AssetSelection"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { BASE_SWAP_FEE, SWAP_QUOTE_REFRESH_TIMEOUT } from "../../util/constants"
 import { ExchangeType } from "../../context/commTypes"
@@ -23,7 +23,7 @@ import { SwapQuote } from "@block-wallet/background/controllers/SwapController"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { classnames, Classes } from "../../styles"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
-import { formatUnits, parseUnits } from "ethers/lib/utils"
+import { formatUnits, parseUnits } from "@ethersproject/units"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { useForm } from "react-hook-form"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
@@ -389,15 +389,10 @@ const SwapPage = () => {
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
-                        label={
-                            error ? error : hasAllowance ? "Review" : "Approve"
-                        }
+                        label={hasAllowance ? "Review" : "Approve"}
                         disabled={!!(error || !quote)}
                         isLoading={isLoading}
                         onClick={onSubmit}
-                        buttonClass={classnames(
-                            error && `${Classes.redButton} opacity-100`
-                        )}
                     />
                 </PopupFooter>
             }
@@ -410,7 +405,7 @@ const SwapPage = () => {
                     rate={rate}
                 />
             ) : null}
-            <div className="flex flex-col p-6">
+            <div className="flex flex-col px-6 py-4 h-full">
                 <div
                     className={classnames(
                         "flex flex-row",
@@ -549,7 +544,7 @@ const SwapPage = () => {
                 <p className="text-sm text-gray-600 pb-3">Swap To</p>
                 <AssetSelection
                     displayIcon
-                    selectedAssetList={AssetListType.ALL}
+                    selectedAssetList={AssetListType.DEFAULT}
                     selectedAsset={
                         tokenTo
                             ? {
@@ -585,10 +580,19 @@ const SwapPage = () => {
                         <span>{`BlockWallet fee (${BASE_SWAP_FEE}%): ${swapFee}`}</span>
                     </div>
                 )}
+                <div className="h-full flex flex-col justify-end space-y-3">
+                    {error && (
+                        <div>
+                            <ErrorMessage>{error}</ErrorMessage>
+                        </div>
+                    )}
+                    {remainingSuffix && (
+                        <div className="flex flex-col justify-end">
+                            <RefreshLabel value={remainingSuffix} />
+                        </div>
+                    )}
+                </div>
             </div>
-            {remainingSuffix && (
-                <RefreshLabel value={remainingSuffix} className="ml-6 mt-12" />
-            )}
         </PopupLayout>
     )
 }

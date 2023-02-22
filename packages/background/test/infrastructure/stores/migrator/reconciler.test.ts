@@ -221,6 +221,7 @@ const initialState: BlankAppState & {
         filters: {
             account: [],
         },
+        defaultGasOption: "medium"
     },
     TransactionController: {
         transactions: [],
@@ -279,6 +280,11 @@ const initialState: BlankAppState & {
         userTokens: {} as any,
         deletedUserTokens: {} as any,
         cachedPopulatedTokens: {} as any,
+    },
+    RemoteConfigsController: {
+        provider: {
+            incompatibleSites: [],
+        },
     },
 };
 
@@ -438,6 +444,7 @@ describe('State reconciler', () => {
                 filters: {
                     account: [],
                 },
+                defaultGasOption: 'medium'
             },
             TransactionController: {
                 transactions: [],
@@ -452,6 +459,11 @@ describe('State reconciler', () => {
             PermissionsController: {
                 permissions: {},
                 permissionRequests: {},
+            },
+            RemoteConfigsController: {
+                provider: {
+                    incompatibleSites: [],
+                },
             },
         });
     });

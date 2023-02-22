@@ -263,13 +263,20 @@ export interface AddEthereumChainConfirmParams {
     saveImage: boolean;
 }
 
+export interface EstimateGasParams {
+    data: string;
+    from: string;
+    to: string;
+    value: string;
+}
+
 // EIP-712
 
 // Raw data for each method (Direct input from the provider)
 export interface RawSignatureData {
     [JSONRPCMethod.eth_sign]: [string, string]; // [account, data]
     [JSONRPCMethod.personal_sign]: [string, string]; // [data, account]
-    [JSONRPCMethod.eth_signTypedData]: [V1TypedData[], string]; // [data, account]
+    [JSONRPCMethod.eth_signTypedData]: [string, string]; // [data, account]
     [JSONRPCMethod.eth_signTypedData_v1]: [V1TypedData[], string]; // [data, account]
     [JSONRPCMethod.eth_signTypedData_v3]: [string, string]; // [account, data]
     [JSONRPCMethod.eth_signTypedData_v4]: [string, string]; // [account, data]
@@ -279,7 +286,7 @@ export interface RawSignatureData {
 export interface NormalizedSignatureData {
     [JSONRPCMethod.eth_sign]: string;
     [JSONRPCMethod.personal_sign]: string;
-    [JSONRPCMethod.eth_signTypedData]: V1TypedData[];
+    [JSONRPCMethod.eth_signTypedData]: TypedMessage<MessageSchema>;
     [JSONRPCMethod.eth_signTypedData_v1]: V1TypedData[];
     [JSONRPCMethod.eth_signTypedData_v3]: TypedMessage<MessageSchema>;
     [JSONRPCMethod.eth_signTypedData_v4]: TypedMessage<MessageSchema>;
@@ -302,6 +309,7 @@ export interface DappSignatureReq<T extends SignatureMethods> {
 export interface NormalizedSignatureParams<T extends SignatureMethods> {
     address: string;
     data: NormalizedSignatureData[T];
+    rawData?: string;
 }
 
 export type TypedSignatureMethods = Exclude<
@@ -313,7 +321,7 @@ export type TypedSignatureMethods = Exclude<
 export const sigVersion: {
     [method in TypedSignatureMethods]: { version: 'V1' | 'V3' | 'V4' };
 } = {
-    eth_signTypedData: { version: 'V1' },
+    eth_signTypedData: { version: 'V4' },
     eth_signTypedData_v1: { version: 'V1' },
     eth_signTypedData_v3: { version: 'V3' },
     eth_signTypedData_v4: { version: 'V4' },

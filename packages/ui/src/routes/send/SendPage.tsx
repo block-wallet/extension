@@ -12,18 +12,19 @@ import classnames from "classnames"
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
-import { utils } from "ethers"
 
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { TokenWithBalance } from "../../context/hooks/useTokensList"
 import { useAddressBookAccounts } from "../../context/hooks/useAddressBookAccounts"
+import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
+
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import AccountSearchResults, {
     AccountResult,
 } from "../../components/account/AccountSearchResults"
 import Checkbox from "../../components/input/Checkbox"
-import { toChecksumAddress } from "ethereumjs-util"
+import { isValidAddress, toChecksumAddress } from "ethereumjs-util"
 import { formatHashLastChars } from "../../util/formatAccount"
 
 // Schema
@@ -32,7 +33,7 @@ const schema = yup.object().shape({
         .string()
         .required("No address provided.")
         .test("is-correct", "Address is incorrect", (address) => {
-            return utils.isAddress(`${address}`)
+            return isValidAddress(`${address}`)
         }),
 })
 type AddressFormData = { address: string }
@@ -43,6 +44,10 @@ const SendPage = () => {
     const defaultAsset = history.location.state?.asset
     const fromAssetPage = defaultAsset ?? false
     const currentAccount = useSelectedAccount()
+
+    const myAccounts = useSortedAccounts({
+        filterCurrentAccount: true,
+    })
 
     const addressBookAccounts = useAddressBookAccounts()
 
@@ -105,13 +110,13 @@ const SendPage = () => {
 
     useEffect(() => {
         const checkAddress = () => {
-            const isValidAddress = utils.isAddress(searchString)
+            const validAddress = isValidAddress(searchString)
 
-            setIsAddress(isValidAddress)
+            setIsAddress(validAddress)
             setCanAddContact(false)
             setWarning("")
 
-            if (isValidAddress) {
+            if (validAddress) {
                 const normalizedAddress = toChecksumAddress(searchString)
 
                 const isCurrentAccount =
@@ -126,7 +131,14 @@ const SendPage = () => {
                 const isInAddressBook = (addressBookAccounts || []).some(
                     ({ address }) => address === normalizedAddress
                 )
-                setCanAddContact(!isCurrentAccount && !isInAddressBook)
+
+                const isInMyAccounts = (myAccounts || []).some(
+                    ({ address }) => address === normalizedAddress
+                )
+
+                setCanAddContact(
+                    !isCurrentAccount && !isInAddressBook && !isInMyAccounts
+                )
             }
         }
 

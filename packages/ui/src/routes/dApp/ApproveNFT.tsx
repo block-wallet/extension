@@ -17,7 +17,7 @@ import {
 } from "../../context/commActions"
 import { AdvancedSettings } from "../../components/transactions/AdvancedSettings"
 import { AiFillInfoCircle } from "react-icons/ai"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes } from "../../styles/classes"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
@@ -34,7 +34,8 @@ import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/
 import { capitalize } from "../../util/capitalize"
 import { formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
-import { formatUnits, getAddress } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
+import { getAddress } from "@ethersproject/address"
 import { getAccountColor } from "../../util/getAccountColor"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { useSelectedAccountBalance } from "../../context/hooks/useSelectedAccountBalance"
@@ -94,7 +95,8 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     transactionId,
 }) => {
     // Hooks
-    const { accounts, selectedAddress, settings } = useBlankState()!
+    const { accounts, selectedAddress, settings, defaultGasOption } =
+        useBlankState()!
     const { chainId, isEIP1559Compatible, desc } = useSelectedNetwork()
     const { hideAddressWarning } = useUserSettings()
     const selectedAccountBalance = useSelectedAccountBalance()
@@ -209,8 +211,8 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     useEffect(
         () => {
             searchTokenInAssetsList(tokenAddress)
-                .then((token) => {
-                    setTokenName(token[0].symbol)
+                .then((searchTokensResponse) => {
+                    setTokenName(searchTokensResponse.tokens[0].symbol)
                 })
                 .catch(() => {
                     throw new Error("Failed to fetch token data")
@@ -414,6 +416,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                 <label className="text-sm text-gray-600">Gas Price</label>
                 {!isEIP1559Compatible ? (
                     <GasPriceSelector
+                        defaultLevel={defaultGasOption || "medium"}
                         defaultGasLimit={defaultGas.gasLimit!}
                         defaultGasPrice={defaultGas.gasPrice!}
                         setGasPriceAndLimit={(gasPrice, gasLimit) => {
@@ -425,6 +428,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                 ) : (
                     <GasPriceComponent
                         defaultGas={{
+                            defaultLevel: defaultGasOption || "medium",
                             feeData: {
                                 gasLimit: defaultGas.gasLimit,
                                 maxFeePerGas: defaultGas.maxFeePerGas!,

@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { BigNumber, ethers } from 'ethers';
+import { PopulatedTransaction } from '@ethersproject/contracts';
+import { BigNumber } from '@ethersproject/bignumber';
+import {
+    LogDescription,
+    ParamType,
+    TransactionDescription,
+} from '@ethersproject/abi';
 import { PreferencesController } from '../../PreferencesController';
 import {
     TransactionController,
@@ -28,11 +34,6 @@ import * as transactionUtils from './../../transactions/utils/utils';
 import { INITIAL_NETWORKS } from '../../../utils/constants/networks';
 import { bnGreaterThanZero } from '../../../utils/bnUtils';
 import { v4 as uuid } from 'uuid';
-import {
-    LogDescription,
-    ParamType,
-    TransactionDescription,
-} from 'ethers/lib/utils';
 import log from 'loglevel';
 import { TransactionArgument } from '../../transactions/ContractSignatureParser';
 
@@ -57,7 +58,7 @@ export interface ISignedTransaction {
      */
     populateTransaction(
         populateTransactionParams: PopulatedTransactionParams
-    ): Promise<ethers.PopulatedTransaction>;
+    ): Promise<PopulatedTransaction>;
 
     /**
      * Calculates the gas limit for a populated transaction. It returns a flag that indicates if the estimation succeeded or defaulted to a fallback price.
@@ -154,7 +155,7 @@ export abstract class SignedTransaction
      */
     public abstract populateTransaction(
         populateTransactionParams: PopulatedTransactionParams
-    ): Promise<ethers.PopulatedTransaction>;
+    ): Promise<PopulatedTransaction>;
 
     /**
      * Calculates the gas limit for a populated transaction.
@@ -169,7 +170,7 @@ export abstract class SignedTransaction
      * @param {PopulatedTransactionParams} populateTransactionParams depends on the case, the necessary data for the contract.
      */
     protected async _calculateTransactionGasLimit(
-        populatedTransaction: ethers.PopulatedTransaction
+        populatedTransaction: PopulatedTransaction
     ): Promise<TransactionGasEstimation> {
         populatedTransaction.from =
             this._preferencesController.getSelectedAddress();
@@ -220,7 +221,7 @@ export abstract class SignedTransaction
      * @param {TransactionAdvancedData} advancedData an object with transaction advanced data.
      */
     protected async _addAsNewTransaction(
-        populatedTransaction: ethers.PopulatedTransaction,
+        populatedTransaction: PopulatedTransaction,
         feeData: TransactionFeeData,
         transactionCategory?: TransactionCategories,
         advancedData?: TransactionAdvancedData
@@ -275,7 +276,7 @@ export abstract class SignedTransaction
      */
     protected _addTransactionData(
         transactionMeta: TransactionMeta,
-        transactionData?: ethers.utils.TransactionDescription
+        transactionData?: TransactionDescription
     ): TransactionMeta {
         try {
             if (transactionData) {

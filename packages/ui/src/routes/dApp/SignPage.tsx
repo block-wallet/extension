@@ -9,7 +9,8 @@ import PopupLayout from "../../components/popup/PopupLayout"
 import { Classes } from "../../styles/classes"
 import Divider from "../../components/Divider"
 import { formatHash, formatName } from "../../util/formatAccount"
-import { formatUnits, getAddress } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
+import { getAddress } from "@ethersproject/address"
 import {
     DappReq,
     DappRequestSigningStatus,
@@ -51,6 +52,7 @@ import { HardwareWalletOpTypes } from "../../context/commTypes"
 import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
 import DAppOrigin from "../../components/dApp/DAppOrigin"
 import { getNetworkNameFromChainId } from "../../util/getExplorer"
+import CodeBlock from "../../components/ui/CodeBlock"
 
 const SignPage = () => {
     return (
@@ -87,7 +89,8 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
         dappReqData as DappRequestParams[DappReq.SIGNING]
 
     const websiteIcon = siteMetadata.iconURL
-    const { address, data } = dappReqParams
+    const { address, data, rawData } = dappReqParams
+
     const accountData = accounts[address]
 
     // Detect if the transaction was triggered using an address different to the active one
@@ -191,7 +194,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
         if (domain.chainId) {
             const networkName = getNetworkNameFromChainId(
                 availableNetworks,
-                domain.chainId
+                Number(domain.chainId)
             )
             parsedDomain[2] += ` (${networkName})`
         }
@@ -217,9 +220,9 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
 
     const formatSignatureData = (
         method: SignatureMethods,
-        data: NormalizedSignatureData[SignatureMethods]
+        data: NormalizedSignatureData[SignatureMethods],
+        rawData: string | undefined
     ) => {
-        //TODO: TEST THIS
         if (method === "eth_sign") {
             return (
                 <>
@@ -238,29 +241,25 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                         {`Make sure you trust ${origin}. Signing this could grant complete control of your assets`}
                     </div>
                     <span className="font-bold py-2">Message</span>
-                    <span className="text-gray-600 allow-select-all">
-                        <>{data}</>
-                    </span>
+                    <CodeBlock className="max-h-56">
+                        <>{rawData ?? data}</>
+                    </CodeBlock>
                 </>
             )
         }
 
-        //TODO: TEST THIS
         if (method === "personal_sign") {
             return (
                 <>
                     <span className="font-bold py-2">Message</span>
-                    <span className="text-gray-600 allow-select-all">
-                        <>{data}</>
-                    </span>
+                    <CodeBlock className="max-h-56">
+                        <>{rawData ?? data}</>
+                    </CodeBlock>
                 </>
             )
         }
 
-        if (
-            method === "eth_signTypedData" ||
-            method === "eth_signTypedData_v1"
-        ) {
+        if (method === "eth_signTypedData_v1") {
             const v1Data = data as V1TypedData[]
             return (
                 <>
@@ -409,7 +408,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                 </div>
             </div>
             <div className="flex flex-col px-6 py-3 space-y-0.5 text-sm text-gray-800 break-words">
-                {formatSignatureData(method, data)}
+                {formatSignatureData(method, data, rawData)}
             </div>
             <HardwareDeviceNotLinkedDialog
                 onDone={resetDeviceLinkStatus}

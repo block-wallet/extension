@@ -12,14 +12,15 @@ import {
     TokenWithBalance,
     useTokensList,
 } from "../../context/hooks/useTokensList"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { formatRounded } from "../../util/formatRounded"
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import { searchTokenInAssetsList } from "../../context/commActions"
 import { useCustomCompareEffect } from "use-custom-compare"
 import { useSwappedTokenList } from "../../context/hooks/useSwappedTokenList"
 import AssetDropdownDisplay from "./AssetDropdownDisplay"
 import AssetList from "./AssetList"
+import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 
 export enum AssetListType {
     ALL = "ALL",
@@ -45,6 +46,21 @@ interface AssetSelectionProps {
 
 const ZERO_BN = BigNumber.from(0)
 const SEARCH_LIMIT = 20
+
+function mergeAssetList(
+    baseList: TokenWithBalance[],
+    mergeList: TokenWithBalance[]
+): TokenWithBalance[] {
+    const baseListAddresses = baseList.map(({ token }) =>
+        token.address.toLowerCase()
+    )
+    return baseList.concat(
+        mergeList.filter(
+            ({ token }) =>
+                !baseListAddresses.includes(token.address.toLowerCase())
+        )
+    )
+}
 
 export const AssetSelection: FC<AssetSelectionProps> = ({
     onAssetChange,
@@ -83,12 +99,12 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
         const searchAll = async () => {
             // If there is no search return the list of swapped assets
             if (!search) {
-                setSearchResult(swappedAssetList)
+                setSearchResult(mergeAssetList(swappedAssetList, assetList))
                 return
             }
 
             const input = search.toLowerCase()
-            let searchRes = await searchTokenInAssetsList(input)
+            let searchRes = (await searchTokenInAssetsList(input)).tokens
 
             searchRes = searchRes.filter((t) => !!t.symbol)
 
@@ -114,7 +130,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
 
                 if (ownedArray.length) {
                     ownedAsset.push({
-                        token: searchRes[index],
+                        token: searchRes[index] as Token,
                         balance: ZERO_BN,
                     })
                     continue
@@ -124,7 +140,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
 
                 if (input === lcSymbol) {
                     exactResult.push({
-                        token: searchRes[index],
+                        token: searchRes[index] as Token,
                         balance: ZERO_BN,
                     })
                     continue
@@ -134,12 +150,12 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
 
                 if (isPartialResult) {
                     partialResult.push({
-                        token: searchRes[index],
+                        token: searchRes[index] as Token,
                         balance: ZERO_BN,
                     })
                 } else {
                     elseResult.push({
-                        token: searchRes[index],
+                        token: searchRes[index] as Token,
                         balance: ZERO_BN,
                     })
                 }

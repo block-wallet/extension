@@ -10,7 +10,12 @@ import {
     GasPriceValue,
     FeeMarketEIP1559Values,
 } from '../../controllers/transactions/TransactionController';
-import { IToken, ITokens, Token } from '../../controllers/erc-20/Token';
+import {
+    IToken,
+    ITokens,
+    SearchTokensResponse,
+    Token,
+} from '../../controllers/erc-20/Token';
 import {
     TransactionAdvancedData,
     TransactionMeta,
@@ -36,6 +41,7 @@ import {
 import { DappReq, DappRequestConfirmOptions } from './ethereum';
 import { TransactionGasEstimation } from '@block-wallet/background/controllers/transactions/TransactionController';
 import {
+    DefaultGasOptions,
     PopupTabs,
     ReleaseNote,
     UserSettings,
@@ -54,6 +60,7 @@ import {
     GetBridgeQuoteResponse,
 } from '@block-wallet/background/controllers/BridgeController';
 import { GasPriceData } from '@block-wallet/background/controllers/GasPricesController';
+import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -62,6 +69,7 @@ enum ACCOUNT {
     IMPORT_JSON = 'IMPORT_ACCOUNT_JSON',
     IMPORT_PRIVATE_KEY = 'IMPORT_ACCOUNT_PK',
     REMOVE = 'REMOVE_ACCOUNT',
+    RESET = 'RESET_ACCOUNT',
     RENAME = 'RENAME_ACCOUNT',
     SELECT = 'SELECT_ACCOUNT',
     GET_BALANCE = 'GET_ACCOUNT_BALANCE',
@@ -119,6 +127,7 @@ export enum EXTERNAL {
     SETUP_PROVIDER = 'SETUP_PROVIDER',
     SW_REINIT = 'SW_REINIT',
     SET_ICON = 'SET_ICON',
+    GET_PROVIDER_CONFIG = 'GET_PROVIDER_CONFIG',
 }
 
 export enum CONTENT {
@@ -134,6 +143,7 @@ enum NETWORK {
     EDIT_NETWORKS_ORDER = 'EDIT_NETWORKS_ORDER',
     REMOVE_NETWORK = 'REMOVE_NETWORK',
     GET_SPECIFIC_CHAIN_DETAILS = 'GET_SPECIFIC_CHAIN_DETAILS',
+    GET_DEFAULT_RPC = 'GET_DEFAULT_RPC',
     GET_RPC_CHAIN_ID = 'GET_RPC_CHAIN_ID',
     SEARCH_CHAINS = 'SEARCH_CHAINS',
 }
@@ -154,6 +164,7 @@ enum PERMISSION {
 enum STATE {
     GET = 'GET_STATE',
     SUBSCRIBE = 'STATE_SUBSCRIBE',
+    GET_REMOTE_CONFIG = 'GET_REMOTE_CONFIG',
 }
 
 enum ENS {
@@ -209,6 +220,7 @@ enum WALLET {
     HARDWARE_GET_HD_PATH = 'HARDWARE_GET_HD_PATH',
     HARDWARE_SET_HD_PATH = 'HARDWARE_SET_HD_PATH',
     HARDWARE_IS_LINKED = 'HARDWARE_IS_LINKED',
+    SET_DEFAULT_GAS = 'SET_DEFAULT_GAS',
 }
 
 enum TOKEN {
@@ -276,6 +288,7 @@ export interface RequestSignatures {
         AccountInfo
     ];
     [Messages.ACCOUNT.REMOVE]: [RequestAccountRemove, boolean];
+    [Messages.ACCOUNT.RESET]: [RequestAccountReset, void];
     [Messages.ACCOUNT.HIDE]: [RequestAccountHide, boolean];
     [Messages.ACCOUNT.UNHIDE]: [RequestAccountUnhide, boolean];
     [Messages.ACCOUNT.RENAME]: [RequestAccountRename, boolean];
@@ -315,6 +328,10 @@ export interface RequestSignatures {
     [Messages.EXTERNAL.SETUP_PROVIDER]: [undefined, ProviderSetupData];
     [Messages.EXTERNAL.SW_REINIT]: [void, void];
     [Messages.EXTERNAL.SET_ICON]: [RequestSetIcon, boolean];
+    [Messages.EXTERNAL.GET_PROVIDER_CONFIG]: [
+        undefined,
+        RemoteConfigsControllerState['provider']
+    ];
     [Messages.BRIDGE.GET_BRIDGE_TOKENS]: [RequestGetBridgeTokens, IToken[]];
 
     [Messages.BRIDGE.APPROVE_BRIDGE_ALLOWANCE]: [
@@ -347,6 +364,10 @@ export interface RequestSignatures {
     [Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS]: [
         RequestGetChainData,
         ChainListItem
+    ];
+    [Messages.NETWORK.GET_DEFAULT_RPC]: [
+        RequestGetChainData,
+        string | undefined
     ];
     [Messages.NETWORK.GET_RPC_CHAIN_ID]: [RequestGetRpcChainId, number];
     [Messages.NETWORK.SEARCH_CHAINS]: [
@@ -427,6 +448,10 @@ export interface RequestSignatures {
     [Messages.WALLET.SETUP_COMPLETE]: [RequestCompleteSetup, void];
     [Messages.WALLET.RESET]: [RequestWalletReset, boolean];
     [Messages.STATE.SUBSCRIBE]: [undefined, boolean, StateSubscription];
+    [Messages.STATE.GET_REMOTE_CONFIG]: [
+        undefined,
+        RemoteConfigsControllerState
+    ];
     [Messages.TOKEN.GET_BALANCE]: [RequestGetTokenBalance, BigNumber];
     [Messages.TOKEN.GET_TOKENS]: [RequestGetTokens, ITokens];
     [Messages.TOKEN.GET_USER_TOKENS]: [RequestGetUserTokens, ITokens];
@@ -436,7 +461,7 @@ export interface RequestSignatures {
     [Messages.TOKEN.ADD_CUSTOM_TOKENS]: [RequestAddCustomTokens, void | void[]];
     [Messages.TOKEN.SEND_TOKEN]: [RequestSendToken, string];
     [Messages.TOKEN.POPULATE_TOKEN_DATA]: [RequestPopulateTokenData, Token];
-    [Messages.TOKEN.SEARCH_TOKEN]: [RequestSearchToken, Token[]];
+    [Messages.TOKEN.SEARCH_TOKEN]: [RequestSearchToken, SearchTokensResponse];
     [Messages.EXTERNAL.EVENT_SUBSCRIPTION]: [
         undefined,
         boolean,
@@ -468,6 +493,7 @@ export interface RequestSignatures {
         RequestToggleDefaultBrowserWallet,
         void
     ];
+    [Messages.WALLET.SET_DEFAULT_GAS]: [RequestSetDefaultGas, void];
 
     [Messages.WALLET.UPDATE_ANTI_PHISHING_IMAGE]: [
         RequestUpdateAntiPhishingImage,
@@ -543,6 +569,10 @@ export interface RequestAccountImportPK {
 }
 
 export interface RequestAccountRemove {
+    address: string;
+}
+
+export interface RequestAccountReset {
     address: string;
 }
 
@@ -896,6 +926,7 @@ export interface RequestSearchToken {
     exact?: boolean;
     accountAddress?: string;
     chainId?: number;
+    manualAddToken?: boolean;
 }
 
 export interface RequestAntiPhishingImage {
@@ -922,6 +953,10 @@ export interface RequestToggleReleaseNotesSubscription {
 
 export interface RequestToggleDefaultBrowserWallet {
     defaultBrowserWalletEnabled: boolean;
+}
+
+export interface RequestSetDefaultGas {
+    defaultGasOption: DefaultGasOptions;
 }
 
 export interface RequestRejectTransaction {
@@ -1062,6 +1097,11 @@ export interface Handler {
     resolve: (data: any) => void;
     reject: (error: Error) => void;
     subscriber?: (data: any) => void;
+}
+
+export interface UnlockHandler extends Handler {
+    //port that is handling the unlock
+    portId: string;
 }
 
 export type Handlers = Record<string, Handler>;

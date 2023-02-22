@@ -1,10 +1,14 @@
 import log from 'loglevel';
-import NetworkController, { NetworkControllerState } from './NetworkController';
+import NetworkController, {
+    NetworkControllerState,
+    NetworkEvents,
+} from './NetworkController';
 import {
     ContractMethodSignature,
     ContractSignatureParser,
 } from './transactions/ContractSignatureParser';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
+import { TransactionResponse } from '@ethersproject/providers';
 import {
     BridgeTransactionParams,
     MetaType,
@@ -111,6 +115,7 @@ export interface BridgeTransaction extends BridgeParameters {
     customNonce?: number;
     flashbots?: boolean;
     gasPrice?: BigNumber;
+    gasLimit?: BigNumber;
     maxFeePerGas?: BigNumber;
     maxPriorityFeePerGas?: BigNumber;
 }
@@ -150,6 +155,10 @@ export default class BridgeController extends BaseController<
         super(initialState, { availableBridgeChains: [] });
 
         this.getAvailableChains();
+
+        this._networkController.on(NetworkEvents.NETWORK_CHANGE, () => {
+            this.getAvailableChains();
+        });
 
         this._networkController.store.subscribe(
             (
@@ -250,34 +259,43 @@ export default class BridgeController extends BaseController<
     ): Promise<IChain[]> {
         const implementor = this._getAPIImplementation(aggregator);
         try {
-            const availableBridgeChains: IChain[] = (
-                await implementor.getSupportedChains()
-            ).map((chain) => {
-                const userNetwork = Object.values(
-                    this._networkController.networks
-                ).find((network) => network.chainId === chain.id);
+            const supportedChains = await retryHandling<IChain[]>(
+                () => implementor.getSupportedChains(),
+                400,
+                3
+            );
 
-                if (userNetwork) {
+            const availableBridgeChains: IChain[] = supportedChains.map(
+                (chain) => {
+                    const userNetwork = Object.values(
+                        this._networkController.networks
+                    ).find((network) => network.chainId === chain.id);
+
+                    if (userNetwork) {
+                        return {
+                            ...chain,
+                            name: userNetwork.desc
+                                ? userNetwork.desc
+                                : chain.name,
+                            logo: userNetwork.iconUrls?.length
+                                ? userNetwork.iconUrls[0]
+                                : chain.logo,
+                        };
+                    }
+
+                    const knownChain = getChainListItem(chain.id);
                     return {
                         ...chain,
-                        name: userNetwork.desc ? userNetwork.desc : chain.name,
-                        logo: userNetwork.iconUrls?.length
-                            ? userNetwork.iconUrls[0]
-                            : chain.logo,
+                        name: knownChain?.name ? knownChain.name : chain.name,
+                        logo: knownChain?.logo ? knownChain.logo : chain.logo,
                     };
                 }
-
-                const knownChain = getChainListItem(chain.id);
-                return {
-                    ...chain,
-                    name: knownChain?.name ? knownChain.name : chain.name,
-                    logo: knownChain?.logo ? knownChain.logo : chain.logo,
-                };
-            });
+            );
             this.UIStore.updateState({ availableBridgeChains });
             return availableBridgeChains;
         } catch (e) {
-            throw new Error('Unable to fetch chains.');
+            log.error('Error fetching bridge chains', e);
+            return [];
         }
     }
 
@@ -493,6 +511,46 @@ export default class BridgeController extends BaseController<
     };
 
     /**
+     * Remove the bridge transactions data of an account.
+     * @param address
+     */
+    public resetBridgeTransactionsByAddress = async (
+        address: string
+    ): Promise<void> => {
+        const {
+            bridgeReceivingTransactions,
+            perndingBridgeReceivingTransactions,
+        } = this.store.getState();
+
+        let anyUpdate = false;
+
+        // Reset bridge receiving transactions
+        for (const c in bridgeReceivingTransactions) {
+            const chainId = parseInt(c);
+            if (address in bridgeReceivingTransactions[chainId]) {
+                delete bridgeReceivingTransactions[chainId][address];
+                anyUpdate = true;
+            }
+        }
+
+        // Reset pending bridge receiving transactions
+        for (const c in perndingBridgeReceivingTransactions) {
+            const chainId = parseInt(c);
+            if (address in perndingBridgeReceivingTransactions[chainId]) {
+                delete perndingBridgeReceivingTransactions[chainId][address];
+                anyUpdate = true;
+            }
+        }
+
+        if (anyUpdate) {
+            this.store.updateState({
+                bridgeReceivingTransactions,
+                perndingBridgeReceivingTransactions,
+            });
+        }
+    };
+
+    /**
      * Fetch quote details
      *
      * @param getQuoteRequest request to get a quote
@@ -533,6 +591,7 @@ export default class BridgeController extends BaseController<
             gasPrice,
             maxFeePerGas,
             maxPriorityFeePerGas,
+            gasLimit,
             params: {
                 transactionRequest,
                 fromToken,
@@ -565,7 +624,9 @@ export default class BridgeController extends BaseController<
                         maxFeePerGas: maxFeePerGas
                             ? BigNumber.from(maxFeePerGas)
                             : undefined,
-                        gasLimit: BigNumber.from(transactionRequest.gasLimit),
+                        gasLimit: BigNumber.from(
+                            gasLimit ?? transactionRequest.gasLimit
+                        ),
                         nonce: customNonce,
                     },
                     origin: 'blank',
@@ -893,17 +954,13 @@ export default class BridgeController extends BaseController<
             toToken
         );
 
-        let transactionByHash: ethers.providers.TransactionResponse;
+        let transactionByHash: TransactionResponse;
         try {
-            transactionByHash =
-                await retryHandling<ethers.providers.TransactionResponse>(
-                    () =>
-                        receivingChainIdProvider.getTransaction(
-                            receivingTxHash
-                        ),
-                    MILISECOND * 500,
-                    3
-                );
+            transactionByHash = await retryHandling<TransactionResponse>(
+                () => receivingChainIdProvider.getTransaction(receivingTxHash),
+                MILISECOND * 500,
+                3
+            );
         } catch (e) {
             log.error('_waitForReceivingTx', 'getTransaction', e);
             return false;
@@ -1120,7 +1177,7 @@ export default class BridgeController extends BaseController<
     }
 
     private _transactionByHashToTransactionMeta(
-        transaction: ethers.providers.TransactionResponse,
+        transaction: TransactionResponse,
         isRefund: boolean
     ): Partial<TransactionMeta> {
         return {

@@ -18,6 +18,7 @@ import { Devices, ExchangeType, Messages } from "./commTypes"
 import {
     IToken,
     ITokens,
+    SearchTokensResponse,
     Token,
 } from "@block-wallet/background/controllers/erc-20/Token"
 import { SiteMetadata } from "@block-wallet/provider/types"
@@ -189,6 +190,16 @@ export const unhideAccount = async (address: string): Promise<boolean> => {
  */
 export const removeAccount = async (address: string): Promise<boolean> => {
     return sendMessage(Messages.ACCOUNT.REMOVE, { address })
+}
+
+/**
+ * Resets the selected account
+ *
+ *
+ * @param address account to be deleted
+ */
+export const resetAccount = async (address: string): Promise<void> => {
+    return sendMessage(Messages.ACCOUNT.RESET, { address })
 }
 
 /**
@@ -647,7 +658,7 @@ export const sendToken = async (
 export const searchTokenInAssetsList = async (
     query: string,
     exact?: boolean
-): Promise<Token[]> => {
+): Promise<SearchTokensResponse> => {
     return sendMessage(Messages.TOKEN.SEARCH_TOKEN, {
         query,
         exact,
@@ -882,6 +893,15 @@ export const removeNetwork = async (chainId: number) => {
  */
 export const getSpecificChainDetails = async (chainId: number) => {
     return sendMessage(Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS, { chainId })
+}
+
+/**
+ * Gets the default rpc url for the specified chain
+ * @param chainId The chainId of the network to fetch the details from
+ * @returns The default rpc url for the specified chain
+ */
+export const getDefaultRpc = async (chainId: number) => {
+    return sendMessage(Messages.NETWORK.GET_DEFAULT_RPC, { chainId })
 }
 
 /**
@@ -1134,6 +1154,18 @@ export const toggleDefaultBrowserWallet = async (
 ): Promise<void> => {
     return sendMessage(Messages.WALLET.TOGGLE_DEFAULT_BROWSER_WALLET, {
         defaultBrowserWalletEnabled: enabled,
+    })
+}
+
+/**
+ * Updates the default gas option preference
+ * @param defaultGasOption default gas option
+ */
+export const setDefaultGasPreference = async (
+    defaultGasOption: "low" | "medium" | "high"
+): Promise<void> => {
+    return sendMessage(Messages.WALLET.SET_DEFAULT_GAS, {
+        defaultGasOption,
     })
 }
 

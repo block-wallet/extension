@@ -1,6 +1,6 @@
 import {
-    CONTENT,
     EXTERNAL,
+    CONTENT,
     Origin,
     WindowTransportRequestMessage,
 } from '@block-wallet/background/utils/types/communication';
@@ -9,25 +9,81 @@ import log from 'loglevel';
 import { SignalMessage, Signals } from './types';
 import { checkScriptLoad } from './utils/site';
 
-const SW_KEEP_ALIVE_INTERVAL = 10;
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-ignore
+import blankProvider from '../../../dist/blankProvider.js?raw';
+import { isManifestV3 } from '@block-wallet/background/utils/manifest';
+
+const EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR =
+    'Extension context invalidated.';
+
+let providerOverridden = false;
+
+function injectProvider() {
+    if (!isManifestV3()) {
+        const injectableScript = blankProvider;
+        const injectableScriptSourceMapURL = `//# sourceURL=${chrome.runtime.getURL(
+            'blankProvider.js'
+        )}\n`;
+        const BUNDLE = injectableScript + injectableScriptSourceMapURL;
+
+        const container = document.head || document.documentElement;
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.textContent = BUNDLE;
+        script.setAttribute('async', 'false');
+        container.insertBefore(script, container.children[0]);
+        container.removeChild(script);
+    }
+}
+
+window.addEventListener('ethereum#initialized', (e: Event) => {
+    const customEvent = e as CustomEvent;
+    if (customEvent.detail !== 'isBlockWallet') {
+        providerOverridden = true;
+    } else {
+        providerOverridden = false;
+    }
+});
+
+injectProvider();
+
+const SW_KEEP_ALIVE_INTERVAL = 1000;
 let SW_ALIVE = false;
 let portReinitialized = false;
+let intervalRef: NodeJS.Timer;
 
-setInterval(() => {
-    chrome.runtime.sendMessage({ message: CONTENT.SW_KEEP_ALIVE }, () => {
-        if (chrome.runtime.lastError) {
-            log.info(
-                'Error keeping alive:',
-                chrome.runtime.lastError.message || chrome.runtime.lastError
+if (isManifestV3()) {
+    intervalRef = setInterval(() => {
+        try {
+            chrome.runtime.sendMessage(
+                { message: CONTENT.SW_KEEP_ALIVE },
+                () => {
+                    if (chrome.runtime.lastError) {
+                        log.info(
+                            'Error keeping alive:',
+                            chrome.runtime.lastError.message ||
+                                chrome.runtime.lastError
+                        );
+                        const err = chrome.runtime.lastError.message || '';
+                        SW_ALIVE = !err.includes(
+                            'Receiving end does not exist'
+                        );
+                        portReinitialized = SW_ALIVE;
+                    } else {
+                        SW_ALIVE = true;
+                    }
+                }
             );
-            const err = chrome.runtime.lastError.message || '';
-            SW_ALIVE = !err.includes('Receiving end does not exist');
-            portReinitialized = SW_ALIVE;
-        } else {
-            SW_ALIVE = true;
+        } catch (e) {
+            e.message === EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR
+                ? log.error(`Please refresh the page. BlockWallet: ${e}`)
+                : log.error(`BlockWallet: ${e}`);
         }
-    });
-}, SW_KEEP_ALIVE_INTERVAL);
+    }, SW_KEEP_ALIVE_INTERVAL);
+} else {
+    SW_ALIVE = true;
+}
 
 function sleep(ms: number): Promise<unknown> {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -42,25 +98,20 @@ chrome.runtime.sendMessage(
     (response: { shouldInject: boolean }): void => {
         const error = chrome.runtime.lastError;
         const shouldLoad = checkScriptLoad();
-
         if (
             port &&
-            (response.shouldInject !== true || shouldLoad !== true || error)
+            (response.shouldInject !== true || shouldLoad !== true || error) &&
+            //If provider has been overridden by another wallet, then remove connection.
+            providerOverridden
         ) {
+            if (isManifestV3() && intervalRef) {
+                clearInterval(intervalRef);
+            }
             port.disconnect();
             window.removeEventListener('message', windowListener);
             log.warn('BlockWallet: Provider not injected due to user setting.');
-        } else {
-            const container = document.head || document.documentElement;
-            const script = document.createElement('script');
-
-            script.type = 'text/javascript';
-            script.src = chrome.runtime.getURL('blankProvider.js');
-            script.setAttribute('async', 'false');
-            script.onload = () => {
-                container.removeChild(script);
-            };
-            container.insertBefore(script, container.children[0]);
+        } else if (providerOverridden) {
+            injectProvider();
         }
     }
 );
@@ -116,34 +167,37 @@ const init = () => {
             window.location.href
         );
     });
-    port.onDisconnect.addListener(() => {
-        initMutex.runExclusive(async () => {
-            log.info('port disconnection');
-            SW_ALIVE = false; // If we've reached this point, we can't expect this to be false and wait until this has changed.
-            await sleep(200);
 
-            // Port has been disconnected, reinitialize once
-            while (SW_ALIVE === false) {
-                log.debug('waiting for SW to be restarted...');
-                await sleep(100);
-            }
+    if (isManifestV3()) {
+        port.onDisconnect.addListener(() => {
+            initMutex.runExclusive(async () => {
+                log.info('port disconnection');
+                SW_ALIVE = false; // If we've reached this point, we can't expect this to be false and wait until this has changed.
+                await sleep(200);
 
-            if (!portReinitialized) {
-                log.info('reinitializing port...');
+                // Port has been disconnected, reinitialize once
+                while (SW_ALIVE === false) {
+                    log.debug('waiting for SW to be restarted...');
+                    await sleep(100);
+                }
 
-                init();
+                if (!portReinitialized) {
+                    log.info('reinitializing port...');
 
-                // Signal SW_REINIT in case there were active subscriptions
-                window.postMessage(
-                    {
-                        signal: Signals.SW_REINIT,
-                        origin: Origin.BACKGROUND,
-                    } as SignalMessage,
-                    window.location.href
-                );
-            }
+                    init();
+
+                    // Signal SW_REINIT in case there were active subscriptions
+                    window.postMessage(
+                        {
+                            signal: Signals.SW_REINIT,
+                            origin: Origin.BACKGROUND,
+                        } as SignalMessage,
+                        window.location.href
+                    );
+                }
+            });
         });
-    });
+    }
     portReinitialized = true;
 };
 

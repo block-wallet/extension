@@ -206,7 +206,7 @@ export default class PermissionsController extends BaseController<PermissionsCon
      * Removes one specific account from all sites' permissions
      *
      */
-    public removeAllPermissionsOfAccount = (account: string): void => {
+    public revokeAllPermissionsOfAccount = (account: string): void => {
         const permissions = this.store.getState().permissions;
         const sites = Object.keys(permissions);
 
@@ -354,6 +354,9 @@ export default class PermissionsController extends BaseController<PermissionsCon
             // Check if there currently is a pending permission request from that origin
             for (const request in requests) {
                 if (requests[request].origin === origin) {
+                    //update timestampt to focus the extension window.
+                    this._updatePermissionRequestTimestamp(request);
+                    //return error to keep interface consitent with the dApp
                     throw new Error(ProviderError.RESOURCE_UNAVAILABLE);
                 }
             }
@@ -375,6 +378,25 @@ export default class PermissionsController extends BaseController<PermissionsCon
 
             // Add response handler
             this._handlers[id] = { reject, resolve };
+        });
+    };
+
+    private _updatePermissionRequestTimestamp = async (id: string) => {
+        const requests = { ...this.store.getState().permissionRequests };
+        const currentRequest = requests[id];
+
+        if (!currentRequest) {
+            throw new Error('The request no longer exist.');
+        }
+
+        // Update timestamp
+        requests[id] = {
+            ...currentRequest,
+            time: Date.now(),
+        };
+
+        this.store.updateState({
+            permissionRequests: requests,
         });
     };
 

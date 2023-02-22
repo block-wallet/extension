@@ -1,10 +1,16 @@
 import { useDrag, useDrop, DragSourceMonitor } from "react-dnd"
 import { useEffect, useRef, useState } from "react"
 import classnames from "classnames"
-import { RiArrowRightSLine } from "react-icons/ri"
 import { HiDotsVertical } from "react-icons/hi"
+import { RiPencilFill } from "react-icons/ri"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import { changeNetwork } from "../../context/commActions"
+import useIsHovering from "../../util/hooks/useIsHovering"
 
 import { Network } from "@block-wallet/background/utils/constants/networks"
+import ConfirmDialog from "../dialog/ConfirmDialog"
+import Icon, { IconName } from "../ui/Icon"
+import WaitingDialog, { useWaitingDialog } from "../dialog/WaitingDialog"
 
 interface NetworkInfo extends Network {
     color: string
@@ -41,6 +47,15 @@ const NetworkDisplay = ({
     isTestnet?: boolean
     onSuccessfulDrop: () => void
 }) => {
+    const { selectedNetwork } = useBlankState()!
+    const isSelectedNetwork = selectedNetwork === networkInfo.name
+
+    const { isHovering: isHoveringIcons, getIsHoveringProps } = useIsHovering()
+
+    const { isOpen, status, dispatch } = useWaitingDialog()
+
+    const [confirmSwitchNetwork, setConfirmSwitchNetwork] = useState(false)
+
     const [dropAnimation, setDropAnimation] = useState(false)
     const dropRef = useRef<HTMLDivElement>(null)
     const dragRef = useRef<HTMLDivElement>(null)
@@ -124,25 +139,65 @@ const NetworkDisplay = ({
 
     const opacity = isDragging ? 0 : 1
 
+    const cardHoverStyle = !dropAnimation && !isHoveringIcons
+
     return (
         <div
-            onClick={onClick}
             className={classnames(
                 "rounded-md",
                 dropAnimation &&
                     "bg-blue-100 transition-colors animate-[pulse_0.8s]",
-                !dropAnimation && "hover:bg-gray-100 hover:cursor-pointer"
+                cardHoverStyle && "hover:bg-primary-100"
             )}
             ref={dropRef}
             style={{ opacity }}
         >
+            <WaitingDialog
+                status={status}
+                open={isOpen}
+                titles={{
+                    loading: "Switching network...",
+                    error: "Error",
+                    success: "Success!",
+                }}
+                texts={{
+                    loading:
+                        "Please wait while the network is being switched...",
+                    error: "There was an error while switching the network",
+                    success: `Switch to ${networkInfo.desc} network was successful.`,
+                }}
+                onDone={() => {
+                    dispatch({ type: "close" })
+                }}
+                timeout={1100}
+            />
+
+            <ConfirmDialog
+                title="Switch Network"
+                message={`Are you sure you want to switch to ${networkInfo.desc} network?`}
+                open={confirmSwitchNetwork}
+                onClose={() => setConfirmSwitchNetwork(false)}
+                onConfirm={async () => {
+                    dispatch({
+                        type: "open",
+                        payload: { status: "loading" },
+                    })
+                    await changeNetwork(networkInfo.name)
+                    dispatch({
+                        type: "setStatus",
+                        payload: { status: "success" },
+                    })
+                }}
+            />
             <>
-                <div className="flex flex-row justify-between items-center p-2 pl-0">
-                    <div className="flex flex-row group items-center">
+                <div className="flex flex-row justify-between items-center pr-2 pl-0 h-full">
+                    <div
+                        className="flex flex-row group items-center py-2 cursor-move"
+                        ref={dragRef}
+                    >
                         <div
-                            className="flex flex-row items-center cursor-move"
+                            className="flex flex-row items-center"
                             title="Drag to sort"
-                            ref={dragRef}
                         >
                             <HiDotsVertical
                                 className="text-gray-500 mr-2"
@@ -159,8 +214,36 @@ const NetworkDisplay = ({
                             {networkInfo.desc}
                         </span>
                     </div>
-
-                    <RiArrowRightSLine size={20} />
+                    <div className="flex flex-row items-center h-full">
+                        {isSelectedNetwork ? (
+                            <div
+                                className="px-2 text-green-600"
+                                title="Current network"
+                            >
+                                <Icon
+                                    name={IconName.CHECKMARK}
+                                    className="fill-green-600"
+                                />
+                            </div>
+                        ) : (
+                            <div
+                                {...getIsHoveringProps()}
+                                className="p-2 hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                                title="Switch network"
+                                onClick={() => setConfirmSwitchNetwork(true)}
+                            >
+                                <Icon name={IconName.SWITCH} />
+                            </div>
+                        )}
+                        <div
+                            {...getIsHoveringProps()}
+                            className="p-2 hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                            title="Edit network"
+                            onClick={onClick}
+                        >
+                            <RiPencilFill size={18} />
+                        </div>
+                    </div>
                 </div>
             </>
         </div>

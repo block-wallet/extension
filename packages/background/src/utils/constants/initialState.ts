@@ -48,6 +48,8 @@ import {
     BridgeControllerState,
 } from '@block-wallet/background/controllers/BridgeController';
 import { SwapControllerMemState } from '@block-wallet/background/controllers/SwapController';
+import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
+import CACHED_INCOMPATIBLE_SITES from '@block-wallet/remote-configs/provider/incompatible_sites.json';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -67,6 +69,7 @@ export type BlankAppState = {
     BlockFetchController: BlockFetchControllerState;
     TransactionWatcherControllerState: TransactionWatcherControllerState;
     BridgeController: BridgeControllerState;
+    RemoteConfigsController: RemoteConfigsControllerState;
 };
 
 export type BlankAppUIState = {
@@ -77,7 +80,6 @@ export type BlankAppUIState = {
     PreferencesController: PreferencesControllerState;
     TransactionController: TransactionVolatileControllerState;
     BlankDepositController: PrivacyControllerUIStoreState;
-    BlockUpdatesController: BlockUpdatesControllerState;
     ExchangeRatesController: ExchangeRatesControllerState;
     GasPricesController: GasPricesControllerState;
     ActivityListController: IActivityListState;
@@ -139,7 +141,7 @@ const initialState: BlankAppState = {
         showDefaultWalletPreferences: false,
         localeInfo: 'en-US',
         nativeCurrency: 'usd',
-        showTestNetworks: false,
+        showTestNetworks: true,
         antiPhishingImage: '',
         popupTab: 'activity',
         settings: {
@@ -158,6 +160,7 @@ const initialState: BlankAppState = {
         filters: {
             account: [],
         },
+        defaultGasOption: 'medium',
     },
     TransactionController: {
         transactions: [],
@@ -177,7 +180,7 @@ const initialState: BlankAppState = {
         },
     },
     NetworkController: {
-        selectedNetwork: 'mainnet',
+        selectedNetwork: 'goerli',
         availableNetworks: INITIAL_NETWORKS,
         isNetworkChanging: false,
         isUserNetworkOnline: true,
@@ -232,6 +235,11 @@ const initialState: BlankAppState = {
     BridgeController: {
         bridgeReceivingTransactions: {},
         perndingBridgeReceivingTransactions: {},
+    },
+    RemoteConfigsController: {
+        provider: {
+            incompatibleSites: CACHED_INCOMPATIBLE_SITES,
+        },
     },
 };
 

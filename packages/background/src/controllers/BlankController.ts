@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 // Explicitly disabled no-empty-pattern on this file as some actions need generic param typing but receive empty objects.
 /* eslint-disable no-empty-pattern */
-import type {
+import {
     ExternalEventSubscription,
     MessageTypes,
     RequestAccountCreate,
@@ -104,10 +104,14 @@ import type {
     RequestApproveBridgeAllowance,
     RequestGetBridgeRoutes,
     RequestEditNetworksOrder,
+    RequestAccountReset,
+    RequestSetDefaultGas,
+    RequestCalculateApproveTransactionGasLimit,
+    Origin,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import BlankStorageStore from '../infrastructure/stores/BlankStorageStore';
 import { Flatten } from '../utils/types/helpers';
 import { Messages } from '../utils/types/communication';
@@ -116,7 +120,7 @@ import {
     BlankAppState,
     BlankAppUIState,
 } from '../utils/constants/initialState';
-import AppStateController from './AppStateController';
+import AppStateController, { AppStateEvents } from './AppStateController';
 import OnboardingController from './OnboardingController';
 import BlankProviderController, {
     BlankProviderEvents,
@@ -146,9 +150,16 @@ import { GasPricesController } from './GasPricesController';
 import {
     TokenController,
     TokenControllerProps,
+    NATIVE_TOKEN_ADDRESS,
 } from './erc-20/TokenController';
 import SwapController, { SwapParameters, SwapQuote } from './SwapController';
-import { IToken, ITokens, Token } from './erc-20/Token';
+import {
+    FetchTokenResponse,
+    IToken,
+    ITokens,
+    SearchTokensResponse,
+    Token,
+} from './erc-20/Token';
 import { ImportStrategy, getAccountJson } from '../utils/account';
 import { ActivityListController } from './ActivityListController';
 import {
@@ -195,7 +206,7 @@ import { toError } from '../utils/toError';
 import { getCustomRpcChainId } from '../utils/ethereumChain';
 import { getChainListItem, searchChainsByTerm } from '../utils/chainlist';
 import { ChainListItem } from '@block-wallet/chains-assets';
-import { Network } from '../utils/constants/networks';
+import { INITIAL_NETWORKS, Network } from '../utils/constants/networks';
 
 import { generateOnDemandReleaseNotes } from '../utils/userPreferences';
 import { TransactionWatcherController } from './TransactionWatcherController';
@@ -209,6 +220,11 @@ import BridgeController, {
 import { IChain } from '../utils/types/chain';
 import { BridgeImplementation } from '../utils/bridgeApi';
 import TokenAllowanceController from './erc-20/transactions/TokenAllowanceController';
+import { isOnboardingTabUrl } from '../utils/window';
+import RemoteConfigsController, {
+    RemoteConfigsControllerState,
+} from './RemoteConfigsController';
+import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -248,6 +264,7 @@ export default class BlankController extends EventEmitter {
     private readonly blockUpdatesController: BlockUpdatesController;
     private readonly transactionWatcherController: TransactionWatcherController;
     private readonly tokenAllowanceController: TokenAllowanceController;
+    private readonly remoteConfigsController: RemoteConfigsController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -278,6 +295,10 @@ export default class BlankController extends EventEmitter {
 
         this.networkController = new NetworkController(
             initState.NetworkController
+        );
+
+        this.remoteConfigsController = new RemoteConfigsController(
+            initState.RemoteConfigsController
         );
 
         this.blockFetchController = new BlockFetchController(
@@ -330,18 +351,6 @@ export default class BlankController extends EventEmitter {
             this.keyringController
         );
 
-        this.exchangeRatesController = new ExchangeRatesController(
-            initState.ExchangeRatesController,
-            this.preferencesController,
-            this.networkController,
-            this.blockUpdatesController,
-            () => {
-                return this.accountTrackerController.getAccountTokens(
-                    this.preferencesController.getSelectedAddress()
-                );
-            }
-        );
-
         this.transactionController = new TransactionController(
             this.networkController,
             this.preferencesController,
@@ -381,7 +390,16 @@ export default class BlankController extends EventEmitter {
             this.preferencesController,
             this.blockUpdatesController,
             this.transactionWatcherController,
+            this.transactionController,
             initState.AccountTrackerController
+        );
+
+        this.exchangeRatesController = new ExchangeRatesController(
+            initState.ExchangeRatesController,
+            this.preferencesController,
+            this.networkController,
+            this.blockUpdatesController,
+            this.accountTrackerController
         );
 
         this.blankProviderController = new BlankProviderController(
@@ -391,7 +409,8 @@ export default class BlankController extends EventEmitter {
             this.appStateController,
             this.keyringController,
             this.tokenController,
-            this.blockUpdatesController
+            this.blockUpdatesController,
+            this.gasPricesController
         );
 
         this.tokenAllowanceController = new TokenAllowanceController(
@@ -449,6 +468,7 @@ export default class BlankController extends EventEmitter {
             AddressBookController: this.addressBookController.store,
             BlockUpdatesController: this.blockUpdatesController.store,
             BlockFetchController: this.blockFetchController.store,
+            RemoteConfigsController: this.remoteConfigsController.store,
             TransactionWatcherControllerState:
                 this.transactionWatcherController.store,
             BridgeController: this.bridgeController.store,
@@ -470,13 +490,15 @@ export default class BlankController extends EventEmitter {
             PermissionsController: this.permissionsController.store,
             AddressBookController: this.addressBookController.store,
             BlankProviderController: this.blankProviderController.store,
-            BlockUpdatesController: this.blockUpdatesController.store,
             SwapController: this.swapController.UIStore,
             BridgeController: this.bridgeController.UIStore,
         });
 
         // Check controllers on app lock/unlock
-        this.appStateController.UIStore.subscribe(() => {
+        this.appStateController.on(AppStateEvents.APP_LOCKED, () => {
+            this.manageControllers();
+        });
+        this.appStateController.on(AppStateEvents.APP_UNLOCKED, () => {
             this.manageControllers();
         });
 
@@ -515,8 +537,14 @@ export default class BlankController extends EventEmitter {
      * Manages controllers updates
      */
     private manageControllers() {
-        // Get active subscriptions
-        const activeSubscriptions = Object.keys(this.subscriptions).length;
+        // Get active subscription
+        let activeSubscription = false;
+        for (const key in this.subscriptions) {
+            if (this.subscriptions[key].name === Origin.EXTENSION) {
+                activeSubscription = true;
+                break;
+            }
+        }
 
         // Check if app is unlocked
         const isAppUnlocked =
@@ -524,7 +552,7 @@ export default class BlankController extends EventEmitter {
 
         this.blockUpdatesController.setActiveSubscriptions(
             isAppUnlocked,
-            activeSubscriptions
+            activeSubscription
         );
     }
 
@@ -693,6 +721,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.ACCOUNT.REMOVE:
                 return this.accountRemove(request as RequestAccountRemove);
+            case Messages.ACCOUNT.RESET:
+                return this.accountReset(request as RequestAccountReset);
             case Messages.ACCOUNT.HIDE:
                 return this.accountHide(request as RequestAccountHide);
             case Messages.ACCOUNT.UNHIDE:
@@ -774,6 +804,8 @@ export default class BlankController extends EventEmitter {
                 return this.setupProvider(portId);
             case Messages.EXTERNAL.SET_ICON:
                 return this.setProviderIcon(request as RequestSetIcon, portId);
+            case Messages.EXTERNAL.GET_PROVIDER_CONFIG:
+                return this.getProviderRemoteConfig();
             case Messages.NETWORK.CHANGE:
                 return this.networkChange(request as RequestNetworkChange);
             case Messages.NETWORK.SET_SHOW_TEST_NETWORKS:
@@ -792,6 +824,8 @@ export default class BlankController extends EventEmitter {
                 return this.removeNetwork(request as RequestRemoveNetwork);
             case Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS:
                 return this.getChainData(request as RequestGetChainData);
+            case Messages.NETWORK.GET_DEFAULT_RPC:
+                return this.getChainDefaultRpc(request as RequestGetChainData);
             case Messages.NETWORK.GET_RPC_CHAIN_ID:
                 return this.getRpcChainId(request as RequestGetRpcChainId);
             case Messages.NETWORK.SEARCH_CHAINS:
@@ -820,6 +854,8 @@ export default class BlankController extends EventEmitter {
                 return this.updateSitePermissions(
                     request as RequestUpdateSitePermissions
                 );
+            case Messages.STATE.GET_REMOTE_CONFIG:
+                return this.getRemoteConifg();
             case Messages.STATE.GET:
                 return this.getState();
             case Messages.TRANSACTION.CONFIRM:
@@ -861,6 +897,10 @@ export default class BlankController extends EventEmitter {
             case Messages.TRANSACTION.GET_SEND_TRANSACTION_RESULT:
                 return this.getSendTransactionResult(
                     request as RequestSendTransactionResult
+                );
+            case Messages.TRANSACTION.CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT:
+                return this.calculateApproveTransactionGasLimit(
+                    request as RequestCalculateApproveTransactionGasLimit
                 );
             case Messages.TRANSACTION.CALCULATE_SEND_TRANSACTION_GAS_LIMIT:
                 return this.calculateSendTransactionGasLimit(
@@ -966,6 +1006,8 @@ export default class BlankController extends EventEmitter {
                 return this.toggleDefaultBrowserWallet(
                     request as RequestToggleDefaultBrowserWallet
                 );
+            case Messages.WALLET.SET_DEFAULT_GAS:
+                return this.setDefaultGas(request as RequestSetDefaultGas);
             case Messages.WALLET.UPDATE_ANTI_PHISHING_IMAGE:
                 return this.updateAntiPhishingImage(
                     request as RequestUpdateAntiPhishingImage
@@ -1196,12 +1238,42 @@ export default class BlankController extends EventEmitter {
         address,
     }: RequestAccountRemove): Promise<boolean> {
         await this.accountTrackerController.removeAccount(address);
-        this.transactionController.wipeTransactionsByAddress(address);
-        this.permissionsController.removeAllPermissionsOfAccount(address);
+        this.transactionController.resetTransactionsByAddress(address);
+        this.permissionsController.revokeAllPermissionsOfAccount(address);
         await this.keyringController.removeAccount(address);
-        this.transactionWatcherController.removeTransactionsByAddress(address);
+        this.transactionWatcherController.resetTransactionsByAddress(address);
+        this.bridgeController.resetBridgeTransactionsByAddress(address);
+        this.tokenController.resetTokensByAccount(address);
 
         return true;
+    }
+
+    /**
+     * Resets an account by removing its transaction history and added tokens.
+     *
+     * @param address address to be reset - hex
+     */
+    private async accountReset({
+        address,
+    }: RequestAccountRemove): Promise<void> {
+        // Reset account
+        await Promise.all([
+            this.transactionController.resetTransactionsByAddress(address),
+            this.transactionWatcherController.resetTransactionsByAddress(
+                address
+            ),
+            this.tokenController.resetTokensByAccount(address),
+            this.permissionsController.revokeAllPermissionsOfAccount(address),
+            this.accountTrackerController.resetAccount(address),
+            this.bridgeController.resetBridgeTransactionsByAddress(address),
+        ]);
+        // Refetch account balance
+        this.accountTrackerController.updateAccounts({
+            addresses: [address],
+            assetAddresses: [NATIVE_TOKEN_ADDRESS],
+        });
+        // Refetch transactions
+        this.transactionWatcherController.fetchTransactions();
     }
 
     /**
@@ -1213,7 +1285,7 @@ export default class BlankController extends EventEmitter {
         address,
     }: RequestAccountRemove): Promise<boolean> {
         await this.accountTrackerController.hideAccount(address);
-        this.permissionsController.removeAllPermissionsOfAccount(address);
+        this.permissionsController.revokeAllPermissionsOfAccount(address);
 
         return true;
     }
@@ -1227,7 +1299,7 @@ export default class BlankController extends EventEmitter {
         address,
     }: RequestAccountRemove): Promise<boolean> {
         await this.accountTrackerController.unhideAccount(address);
-        this.permissionsController.removeAllPermissionsOfAccount(address);
+        this.permissionsController.revokeAllPermissionsOfAccount(address);
 
         return true;
     }
@@ -1318,8 +1390,8 @@ export default class BlankController extends EventEmitter {
         // Check if there is any open onboarding tab
         for (const instance in extensionInstances) {
             if (
-                extensionInstances[instance].port.sender?.url?.includes(
-                    'tab.html'
+                isOnboardingTabUrl(
+                    extensionInstances[instance].port.sender?.url
                 )
             ) {
                 onboardingInstance = instance;
@@ -1344,10 +1416,10 @@ export default class BlankController extends EventEmitter {
         // Close every other extension instance tab
         for (const instance in extensionInstances) {
             if (
-                extensionInstances[instance].port.sender?.url?.includes(
-                    'tab.html'
-                ) &&
-                instance
+                instance &&
+                isOnboardingTabUrl(
+                    extensionInstances[instance].port.sender?.url
+                )
             ) {
                 const tab = extensionInstances[instance].port.sender?.tab;
                 if (tab && tab.id && tab.windowId) {
@@ -1844,6 +1916,18 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * getChainDefaultRpc
+     *
+     * @param chainId chain identifier of the network
+     * @returns default rpc url of the network
+     */
+    private async getChainDefaultRpc({ chainId }: RequestGetChainData) {
+        return Object.values(INITIAL_NETWORKS).find(
+            (network) => network.chainId === chainId
+        )?.defaultRpcUrl;
+    }
+
+    /**
      * getRpcChainId
      *
      * @param rpcUrl rpc url of the network
@@ -1915,6 +1999,14 @@ export default class BlankController extends EventEmitter {
      */
     private getState(): Flatten<BlankAppUIState> {
         return this.UIStore.flatState;
+    }
+
+    private getRemoteConifg(): RemoteConfigsControllerState {
+        return this.remoteConfigsController.config;
+    }
+
+    private getProviderRemoteConfig(): RemoteConfigsControllerState['provider'] {
+        return this.remoteConfigsController.providerConfig;
     }
 
     /**
@@ -2114,6 +2206,26 @@ export default class BlankController extends EventEmitter {
         chainId: number
     ): Promise<GasPriceData | undefined> {
         return this.gasPricesController.fetchGasPriceData(chainId);
+    }
+
+    /**
+     * Calculate the gas limit for an approve transaction
+     */
+    private async calculateApproveTransactionGasLimit({
+        tokenAddress,
+        spender,
+        amount,
+    }: RequestCalculateApproveTransactionGasLimit): Promise<TransactionGasEstimation> {
+        const approveTransaction = new ApproveTransaction({
+            transactionController: this.transactionController,
+            preferencesController: this.preferencesController,
+            networkController: this.networkController,
+        });
+        return approveTransaction.calculateTransactionGasLimit({
+            tokenAddress,
+            spender,
+            amount,
+        });
     }
 
     private cancelTransaction({
@@ -2592,12 +2704,13 @@ export default class BlankController extends EventEmitter {
         exact,
         accountAddress,
         chainId,
-    }: RequestSearchToken): Promise<Token[]> {
+    }: RequestSearchToken): Promise<SearchTokensResponse> {
         return this.tokenController.search(
             query,
             exact,
             accountAddress,
-            chainId
+            chainId,
+            false
         );
     }
 
@@ -2654,7 +2767,8 @@ export default class BlankController extends EventEmitter {
         return this.tokenController.addCustomTokens(
             tokens,
             accountAddress,
-            chainId
+            chainId,
+            true
         );
     }
 
@@ -2696,8 +2810,10 @@ export default class BlankController extends EventEmitter {
      */
     private async populateTokenData({
         tokenAddress,
-    }: RequestPopulateTokenData): Promise<Token> {
-        return this.tokenOperationsController.populateTokenData(tokenAddress);
+    }: RequestPopulateTokenData): Promise<FetchTokenResponse> {
+        return this.tokenOperationsController.fetchTokenDataFromChain(
+            tokenAddress
+        );
     }
 
     /**
@@ -2873,6 +2989,14 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * Sets the default gas option preference
+     * @param defaultGasOption default gas option
+     */
+    private setDefaultGas({ defaultGasOption }: RequestSetDefaultGas) {
+        this.preferencesController.defaultGasOption = defaultGasOption;
+    }
+
+    /**
      * Updates the user's native currency preference and fires the exchange rates update
      * @param currencyCode the user selected currency
      *
@@ -2905,7 +3029,7 @@ export default class BlankController extends EventEmitter {
             networkByChainId.set(network.chainId, network);
         });
         return Promise.resolve(
-            filteredChains.map((chain) => {
+            filteredChains.map((chain: any) => {
                 return {
                     chain,
                     isEnabled:

@@ -3,6 +3,7 @@
     "version": "0.3.2",
     "private": true,
     "dependencies": {
+        "@block-wallet/remote-configs": "https://github.com/block-wallet/remote-configs#v1.1.0",
         "@metamask/safe-event-emitter": "^2.0.0",
         "async-mutex": "^0.4.0",
         "eth-rpc-errors": "^4.0.3",

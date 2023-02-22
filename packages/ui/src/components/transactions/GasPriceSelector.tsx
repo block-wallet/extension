@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react"
 import { ImCheckmark } from "react-icons/im"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import classnames from "classnames"
 import { parseUnits } from "@ethersproject/units"
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import { GasPriceLevels } from "@block-wallet/background/controllers/GasPricesController"
 import * as yup from "yup"
 import { InferType } from "yup"
@@ -57,6 +57,7 @@ export type TransactionSpeedOption = {
 interface GasPriceSelectorProps {
     defaultGasLimit: BigNumber
     defaultGasPrice: BigNumber
+    defaultLevel: "low" | "medium" | "high"
     setGasPriceAndLimit: (gasPrice: BigNumber, gasLimit: BigNumber) => void
     disabled?: boolean
     isParentLoading?: boolean
@@ -70,6 +71,7 @@ interface GasTabProps {
     selectedGasPrice: TransactionSpeedOption
     defaultGasLimit: BigNumber
     defaultGasPrice: BigNumber
+    minGasLimit?: number
     setUserChanged: (userChanged: boolean) => void
     handlePriceSelection: (price: TransactionSpeedOption) => void
     getSpeedOption: (
@@ -251,7 +253,7 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                                 !isCustom && "text-gray-400"
                             )}
                         >
-                            Gas Limit
+                            Gas limit
                         </label>
                         <EndLabel label="WEI">
                             <input
@@ -434,6 +436,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
     const {
         defaultGasLimit,
         defaultGasPrice,
+        defaultLevel,
         setGasPriceAndLimit,
         disabled,
         isParentLoading = props.isParentLoading ?? false,
@@ -496,16 +499,9 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
     const [userChanged, setUserChanged] = useState<boolean>(false)
 
     // Tabs variables
-    // if network is configured to not show gas levels or received gas does not match with average, default is advanced tab.
+    // if network is configured to noxt show gas levels or received gas does not match with average, default is advanced tab.
     const [tab, setTab] = useState(
-        tabs[
-            !showGasLevels ||
-            !defaultGasPrice.eq(
-                BigNumber.from(gasPricesLevels.average.gasPrice)
-            )
-                ? 1
-                : 0
-        ]
+        tabs[!showGasLevels || !defaultLevel ? 1 : 0]
     )
     const TabComponent = tab.component
     //Recalculate options on gas change
@@ -532,11 +528,14 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
 
         //Default selected checks if received default price is equals average to select it, otherwise sets custom value.
         if (!isLoaded) {
-            if (showGasLevels && defaultGasPrice.eq(speedOptions[1].gasPrice)) {
-                setSelectedGasPrice(speedOptions[1])
+            if (showGasLevels && defaultLevel) {
+                const defaultOption = speedOptions.find(
+                    (o) => o.label === defaultLevel
+                )!
+                setSelectedGasPrice(defaultOption)
                 setGasPriceAndLimit(
-                    speedOptions[1].gasPrice,
-                    speedOptions[1].gasLimit
+                    defaultOption.gasPrice,
+                    defaultOption.gasLimit
                 )
                 setTab(tabs[0])
             } else {
@@ -586,7 +585,8 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
             <div
                 className={classnames(
                     Classes.blueSection,
-                    active && Classes.blueSectionActive
+                    active && Classes.blueSectionActive,
+                    disabled && "pointer-events-none"
                 )}
                 onClick={() =>
                     !disabled &&
@@ -640,7 +640,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                 open={showEstimationWarning}
                 onDone={() => setShowEstimationWarning(false)}
                 title="Gas estimation failed"
-                message="There was an error estimating fee values. This transaction might fail when confirmed."
+                message="The provided gas estimation could be incorrect. Please review gas settings before submitting."
             />
             <Dialog open={active} onClickOutside={() => setActive(false)}>
                 <span className="absolute top-0 right-0 p-4 z-50">

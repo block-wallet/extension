@@ -2,10 +2,11 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { Redirect } from "react-router-dom"
 import { BsFileEarmarkText } from "react-icons/bs"
 import { AiFillInfoCircle } from "react-icons/ai"
-import { formatUnits, getAddress } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
+import { getAddress } from "@ethersproject/address"
 import { HiOutlineExclamationCircle } from "react-icons/hi"
 
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 
 // Styles
 import { Classes, classnames } from "../../styles"
@@ -119,6 +120,7 @@ const TransactionConfirm: React.FC<{
         networkNativeCurrency,
         selectedAddress,
         settings,
+        defaultGasOption,
     } = useBlankState()!
     const { isEIP1559Compatible, defaultNetworkLogo } = useSelectedNetwork()
     const [gasPriceThresholdWarning, setGasPriceThresholdWarning] = useState<{
@@ -651,6 +653,7 @@ const TransactionConfirm: React.FC<{
 
                     {!isEIP1559Compatible ? (
                         <GasPriceSelector
+                            defaultLevel={defaultGasOption || "medium"}
                             defaultGasLimit={defaultGas.gasLimit!}
                             defaultGasPrice={defaultGas.gasPrice!}
                             setGasPriceAndLimit={(gasPrice, gasLimit) => {
@@ -662,6 +665,7 @@ const TransactionConfirm: React.FC<{
                     ) : (
                         <GasPriceComponent
                             defaultGas={{
+                                defaultLevel: defaultGasOption || "medium",
                                 feeData: {
                                     gasLimit: defaultGas.gasLimit,
                                     maxFeePerGas: defaultGas.maxFeePerGas!,

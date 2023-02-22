@@ -7,11 +7,11 @@ import TextInput from "../../components/input/TextInput"
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
-import classnames from "classnames"
 import {
     addNetwork,
     editNetwork,
     getRpcChainId,
+    getDefaultRpc,
     getSpecificChainDetails,
     removeNetwork,
 } from "../../context/commActions"
@@ -140,7 +140,18 @@ const NetworkFormPage = ({
     const [rpcChainId, setRpcChainId] = useState<number>(0)
     const [isNativelySupported, setIsNativelySupported] =
         useState<boolean>(false)
-    const { availableNetworks } = useBlankState()!
+    const { availableNetworks, isProviderNetworkOnline } = useBlankState()!
+
+    const [defaultRpcUrl, setDefaultRpcUrl] = useState<string | undefined>(
+        undefined
+    )
+
+    useEffect(() => {
+        if (!network?.chainId) return
+        getDefaultRpc(network?.chainId).then((defaultRpc) => {
+            setDefaultRpcUrl(defaultRpc)
+        })
+    }, [])
 
     const {
         register,
@@ -171,6 +182,8 @@ const NetworkFormPage = ({
         rpcUrl: watchRPCUrl,
         symbol: watchCurrencySymbol,
     } = watchedFields
+
+    const isUsingDefaultRPC = !!defaultRpcUrl && watchRPCUrl === defaultRpcUrl
 
     useEffect(() => {
         let ref: NodeJS.Timeout | null = null
@@ -308,8 +321,11 @@ const NetworkFormPage = ({
         )
     }, [availableNetworks, watchChainId, watchName])
 
+    //Do not allow to edit the selected network unless the provider is down.
     const editingSelectedNetwork =
-        isEdit && selectedChainId === Number(watchChainId)
+        isEdit &&
+        selectedChainId === Number(watchChainId) &&
+        isProviderNetworkOnline
 
     const canSubmitForm =
         Object.keys(errors).length === 0 &&
@@ -496,26 +512,42 @@ const NetworkFormPage = ({
                             }
                         />
                     </div>
-                    <TextInput
-                        appearance="outline"
-                        label="RPC URL"
-                        {...register("rpcUrl")}
-                        placeholder="https://..."
-                        error={errors.rpcUrl?.message}
-                        autoFocus={true}
-                        defaultValue={network?.rpcUrl}
-                        readOnly={
-                            editMode === "disabled" || editingSelectedNetwork
-                        }
-                        endLabel={
-                            <RPCValidationEndLabelInfo
-                                currentChainId={watchChainId}
-                                rpcChainId={rpcChainId}
-                                isValidating={isValidating}
-                                rpcValidation={rpcValidationStatus}
-                            />
-                        }
-                    />
+                    <div>
+                        <TextInput
+                            appearance="outline"
+                            label="RPC URL"
+                            {...register("rpcUrl")}
+                            placeholder="https://..."
+                            error={errors.rpcUrl?.message}
+                            autoFocus={true}
+                            defaultValue={network?.rpcUrl}
+                            readOnly={
+                                editMode === "disabled" ||
+                                editingSelectedNetwork
+                            }
+                            endLabel={
+                                <RPCValidationEndLabelInfo
+                                    currentChainId={watchChainId}
+                                    rpcChainId={rpcChainId}
+                                    isValidating={isValidating}
+                                    rpcValidation={rpcValidationStatus}
+                                />
+                            }
+                        />
+                        {defaultRpcUrl && !isUsingDefaultRPC && (
+                            <div className="flex flex-col items-end mt-2 -mb-4">
+                                <span
+                                    className="text-xs font-bold text-primary-300 cursor-pointer hover:underline"
+                                    onClick={() => {
+                                        setValue("rpcUrl", defaultRpcUrl)
+                                    }}
+                                >
+                                    Revert to default RPC
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
                     <TextInput
                         appearance="outline"
                         label="Chain ID"

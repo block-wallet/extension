@@ -15,6 +15,7 @@ import { DeepPartial } from './utils/types/helpers';
 import log, { LogLevelDesc } from 'loglevel';
 import { resolvePreferencesAfterWalletUpdate } from './utils/userPreferences';
 import { CONTENT } from './utils/types/communication';
+import { isManifestV3 } from './utils/manifest';
 
 // Initialize Block State Store
 const blankStateStore = new BlankStorageStore();
@@ -99,8 +100,13 @@ const getDevTools = () => {
  * updates the extension badge
  */
 const updateExtensionBadge = (label: string) => {
-    chrome.action.setBadgeText({ text: label });
-    chrome.action.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
+    if (isManifestV3()) {
+        chrome.action.setBadgeText({ text: label });
+        chrome.action.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
+    } else {
+        chrome.browserAction.setBadgeText({ text: label });
+        chrome.browserAction.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
+    }
 };
 
 /**
@@ -175,13 +181,40 @@ initBlockWallet().catch((error) => {
 // On install, open onboarding tab
 chrome.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === 'install') {
+        chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
         openExtensionInBrowser();
+    }
+
+    // For existing users, when the extension gets updated we also set the uninstall form.
+    if (reason === 'update') {
+        chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
     }
 });
 
-// this keeps alive the service worker.
-// when it goes 'inactive' it is restarted.
-chrome.alarms.create({ delayInMinutes: 0.5, periodInMinutes: 0.05 });
-chrome.alarms.onAlarm.addListener(() => {
-    fetch(chrome.runtime.getURL('keep-alive'));
-});
+const registerBlankProviderContentScript = async () => {
+    try {
+        await (chrome.scripting as any).registerContentScripts([
+            {
+                id: 'blankProvider',
+                matches: ['file://*/*', 'http://*/*', 'https://*/*'],
+                js: ['blankProvider.js'],
+                runAt: 'document_start',
+                world: 'MAIN',
+            },
+        ]);
+    } catch (err) {
+        console.warn(
+            `Dropped attempt to register blankProvider content script. ${err}`
+        );
+    }
+};
+
+if (isManifestV3()) {
+    // this keeps alive the service worker.
+    // when it goes 'inactive' it is restarted.
+    chrome.alarms.create({ delayInMinutes: 0.5, periodInMinutes: 0.05 });
+    chrome.alarms.onAlarm.addListener(() => {
+        fetch(chrome.runtime.getURL('keep-alive'));
+    });
+    registerBlankProviderContentScript();
+}

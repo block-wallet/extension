@@ -6,6 +6,7 @@ import {
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     Network,
 } from '../../utils/constants/networks';
+import { MINUTE } from './../../utils/constants/time';
 
 export interface BlockUpdatesControllerState {
     blockData: {
@@ -40,18 +41,34 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
             NetworkEvents.NETWORK_CHANGE,
             async ({ chainId }: Network) => {
                 this.initBlockNumber(chainId);
-
-                this._blockFetchController.addNewOnBlockListener(
-                    chainId,
-                    this._blockUpdates
-                );
+                this.addNewOnBlockListener();
             }
         );
 
-        this._blockFetchController.addNewOnBlockListener(
-            this._networkController.network.chainId,
-            this._blockUpdates
-        );
+        this.addNewOnBlockListener();
+    }
+
+    /**
+     * addNewOnBlockListener
+     *
+     * It adds a new block listener considering the state of the app.
+     *
+     */
+    private addNewOnBlockListener() {
+        if (!this.activeSubscriptions) {
+            // when there is no active subscriptions (the extension is closed and locked)
+            // the blocks are synced every 3 minutes.
+            this._blockFetchController.addNewOnBlockListener(
+                this._networkController.network.chainId,
+                this._blockUpdates,
+                3 * MINUTE
+            );
+        } else {
+            this._blockFetchController.addNewOnBlockListener(
+                this._networkController.network.chainId,
+                this._blockUpdates
+            );
+        }
     }
 
     /**
@@ -86,13 +103,17 @@ export default class BlockUpdatesController extends BaseController<BlockUpdatesC
      * It sets if there is at least one active subscription to the background
      *
      * @param isUnlocked Whether the extension is unlocked or not
-     * @param subscriptions The number of subscriptions to the background
+     * @param activeSubscription If there is any block wallet instance active.
      */
     public setActiveSubscriptions(
         isUnlocked: boolean,
-        subscriptions: number
+        activeSubscription: boolean
     ): void {
-        this.activeSubscriptions = isUnlocked && subscriptions > 0;
+        const prevActiveSubscriptions = this.activeSubscriptions;
+        this.activeSubscriptions = isUnlocked && activeSubscription;
+        if (this.activeSubscriptions != prevActiveSubscriptions) {
+            this.addNewOnBlockListener();
+        }
     }
 
     /**

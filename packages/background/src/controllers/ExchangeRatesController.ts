@@ -1,7 +1,8 @@
+import log from 'loglevel';
+
 import { PreferencesController } from './PreferencesController';
 import { BaseController } from '../infrastructure/BaseController';
 import { Token } from './erc-20/Token';
-import checksummedAddress from '../utils/checksummedAddress';
 import NetworkController, { NetworkEvents } from './NetworkController';
 import {
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
@@ -25,6 +26,11 @@ import {
     chainLinkService,
     coingekoService,
 } from '../utils/rateService';
+import {
+    AccountTrackerController,
+    AccountTrackerEvents,
+} from './AccountTrackerController';
+import { isNativeTokenAddress } from '../utils/token';
 
 export interface ExchangeRatesControllerState {
     exchangeRates: Rates;
@@ -66,13 +72,9 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         private readonly _preferencesController: PreferencesController,
         private readonly _networkController: NetworkController,
         private readonly _blockUpdatesController: BlockUpdatesController,
-        private readonly getTokens: () => {
-            [address: string]: {
-                token: Token;
-            };
-        }
+        private readonly _accountTrackerController: AccountTrackerController
     ) {
-        super(initState);
+        super({ ...initState, isRatesChangingAfterNetworkChange: false });
 
         this._exchangeRateFetchIntervalController =
             new ActionIntervalController(this._networkController);
@@ -85,16 +87,20 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         this._networkController.on(
             NetworkEvents.NETWORK_CHANGE,
             async (network: Network) => {
-                this.store.updateState({
-                    isRatesChangingAfterNetworkChange: true,
-                });
+                try {
+                    this.store.updateState({
+                        isRatesChangingAfterNetworkChange: true,
+                    });
 
-                this.updateNetworkNativeCurrencyId(network);
-                await this.updateExchangeRates();
-
-                this.store.updateState({
-                    isRatesChangingAfterNetworkChange: false,
-                });
+                    this.updateNetworkNativeCurrencyId(network);
+                    await this.updateExchangeRates();
+                } catch (error) {
+                    log.error(error);
+                } finally {
+                    this.store.updateState({
+                        isRatesChangingAfterNetworkChange: false,
+                    });
+                }
             }
         );
 
@@ -115,6 +121,35 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
                     }
                 );
             }
+        );
+
+        this._accountTrackerController.on(
+            AccountTrackerEvents.BALANCE_UPDATED,
+            () => {
+                const { exchangeRates } = this.store.getState();
+                const newTokenSymbols = Object.values(this.getTokens())
+                    .map(({ token }) => token)
+                    .filter(
+                        (token) =>
+                            !isNativeTokenAddress(token.address) &&
+                            exchangeRates[token.symbol] === undefined
+                    );
+                if (newTokenSymbols.length) {
+                    //when there are new token symbols, force fetching.
+                    this._exchangeRateFetchIntervalController.tick(
+                        0, //force update with 0 interval
+                        async () => {
+                            await this.updateExchangeRates();
+                        }
+                    );
+                }
+            }
+        );
+    }
+
+    private getTokens() {
+        return this._accountTrackerController.getAccountTokens(
+            this._preferencesController.getSelectedAddress()
         );
     }
 
@@ -197,17 +232,20 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         // Get tokens exchange rates
         const tokenRatesQuery = await this._getTokenRates();
 
-        // Response -> {[contractAddress] : { [nativeCurrency] : rate }} | {}
-        Object.keys(tokenRatesQuery).forEach((contractAddress) => {
-            // Need to checksumm address given that the current assets list
-            const address = checksummedAddress(contractAddress);
-            const tokens = { ...this.staticTokens, ...this.getTokens() };
-            const { symbol } = tokens[address].token;
+        const tokens = { ...this.staticTokens, ...this.getTokens() };
+
+        Object.keys(tokens).forEach((contractAddress) => {
+            const lowerAddress = contractAddress.toLowerCase();
+            //TODO: Improve the way we store "unknown" convertion rates.
+            const rate = tokenRatesQuery[lowerAddress] ||
+                tokenRatesQuery[contractAddress] || {
+                    [this._preferencesController.nativeCurrency]: 0,
+                }; //Force 0 if the convertion is not returned.
+
+            const { symbol } = tokens[contractAddress].token;
             if (symbol) {
                 rates[symbol] =
-                    tokenRatesQuery[contractAddress][
-                        this._preferencesController.nativeCurrency
-                    ];
+                    rate[this._preferencesController.nativeCurrency];
             }
         });
 
@@ -218,7 +256,9 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
     /**
      * Gets the exchange rate for all tokens
      */
-    private _getTokenRates = async (): Promise<any> => {
+    private _getTokenRates = async (): Promise<{
+        [lowerCaseAddress: string]: { [currency: string]: number };
+    }> => {
         const tokens = { ...this.staticTokens, ...this.getTokens() };
         const tokenContracts = Object.keys(tokens).join(',');
 

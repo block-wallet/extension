@@ -36,11 +36,6 @@ install/ci:
 	@cd packages/ui && yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
 	@cd packages/provider && yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
 
-# Commented due to feature deprecation
-# cp/snarks:
-#	  @mkdir -p dist/snarks/tornado
-# 	@cp utils/tornado/* dist/snarks/tornado
-
 build/ui:
 	@cd packages/ui && $(MAKE) build/ui --no-print-directory
 

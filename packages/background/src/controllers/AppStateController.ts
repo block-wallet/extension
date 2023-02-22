@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import log from 'loglevel';
 import { BaseController } from '../infrastructure/BaseController';
+import { isManifestV3 } from '../utils/manifest';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 import TransactionController from './transactions/TransactionController';
 
@@ -9,6 +10,11 @@ export interface AppStateControllerState {
     isAppUnlocked: boolean;
     lockedByTimeout: boolean;
     lastActiveTime: number;
+}
+
+export enum AppStateEvents {
+    APP_LOCKED = 'APP_LOCKED',
+    APP_UNLOCKED = 'APP_UNLOCKED',
 }
 
 export default class AppStateController extends BaseController<AppStateControllerState> {
@@ -28,7 +34,11 @@ export default class AppStateController extends BaseController<AppStateControlle
 
         if (isAppUnlocked) {
             const now = new Date().getTime();
-            if (lastActiveTime + idleTimeout * 60 * 1000 < now) {
+            if (
+                lastActiveTime + idleTimeout * 60 * 1000 < now ||
+                //Force locking on refresh if it is not MV3.
+                !isManifestV3()
+            ) {
                 this.lock(true);
             }
         }
@@ -84,11 +94,16 @@ export default class AppStateController extends BaseController<AppStateControlle
             await this._keyringController.setLocked();
 
             // Removing login token from storage
-            // @ts-ignore
-            chrome.storage.session && chrome.storage.session.clear();
+            if (isManifestV3()) {
+                // @ts-ignore
+                chrome.storage.session && chrome.storage.session.clear();
+            }
 
             // Update controller state
             this.store.updateState({ isAppUnlocked: false, lockedByTimeout });
+
+            // event emit
+            this.emit(AppStateEvents.APP_LOCKED);
         } catch (error) {
             throw new Error(error.message || error);
         }
@@ -106,12 +121,16 @@ export default class AppStateController extends BaseController<AppStateControlle
                 password
             );
 
-            // @ts-ignore
-            chrome.storage.session &&
+            if (isManifestV3()) {
                 // @ts-ignore
-                chrome.storage.session.set({ loginToken }).catch((err: any) => {
-                    log.error('error setting loginToken', err);
-                });
+                chrome.storage.session &&
+                    // @ts-ignore
+                    chrome.storage.session
+                        .set({ loginToken })
+                        .catch((err: any) => {
+                            log.error('error setting loginToken', err);
+                        });
+            }
 
             await this._postLoginAction();
         } catch (error) {
@@ -120,22 +139,24 @@ export default class AppStateController extends BaseController<AppStateControlle
     };
 
     public autoUnlock = async (): Promise<void> => {
-        const { isAppUnlocked } = this.store.getState();
-        if (!isAppUnlocked) {
-            // @ts-ignore
-            chrome.storage.session &&
+        if (isManifestV3()) {
+            const { isAppUnlocked } = this.store.getState();
+            if (!isAppUnlocked) {
                 // @ts-ignore
-                chrome.storage.session.get(
-                    ['loginToken'],
-                    async ({ loginToken }: { [key: string]: string }) => {
-                        if (loginToken) {
-                            await this._keyringController.submitEncryptionKey(
-                                loginToken
-                            );
-                            await this._postLoginAction();
+                chrome.storage.session &&
+                    // @ts-ignore
+                    chrome.storage.session.get(
+                        ['loginToken'],
+                        async ({ loginToken }: { [key: string]: string }) => {
+                            if (loginToken) {
+                                await (this._keyringController as any)[
+                                    'submitEncryptionKey'
+                                ](loginToken);
+                                await this._postLoginAction();
+                            }
                         }
-                    }
-                );
+                    );
+            }
         }
     };
 
@@ -152,6 +173,9 @@ export default class AppStateController extends BaseController<AppStateControlle
         });
 
         this._resetTimer();
+
+        // event emit
+        this.emit(AppStateEvents.APP_UNLOCKED);
     };
 
     /**

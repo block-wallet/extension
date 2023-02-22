@@ -4,7 +4,7 @@ import BlockFetchController, {
 } from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
 import { BlockUpdatesControllerState } from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
-import sinon from 'sinon';
+import initialState from '@block-wallet/background/utils/constants/initialState';
 import {
     ExchangeRatesController,
     ExchangeRatesControllerState,
@@ -14,14 +14,38 @@ import {
     mockPreferencesController,
     mockPreferencesControllerARS,
 } from './mock-preferences';
-import MockProvider from './mock-provider';
 import { Token } from '@block-wallet/background/controllers/erc-20/Token';
+import {
+    AccountStatus,
+    AccountTrackerController,
+    AccountTrackerState,
+    AccountType,
+} from '@block-wallet/background/controllers/AccountTrackerController';
+import KeyringControllerDerivated from '@block-wallet/background/controllers/KeyringControllerDerivated';
+import {
+    TokenController,
+    TokenControllerProps,
+} from '@block-wallet/background/controllers/erc-20/TokenController';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
+import TransactionController from '@block-wallet/background/controllers/transactions/TransactionController';
+import { mockedPermissionsController } from './mock-permissions';
+import { TypedTransaction } from '@ethereumjs/tx';
+import { GasPricesController } from '@block-wallet/background/controllers/GasPricesController';
+import { BigNumber } from 'ethers';
 
 let exchangeRatesControllerETH: ExchangeRatesControllerState;
 let blockFetchController: BlockFetchController;
 let blockUpdatesController: BlockUpdatesController;
 let blockUpdatesControllerState: BlockUpdatesControllerState;
 let blockFetchControllerState: BlockFetchControllerState;
+let accountTrackerController: AccountTrackerController;
+let gasPricesController: GasPricesController;
+let transactionController: TransactionController;
+let transactionWatcherController: TransactionWatcherController;
+let tokenController: TokenController;
+let tokenOperationsController: TokenOperationsController;
+let accountTrackerControllerState: AccountTrackerState;
 
 exchangeRatesControllerETH = {
     exchangeRates: {},
@@ -62,54 +86,123 @@ blockUpdatesController = new BlockUpdatesController(
     blockUpdatesControllerState
 );
 
-const mockExchangeRatesController = new ExchangeRatesController(
-    exchangeRatesControllerETH,
+tokenOperationsController = new TokenOperationsController({
+    networkController: mockedNetworkController,
+});
+
+tokenController = new TokenController(
+    {
+        userTokens: {} as any,
+        deletedUserTokens: {} as any,
+        cachedPopulatedTokens: {} as any,
+    },
+    {
+        networkController: mockedNetworkController,
+        preferencesController: mockPreferencesController,
+        tokenOperationsController,
+    } as TokenControllerProps
+);
+
+gasPricesController = new GasPricesController(
+    mockedNetworkController,
+    blockUpdatesController,
+    initialState.GasPricesController
+);
+
+transactionController = new TransactionController(
+    mockedNetworkController,
     mockPreferencesController,
-    mockedNetworkController,
+    mockedPermissionsController,
+    gasPricesController,
+    tokenController,
     blockUpdatesController,
-    () => {
-        const token = new Token(
-            '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
-            'GoBlank',
-            'BLANK',
-            18
-        );
-        const token2 = new Token(
-            '0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60',
-            'Dai Stablecoin',
-            'DAI',
-            18
-        );
-        const res = {
-            '0x0859D5C40e6B274d4a953014c65405316f55c369': { token, token2 },
-        };
-        return res;
+    {
+        transactions: [],
+        txSignTimeout: 0,
+    },
+    async () => {
+        return '' as unknown as TypedTransaction;
+    },
+    { txHistoryLimit: 40 }
+);
+
+transactionWatcherController = new TransactionWatcherController(
+    mockedNetworkController,
+    mockPreferencesController,
+    blockUpdatesController,
+    tokenController,
+    transactionController,
+    {
+        transactions: {},
     }
 );
 
-const mockExchangeRatesControllerARS = new ExchangeRatesController(
-    exchangeRatesControllerETH,
-    mockPreferencesControllerARS,
+// Mock Account tracker data
+
+const ACCOUNT_ADDRESS = '0x281ae730d284bDA68F4e9Ac747319c8eDC7dF3B1';
+const TOKENS = [
+    new Token(
+        '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+        'GoBlank',
+        'BLANK',
+        18
+    ),
+    new Token(
+        '0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60',
+        'Dai Stablecoin',
+        'DAI',
+        18
+    ),
+];
+
+accountTrackerControllerState = {
+    ...initialState.AccountTrackerController,
+    accounts: {
+        [ACCOUNT_ADDRESS]: {
+            name: 'Account 1',
+            index: 1,
+            status: AccountStatus.ACTIVE,
+            address: ACCOUNT_ADDRESS,
+            accountType: AccountType.HD_ACCOUNT,
+            balances: {
+                [mockedNetworkController.network.chainId]: {
+                    nativeTokenBalance: BigNumber.from(1),
+                    tokens: {
+                        [TOKENS[0].address]: {
+                            token: TOKENS[0],
+                            balance: BigNumber.from(1),
+                        },
+                        [TOKENS[1].address]: {
+                            token: TOKENS[1],
+                            balance: BigNumber.from(1),
+                        },
+                    },
+                },
+            },
+        },
+    },
+};
+
+accountTrackerController = new AccountTrackerController(
+    new KeyringControllerDerivated({}),
     mockedNetworkController,
+    tokenController,
+    tokenOperationsController,
+    mockPreferencesController,
     blockUpdatesController,
-    () => {
-        const token = new Token(
-            '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
-            'GoBlank',
-            'BLANK',
-            18
-        );
-        const token2 = new Token(
-            '0xdc31Ee1784292379Fbb2964b3B9C4124D8F89C60',
-            'Dai Stablecoin',
-            'DAI',
-            18
-        );
-        const res = {
-            '0x0859D5C40e6B274d4a953014c65405316f55c369': { token, token2 },
-        };
-        return res;
-    }
+    transactionWatcherController,
+    transactionController,
+    accountTrackerControllerState
 );
 
-export { mockExchangeRatesController, mockExchangeRatesControllerARS };
+export function getExchangeRateMockController(currency: 'USD' | 'ARS') {
+    return new ExchangeRatesController(
+        exchangeRatesControllerETH,
+        currency === 'USD'
+            ? mockPreferencesController
+            : mockPreferencesControllerARS,
+        mockedNetworkController,
+        blockUpdatesController,
+        accountTrackerController
+    );
+}

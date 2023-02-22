@@ -1,6 +1,6 @@
 import initialState from '@block-wallet/background/utils/constants/initialState';
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import {
     FeeDataResponse,
     GasPriceData,
@@ -1263,7 +1263,7 @@ describe('GasPrices Controller', () => {
                 networkController.getProvider(),
                 'send'
             );
-            providerStub.onFirstCall().returns(
+            providerStub.returns(
                 new Promise<any>((resolve) => {
                     resolve({
                         baseFeePerGas: [BigNumber.from('110000')],
@@ -1559,7 +1559,7 @@ describe('GasPrices Controller', () => {
                 networkController.getProvider(),
                 'send'
             );
-            providerStub.onFirstCall().returns(
+            providerStub.returns(
                 new Promise<any>((resolve) => {
                     resolve({
                         baseFeePerGas: [BigNumber.from('110000')],

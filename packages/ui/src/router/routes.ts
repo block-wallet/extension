@@ -26,6 +26,7 @@ import SwitchEthereumChain from "../routes/dApp/SwitchEthereumChain"
 import AddEthereumChain from "../routes/dApp/AddEthereumChain"
 import LockTimeout from "../routes/settings/LockTimeout"
 import AccountMenu from "../components/account/AccountMenu"
+import ResetAccountPage from "../routes/account/ResetAccountPage"
 import EditAccountPage from "../routes/account/EditAccountPage"
 import WatchAssetPage from "../routes/dApp/WatchAsset"
 import SpeedUpPage from "../routes/transaction/SpeedUpPage"
@@ -36,6 +37,7 @@ import PhishingProtectionPreferencesPage from "../routes/preferences/PhishingPro
 import LocalePreferencesPage from "../routes/preferences/LocalePreferencesPage"
 import PreferencesPage from "../routes/settings/PreferencesPage"
 import DefaultWalletPreferencesPage from "../routes/preferences/DefaultWalletPreferencesPage"
+import DefaultGasPreferencesPage from "../routes/preferences/DefaultGasPreferencesPage"
 import ReleaseNotesPreferencesPage from "../routes/preferences/ReleaseNotesPreferencesPage"
 import OnDemandReleaseNotesPage from "../components/releaseNotes/OnDemandReleaseNotesPage"
 import WelcomeInfo from "../components/info/WelcomeInfo"
@@ -101,6 +103,11 @@ export const ROUTES_DEFINITION = [
         exact: true,
         component: ConnectedSiteAccountsPage,
     },
+    {
+        path: "/accounts/menu/reset",
+        exact: true,
+        component: ResetAccountPage,
+    },
     /* Send */
     { path: "/send", exact: true, component: SendPage },
     {
@@ -162,6 +169,11 @@ export const ROUTES_DEFINITION = [
         path: "/settings/preferences/defaultWallet",
         exact: true,
         component: DefaultWalletPreferencesPage,
+    },
+    {
+        path: "/settings/preferences/defaultGas",
+        exact: true,
+        component: DefaultGasPreferencesPage,
     },
 
     { path: "/settings/tokens/add", exact: true, component: AddTokensPage },

@@ -1288,17 +1288,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             throw new Error('Can only hide internal accounts');
         }
 
-        // if only one internal account exists, cannot hide it
-        let internalAccounts = 0;
+        const accountsNumber = Object.keys(accounts).length;
 
-        for (const address of Object.keys(accounts)) {
-            if (accounts[address].accountType === AccountType.HD_ACCOUNT) {
-                internalAccounts++;
-            }
-        }
-
-        if (internalAccounts === 1) {
-            throw new Error("Can't hide last internal account");
+        if (accountsNumber === 1) {
+            throw new Error("Can't hide last account");
         }
 
         // if account is currently selected, change accounts

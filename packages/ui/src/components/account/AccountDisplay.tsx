@@ -121,7 +121,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             <div className="flex flex-row space-x-1">
                                 <label
                                     className={classnames(
-                                        "font-bold",
+                                        "font-bold truncate max-w-[96px]",
                                         hoverStyle && "cursor-pointer"
                                     )}
                                     title={account.name}

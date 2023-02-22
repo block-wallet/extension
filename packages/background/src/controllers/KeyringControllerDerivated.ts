@@ -666,22 +666,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             msgParams.from
         );
         if (keyringType === KeyringTypes.QR) {
-            // cancels any previous signature request
-            this.cancelQRHardwareSignRequest();
-            this.removeAllListeners(
-                KeyringControllerEvents.QR_SIGNATURE_SUBMIT
-            );
-
-            const signRequest = await this.getQRMessageSignRequest(msgParams);
-
-            this.emit(
-                KeyringControllerEvents.QR_MESSAGE_SIGNATURE_REQUEST_GENERATED,
-                signRequest.requestId,
-                signRequest.qrSignRequest
-            );
-
-            const { v, r, s } = await this.QRsignatureSubmission(signRequest);
-            return concatSig(bigIntToBuffer(v), r, s);
+            return await this._signQRMessage(msgParams, opts);
         } else {
             return this._mutex.runExclusive(async () =>
                 super.signMessage(msgParams, opts)
@@ -710,22 +695,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             msgParams.from
         );
         if (keyringType === KeyringTypes.QR) {
-            // cancels any previous signature request
-            this.cancelQRHardwareSignRequest();
-            this.removeAllListeners(
-                KeyringControllerEvents.QR_SIGNATURE_SUBMIT
-            );
-
-            const signRequest = await this.getQRMessageSignRequest(msgParams);
-
-            this.emit(
-                KeyringControllerEvents.QR_MESSAGE_SIGNATURE_REQUEST_GENERATED,
-                signRequest.requestId,
-                signRequest.qrSignRequest
-            );
-
-            const { v, r, s } = await this.QRsignatureSubmission(signRequest);
-            return concatSig(bigIntToBuffer(v), r, s);
+            return await this._signQRMessage(msgParams, opts);
         } else {
             return this._mutex.runExclusive(async () =>
                 super.signPersonalMessage(msgParams, opts)
@@ -753,30 +723,45 @@ export default class KeyringControllerDerivated extends KeyringController {
             msgParams.from
         );
         if (keyringType === KeyringTypes.QR) {
-            // cancels any previous signature request
-            this.cancelQRHardwareSignRequest();
-            this.removeAllListeners(
-                KeyringControllerEvents.QR_SIGNATURE_SUBMIT
-            );
-
-            const signRequest = await this.getQRTypedMessageSignRequest(
-                msgParams,
-                opts
-            );
-
-            this.emit(
-                KeyringControllerEvents.QR_MESSAGE_SIGNATURE_REQUEST_GENERATED,
-                signRequest.requestId,
-                signRequest.qrSignRequest
-            );
-
-            const { v, r, s } = await this.QRsignatureSubmission(signRequest);
-            return concatSig(bigIntToBuffer(v), r, s);
+            return await this._signQRMessage(msgParams, opts, true);
         } else {
             return this._mutex.runExclusive(async () => {
                 return super.signTypedMessage(msgParams, opts);
             });
         }
+    }
+
+    private async _signQRMessage(
+        msgParams: {
+            from: string;
+            data: string;
+        },
+        opts?: any,
+        typedData?: boolean
+    ): Promise<string> {
+        // cancels any previous signature request
+        this.cancelQRHardwareSignRequest();
+        this.removeAllListeners(KeyringControllerEvents.QR_SIGNATURE_SUBMIT);
+
+        let signRequest: QRSignatureRequest;
+
+        if (typedData) {
+            signRequest = await this.getQRTypedMessageSignRequest(
+                msgParams,
+                opts
+            );
+        } else {
+            signRequest = await this.getQRMessageSignRequest(msgParams);
+        }
+
+        this.emit(
+            KeyringControllerEvents.QR_MESSAGE_SIGNATURE_REQUEST_GENERATED,
+            signRequest.requestId,
+            signRequest.qrSignRequest
+        );
+
+        const { v, r, s } = await this.QRsignatureSubmission(signRequest);
+        return concatSig(bigIntToBuffer(v), r, s);
     }
 
     /**

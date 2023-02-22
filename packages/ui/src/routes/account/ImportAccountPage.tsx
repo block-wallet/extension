@@ -28,7 +28,7 @@ const importAccountSchema = yup.object({
         .min(64, "Please enter a valid private key")
         .max(66, "Please enter a valid private key"),
     importType: yup.string().required("Please select a type of import"),
-    accountName: yup.string().max(20, "Account name is too long"),
+    accountName: yup.string().max(40, "Account name is too long"),
 })
 type importAccountFormData = {
     privateKey: string

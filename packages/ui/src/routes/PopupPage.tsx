@@ -63,6 +63,7 @@ const AccountDisplay = () => {
             <span
                 className="text-sm font-bold truncate max-w-[96px]"
                 data-testid="account-name"
+                title={account.name}
             >
                 {formatName(account.name, 18)}
             </span>

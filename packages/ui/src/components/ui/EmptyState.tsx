@@ -20,7 +20,7 @@ const EmptyState: React.FC<PropsWithChildren<EmptyStateProps>> = ({
                 className || ""
             )}
         >
-            <Icon size="xl" name={iconName || IconName.EMPTY_DRAWER} />
+            <Icon size="xxl" name={iconName || IconName.EMPTY_DRAWER} />
             <Typography type={TypographyType.TITLE}>{title}</Typography>
             {children}
         </div>

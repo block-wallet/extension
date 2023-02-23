@@ -55,13 +55,15 @@ export const showTransactionNotification = (txMeta: TransactionMeta) => {
  *
  */
 const showNotification = (title: string, message: string, url: string) => {
-    if (url) addOnClickListener();
+    let notificationUrl = url;
+    if (url) {
+        addOnClickListener();
 
-    // To prevent duplicate notifications id which causes the notification to not show (overrides the old one)
-    const urlObject = new URL(url);
-    urlObject.searchParams.set('timestamp', Date.now().toString());
-    const notificationUrl = urlObject.toString();
-
+        // To prevent duplicate notifications id which causes the notification to not show (overrides the old one)
+        const urlObject = new URL(url);
+        urlObject.searchParams.set('timestamp', Date.now().toString());
+        notificationUrl = urlObject.toString();
+    }
     chrome.notifications.create(notificationUrl, {
         title: title,
         message: message,

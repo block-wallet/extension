@@ -1,5 +1,6 @@
 import { FC, useRef } from "react"
 import { QrReader } from "react-qr-reader"
+import { Result } from "@zxing/library"
 
 interface Props {
     deviceNotReady: boolean
@@ -8,22 +9,23 @@ interface Props {
 }
 
 const QrContainer: FC<Props> = ({ deviceNotReady, className, onRead }) => {
-    const lastResult = useRef()
+    const lastResult = useRef<string>()
     const done = useRef(false)
 
-    const onReadResult = async (result: any) => {
-        if (!result) return
+    const onReadResult = async (result: Result | undefined | null) => {
+        const resultText = result?.getText()
+        if (!result || !resultText) return
         if (done && done.current) return
 
         // This callback will keep existing even after
         // this component is unmounted
         // So ignore it (only in this reference) if result keeps repeating
-        if (lastResult.current === result.text) {
+        if (lastResult.current === resultText) {
             return
         }
 
-        lastResult.current = result.text
-        if (await onRead(result.text)) {
+        lastResult.current = resultText
+        if (await onRead(resultText)) {
             done.current = true
         }
     }

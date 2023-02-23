@@ -3,7 +3,6 @@ import QrContainer from "./QRReader"
 import useVideoDeviceConnect from "../../util/hooks/useVideoDeviceConnect"
 import Divider from "../Divider"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
-import classnames from "classnames"
 import { Classes } from "../../styles"
 
 interface Props {

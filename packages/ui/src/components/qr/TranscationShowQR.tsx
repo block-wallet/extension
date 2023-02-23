@@ -4,10 +4,6 @@ import { Classes } from "../../styles"
 import QRCode from "qrcode.react"
 import Divider from "../Divider"
 
-function sleep(ms: number): Promise<unknown> {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
 interface Props {
     QRValues?: string[]
     onBack: () => void
@@ -19,7 +15,7 @@ const TransactionShowQR: FC<Props> = ({ onBack, onSuccess, QRValues }) => {
     const [index, setIndex] = useState(0)
 
     useEffect(() => {
-        setTimeout(() => {
+        const timeoutRef = setTimeout(() => {
             if (QRValues && QRValues.length) {
                 if (index < QRValues.length) {
                     setQRValue(QRValues[index])
@@ -32,6 +28,10 @@ const TransactionShowQR: FC<Props> = ({ onBack, onSuccess, QRValues }) => {
                 setIndex(newIndex)
             }
         }, 1200)
+
+        return () => {
+            clearTimeout(timeoutRef)
+        }
     }, [QRValue])
 
     return (

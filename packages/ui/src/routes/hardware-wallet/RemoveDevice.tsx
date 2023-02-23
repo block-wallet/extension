@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { Dispatch, FC, SetStateAction, useState } from "react"
 import classnames from "classnames"
 
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
@@ -7,9 +7,9 @@ import { Devices } from "../../context/commTypes"
 import Divider from "../../components/Divider"
 
 // Assets & icons
-import ledger from "../../assets/images/icons/ledger.svg"
-import trezor from "../../assets/images/icons/trezor.svg"
-import keystone from "../../assets/images/icons/keystone.svg"
+import ledgerImg from "../../assets/images/icons/ledger.svg"
+import trezorImg from "../../assets/images/icons/trezor.svg"
+import keystoneImg from "../../assets/images/icons/keystone.svg"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes } from "../../styles"
 
@@ -18,10 +18,70 @@ import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import { removeHardwareWallet } from "../../context/commActions"
 import { getAccountTypeFromDevice } from "../../util/hardwareDevice"
+import { capitalize } from "../../util/capitalize"
+import { bool } from "yup"
+
+type DeviceButtonProps = {
+    device: Devices
+    onClick: Dispatch<SetStateAction<Devices | undefined>>
+    className: string
+}
+
+const DETAILS = {
+    [Devices.LEDGER]: {
+        imgSrc: ledgerImg,
+        name: capitalize(Devices.LEDGER),
+    },
+    [Devices.TREZOR]: {
+        imgSrc: trezorImg,
+        name: capitalize(Devices.TREZOR),
+    },
+    [Devices.KEYSTONE]: {
+        imgSrc: keystoneImg,
+        name: capitalize(Devices.KEYSTONE),
+    },
+}
+
+const DeviceButton: FC<DeviceButtonProps> = ({
+    device,
+    onClick,
+    className,
+}) => {
+    const details = DETAILS[device]
+    const accounts = useSortedAccounts({ includeHiddenAccounts: true })
+    const getImportedDevices = (device: Devices): number => {
+        const accountType = getAccountTypeFromDevice(device)
+        return accounts.filter(
+            (account: AccountInfo) => account.accountType === accountType
+        ).length
+    }
+    const importedDevices = getImportedDevices(device)
+    const isDeviceImported = importedDevices > 0
+    return (
+        <button
+            type="button"
+            onClick={() => isDeviceImported && onClick(device)}
+            className={classnames(
+                "bg-white rounded-md p-4 w-1/2 flex flex-col items-center justify-center space-y-3 cursor-pointer border hover:border-primary-300",
+                className,
+                !isDeviceImported && "opacity-50 pointer-events-none"
+            )}
+            style={{ height: "120px" }}
+        >
+            <img
+                src={details.imgSrc}
+                alt={`Remove ${details.name} hardware wallet`}
+                className="h-8 mb-2"
+            />
+            {importedDevices === 1
+                ? "1 Account"
+                : importedDevices + " Accounts"}
+        </button>
+    )
+}
 
 const HardwareWalletRemoveDevicePage = () => {
     const history = useOnMountHistory()
-    const accounts = useSortedAccounts({ includeHiddenAccounts: true })
     const [selectedVendor, setSelectedVendor] = useState<Devices>()
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
@@ -46,15 +106,6 @@ const HardwareWalletRemoveDevicePage = () => {
         }
     }
 
-    const isDeviceImported = (device: Devices): number => {
-        const accountType = getAccountTypeFromDevice(device)
-        return accounts.filter(
-            (account: AccountInfo) => account.accountType === accountType
-        ).length
-    }
-    const importedLedger = isDeviceImported(Devices.LEDGER)
-    const importedTrezor = isDeviceImported(Devices.TREZOR)
-    const importedKeystone = isDeviceImported(Devices.KEYSTONE)
     return (
         <HardwareWalletSetupLayout
             title="Remove device"
@@ -71,77 +122,33 @@ const HardwareWalletRemoveDevicePage = () => {
         >
             <div className="flex flex-col">
                 <div className="flex flex-row space-x-4 items-center justify-evenly p-8">
-                    <button
-                        type="button"
-                        onClick={() =>
-                            importedLedger && setSelectedVendor(Devices.LEDGER)
-                        }
-                        className={classnames(
-                            "bg-white rounded-md p-4 w-1/2 flex flex-col items-center justify-center space-y-3 cursor-pointer border hover:border-primary-300",
+                    <DeviceButton
+                        device={Devices.LEDGER}
+                        onClick={setSelectedVendor}
+                        className={
                             selectedVendor === Devices.LEDGER
                                 ? "border-primary-300"
-                                : "border-primary-100",
-                            !importedLedger && "opacity-50 pointer-events-none"
-                        )}
-                        style={{ height: "120px" }}
-                    >
-                        <img
-                            src={ledger}
-                            alt="Remove Ledger hardware wallet"
-                            className="h-8 mb-2"
-                        />
-                        {importedLedger === 1
-                            ? "1 Account"
-                            : importedLedger + " accounts"}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() =>
-                            importedTrezor && setSelectedVendor(Devices.TREZOR)
+                                : "border-primary-100"
                         }
-                        className={classnames(
-                            "bg-white rounded-md justify-center p-4 w-1/2 flex flex-col items-center group space-y-3 cursor-pointer border hover:border-primary-300",
+                    />
+                    <DeviceButton
+                        device={Devices.TREZOR}
+                        onClick={setSelectedVendor}
+                        className={
                             selectedVendor === Devices.TREZOR
                                 ? "border-primary-300"
-                                : "border-primary-100",
-                            !importedTrezor && "opacity-50 pointer-events-none"
-                        )}
-                        style={{ height: "120px" }}
-                    >
-                        <img
-                            src={trezor}
-                            alt="Remove Trezor hardware wallet"
-                            className="h-8 mb-2"
-                        />
-                        {importedTrezor === 1
-                            ? "1 Account"
-                            : importedTrezor + " accounts"}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() =>
-                            importedKeystone &&
-                            setSelectedVendor(Devices.KEYSTONE)
+                                : "border-primary-100"
                         }
-                        className={classnames(
-                            "bg-white rounded-md justify-center p-4 w-1/2 flex flex-col items-center group space-y-3 cursor-pointer border hover:border-primary-300",
+                    />
+                    <DeviceButton
+                        device={Devices.KEYSTONE}
+                        onClick={setSelectedVendor}
+                        className={
                             selectedVendor === Devices.KEYSTONE
                                 ? "border-primary-300"
-                                : "border-primary-100",
-                            !importedKeystone &&
-                                "opacity-50 pointer-events-none"
-                        )}
-                        style={{ height: "120px" }}
-                    >
-                        <img
-                            src={keystone}
-                            alt="Remove Keystone hardware wallet"
-                            className="h-8 mb-2"
-                        />
-                        {importedKeystone === 1
-                            ? "1 Account"
-                            : importedKeystone + " accounts"}
-                    </button>
+                                : "border-primary-100"
+                        }
+                    />
                 </div>
                 <Divider />
             </div>

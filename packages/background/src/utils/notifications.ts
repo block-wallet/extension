@@ -58,7 +58,9 @@ const showNotification = (title: string, message: string, url: string) => {
     if (url) addOnClickListener();
 
     // To prevent duplicate notifications id which causes the notification to not show (overrides the old one)
-    const notificationUrl = url + `?timestamp=${Date.now()}`;
+    const urlObject = new URL(url);
+    urlObject.searchParams.set('timestamp', Date.now().toString());
+    const notificationUrl = urlObject.toString();
 
     chrome.notifications.create(notificationUrl, {
         title: title,
@@ -161,8 +163,13 @@ const getTxNotificationData = (
                 showDefaultNotification = true;
                 break;
             }
-            const { spenderAddress, spenderInfo, token, allowanceValue } =
-                approveAllowanceParams;
+            const {
+                spenderAddress,
+                spenderInfo,
+                token,
+                allowanceValue,
+                isUnlimited,
+            } = approveAllowanceParams;
             const isRevoke = BigNumber.from(allowanceValue).eq(0);
             const spenderName =
                 spenderInfo?.name ??
@@ -172,11 +179,15 @@ const getTxNotificationData = (
                 )}...${spenderAddress?.slice(spenderAddress.length - 4)})`;
             if (!isRevoke) {
                 title = `Token Approval`;
-                message = `Approval of ${formatTokenAmount(
-                    allowanceValue,
-                    token.decimals,
-                    token.symbol
-                )} for use with ${spenderName} on ${txNetworkName}`;
+                message = `Approval of ${
+                    isUnlimited
+                        ? `unlimited ${token.symbol}`
+                        : formatTokenAmount(
+                              allowanceValue,
+                              token.decimals,
+                              token.symbol
+                          )
+                } for use with ${spenderName} on ${txNetworkName}`;
             } else {
                 title = `Approval Revoke`;
                 message = `${token.symbol} approval revoke for ${spenderName} on ${txNetworkName}`;

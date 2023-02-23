@@ -12,7 +12,7 @@ import {
 } from './types/ethereum';
 import { BigNumber } from 'ethers';
 import { MaxUint256 } from '@ethersproject/constants';
-import { formatUnits } from 'ethers/lib/utils';
+import { formatUnits } from '@ethersproject/units';
 
 const IS_BASE64_IMAGE = 'IS_BASE64_IMAGE';
 

@@ -95,7 +95,7 @@ export interface TransactionWatcherControllerState {
 export const TRANSACTION_TYPE_STATUS: {
     [type in WatchedTransactionType]: boolean;
 } = {
-    txlist: false,
+    txlist: true,
     tokentx: true,
     tokennfttx: false,
     token1155tx: false,

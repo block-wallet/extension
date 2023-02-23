@@ -1,6 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { createCustomExplorerLink } from '@block-wallet/explorer-link';
-import { formatUnits } from 'ethers/lib/utils';
 import { ChainListItem, getChainListItem } from './chainlist';
 import {
     MetaType,
@@ -8,6 +7,7 @@ import {
     TransactionMeta,
     TransactionStatus,
 } from '../controllers/transactions/utils/types';
+import { formatTokenAmount } from './token';
 
 interface ChainListItemWithExplorerUrl extends ChainListItem {
     explorerUrl: string;
@@ -36,13 +36,10 @@ export const showTransactionNotification = (txMeta: TransactionMeta) => {
     if (
         txMeta.metaType === MetaType.CANCEL ||
         txMeta.transactionCategory === TransactionCategories.INCOMING ||
+        // in cancel tx, the from and to are the same
         txMeta.transactionParams.from === txMeta.transactionParams.to
     )
         return;
-    console.log(
-        '🚀 ~ file: notifications.ts:34 ~ showTransactionNotification ~ txMeta',
-        txMeta
-    );
 
     const { title, message, url } = getTxNotificationData(txMeta, network);
 
@@ -60,11 +57,15 @@ export const showTransactionNotification = (txMeta: TransactionMeta) => {
 const showNotification = (title: string, message: string, url: string) => {
     if (url) addOnClickListener();
 
-    chrome.notifications.create(url, {
+    // To prevent duplicate notifications id which causes the notification to not show (overrides the old one)
+    const notificationUrl = url + `?timestamp=${Date.now()}`;
+
+    chrome.notifications.create(notificationUrl, {
         title: title,
         message: message,
         iconUrl: chrome.runtime.getURL('icons/icon-48.png'),
         type: 'basic',
+        isClickable: url ? true : false,
     });
 };
 
@@ -114,7 +115,6 @@ const getTxNotificationData = (
         bridgeParams,
         approveAllowanceParams,
         transferType,
-        metaType,
     } = txMeta;
 
     const {
@@ -133,16 +133,8 @@ const getTxNotificationData = (
 
     const isTxFailed = status === TransactionStatus.FAILED;
     const isTxCancelled = status === TransactionStatus.CANCELLED;
-    const isTxSpedUp =
-        status === TransactionStatus.CONFIRMED &&
-        metaType === MetaType.SPEED_UP;
 
-    if (isTxCancelled) {
-        title = `Transaction Cancelled`;
-        message = `Transaction on ${txNetworkName} cancelled.`;
-        return { title, message, url };
-    }
-
+    // Used when the transaction category is not supported or there is no data for the transaction category.
     let showDefaultNotification = false;
 
     switch (transactionCategory) {
@@ -151,22 +143,18 @@ const getTxNotificationData = (
                 showDefaultNotification = true;
                 break;
             }
-            title = `Swap ${isTxFailed ? 'Failed' : 'Completed'}`;
-            message = `${exchangeParams.fromToken.symbol} to ${
-                exchangeParams.toToken.symbol
-            } swap on ${txNetworkName} ${
-                isTxFailed ? 'failed' : 'completed'
-            }.`;
+            title = `Swap`;
+            message = `${exchangeParams.fromToken.symbol} to ${exchangeParams.toToken.symbol} swap on ${txNetworkName}`;
             break;
         case TransactionCategories.BRIDGE:
             if (!bridgeParams) {
                 showDefaultNotification = true;
                 break;
             }
-            title = `Bridge ${isTxFailed ? 'Failed' : 'Completed'}`;
+            title = `Bridge`;
             message = `${getNetworkData(bridgeParams.fromChainId)?.name} to ${
                 getNetworkData(bridgeParams.toChainId)?.name
-            } bridge ${isTxFailed ? 'failed' : 'completed'}.`;
+            } bridge`;
             break;
         case TransactionCategories.TOKEN_METHOD_APPROVE: {
             if (!approveAllowanceParams) {
@@ -176,37 +164,36 @@ const getTxNotificationData = (
             const { spenderAddress, spenderInfo, token, allowanceValue } =
                 approveAllowanceParams;
             const isRevoke = BigNumber.from(allowanceValue).eq(0);
-            title = `Token Approval ${isRevoke ? 'Revoke' : ''} ${
-                isTxFailed ? 'Failed' : 'Completed'
-            }`;
-            message = `${token.symbol} approval for ${
+            const spenderName =
                 spenderInfo?.name ??
                 `Spender (${spenderAddress?.slice(
                     0,
                     6
-                )}...${spenderAddress?.slice(spenderAddress.length - 4)})`
-            } on ${txNetworkName} ${isTxFailed ? 'failed' : 'completed'}.`;
+                )}...${spenderAddress?.slice(spenderAddress.length - 4)})`;
+            if (!isRevoke) {
+                title = `Token Approval`;
+                message = `Approval of ${formatTokenAmount(
+                    allowanceValue,
+                    token.decimals,
+                    token.symbol
+                )} for use with ${spenderName} on ${txNetworkName}`;
+            } else {
+                title = `Approval Revoke`;
+                message = `${token.symbol} approval revoke for ${spenderName} on ${txNetworkName}`;
+            }
             break;
         }
         case TransactionCategories.SENT_ETHER:
-            title = `Transaction ${isTxFailed ? 'Failed' : 'Completed'}`;
-            message = `${
-                txNetworkNativeToken.symbol
-            } transaction on ${txNetworkName} ${
-                isTxFailed ? 'failed' : 'completed'
-            }.`;
+            title = `Transaction`;
+            message = `${txNetworkNativeToken.symbol} transaction on ${txNetworkName}`;
             break;
         case TransactionCategories.TOKEN_METHOD_TRANSFER:
             if (!transferType) {
                 showDefaultNotification = true;
                 break;
             }
-            title = `Transaction ${isTxFailed ? 'Failed' : 'Completed'}`;
-            message = `${
-                transferType.currency
-            } transaction on ${txNetworkName} ${
-                isTxFailed ? 'failed' : 'completed'
-            }.`;
+            title = `Transaction`;
+            message = `${transferType.currency} transaction on ${txNetworkName}`;
             break;
 
         case TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER: {
@@ -235,30 +222,41 @@ const getTxNotificationData = (
             break;
         }
         case TransactionCategories.CONTRACT_INTERACTION:
-            title = `Contract Interaction ${isTxFailed ? 'Failed' : ''}`;
-            message = `Interaction with contract on ${txNetworkName} ${
-                isTxFailed ? 'failed' : 'completed'
-            }.`;
+            title = `Contract Interaction`;
+            message = `Interaction with contract on ${txNetworkName}`;
             break;
         case TransactionCategories.CONTRACT_DEPLOYMENT:
-            title = `Contract ${
-                isTxFailed ? 'Deployment Failed' : 'Deployed'
-            }`;
-            message = `Contract deployment on ${txNetworkName} ${
-                isTxFailed ? 'failed' : 'completed'
-            }.`;
+            title = `Contract Deploy`;
+            message = `Contract deployment on ${txNetworkName}`;
+            break;
+        default:
+            showDefaultNotification = true;
             break;
     }
 
     if (showDefaultNotification) {
-        title = isTxFailed ? 'Transaction Failed' : 'Transaction Completed';
-        message = `Transaction on ${txNetworkName} ${
-            isTxFailed ? 'failed' : 'completed'
-        }.`;
+        title = 'Transaction';
+        message = `Transaction on ${txNetworkName}`;
     }
 
-    if (isTxSpedUp) {
-        title = title + ' (Sped Up)';
+    if (
+        transactionCategory !==
+        TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER
+    ) {
+        title =
+            title +
+            (!isTxFailed && !isTxCancelled
+                ? ' Completed'
+                : isTxCancelled
+                ? ' Cancelled'
+                : ' Failed');
+        message =
+            message +
+            (!isTxFailed && !isTxCancelled
+                ? ' completed.'
+                : isTxCancelled
+                ? ' cancelled.'
+                : ' failed.');
     }
 
     return {
@@ -266,27 +264,4 @@ const getTxNotificationData = (
         message,
         url,
     };
-};
-
-/**
- * Formats the token amount.
- * @param amount - The token amount.
- * @param decimals - The token decimals.
- * @param symbol - The token symbol.
- * @returns The formatted token amount.
- * @example
- * formatTokenAmount('1000000000000000000', 18, 'ETH') // '1 ETH'
- * formatTokenAmount('2000000000000000000', 18) // '2 tokens'
- * formatTokenAmount('1000000000000000000') // 'some tokens'
- * formatTokenAmount() // 'some tokens'
- * formatTokenAmount(undefined, 18, 'ETH') // 'some ETH'
- */
-const formatTokenAmount = (
-    amount: BigNumber | string | undefined,
-    decimals: number | undefined,
-    symbol: string | undefined
-) => {
-    return `${amount && decimals ? formatUnits(amount, decimals) : 'some'} ${
-        symbol ?? 'tokens'
-    }`;
 };

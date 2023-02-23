@@ -31,7 +31,7 @@ import TransactionController from '@block-wallet/background/controllers/transact
 import { mockedPermissionsController } from './mock-permissions';
 import { TypedTransaction } from '@ethereumjs/tx';
 import { GasPricesController } from '@block-wallet/background/controllers/GasPricesController';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import { mockKeyringController } from './mock-keyring-controller';
 

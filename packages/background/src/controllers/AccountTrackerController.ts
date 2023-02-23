@@ -1,7 +1,10 @@
 import NetworkController, { NetworkEvents } from './NetworkController';
 import { BaseController } from '../infrastructure/BaseController';
 import { BigNumber } from '@ethersproject/bignumber';
-import { StaticJsonRpcProvider } from '@ethersproject/providers/';
+import {
+    StaticJsonRpcProvider,
+    TransactionResponse,
+} from '@ethersproject/providers';
 import { Zero } from '@ethersproject/constants';
 import {
     ImportStrategy,
@@ -54,7 +57,6 @@ import {
     WatchedTransactionType,
 } from './transactions/utils/types';
 import { retryHandling } from '../utils/retryHandling';
-import { providers } from 'ethers';
 import { RPCLogsFetcher } from '../utils/rpc/RPCLogsFetcher';
 import { getTokenApprovalLogsTopics } from '../utils/logsQuery';
 import { runPromiseSafely } from '../utils/promises';
@@ -973,7 +975,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         if (lastTxHash) {
             try {
                 const oldTtransaction =
-                    await retryHandling<providers.TransactionResponse>(() =>
+                    await retryHandling<TransactionResponse>(() =>
                         provider.getTransaction(lastTxHash)
                     );
                 if (oldTtransaction.blockNumber) {

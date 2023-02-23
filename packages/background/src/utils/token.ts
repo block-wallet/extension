@@ -10,7 +10,7 @@ import {
     WatchAssetParameters,
     WatchAssetReq,
 } from './types/ethereum';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { MaxUint256 } from '@ethersproject/constants';
 
 const IS_BASE64_IMAGE = 'IS_BASE64_IMAGE';

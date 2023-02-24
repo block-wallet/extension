@@ -435,7 +435,7 @@ export const INITIAL_NETWORKS: Networks = {
         blockExplorerUrls: ['https://blockscout.com/xdai/mainnet'],
         blockExplorerName: 'Blockscout',
         etherscanApiUrl: 'https://api-gnosis.etherscan.io',
-        actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
+        actionsTimeIntervals: { ...FAST_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
             derivationsForward: DERIVATIONS_FORWARD,

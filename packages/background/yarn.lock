@@ -716,7 +716,7 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
-"@metamask/browser-passworder@^4.0.2", "@metamask/browser-passworder@https://github.com/block-wallet/browser-passworder", "@metamask/browser-passworder@https://github.com/block-wallet/browser-passworder#v1.0.1":
+"@metamask/browser-passworder@^4.0.2", "@metamask/browser-passworder@https://github.com/block-wallet/browser-passworder#v1.0.1":
   version "4.0.2"
   resolved "https://github.com/block-wallet/browser-passworder#f8fa5a8a9dfdba84afc8b67c481e6c9374e99d13"
 

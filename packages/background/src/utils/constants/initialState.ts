@@ -186,7 +186,7 @@ const initialState: BlankAppState = {
         },
     },
     NetworkController: {
-        selectedNetwork: 'goerli',
+        selectedNetwork: 'Gnosis_RPCh',
         availableNetworks: INITIAL_NETWORKS,
         isNetworkChanging: false,
         isUserNetworkOnline: true,

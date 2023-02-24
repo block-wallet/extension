@@ -15,16 +15,16 @@ const IsBetaDialog: FunctionComponent<BetaDialogProps> = ({
     return (
         <FullScreenDialog
             open={isOpen}
-            className="relative py-6 opacity-100 w-1/3 bg-white shadow-md rounded-md flex-col flex"
+            className="relative py-6 opacity-100 w-3/12 bg-white shadow-md rounded-md flex-col flex"
         >
-            <div className="flex flex-col items-center space-y-4">
+            <div className="flex flex-col items-center space-y-6 p-4">
                 <div className="bg-yellow-100 opacity-90 rounded-md w-full p-4 flex space-x-4 items-center font-bold justify-center">
                     <ExclamationCircleIconFull size="20" profile="outlined" />{" "}
                     <span className="text-xl" style={{ color: "#FFBB54" }}>
                         Warning! Experimental Version
                     </span>
                 </div>
-                <span className="text-base p-4 text-center">
+                <span className="text-sm  text-center">
                     This version of BlockWallet is experimental and intended for
                     testing purposes only. Please proceed with caution and read
                     about the intended use{" "}

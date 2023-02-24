@@ -1,7 +1,7 @@
 import {
     KeyringControllerState,
     KeyringControllerMemState,
-} from '@eth-keyring-controller';
+} from 'eth-keyring-controller';
 import { ValuesOf } from '../types/helpers';
 import { IObservableStore } from '../../infrastructure/stores/ObservableStore';
 

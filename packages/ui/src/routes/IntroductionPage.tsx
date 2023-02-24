@@ -11,7 +11,11 @@ const IntroductionPage = () => {
     const history = useOnMountHistory()
     const [isBetaDiallogOpen, setIsBetaDiallogOpen] = useState(false)
     return (
-        <PageLayout centered className="relative overflow-hidden">
+        <PageLayout
+            centered
+            className="relative overflow-hidden"
+            displayWarningTip={true}
+        >
             <IsBetaDialog
                 isOpen={isBetaDiallogOpen}
                 onClick={() => {

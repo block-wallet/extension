@@ -7,19 +7,27 @@ const FullCenterContainer: FunctionComponent<{
     centered?: boolean
     screen?: boolean
     children: React.ReactNode
-}> = ({ children, centered = false, screen = false }) => (
+    displayWarningTip?: boolean
+}> = ({
+    children,
+    centered = false,
+    screen = false,
+    displayWarningTip = false,
+}) => (
     <>
-        <WarningTip
-            text={
-                <>
-                    <b>Warning!</b> This is an experimental version of
-                    BlockWallet
-                </>
-            }
-            fontSize="text-sm"
-            justify="justify-center"
-            className="w-full"
-        />
+        {displayWarningTip && (
+            <WarningTip
+                text={
+                    <>
+                        <b>Warning!</b> This is an experimental version of
+                        BlockWallet
+                    </>
+                }
+                fontSize="text-sm"
+                justify="justify-center"
+                className="w-full"
+            />
+        )}
         <div
             className="w-full min-h-full flex bg-primary-100"
             style={screen ? {} : { height: "fit-content" }}

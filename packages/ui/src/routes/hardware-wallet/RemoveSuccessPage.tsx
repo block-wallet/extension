@@ -13,7 +13,11 @@ const HardwareWalletRemoveSuccessPage = () => {
 
     return (
         <>
-            <PageLayout centered className="relative overflow-hidden">
+            <PageLayout
+                centered
+                className="relative overflow-hidden"
+                displayWarningTip={true}
+            >
                 <div className="flex flex-col items-center relative py-14 z-10">
                     <LogoHeader />
                     <div className="flex flex-col items-center my-12 space-y-6">

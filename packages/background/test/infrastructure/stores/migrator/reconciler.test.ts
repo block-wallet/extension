@@ -199,6 +199,8 @@ const initialState: newBlankAppState = {
         keyringTypes: {},
         keyrings: [],
         vault: '',
+        encryptionKey: '',
+        encryptionSalt: '',
     },
     NetworkController: {
         selectedNetwork: 'mainnet',
@@ -425,6 +427,8 @@ describe('State reconciler', () => {
                 keyringTypes: {},
                 keyrings: [],
                 vault: 'encrypted-vault',
+                encryptionKey: '',
+                encryptionSalt: '',
             },
             OnboardingController: {
                 isOnboarded: true,

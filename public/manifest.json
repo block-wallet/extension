@@ -31,7 +31,7 @@
         "128": "icons/icon-128.png"
     },
     "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'"
+        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
     },
     "manifest_version": 3,
     "name": "[Experimental] BlockWallet",
@@ -48,7 +48,7 @@
     "version_name": "beta",
     "web_accessible_resources": [
         {
-            "resources": ["blankProvider.js", "keep-alive"],
+            "resources": ["blankProvider.js", "keep-alive", "rpch_crypto_bg.wasm"],
             "matches": ["<all_urls>"]
         }
     ]

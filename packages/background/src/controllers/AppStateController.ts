@@ -17,6 +17,11 @@ export enum AppStateEvents {
     APP_UNLOCKED = 'APP_UNLOCKED',
 }
 
+export type LoginToken = {
+    encryptionKey: string;
+    encryptionSalt: string;
+};
+
 export default class AppStateController extends BaseController<AppStateControllerState> {
     private _timer: ReturnType<typeof setTimeout> | null;
 
@@ -126,7 +131,12 @@ export default class AppStateController extends BaseController<AppStateControlle
                 chrome.storage.session &&
                     // @ts-ignore
                     chrome.storage.session
-                        .set({ loginToken })
+                        .set({
+                            loginToken: {
+                                encryptionKey: loginToken.encryptionKey,
+                                encryptionSalt: loginToken.encryptionSalt,
+                            },
+                        })
                         .catch((err: any) => {
                             log.error('error setting loginToken', err);
                         });
@@ -141,18 +151,32 @@ export default class AppStateController extends BaseController<AppStateControlle
     public autoUnlock = async (): Promise<void> => {
         if (isManifestV3()) {
             const { isAppUnlocked } = this.store.getState();
-            if (!isAppUnlocked) {
+            if (isAppUnlocked) {
                 // @ts-ignore
                 chrome.storage.session &&
                     // @ts-ignore
                     chrome.storage.session.get(
                         ['loginToken'],
-                        async ({ loginToken }: { [key: string]: string }) => {
-                            if (loginToken) {
-                                await (this._keyringController as any)[
-                                    'submitEncryptionKey'
-                                ](loginToken);
-                                await this._postLoginAction();
+                        async ({ loginToken }: { [key: string]: any }) => {
+                            const typedLoginToken = loginToken as LoginToken;
+                            let forceLock = true;
+                            try {
+                                if (typedLoginToken) {
+                                    await this._keyringController.submitEncryptionKey(
+                                        typedLoginToken.encryptionKey,
+                                        typedLoginToken.encryptionSalt
+                                    );
+                                    await this._postLoginAction();
+                                    forceLock = false;
+                                }
+                            } catch (e) {
+                                log.error('Unable to autoUnlock keyring', e);
+                            } finally {
+                                // if we were unable to unlock keyring we should lock the wallet
+                                // the user needs to unlock the keyring and the wallet by his own
+                                if (forceLock) {
+                                    this.lock();
+                                }
                             }
                         }
                     );

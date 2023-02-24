@@ -8,6 +8,7 @@ import {
     TransactionStatus,
 } from '../controllers/transactions/utils/types';
 import { formatTokenAmount } from './token';
+import { fetchContractDetails } from './contractsInfo';
 
 interface ChainListItemWithExplorerUrl extends ChainListItem {
     explorerUrl: string;
@@ -29,14 +30,17 @@ export const showSetUpCompleteNotification = () => {
  * Shows a notification including the transaction info and open link to explorer on click.
  * @param txMeta - The transaction meta object.
  */
-export const showTransactionNotification = (txMeta: TransactionMeta) => {
+export const showTransactionNotification = async (txMeta: TransactionMeta) => {
     const network = getNetworkData(txMeta.chainId);
     if (!network) return;
 
     // the cancel transaction is not shown in the notification only the cancelation
     if (txMeta.metaType === MetaType.CANCEL) return;
 
-    const { title, message, url } = getTxNotificationData(txMeta, network);
+    const { title, message, url } = await getTxNotificationData(
+        txMeta,
+        network
+    );
 
     showNotification(title, message, url);
 };
@@ -102,7 +106,7 @@ const getNetworkData = (chainId: number | undefined) => {
     return { ...networkData, explorerUrl } as ChainListItemWithExplorerUrl;
 };
 
-const getTxNotificationData = (
+const getTxNotificationData = async (
     txMeta: TransactionMeta,
     network: ChainListItemWithExplorerUrl
 ) => {
@@ -114,6 +118,7 @@ const getTxNotificationData = (
         bridgeParams,
         approveAllowanceParams,
         transferType,
+        chainId,
     } = txMeta;
 
     const {
@@ -193,7 +198,7 @@ const getTxNotificationData = (
         }
         case TransactionCategories.SENT_ETHER:
             title = `Transaction`;
-            message = `${txNetworkNativeToken.symbol} transaction on ${txNetworkName}`;
+            message = `${txNetworkNativeToken.symbol} transfer on ${txNetworkName}`;
             break;
         case TransactionCategories.TOKEN_METHOD_TRANSFER:
             if (!transferType) {
@@ -201,10 +206,10 @@ const getTxNotificationData = (
                 break;
             }
             title = `Transaction`;
-            message = `${transferType.currency} transaction on ${txNetworkName}`;
+            message = `${transferType.currency} transfer on ${txNetworkName}`;
             break;
         case TransactionCategories.INCOMING:
-            if (!txParams) {
+            if (!txParams || !txParams.value) {
                 showDefaultNotification = true;
                 break;
             }
@@ -229,10 +234,27 @@ const getTxNotificationData = (
             )} on ${txNetworkName}.`;
             break;
         }
-        case TransactionCategories.CONTRACT_INTERACTION:
+        case TransactionCategories.CONTRACT_INTERACTION: {
+            if (!txParams || !txParams.to || !chainId) {
+                showDefaultNotification = true;
+                break;
+            }
+            const contractAddress = txParams.to;
+            const contractDetails = await fetchContractDetails(
+                chainId,
+                contractAddress
+            );
+            const contractName =
+                contractDetails?.name ??
+                `Contract (${contractAddress?.slice(
+                    0,
+                    6
+                )}...${contractAddress?.slice(contractAddress.length - 4)})`;
+
             title = `Contract Interaction`;
-            message = `Interaction with contract on ${txNetworkName}`;
+            message = `Transaction with ${contractName} on ${txNetworkName}`;
             break;
+        }
         case TransactionCategories.CONTRACT_DEPLOYMENT:
             title = `Contract Deploy`;
             message = `Contract deployment on ${txNetworkName}`;

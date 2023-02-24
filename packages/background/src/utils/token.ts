@@ -13,6 +13,7 @@ import {
 import { BigNumber } from 'ethers';
 import { MaxUint256 } from '@ethersproject/constants';
 import { formatUnits } from '@ethersproject/units';
+import { FixedNumber } from '@ethersproject/bignumber';
 
 const IS_BASE64_IMAGE = 'IS_BASE64_IMAGE';
 
@@ -184,11 +185,11 @@ export function mergeTokens(
  * formatTokenAmount(undefined, 18, 'ETH') // 'some ETH'
  */
 export const formatTokenAmount = (
-    amount: BigNumber | string | undefined,
-    decimals: number | undefined,
-    symbol: string | undefined
+    amount: BigNumber | string,
+    decimals: number,
+    symbol: string
 ) => {
-    return `${amount && decimals ? formatUnits(amount, decimals) : 'some'} ${
-        symbol ?? 'tokens'
-    }`;
+    return `${FixedNumber.fromString(formatUnits(amount, decimals))
+        .round(5)
+        .toString()} ${symbol}`;
 };

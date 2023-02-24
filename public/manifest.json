@@ -34,7 +34,7 @@
         "extension_pages": "script-src 'self'; object-src 'self'"
     },
     "manifest_version": 3,
-    "name": "BlockWallet",
+    "name": "[Experimental] BlockWallet",
     "permissions": [
         "activeTab",
         "storage",
@@ -43,8 +43,9 @@
         "scripting"
     ],
     "host_permissions": ["file://*/*", "http://*/*", "https://*/*"],
-    "short_name": "[Experimental] BlockWallet",
+    "short_name": "BlockWallet",
     "version": "0.6.0",
+    "version_name": "beta",
     "web_accessible_resources": [
         {
             "resources": ["blankProvider.js", "keep-alive"],

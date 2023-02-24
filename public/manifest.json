@@ -44,7 +44,7 @@
     ],
     "host_permissions": ["file://*/*", "http://*/*", "https://*/*"],
     "short_name": "BlockWallet RPCh (Experimental)",
-    "version": "0.0.1",
+    "version": "0.6.1",
     "version_name": "experimental",
     "web_accessible_resources": [
         {

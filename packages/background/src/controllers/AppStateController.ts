@@ -17,6 +17,11 @@ export enum AppStateEvents {
     APP_UNLOCKED = 'APP_UNLOCKED',
 }
 
+export type SessionToken = {
+    encryptionKey: string;
+    encryptionSalt: string;
+};
+
 export default class AppStateController extends BaseController<AppStateControllerState> {
     private _timer: ReturnType<typeof setTimeout> | null;
 
@@ -117,19 +122,15 @@ export default class AppStateController extends BaseController<AppStateControlle
     public unlock = async (password: string): Promise<void> => {
         try {
             // Unlock vault
-            const loginToken = await this._keyringController.submitPassword(
+            const sessionToken = await this._keyringController.submitPassword(
                 password
             );
 
             if (isManifestV3()) {
-                // @ts-ignore
-                chrome.storage.session &&
-                    // @ts-ignore
-                    chrome.storage.session
-                        .set({ loginToken })
-                        .catch((err: any) => {
-                            log.error('error setting loginToken', err);
-                        });
+                this._storeSessionToken({
+                    encryptionKey: sessionToken.encryptionKey,
+                    encryptionSalt: sessionToken.encryptionSalt,
+                });
             }
 
             await this._postLoginAction();
@@ -138,24 +139,76 @@ export default class AppStateController extends BaseController<AppStateControlle
         }
     };
 
+    private _getSessionToken(): Promise<SessionToken | undefined> {
+        return new Promise((resolve) => {
+            // @ts-ignore
+            if (chrome.storage.session) {
+                // @ts-ignore
+                chrome.storage.session.get(
+                    ['sessionToken'],
+                    async ({ sessionToken }: { [key: string]: any }) => {
+                        if (!sessionToken) {
+                            resolve(undefined);
+                        }
+                        resolve(sessionToken as SessionToken);
+                    }
+                );
+            } else {
+                resolve(undefined);
+            }
+        });
+    }
+
+    private async _storeSessionToken(
+        sessionToken: SessionToken
+    ): Promise<SessionToken> {
+        // @ts-ignore
+        if (chrome.storage.session) {
+            // @ts-ignore
+            await chrome.storage.session
+                .set({
+                    sessionToken: {
+                        encryptionKey: sessionToken.encryptionKey,
+                        encryptionSalt: sessionToken.encryptionSalt,
+                    },
+                })
+                .catch((err: any) => {
+                    log.error('error setting sessionToken', err);
+                });
+        }
+
+        return sessionToken;
+    }
+
     public autoUnlock = async (): Promise<void> => {
         if (isManifestV3()) {
             const { isAppUnlocked } = this.store.getState();
-            if (!isAppUnlocked) {
-                // @ts-ignore
-                chrome.storage.session &&
-                    // @ts-ignore
-                    chrome.storage.session.get(
-                        ['loginToken'],
-                        async ({ loginToken }: { [key: string]: string }) => {
-                            if (loginToken) {
-                                await (this._keyringController as any)[
-                                    'submitEncryptionKey'
-                                ](loginToken);
-                                await this._postLoginAction();
-                            }
-                        }
-                    );
+            if (isAppUnlocked) {
+                let forceLock = true;
+                try {
+                    const sessionToken = await this._getSessionToken();
+                    if (sessionToken) {
+                        const newSessionToken =
+                            await this._keyringController.submitEncryptionKey(
+                                sessionToken.encryptionKey,
+                                sessionToken.encryptionSalt
+                            );
+                        await this._storeSessionToken({
+                            encryptionKey: newSessionToken.encryptionKey,
+                            encryptionSalt: newSessionToken.encryptionSalt,
+                        });
+                        await this._postLoginAction();
+                        forceLock = false;
+                    }
+                } catch (e) {
+                    log.error('Unable to autoUnlock keyring', e);
+                } finally {
+                    // if we were unable to unlock keyring we should lock the wallet
+                    // the user needs to unlock the keyring and the wallet by his own
+                    if (forceLock) {
+                        this.lock();
+                    }
+                }
             }
         }
     };

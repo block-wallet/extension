@@ -1,4 +1,4 @@
-import { KeyringControllerState } from 'eth-keyring-controller';
+import { KeyringControllerState } from '@metamask/eth-keyring-controller';
 import { BaseController } from '../infrastructure/BaseController';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 

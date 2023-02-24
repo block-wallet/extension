@@ -42,7 +42,13 @@ export const showTransactionNotification = async (txMeta: TransactionMeta) => {
         network
     );
 
-    showNotification(title, message, url);
+    const accountAddress = txMeta.transactionParams.from;
+    const accountName = accountAddress
+        ? `Account (${accountAddress?.slice(0, 6)}...${accountAddress?.slice(
+              accountAddress.length - 4
+          )})`
+        : undefined;
+    showNotification(title, message, url, accountName);
 };
 
 /**
@@ -51,9 +57,15 @@ export const showTransactionNotification = async (txMeta: TransactionMeta) => {
  * @param title - The notification title.
  * @param message - The notification message.
  * @param url - The url to open on click.
+ * @param contextMessage - The context message.
  *
  */
-const showNotification = (title: string, message: string, url: string) => {
+const showNotification = (
+    title: string,
+    message: string,
+    url: string,
+    contextMessage?: string
+) => {
     let notificationUrl = url;
     if (url) {
         addOnClickListener();
@@ -69,6 +81,7 @@ const showNotification = (title: string, message: string, url: string) => {
         iconUrl: chrome.runtime.getURL('icons/icon-48.png'),
         type: 'basic',
         isClickable: url ? true : false,
+        contextMessage: contextMessage,
     });
 };
 

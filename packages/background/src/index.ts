@@ -196,7 +196,7 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
     }
 });
 
-const registerInPageContentScript = async () => {
+const registerBlankProviderContentScript = async () => {
     try {
         await (chrome.scripting as any).registerContentScripts([
             {
@@ -221,5 +221,5 @@ if (isManifestV3()) {
     chrome.alarms.onAlarm.addListener(() => {
         fetch(chrome.runtime.getURL('keep-alive'));
     });
-    registerInPageContentScript();
+    registerBlankProviderContentScript();
 }

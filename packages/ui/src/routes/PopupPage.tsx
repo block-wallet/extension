@@ -357,11 +357,13 @@ const PopupPage = () => {
                                 </span>
                             </Link>
                             {isSwapEnabled && (
-                                <button
+                                <a
                                     onClick={() => {
                                         setShowDisabledFeatureDialog(true)
                                         setDisabledFeatureName("Swap")
                                     }}
+                                    className={classnames("cursor-pointer")}
+                                    draggable={false}
                                 >
                                     <div
                                         className={classnames(
@@ -388,7 +390,7 @@ const PopupPage = () => {
                                     <span className="text-xs font-medium">
                                         Swap
                                     </span>
-                                </button>
+                                </a>
                             )}
                             {isBridgeEnabled && (
                                 <button

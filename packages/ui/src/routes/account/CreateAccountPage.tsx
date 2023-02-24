@@ -1,4 +1,4 @@
-import { AriaAttributes } from "react"
+import { AriaAttributes, useState } from "react"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import { openHardwareConnect } from "../../context/commActions"
@@ -6,6 +6,7 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import Icon, { IconName } from "../../components/ui/Icon"
 import classNames from "classnames"
 import { PropsWithChildren } from "react"
+import DisabledFeatureDialog from "../../components/dialog/DisabledFeatureDialog"
 
 const CardFrame: React.FC<
     PropsWithChildren<{
@@ -58,6 +59,9 @@ const CreateAccountCard: React.FC<{
 
 const CreateAccountPage = () => {
     const history = useOnMountHistory()
+    const [showDisabledFeatureDialog, setShowDisabledFeatureDialog] =
+        useState(false)
+    const [disabledFeatureName, setDisabledFeatureName] = useState("")
     return (
         <PopupLayout
             header={
@@ -67,6 +71,13 @@ const CreateAccountPage = () => {
                 />
             }
         >
+            <DisabledFeatureDialog
+                isOpen={showDisabledFeatureDialog}
+                onDone={() => {
+                    setShowDisabledFeatureDialog(false)
+                }}
+                disabledFeatureName={disabledFeatureName}
+            />
             <div className="flex flex-col space-y-6 p-6">
                 <CreateAccountCard
                     title="Create Account"
@@ -84,7 +95,10 @@ const CreateAccountPage = () => {
                     title="Connect Hardware Wallet"
                     iconName={IconName.USB}
                     description="Connect accounts from a hardware wallet."
-                    onClick={() => openHardwareConnect()}
+                    onClick={() => {
+                        setShowDisabledFeatureDialog(true)
+                        setDisabledFeatureName("Hardware Wallet")
+                    }}
                 />
             </div>
         </PopupLayout>

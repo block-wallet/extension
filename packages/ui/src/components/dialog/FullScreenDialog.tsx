@@ -8,8 +8,9 @@ const FullScreenDialog: FunctionComponent<
     PropsWithChildren<{
         open: boolean
         onClickOutside?: () => void
+        className?: string
     }>
-> = ({ children, open, onClickOutside }) => {
+> = ({ children, open, onClickOutside, className }) => {
     const nodeRef = useRef(null)
     const ref = useRef(null)
     useOnClickOutside(ref, () => onClickOutside?.())
@@ -30,7 +31,10 @@ const FullScreenDialog: FunctionComponent<
             >
                 <div
                     ref={ref}
-                    className="relative py-6 opacity-100 max-w-md w-3/6 bg-white shadow-md rounded-md flex-col flex"
+                    className={
+                        className ??
+                        "relative py-6 opacity-100 max-w-md w-3/6 bg-white shadow-md rounded-md flex-col flex"
+                    }
                 >
                     {children}
                 </div>

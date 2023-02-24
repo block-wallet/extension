@@ -27,10 +27,14 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import classNames from "classnames"
 import GenericTooltip from "../../components/label/GenericTooltip"
 import AppVersion from "../../components/AppVersion"
-import { openHardwareConnect } from "../../context/commActions"
+import DisabledFeatureDialog from "../../components/dialog/DisabledFeatureDialog"
+import { useState } from "react"
 
 const SettingsPage = () => {
     const { isSeedPhraseBackedUp, isImportingDeposits } = useBlankState()!
+    const [showDisabledFeatureDialog, setShowDisabledFeatureDialog] =
+        useState(false)
+    const [disabledFeatureName, setDisabledFeatureName] = useState("")
     const handleError = useErrorHandler()
     const history = useOnMountHistory()
 
@@ -58,7 +62,10 @@ const SettingsPage = () => {
         {
             icon: usb,
             label: "Connect Hardware Wallet",
-            onClick: () => openHardwareConnect(),
+            onClick: () => {
+                setShowDisabledFeatureDialog(true)
+                setDisabledFeatureName("Hardware Wallet")
+            },
         },
         {
             icon: about,
@@ -125,6 +132,13 @@ const SettingsPage = () => {
                 </PopupFooter>
             }
         >
+            <DisabledFeatureDialog
+                isOpen={showDisabledFeatureDialog}
+                onDone={() => {
+                    setShowDisabledFeatureDialog(false)
+                }}
+                disabledFeatureName={disabledFeatureName}
+            />
             <div className="flex flex-col space-y-6 p-6">
                 <div className="flex flex-col space-y-1">
                     <div className="flex flex-col space-y-4">

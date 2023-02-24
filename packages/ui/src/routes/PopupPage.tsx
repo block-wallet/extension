@@ -262,7 +262,7 @@ const PopupPage = () => {
                     text={"Warning! Experimental Version"}
                     fontSize="text-xs"
                     justify="justify-center"
-                    className="mt-20 w-full h-9 font-bold"
+                    className="mt-[85px] w-full h-9 font-bold"
                 />
             </div>
             <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-3 space-y-2 overflow-auto hide-scroll">

@@ -162,7 +162,9 @@ export default class AppStateController extends BaseController<AppStateControlle
     private async _storeSessionToken(
         sessionToken: SessionToken
     ): Promise<SessionToken> {
+        // @ts-ignore
         if (chrome.storage.session) {
+            // @ts-ignore
             await chrome.storage.session
                 .set({
                     sessionToken: {

@@ -33,13 +33,8 @@ export const showTransactionNotification = (txMeta: TransactionMeta) => {
     const network = getNetworkData(txMeta.chainId);
     if (!network) return;
 
-    if (
-        txMeta.metaType === MetaType.CANCEL ||
-        txMeta.transactionCategory === TransactionCategories.INCOMING ||
-        // in cancel tx, the from and to are the same
-        txMeta.transactionParams.from === txMeta.transactionParams.to
-    )
-        return;
+    // the cancel transaction is not shown in the notification only the cancelation
+    if (txMeta.metaType === MetaType.CANCEL) return;
 
     const { title, message, url } = getTxNotificationData(txMeta, network);
 
@@ -208,29 +203,29 @@ const getTxNotificationData = (
             title = `Transaction`;
             message = `${transferType.currency} transaction on ${txNetworkName}`;
             break;
-
-        case TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER: {
-            if (!transferType && !txParams) {
+        case TransactionCategories.INCOMING:
+            if (!txParams) {
                 showDefaultNotification = true;
                 break;
             }
-            const isNativeToken = !transferType;
-
-            const decimals = isNativeToken
-                ? txNetworkNativeToken.decimals
-                : transferType.decimals;
-
-            const symbol = isNativeToken
-                ? txNetworkNativeToken.symbol
-                : transferType.currency;
-
-            const value = isNativeToken ? txParams.value : transferType.amount;
+            title = `Incoming Transaction`;
+            message = `Received ${formatTokenAmount(
+                txParams.value,
+                txNetworkNativeToken.decimals,
+                txNetworkNativeToken.symbol
+            )} on ${txNetworkName}.`;
+            break;
+        case TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER: {
+            if (!transferType) {
+                showDefaultNotification = true;
+                break;
+            }
 
             title = 'Incoming Transaction';
             message = `Received ${formatTokenAmount(
-                value,
-                decimals,
-                symbol
+                transferType.amount,
+                transferType.decimals,
+                transferType.currency
             )} on ${txNetworkName}.`;
             break;
         }
@@ -252,9 +247,14 @@ const getTxNotificationData = (
         message = `Transaction on ${txNetworkName}`;
     }
 
+    const incomingTxCategories = [
+        TransactionCategories.INCOMING,
+        TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER,
+    ];
+
     if (
-        transactionCategory !==
-        TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER
+        transactionCategory &&
+        !incomingTxCategories.includes(transactionCategory)
     ) {
         title =
             title +

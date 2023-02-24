@@ -1,7 +1,7 @@
 import {
     KeyringControllerState,
     KeyringControllerMemState,
-} from 'eth-keyring-controller';
+} from '@metamask/eth-keyring-controller';
 import { ValuesOf } from '../types/helpers';
 import { IObservableStore } from '../../infrastructure/stores/ObservableStore';
 
@@ -145,7 +145,7 @@ const initialState: BlankAppState = {
         showDefaultWalletPreferences: false,
         localeInfo: 'en-US',
         nativeCurrency: 'usd',
-        showTestNetworks: false,
+        showTestNetworks: true,
         antiPhishingImage: '',
         popupTab: 'activity',
         settings: {
@@ -184,7 +184,7 @@ const initialState: BlankAppState = {
         },
     },
     NetworkController: {
-        selectedNetwork: 'mainnet',
+        selectedNetwork: 'goerli',
         availableNetworks: INITIAL_NETWORKS,
         isNetworkChanging: false,
         isUserNetworkOnline: true,

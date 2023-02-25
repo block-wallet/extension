@@ -16,10 +16,7 @@ function patchBackgroundJs() {
     );
     fs.writeFileSync(filePath, updatedContent);
     const updatedContentProd = content.replace(
-        // r in prod build == self
-        // 'var ctx = __self__;', // var n = r
         'var n=r;',
-        // 'var ctx = global.fetch ? global : __self__;'
         'var n=globalThis.fetch?globalThis:r;'
     );
     fs.writeFileSync(filePath, updatedContentProd);

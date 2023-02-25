@@ -11,13 +11,19 @@ function patchBackgroundJs() {
     const filePath = path.join(DIST_DIR, 'background.js');
     const content = fs.readFileSync(filePath, 'utf-8');
     const updatedContent = content.replace(
+        'var ctx = __self__;',
+        'var ctx = global.fetch ? global : __self__;'
+    );
+    fs.writeFileSync(filePath, updatedContent);
+    const updatedContentProd = content.replace(
         // r in prod build == self
         // 'var ctx = __self__;', // var n = r
         'var n=r;',
         // 'var ctx = global.fetch ? global : __self__;'
         'var n=globalThis.fetch?globalThis:r;'
     );
-    fs.writeFileSync(filePath, updatedContent);
+    fs.writeFileSync(filePath, updatedContentProd);
+
 }
 
 function patchWasm() {

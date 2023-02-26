@@ -1,7 +1,7 @@
 import {
     KeyringControllerState,
     KeyringControllerMemState,
-} from 'eth-keyring-controller';
+} from '@metamask/eth-keyring-controller';
 import { ValuesOf } from '../types/helpers';
 import { IObservableStore } from '../../infrastructure/stores/ObservableStore';
 
@@ -97,7 +97,10 @@ export type BlankAppStoreConfig<S> = {
 };
 
 const initialState: BlankAppState = {
-    TransactionWatcherControllerState: { transactions: {} },
+    TransactionWatcherControllerState: {
+        transactions: {},
+        tokenAllowanceEvents: {},
+    },
     BlockFetchController: {
         blockFetchData: {
             1: {
@@ -116,6 +119,7 @@ const initialState: BlankAppState = {
     AccountTrackerController: {
         accounts: {},
         hiddenAccounts: {},
+        isRefreshingAllowances: false,
         isAccountTrackerLoading: false,
     },
     AppStateController: {
@@ -130,6 +134,8 @@ const initialState: BlankAppState = {
         keyringTypes: [],
         keyrings: [],
         vault: '',
+        encryptionKey: '',
+        encryptionSalt: '',
     },
     OnboardingController: {
         isOnboarded: false,
@@ -180,7 +186,7 @@ const initialState: BlankAppState = {
         },
     },
     NetworkController: {
-        selectedNetwork: 'goerli',
+        selectedNetwork: 'Gnosis_RPCh',
         availableNetworks: INITIAL_NETWORKS,
         isNetworkChanging: false,
         isUserNetworkOnline: true,

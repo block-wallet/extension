@@ -4,13 +4,18 @@ import classnames from "classnames"
 import Dialog from "./Dialog"
 import Divider from "../Divider"
 
+import openExternal from "../../assets/images/icons/open_external.svg"
 import CloseIcon from "../icons/CloseIcon"
 import { Classes } from "../../styles"
+import useCopyToClipboard from "../../util/hooks/useCopyToClipboard"
+import CopyTooltip from "../label/СopyToClipboardTooltip"
 
-type option = {
+export type option = {
     title: string | JSX.Element
     content: string | JSX.Element | undefined
-    expandable?: boolean
+    expandable?: boolean // if true, full content will be shown on click otherwise only first line
+    link?: string
+    copyable?: boolean // if true, content will be copied to clipboard on click. preferably not used with expandable
 }
 
 type TextSizes = "text-base" | "text-lg" | "text-sm" | "text-xs"
@@ -24,6 +29,7 @@ type DetailsDialogProps = {
     open: boolean
     onClose: () => void
     options: option[]
+    expandedByDefault?: boolean // if true, all options will be expanded by default
     onOption?: (option: option) => React.ReactNode
     showUndefined?: boolean
 }
@@ -37,19 +43,22 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
     itemContentSize = "text-sm",
     titleSize = "text-lg",
     fixedTitle = false,
+    expandedByDefault = false,
     onOption,
     showUndefined = false,
 }) => {
     const [expends, setExpends] = useState<boolean[]>(
-        new Array(options.length).fill(false)
+        new Array(options.length).fill(expandedByDefault)
     )
+
+    const { onCopy, copied } = useCopyToClipboard()
 
     const previousLengthRef = useRef(options.length)
 
     useEffect(() => {
         if (options.length === previousLengthRef.current) return
 
-        setExpends(new Array(options.length).fill(false))
+        setExpends(new Array(options.length).fill(expandedByDefault))
     }, [options])
 
     return (
@@ -109,18 +118,66 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                                         }
                                     >
                                         {typeof option.title === "string" ? (
-                                            <h3
-                                                className={classnames(
-                                                    itemTitleSize,
-                                                    "font-bold"
+                                            <div className="flex flex-row w-full items-center">
+                                                <h3
+                                                    className={classnames(
+                                                        itemTitleSize,
+                                                        "font-bold mr-2"
+                                                    )}
+                                                >
+                                                    {option.title}
+                                                </h3>
+                                                {option.link && (
+                                                    <a
+                                                        href={option.link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        title="Open in explorer"
+                                                    >
+                                                        <img
+                                                            src={openExternal}
+                                                            alt="Open in explorer"
+                                                            className="w-3 h-3"
+                                                        />
+                                                    </a>
                                                 )}
-                                            >
-                                                {option.title}
-                                            </h3>
+                                            </div>
                                         ) : (
-                                            option.title
+                                            <div className="flex flex-row w-full items-center">
+                                                {option.title}
+                                                {option.link && (
+                                                    <a
+                                                        href={option.link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="ml-2"
+                                                        title="Open in explorer"
+                                                    >
+                                                        <img
+                                                            src={openExternal}
+                                                            alt="Open in explorer"
+                                                            className="w-3 h-3"
+                                                        />
+                                                    </a>
+                                                )}
+                                            </div>
                                         )}
-                                        <div className="flex w-full">
+                                        <div
+                                            className={classnames(
+                                                "flex w-full",
+                                                option.copyable &&
+                                                    "cursor-pointer group relative"
+                                            )}
+                                            onClick={(_) => {
+                                                if (
+                                                    option.copyable &&
+                                                    typeof option.content ===
+                                                        "string"
+                                                ) {
+                                                    onCopy(option.content)
+                                                }
+                                            }}
+                                        >
                                             <p
                                                 className={classnames(
                                                     itemContentSize,
@@ -153,6 +210,7 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                                             >
                                                 {option.content ?? "N/A"}
                                             </p>
+                                            <CopyTooltip copied={copied} />
                                         </div>
                                     </div>
                                 )
@@ -160,7 +218,7 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                     </div>
                 </div>
                 <div className="mt-auto w-full">
-                    <div className="-mx-6">
+                    <div className="-mx-3">
                         <Divider />
                     </div>
                     <button

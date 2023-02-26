@@ -124,9 +124,9 @@ const NetworkSelect: FunctionComponent<{
                     {Object.values(availableNetworks)
                         .filter((n) => n.enable && !n.test)
                         .sort(sortNetworksByOrder)
-                        .map((option) => (
+                        .map((option, index) => (
                             <NetworkOption
-                                key={option.chainId}
+                                key={option.chainId + "-" + index}
                                 option={option}
                                 selectedNetwork={selectedNetwork}
                                 handleNetworkChange={handleNetworkChange}

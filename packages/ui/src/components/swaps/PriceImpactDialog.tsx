@@ -1,5 +1,5 @@
 import { BasicToken } from "@block-wallet/background/utils/types/1inch"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits } from "ethers/lib/utils"
 import { FC } from "react"
 import { formatRounded } from "../../util/formatRounded"

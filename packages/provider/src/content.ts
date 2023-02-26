@@ -50,11 +50,12 @@ injectProvider();
 
 const SW_KEEP_ALIVE_INTERVAL = 1000;
 let SW_ALIVE = false;
+let EXTENSION_CONTEXT_VALID = true;
 let portReinitialized = false;
-let intervalRef: NodeJS.Timer;
+let timeoutRef: NodeJS.Timer;
 
-if (isManifestV3()) {
-    intervalRef = setInterval(() => {
+function swKeepAlive() {
+    return new Promise<void>((resolve) => {
         try {
             chrome.runtime.sendMessage(
                 { message: CONTENT.SW_KEEP_ALIVE },
@@ -73,14 +74,30 @@ if (isManifestV3()) {
                     } else {
                         SW_ALIVE = true;
                     }
+                    resolve();
                 }
             );
         } catch (e) {
-            e.message === EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR
-                ? log.error(`Please refresh the page. BlockWallet: ${e}`)
-                : log.error(`BlockWallet: ${e}`);
+            let message = `BlockWallet: ${e}`;
+            if (e.message === EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR) {
+                EXTENSION_CONTEXT_VALID = false;
+                message = `BlockWallet: Please refresh the page. ${e}`;
+            }
+            log.error(message);
+            resolve();
         }
-    }, SW_KEEP_ALIVE_INTERVAL);
+    });
+}
+
+async function keepExtensionAlive() {
+    await swKeepAlive();
+    if (EXTENSION_CONTEXT_VALID) {
+        timeoutRef = setTimeout(keepExtensionAlive, SW_KEEP_ALIVE_INTERVAL);
+    }
+}
+
+if (isManifestV3()) {
+    keepExtensionAlive();
 } else {
     SW_ALIVE = true;
 }
@@ -104,8 +121,8 @@ chrome.runtime.sendMessage(
             //If provider has been overridden by another wallet, then remove connection.
             providerOverridden
         ) {
-            if (isManifestV3() && intervalRef) {
-                clearInterval(intervalRef);
+            if (isManifestV3() && timeoutRef) {
+                clearTimeout(timeoutRef);
             }
             port.disconnect();
             window.removeEventListener('message', windowListener);

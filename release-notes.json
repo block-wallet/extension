@@ -559,6 +559,33 @@
                 }
             ],
             "version": "0.5.7"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Token allowances: manage and revoke your allowances right in the wallet."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improved the allowance set interface to give you more control."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Minor visual tweaks."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.6.0"
         }
     ]
 }

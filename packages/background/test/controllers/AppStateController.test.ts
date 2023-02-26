@@ -14,7 +14,7 @@ import {
     TokenController,
     TokenControllerProps,
 } from '@block-wallet/background/controllers/erc-20/TokenController';
-import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import { sleep } from '@block-wallet/background/utils/sleep';
 
 describe('AppState Controller', function () {

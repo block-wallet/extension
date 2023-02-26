@@ -43,6 +43,9 @@ import GasPricesInfo from "../components/gas/GasPricesInfo"
 import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
 import TransparentOverlay from "../components/loading/TransparentOverlay"
 import Icon, { IconName } from "../components/ui/Icon"
+import WarningTip from "../components/label/WarningTip"
+import WarningDialog from "../components/dialog/WarningDialog"
+import DisabledFeatureDialog from "../components/dialog/DisabledFeatureDialog"
 
 const AccountDisplay = () => {
     const accountAddress = useSelectedAddressWithChainIdChecksum()
@@ -60,7 +63,11 @@ const AccountDisplay = () => {
             className="relative flex flex-col group"
             onClick={copy}
         >
-            <span className="text-sm font-bold" data-testid="account-name">
+            <span
+                className="text-sm font-bold truncate max-w-[96px]"
+                data-testid="account-name"
+                title={account.name}
+            >
                 {formatName(account.name, 18)}
             </span>
             <span className="text-xs text-gray-600 truncate">
@@ -153,6 +160,9 @@ const PopupPage = () => {
         useSelectedNetwork()
     const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
+    const [showDisabledFeatureDialog, setShowDisabledFeatureDialog] =
+        useState(false)
+    const [disabledFeatureName, setDisabledFeatureName] = useState("")
 
     const isLoading =
         state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
@@ -161,6 +171,13 @@ const PopupPage = () => {
 
     return (
         <PageLayout screen className="max-h-screen popup-layout">
+            <DisabledFeatureDialog
+                isOpen={showDisabledFeatureDialog}
+                onDone={() => {
+                    setShowDisabledFeatureDialog(false)
+                }}
+                disabledFeatureName={disabledFeatureName}
+            />
             <ErrorDialog
                 title="Error!"
                 message={error}
@@ -232,7 +249,23 @@ const PopupPage = () => {
                     </div>
                 </div>
             </div>
-            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-24 space-y-2 overflow-auto hide-scroll">
+            <div
+                onClick={() => {
+                    history.push({
+                        pathname: "/welcome",
+                        state: { fromPopUpPage: true },
+                    })
+                }}
+                className="w-full cursor-pointer"
+            >
+                <WarningTip
+                    text={"Warning! Experimental Version"}
+                    fontSize="text-xs"
+                    justify="justify-center"
+                    className="mt-[85px] w-full h-9 font-bold"
+                />
+            </div>
+            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-3 space-y-2 overflow-auto hide-scroll">
                 <div className="w-full">
                     <div className="flex flex-row items-start w-full justify-between pt-1 pb-2">
                         <GenericTooltip
@@ -324,13 +357,13 @@ const PopupPage = () => {
                                 </span>
                             </Link>
                             {isSwapEnabled && (
-                                <Link
-                                    to="/swap"
+                                <a
+                                    onClick={() => {
+                                        setShowDisabledFeatureDialog(true)
+                                        setDisabledFeatureName("Swap")
+                                    }}
+                                    className={classnames("cursor-pointer")}
                                     draggable={false}
-                                    className={classnames(
-                                        "flex flex-col items-center space-y-2 group",
-                                        disabledActions && "pointer-events-none"
-                                    )}
                                 >
                                     <div
                                         className={classnames(
@@ -357,16 +390,14 @@ const PopupPage = () => {
                                     <span className="text-xs font-medium">
                                         Swap
                                     </span>
-                                </Link>
+                                </a>
                             )}
                             {isBridgeEnabled && (
-                                <Link
-                                    to="/bridge"
-                                    draggable={false}
-                                    className={classnames(
-                                        "flex flex-col items-center space-y-2 group",
-                                        disabledActions && "pointer-events-none"
-                                    )}
+                                <button
+                                    onClick={() => {
+                                        setShowDisabledFeatureDialog(true)
+                                        setDisabledFeatureName("Bridge")
+                                    }}
                                 >
                                     <div
                                         className={classnames(
@@ -409,7 +440,7 @@ const PopupPage = () => {
                                     <span className="text-xs font-medium">
                                         Bridge
                                     </span>
-                                </Link>
+                                </button>
                             )}
                         </TokenSummary.Actions>
                     </TokenSummary>

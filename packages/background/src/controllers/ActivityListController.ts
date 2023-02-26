@@ -15,12 +15,10 @@ import {
     TransactionCategories,
     TransactionMeta,
     TransactionStatus,
+    WatchedTransactionType,
 } from './transactions/utils/types';
 import { compareAddresses } from './transactions/utils/utils';
-import {
-    TransactionTypeEnum,
-    TransactionWatcherController,
-} from './TransactionWatcherController';
+import { TransactionWatcherController } from './TransactionWatcherController';
 
 export interface IActivityListState {
     activityList: {
@@ -232,7 +230,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
                     transactions[chainId][selectedAddress];
 
                 for (const type in transactionsByAddress) {
-                    const transactionType = type as TransactionTypeEnum;
+                    const transactionType = type as WatchedTransactionType;
 
                     const { transactions: transactionsByType } =
                         transactionsByAddress[transactionType];

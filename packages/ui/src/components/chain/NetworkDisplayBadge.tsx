@@ -46,7 +46,7 @@ const NetworkDisplayBadge = ({
                         ? "flex justify-center truncate ..."
                         : "flex justify-center whitespace-normal break-all flex-1"
                 )}
-                style={truncate ? { maxWidth: 130 } : {}}
+                style={truncate ? { maxWidth: 80, display: "block" } : {}}
             >
                 {formattedNetworkName}
             </span>

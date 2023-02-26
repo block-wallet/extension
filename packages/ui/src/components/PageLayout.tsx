@@ -12,6 +12,7 @@ const PageLayout: FunctionComponent<{
     sideComponent?: React.ReactNode
     children?: React.ReactNode
     screen?: boolean
+    displayWarningTip?: boolean
 }> = ({
     children,
     centered = false,
@@ -21,8 +22,13 @@ const PageLayout: FunctionComponent<{
     style,
     sideComponent,
     screen = false,
+    displayWarningTip = false,
 }) => (
-    <FullCenterContainer centered={centered} screen={screen}>
+    <FullCenterContainer
+        centered={centered}
+        screen={screen}
+        displayWarningTip={displayWarningTip}
+    >
         <div className="flex-1 flex flex-col items-center">
             {header ? (
                 <div className="mt-8 mb-4">

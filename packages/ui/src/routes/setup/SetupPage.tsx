@@ -42,7 +42,7 @@ const SetupPage = () => {
     useCheckUserIsOnboarded()
 
     return (
-        <PageLayout className="relative" header>
+        <PageLayout className="relative" header displayWarningTip={true}>
             <span className="my-6 text-lg font-bold font-title">
                 New to BlockWallet?
             </span>

@@ -1,23 +1,27 @@
 import { FC } from "react"
-import { LINKS } from "../../util/constants"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
 import PopupFooter from "../popup/PopupFooter"
 import PopupLayout from "../popup/PopupLayout"
 import Info from "./Info"
-import { useBlankState } from "../../context/background/backgroundHooks"
+import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
 interface WelcomeInfoProps {
     onDismiss: () => void
 }
 const WelcomeInfo: FC<WelcomeInfoProps> = ({ onDismiss }) => {
-    const { settings } = useBlankState()!
+    const history = useOnMountHistory()
+    const fromPopupPage = history.location.state?.fromPopUpPage
 
     return (
         <PopupLayout
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
-                        onClick={onDismiss}
+                        onClick={
+                            !fromPopupPage
+                                ? onDismiss
+                                : () => history.push("/home")
+                        }
                         label="Start Using"
                     />
                 </PopupFooter>
@@ -25,47 +29,46 @@ const WelcomeInfo: FC<WelcomeInfoProps> = ({ onDismiss }) => {
         >
             <div className="w-full p-6 pb-0 bg-white bg-opacity-75">
                 <Info>
-                    <Info.Title>Welcome to BlockWallet!</Info.Title>
+                    <Info.Title>BlockWallet Experimental</Info.Title>
                     <div className="p-1 pt-6">
                         <Info.List>
                             <Info.Item type="warn">
-                                EXPERIMENTAL VERSION, USE AT YOUR OWN RISK
-                            </Info.Item>
-                            {settings.defaultBrowserWallet ? (
-                                <Info.Item type="success">
-                                    BlockWallet is your default browser wallet
-                                    to interact with DApps.
-                                </Info.Item>
-                            ) : (
-                                <Info.Item type="warn">
-                                    Set BlockWallet as your default browser
-                                    wallet to interact with DApps.
-                                </Info.Item>
-                            )}
-
-                            <Info.Item type="warn">
-                                Select BlockWallet or, alternatively the
-                                injected option, to connect with DApps.
-                            </Info.Item>
-                            <Info.Item type="warn">
-                                If you don't see BlockWallet's logo when
-                                connecting, select another browser wallet's
-                                logo.
-                            </Info.Item>
-                            <Info.Item type="warn">
-                                Join our{" "}
+                                This version of BlockWallet is experimental and
+                                intended for testing purposes only. Please
+                                proceed with caution and read about the intended
+                                use{" "}
                                 <a
                                     target="_blank"
-                                    rel="noreferrer"
-                                    href={LINKS.TELEGRAM}
-                                    className="text-decoration-line: underline; text-blue-600 hover:text-blue-800"
+                                    rel="noopener noreferrer"
+                                    className="text-primary-300 mt-auto"
+                                    href="https://chrome.google.com/webstore/detail/experimental-blockwallet/fhjkaoanopnkfmlahebnoeghlacnimpj"
                                 >
-                                    Telegram group
-                                </a>{" "}
-                                if you have any questions or feedback.
+                                    here
+                                </a>
+                                .
                             </Info.Item>
-                            <Info.Item type="success" className="m-0 mt-16">
-                                We hope that you enjoy using the BlockWallet!
+                            <Info.Item type="warn">
+                                Some features of the experimental version may be
+                                limited or disabled to ensure the safety of your
+                                funds.
+                            </Info.Item>
+                            <Info.Item type="warn">
+                                Please use the standard production version of
+                                BlockWallet for all regular activities. Download
+                                it{" "}
+                                <a
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary-300 mt-auto"
+                                    href="https://chrome.google.com/webstore/detail/blockwallet/bopcbmipnjdcdfflfgjdgdjejmgpoaab"
+                                >
+                                    here
+                                </a>
+                                .
+                            </Info.Item>
+                            <Info.Item type="success" className="m-0 mt-12">
+                                We hope you enjoy testing our experimental
+                                features!
                             </Info.Item>
                         </Info.List>
                     </div>

@@ -1,7 +1,7 @@
 import type { BlankAppState } from '../../utils/constants/initialState';
 import { BigNumber } from '@ethersproject/bignumber';
 import BaseStorageStore from './BaseStorageStore';
-import { TransactionTypeEnum } from '@block-wallet/background/controllers/TransactionWatcherController';
+import { WatchedTransactionType } from '@block-wallet/background/controllers/transactions/utils/types';
 
 export default class BlankStorageStore extends BaseStorageStore<BlankAppState> {
     constructor() {
@@ -59,7 +59,7 @@ export default class BlankStorageStore extends BaseStorageStore<BlankAppState> {
                             const transactions = transactionByAddress[address];
                             for (const type in transactions) {
                                 const transactionType =
-                                    type as TransactionTypeEnum;
+                                    type as WatchedTransactionType;
                                 for (const transactionHash in transactions[
                                     transactionType
                                 ].transactions) {

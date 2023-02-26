@@ -182,17 +182,22 @@ initBlockWallet().catch((error) => {
 // On install, open onboarding tab
 chrome.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === 'install') {
-        chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
+        // chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
+        // Form for beta version
+        chrome.runtime.setUninstallURL('https://forms.gle/1Jd5dinmYtW1KFJX7');
+
         openExtensionInBrowser();
     }
 
     // For existing users, when the extension gets updated we also set the uninstall form.
     if (reason === 'update') {
-        chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
+        // chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
+        // Form for beta version
+        chrome.runtime.setUninstallURL('https://forms.gle/1Jd5dinmYtW1KFJX7');
     }
 });
 
-const registerInPageContentScript = async () => {
+const registerBlankProviderContentScript = async () => {
     try {
         await (chrome.scripting as any).registerContentScripts([
             {
@@ -217,5 +222,5 @@ if (isManifestV3()) {
     chrome.alarms.onAlarm.addListener(() => {
         fetch(chrome.runtime.getURL('keep-alive'));
     });
-    registerInPageContentScript();
+    registerBlankProviderContentScript();
 }

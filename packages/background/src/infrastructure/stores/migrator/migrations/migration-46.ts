@@ -1,4 +1,4 @@
-import { TransactionTypeEnum } from '../../../../controllers/TransactionWatcherController';
+import { WatchedTransactionType } from '../../../../controllers/transactions/utils/types';
 import { BigNumber } from '@ethersproject/bignumber';
 import { BlankAppState } from '../../../../utils/constants/initialState';
 import { IMigration } from '../IMigration';
@@ -17,9 +17,9 @@ export default {
                 const transactionsByType = transactionsByAccount[account] || {};
                 for (const type in transactionsByType) {
                     const transactions =
-                        transactionsByType[type as TransactionTypeEnum];
+                        transactionsByType[type as WatchedTransactionType];
                     if (
-                        type !== TransactionTypeEnum.Native &&
+                        type !== WatchedTransactionType.Native &&
                         transactions &&
                         transactions.transactions
                     ) {

@@ -29,7 +29,7 @@ const SeedImportPage = () => {
     }
 
     return (
-        <PageLayout header maxWidth="max-w-lg">
+        <PageLayout header maxWidth="max-w-lg" displayWarningTip={true}>
             <span className="my-6 text-lg font-bold font-title">
                 Import an Account
             </span>

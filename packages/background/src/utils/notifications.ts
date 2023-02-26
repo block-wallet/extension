@@ -10,6 +10,8 @@ import {
 import { formatTokenAmount } from './token';
 import { fetchContractDetails } from './contractsInfo';
 
+//TODO: change this to a class with static methods to make use of other controllers like accounts(account name)
+
 interface ChainListItemWithExplorerUrl extends ChainListItem {
     explorerUrl: string;
 }

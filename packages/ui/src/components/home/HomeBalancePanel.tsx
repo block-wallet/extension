@@ -11,6 +11,7 @@ import AnimatedIcon, { AnimatedIconName } from "../AnimatedIcon"
 import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
 import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
+import Icon, { IconName } from "../ui/Icon"
 
 const LoadingBlueIcon = () => {
     return (
@@ -31,6 +32,8 @@ const HomeBalancePanel = () => {
     const { nativeToken } = useTokensList()
     const { nativeCurrency, isSendEnabled, isSwapEnabled, isBridgeEnabled } =
         useSelectedNetwork()
+
+    const disabledActions = !isSendEnabled || !isUserNetworkOnline
 
     return (
         <div className="px-6">
@@ -74,13 +77,13 @@ const HomeBalancePanel = () => {
                         draggable={false}
                         className={classnames(
                             "flex flex-col items-center space-y-2 group",
-                            !isSendEnabled && "pointer-events-none"
+                            disabledActions && "pointer-events-none"
                         )}
                     >
                         <div
                             className={classnames(
                                 "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                !isSendEnabled
+                                disabledActions
                                     ? "bg-gray-300"
                                     : "bg-primary-300"
                             )}
@@ -100,14 +103,13 @@ const HomeBalancePanel = () => {
                             draggable={false}
                             className={classnames(
                                 "flex flex-col items-center space-y-2 group",
-                                (!isSendEnabled || !isUserNetworkOnline) &&
-                                    "pointer-events-none"
+                                disabledActions && "pointer-events-none"
                             )}
                         >
                             <div
                                 className={classnames(
                                     "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                    !isSendEnabled || !isUserNetworkOnline
+                                    disabledActions
                                         ? "bg-gray-300"
                                         : "bg-primary-300"
                                 )}
@@ -128,14 +130,13 @@ const HomeBalancePanel = () => {
                             draggable={false}
                             className={classnames(
                                 "flex flex-col items-center space-y-2 group",
-                                (!isBridgeEnabled || !isUserNetworkOnline) &&
-                                    "pointer-events-none"
+                                disabledActions && "pointer-events-none"
                             )}
                         >
                             <div
                                 className={classnames(
                                     "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                    !isBridgeEnabled || !isUserNetworkOnline
+                                    disabledActions
                                         ? "bg-gray-300"
                                         : "bg-primary-300"
                                 )}
@@ -144,10 +145,19 @@ const HomeBalancePanel = () => {
                                 {isNetworkChanging ? (
                                     <LoadingBlueIcon />
                                 ) : (
-                                    <AnimatedIcon
-                                        icon={AnimatedIconName.Bridge}
-                                        className="cursor-pointer"
-                                    />
+                                    <>
+                                        {disabledActions ? (
+                                            <Icon
+                                                name={IconName.DISABLED_BRIDGE}
+                                                size="xl"
+                                            />
+                                        ) : (
+                                            <AnimatedIcon
+                                                icon={AnimatedIconName.Bridge}
+                                                className="cursor-pointer"
+                                            />
+                                        )}
+                                    </>
                                 )}
                             </div>
                             <span className="text-xs font-medium">Bridge</span>

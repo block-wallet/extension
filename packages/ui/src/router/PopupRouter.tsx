@@ -5,7 +5,6 @@ import PendingSetupPage from "../routes/setup/PendingSetupPage"
 import UnlockPage from "../routes/UnlockPage"
 import { appRoutes } from "./routes"
 import "./routeTransitions.css"
-import { lockApp } from "../context/commActions"
 import { LastLocationProvider } from "react-router-last-location"
 import { TransitionRoute } from "./TransitionRoute"
 import { ErrorBoundary } from "react-error-boundary"
@@ -18,10 +17,13 @@ import LocationHolder from "./LocationHolder"
 import { useLocationRecovery } from "../util/hooks/useLocationRecovery"
 import ProviderDownDialog from "../components/dialog/ProviderDownDialog"
 import useClearStickyStorage from "../context/hooks/useClearStickyStorage"
-import { getNonSubmittedTransactions } from "../util/getNonSubmittedTransactions"
-import { ExchangeRatesStateProvider } from "../context/background/useExchangeRatesState"
-import { GasPricesStateProvider } from "../context/background/useGasPricesState"
-import { ActivityListStateProvider } from "../context/background/useActivityListState"
+import {
+    getNonSubmittedTransactions,
+    TransactionOrigin,
+} from "../util/getNonSubmittedTransactions"
+
+//10 minutes
+const LOCAL_STORAGE_DATA_TTL = 60000 * 10
 
 /**  Purpose of this component is to check in Blank State if there is any pending connect to site or transaction confirm
  *  in order to show that page always, whenever the extension is loaded and unlocked.
@@ -37,7 +39,7 @@ const PopupComponent = () => {
     } = useBlankState()!
     const unapprovedTransactions = getNonSubmittedTransactions(
         transactions,
-        true
+        TransactionOrigin.EXTERNAL_ONLY
     )
 
     const history = useHistory()

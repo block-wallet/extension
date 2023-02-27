@@ -370,3 +370,22 @@ export function pruneTransaction(tx: TransactionMeta): TransactionMeta {
     }
     return tx;
 }
+
+export function resolveAllownaceParamsFromTransaction(
+    transactionMeta: TransactionMeta
+): { spenderAddress: string; tokenAddress: string } | undefined {
+    let tokenAddress: string | undefined = transactionMeta.transactionParams.to;
+    let spenderAddress: string | undefined;
+    if (transactionMeta.approveAllowanceParams) {
+        spenderAddress = transactionMeta.approveAllowanceParams.spenderAddress;
+        tokenAddress =
+            transactionMeta.approveAllowanceParams.token?.address ||
+            tokenAddress;
+    }
+    return spenderAddress && tokenAddress
+        ? {
+              spenderAddress: spenderAddress.toLowerCase(),
+              tokenAddress: tokenAddress.toLowerCase(),
+          }
+        : undefined;
+}

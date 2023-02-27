@@ -1,4 +1,7 @@
-import { getNonSubmittedTransactions } from "../../util/getNonSubmittedTransactions"
+import {
+    getNonSubmittedTransactions,
+    TransactionOrigin,
+} from "../../util/getNonSubmittedTransactions"
 import { useBlankState } from "../background/backgroundHooks"
 import getRequestRouteAndStatus from "../util/getRequestRouteAndStatus"
 
@@ -12,7 +15,7 @@ const useNextRequestRoute = () => {
 
     const nonSubmittedTransactions = getNonSubmittedTransactions(
         transactions,
-        true
+        TransactionOrigin.EXTERNAL_ONLY
     )
 
     const [isNotEmpty, route] = getRequestRouteAndStatus(

@@ -111,13 +111,20 @@ import {
     RequestAccountReset,
     RequestSetDefaultGas,
     RequestCalculateApproveTransactionGasLimit,
+    RequestApproveAllowance,
+    RequestAddAsNewApproveTransaction,
+    RequestGetExchangeSpender,
+    Origin,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
 import { BigNumber } from '@ethersproject/bignumber';
 import BlankStorageStore from '../infrastructure/stores/BlankStorageStore';
 import { Messages } from '../utils/types/communication';
-import { TransactionMeta } from './transactions/utils/types';
+import {
+    TransactionCategories,
+    TransactionMeta,
+} from './transactions/utils/types';
 import {
     ActivityListUIState,
     BlankAppState,
@@ -171,7 +178,7 @@ import {
     TransferTransaction,
     TransferTransactionPopulatedTransactionParams,
 } from './erc-20/transactions/TransferTransaction';
-import { TokenOperationsController } from './erc-20/transactions/Transaction';
+import { TokenOperationsController } from './erc-20/transactions/TokenOperationsController';
 import {
     ProviderEvents,
     ProviderSetupData,
@@ -211,7 +218,7 @@ import { toError } from '../utils/toError';
 import { getCustomRpcChainId } from '../utils/ethereumChain';
 import { getChainListItem, searchChainsByTerm } from '../utils/chainlist';
 import { ChainListItem } from '@block-wallet/chains-assets';
-import { Network } from '../utils/constants/networks';
+import { INITIAL_NETWORKS, Network } from '../utils/constants/networks';
 
 import { generateOnDemandReleaseNotes } from '../utils/userPreferences';
 import { TransactionWatcherController } from './TransactionWatcherController';
@@ -360,18 +367,6 @@ export default class BlankController extends EventEmitter {
             this.keyringController
         );
 
-        this.exchangeRatesController = new ExchangeRatesController(
-            initState.ExchangeRatesController,
-            this.preferencesController,
-            this.networkController,
-            this.blockUpdatesController,
-            () => {
-                return this.accountTrackerController.getAccountTokens(
-                    this.preferencesController.getSelectedAddress()
-                );
-            }
-        );
-
         this.transactionController = new TransactionController(
             this.networkController,
             this.preferencesController,
@@ -411,7 +406,16 @@ export default class BlankController extends EventEmitter {
             this.preferencesController,
             this.blockUpdatesController,
             this.transactionWatcherController,
+            this.transactionController,
             initState.AccountTrackerController
+        );
+
+        this.exchangeRatesController = new ExchangeRatesController(
+            initState.ExchangeRatesController,
+            this.preferencesController,
+            this.networkController,
+            this.blockUpdatesController,
+            this.accountTrackerController
         );
 
         this.blankProviderController = new BlankProviderController(
@@ -565,8 +569,14 @@ export default class BlankController extends EventEmitter {
      * Manages controllers updates
      */
     private manageControllers() {
-        // Get active subscriptions
-        const activeSubscriptions = Object.keys(this.subscriptions).length;
+        // Get active subscription
+        let activeSubscription = false;
+        for (const key in this.subscriptions) {
+            if (this.subscriptions[key].name === Origin.EXTENSION) {
+                activeSubscription = true;
+                break;
+            }
+        }
 
         // Check if app is unlocked
         const isAppUnlocked =
@@ -574,7 +584,7 @@ export default class BlankController extends EventEmitter {
 
         this.blockUpdatesController.setActiveSubscriptions(
             isAppUnlocked,
-            activeSubscriptions
+            activeSubscription
         );
     }
 
@@ -759,6 +769,8 @@ export default class BlankController extends EventEmitter {
                 return this.getAccountNativeTokenBalanceForChain(
                     request as number
                 );
+            case Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES:
+                return this.refreshAccountTokenAllowances();
             case Messages.APP.GET_IDLE_TIMEOUT:
                 return this.getIdleTimeout();
             case Messages.APP.SET_IDLE_TIMEOUT:
@@ -800,6 +812,10 @@ export default class BlankController extends EventEmitter {
             case Messages.EXCHANGE.GET_EXCHANGE:
                 return this.getExchangeParameters(
                     request as RequestGetExchange
+                );
+            case Messages.EXCHANGE.GET_SPENDER:
+                return this.getExchangeSpender(
+                    request as RequestGetExchangeSpender
                 );
             case Messages.EXCHANGE.EXECUTE:
                 return this.executeExchange(request as RequestExecuteExchange);
@@ -846,6 +862,8 @@ export default class BlankController extends EventEmitter {
                 return this.removeNetwork(request as RequestRemoveNetwork);
             case Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS:
                 return this.getChainData(request as RequestGetChainData);
+            case Messages.NETWORK.GET_DEFAULT_RPC:
+                return this.getChainDefaultRpc(request as RequestGetChainData);
             case Messages.NETWORK.GET_RPC_CHAIN_ID:
                 return this.getRpcChainId(request as RequestGetRpcChainId);
             case Messages.NETWORK.SEARCH_CHAINS:
@@ -911,6 +929,10 @@ export default class BlankController extends EventEmitter {
             case Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION:
                 return this.addAsNewSendTransaction(
                     request as RequestAddAsNewSendTransaction
+                );
+            case Messages.TRANSACTION.ADD_NEW_APPROVE_TRANSACTION:
+                return this.addAsNewApproveTransaction(
+                    request as RequestAddAsNewApproveTransaction
                 );
             case Messages.TRANSACTION.UPDATE_SEND_TRANSACTION_GAS:
                 return this.updateSendTransactionGas(
@@ -979,6 +1001,10 @@ export default class BlankController extends EventEmitter {
             case Messages.TOKEN.DELETE_CUSTOM_TOKEN:
                 return this.deleteCustomToken(
                     request as RequestDeleteCustomToken
+                );
+            case Messages.TOKEN.APPROVE_ALLOWANCE:
+                return this.approveAllowance(
+                    request as RequestApproveAllowance
                 );
             case Messages.TOKEN.ADD_CUSTOM_TOKENS:
                 return this.addCustomTokens(request as RequestAddCustomTokens);
@@ -1162,6 +1188,16 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * refreshAccountTokenAllowances
+     *
+     * It refreshes all the token allownaces for the provided filters
+     *
+     */
+    private async refreshAccountTokenAllowances(): Promise<void> {
+        return this.accountTrackerController.refreshTokenAllowances();
+    }
+
+    /**
      * Adds a new account to the default (first) HD seed phrase Keyring.
      *
      */
@@ -1265,7 +1301,7 @@ export default class BlankController extends EventEmitter {
         this.transactionController.resetTransactionsByAddress(address);
         this.permissionsController.revokeAllPermissionsOfAccount(address);
         await this.keyringController.removeAccount(address);
-        this.transactionWatcherController.resetTransactionsByAddress(address);
+        this.transactionWatcherController.resetStateByAddress(address);
         this.bridgeController.resetBridgeTransactionsByAddress(address);
         this.tokenController.resetTokensByAccount(address);
 
@@ -1283,9 +1319,7 @@ export default class BlankController extends EventEmitter {
         // Reset account
         await Promise.all([
             this.transactionController.resetTransactionsByAddress(address),
-            this.transactionWatcherController.resetTransactionsByAddress(
-                address
-            ),
+            this.transactionWatcherController.resetStateByAddress(address),
             this.tokenController.resetTokensByAccount(address),
             this.permissionsController.revokeAllPermissionsOfAccount(address),
             this.accountTrackerController.resetAccount(address),
@@ -1297,7 +1331,7 @@ export default class BlankController extends EventEmitter {
             assetAddresses: [NATIVE_TOKEN_ADDRESS],
         });
         // Refetch transactions
-        this.transactionWatcherController.fetchTransactions();
+        this.transactionWatcherController.fetchAccountOnChainEvents();
     }
 
     /**
@@ -1679,6 +1713,18 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * Fetch the spender address for the specified exchange
+     *
+     * @param exchangeType Exchange type
+     *
+     */
+    private async getExchangeSpender({
+        exchangeType,
+    }: RequestGetExchangeSpender): Promise<string> {
+        return this.swapController.getSpender(exchangeType);
+    }
+
+    /**
      * Executes the exchange
      *
      * @param exchangeType Exchange type
@@ -1940,6 +1986,18 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * getChainDefaultRpc
+     *
+     * @param chainId chain identifier of the network
+     * @returns default rpc url of the network
+     */
+    private async getChainDefaultRpc({ chainId }: RequestGetChainData) {
+        return Object.values(INITIAL_NETWORKS).find(
+            (network) => network.chainId === chainId
+        )?.defaultRpcUrl;
+    }
+
+    /**
      * getRpcChainId
      *
      * @param rpcUrl rpc url of the network
@@ -2164,6 +2222,52 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * Generate an unapproved approve transaction
+     *
+     * @param tokenAddress erc20 token address
+     * @param spenderAddress spender address
+     * @param allowance  allowance amount
+     * @returns transaction object
+     */
+    private async addAsNewApproveTransaction({
+        tokenAddress,
+        spenderAddress,
+        allowance,
+    }: RequestAddAsNewApproveTransaction): Promise<TransactionMeta> {
+        const approveTransaction = new ApproveTransaction({
+            transactionController: this.transactionController,
+            preferencesController: this.preferencesController,
+            networkController: this.networkController,
+        });
+
+        const populatedApproveTransaction =
+            await approveTransaction.populateTransaction({
+                tokenAddress,
+                spender: spenderAddress,
+                amount: BigNumber.from(allowance),
+            });
+
+        const { transactionMeta, result } =
+            await this.transactionController.addTransaction({
+                transaction: {
+                    value: BigNumber.from('0'),
+                    to: tokenAddress,
+                    from: this.preferencesController
+                        .getSelectedAddress()
+                        .toLowerCase(),
+                    data: populatedApproveTransaction.data,
+                },
+                origin: 'blank',
+                customCategory: TransactionCategories.TOKEN_METHOD_APPROVE,
+            });
+
+        // As we don't care about the result here, ignore errors in transaction result
+        result.catch(() => {});
+
+        return transactionMeta;
+    }
+
+    /**
      * Update the gas for a send transaction
      *
      * @param transactionId of the transaction meta to update
@@ -2328,10 +2432,14 @@ export default class BlankController extends EventEmitter {
         if (isNativeToken) {
             // Native Token and Not a custom network, returns SEND_GAS_COST const.
             if (hasFixedGasCost) {
-                return {
-                    gasLimit: BigNumber.from(SEND_GAS_COST),
-                    estimationSucceeded: true,
-                };
+                const isContract =
+                    await this.networkController.isAddressContract(to);
+                if (!isContract) {
+                    return {
+                        gasLimit: BigNumber.from(SEND_GAS_COST),
+                        estimationSucceeded: true,
+                    };
+                }
             }
 
             // Native token of a custom network, estimets gas with fallback price.
@@ -2488,7 +2596,7 @@ export default class BlankController extends EventEmitter {
         await this.networkController.setNetwork(network);
 
         // reconstruct past erc20 transfers
-        this.transactionWatcherController.fetchTransactions();
+        this.transactionWatcherController.fetchAccountOnChainEvents();
 
         // Create and assign to the Wallet an anti phishing image
         this.preferencesController.assignNewPhishingPreventionImage(
@@ -2728,6 +2836,34 @@ export default class BlankController extends EventEmitter {
             accountAddress,
             chainId,
             false
+        );
+    }
+
+    /**
+     * Submits an approval transaction to setup asset allowance
+     *
+     * @param allowance User selected allowance
+     * @param amount Exchange amount
+     * @param spenderAddress The spender address
+     * @param feeData Transaction gas fee data
+     * @param tokenAddress Asset token address
+     * @param customNonce Custom transaction nonce
+     */
+    private async approveAllowance({
+        allowance,
+        amount,
+        spenderAddress,
+        feeData,
+        tokenAddress,
+        customNonce,
+    }: RequestApproveAllowance): Promise<boolean> {
+        return this.tokenAllowanceController.approveAllowance(
+            BigNumber.from(allowance),
+            BigNumber.from(amount),
+            spenderAddress,
+            feeData,
+            tokenAddress,
+            customNonce
         );
     }
 

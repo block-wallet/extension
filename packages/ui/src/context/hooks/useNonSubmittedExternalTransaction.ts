@@ -2,7 +2,10 @@ import {
     TransactionMeta,
     uiTransactionParams,
 } from "@block-wallet/background/controllers/transactions/utils/types"
-import { getNonSubmittedTransactions } from "../../util/getNonSubmittedTransactions"
+import {
+    getNonSubmittedTransactions,
+    TransactionOrigin,
+} from "../../util/getNonSubmittedTransactions"
 import { getUITransactionParams } from "../../util/transactionUtils"
 import { useBlankState } from "../background/backgroundHooks"
 import { useGasPriceData } from "./useGasPriceData"
@@ -16,13 +19,28 @@ interface UnapprovedTransaction {
 }
 
 export const useNonSubmittedExternalTransaction = (): UnapprovedTransaction => {
+    return useNonSubmittedTransaction()
+}
+
+export const useNonSubmittedCombinedTransaction = (): UnapprovedTransaction => {
+    return useNonSubmittedTransaction(false)
+}
+
+/**
+ * Returns the first unapproved transaction
+ * @param externalOnly - if true, returns only external transactions otherwise returns external and blank transactions
+ * @returns - first unapproved transaction
+ */
+const useNonSubmittedTransaction = (
+    externalOnly = true
+): UnapprovedTransaction => {
     const { transactions } = useBlankState()!
     const { isEIP1559Compatible } = useSelectedNetwork()
     const { gasPricesLevels } = useGasPriceData()
 
     const nonSubmittedTransactions = getNonSubmittedTransactions(
         transactions,
-        true
+        externalOnly ? TransactionOrigin.EXTERNAL_ONLY : TransactionOrigin.ALL
     )
 
     // Gets first unapproved transaction

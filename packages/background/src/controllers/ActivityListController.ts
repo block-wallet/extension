@@ -15,10 +15,10 @@ import {
     TransactionCategories,
     TransactionMeta,
     TransactionStatus,
+    WatchedTransactionType,
 } from './transactions/utils/types';
 import { compareAddresses } from './transactions/utils/utils';
 import {
-    TransactionTypeEnum,
     TransactionWatcherController,
     TransactionWatcherControllerState,
 } from './TransactionWatcherController';
@@ -87,7 +87,8 @@ export class ActivityListController extends BaseController<IActivityListState> {
                         selectedAddress,
                         txWatcherState.transactions
                     )
-                        .map((tx) => tx.transactionParams.hash!)
+                        .filter((tx) => tx.transactionParams.hash)
+                        .map((tx) => tx.transactionParams.hash)
                         .filter(Boolean);
                 };
 
@@ -275,7 +276,7 @@ export class ActivityListController extends BaseController<IActivityListState> {
                     transactions[chainId][selectedAddress];
 
                 for (const type in transactionsByAddress) {
-                    const transactionType = type as TransactionTypeEnum;
+                    const transactionType = type as WatchedTransactionType;
 
                     const { transactions: transactionsByType } =
                         transactionsByAddress[transactionType];

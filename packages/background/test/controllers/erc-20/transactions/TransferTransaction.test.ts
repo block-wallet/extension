@@ -16,7 +16,7 @@ import { TransferTransaction } from '@block-wallet/background/controllers/erc-20
 import { PreferencesController } from '@block-wallet/background/controllers/PreferencesController';
 import { BigNumber } from '@ethersproject/bignumber';
 import { TransactionMeta } from '@block-wallet/background/controllers/transactions/utils/types';
-import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import initialState from '@block-wallet/background/utils/constants/initialState';
 import { mockedPermissionsController } from '../../../mocks/mock-permissions';
 import PermissionsController from '@block-wallet/background/controllers/PermissionsController';
@@ -462,11 +462,15 @@ describe('TransferTransaction implementation', function () {
                 expect(updatedMeta).to.be.not.undefined;
                 expect(updatedMeta!.id).to.be.not.null;
                 expect(updatedMeta!.id).to.be.not.undefined;
-                expect(meta.transactionParams.maxFeePerGas?.eq(2000000)).to.be
-                    .true;
-                expect(meta.transactionParams.maxPriorityFeePerGas?.eq(200000))
+                expect(updatedMeta!.transactionParams.maxFeePerGas?.eq(2000000))
                     .to.be.true;
-                expect(meta.transactionParams.gasLimit?.eq(200000)).to.be.true;
+                expect(
+                    updatedMeta!.transactionParams.maxPriorityFeePerGas?.eq(
+                        200000
+                    )
+                ).to.be.true;
+                expect(updatedMeta!.transactionParams.gasLimit?.eq(200000)).to
+                    .be.true;
             });
         });
 

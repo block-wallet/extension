@@ -9,7 +9,7 @@ import {
     TokenController,
     TokenControllerProps,
 } from '@block-wallet/background/controllers/erc-20/TokenController';
-import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import { GasPricesController } from '@block-wallet/background/controllers/GasPricesController';
 import NetworkController from '@block-wallet/background/controllers/NetworkController';
 import PermissionsController from '@block-wallet/background/controllers/PermissionsController';
@@ -193,8 +193,9 @@ describe('Bridge Controller', () => {
                 blockUpdatesController,
                 tokenController,
                 transactionController,
-                { transactions: [] }
-            )
+                { transactions: [], tokenAllowanceEvents: {} }
+            ),
+            transactionController
         );
 
         bridgeController = new BridgeController(

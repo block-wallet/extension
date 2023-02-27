@@ -946,6 +946,7 @@ const SendConfirmPage = () => {
                                         customNonce: newSettings.customNonce,
                                     })
                                 }}
+                                buttonDisplay={false}
                             />
                         </div>
                     </div>

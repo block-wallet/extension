@@ -29,7 +29,7 @@ import { FeeData } from '@ethersproject/abstract-provider';
 import BlockUpdatesController from '@block-wallet/background/controllers/block-updates/BlockUpdatesController';
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TokenController } from '@block-wallet/background/controllers/erc-20/TokenController';
-import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 
 // TODO: Test gas override
 
@@ -1343,7 +1343,7 @@ describe('Transactions Controller', () => {
                 .stub(networkController, 'getEIP1559Compatibility')
                 .returns(Promise.resolve(false));
 
-            const { transactionMeta, result } =
+            const { transactionMeta } =
                 await transactionController.addTransaction({
                     transaction: {
                         from: mockedAccounts.goerli[0].address,

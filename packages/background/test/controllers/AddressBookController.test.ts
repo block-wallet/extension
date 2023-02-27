@@ -11,7 +11,7 @@ import { PreferencesController } from '@block-wallet/background/controllers/Pref
 import { mockedPermissionsController } from '../mocks/mock-permissions';
 import { ActivityListController } from '@block-wallet/background/controllers/ActivityListController';
 import { PendingWithdrawalsStore } from '@block-wallet/background/controllers/privacy/types';
-import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/Transaction';
+import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import {
     TokenController,
     TokenControllerProps,
@@ -130,6 +130,7 @@ describe('Address book controller implementation', function () {
             transactionController,
             {
                 transactions: {},
+                tokenAllowanceEvents: {},
             }
         );
 
@@ -147,7 +148,8 @@ describe('Address book controller implementation', function () {
             tokenOperationsController,
             preferencesController,
             blockUpdatesController,
-            transactionWatcherController
+            transactionWatcherController,
+            transactionController
         );
 
         bridgeController = new BridgeController(

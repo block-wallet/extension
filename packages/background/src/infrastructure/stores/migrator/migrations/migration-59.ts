@@ -1,106 +1,71 @@
-import { BridgeControllerState } from '@block-wallet/background/controllers/BridgeController';
-import { pruneTransaction } from '../../../../controllers/transactions/utils/utils';
-import {
-    TransactionTypeEnum,
-    TransactionWatcherControllerState,
-} from '../../../../controllers/TransactionWatcherController';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
-
-const pruneBridgeTxs = (
-    txs: BridgeControllerState['bridgeReceivingTransactions']
-): BridgeControllerState['bridgeReceivingTransactions'] => {
-    const newTxs = { ...txs };
-    for (const chainId in newTxs) {
-        const chainTxs = newTxs[chainId];
-        if (chainTxs) {
-            for (const addr in chainTxs) {
-                const addrTxs = chainTxs[addr];
-                if (addrTxs) {
-                    newTxs[chainId][addr] = Object.entries(addrTxs).reduce(
-                        (acc, [txHash, tx]) => {
-                            return {
-                                ...acc,
-                                [txHash]: pruneTransaction(tx),
-                            };
-                        },
-                        addrTxs
-                    );
-                }
-            }
-        }
-    }
-    return newTxs;
-};
-
-const pruneWatchedTxs = (
-    txs: TransactionWatcherControllerState['transactions']
-): TransactionWatcherControllerState['transactions'] => {
-    const newTxs = { ...txs };
-    for (const chainId in newTxs) {
-        const chainTxs = newTxs[chainId];
-        if (chainTxs) {
-            for (const addr in chainTxs) {
-                const addrTxs = chainTxs[addr];
-                if (addrTxs) {
-                    for (const type in addrTxs) {
-                        const typeTxs = addrTxs[type as TransactionTypeEnum];
-                        if (typeTxs && typeTxs.transactions) {
-                            newTxs[chainId][addr][
-                                type as TransactionTypeEnum
-                            ].transactions = Object.entries(
-                                typeTxs.transactions
-                            ).reduce((acc, [txHash, tx]) => {
-                                return {
-                                    ...acc,
-                                    [txHash]: pruneTransaction(tx),
-                                };
-                            }, typeTxs.transactions);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return newTxs;
-};
+import { Network } from '../../../../utils/constants/networks';
+import { MINUTE, SECOND } from '../../../../utils/constants/time';
 
 /**
- * This migration fixes zksync block explorer
+ * This migration adds the websocket rpc endpoints to the current networks
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
-        const { transactions } = persistedState.TransactionController;
-        const { bridgeReceivingTransactions } = persistedState.BridgeController;
-        const { transactions: watchedTx } =
-            persistedState.TransactionWatcherControllerState;
+        const { availableNetworks } = persistedState.NetworkController;
+        const updatedNetworks = { ...availableNetworks };
 
-        const newTxsState = transactions
-            ? transactions.map(pruneTransaction)
-            : transactions;
+        const ACTIONS_TIME_INTERVALS_DEFAULT_VALUES = {
+            blockNumberPull: 45 * SECOND,
+            balanceFetch: 80 * SECOND,
+            gasPricesUpdate: 30 * SECOND,
+            exchangeRatesFetch: 1 * MINUTE,
+            transactionsStatusesUpdate: 15 * SECOND,
+            providerSubscriptionsUpdate: 15 * SECOND,
+            transactionWatcherUpdate: 90 * SECOND,
+        };
 
-        const newBridgeReceivingTxState = bridgeReceivingTransactions
-            ? pruneBridgeTxs(bridgeReceivingTransactions)
-            : bridgeReceivingTransactions;
+        const FAST_TIME_INTERVALS_DEFAULT_VALUES = {
+            ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+            ...{
+                blockNumberPull: 20 * SECOND,
+                balanceFetch: 30 * SECOND,
+                gasPricesUpdate: 15 * SECOND,
+                transactionsStatusesUpdate: 6 * SECOND,
+                providerSubscriptionsUpdate: 6 * SECOND,
+                transactionWatcherUpdate: 45 * SECOND,
+            },
+        };
 
-        const newWatchedTxsState = watchedTx
-            ? pruneWatchedTxs(watchedTx)
-            : watchedTx;
+        const networkBlockInterfals: {
+            [x: string]: Network['actionsTimeIntervals'];
+        } = {
+            MAINNET: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
+            OPTIMISM: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
+            XDAI: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
+            RSK: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
+            GOERLI: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
+            LOCALHOST: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
+
+            ARBITRUM: { ...FAST_TIME_INTERVALS_DEFAULT_VALUES },
+            BSC: { ...FAST_TIME_INTERVALS_DEFAULT_VALUES },
+            POLYGON: { ...FAST_TIME_INTERVALS_DEFAULT_VALUES },
+            AVALANCHEC: { ...FAST_TIME_INTERVALS_DEFAULT_VALUES },
+            FANTOM: { ...FAST_TIME_INTERVALS_DEFAULT_VALUES },
+        };
+
+        for (const network in updatedNetworks) {
+            if (networkBlockInterfals[network]) {
+                updatedNetworks[network] = {
+                    ...updatedNetworks[network],
+                    actionsTimeIntervals: networkBlockInterfals[network],
+                };
+            }
+        }
 
         return {
             ...persistedState,
-            TransactionController: {
-                ...persistedState.TransactionController,
-                transactions: newTxsState,
-            },
-            BridgeController: {
-                ...persistedState.BridgeController,
-                bridgeReceivingTransactions: newBridgeReceivingTxState,
-            },
-            TransactionWatcherControllerState: {
-                transactions: newWatchedTxsState,
+            NetworkController: {
+                ...persistedState.NetworkController,
+                availableNetworks: { ...updatedNetworks },
             },
         };
     },
-    version: '1.1.0',
+    version: '1.0.2',
 } as IMigration;

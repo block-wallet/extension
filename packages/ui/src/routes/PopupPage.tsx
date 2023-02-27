@@ -7,7 +7,6 @@ import NetworkSelect from "../components/input/NetworkSelect"
 import ErrorDialog from "../components/dialog/ErrorDialog"
 import AccountIcon from "../components/icons/AccountIcon"
 import ActivityAssetsView from "../components/home/ActivityAssetsView"
-import GenericTooltip from "../components/label/GenericTooltip"
 import Tooltip from "../components/label/Tooltip"
 import { getAccountColor } from "../util/getAccountColor"
 import { useBlankState } from "../context/background/backgroundHooks"
@@ -104,19 +103,7 @@ const PopupPage = () => {
                 <div className="flex flex-col items-start flex-1 w-full mt-1 space-y-2 overflow-auto hide-scroll">
                     <div className="w-full h-full">
                         <div className="flex flex-row items-start w-full justify-between pt-1 pb-2 p-6">
-                            <GenericTooltip
-                                bottom
-                                disabled={!state.isImportingDeposits}
-                                content={
-                                    <p className="w-40 text-center">
-                                        Please wait until deposits are done
-                                        loading to change networks. This can
-                                        take up to 15 minutes.
-                                    </p>
-                                }
-                            >
-                                <NetworkSelect />
-                            </GenericTooltip>
+                            <NetworkSelect />
                             <DAppConnection />
                         </div>
                         <HomeBalancePanel />

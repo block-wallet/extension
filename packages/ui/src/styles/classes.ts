@@ -3,7 +3,7 @@ import _classnames from "classnames"
 export const classnames = _classnames
 
 const primaryButton =
-    "text-white bg-primary-300 hover:bg-blue-600 border-primary-300 hover:border-blue-600"
+    "text-white bg-primary-blue-default hover:bg-primary-blue-hover border-primary-blue-default hover:border-primary-blue-hover"
 
 export class Classes {
     static centered = classnames("flex flex-row items-center justify-center")
@@ -15,7 +15,7 @@ export class Classes {
         Classes.start,
         Classes.animated,
         Classes.transform,
-        "h-12 space-x-2 p-4 rounded-md text-sm font-bold text-black cursor-pointer disabled:pointer-events-none"
+        "h-12 space-x-2 p-4 rounded-md text-sm font-bold text-primary-black-default cursor-pointer disabled:pointer-events-none"
     )
 
     static baseButton = classnames(
@@ -47,12 +47,12 @@ export class Classes {
 
     static actionButton = classnames(
         Classes.iconButton,
-        "bg-white border border-gray-200 hover:border-black"
+        "bg-primary-grey-default border border-primary-grey-default hover:border-black"
     )
 
     static logoutButton = classnames(
         Classes.iconButton,
-        "text-red-500 bg-red-100 border border-opacity-0 hover:border-red-600 hover:border-opacity-100"
+        "!text-secondary-red-default bg-secondary-red-100 border border-secondary-red-100  hover:border-secondary-red-default"
     )
     static disabledLogoutButton = classnames(
         Classes.iconButton,
@@ -72,12 +72,12 @@ export class Classes {
     static darkButton = classnames(
         Classes.centered,
         Classes.baseButton,
-        "bg-gray-900 text-white hover:bg-gray-800 border-gray-900 hover:border-gray-800"
+        "bg-primary-black-default text-white hover:bg-primary-black-hover border-primary-black-default hover:border-primary-black-hover"
     )
     static disabledDarkButton = classnames(
         Classes.centered,
         Classes.baseButton,
-        "bg-gray-700 border-gray-700 text-white pointer-events-none"
+        "bg-primary-black-disabled border-primary-black-disabled text-white pointer-events-none"
     )
     static liteButton = classnames(
         Classes.centered,
@@ -107,8 +107,16 @@ export class Classes {
         "p-4 border-opacity-0 border-transparent flex justify-between items-center flex-row w-full rounded-md bg-primary-100 border cursor-pointer hover:bg-primary-200"
     )
 
+    static greySection = classnames(
+        "p-4 border-opacity-0 border-transparent flex justify-between items-center flex-row w-full rounded-md bg-primary-grey-default border cursor-pointer hover:bg-primary-grey-hover"
+    )
+
     static blueSelectionDisabled = classnames(
         "cursor-not-allowed hover:bg-primary-100"
+    )
+
+    static greySelectionDisabled = classnames(
+        "cursor-not-allowed hover:bg-primary-grey-disabled"
     )
 
     static blueSectionActive = classnames("bg-primary-200")
@@ -125,14 +133,14 @@ export class Classes {
     )
 
     static clickableText = classnames(
-        "rounded border-none bg-transparent text-primary-300 hover:underline"
+        "rounded border-none bg-transparent text-primary-blue-default hover:underline"
     )
     static selectBaseStyle = classnames(
         "relative flex flex-row justify-between items-center cursor-pointer select-none"
     )
     static selectStyle = classnames(
         this.selectBaseStyle,
-        "text-gray-600 border rounded-md group border-primary-200 hover:border-primary-300 px-3 py-2"
+        "text-gray-600 border rounded-md group border-primary-200 hover:border-primary-blue-default px-3 py-2"
     )
     static selectStyleDisabled = classnames(
         this.selectStyle,

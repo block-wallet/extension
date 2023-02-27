@@ -110,7 +110,7 @@ const GasSelectorBasic = (props: GasComponentProps) => {
                                 className={classnames(
                                     "text-base font-semibold cursor-pointer capitalize",
                                     selectedOption.label === option.label &&
-                                        "text-primary-300"
+                                        "text-primary-blue-default"
                                 )}
                             >
                                 {option.label}
@@ -122,7 +122,7 @@ const GasSelectorBasic = (props: GasComponentProps) => {
                                             "text-xs",
                                             selectedOption.label ===
                                                 option.label &&
-                                                "text-primary-300"
+                                                "text-primary-blue-default"
                                         )}
                                     >
                                         {option.totalNativeCurrencyCostRange}
@@ -133,7 +133,7 @@ const GasSelectorBasic = (props: GasComponentProps) => {
                                                 "text-sm",
                                                 selectedOption.label ===
                                                     option.label
-                                                    ? "text-primary-300"
+                                                    ? "text-primary-blue-default"
                                                     : "hidden"
                                             )}
                                         />
@@ -145,7 +145,7 @@ const GasSelectorBasic = (props: GasComponentProps) => {
                                             "text-gray-600 text-xs",
                                             selectedOption.label ===
                                                 option.label &&
-                                                "!text-primary-300"
+                                                "!text-primary-blue-default"
                                         )}
                                     >
                                         {option.totalETHCostRange}
@@ -757,7 +757,7 @@ const GasPriceComponent: FunctionComponent<{
             {/* Label */}
             <div
                 className={classnames(
-                    Classes.blueSection,
+                    Classes.greySection,
                     active && Classes.blueSectionActive,
                     disabled && "pointer-events-none"
                 )}
@@ -851,7 +851,7 @@ const GasPriceComponent: FunctionComponent<{
                 <span className="absolute top-0 right-0 p-4 z-50">
                     <div
                         onClick={() => setActive(false)}
-                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
                     >
                         <CloseIcon size="10" />
                     </div>
@@ -868,7 +868,7 @@ const GasPriceComponent: FunctionComponent<{
                                 >
                                     <AiFillInfoCircle
                                         size={26}
-                                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
                                     />
                                 </a>
                                 <Tooltip
@@ -901,7 +901,7 @@ const GasPriceComponent: FunctionComponent<{
                                 `flex-1 flex flex-row items-center justify-center p-3 text-sm
                                             ${
                                                 tab === value
-                                                    ? "border-primary-300 border-b-2 text-primary-300 font-bold"
+                                                    ? "border-primary-blue-default border-b-2 text-primary-blue-default font-bold"
                                                     : "border-gray-200 text-gray-500 border-b"
                                             }`
                             }

@@ -55,7 +55,7 @@ const ChainDisplay: FC<Props> = ({
                     />
                 </div>
                 <div className="flex flex-col space-y-1 justify-start h-full box-border ml-4">
-                    <span className="text-sm text-black font-semibold mr-1 truncate w-48">
+                    <span className="text-sm text-primary-black-default font-semibold mr-1 truncate w-48">
                         {name}
                     </span>
                     <span className="text-gray-400 text-xs font-small text-overflow flex flex-row space-x-2 items-center">

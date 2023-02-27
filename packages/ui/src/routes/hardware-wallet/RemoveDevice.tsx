@@ -75,9 +75,9 @@ const HardwareWalletRemoveDevicePage = () => {
                             setSelectedVendor(Devices.LEDGER)
                         }
                         className={classnames(
-                            "bg-white rounded-md p-4 w-1/2 flex flex-col items-center justify-center space-y-3 cursor-pointer border hover:border-primary-300",
+                            "bg-white rounded-md p-4 w-1/2 flex flex-col items-center justify-center space-y-3 cursor-pointer border hover:border-primary-blue-default",
                             selectedVendor === Devices.LEDGER
-                                ? "border-primary-300"
+                                ? "border-primary-blue-default"
                                 : "border-primary-100",
                             !isDeviceImported(Devices.LEDGER) &&
                                 "opacity-50 pointer-events-none"
@@ -98,9 +98,9 @@ const HardwareWalletRemoveDevicePage = () => {
                             setSelectedVendor(Devices.TREZOR)
                         }
                         className={classnames(
-                            "bg-white rounded-md justify-center p-4 w-1/2 flex flex-col items-center group space-y-3 cursor-pointer border hover:border-primary-300",
+                            "bg-white rounded-md justify-center p-4 w-1/2 flex flex-col items-center group space-y-3 cursor-pointer border hover:border-primary-blue-default",
                             selectedVendor === Devices.TREZOR
-                                ? "border-primary-300"
+                                ? "border-primary-blue-default"
                                 : "border-primary-100",
                             !isDeviceImported(Devices.TREZOR) &&
                                 "opacity-50 pointer-events-none"

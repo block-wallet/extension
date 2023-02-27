@@ -57,9 +57,9 @@ const ActivityAllowancesView = () => {
                 disableStyles
                 optionClassName={(value) =>
                     classnames(
-                        "flex-1 flex flex-row items-center justify-center p-3 text-sm hover:text-primary-300",
+                        "flex-1 flex flex-row items-center justify-center p-3 text-sm hover:text-primary-primary-blue-default",
                         tab === value
-                            ? "border-primary-300 border-b-2 text-primary-300 font-bold"
+                            ? "border-primary-blue-default border-b-2 text-primary-blue-default font-bold"
                             : "border-gray-200 text-gray-500 border-b hover:font-medium"
                     )
                 }

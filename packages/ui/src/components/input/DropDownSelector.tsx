@@ -98,11 +98,11 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
             {/* Display */}
             <div
                 className={classNames(
-                    Classes.blueSection,
+                    Classes.greySection,
                     "h-[4.5rem]",
                     "space-x-1",
                     active && Classes.blueSectionActive,
-                    disabled && Classes.blueSelectionDisabled,
+                    disabled && Classes.greySelectionDisabled,
                     error
                         ? "border-red-400"
                         : "border-opacity-0 border-transparent",
@@ -117,7 +117,7 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
                         alt="active-arrow"
                         src={arrowDown}
                         className={classnames(
-                            "w-3 h-2 text-black",
+                            "w-3 h-2 text-primary-black-default",
                             active && "rotate-180"
                         )}
                     />

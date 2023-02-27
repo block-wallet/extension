@@ -108,7 +108,7 @@ const DAppConnection = () => {
                     }
                 }}
                 className={classnames(
-                    "relative flex flex-row items-center p-1 px-2 pr-1  text-gray-600 rounded-md group border border-primary-200  text-xs cursor-pointer",
+                    "relative flex flex-row items-center p-1 px-2 pr-1  text-gray-600 rounded-md group border-primary-200  text-xs cursor-pointer",
                     dAppConnected === "connected" &&
                         "bg-green-100 hover:border-green-300",
                     dAppConnected === "connected-warning" &&
@@ -213,7 +213,7 @@ const PopupPage = () => {
 
                                     history.push("/accounts/menu/receive")
                                 }}
-                                className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                                className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
                             >
                                 <QRIcon />
                             </Link>
@@ -229,7 +229,7 @@ const PopupPage = () => {
 
                                 history.push("/settings")
                             }}
-                            className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                            className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
                         >
                             <GearIcon />
                         </Link>
@@ -306,7 +306,7 @@ const PopupPage = () => {
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
                                         disabledActions
                                             ? "bg-gray-300"
-                                            : "bg-primary-300"
+                                            : "bg-primary-blue-default"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
@@ -341,7 +341,7 @@ const PopupPage = () => {
                                             "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
                                             disabledActions
                                                 ? "bg-gray-300"
-                                                : "bg-primary-300"
+                                                : "bg-primary-blue-default"
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
@@ -377,7 +377,7 @@ const PopupPage = () => {
                                             "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
                                             disabledActions
                                                 ? "bg-gray-300"
-                                                : "bg-primary-300"
+                                                : "bg-primary-blue-default"
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
@@ -404,7 +404,7 @@ const PopupPage = () => {
                                                         icon={
                                                             AnimatedIconName.Bridge
                                                         }
-                                                        className="cursor-pointer"
+                                                        className="cursor-pointer bg-primary-blue-default"
                                                     />
                                                 )}
                                             </>

@@ -91,7 +91,7 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                     <span className="absolute top-0 right-0 p-4">
                         <div
                             onClick={() => onClose()}
-                            className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                            className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
                         >
                             <CloseIcon size="10" />
                         </div>

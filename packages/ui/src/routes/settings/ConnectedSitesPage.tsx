@@ -100,11 +100,14 @@ const ConnectedSitesPage = () => {
         >
             <div className="flex flex-col p-6 space-y-6">
                 <span className="text-sm text-gray-500">
-                    <span className="font-bold text-black" title={account.name}>
+                    <span
+                        className="font-bold text-primary-black-default"
+                        title={account.name}
+                    >
                         {formatName(account.name, 30)}
                     </span>
                     <span
-                        className="font-bold text-black"
+                        className="font-bold text-primary-black-default"
                         title={account.address}
                     >
                         {" "}

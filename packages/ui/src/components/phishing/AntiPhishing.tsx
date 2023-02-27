@@ -31,7 +31,7 @@ const AntiPhishing: FunctionComponent<{
                     >
                         <img
                             src={image}
-                            className="rounded-lg border border-primary-200 hover:border-primary-300"
+                            className="rounded-lg border border-primary-200 hover:border-primary-blue-default"
                             alt="anti-phishing"
                             width={imgSize}
                             height={imgSize}

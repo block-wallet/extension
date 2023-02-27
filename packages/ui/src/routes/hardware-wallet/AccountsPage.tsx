@@ -392,7 +392,7 @@ const HardwareWalletAccount = ({
             <div className="flex space-x-3 items-center">
                 <div
                     className={classnames(
-                        "text-black hover:text-primary-300",
+                        "text-primary-black-default hover:text-primary-blue-default",
                         !isLoading && "cursor-pointer"
                     )}
                     title="Fetch Balance"
@@ -479,7 +479,7 @@ const AdvancedSettings = ({
                             >
                                 <AiFillInfoCircle
                                     size={26}
-                                    className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                    className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
                                 />
                             </a>
                             <Tooltip
@@ -490,7 +490,7 @@ const AdvancedSettings = ({
                     </div>
                     <div
                         onClick={() => setOpenModal(false)}
-                        className=" cursor-pointer p-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                        className=" cursor-pointer p-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
                     >
                         <CloseIcon size="12" />
                     </div>

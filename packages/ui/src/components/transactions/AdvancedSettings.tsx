@@ -357,7 +357,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             ) : (
                 <div className="flex flex-col items-end">
                     <span
-                        className="text-xs font-bold text-primary-300 cursor-pointer hover:underline"
+                        className="text-xs font-bold text-primary-blue-default cursor-pointer hover:underline"
                         onClick={() => setIsOpen(true)}
                     >
                         {label}
@@ -371,7 +371,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                         onClick={() => {
                             setIsOpen(false)
                         }}
-                        className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                        className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
                     >
                         <CloseIcon size="10" />
                     </div>
@@ -452,7 +452,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                 <div className="group relative">
                                     <AiFillInfoCircle
                                         size={20}
-                                        className="pl-1 text-primary-200  hover:text-primary-300"
+                                        className="pl-1 text-primary-200  hover:text-primary-blue-default"
                                     />
                                     <Tooltip
                                         content={

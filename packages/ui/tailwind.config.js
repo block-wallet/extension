@@ -7,6 +7,27 @@ module.exports = {
                     100: "#E7F1FB",
                     200: "#D9E9FA",
                     300: "#1673FF",
+                    grey: {
+                        default: "#EEF1EF",
+                        hover: "#E3E5E4",
+                        disabled: "#F7F8F7",
+                    },
+                    black: {
+                        default: "#08090A",
+                        hover: "#292E33",
+                        disabled: "#838484",
+                    },
+                    blue: {
+                        default: "#3742F7",
+                        hover: "#2D37CC",
+                        disabled: "#9BA0FB",
+                    },
+                },
+                secondary: {
+                    red: {
+                        100: "#FFECE5",
+                        default: "#FF3E00",
+                    },
                 },
                 gray: {
                     900: "#0A121E",

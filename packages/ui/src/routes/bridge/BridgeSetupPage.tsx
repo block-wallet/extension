@@ -535,10 +535,10 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         <div
                             onClick={focusAmountInput}
                             className={classnames(
-                                "flex flex-col items-stretch rounded-md p-4 h-[4.5rem] hover:bg-primary-200 w-full",
+                                "flex flex-col items-stretch rounded-md p-4 h-[4.5rem] hover:bg-primary-grey-hover w-full",
                                 inputFocus
-                                    ? "bg-primary-200"
-                                    : "bg-primary-100",
+                                    ? "bg-primary-grey-hover"
+                                    : "bg-primary-grey-default",
                                 errors.amount
                                     ? "border border-red-400"
                                     : "border-opacity-0 border-transparent"

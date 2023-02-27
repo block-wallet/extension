@@ -477,7 +477,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         href={spenderAddressExplorerLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-primary-300 hover:underline"
+                        className="text-primary-blue-default hover:underline"
                     >
                         {spenderName}
                     </a>{" "}
@@ -490,7 +490,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         href={spenderAddressExplorerLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-primary-300 hover:underline"
+                        className="text-primary-blue-default hover:underline"
                     >
                         {spenderName}
                     </a>{" "}

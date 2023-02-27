@@ -276,7 +276,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
             <div className="flex flex-col px-6 pt-3 pb-1 space-y-2 h-full justify-between">
                 {/* Header */}
                 <div className="flex flex-col space-y-1 text-sm">
-                    <span className="font-bold text-black">
+                    <span className="font-bold text-primary-black-default">
                         Allow this site to add a network?
                     </span>
                     <span className="text-gray-500">
@@ -286,12 +286,14 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                 </div>
                 <div className="flex flex-col border border-gray-200 rounded-lg space-y-2 px-4 py-3">
                     <div>
-                        <p className="font-bold text-black">Network Name</p>
+                        <p className="font-bold text-primary-black-default">
+                            Network Name
+                        </p>
                         <p className="text-gray-500">{chainName || "-"}</p>
                     </div>
                     <div>
                         <div className="flex flex-row w-full">
-                            <p className="font-bold text-black mr-2">
+                            <p className="font-bold text-primary-black-default mr-2">
                                 Chain ID
                             </p>
                             <RPCValidationEndLabelInfo
@@ -309,7 +311,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     </div>
                     <div>
                         <div className="flex flex-row w-full">
-                            <p className="font-bold text-black mr-2">
+                            <p className="font-bold text-primary-black-default mr-2">
                                 Network URL
                             </p>
                             {validations.knownChainId && (
@@ -333,7 +335,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     {iconUrl && (
                         <div>
                             <div className="flex flex-row w-full">
-                                <p className="font-bold text-black mr-2">
+                                <p className="font-bold text-primary-black-default mr-2">
                                     {validations.knownIcon
                                         ? "Currency Icon"
                                         : "Currency Icon URL"}

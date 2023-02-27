@@ -41,7 +41,7 @@ const Price: FunctionComponent<{
             <div className="flex flex-col justify-start w-3/5 pl-4">
                 <div className="w-full flex justify-end">
                     <span
-                        className="text-lg uppercase text-black text-right truncate w-4/5 mr-1"
+                        className="text-lg uppercase text-primary-black-default text-right truncate w-4/5 mr-1"
                         title={txValue.join(" ")}
                     >
                         {txValue[0]}

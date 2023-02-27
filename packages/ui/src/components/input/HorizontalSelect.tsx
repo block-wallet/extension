@@ -31,8 +31,8 @@ const HorizontalSelect: FunctionComponent<{
                     !disableStyles
                         ? `flex-1 flex flex-row items-center justify-center p-4 border-b-2 text-sm ${
                               option === value
-                                  ? "border-primary-300 text-primary-300 font-bold"
-                                  : "border-transparent text-gray-500 hover:text-primary-300 hover:font-medium"
+                                  ? "border-primary-blue-default text-primary-blue-default font-bold"
+                                  : "border-transparent text-gray-500 hover:text-primary-blue-default hover:font-medium"
                           }`
                         : optionClassName
                         ? optionClassName(option)

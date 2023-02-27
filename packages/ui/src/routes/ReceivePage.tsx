@@ -35,7 +35,7 @@ const ReceivePage = () => {
                         <input
                             value={accountAddress}
                             disabled
-                            className="flex flex-row items-center justify-start w-full bg-opacity-0 truncate text-black text-sm font-bold outline-none cursor-pointer"
+                            className="flex flex-row items-center justify-start w-full bg-opacity-0 truncate text-primary-black-default text-sm font-bold outline-none cursor-pointer"
                         />
                     </span>
                     <CopyTooltip copied={copied}></CopyTooltip>

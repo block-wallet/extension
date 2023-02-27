@@ -24,7 +24,7 @@ const TokenSummary: FC<{
     return (
         <div
             className={
-                "flex flex-col items-center w-full justify-between rounded-md bg-primary-100 h-fit " +
+                "flex flex-col items-center w-full justify-between rounded-md h-fit " +
                 className
             }
             style={{ minHeight: minHeight ?? "10rem" }}

@@ -45,7 +45,7 @@ const ProviderDownDialog = () => {
                         <p>
                             If the problem persists, try{" "}
                             <a
-                                className="text-primary-300 cursor-pointer"
+                                className="text-primary-blue-default cursor-pointer"
                                 onClick={() =>
                                     history.push({
                                         pathname: "/settings/networks",

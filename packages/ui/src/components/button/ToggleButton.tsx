@@ -35,7 +35,7 @@ const ToggleButton: FunctionComponent<{
     const backgroundStyle = disabled
         ? "bg-gray-200"
         : isChecked
-        ? "bg-primary-300"
+        ? "bg-primary-blue-default"
         : "bg-primary-200"
 
     const onClick = () => {

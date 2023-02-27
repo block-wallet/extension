@@ -42,9 +42,9 @@ const HardwareWalletVendorsPage = () => {
                         type="button"
                         onClick={() => setSelectedVendor(Devices.LEDGER)}
                         className={classnames(
-                            "bg-white rounded-md p-4 w-1/2 flex flex-col items-center justify-center space-y-3 cursor-pointer border hover:border-primary-300",
+                            "bg-white rounded-md p-4 w-1/2 flex flex-col items-center justify-center space-y-3 cursor-pointer border hover:border-primary-blue-default",
                             selectedVendor === Devices.LEDGER
-                                ? "border-primary-300"
+                                ? "border-primary-blue-default"
                                 : "border-primary-100"
                         )}
                         style={{ height: "120px" }}
@@ -59,9 +59,9 @@ const HardwareWalletVendorsPage = () => {
                         type="button"
                         onClick={() => setSelectedVendor(Devices.TREZOR)}
                         className={classnames(
-                            "bg-white rounded-md justify-center p-4 w-1/2 flex flex-col items-center group space-y-3 cursor-pointer border  hover:border-primary-300",
+                            "bg-white rounded-md justify-center p-4 w-1/2 flex flex-col items-center group space-y-3 cursor-pointer border  hover:border-primary-blue-default",
                             selectedVendor === Devices.TREZOR
-                                ? "border-primary-300"
+                                ? "border-primary-blue-default"
                                 : "border-primary-100"
                         )}
                         style={{ height: "120px" }}
@@ -94,7 +94,7 @@ const HardwareWalletVendorsPage = () => {
 }
 
 const ExternalLink = ({ href, title }: { href: string; title: string }) => (
-    <div className="flex justify-between w-full text-base font-medium hover:text-primary-300 cursor-pointer">
+    <div className="flex justify-between w-full text-base font-medium hover:text-primary-blue-default cursor-pointer">
         <a href={href} target="_blank" rel="noreferrer">
             {title}
         </a>

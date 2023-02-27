@@ -70,9 +70,9 @@ const DefaultGasPreferencesPage = () => {
                         <div
                             key={option.name}
                             className={classnames(
-                                "w-full flex flex-row p-4 justify-between cursor-pointer rounded-md hover:border-primary-300 hover:text-primary-300 border",
+                                "w-full flex flex-row p-4 justify-between cursor-pointer rounded-md hover:border-primary-blue-default hover:text-primary-blue-default border",
                                 selectedOption === option.name &&
-                                    "text-primary-300 border-primary-300"
+                                    "text-primary-blue-default border-primary-blue-default"
                             )}
                             onClick={() => {
                                 setSelectedOption(

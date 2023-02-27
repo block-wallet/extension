@@ -122,7 +122,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         return (
             <div
                 className={classnames(
-                    appearance === "blue-section" && Classes.blueSection,
+                    appearance === "blue-section" && Classes.greySection,
                     appearance === "blue-section" &&
                         hasFocus &&
                         Classes.blueSectionActive
@@ -144,7 +144,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                                     size={16}
                                     onClick={onClickInfo}
                                     className={classnames(
-                                        "text-primary-200 hover:text-primary-300 cursor-default",
+                                        "text-primary-200 hover:text-primary-blue-default cursor-default",
                                         onClickInfo && "!cursor-pointer"
                                     )}
                                 />

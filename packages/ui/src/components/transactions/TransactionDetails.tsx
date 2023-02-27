@@ -47,7 +47,7 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
             <span className="absolute top-0 right-0 p-4 z-50">
                 <div
                     onClick={onClose}
-                    className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                    className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
                 >
                     <CloseIcon size="10" />
                 </div>
@@ -83,7 +83,7 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
                         `flex-1 flex flex-row items-center justify-center p-3 text-sm group
                                     ${
                                         tab.label === value.label
-                                            ? "border-primary-300 border-b-2 text-primary-300 font-bold"
+                                            ? "border-primary-blue-default border-b-2 text-primary-blue-default font-bold"
                                             : "border-gray-200 text-gray-500 border-b"
                                     }`
                     }

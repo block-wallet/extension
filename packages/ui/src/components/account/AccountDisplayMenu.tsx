@@ -34,7 +34,7 @@ const RemoveOption: React.FC<any> = ({ onClick }) => {
 const EditOption: React.FC<any> = ({ onClick }) => {
     return (
         <div
-            className="flex flex-row space-x-2 items-center text-black"
+            className="flex flex-row space-x-2 items-center text-primary-black-default"
             onClick={onClick}
         >
             <div className="pr-3">
@@ -49,7 +49,7 @@ const HideAccountOption: React.FC<any> = ({ onClick, disabled }) => {
     return (
         <div
             className={classnames(
-                "flex flex-row space-x-2 items-center text-black",
+                "flex flex-row space-x-2 items-center text-primary-black-default",
                 disabled && "opacity-50 pointer-events-none"
             )}
             onClick={onClick}
@@ -64,7 +64,7 @@ const UnHideAccountOption: React.FC<any> = ({ onClick, disabled }) => {
     return (
         <div
             className={classnames(
-                "flex flex-row space-x-2 items-center text-black",
+                "flex flex-row space-x-2 items-center text-primary-black-default",
                 disabled && "opacity-50 pointer-events-none"
             )}
             onClick={onClick}

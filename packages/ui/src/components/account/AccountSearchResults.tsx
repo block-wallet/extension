@@ -190,7 +190,7 @@ const AccountSearchResults = ({
             )}
 
             {displayEmptyResultsMessage() && (
-                <div className="text-base font-bold text-black w-full text-center mt-4">
+                <div className="text-base font-bold text-primary-black-default w-full text-center mt-4">
                     <span>No results found.</span>
                 </div>
             )}

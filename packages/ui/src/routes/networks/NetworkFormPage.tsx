@@ -537,7 +537,7 @@ const NetworkFormPage = ({
                         {defaultRpcUrl && !isUsingDefaultRPC && (
                             <div className="flex flex-col items-end mt-2 -mb-4">
                                 <span
-                                    className="text-xs font-bold text-primary-300 cursor-pointer hover:underline"
+                                    className="text-xs font-bold text-primary-blue-default cursor-pointer hover:underline"
                                     onClick={() => {
                                         setValue("rpcUrl", defaultRpcUrl)
                                     }}

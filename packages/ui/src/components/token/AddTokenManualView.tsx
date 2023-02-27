@@ -208,16 +208,16 @@ const AddTokenManualView = ({
                 onSubmit={onSubmit}
             >
                 <div className="flex justify-center items-center space-x-2 pb-3">
-                    <div className="text-base font-bold text-black text-center">
+                    <div className="text-base font-bold text-primary-black-default text-center">
                         Custom Token
                     </div>
 
                     <MdRefresh
                         size={18}
                         className={classNames(
-                            "hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300",
+                            "hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default",
                             refetchAnimation &&
-                                "bg-primary-100 text-primary-300 animate-[bounce_1.5s]",
+                                "bg-primary-100 text-primary-blue-default animate-[bounce_1.5s]",
                             (!refetchOption || isLoading) && "invisible"
                         )}
                         onClick={() => {

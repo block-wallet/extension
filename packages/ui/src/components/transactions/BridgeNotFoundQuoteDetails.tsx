@@ -47,7 +47,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
             <span className="absolute top-0 right-0 p-4 z-50">
                 <div
                     onClick={onClose}
-                    className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                    className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
                 >
                     <CloseIcon size="10" />
                 </div>
@@ -111,7 +111,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                             href={LINKS.ARTICLES.BRIDGES}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-300"
+                            className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-blue-default"
                         >
                             <span>Read about bridges</span>
                             <img
@@ -127,7 +127,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                             target="_blank"
                             rel="noopener noreferrer"
                             download={"quote_not_found.json"}
-                            className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-300"
+                            className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-blue-default"
                         >
                             <span>Download report</span>
                             <img

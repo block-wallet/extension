@@ -118,7 +118,7 @@ const UnlockPage = () => {
                             >
                                 <AiFillInfoCircle
                                     size={26}
-                                    className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                    className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
                                 />
                                 <Tooltip
                                     className="!w-52 !break-word !whitespace-normal  border boder-gray-300 -translate-x-44"

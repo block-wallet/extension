@@ -55,7 +55,11 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
         >
             <TokenLogo logo={data.logo} name={data.name} />
             <div className="flex flex-col ml-4 truncate">
-                <span className={"text-sm text-black font-semibold"}>
+                <span
+                    className={
+                        "text-sm text-primary-black-default font-semibold"
+                    }
+                >
                     {formatName(data.name, 22)}
                 </span>
                 {balance && (

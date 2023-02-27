@@ -28,7 +28,7 @@ const NetworkDisplayBadge = ({
     return (
         <div
             className={classnames(
-                "flex flex-row items-center py-1.5 px-1.5 text-gray-600 rounded-md group border border-primary-200 text-xs",
+                "flex flex-row items-center py-1.5 px-1.5 text-gray-600 rounded-md group bg-primary-grey-default border-primary-200 text-xs",
                 fill && "bg-green-100",
                 "w-auto",
                 className

@@ -159,7 +159,7 @@ export const TransactionDetails: FunctionComponent<
                             {signature.args.map((arg, i) => (
                                 <span className="allow-select" key={i}>
                                     <br />
-                                    <span className="text-primary-300 allow-select">{`\u00A0\u00A0\u00A0\u00A0${arg.type}`}</span>
+                                    <span className="text-primary-blue-default allow-select">{`\u00A0\u00A0\u00A0\u00A0${arg.type}`}</span>
                                     {arg.name ? ` ${arg.name}` : ""}
                                     {i !== signature.args.length - 1 ? "," : ""}
                                 </span>

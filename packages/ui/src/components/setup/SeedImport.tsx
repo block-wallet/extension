@@ -279,7 +279,7 @@ const SeedImport: FunctionComponent<{
                                 href="https://blockwallet.io/terms-of-use-of-block-wallet.html"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-primary-300"
+                                className="text-primary-blue-default"
                             >
                                 Terms of Use
                             </a>
@@ -302,7 +302,7 @@ const SeedImport: FunctionComponent<{
                     type="submit"
                     className={classnames(
                         Classes.button,
-                        "w-1/2 font-bold border-2 border-primary-300",
+                        "w-1/2 font-bold border-2 border-primary-blue-default",
                         (isLoading || isImportDisabled) &&
                             "opacity-50 pointer-events-none"
                     )}

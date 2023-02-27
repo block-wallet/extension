@@ -20,7 +20,7 @@ const FeeDetails: FC<FeeDetailsProps> = ({ summary, details }) => {
                 >
                     <AiFillInfoCircle
                         size={18}
-                        className="cursor-pointer text-primary-200 hover:text-primary-300"
+                        className="cursor-pointer text-primary-200 hover:text-primary-blue-default"
                     />
                 </GenericTooltip>
             )}

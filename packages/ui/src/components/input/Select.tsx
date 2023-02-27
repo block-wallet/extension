@@ -29,7 +29,7 @@ const getClassnamesForType = ({
     if (type === "select") {
         return classnames(
             !disabled ? Classes.selectStyle : Classes.selectStyleDisabled,
-            showMenu ? "border-primary-300" : ""
+            showMenu ? "border-primary-blue-default" : ""
         )
     }
     return Classes.selectInlineStyle

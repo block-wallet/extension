@@ -193,7 +193,10 @@ const failedStatuses = [
 const PendingSpinner: React.FC<{
     size?: string
 }> = ({ size = "1rem" }) => (
-    <ImSpinner size={size} className="animate-spin text-black opacity-50" />
+    <ImSpinner
+        size={size}
+        className="animate-spin text-primary-black-default opacity-50"
+    />
 )
 
 const TransactionIcon: React.FC<{
@@ -608,7 +611,7 @@ const TransactionItem: React.FC<{
                                         >
                                             <AiFillInfoCircle
                                                 size={24}
-                                                className="pl-2 pb-1 text-primary-200 cursor-pointer hover:text-primary-300"
+                                                className="pl-2 pb-1 text-primary-200 cursor-pointer hover:text-primary-blue-default"
                                             />
                                         </a>
                                         <Tooltip

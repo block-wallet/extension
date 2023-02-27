@@ -108,7 +108,7 @@ const AddressBookPage: FunctionComponent<{
                                             AccountMenuOptionType.CUSTOM,
                                         component: () => (
                                             <div
-                                                className="flex flex-row justify-start items-center p-1 cursor-pointer text-black hover:bg-gray-100 hover:rounded-t-md w-36"
+                                                className="flex flex-row justify-start items-center p-1 cursor-pointer text-primary-black-default hover:bg-gray-100 hover:rounded-t-md w-36"
                                                 onClick={() =>
                                                     history.push({
                                                         pathname:

@@ -233,7 +233,7 @@ const AssetDetailsPage = () => {
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
                                         disabledActions
                                             ? "bg-gray-300"
-                                            : "bg-primary-300"
+                                            : "bg-primary-blue-default"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
@@ -265,7 +265,7 @@ const AssetDetailsPage = () => {
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
                                         disabledActions
                                             ? "bg-gray-300"
-                                            : "bg-primary-300"
+                                            : "bg-primary-blue-default"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >

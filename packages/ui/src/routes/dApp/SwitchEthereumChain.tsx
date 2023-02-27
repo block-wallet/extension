@@ -150,7 +150,7 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
             <div className="flex flex-col p-6 space-y-4 h-full justify-between">
                 {/* Header */}
                 <div className="flex flex-col space-y-2 text-sm">
-                    <span className="font-bold text-black">
+                    <span className="font-bold text-primary-black-default">
                         Allow this site to switch the network?
                     </span>
                     <span className="text-gray-500">

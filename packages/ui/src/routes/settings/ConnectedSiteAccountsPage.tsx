@@ -71,7 +71,7 @@ const ConnectedSiteAccount: FunctionComponent<{
                                     {formatName(account.name, 18)}{" "}
                                 </span>
                                 <span
-                                    className="font-bold text-black cursor-text"
+                                    className="font-bold text-primary-black-default cursor-text"
                                     title={account.address}
                                 >
                                     {formatHashLastChars(account.address)}
@@ -135,7 +135,7 @@ const ConnectedSiteAccount: FunctionComponent<{
                         {account.address !== selectedAddress && (
                             <button
                                 className={classnames(
-                                    "mt-2 px-1.5 py-0.5 font-bold border rounded-sm text-xs border-primary-300 text-primary-300 hover:bg-primary-200",
+                                    "mt-2 px-1.5 py-0.5 font-bold border rounded-sm text-xs border-primary-blue-default text-primary-blue-default hover:bg-primary-200",
                                     active ? "ml-2" : "ml-14"
                                 )}
                                 onClick={() =>

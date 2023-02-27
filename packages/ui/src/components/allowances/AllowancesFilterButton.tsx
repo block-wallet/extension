@@ -21,7 +21,7 @@ const AllowancesFilterButton = ({
     onChangeFilter: (newFilter: AllowancesFilters) => void
 }) => {
     return (
-        <div className="relative text-sm text-primary-300">
+        <div className="relative text-sm text-primary-blue-default">
             <Dropdown
                 onClickItem={(selected) => {
                     onChangeFilter(selected)
@@ -40,7 +40,7 @@ const AllowancesFilterButton = ({
                                 <Dropdown.MenuItem
                                     value={value}
                                     selected={filter === value}
-                                    className="p-2 px-3 font-semibold text-black"
+                                    className="p-2 px-3 font-semibold text-primary-black-default"
                                 >
                                     {label}
                                 </Dropdown.MenuItem>

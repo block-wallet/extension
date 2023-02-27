@@ -1,5 +1,5 @@
 import { BigNumber } from "@ethersproject/bignumber"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { formatUnits } from "@ethersproject/units"
 import { TokenAllowance } from "@block-wallet/background/controllers/AccountTrackerController"
 import { Classes, classnames } from "../../styles"

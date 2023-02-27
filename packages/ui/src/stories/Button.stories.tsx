@@ -18,14 +18,14 @@ export const DarkButton = () => (
 export const ArrowHoverButton = () => (
     <div className="flex flex-row items-start space-x-8">
         <div className="flex flex-col items-center w-auto space-y-2 group">
-            <a className="w-10 h-10 overflow-hidden transition duration-300 rounded-full bg-primary-300 group-hover:opacity-75">
+            <a className="w-10 h-10 overflow-hidden transition duration-300 rounded-full bg-primary-blue-default group-hover:opacity-75">
                 <ArrowHoverAnimation />
             </a>
             <span className="text-sm">Receive</span>
         </div>
         <div className="flex flex-col items-center w-auto space-y-2 group">
             <a
-                className="w-10 h-10 overflow-hidden transition duration-300 rounded-full bg-primary-300 group-hover:opacity-75"
+                className="w-10 h-10 overflow-hidden transition duration-300 rounded-full bg-primary-blue-default group-hover:opacity-75"
                 style={{ transform: "scale(-1)" }}
             >
                 <ArrowHoverAnimation />

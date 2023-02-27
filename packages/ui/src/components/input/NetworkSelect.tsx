@@ -89,11 +89,11 @@ const NetworkSelect: FunctionComponent<{
                     }
                 }}
                 className={classNames(
-                    "relative flex flex-row items-center justify-start p-1 text-gray-600 border rounded-md group border-primary-200 w-44 text-xs hover:border-primary-300",
+                    "relative flex flex-row items-center justify-start p-1 text-gray-600 bg-primary-grey-default rounded-md group border-primary-200 w-44 text-xs hover:border-primary-blue-default",
                     !isImportingDeposits
                         ? "cursor-pointer select-none"
                         : "disabled:pointer-events-none opacity-50",
-                    networkList && "border-primary-300"
+                    networkList && "border-primary-blue-default"
                 )}
             >
                 <span

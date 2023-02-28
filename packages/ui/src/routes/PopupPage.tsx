@@ -251,13 +251,39 @@ const PopupPage = () => {
                         <DAppConnection />
                     </div>
                     <TokenSummary className="p-4">
-                        <TokenSummary.Balances>
-                            <TokenSummary.TokenBalance title={netWorth}>
-                                {netWorth}
-                            </TokenSummary.TokenBalance>
-                            <TokenSummary.ExchangeRateBalance>
-                                Net Worth
-                            </TokenSummary.ExchangeRateBalance>
+                        <TokenSummary.Balances className="group relative">
+                            <a
+                                href="https://ethereum.org/en/developers/docs/gas/"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="contents"
+                            >
+                                <TokenSummary.TokenBalance title={netWorth}>
+                                    {netWorth}
+                                </TokenSummary.TokenBalance>
+                                <TokenSummary.ExchangeRateBalance>
+                                    Net Worth
+                                </TokenSummary.ExchangeRateBalance>
+                            </a>
+                            <Tooltip
+                                content={
+                                    <div className="flex flex-col font-normal items-start text-xs text-white-500">
+                                        <div className="flex flex-row items-end space-x-7">
+                                            <span>
+                                                Your NET worth is the summed{" "}
+                                                {state.nativeCurrency.toUpperCase()}{" "}
+                                                value
+                                                <br /> of all assets in your
+                                                asset list.
+                                            </span>{" "}
+                                        </div>
+                                        <div className="flex flex-row items-end space-x-4">
+                                            <span>Click to learn more.</span>{" "}
+                                        </div>
+                                    </div>
+                                }
+                                className="-translate-x-[0%]"
+                            />
                         </TokenSummary.Balances>
                         <TokenSummary.Actions>
                             <Link

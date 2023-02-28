@@ -1,8 +1,6 @@
 import { useState } from "react"
 import classnames from "classnames"
 import { Link, useHistory } from "react-router-dom"
-import { formatUnits } from "@ethersproject/units"
-import { BigNumber } from "@ethersproject/bignumber"
 import { BiCircle } from "react-icons/bi"
 
 // Components
@@ -21,9 +19,7 @@ import Tooltip from "../components/label/Tooltip"
 
 // Utils
 import { formatHash, formatName } from "../util/formatAccount"
-import { formatCurrency, toCurrencyAmount } from "../util/formatCurrency"
 import { getAccountColor } from "../util/getAccountColor"
-import { formatRounded } from "../util/formatRounded"
 import { HiOutlineExclamationCircle } from "react-icons/hi"
 
 // Context
@@ -32,7 +28,6 @@ import { useSelectedAccount } from "../context/hooks/useSelectedAccount"
 import { useSelectedNetwork } from "../context/hooks/useSelectedNetwork"
 import { session } from "../context/setup"
 import { useConnectedSite } from "../context/hooks/useConnectedSite"
-import { useTokensList } from "../context/hooks/useTokensList"
 
 // Utils
 import { useSelectedAddressWithChainIdChecksum } from "../util/hooks/useSelectedAddressWithChainIdChecksum"
@@ -43,6 +38,7 @@ import GasPricesInfo from "../components/gas/GasPricesInfo"
 import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
 import TransparentOverlay from "../components/loading/TransparentOverlay"
 import Icon, { IconName } from "../components/ui/Icon"
+import useNetWorthBalance from "../context/hooks/useNetWorthBalance"
 
 const AccountDisplay = () => {
     const accountAddress = useSelectedAddressWithChainIdChecksum()
@@ -152,8 +148,8 @@ const PopupPage = () => {
     const error = (useHistory().location.state as { error: string })?.error
     const state = useBlankState()!
     const history = useHistory()
-    const { nativeToken } = useTokensList()
-    const { nativeCurrency, isSendEnabled, isSwapEnabled, isBridgeEnabled } =
+    const netWorth = useNetWorthBalance()
+    const { isSendEnabled, isSwapEnabled, isBridgeEnabled } =
         useSelectedNetwork()
     const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
@@ -256,40 +252,11 @@ const PopupPage = () => {
                     </div>
                     <TokenSummary className="p-4">
                         <TokenSummary.Balances>
-                            <TokenSummary.TokenBalance
-                                title={
-                                    formatUnits(
-                                        nativeToken.balance || "0",
-                                        nativeCurrency.decimals
-                                    ) + ` ${nativeCurrency.symbol}`
-                                }
-                            >
-                                {formatRounded(
-                                    formatUnits(
-                                        nativeToken.balance || "0",
-                                        nativeCurrency.decimals
-                                    ),
-                                    5
-                                )}{" "}
-                                {nativeCurrency.symbol}
+                            <TokenSummary.TokenBalance title={netWorth}>
+                                {netWorth}
                             </TokenSummary.TokenBalance>
                             <TokenSummary.ExchangeRateBalance>
-                                {formatCurrency(
-                                    toCurrencyAmount(
-                                        nativeToken.balance ||
-                                            BigNumber.from(0),
-                                        state.exchangeRates[
-                                            state.networkNativeCurrency.symbol
-                                        ],
-                                        nativeCurrency.decimals
-                                    ),
-                                    {
-                                        currency: state.nativeCurrency,
-                                        locale_info: state.localeInfo,
-                                        returnNonBreakingSpace: true,
-                                        showSymbol: true,
-                                    }
-                                )}
+                                Net Worth
                             </TokenSummary.ExchangeRateBalance>
                         </TokenSummary.Balances>
                         <TokenSummary.Actions>

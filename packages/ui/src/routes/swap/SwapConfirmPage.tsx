@@ -78,6 +78,7 @@ import WaitingAllowanceTransactionDialog from "../../components/dialog/WaitingAl
 import ErrorMessage from "../../components/error/ErrorMessage"
 import Alert from "../../components/ui/Alert"
 import PriceImpactDialog from "../../components/swaps/PriceImpactDialog"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token
@@ -96,7 +97,9 @@ const PRICE_IMPACT_THRESHOLD = 0.1
 
 const SwapPageConfirm: FC<{}> = () => {
     const history = useOnMountHistory()
-    const { exchangeRates } = useBlankState()!
+    const {
+        state: { exchangeRates },
+    } = useExchangeRatesState()!
     const { fromToken, swapQuote, toToken, allowanceTransactionId } = useMemo(
         () => history.location.state as SwapConfirmPageLocalState,
         [history.location.state]

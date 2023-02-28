@@ -12,7 +12,6 @@ import useIsHovering from "../../util/hooks/useIsHovering"
 import { generateExplorerLink } from "../../util/getExplorer"
 import { formatRounded } from "../../util/formatRounded"
 
-import { AssetIcon } from "../AssetsList"
 import { AllowancesFilters } from "./AllowancesFilterButton"
 import { TabLabels } from "../assets/ActivityAllowancesView"
 import DetailsDialog from "../dialog/DetailsDialog"
@@ -21,6 +20,7 @@ import ChevronRightIcon from "../icons/ChevronRightIcon"
 import revokeIcon from "../../assets/images/icons/revoke.svg"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
 import { TokenAllowanceStatus } from "../../context/commTypes"
+import TokenLogo from "../token/TokenLogo"
 
 const AllowanceItem = ({
     allowance,
@@ -28,12 +28,14 @@ const AllowanceItem = ({
     spender,
     showToken = false,
     fromAssetDetails = false,
+    className,
 }: {
     allowance: TokenAllowance
     token: AllowanceDisplayData
     spender: AllowanceDisplayData
     showToken?: boolean
     fromAssetDetails?: boolean
+    className?: string
 }) => {
     const history = useOnMountHistory()
     const { selectedNetwork, availableNetworks } = useBlankState()!
@@ -165,7 +167,8 @@ const AllowanceItem = ({
                 "flex flex-row items-center justify-between py-4 mr-1 transition duration-300 -ml-6 px-6 w-[calc(100%+3rem)]",
                 !isHoveringButton &&
                     !open &&
-                    "hover:cursor-pointer hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50"
+                    "hover:cursor-pointer hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 bg-clip-padding",
+                className
             )}
         >
             <DetailsDialog
@@ -182,7 +185,11 @@ const AllowanceItem = ({
                 expandedByDefault
             />
             <div className="flex flex-row items-center">
-                <AssetIcon asset={{ logo: logo, symbol: name }} />
+                <TokenLogo
+                    logo={logo}
+                    name={name}
+                    className={Classes.roundedIcon}
+                />
                 <div className="flex flex-col ml-2">
                     <span
                         className="text-sm font-bold truncate w-36"

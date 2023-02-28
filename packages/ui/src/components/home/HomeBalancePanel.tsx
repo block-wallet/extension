@@ -5,24 +5,9 @@ import { useTokensList } from "../../context/hooks/useTokensList"
 import { formatRounded } from "../../util/formatRounded"
 import TokenSummary from "../token/TokenSummary"
 import { formatUnits } from "ethers/lib/utils"
-import { Link } from "react-router-dom"
-import classnames from "classnames"
-import AnimatedIcon, { AnimatedIconName } from "../AnimatedIcon"
-import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
-import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
-import Icon, { IconName } from "../ui/Icon"
+import PanelButtons from "./PanelButtons"
 
-const LoadingBlueIcon = () => {
-    return (
-        <div className="flex flex-row items-center justify-center w-full h-full">
-            <AnimatedIcon
-                icon={AnimatedIconName.BlueCircleLoadingSkeleton}
-                className="w-4 h-4 pointer-events-none rotate-180"
-            />
-        </div>
-    )
-}
 const HomeBalancePanel = () => {
     const { isNetworkChanging, isUserNetworkOnline } = useBlankState()!
     const formatter = useCurrencyFromatter()
@@ -72,96 +57,21 @@ const HomeBalancePanel = () => {
                     </TokenSummary.ExchangeRateBalance>
                 </TokenSummary.Balances>
                 <TokenSummary.Actions>
-                    <Link
-                        to="/send"
-                        draggable={false}
-                        className={classnames(
-                            "flex flex-col items-center space-y-2 group",
-                            disabledActions && "pointer-events-none"
-                        )}
-                    >
-                        <div
-                            className={classnames(
-                                "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                disabledActions
-                                    ? "bg-gray-300"
-                                    : "bg-primary-300"
-                            )}
-                            style={{ transform: "scaleY(-1)" }}
-                        >
-                            {isNetworkChanging ? (
-                                <LoadingBlueIcon />
-                            ) : (
-                                <ArrowHoverAnimation />
-                            )}
-                        </div>
-                        <span className="text-xs font-medium">Send</span>
-                    </Link>
+                    <PanelButtons.Send
+                        disabled={disabledActions}
+                        isLoading={isNetworkChanging}
+                    />
                     {isSwapEnabled && (
-                        <Link
-                            to="/swap"
-                            draggable={false}
-                            className={classnames(
-                                "flex flex-col items-center space-y-2 group",
-                                disabledActions && "pointer-events-none"
-                            )}
-                        >
-                            <div
-                                className={classnames(
-                                    "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                    disabledActions
-                                        ? "bg-gray-300"
-                                        : "bg-primary-300"
-                                )}
-                                style={{ transform: "scaleY(-1)" }}
-                            >
-                                {isNetworkChanging ? (
-                                    <LoadingBlueIcon />
-                                ) : (
-                                    <DoubleArrowHoverAnimation />
-                                )}
-                            </div>
-                            <span className="text-xs font-medium">Swap</span>
-                        </Link>
+                        <PanelButtons.Swap
+                            disabled={disabledActions}
+                            isLoading={isNetworkChanging}
+                        />
                     )}
                     {isBridgeEnabled && (
-                        <Link
-                            to="/bridge"
-                            draggable={false}
-                            className={classnames(
-                                "flex flex-col items-center space-y-2 group",
-                                disabledActions && "pointer-events-none"
-                            )}
-                        >
-                            <div
-                                className={classnames(
-                                    "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                    disabledActions
-                                        ? "bg-gray-300"
-                                        : "bg-primary-300"
-                                )}
-                                style={{ transform: "scaleY(-1)" }}
-                            >
-                                {isNetworkChanging ? (
-                                    <LoadingBlueIcon />
-                                ) : (
-                                    <>
-                                        {disabledActions ? (
-                                            <Icon
-                                                name={IconName.DISABLED_BRIDGE}
-                                                size="xl"
-                                            />
-                                        ) : (
-                                            <AnimatedIcon
-                                                icon={AnimatedIconName.Bridge}
-                                                className="cursor-pointer"
-                                            />
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                            <span className="text-xs font-medium">Bridge</span>
-                        </Link>
+                        <PanelButtons.Bridge
+                            disabled={disabledActions}
+                            isLoading={isNetworkChanging}
+                        />
                     )}
                 </TokenSummary.Actions>
             </TokenSummary>

@@ -1,5 +1,4 @@
 import { BigNumber } from "@ethersproject/bignumber"
-import { useBlankState } from "../../context/background/backgroundHooks"
 import { useActivityListState } from "../../context/background/useActivityListState"
 import {
     MetaType,

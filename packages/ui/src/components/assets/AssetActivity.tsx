@@ -10,7 +10,10 @@ const AssetActivity = () => {
     const tokenTransactions = useTokenTransactions(token)
 
     return (
-        <>
+        <div
+            className="flex flex-col flex-1 w-full space-y-0 h-full max-h-[470px] min-h-[266px]"
+            data-testid="activity-list"
+        >
             {tokenTransactions.length > 0 ? (
                 <TransactionsList transactions={tokenTransactions} />
             ) : (
@@ -18,7 +21,7 @@ const AssetActivity = () => {
                     You have no transactions.
                 </span>
             )}
-        </>
+        </div>
     )
 }
 

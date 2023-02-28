@@ -1,7 +1,6 @@
-import { useMemo, useRef, useState } from "react"
+import { useState } from "react"
 import AutoSizer from "react-virtualized-auto-sizer"
 import { VariableSizeList as List } from "react-window"
-import useDOMElementObserver from "../../util/hooks/useDOMElementObserver"
 import { RichedTransactionMeta } from "../../util/transactionUtils"
 import TransactionItem from "./TransactionItem"
 import {
@@ -62,7 +61,7 @@ const TransactionsList: React.FC<{
     }
 
     return (
-        <div className="w-full h-full">
+        <>
             {OperationDetails && watchDetails?.transaction && (
                 <OperationDetails
                     transaction={watchDetails?.transaction}
@@ -90,7 +89,11 @@ const TransactionsList: React.FC<{
                     >
                         {({ style, data, index }) => (
                             <div style={style} key={data[index].id || index}>
-                                {index > 0 ? <hr /> : null}
+                                {index > 0 ? (
+                                    <div className="px-6">
+                                        <hr />
+                                    </div>
+                                ) : null}
                                 <TransactionItem
                                     onClick={() =>
                                         setWatchDetails({
@@ -106,7 +109,7 @@ const TransactionsList: React.FC<{
                     </List>
                 )}
             </AutoSizer>
-        </div>
+        </>
     )
 }
 

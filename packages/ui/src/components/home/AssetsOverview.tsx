@@ -8,7 +8,7 @@ import AssetsLoadingSkeleton from "../skeleton/AssetsLoadingSkeleton"
 
 const AddTokenButton = () => {
     return (
-        <div className="flex flex-col w-full space-y-1 py-3 flex px-6">
+        <div className="flex flex-col w-full space-y-1 py-2 flex px-6">
             <ActionButton
                 icon={plus}
                 label="Add Token"

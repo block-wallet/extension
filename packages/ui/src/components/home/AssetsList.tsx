@@ -1,6 +1,5 @@
 import { Fragment, FunctionComponent, useState } from "react"
 import { TokenList } from "../../context/hooks/useTokensList"
-import AssetsLoadingSkeleton from "../skeleton/AssetsLoadingSkeleton"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import AssetItem from "./AssetItem"
 
@@ -33,8 +32,8 @@ const AssetsList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
                 .filter((t) => !deletedTokens.includes(t.token.address))
                 .map((asset, i) => (
                     <Fragment key={asset.token.address}>
-                        {i > 0 ? <hr /> : null}
                         <div className="px-6">
+                            {i > 0 ? <hr /> : null}
                             <AssetItem
                                 asset={asset}
                                 pushDeleteTokens={pushDeleteTokens}

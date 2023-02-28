@@ -45,7 +45,7 @@ const ActivityAllowancesView: FC<{ tokenAddress: string }> = ({
     }
 
     return (
-        <div className="flex flex-col w-full !mt-0">
+        <div className="flex flex-col w-full h-full !mt-0">
             <HorizontalSelect
                 options={tabs}
                 value={tab}

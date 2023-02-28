@@ -1,4 +1,4 @@
-import { isNativeTokenAddress } from "../tokenUtils"
+import { compareAddresses, isNativeTokenAddress } from "../tokenUtils"
 import { RichedTransactionMeta } from "../transactionUtils"
 import useActivtyListTransactions from "./useActivtyListTransactions"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
@@ -12,7 +12,6 @@ const useTokenTransactions = (token: Token | undefined) => {
     }
 
     try {
-        const contractToLower = token.address.toLowerCase()
         return transactions.filter(
             ({ transactionParams, transactionReceipt, transferType }) => {
                 if (isNativeTokenAddress(token.address)) {
@@ -25,9 +24,11 @@ const useTokenTransactions = (token: Token | undefined) => {
                     )
                 } else {
                     return (
-                        transactionReceipt?.contractAddress?.toLowerCase() ==
-                            contractToLower ||
-                        transactionParams.to?.toLowerCase() == contractToLower
+                        compareAddresses(
+                            transactionReceipt?.contractAddress,
+                            token.address
+                        ) ||
+                        compareAddresses(transactionParams.to, token.address)
                     )
                 }
             }

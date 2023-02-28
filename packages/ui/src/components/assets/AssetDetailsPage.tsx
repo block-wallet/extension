@@ -1,6 +1,5 @@
 import { formatUnits } from "@ethersproject/units"
 import { useState } from "react"
-import { Link } from "react-router-dom"
 import { deleteCustomToken } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
@@ -11,24 +10,20 @@ import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetAssetByTokenAddress from "../../util/hooks/useGetAssetByTokenAddress"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
-import RoundedIconButton from "../button/RoundedIconButton"
-import AnimatedIcon, { AnimatedIconName } from "../../components/AnimatedIcon"
-import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
 import openExternal from "../../assets/images/icons/open_external.svg"
 import PopupHeader from "../popup/PopupHeader"
 import PopupLayout from "../popup/PopupLayout"
 import TokenSummary from "../token/TokenSummary"
-import TransactionsList from "../transactions/TransactionsList"
 import log from "loglevel"
 import ConfirmDialog from "../dialog/ConfirmDialog"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
 import SuccessDialog from "../dialog/SuccessDialog"
 import { formatName } from "../../util/formatAccount"
 import Icon, { IconName } from "../ui/Icon"
-import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
 import TokenLogo from "../token/TokenLogo"
 import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 import ActivityAllowancesView from "./ActivityAllowancesView"
+import PanelButtons from "../home/PanelButtons"
 
 const AssetDetailsPage = () => {
     const state = useBlankState()!
@@ -167,9 +162,9 @@ const AssetDetailsPage = () => {
                 }}
                 timeout={1000}
             />
-            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen pt-3 space-y-6 overflow-auto hide-scroll">
-                <div className="px-3 w-full">
-                    <TokenSummary minHeight="13rem" className="mt-2">
+            <div className="flex flex-col items-start flex-1 w-full h-full max-h-screen pt-3 space-y-6 overflow-auto hide-scroll">
+                <div className="px-6 w-full">
+                    <TokenSummary className="mt-2">
                         <TokenSummary.Balances className="mt-2">
                             <TokenLogo
                                 name={token.symbol}
@@ -203,99 +198,38 @@ const AssetDetailsPage = () => {
                             </TokenSummary.ExchangeRateBalance>
                         </TokenSummary.Balances>
                         <TokenSummary.Actions className="mb-4">
-                            <Link
-                                to={{
-                                    pathname: "/send",
-                                    state: {
-                                        asset,
-                                        transitionDirection: "left",
-                                    },
+                            <PanelButtons.Send
+                                disabled={disabledActions}
+                                redirectState={{
+                                    asset,
+                                    transitionDirection: "left",
                                 }}
-                                draggable={false}
-                                className={classnames(
-                                    "flex flex-col items-center space-y-2 group",
-                                    disabledActions && "pointer-events-none"
-                                )}
-                            >
-                                <RoundedIconButton
-                                    Icon={ArrowHoverAnimation}
-                                    disabled={disabledActions}
-                                >
-                                    Send
-                                </RoundedIconButton>
-                            </Link>
+                            />
                             {isSwapEnabled && (
-                                <Link
-                                    to={{
-                                        pathname: "/swap",
-                                        state: {
-                                            fromToken: asset.token,
-                                            fromTokenBalance: asset.balance,
-                                            fromAssetPage: true,
-                                            transitionDirection: "left",
-                                        },
+                                <PanelButtons.Swap
+                                    disabled={disabledActions}
+                                    redirectState={{
+                                        fromToken: asset.token,
+                                        fromTokenBalance: asset.balance,
+                                        fromAssetPage: true,
+                                        transitionDirection: "left",
                                     }}
-                                    draggable={false}
-                                    className={classnames(
-                                        "flex flex-col items-center space-y-2 group",
-                                        disabledActions && "pointer-events-none"
-                                    )}
-                                >
-                                    <RoundedIconButton
-                                        Icon={DoubleArrowHoverAnimation}
-                                        disabled={disabledActions}
-                                    >
-                                        Swap
-                                    </RoundedIconButton>
-                                </Link>
+                                />
                             )}
                             {isBridgeEnabled && (
-                                <Link
-                                    to={{
-                                        pathname: "/bridge",
-                                        state: {
-                                            token: asset.token,
-                                            fromAssetPage: true,
-                                            transitionDirection: "left",
-                                        },
+                                <PanelButtons.Bridge
+                                    disabled={disabledActions}
+                                    redirectState={{
+                                        token: asset.token,
+                                        fromAssetPage: true,
+                                        transitionDirection: "left",
                                     }}
-                                    draggable={false}
-                                    className={classnames(
-                                        "flex flex-col items-center space-y-2 group",
-                                        disabledActions && "pointer-events-none"
-                                    )}
-                                >
-                                    <div
-                                        className={classnames(
-                                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                            disabledActions
-                                                ? "bg-gray-300"
-                                                : "bg-primary-300"
-                                        )}
-                                    >
-                                        {disabledActions ? (
-                                            <Icon
-                                                name={IconName.DISABLED_BRIDGE}
-                                                size="xl"
-                                            />
-                                        ) : (
-                                            <AnimatedIcon
-                                                icon={AnimatedIconName.Bridge}
-                                                className="cursor-pointer"
-                                            />
-                                        )}
-                                    </div>
-                                    <span className="text-xs font-medium">
-                                        Bridge
-                                    </span>
-                                </Link>
+                                />
                             )}
                         </TokenSummary.Actions>
                     </TokenSummary>
-                    <ActivityAllowancesView
-                        tokenAddress={asset.token.address}
-                    />
                 </div>
+                <ActivityAllowancesView tokenAddress={asset.token.address} />
             </div>
         </PopupLayout>
     )

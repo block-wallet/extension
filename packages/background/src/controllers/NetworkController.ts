@@ -36,6 +36,7 @@ import {
     isABlockWalletNode,
     customHeadersForBlockWalletNode,
 } from '../utils/nodes';
+import { toChecksumAddress } from 'ethereumjs-util';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -867,4 +868,24 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         return provider;
     };
+
+    /**
+     * Checks if an address is an smart contract.
+     *
+     * @param address
+     * @param provider
+     * @returns
+     */
+    public async isAddressContract(
+        address: string,
+        provider: JsonRpcProvider = this.getProvider()
+    ): Promise<boolean> {
+        try {
+            const code = await provider.getCode(toChecksumAddress(address));
+            if (code !== '0x') return true;
+        } catch (error) {
+            log.error("error executing 'getCode'", error);
+        }
+        return false;
+    }
 }

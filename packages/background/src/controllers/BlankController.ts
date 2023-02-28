@@ -2419,10 +2419,14 @@ export default class BlankController extends EventEmitter {
         if (isNativeToken) {
             // Native Token and Not a custom network, returns SEND_GAS_COST const.
             if (hasFixedGasCost) {
-                return {
-                    gasLimit: BigNumber.from(SEND_GAS_COST),
-                    estimationSucceeded: true,
-                };
+                const isContract =
+                    await this.networkController.isAddressContract(to);
+                if (!isContract) {
+                    return {
+                        gasLimit: BigNumber.from(SEND_GAS_COST),
+                        estimationSucceeded: true,
+                    };
+                }
             }
 
             // Native token of a custom network, estimets gas with fallback price.

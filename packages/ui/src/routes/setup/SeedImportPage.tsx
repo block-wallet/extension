@@ -30,7 +30,7 @@ const SeedImportPage = () => {
 
     return (
         <PageLayout header maxWidth="max-w-lg">
-            <span className="my-6 text-lg font-bold font-title">
+            <span className="my-6 text-lg font-semibold font-title">
                 Import an Account
             </span>
             <Divider />
@@ -42,7 +42,7 @@ const SeedImportPage = () => {
                             to import your account.
                         </span>
                     </div>
-                    <div className="w-full px-4 py-4 text-sm text-center text-red-500 bg-red-100 rounded">
+                    <div className="w-full px-4 py-4 text-sm text-center text-secondary-red-default bg-red-100 rounded">
                         <strong className="font-bold">Warning: </strong>
                         <span>
                             Never disclose your seed phrase. Anyone asking for

@@ -7,7 +7,7 @@ const ClickToReveal: FunctionComponent<{
     revealed: boolean
     onClick: () => void
 }> = ({ hiddenText, revealMessage, revealed, onClick }) => (
-    <div className="relative p-8 overflow-hidden text-gray-900 rounded-md bg-primary-200">
+    <div className="relative p-8 overflow-hidden text-gray-900 rounded-md bg-primary-grey-default">
         {!revealed ? (
             <button
                 type="button"

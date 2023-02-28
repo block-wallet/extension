@@ -89,7 +89,7 @@ export class Classes {
         "text-sm rounded-md border-1 border-gray-200 placeholder-gray-400 focus:ring-0"
     )
     static input = classnames(
-        "w-full text-xs px-0 py-2 border-0 border-b-2 border-gray-800 placeholder-gray-400 focus:ring-0"
+        "w-full text-xs px-0 py-2 border-0 border-b-2 border-primary-black-default placeholder-gray-400 focus:ring-0"
     )
     static inputBorder = classnames(
         "w-full text-xs px-2 py-2 mt-1 rounded-md border-1 border-gray-200 placeholder-gray-400 focus:ring-0"

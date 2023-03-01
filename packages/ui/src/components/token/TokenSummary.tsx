@@ -10,7 +10,11 @@ interface TokenSummaryMembers {
         children: React.ReactNode
         className?: string
     }>
-    ExchangeRateBalance: FC<{ title?: string; children: React.ReactNode }>
+    ExchangeRateBalance: FC<{
+        title?: string
+        className?: string
+        children: React.ReactNode
+    }>
     TokenName: FC<{ title?: string; children: React.ReactNode }>
     Actions: FC<{ children: React.ReactNode; className?: string | undefined }>
 }
@@ -80,10 +84,14 @@ const TokenBalance: FC<{
 
 const ExchangeRateBalance: FC<{
     title?: string
+    className?: string
     children: React.ReactNode
-}> = ({ children, title }) => {
+}> = ({ children, title, className }) => {
     return (
-        <span className="text-sm text-gray-600" title={title}>
+        <span
+            className={classnames("text-sm text-gray-600", className)}
+            title={title}
+        >
             {children}
         </span>
     )

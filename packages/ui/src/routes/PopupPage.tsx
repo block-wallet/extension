@@ -201,18 +201,6 @@ const PopupPage = () => {
                         </div>
                         <div className="flex flex-row items-center space-x-1">
                             <AccountDisplay />
-                            <Link
-                                to="/accounts/menu/receive"
-                                draggable={false}
-                                onClick={(e) => {
-                                    e.preventDefault()
-
-                                    history.push("/accounts/menu/receive")
-                                }}
-                                className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
-                            >
-                                <QRIcon />
-                            </Link>
                         </div>
                     </div>
                     <div className="flex flex-row items-center -mr-1 space-x-2">
@@ -318,6 +306,39 @@ const PopupPage = () => {
                                 </div>
                                 <span className="text-xs font-medium">
                                     Send
+                                </span>
+                            </Link>
+                            <Link
+                                to="/accounts/menu/receive"
+                                draggable={false}
+                                className={classnames(
+                                    "flex flex-col items-center space-y-2 group",
+                                    disabledActions && "pointer-events-none"
+                                )}
+                            >
+                                <div
+                                    className={classnames(
+                                        "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                        disabledActions
+                                            ? "bg-gray-300"
+                                            : "bg-primary-blue-default"
+                                    )}
+                                >
+                                    {isLoading ? (
+                                        <div className="flex flex-row items-center justify-center w-full h-full">
+                                            <AnimatedIcon
+                                                icon={
+                                                    AnimatedIconName.BlueCircleLoadingSkeleton
+                                                }
+                                                className="w-4 h-4 pointer-events-none"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <ArrowHoverAnimation />
+                                    )}
+                                </div>
+                                <span className="text-xs font-medium">
+                                    Receive
                                 </span>
                             </Link>
                             {isSwapEnabled && (

@@ -96,7 +96,7 @@ const SetupDonePage = () => {
                     </div>
                 </div>
                 <div
-                    className="absolute w-64 h-64 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-5"
+                    className="absolute w-64 h-64 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-5"
                     style={{
                         color: "blue",
                         background: `url(${logo})`,

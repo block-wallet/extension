@@ -1,5 +1,5 @@
 import { FC } from "react"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import ChevronRightIcon from "../icons/ChevronRightIcon"

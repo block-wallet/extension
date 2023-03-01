@@ -4,7 +4,7 @@ import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { formatRounded } from "../../util/formatRounded"
 import TokenSummary from "../token/TokenSummary"
-import { formatUnits } from "ethers/lib/utils"
+import { formatUnits } from "@ethersproject/units"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import PanelButtons from "./PanelButtons"
 

@@ -1,5 +1,5 @@
-import { BigNumber } from "ethers"
-import { formatUnits } from "ethers/lib/utils"
+import { BigNumber } from "@ethersproject/bignumber"
+import { formatUnits } from "@ethersproject/units"
 import { formatRounded } from "./formatRounded"
 
 interface TokenInfo {

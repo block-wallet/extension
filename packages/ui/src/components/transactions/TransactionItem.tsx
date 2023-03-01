@@ -6,6 +6,7 @@ import { AiFillInfoCircle } from "react-icons/ai"
 import { GiSuspensionBridge } from "react-icons/gi"
 import { ImSpinner } from "react-icons/im"
 import { BigNumber } from "@ethersproject/bignumber"
+import { formatUnits } from "@ethersproject/units"
 import classNames from "classnames"
 import { Classes, classnames } from "../../styles"
 import Tooltip from "../../components/label/Tooltip"
@@ -43,7 +44,6 @@ import {
 import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 import AnimatedIcon, { AnimatedIconName } from "../AnimatedIcon"
 import TokenLogo from "../token/TokenLogo"
-import { formatUnits } from "ethers/lib/utils"
 
 const TRANSACTION_STATIC_MESSAGES = {
     [TransactionCategories.BLANK_DEPOSIT]: "Privacy Pool Deposit",

@@ -1,12 +1,32 @@
 import { useEffect, useState } from "react"
 
 import Confetti from "react-dom-confetti"
+import { IoLogoTwitter } from "react-icons/io"
+import { FaGithub, FaTelegramPlane } from "react-icons/fa"
 
 import LogoHeader from "../../components/LogoHeader"
 import PageLayout from "../../components/PageLayout"
+import Divider from "../../components/Divider"
+
+import { completeSetup } from "../../context/commActions"
 
 import logo from "../../assets/images/logo.svg"
-import { completeSetup } from "../../context/commActions"
+import { LINKS } from "../../util/constants"
+
+const links = [
+    {
+        icon: <FaGithub className="w-5 h-5" />,
+        link: LINKS.GITHUB,
+    },
+    {
+        icon: <IoLogoTwitter className="w-5 h-5" />,
+        link: LINKS.TWITTER,
+    },
+    {
+        icon: <FaTelegramPlane className="w-5 h-5" />,
+        link: LINKS.TELEGRAM,
+    },
+]
 
 const ResetDonePage = () => {
     const [confettiActive, setConfettiActive] = useState(false)
@@ -32,23 +52,36 @@ const ResetDonePage = () => {
             <div className="absolute w-full h-full flex flex-row items-center justify-center overflow-hidden z-10">
                 <Confetti active={confettiActive} config={config} />
             </div>
-            <PageLayout centered className="relative overflow-hidden">
+            <PageLayout header centered className="relative overflow-hidden">
                 <div className="flex flex-col items-center relative py-14 z-10">
-                    <LogoHeader />
                     <div className="flex flex-col items-center my-12 space-y-6">
                         <span className="font-title font-semibold text-5xl">
                             Reset completed!
                         </span>
-                        <div className="flex flex-col md:flex-row items-center space-x-1 w-52 md:w-full mx-auto text-gray-600 text-sm text-center leading-loose">
+                        <div className="flex flex-col items-center space-x-1 w-92 px-4 mx-auto text-gray-600 text-base text-center leading-loose">
                             <span>
-                                You're ready to start using BlockWallet again.
+                                You can start using BlockWallet again.
                                 <br />
-                                The wallet has been reset with a new seed
-                                phrase.
-                                <br />
-                                Access BlockWallet via the extensions section of
-                                your browser.
+                                Access your wallet by clicking on the extension
+                                icon on your browser.
                             </span>
+                            <Divider className="text-primary-grey-default my-6" />
+                            <span>
+                                Keep track of updates or ask us anything on
+                                Twitter or Telegram.
+                            </span>
+                            <div className="flex space-x-4 text-black mt-4">
+                                {links.map(({ link, icon }) => (
+                                    <a
+                                        href={link}
+                                        target="_blank"
+                                        className="text-sm font-bold hover:underline flex items-center"
+                                        rel="noopener noreferrer"
+                                    >
+                                        {icon}
+                                    </a>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>

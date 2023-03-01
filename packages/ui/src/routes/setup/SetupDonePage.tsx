@@ -1,32 +1,30 @@
 import { useEffect, useState } from "react"
 
 import Confetti from "react-dom-confetti"
-
-import PageLayout from "../../components/PageLayout"
-
-import logo from "../../assets/images/logo.svg"
-import { completeSetup } from "../../context/commActions"
-import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import Divider from "../../components/Divider"
-import { LINKS } from "../../util/constants"
 import { FaGithub, FaTelegramPlane } from "react-icons/fa"
 import { IoLogoTwitter } from "react-icons/io"
+
+import PageLayout from "../../components/PageLayout"
+import Divider from "../../components/Divider"
+
+import { completeSetup } from "../../context/commActions"
+import { useOnMountHistory } from "../../context/hooks/useOnMount"
+
+import logo from "../../assets/images/logo.svg"
+import { LINKS } from "../../util/constants"
 
 const links = [
     {
         icon: <FaGithub className="w-5 h-5" />,
         link: LINKS.GITHUB,
-        text: "github.com/block-wallet",
     },
     {
         icon: <IoLogoTwitter className="w-5 h-5" />,
         link: LINKS.TWITTER,
-        text: "twitter.com/GetBlockWallet",
     },
     {
         icon: <FaTelegramPlane className="w-5 h-5" />,
         link: LINKS.TELEGRAM,
-        text: "t.me/blockwallet",
     },
 ]
 
@@ -81,7 +79,7 @@ const SetupDonePage = () => {
                                 Twitter or Telegram.
                             </span>
                             <div className="flex space-x-4 text-black mt-4">
-                                {links.map(({ text, link, icon }) => (
+                                {links.map(({ link, icon }) => (
                                     <a
                                         href={link}
                                         target="_blank"

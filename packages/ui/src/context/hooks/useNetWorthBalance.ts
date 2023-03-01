@@ -1,36 +1,26 @@
-import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
-import { useSelectedAccount } from "./useSelectedAccount"
-import { useSelectedNetwork } from "./useSelectedNetwork"
-import { BigNumber } from "@ethersproject/bignumber"
 import { useBlankState } from "../background/backgroundHooks"
+import { useTokensList } from "./useTokensList"
+
+import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 
 const useNetWorthBalance = () => {
     const state = useBlankState()!
-    const selectedAccount = useSelectedAccount()
-    const selectedNetwork = useSelectedNetwork()
+    const assets = useTokensList()
 
-    const balances = selectedAccount.balances[selectedNetwork.chainId]
+    const tokenBalances = assets.currentNetworkTokens
 
-    if (!balances)
-        return formatCurrency(0, {
-            currency: state.nativeCurrency,
-            locale_info: state.localeInfo,
-            returnNonBreakingSpace: true,
-            showSymbol: true,
-        })
-
-    const tokenBalances = balances.tokens
-    const nativeTokenBalance = balances.nativeTokenBalance
+    const { token: nativeToken, balance: nativeTokenBalance } =
+        assets.nativeToken
 
     let netWorth = toCurrencyAmount(
-        nativeTokenBalance || BigNumber.from(0),
-        state.exchangeRates[state.networkNativeCurrency.symbol],
-        selectedNetwork.nativeCurrency.decimals
+        nativeTokenBalance,
+        state.exchangeRates[nativeToken.symbol],
+        nativeToken.decimals
     )
 
     Object.values(tokenBalances).forEach(({ balance, token }) => {
         netWorth += toCurrencyAmount(
-            balance || BigNumber.from(0),
+            balance,
             state.exchangeRates[token.symbol],
             token.decimals
         )

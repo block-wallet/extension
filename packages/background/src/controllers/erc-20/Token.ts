@@ -1,3 +1,5 @@
+import { BigNumber } from 'ethers';
+
 export interface IL1Bridge {
     tokenAddress: string;
     bridgeAddress: string;
@@ -10,6 +12,7 @@ export interface IToken {
     symbol: string;
     decimals: number;
     l1Bridge?: IL1Bridge;
+    totalSupply?: BigNumber;
 }
 
 export type IAccountTokens = {
@@ -32,6 +35,7 @@ export class Token implements IToken {
     symbol: string;
     decimals: number;
     l1Bridge?: IL1Bridge;
+    totalSupply?: BigNumber;
 
     constructor(
         address: string,
@@ -40,7 +44,8 @@ export class Token implements IToken {
         decimals: number,
         type?: string,
         logo?: string,
-        l1Bridge?: IL1Bridge
+        l1Bridge?: IL1Bridge,
+        totalSupply?: BigNumber
     ) {
         this.address = address;
         this.name = name;
@@ -50,6 +55,20 @@ export class Token implements IToken {
         this.decimals = decimals;
         this.l1Bridge = l1Bridge;
         this.decimals = decimals;
+        this.totalSupply = totalSupply;
+    }
+
+    static new(token: IToken): Token {
+        return new Token(
+            token.address,
+            token.name,
+            token.symbol,
+            token.decimals,
+            token.type,
+            token.logo,
+            token.l1Bridge,
+            token.totalSupply
+        );
     }
 }
 

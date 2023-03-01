@@ -15,6 +15,7 @@ export const initBackgroundState: BackgroundStateType = {
         idleTimeout: 0,
         antiPhishingImage: "",
         userTokens: {},
+        isRefreshingAllowances: false,
         deletedUserTokens: {},
         cachedPopulatedTokens: {},
         isAccountTrackerLoading: false,
@@ -145,6 +146,7 @@ export const initBackgroundState: BackgroundStateType = {
                 accountType: AccountType.HD_ACCOUNT,
                 status: AccountStatus.ACTIVE,
                 name: "Mock 1",
+                allowances: {},
                 balances: {
                     5: {
                         nativeTokenBalance: BigNumber.from(0),
@@ -218,6 +220,7 @@ export const initBackgroundState: BackgroundStateType = {
                 index: 1,
                 accountType: AccountType.HD_ACCOUNT,
                 status: AccountStatus.ACTIVE,
+                allowances: {},
                 balances: {
                     5: {
                         nativeTokenBalance: BigNumber.from("1"),
@@ -231,6 +234,7 @@ export const initBackgroundState: BackgroundStateType = {
                 index: 2,
                 accountType: AccountType.HD_ACCOUNT,
                 status: AccountStatus.ACTIVE,
+                allowances: {},
                 balances: {
                     5: {
                         nativeTokenBalance: BigNumber.from("2"),
@@ -244,6 +248,7 @@ export const initBackgroundState: BackgroundStateType = {
                 index: 3,
                 accountType: AccountType.EXTERNAL,
                 status: AccountStatus.ACTIVE,
+                allowances: {},
                 balances: {
                     5: {
                         nativeTokenBalance: BigNumber.from("2"),
@@ -419,6 +424,7 @@ export const initBackgroundState: BackgroundStateType = {
         showTestNetworks: true,
         showWelcomeMessage: false,
         showDefaultWalletPreferences: false,
+        defaultGasOption: "medium",
         popupTab: "activity",
         settings: {
             hideAddressWarning: false,

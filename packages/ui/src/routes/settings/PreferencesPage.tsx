@@ -3,6 +3,7 @@ import PopupLayout from "../../components/popup/PopupLayout"
 import pin from "../../assets/images/icons/pin.svg"
 import lock from "../../assets/images/icons/lock.svg"
 import world from "../../assets/images/icons/world.svg"
+import gas from "../../assets/images/icons/gas.svg"
 import news from "../../assets/images/icons/news.svg"
 import bell from "../../assets/images/icons/bell.svg"
 import shield from "../../assets/images/icons/shield.svg"
@@ -32,6 +33,11 @@ const PreferencesPage = () => {
             icon: world,
             label: "Default Browser Wallet",
             to: "/settings/preferences/defaultWallet",
+        },
+        {
+            icon: gas,
+            label: "Default Gas Setting",
+            to: "/settings/preferences/defaultGas",
         },
         {
             icon: bell,

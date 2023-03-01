@@ -176,7 +176,6 @@ jobs:
           make install/ci
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-          NODE_AUTH_TOKEN: ${{secrets.REGISTRY_AUTH_TOKEN}}
 
       - name: Build extension
         env:
@@ -254,7 +253,7 @@ jobs:
 
       - name: Install ImageMagick (needed for convert)
         run: |
-          apt install -y imagemagick
+          apt update && apt install -y imagemagick --fix-missing
 
       - name: Cut the screenshot
         run: |

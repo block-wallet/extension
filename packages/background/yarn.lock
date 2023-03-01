@@ -196,9 +196,9 @@
     "@babel/helper-validator-identifier" "^7.19.1"
     to-fast-properties "^2.0.0"
 
-"@block-wallet/chains-assets@https://github.com/block-wallet/chains-assets#v0.0.24":
-  version "0.0.24"
-  resolved "https://github.com/block-wallet/chains-assets#31a3aa34b7cd34d967fda8ea943f93ef0fe2fd0d"
+"@block-wallet/chains-assets@https://github.com/block-wallet/chains-assets#v0.0.27":
+  version "0.0.27"
+  resolved "https://github.com/block-wallet/chains-assets#e85446cac33b09c7e3a9893644ad3091eba806fd"
 
 "@block-wallet/eth-ledger-bridge-keyring@https://github.com/block-wallet/eth-ledger-bridge-keyring":
   version "0.13.0"
@@ -1611,12 +1611,6 @@ balanced-match@^1.0.0:
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.2.tgz#e83e3a7e3f300b34cb9d87f615fa0cbf357690ee"
   integrity sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
 
-"banned-assets@https://github.com/block-wallet/banned-assets#v0.0.1":
-  version "0.0.1"
-  resolved "https://github.com/block-wallet/banned-assets#6541fdafd7aefc0c67e8d7aca54908bc773bcfdc"
-  dependencies:
-    ethereumjs-util "^7.1.4"
-
 base-x@3.0.9, base-x@^3.0.2:
   version "3.0.9"
   resolved "https://registry.yarnpkg.com/base-x/-/base-x-3.0.9.tgz#6349aaabb58526332de9f60995e548a53fe21320"
@@ -2834,7 +2828,7 @@ ethereumjs-util@^6.0.0, ethereumjs-util@^6.2.1:
     ethjs-util "0.1.6"
     rlp "^2.2.3"
 
-ethereumjs-util@^7.0.7, ethereumjs-util@^7.0.9, ethereumjs-util@^7.1.2, ethereumjs-util@^7.1.4, ethereumjs-util@^7.1.5:
+ethereumjs-util@^7.0.7, ethereumjs-util@^7.0.9, ethereumjs-util@^7.1.2, ethereumjs-util@^7.1.5:
   version "7.1.5"
   resolved "https://registry.yarnpkg.com/ethereumjs-util/-/ethereumjs-util-7.1.5.tgz#9ecf04861e4fbbeed7465ece5f23317ad1129181"
   integrity sha512-SDl5kKrQAudFBUe5OJM9Ac6WmMyYmXX/6sTmLZ3ffG2eY6ZIGBes3pEDxNN6V72WyOw4CPD5RomKdsa8DAAwLg==

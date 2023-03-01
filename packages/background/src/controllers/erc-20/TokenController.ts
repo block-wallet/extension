@@ -21,8 +21,8 @@ import {
 import { PreferencesController } from '../PreferencesController';
 import { Mutex } from 'async-mutex';
 import initialState from '../../utils/constants/initialState';
-import { TokenOperationsController } from './transactions/Transaction';
-import { fillTokenData } from '../../utils/token';
+import { TokenOperationsController } from './transactions/TokenOperationsController';
+import { fillTokenData, mergeTokens } from '../../utils/token';
 
 const tokenAddressParamNotPresentError = new Error('token address is required');
 const tokenAddressInvalidError = new Error(
@@ -370,8 +370,8 @@ export class TokenController extends BaseController<TokenControllerState> {
 
         this.emit(
             TokenControllerEvents.USER_TOKEN_CHANGE,
-            this.getSelectedAccountAddress(),
-            this.getSelectedNetworkChainId(),
+            accountAddress ? accountAddress : this.getSelectedAccountAddress(),
+            chainId ? chainId : this.getSelectedNetworkChainId(),
             tokens.map(function (token) {
                 return token.address;
             })
@@ -482,12 +482,14 @@ export class TokenController extends BaseController<TokenControllerState> {
      * @param tokenAddress
      * @param accountAddress
      * @param chainId
+     * @param forceUpdate forces blockchain query
      * @returns
      */
     private async _populateTokenData(
         tokenAddress: string,
         accountAddress?: string,
-        chainId?: number
+        chainId?: number,
+        forceUpdate = false
     ): Promise<FetchTokenResponse> {
         tokenAddress = toChecksumAddress(tokenAddress);
 
@@ -495,7 +497,9 @@ export class TokenController extends BaseController<TokenControllerState> {
         const token = (await this.getCachedPopulatedTokens(chainId))[
             tokenAddress
         ];
-        if (token) {
+
+        //If force update is activated, do not return
+        if (token && !forceUpdate) {
             return { token, fetchFailed: false };
         }
 
@@ -525,8 +529,11 @@ export class TokenController extends BaseController<TokenControllerState> {
             const cachedPopulatedTokens = await this.getCachedPopulatedTokens(
                 chainId
             );
-            cachedPopulatedTokens[tokenAddress] = fetchTokenResponse.token;
 
+            cachedPopulatedTokens[tokenAddress] = mergeTokens(
+                fetchTokenResponse.token,
+                token || {}
+            );
             await this._updateState(
                 userTokens,
                 deletedUserTokens,
@@ -666,6 +673,33 @@ export class TokenController extends BaseController<TokenControllerState> {
      */
     public clearTokens(): void {
         this.store.setState(initialState.TokenController);
+    }
+
+    public async searchTokenWithTotalSupply(
+        tokenAddress: string
+    ): Promise<Token> {
+        const { tokens } = await this.search(tokenAddress);
+        let token = tokens[0];
+
+        if (!token) {
+            throw new Error('Token does not exist');
+        }
+        if (!token.totalSupply) {
+            const updatedToken = await this._populateTokenData(
+                tokenAddress,
+                this._preferencesController.getSelectedAddress(),
+                this._networkController.network.chainId,
+                true
+            );
+            if (updatedToken.token.totalSupply) {
+                token = mergeTokens(updatedToken.token, token);
+            }
+        }
+
+        if (!token.totalSupply) {
+            throw new Error('Unable to get token total supply');
+        }
+        return token;
     }
 
     /**

@@ -10,6 +10,7 @@ import trashBinIcon from "../../assets/images/icons/trash_bin.svg"
 import openExternal from "../../assets/images/icons/open_external.svg"
 import accountsIcon from "../../assets/images/icons/accounts.svg"
 import resetIcon from "../../assets/images/icons/reset.svg"
+import allowancesIcon from "../../assets/images/icons/allowances.svg"
 import qrIcon from "../../assets/images/icons/qr_icon.svg"
 import sites from "../../assets/images/icons/connected_sites.svg"
 import editIcon from "../../assets/images/icons/pencil.svg"
@@ -90,6 +91,12 @@ const AccountMenu = () => {
             },
         })
     }
+
+    options.push({
+        icon: allowancesIcon,
+        label: "Token Allowances",
+        to: "/accounts/menu/allowances",
+    })
 
     options.push({
         icon: accountsIcon,

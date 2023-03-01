@@ -24,8 +24,9 @@ export class ActionIntervalController {
         interval: Duration,
         cb: () => Promise<T>
     ): Promise<void> {
-        const _currentTimestamp = currentTimestamp();
-        if (_currentTimestamp - this._currentTimestamp >= interval) {
+        const _now = currentTimestamp();
+        const timeEllapsedSinceLastUpdate = _now - this._currentTimestamp;
+        if (timeEllapsedSinceLastUpdate >= interval) {
             await this._mutex.runExclusive(async () => {
                 this._updateCurrentTimestamp(currentTimestamp());
                 try {

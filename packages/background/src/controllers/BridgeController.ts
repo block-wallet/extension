@@ -49,6 +49,7 @@ import { BaseController } from '../infrastructure/BaseController';
 import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
 import { fillTokenData, isNativeTokenAddress } from '../utils/token';
 import { AccountTrackerController } from './AccountTrackerController';
+import { unixTimestampToJSTimestamp } from '../utils/timestamp';
 const TIMEOUT_FETCH_RECEIVING_TX = 2 * HOUR;
 const STATUS_API_CALLS_DELAY = 30 * SECOND;
 const BRIDGE_STATUS_INVALID_MAX_COUNT = 10;
@@ -115,6 +116,7 @@ export interface BridgeTransaction extends BridgeParameters {
     customNonce?: number;
     flashbots?: boolean;
     gasPrice?: BigNumber;
+    gasLimit?: BigNumber;
     maxFeePerGas?: BigNumber;
     maxPriorityFeePerGas?: BigNumber;
 }
@@ -590,6 +592,7 @@ export default class BridgeController extends BaseController<
             gasPrice,
             maxFeePerGas,
             maxPriorityFeePerGas,
+            gasLimit,
             params: {
                 transactionRequest,
                 fromToken,
@@ -622,7 +625,9 @@ export default class BridgeController extends BaseController<
                         maxFeePerGas: maxFeePerGas
                             ? BigNumber.from(maxFeePerGas)
                             : undefined,
-                        gasLimit: BigNumber.from(transactionRequest.gasLimit),
+                        gasLimit: BigNumber.from(
+                            gasLimit ?? transactionRequest.gasLimit
+                        ),
                         nonce: customNonce,
                     },
                     origin: 'blank',
@@ -1027,8 +1032,9 @@ export default class BridgeController extends BaseController<
                 receivingChainIdProvider
             );
             if (block) {
-                //transform to miliseconds
-                txConfirmationTime = block.timestamp * 1000;
+                txConfirmationTime = unixTimestampToJSTimestamp(
+                    block.timestamp
+                );
             }
         }
 

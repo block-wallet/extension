@@ -36,6 +36,7 @@ import {
     isABlockWalletNode,
     customHeadersForBlockWalletNode,
 } from '../utils/nodes';
+import { toChecksumAddress } from 'ethereumjs-util';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -57,11 +58,19 @@ export default class NetworkController extends BaseController<NetworkControllerS
     private provider: StaticJsonRpcProvider;
 
     constructor(initialState: NetworkControllerState) {
-        super(initialState);
+        super({
+            ...initialState,
+            isNetworkChanging: false,
+            isProviderNetworkOnline: true,
+            isUserNetworkOnline: true,
+        });
 
         this.provider = this.getProviderFromName(
             initialState.selectedNetwork || 'goerli'
         );
+
+        //check provider's status
+        this._updateProviderNetworkStatus();
 
         // Set the error handler for the provider to check for network status
         this.provider.on('error', this._updateProviderNetworkStatus);
@@ -302,6 +311,11 @@ export default class NetworkController extends BaseController<NetworkControllerS
         newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
         newNetworks[networkKey].test = updates.test;
         this.networks = newNetworks;
+
+        // If network is currently selected & rpc is changed, update provider by resetting the network (only available if provider is down)
+        if (this.network.chainId === chainId && updates.rpcUrls) {
+            this.setNetwork(this.network.name);
+        }
         return;
     }
 
@@ -585,11 +599,19 @@ export default class NetworkController extends BaseController<NetworkControllerS
             // the network seems to be eip1559 but eth_feeHistory is not available.
             if (baseFeePerGas) {
                 try {
-                    await provider.send('eth_feeHistory', [
+                    const feeHistory = await provider.send('eth_feeHistory', [
                         '0x1',
                         'latest',
                         [50],
                     ]);
+                    if (
+                        !feeHistory ||
+                        (!feeHistory.baseFeePerGas && !feeHistory.reward)
+                    ) {
+                        throw new Error(
+                            `eth_feeHistory is not fully supported by chain ${chainId}`
+                        );
+                    }
                 } catch {
                     baseFeePerGas = undefined;
                 }
@@ -692,23 +714,18 @@ export default class NetworkController extends BaseController<NetworkControllerS
             // check for eip1559 compatibility
             await this.getEIP1559Compatibility(network.chainId, true);
 
-            // Set the isNetworkChanging flag to false
-            this.store.updateState({
-                isNetworkChanging: false,
-            });
-
-            // Emit NETWORK_CHANGE event
-            this.emit(NetworkEvents.NETWORK_CHANGE, this.network);
-
             // Return network change success
             return true;
         } catch (error) {
-            // Set the isNetworkChanging flag to false
-            this.store.updateState({ isNetworkChanging: false });
-
             // If an error was thrown
             // return network change failure
             return false;
+        } finally {
+            // Set the isNetworkChanging flag to false
+            this.store.updateState({ isNetworkChanging: false });
+
+            // Emit NETWORK_CHANGE event
+            this.emit(NetworkEvents.NETWORK_CHANGE, this.network);
         }
     }
 
@@ -849,4 +866,24 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         return provider;
     };
+
+    /**
+     * Checks if an address is an smart contract.
+     *
+     * @param address
+     * @param provider
+     * @returns
+     */
+    public async isAddressContract(
+        address: string,
+        provider: JsonRpcProvider = this.getProvider()
+    ): Promise<boolean> {
+        try {
+            const code = await provider.getCode(toChecksumAddress(address));
+            if (code !== '0x') return true;
+        } catch (error) {
+            log.error("error executing 'getCode'", error);
+        }
+        return false;
+    }
 }

@@ -50,6 +50,8 @@
             }
         }
     },
-    "version": "0.5.4",
-    "web_accessible_resources": ["blankProvider.js"]
+    "version": "0.6.0",
+    "web_accessible_resources": [
+        "blankProvider.js"
+    ]
 }

@@ -8,9 +8,12 @@ import { SwapParameters } from "@block-wallet/background/controllers/SwapControl
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits } from "@ethersproject/units"
 import { RichedTransactionMeta } from "./transactionUtils"
+import { Rates } from "@block-wallet/background/controllers/ExchangeRatesController"
+import { BasicToken } from "@block-wallet/background/utils/types/1inch"
+import { getValueByKey } from "./objectUtils"
+import { toCurrencyAmount } from "./formatCurrency"
 
 const ONEINCH_NATIVE_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-
 export const isSwapNativeTokenAddress = (address: string): boolean => {
     return address.toLowerCase() === ONEINCH_NATIVE_ADDRESS.toLowerCase()
 }
@@ -58,4 +61,39 @@ export const populateExchangeTransaction = (
             blockWalletFee: swapParameters.blockWalletFee,
         },
     }
+}
+
+export function calculatePricePercentageImpact(
+    exchangeRates: Rates,
+    fromToken: { token: BasicToken; amount: BigNumber },
+    toToken: { token: BasicToken; amount: BigNumber }
+): number | undefined {
+    const fromTokenRate = getValueByKey(
+        exchangeRates,
+        fromToken.token.symbol,
+        0
+    )
+    const toTokenRate = getValueByKey(exchangeRates, toToken.token.symbol, 0)
+
+    if (fromTokenRate === 0 || toTokenRate === 0) {
+        return undefined
+    }
+
+    const fromTokenCurrencyAmount = toCurrencyAmount(
+        fromToken.amount || BigNumber.from(0),
+        fromTokenRate,
+        fromToken.token.decimals
+    )
+    const toTokenCurrencyAmount = toCurrencyAmount(
+        toToken.amount || BigNumber.from(0),
+        toTokenRate,
+        toToken.token.decimals
+    )
+
+    const priceImpact =
+        (100 -
+            Math.abs(toTokenCurrencyAmount / fromTokenCurrencyAmount) * 100) /
+        100
+
+    return priceImpact
 }

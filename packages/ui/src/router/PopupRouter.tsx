@@ -6,7 +6,6 @@ import PendingSetupPage from "../routes/setup/PendingSetupPage"
 import UnlockPage from "../routes/UnlockPage"
 import { appRoutes } from "./routes"
 import "./routeTransitions.css"
-import { lockApp } from "../context/commActions"
 import { LastLocationProvider } from "react-router-last-location"
 import { TransitionRoute } from "./TransitionRoute"
 import { ErrorBoundary } from "react-error-boundary"
@@ -20,7 +19,10 @@ import { useLocationRecovery } from "../util/hooks/useLocationRecovery"
 import { timeExceedsTTL } from "../util/time"
 import ProviderDownDialog from "../components/dialog/ProviderDownDialog"
 import useClearStickyStorage from "../context/hooks/useClearStickyStorage"
-import { getNonSubmittedTransactions } from "../util/getNonSubmittedTransactions"
+import {
+    getNonSubmittedTransactions,
+    TransactionOrigin,
+} from "../util/getNonSubmittedTransactions"
 
 //10 minutes
 const LOCAL_STORAGE_DATA_TTL = 60000 * 10
@@ -39,7 +41,7 @@ const PopupComponent = () => {
     } = useBlankState()!
     const unapprovedTransactions = getNonSubmittedTransactions(
         transactions,
-        true
+        TransactionOrigin.EXTERNAL_ONLY
     )
 
     const history = useHistory()
@@ -90,6 +92,7 @@ const PopupComponent = () => {
     }
     return (
         <WalletNews>
+            <ProviderDownDialog />
             <Route path="/" component={LocationHolder} />
             <Route exact path="/">
                 {showPage ? <Redirect to={route} /> : <Redirect to="/home" />}
@@ -109,7 +112,7 @@ const PopupRouter = ({
     const state = useBlankState()!
     const isOnboarded = state?.isOnboarded
     const resetHandler = async () => {
-        await lockApp()
+        chrome.runtime.reload()
     }
 
     const [shouldShowDialog, setShouldShowDialog] = useState(false)
@@ -128,7 +131,6 @@ const PopupRouter = ({
                 >
                     {isOnboarded ? (
                         <>
-                            <ProviderDownDialog />
                             <ErrorDialog
                                 onClickOutside={() =>
                                     setShouldShowDialog(false)

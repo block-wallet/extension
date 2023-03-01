@@ -81,7 +81,8 @@ export class TokenOperationsController extends TokenTransactionController {
     public async allowance(
         tokenAddress: string,
         owner: string,
-        spender: string
+        spender: string,
+        provider: StaticJsonRpcProvider = this._networkController.getProvider()
     ): Promise<BigNumber> {
         if (!tokenAddress) {
             throw tokenAddressParamNotPresentError;
@@ -92,7 +93,7 @@ export class TokenOperationsController extends TokenTransactionController {
         if (!spender) {
             throw spenderParamNotPresentError;
         }
-        const contract = this.getContract(tokenAddress);
+        const contract = this.getContract(tokenAddress, provider);
         return contract.allowance(owner, spender);
     }
     /**
@@ -116,18 +117,44 @@ export class TokenOperationsController extends TokenTransactionController {
         let symbol = '';
         let decimals = 18;
         let fetchFailed = false;
-
+        let totalSupply: BigNumber | undefined;
         try {
             const contract = this.getContract(tokenAddress, networkProvider);
             name = await contract.name();
             symbol = await contract.symbol();
             decimals = parseFloat((await contract.decimals()) as string);
+            totalSupply = await contract.totalSupply();
         } catch (error) {
             log.error(error.message || error);
             fetchFailed = true;
         }
 
-        const token = new Token(tokenAddress, name, symbol, decimals);
+        const token = new Token(
+            tokenAddress,
+            name,
+            symbol,
+            decimals,
+            undefined,
+            undefined,
+            undefined,
+            totalSupply ? BigNumber.from(totalSupply) : undefined
+        );
         return { token, fetchFailed };
+    }
+
+    /**
+     * Get the erc20 token total supply
+     * @param {string} tokenAddress to chek
+     * @param {string} provider network provider. If it not present, will default to the current network provider.
+     */
+    public async totalSupply(
+        tokenAddress: string,
+        provider: StaticJsonRpcProvider = this._networkController.getProvider()
+    ): Promise<BigNumber> {
+        if (!tokenAddress) {
+            throw tokenAddressParamNotPresentError;
+        }
+        const contract = this.getContract(tokenAddress, provider);
+        return contract.totalSupply();
     }
 }

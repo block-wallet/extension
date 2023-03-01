@@ -6,10 +6,18 @@ import { useBlankState } from "../background/backgroundHooks"
 
 const useNetWorthBalance = () => {
     const state = useBlankState()!
-    const selectedAccount = useSelectedAccount()!
-    const selectedNetwork = useSelectedNetwork()!
+    const selectedAccount = useSelectedAccount()
+    const selectedNetwork = useSelectedNetwork()
 
     const balances = selectedAccount.balances[selectedNetwork.chainId]
+
+    if (!balances)
+        return formatCurrency(0, {
+            currency: state.nativeCurrency,
+            locale_info: state.localeInfo,
+            returnNonBreakingSpace: true,
+            showSymbol: true,
+        })
 
     const tokenBalances = balances.tokens
     const nativeTokenBalance = balances.nativeTokenBalance

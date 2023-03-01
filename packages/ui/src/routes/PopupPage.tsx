@@ -282,7 +282,7 @@ const PopupPage = () => {
                                         </div>
                                     </div>
                                 }
-                                className="-translate-x-[0%]"
+                                className="!-translate-x-[0%]"
                             />
                         </TokenSummary.Balances>
                         <TokenSummary.Actions>

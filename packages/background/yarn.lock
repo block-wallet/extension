@@ -222,9 +222,9 @@
     eth-sig-util "^2.0.0"
     hdkey "0.8.0"
 
-"@block-wallet/eth-trezor-keyring@https://github.com/block-wallet/eth-trezor-keyring#073aa77bb0d94889ce404843f8451712b80f4afd":
+"@block-wallet/eth-trezor-keyring@https://github.com/block-wallet/eth-trezor-keyring#c9d2ffdc158c100ab670e59f706784a06f5acf57":
   version "0.11.0"
-  resolved "https://github.com/block-wallet/eth-trezor-keyring#073aa77bb0d94889ce404843f8451712b80f4afd"
+  resolved "https://github.com/block-wallet/eth-trezor-keyring#c9d2ffdc158c100ab670e59f706784a06f5acf57"
   dependencies:
     "@ethereumjs/tx" "^4.0.2"
     "@ethereumjs/util" "^8.0.3"

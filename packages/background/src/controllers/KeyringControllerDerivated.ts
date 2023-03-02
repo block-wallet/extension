@@ -640,8 +640,12 @@ export default class KeyringControllerDerivated extends KeyringController {
             }
         } else {
             return this._mutex.runExclusive(
-                async (): Promise<TypedTransaction> =>
-                    super.signTransaction(ethTx, _fromAddress, opts)
+                async (): Promise<TypedTransaction> => {
+                    if (keyringType === KeyringTypes.TREZOR) {
+                        await this.connectHardwareKeyring(Devices.TREZOR);
+                    }
+                    return super.signTransaction(ethTx, _fromAddress, opts);
+                }
             );
         }
     }
@@ -668,9 +672,12 @@ export default class KeyringControllerDerivated extends KeyringController {
         if (keyringType === KeyringTypes.QR) {
             return await this._signQRMessage(msgParams, opts);
         } else {
-            return this._mutex.runExclusive(async () =>
-                super.signMessage(msgParams, opts)
-            );
+            return this._mutex.runExclusive(async () => {
+                if (keyringType === KeyringTypes.TREZOR) {
+                    await this.connectHardwareKeyring(Devices.TREZOR);
+                }
+                return super.signMessage(msgParams, opts);
+            });
         }
     }
 
@@ -697,9 +704,12 @@ export default class KeyringControllerDerivated extends KeyringController {
         if (keyringType === KeyringTypes.QR) {
             return await this._signQRMessage(msgParams, opts);
         } else {
-            return this._mutex.runExclusive(async () =>
-                super.signPersonalMessage(msgParams, opts)
-            );
+            return this._mutex.runExclusive(async () => {
+                if (keyringType === KeyringTypes.TREZOR) {
+                    await this.connectHardwareKeyring(Devices.TREZOR);
+                }
+                return super.signPersonalMessage(msgParams, opts);
+            });
         }
     }
 
@@ -726,6 +736,9 @@ export default class KeyringControllerDerivated extends KeyringController {
             return await this._signQRMessage(msgParams, opts, true);
         } else {
             return this._mutex.runExclusive(async () => {
+                if (keyringType === KeyringTypes.TREZOR) {
+                    await this.connectHardwareKeyring(Devices.TREZOR);
+                }
                 return super.signTypedMessage(msgParams, opts);
             });
         }

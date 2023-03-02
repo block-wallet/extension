@@ -135,7 +135,7 @@ const ConnectedSiteAccount: FunctionComponent<{
                         {account.address !== selectedAddress && (
                             <button
                                 className={classnames(
-                                    "mt-2 px-1.5 py-0.5 font-bold border rounded-sm text-xs border-primary-blue-default text-primary-blue-default hover:bg-primary-200",
+                                    "mt-2 px-1.5 py-0.5 font-bold border rounded-sm text-xs border-primary-blue-default text-primary-blue-default hover:bg-primary-grey-hover",
                                     active ? "ml-2" : "ml-14"
                                 )}
                                 onClick={() =>

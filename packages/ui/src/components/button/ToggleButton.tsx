@@ -36,7 +36,7 @@ const ToggleButton: FunctionComponent<{
         ? "bg-gray-200"
         : isChecked
         ? "bg-primary-blue-default"
-        : "bg-primary-200"
+        : "bg-primary-grey-hover"
 
     const onClick = () => {
         if (!disabled && !readOnly) {

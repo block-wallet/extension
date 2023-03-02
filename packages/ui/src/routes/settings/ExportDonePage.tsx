@@ -51,7 +51,7 @@ const ExportDonePage = () => {
                         />
                         <button
                             type="button"
-                            className="relative flex flex-row items-stretch justify-between w-full rounded group bg-primary-100 hover:bg-primary-200"
+                            className="relative flex flex-row items-stretch justify-between w-full rounded group bg-primary-grey-default hover:bg-primary-grey-hover"
                             onClick={copyToClipboard}
                         >
                             <span className="flex-grow px-4 py-4 text-sm ">
@@ -82,7 +82,7 @@ const ExportDonePage = () => {
                         />
                         <a
                             type="button"
-                            className="relative flex flex-row items-stretch justify-between w-full rounded group bg-primary-100 hover:bg-primary-200"
+                            className="relative flex flex-row items-stretch justify-between w-full rounded group bg-primary-grey-default hover:bg-primary-grey-hover"
                             href={`data:text/json;charset=utf-8,${encodeURIComponent(
                                 exportData
                             )}`}

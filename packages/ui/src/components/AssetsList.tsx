@@ -56,7 +56,7 @@ const Asset: FunctionComponent<{
                     },
                 })
             }
-            className="flex flex-row items-center justify-between px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 cursor-pointer"
+            className="flex flex-row items-center justify-between px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 cursor-pointer"
             style={{ width: "calc(100% + 2 * 1.5rem)" }}
             role="listitem"
             aria-label={asset.token.symbol}

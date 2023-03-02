@@ -48,8 +48,8 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
             className={classnames(
                 "relative flex items-center p-3 my-0.5 rounded-md transition-all duration-300 active:scale-95",
                 clickable && "cursor-pointer",
-                selected && "bg-primary-200",
-                hoverable && "hover:bg-primary-100"
+                selected && "bg-primary-grey-hover",
+                hoverable && "hover:bg-primary-grey-default"
             )}
             onClick={() => (clickable ? setSelected(!selected) : null)}
         >

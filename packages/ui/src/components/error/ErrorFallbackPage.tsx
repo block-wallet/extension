@@ -92,7 +92,7 @@ const ErrorFallbackPage: FunctionComponent<{
                 onConfirm={handleReset}
             />
             <div className="flex flex-col space-y-4 p-6 py-4 justify-center items-center">
-                <div className="flex flex-col space-y-6 p-4 items-center justify-center bg-primary-100 rounded-md">
+                <div className="flex flex-col space-y-6 p-4 items-center justify-center bg-primary-grey-default rounded-md">
                     <div className="text-sm">
                         <p>
                             An error ocurred while using{" "}
@@ -125,7 +125,7 @@ const ErrorFallbackPage: FunctionComponent<{
                     </div>
                 </div>
 
-                <div className="flex flex-col w-full space-y-4 px-4 py-4 bg-primary-100 rounded-md">
+                <div className="flex flex-col w-full space-y-4 px-4 py-4 bg-primary-grey-default rounded-md">
                     <div className="flex flex-col space-y-4 text-xs">
                         <a
                             href={LINKS.GITHUB_BUG_REPORT}

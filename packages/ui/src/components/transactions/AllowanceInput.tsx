@@ -256,7 +256,7 @@ const AllowanceInput = ({
                 className={classnames(
                     Classes.greySection,
                     "px-4 py-3",
-                    inputFocus && "bg-primary-200",
+                    inputFocus && "bg-primary-grey-hover",
                     error && "border-red-400"
                 )}
             >
@@ -341,8 +341,8 @@ const AllowanceInput = ({
                         className={classnames(
                             "w-16 text-center float-right rounded-md cursor-pointer border p-1",
                             usingRevoke
-                                ? "bg-primary-blue-default border-primary-blue-default text-white hover:bg-blue-600 hover:border-blue-600"
-                                : "bg-blue-200 border-blue-200 hover:bg-blue-300 hover:border-blue-300"
+                                ? "bg-gray-500 border-gray-500 text-white hover:bg-gray-400 hover:border-gray-400"
+                                : "bg-gray-300 border-gray-300 hover:bg-gray-400 hover:border-gray-400"
                         )}
                         title={`Revoke value`}
                         onClick={() => {
@@ -358,8 +358,8 @@ const AllowanceInput = ({
                         className={classnames(
                             "w-16 text-center float-right rounded-md cursor-pointer border p-1",
                             usingUnlimited
-                                ? "bg-primary-blue-default border-primary-blue-default text-white hover:bg-blue-600 hover:border-blue-600"
-                                : "bg-blue-200 border-blue-200 hover:bg-blue-300 hover:border-blue-300"
+                                ? "bg-gray-500 border-gray-500 text-white hover:bg-gray-400 hover:border-gray-400"
+                                : "bg-gray-300 border-gray-300 hover:bg-gray-400 hover:border-gray-400"
                         )}
                         title={`Unlimited value`}
                         onClick={() => {
@@ -391,7 +391,7 @@ const AllowanceInput = ({
                 <span className="absolute top-0 right-0 p-4 z-50">
                     <div
                         onClick={() => setShowOptionsInfo(false)}
-                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
+                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                     >
                         <CloseIcon size="10" />
                     </div>

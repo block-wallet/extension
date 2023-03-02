@@ -12,7 +12,7 @@ const PROFILE_COLORS = {
         textColor: "text-white",
     },
     success: {
-        backgroundColor: "bg-green-100",
+        backgroundColor: "bg-secondary-green-default",
         textColor: "text-green-600",
         borderColor: "border-green-300",
     },
@@ -29,7 +29,7 @@ const PROFILE_COLORS = {
         textColor: "text-white",
     },
     dark: {
-        backgroundColor: "bg-black",
+        backgroundColor: "bg-primary-blue-default",
         textColor: "text-white",
     },
 }

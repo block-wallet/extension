@@ -67,7 +67,7 @@ const ConfirmDialog: FunctionComponent<{
                             e.stopPropagation()
                             onClose()
                         }}
-                        className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
+                        className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                     >
                         <CloseIcon size="10" />
                     </div>

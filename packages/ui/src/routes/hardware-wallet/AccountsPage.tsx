@@ -359,7 +359,9 @@ const HardwareWalletAccount = ({
         <label
             className={classnames(
                 "flex flex-row items-center space-x-4 rounded-md pl-2 py-2",
-                disabled ? "bg-gray-50" : "cursor-pointer hover:bg-primary-100"
+                disabled
+                    ? "bg-gray-50"
+                    : "cursor-pointer hover:bg-primary-grey-default"
             )}
             key={account.index}
             htmlFor={`account-${account.index}`}
@@ -490,7 +492,7 @@ const AdvancedSettings = ({
                     </div>
                     <div
                         onClick={() => setOpenModal(false)}
-                        className=" cursor-pointer p-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
+                        className=" cursor-pointer p-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                     >
                         <CloseIcon size="12" />
                     </div>

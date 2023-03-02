@@ -113,7 +113,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                     }}
                     disabled={disabled || !mounted}
                     className={classnames(
-                        "p-2 -ml-2 mr-1 cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default",
+                        "p-2 -ml-2 mr-1 cursor-pointer transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default",
                         disabled && "pointer-events-none text-gray-300"
                     )}
                 >
@@ -172,7 +172,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                         }}
                         disabled={disabled}
                         className={classnames(
-                            "p-2 -mr-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default",
+                            "p-2 -mr-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default",
                             disabled && "pointer-events-none text-gray-300"
                         )}
                         type="button"

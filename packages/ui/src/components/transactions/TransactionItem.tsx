@@ -557,7 +557,7 @@ const TransactionItem: React.FC<{
             />
 
             <div
-                className={`flex flex-col px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 ${
+                className={`flex flex-col px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 ${
                     !(txHash && transaction.transactionParams.from) &&
                     "cursor-default"
                 }`}

@@ -28,6 +28,9 @@ module.exports = {
                         100: "#FFECE5",
                         default: "#FF3E00",
                     },
+                    green: {
+                        default: "#3CBF88",
+                    },
                 },
                 gray: {
                     900: "#0A121E",

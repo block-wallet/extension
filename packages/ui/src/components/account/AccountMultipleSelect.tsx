@@ -20,7 +20,7 @@ const AccountMultipleSelect: FunctionComponent<{
         <div className="flex flex-col space-y-3 text-sm text-gray-500">
             {accounts.map((account, i) => (
                 <div
-                    className="flex flex-row items-center space-x-3 cursor-pointer rounded-md hover:bg-primary-100 pl-2"
+                    className="flex flex-row items-center space-x-3 cursor-pointer rounded-md hover:bg-primary-grey-default pl-2"
                     key={i}
                     onClick={() => toggleAccount(account)}
                 >

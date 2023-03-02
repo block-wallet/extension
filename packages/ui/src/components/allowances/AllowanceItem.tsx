@@ -165,7 +165,7 @@ const AllowanceItem = ({
                 "flex flex-row items-center justify-between py-4 mr-1 transition duration-300 -ml-6 px-6 w-[calc(100%+3rem)]",
                 !isHoveringButton &&
                     !open &&
-                    "hover:cursor-pointer hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50"
+                    "hover:cursor-pointer hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50"
             )}
         >
             <DetailsDialog

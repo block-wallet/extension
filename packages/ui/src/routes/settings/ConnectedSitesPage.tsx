@@ -23,10 +23,10 @@ const ConnectedSite: FunctionComponent<{
     return (
         <div className="flex flex-row items-center justify-between w-full ">
             <div
-                className="flex flex-row items-center space-x-4 w-11/12 hover:bg-primary-200 rounded-md p-1 cursor-pointer "
+                className="flex flex-row items-center space-x-4 w-11/12 hover:bg-primary-grey-hover rounded-md p-1 cursor-pointer "
                 onClick={() => onSiteClick(origin)}
             >
-                <div className="flex flex-row items-center justify-center w-10 h-10 p-2 rounded-full bg-primary-100">
+                <div className="flex flex-row items-center justify-center w-10 h-10 p-2 rounded-full bg-primary-grey-default">
                     {site.iconURL ? (
                         <AppIcon iconURL={site.iconURL} size={10} />
                     ) : (
@@ -39,7 +39,7 @@ const ConnectedSite: FunctionComponent<{
             </div>
             <button
                 onClick={() => setConfirmOpen(true)}
-                className="hover:bg-primary-200 p-2 rounded-full"
+                className="hover:bg-primary-grey-hover p-2 rounded-full"
             >
                 <Icon name={IconName.TRASH_BIN} />
             </button>

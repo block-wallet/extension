@@ -47,7 +47,7 @@ const ChainIcon: FunctionComponent<{ iconUrl: string; hide: boolean }> = ({
 }) => {
     const [loaded, setLoaded] = useState(false)
     return (
-        <div className="flex flex-row items-center justify-center w-6 h-6 rounded-full bg-primary-100 mr-2">
+        <div className="flex flex-row items-center justify-center w-6 h-6 rounded-full bg-primary-grey-default mr-2">
             {!hide && !loaded && <Spinner />}
             <img
                 alt="icon"

@@ -114,7 +114,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                             />
                             <img
                                 className={classNames(
-                                    "w-6 h-6 p-1 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-100 rounded-full",
+                                    "w-6 h-6 p-1 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-grey-default rounded-full",
                                     showPassword === false
                                         ? "opacity-100 z-10"
                                         : "opacity-0 pointer-event-none z-0"
@@ -125,7 +125,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                             />
                             <img
                                 className={classNames(
-                                    "w-6 h-6 p-1 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-100 rounded-full",
+                                    "w-6 h-6 p-1 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-grey-default rounded-full",
                                     showPassword === true
                                         ? "opacity-100 z-10"
                                         : "opacity-0 pointer-event-none z-0"

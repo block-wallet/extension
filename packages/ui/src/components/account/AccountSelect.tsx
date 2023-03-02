@@ -220,7 +220,7 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                                                           },
                                                       })
                                                   }}
-                                                  className="cursor-pointer p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default"
+                                                  className="cursor-pointer p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                                               >
                                                   <GearIcon />
                                               </div>,

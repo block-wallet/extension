@@ -215,9 +215,9 @@ const AddTokenManualView = ({
                     <MdRefresh
                         size={18}
                         className={classNames(
-                            "hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-blue-default",
+                            "hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default",
                             refetchAnimation &&
-                                "bg-primary-100 text-primary-blue-default animate-[bounce_1.5s]",
+                                "bg-primary-grey-default text-primary-blue-default animate-[bounce_1.5s]",
                             (!refetchOption || isLoading) && "invisible"
                         )}
                         onClick={() => {

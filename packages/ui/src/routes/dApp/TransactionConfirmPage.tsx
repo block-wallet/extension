@@ -406,7 +406,7 @@ const TransactionConfirm: React.FC<{
                     </div>
                 }
             >
-                <div className="flex items-center p-4 rounded-md bg-primary-100 justify-between  hover:bg-primary-200">
+                <div className="flex items-center p-4 rounded-md bg-primary-grey-default justify-between  hover:bg-primary-grey-hover">
                     <div
                         className={classnames(
                             "flex flex-row items-center pointer-events-none",
@@ -688,7 +688,7 @@ const TransactionConfirm: React.FC<{
                 <div className="flex flex-col space-y-2">
                     <div
                         className={classnames(
-                            "flex flex-col items-start px-4 pt-4 space-y rounded-md bg-primary-100",
+                            "flex flex-col items-start px-4 pt-4 space-y rounded-md bg-primary-grey-default",
                             !hasBalance
                                 ? "border border-red-400 pb-2"
                                 : "border-opacity-0 border-transparent pb-4"

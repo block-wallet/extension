@@ -20,7 +20,11 @@ const ReceivePage = () => {
     }
 
     return (
-        <PopupLayout header={<PopupHeader title="Receive Funds" keepState />}>
+        <PopupLayout
+            header={
+                <PopupHeader title="Receive Funds" keepState networkIndicator />
+            }
+        >
             <div className="flex items-center justify-center my-6">
                 <QRCode value={accountAddress} />
             </div>
@@ -28,7 +32,7 @@ const ReceivePage = () => {
             <div className="flex flex-col items-center justify-center w-full mt-6 px-6">
                 <button
                     type="button"
-                    className="flex flex-row items-stretch justify-between group relative w-full bg-primary-100 rounded-md hover:bg-primary-200 cursor-pointer"
+                    className="flex flex-row items-stretch justify-between group relative w-full bg-primary-grey-default rounded-md hover:bg-primary-grey-hover cursor-pointer"
                     onClick={copyToClipboard}
                 >
                     <span className="flex-grow py-4 px-4 ">

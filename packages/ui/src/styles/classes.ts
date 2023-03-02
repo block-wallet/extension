@@ -40,7 +40,7 @@ export class Classes {
 
     static menuButton = classnames(
         Classes.iconButton,
-        "bg-primary-100 hover:bg-primary-200"
+        "bg-primary-grey-default hover:bg-primary-grey-hover"
     )
 
     static buttonIcon = classnames("w-5 h-5 mr-3")
@@ -104,7 +104,7 @@ export class Classes {
     static placeholder = classnames("overflow-hidden relative placeholder")
 
     static blueSection = classnames(
-        "p-4 border-opacity-0 border-transparent flex justify-between items-center flex-row w-full rounded-md bg-primary-100 border cursor-pointer hover:bg-primary-200"
+        "p-4 border-opacity-0 border-transparent flex justify-between items-center flex-row w-full rounded-md bg-primary-grey-default border cursor-pointer hover:bg-primary-grey-hover"
     )
 
     static greySection = classnames(
@@ -112,14 +112,14 @@ export class Classes {
     )
 
     static blueSelectionDisabled = classnames(
-        "cursor-not-allowed hover:bg-primary-100"
+        "cursor-not-allowed hover:bg-primary-grey-default"
     )
 
     static greySelectionDisabled = classnames(
         "cursor-not-allowed hover:bg-primary-grey-disabled"
     )
 
-    static blueSectionActive = classnames("bg-primary-200")
+    static blueSectionActive = classnames("bg-primary-grey-hover")
     static blueSectionInput = classnames(
         "bg-transparent p-0 mb-1 border-none font-bold"
     )

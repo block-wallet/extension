@@ -804,7 +804,7 @@ const SendConfirmPage = () => {
                             <div
                                 className={classnames(
                                     Classes.greySection,
-                                    inputFocus && "bg-primary-200",
+                                    inputFocus && "bg-primary-grey-hover",
                                     errors.amount && "border-red-400"
                                 )}
                             >
@@ -856,8 +856,8 @@ const SendConfirmPage = () => {
                                         className={classnames(
                                             "float-right rounded-md cursor-pointer border p-1",
                                             usingMax
-                                                ? "bg-primary-blue-default border-primary-blue-default text-white hover:bg-blue-600 hover:border-blue-600"
-                                                : "bg-blue-200 border-blue-200 hover:bg-blue-300 hover:border-blue-300",
+                                                ? "bg-gray-500 border-gray-500 text-white hover:bg-gray-400 hover:border-gray-400"
+                                                : "bg-gray-300 border-gray-300 hover:bg-gray-400 hover:border-gray-400",
                                             !HasBalance(selectedToken) &&
                                                 "pointer-events-none text-gray-600"
                                         )}

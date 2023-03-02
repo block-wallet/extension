@@ -12,7 +12,7 @@ const ClickToReveal: FunctionComponent<{
             <button
                 type="button"
                 onClick={onClick}
-                className="absolute top-0 left-0 z-10 flex flex-col items-center justify-center w-full h-full space-y-2 bg-opacity-25 bg-primary-200"
+                className="absolute top-0 left-0 z-10 flex flex-col items-center justify-center w-full h-full space-y-2 bg-opacity-25 bg-primary-grey-hover"
             >
                 <img src={lockIcon} alt="lock" className="w-5 h-5" />
                 <span className="font-bold">{revealMessage}</span>

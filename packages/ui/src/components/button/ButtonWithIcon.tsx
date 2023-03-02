@@ -23,7 +23,7 @@ export const ButtonWithIcon: FunctionComponent<{
             className={
                 !disableStyles
                     ? `flex flex-row items-center justify-between p-4 rounded-md text-sm transform transition-all duration-300 active:scale-95
-                 disabled:pointer-events-none bg-primary-100 hover:bg-primary-200
+                 disabled:pointer-events-none bg-primary-grey-default hover:bg-primary-grey-hover
                 ${disabled ? "pointer-events-none" : ""}
               `
                     : ""

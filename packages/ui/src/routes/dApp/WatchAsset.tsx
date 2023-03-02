@@ -165,7 +165,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                     />
                 </div>
                 <div className="flex flex-row items-center px-6 py-3">
-                    <div className="flex flex-row items-center justify-center w-10 h-10 rounded-full bg-primary-100">
+                    <div className="flex flex-row items-center justify-center w-10 h-10 rounded-full bg-primary-grey-default">
                         <img
                             alt="icon"
                             src={
@@ -251,7 +251,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
             <Divider />
             {isUpdate ? UpdateAssetLayout() : null}
             <div className="flex flex-row items-center px-6 pt-6 pb-3">
-                <div className="flex flex-row items-center justify-center w-10 h-10 rounded-full bg-primary-100">
+                <div className="flex flex-row items-center justify-center w-10 h-10 rounded-full bg-primary-grey-default">
                     <img alt="icon" src={assetImageSrc()} />
                 </div>
                 <button

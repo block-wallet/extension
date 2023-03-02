@@ -19,7 +19,7 @@ const AppIcon = ({
         className={classnames(
             "flex flex-row items-center justify-center rounded-full",
             `w-${size} h-${size}`,
-            background && "bg-primary-100"
+            background && "bg-primary-grey-default"
         )}
     >
         {iconURL ? (

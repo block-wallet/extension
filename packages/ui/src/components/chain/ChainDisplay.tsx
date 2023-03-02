@@ -26,8 +26,8 @@ const ChainDisplay: FC<Props> = ({
         <div
             className={classnames(
                 "flex justify-between items-center flex-row relative px-3 rounded-md transition-all duration-300 active:scale-95",
-                onClick && "cursor-pointer hover:bg-primary-100",
-                selected && "bg-primary-200"
+                onClick && "cursor-pointer hover:bg-primary-grey-default",
+                selected && "bg-primary-grey-hover"
             )}
             onClick={onClick}
         >

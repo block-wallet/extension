@@ -115,7 +115,7 @@ const SearchedTokenView = ({
                             alt="search"
                             className="w-7 h-7 absolute z-10"
                         />
-                        <div className="w-20 h-20 bg-primary-100 rounded-full relative z-0"></div>
+                        <div className="w-20 h-20 bg-primary-grey-default rounded-full relative z-0"></div>
                     </div>
                     <span className="text-sm text-gray-600 text-center">
                         Add the tokens that you've acquired using BlockWallet.

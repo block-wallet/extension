@@ -33,9 +33,9 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
         label: string
         component: () => JSX.Element
     }) => {
-        console.log("New value: " + value)
         setTab(value)
-        // updatePopupTab(value.label.toLowerCase() as PopupTabs)
+        updatePopupTab(value.label.toLowerCase() as PopupTabs)
+        setCurrentTabLabel(value.label)
     }
 
     //UseHotkeys changes state.popupTab, we do it to change the tab in real time, otherwise it will change only next time we open the extension
@@ -52,7 +52,6 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
     useHotkeys("alt+n", () => {
         console.log("Entra")
         console.log(tab.label)
-        console.log(state.popupTab)
         console.log(currentTabLabel)
         if (currentTabLabel === "Assets") {
             history.push({

@@ -35,11 +35,11 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
     }) => {
         setTab(value)
         updatePopupTab(value.label.toLowerCase() as PopupTabs)
-        setCurrentTabLabel(value.label)
     }
 
     //UseHotkeys changes state.popupTab, we do it to change the tab in real time, otherwise it will change only next time we open the extension
     useEffect(() => {
+        setCurrentTabLabel(state.popupTab)
         if (state.popupTab !== tab.label.toLocaleLowerCase()) {
             const newTab = tabs.find(
                 (l) => l.label.toLocaleLowerCase() === state.popupTab
@@ -53,7 +53,7 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
         console.log("Entra")
         console.log(tab.label)
         console.log(currentTabLabel)
-        if (currentTabLabel === "Assets") {
+        if (currentTabLabel.toLocaleLowerCase() === "assets") {
             history.push({
                 pathname: "/settings/tokens/add",
                 state: {

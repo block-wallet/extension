@@ -50,20 +50,6 @@ const WalletIcon: React.FC<{ className?: string }> = ({ className }) => {
                     filterUnits="userSpaceOnUse"
                     color-interpolation-filters="sRGB"
                 >
-                    <feFlood flood-opacity="0" result="BackgroundImageFix" />
-                    <feColorMatrix
-                        in="SourceAlpha"
-                        type="matrix"
-                        values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                        result="hardAlpha"
-                    />
-                    <feOffset dy="4" />
-                    <feGaussianBlur stdDeviation="2" />
-                    <feComposite in2="hardAlpha" operator="out" />
-                    <feColorMatrix
-                        type="matrix"
-                        values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
-                    />
                     <feBlend
                         mode="normal"
                         in2="BackgroundImageFix"

@@ -12,7 +12,7 @@ const IntroductionPage = () => (
                     Welcome to BlockWallet
                 </span>
                 <div className="flex flex-col md:flex-row items-center space-x-1 w-52 md:w-full mx-auto text-gray-600 text-lg justify-center text-center">
-                    <span>Protecting you on Web3 without compromises.</span>
+                    <span>Protecting you on Web3 without compromise.</span>
                 </div>
             </div>
             <Link

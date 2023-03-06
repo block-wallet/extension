@@ -63,15 +63,6 @@ const SetupPage = () => {
                     linkLabel="Create new wallet"
                 />
             </div>
-
-            <a
-                href="https://blog.blockwallet.io/"
-                target="_blank"
-                rel="noreferrer"
-                className="text-primary-blue-default mb-6 hover:text-primary-blue-hover"
-            >
-                BlockWallet Blog
-            </a>
         </PageLayout>
     )
 }

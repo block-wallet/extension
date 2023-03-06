@@ -207,7 +207,7 @@ const SeedImport: FunctionComponent<{
                         />
                     </div>
                     <div className="flex flex-col space-y-1">
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                             {Array.from({ length: numberOfWords }, (v, i) => {
                                 const wordnN = i + 1
                                 return (

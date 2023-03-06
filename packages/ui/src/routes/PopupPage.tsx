@@ -271,7 +271,7 @@ const PopupPage = () => {
                                                 </div>
                                             </div>
                                         }
-                                        className="!-mb-4 !text-primary-black-default"
+                                        className="!-mb-4 !text-primary-black-default !-translate-x-[37.3%]"
                                     />
                                 </TokenSummary.ExchangeRateBalance>
                             </a>

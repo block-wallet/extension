@@ -73,12 +73,14 @@ export default class NetworkController extends BaseController<NetworkControllerS
         this._updateProviderNetworkStatus();
 
         // Set the error handler for the provider to check for network status
-        this.provider.on('error', this._updateProviderNetworkStatus);
+        this.provider.on('error', (err) => {
+            return this._updateProviderNetworkStatus({ err });
+        });
 
         // Periodical checks when provider is down
-        setInterval(() => {
+        setInterval(async () => {
             if (!this.getState().isProviderNetworkOnline) {
-                this._updateProviderNetworkStatus();
+                await this._updateProviderNetworkStatus({ timeout: 3000 });
             }
         }, 3000);
 
@@ -497,11 +499,22 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * @returns {StaticJsonRpcProvider}
      */
     public getProviderFromName = (
-        networkName: string
+        networkName: string,
+        timeout?: number
     ): StaticJsonRpcProvider => {
         const network = this.searchNetworkByName(networkName);
-        return this._getProviderForNetwork(network.chainId, network.rpcUrls[0]);
+        return this._getProviderForNetwork(
+            network.chainId,
+            network.rpcUrls[0],
+            timeout
+        );
     };
+
+    private _getCurrentProviderWithTimeout(
+        timeout: number
+    ): StaticJsonRpcProvider {
+        return this.getProviderFromName(this.network.name, timeout);
+    }
 
     /**
      * Gets a provider for a given chainId.
@@ -541,7 +554,11 @@ export default class NetworkController extends BaseController<NetworkControllerS
         }
     };
 
-    private _getProviderForNetwork(chainId: number, rpcUrl: string) {
+    private _getProviderForNetwork(
+        chainId: number,
+        rpcUrl: string,
+        timeout?: number
+    ) {
         const blockWalletNode = isABlockWalletNode(rpcUrl);
         return this._overloadProviderMethods(
             { chainId },
@@ -549,6 +566,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 {
                     url: rpcUrl,
                     allowGzip: blockWalletNode,
+                    timeout,
                     headers: blockWalletNode
                         ? customHeadersForBlockWalletNode
                         : undefined,
@@ -772,13 +790,23 @@ export default class NetworkController extends BaseController<NetworkControllerS
         this.emit(NetworkEvents.USER_NETWORK_CHANGE, newValue);
     }
 
-    private _updateProviderNetworkStatus = (err?: {
-        code: ErrorCode;
-        body?: string;
-    }) => {
+    private _updateProviderNetworkStatus = (
+        options: {
+            err?: {
+                code: ErrorCode;
+                body?: string;
+            };
+            timeout?: number;
+        } = {}
+    ) => {
+        const { timeout, err } = options;
         const errorCodes = [ErrorCode.SERVER_ERROR, ErrorCode.TIMEOUT];
         if (!err || errorCodes.includes(err.code)) {
-            this._isProviderReady()
+            let provider = this.provider;
+            if (timeout) {
+                provider = this._getCurrentProviderWithTimeout(timeout);
+            }
+            this._isProviderReady(provider)
                 .then(() => {
                     return Promise.resolve(true);
                 })
@@ -796,6 +824,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                     this.emit(NetworkEvents.PROVIDER_NETWORK_CHANGE, newStatus);
                 });
         }
+        return Promise.resolve(true);
     };
 
     private _isProviderReady(

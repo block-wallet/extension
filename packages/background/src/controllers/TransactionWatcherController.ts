@@ -1459,12 +1459,21 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         currentTransactions: TransactionByHash,
         newTransactions: TransactionByHash
     ) => {
+        const allTransactions = this._transactionController.getTransactions();
+
         if (Object.keys(currentTransactions).length) {
             for (const transactionHash in newTransactions) {
                 if (
                     this._sameAddress(
                         newTransactions[transactionHash].transactionParams.to,
                         address
+                    ) &&
+                    // Discard incoming transaction if it's from a BlockWallet swap
+                    !allTransactions.find(
+                        (tx) =>
+                            tx.transactionParams.hash === transactionHash &&
+                            tx.transactionCategory ===
+                                TransactionCategories.EXCHANGE
                     )
                 ) {
                     this.emit(

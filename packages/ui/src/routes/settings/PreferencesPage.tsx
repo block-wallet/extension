@@ -41,8 +41,8 @@ const PreferencesPage = () => {
         },
         {
             icon: bell,
-            label: "Warnings",
-            to: "/settings/preferences/warnings",
+            label: "Notifications & Warnings",
+            to: "/settings/preferences/notificationsAndWarnings",
         },
         {
             icon: shield,

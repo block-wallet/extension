@@ -1,217 +1,317 @@
+import { BigNumber } from '@ethersproject/bignumber';
+import { createCustomExplorerLink } from '@block-wallet/explorer-link';
+import { ChainListItem, getChainListItem } from './chainlist';
 import {
+    MetaType,
     TransactionCategories,
     TransactionMeta,
     TransactionStatus,
 } from '../controllers/transactions/utils/types';
-import {
-    createCustomAccountLink,
-    createCustomExplorerLink,
-} from '@block-wallet/explorer-link';
-import { getChainListItem } from './chainlist';
+import { formatTokenAmount } from './token';
+import { fetchContractDetails } from './contractsInfo';
 
-export const showSetUpCompleteNotification = (): void => {
+//TODO: change this to a class with static methods to make use of other controllers like accounts(account name)
+
+interface ChainListItemWithExplorerUrl extends ChainListItem {
+    explorerUrl: string;
+}
+
+/**
+ * Shows a notification when the user has completed the set-up process.
+ */
+export const showSetUpCompleteNotification = () => {
     const url = '';
-    const title = 'Block Wallet is ready!';
+    const title = 'BlockWallet is ready!';
     const message =
         "You've completed the set-up process. Check the extension in the upper right corner of your browser.";
 
     showNotification(title, message, url);
 };
 
-export const showTransactionNotification = (txMeta: TransactionMeta): void => {
-    const { status, transactionCategory } = txMeta;
+/**
+ * Shows a notification including the transaction info and open link to explorer on click.
+ * @param txMeta - The transaction meta object.
+ */
+export const showTransactionNotification = async (txMeta: TransactionMeta) => {
+    const network = getNetworkData(txMeta.chainId);
+    if (!network) return;
 
-    if (
-        transactionCategory === TransactionCategories.BLANK_DEPOSIT ||
-        transactionCategory === TransactionCategories.BLANK_WITHDRAWAL
-    ) {
-        showBlankContractNotification(txMeta);
-    } else if (status === TransactionStatus.CONFIRMED) {
-        showSucceededTransaction(txMeta);
-    } else if (status === TransactionStatus.FAILED) {
-        showFailedTransaction(txMeta);
-    } else if (status === TransactionStatus.REJECTED) {
-        showRejectedTransaction(txMeta.error?.message ?? '');
-    }
-};
+    // the cancel transaction is not shown in the notification only the cancelation
+    if (txMeta.metaType === MetaType.CANCEL) return;
 
-export const showBlankContractNotification = (
-    txMeta: TransactionMeta
-): void => {
-    const { status } = txMeta;
-
-    if (status === TransactionStatus.CONFIRMED) {
-        showSucceededBlankInteraction(txMeta);
-    } else if (status === TransactionStatus.FAILED) {
-        showFailedBlankInteraction(txMeta);
-    } else if (status === TransactionStatus.REJECTED) {
-        showRejectedBlankInteraction(txMeta.error?.message ?? '');
-    }
-};
-
-export const showIncomingTransactionNotification = (
-    account: string,
-    chainId: number,
-    section?: '' | 'tokentxns' | 'tokentxnsErc721' | 'tokentxnsErc1155'
-): void => {
-    const explorerUrl = getExplorerUrl(chainId);
-    if (!explorerUrl) {
-        return;
-    }
-
-    addOnClickListener();
-
-    const url = createCustomAccountLink(
-        account as string,
-        explorerUrl,
-        section
+    const { title, message, url } = await getTxNotificationData(
+        txMeta,
+        network
     );
-    const title = 'Incoming Transaction';
-    const message = 'An incoming transaction to your address was confirmed!';
 
-    showNotification(title, message, url);
+    const accountAddress = txMeta.transactionParams.from;
+    const accountName = accountAddress
+        ? `Account (${accountAddress?.slice(0, 6)}...${accountAddress?.slice(
+              accountAddress.length - 4
+          )})`
+        : undefined;
+    showNotification(title, message, url, accountName);
 };
 
-const showSucceededTransaction = (txMeta: TransactionMeta) => {
-    const { chainId, transactionParams } = txMeta;
-    if (!chainId) {
-        return;
+/**
+ * Shows a browser notification and open link on click.
+ *
+ * @param title - The notification title.
+ * @param message - The notification message.
+ * @param url - The url to open on click.
+ * @param contextMessage - The context message.
+ *
+ */
+const showNotification = (
+    title: string,
+    message: string,
+    url: string,
+    contextMessage?: string
+) => {
+    let notificationUrl = url;
+    if (url) {
+        addOnClickListener();
+
+        // To prevent duplicate notifications id which causes the notification to not show (overrides the old one)
+        const urlObject = new URL(url);
+        urlObject.searchParams.set('timestamp', Date.now().toString());
+        notificationUrl = urlObject.toString();
     }
-
-    const explorerUrl = getExplorerUrl(chainId);
-    if (!explorerUrl) {
-        return;
-    }
-
-    addOnClickListener();
-
-    const { hash, nonce } = transactionParams;
-
-    const url = createCustomExplorerLink(hash as string, explorerUrl);
-    const title = 'Transaction confirmed';
-    const message = `Transaction with nonce ${nonce} confirmed!`;
-
-    showNotification(title, message, url);
-};
-
-const showSucceededBlankInteraction = (txMeta: TransactionMeta) => {
-    const { chainId, transactionParams } = txMeta;
-    if (!chainId) {
-        return;
-    }
-
-    const explorerUrl = getExplorerUrl(chainId);
-    if (!explorerUrl) {
-        return;
-    }
-
-    addOnClickListener();
-
-    const { hash } = transactionParams;
-
-    const url = createCustomExplorerLink(hash as string, explorerUrl);
-    const title = 'Blank interaction succeeded';
-    const message = 'Privacy Smart Contract interaction has been confirmed!';
-
-    showNotification(title, message, url);
-};
-
-const showFailedTransaction = (txMeta: TransactionMeta) => {
-    const { chainId, transactionParams } = txMeta;
-    if (!chainId) {
-        return;
-    }
-
-    const explorerUrl = getExplorerUrl(chainId);
-    if (!explorerUrl) {
-        return;
-    }
-
-    addOnClickListener();
-
-    const { hash, nonce } = transactionParams;
-
-    const url = createCustomExplorerLink(hash as string, explorerUrl);
-    const title = 'Transaction failed';
-    const message = `Transaction with nonce ${nonce} failed!`;
-
-    showNotification(title, message, url);
-};
-
-const showFailedBlankInteraction = (txMeta: TransactionMeta) => {
-    const { chainId, transactionParams } = txMeta;
-    if (!chainId) {
-        return;
-    }
-
-    const explorerUrl = getExplorerUrl(chainId);
-    if (!explorerUrl) {
-        return;
-    }
-
-    addOnClickListener();
-
-    const { hash } = transactionParams;
-
-    const url = createCustomExplorerLink(hash as string, explorerUrl);
-    const title = 'Blank interaction failed';
-    const message = 'Privacy Smart Contract interaction failed!';
-
-    showNotification(title, message, url);
-};
-
-const showRejectedTransaction = (message: string) => {
-    addOnClickListener();
-
-    const title = 'Transaction was rejected';
-
-    showNotification(title, message, '');
-};
-
-const showRejectedBlankInteraction = (message: string) => {
-    addOnClickListener();
-
-    const title = 'Blank interaction rejected';
-
-    showNotification(title, message, '');
-};
-
-const showNotification = (title: string, message: string, url: string) => {
-    chrome.notifications.create(url, {
+    chrome.notifications.create(notificationUrl, {
         title: title,
         message: message,
         iconUrl: chrome.runtime.getURL('icons/icon-48.png'),
         type: 'basic',
+        isClickable: url ? true : false,
+        contextMessage: contextMessage,
     });
 };
 
 const addOnClickListener = () => {
-    if (!chrome.notifications.onClicked.hasListener(linkToEtherscan)) {
-        chrome.notifications.onClicked.addListener(linkToEtherscan);
+    const onClickListener = chrome.notifications.onClicked;
+
+    if (!onClickListener.hasListener(linkToExplorer)) {
+        onClickListener.addListener(linkToExplorer);
     }
 };
 
-const linkToEtherscan = (url: string) => {
+const linkToExplorer = (url: string) => {
     if (url.startsWith('https://')) {
         chrome.tabs.create({ url: url });
     }
 };
 
-const getExplorerUrl = (chainId: number) => {
-    if (isNaN(chainId)) {
+/**
+ * Gets the network data from the chain list.
+ * @param chainId - The chain id.
+ * @returns The network data.
+ *
+ */
+const getNetworkData = (chainId: number | undefined) => {
+    if (!chainId || isNaN(chainId)) return undefined;
+
+    const networkData = getChainListItem(chainId);
+
+    if (!networkData || !networkData.explorers || !networkData.explorers.length)
         return undefined;
+
+    const explorerUrl = networkData.explorers.find((e) => e.url)?.url;
+    if (!explorerUrl) return undefined;
+
+    return { ...networkData, explorerUrl } as ChainListItemWithExplorerUrl;
+};
+
+const getTxNotificationData = async (
+    txMeta: TransactionMeta,
+    network: ChainListItemWithExplorerUrl
+) => {
+    const {
+        transactionParams: txParams,
+        transactionCategory,
+        status,
+        exchangeParams,
+        bridgeParams,
+        approveAllowanceParams,
+        transferType,
+        chainId,
+    } = txMeta;
+
+    const {
+        name: txNetworkName,
+        nativeCurrency: txNetworkNativeToken,
+        explorerUrl,
+    } = network;
+
+    let title = '';
+    let message = '';
+    let url = '';
+
+    if (txParams.hash) {
+        url = createCustomExplorerLink(txParams.hash, explorerUrl);
     }
 
-    const network = getChainListItem(chainId);
-    if (!network) {
-        return undefined;
-    }
-    if (!network.explorers || !network.explorers.length) {
-        return undefined;
-    }
-    if (!network.explorers.some((e) => e.url)) {
-        return undefined;
+    const isTxFailed = status === TransactionStatus.FAILED;
+    const isTxCancelled = status === TransactionStatus.CANCELLED;
+
+    // Used when the transaction category is not supported or there is no data for the transaction category.
+    let showDefaultNotification = false;
+
+    switch (transactionCategory) {
+        case TransactionCategories.EXCHANGE:
+            if (!exchangeParams) {
+                showDefaultNotification = true;
+                break;
+            }
+            title = `Swap`;
+            message = `${exchangeParams.fromToken.symbol} to ${exchangeParams.toToken.symbol} swap on ${txNetworkName}`;
+            break;
+        case TransactionCategories.BRIDGE:
+            if (!bridgeParams) {
+                showDefaultNotification = true;
+                break;
+            }
+            title = `Bridge`;
+            message = `${getNetworkData(bridgeParams.fromChainId)?.name} to ${
+                getNetworkData(bridgeParams.toChainId)?.name
+            } bridge`;
+            break;
+        case TransactionCategories.TOKEN_METHOD_APPROVE: {
+            if (!approveAllowanceParams) {
+                showDefaultNotification = true;
+                break;
+            }
+            const {
+                spenderAddress,
+                spenderInfo,
+                token,
+                allowanceValue,
+                isUnlimited,
+            } = approveAllowanceParams;
+            const isRevoke = BigNumber.from(allowanceValue).eq(0);
+            const spenderName =
+                spenderInfo?.name ??
+                `Spender (${spenderAddress?.slice(
+                    0,
+                    6
+                )}...${spenderAddress?.slice(spenderAddress.length - 4)})`;
+            if (!isRevoke) {
+                title = `Token Approval`;
+                message = `Approval of ${
+                    isUnlimited
+                        ? `unlimited ${token.symbol}`
+                        : formatTokenAmount(
+                              allowanceValue,
+                              token.decimals,
+                              token.symbol
+                          )
+                } for use with ${spenderName} on ${txNetworkName}`;
+            } else {
+                title = `Approval Revoke`;
+                message = `${token.symbol} approval revoke for ${spenderName} on ${txNetworkName}`;
+            }
+            break;
+        }
+        case TransactionCategories.SENT_ETHER:
+            title = `Transaction`;
+            message = `${txNetworkNativeToken.symbol} transfer on ${txNetworkName}`;
+            break;
+        case TransactionCategories.TOKEN_METHOD_TRANSFER:
+            if (!transferType) {
+                showDefaultNotification = true;
+                break;
+            }
+            title = `Transaction`;
+            message = `${transferType.currency} transfer on ${txNetworkName}`;
+            break;
+        case TransactionCategories.INCOMING:
+            if (!txParams || !txParams.value) {
+                showDefaultNotification = true;
+                break;
+            }
+            title = `Incoming Transaction`;
+            message = `Received ${formatTokenAmount(
+                txParams.value,
+                txNetworkNativeToken.decimals,
+                txNetworkNativeToken.symbol
+            )} on ${txNetworkName}.`;
+            break;
+        case TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER: {
+            if (!transferType) {
+                showDefaultNotification = true;
+                break;
+            }
+
+            title = 'Incoming Transaction';
+            message = `Received ${formatTokenAmount(
+                transferType.amount,
+                transferType.decimals,
+                transferType.currency
+            )} on ${txNetworkName}.`;
+            break;
+        }
+        case TransactionCategories.CONTRACT_INTERACTION: {
+            if (!txParams || !txParams.to || !chainId) {
+                showDefaultNotification = true;
+                break;
+            }
+            const contractAddress = txParams.to;
+            const contractDetails = await fetchContractDetails(
+                chainId,
+                contractAddress
+            );
+            const contractName =
+                contractDetails?.name ??
+                `Contract (${contractAddress?.slice(
+                    0,
+                    6
+                )}...${contractAddress?.slice(contractAddress.length - 4)})`;
+
+            title = `Contract Interaction`;
+            message = `Transaction with ${contractName} on ${txNetworkName}`;
+            break;
+        }
+        case TransactionCategories.CONTRACT_DEPLOYMENT:
+            title = `Contract Deploy`;
+            message = `Contract deployment on ${txNetworkName}`;
+            break;
+        default:
+            showDefaultNotification = true;
+            break;
     }
 
-    return network.explorers.find((e) => e.url)?.url;
+    if (showDefaultNotification) {
+        title = 'Transaction';
+        message = `Transaction on ${txNetworkName}`;
+    }
+
+    const incomingTxCategories = [
+        TransactionCategories.INCOMING,
+        TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER,
+    ];
+
+    if (
+        transactionCategory &&
+        !incomingTxCategories.includes(transactionCategory)
+    ) {
+        title =
+            title +
+            (!isTxFailed && !isTxCancelled
+                ? ' Completed'
+                : isTxCancelled
+                ? ' Cancelled'
+                : ' Failed');
+        message =
+            message +
+            (!isTxFailed && !isTxCancelled
+                ? ' completed.'
+                : isTxCancelled
+                ? ' cancelled.'
+                : ' failed.');
+    }
+
+    return {
+        title,
+        message,
+        url,
+    };
 };

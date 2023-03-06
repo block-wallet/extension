@@ -427,9 +427,16 @@ export class TransactionController extends BaseController<
         this.on(
             TransactionEvents.STATUS_UPDATE,
             (transactionMeta: TransactionMeta) => {
+                const notificationTxStatuses = [
+                    TransactionStatus.CONFIRMED,
+                    TransactionStatus.FAILED,
+                    TransactionStatus.CANCELLED,
+                ];
+
                 if (
-                    transactionMeta.status === TransactionStatus.CONFIRMED ||
-                    transactionMeta.status === TransactionStatus.FAILED
+                    this._preferencesController.settings
+                        .subscribedToNotifications &&
+                    notificationTxStatuses.includes(transactionMeta.status)
                 ) {
                     showTransactionNotification(transactionMeta);
                 }

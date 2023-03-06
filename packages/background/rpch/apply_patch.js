@@ -15,6 +15,12 @@ function patchBackgroundJs() {
         'var ctx = global.fetch ? global : __self__;'
     );
     fs.writeFileSync(filePath, updatedContent);
+    const updatedContentProd = content.replace(
+        'var n=r;',
+        'var n=globalThis.fetch?globalThis:r;'
+    );
+    fs.writeFileSync(filePath, updatedContentProd);
+
 }
 
 function patchWasm() {

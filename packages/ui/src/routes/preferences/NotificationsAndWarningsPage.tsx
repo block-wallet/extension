@@ -13,17 +13,19 @@ import { deepEqual } from "../../util/objectUtils"
 import { mergeReducer } from "../../util/reducerUtils"
 
 interface State {
+    subscribedToNotifications: boolean
     hideAddressWarning: boolean
     hideEstimatedGasExceedsThresholdWarning: boolean
     hideBridgeInsufficientNativeTokenWarning: boolean
 }
 
-const WarningsPreferencesPage = () => {
+const NotificationsAndWarningsPage = () => {
     const { settings } = useBlankState()!
     const { run, isSuccess, isError, isLoading } = useAsyncInvoke()
     const history = useHistory()
 
     const initialState = useRef<State>({
+        subscribedToNotifications: settings.subscribedToNotifications,
         hideAddressWarning: settings.hideAddressWarning,
         hideEstimatedGasExceedsThresholdWarning:
             settings.hideEstimatedGasExceedsThresholdWarning,
@@ -31,7 +33,7 @@ const WarningsPreferencesPage = () => {
             settings.hideBridgeInsufficientNativeTokenWarning,
     })
 
-    const [warningsConfig, setWarningsConfig] = useReducer(
+    const [preferencesConfig, setPreferencesConfig] = useReducer(
         mergeReducer<State, any>(),
         initialState.current
     )
@@ -40,27 +42,31 @@ const WarningsPreferencesPage = () => {
         run(
             setUserSettings({
                 ...settings,
-                hideAddressWarning: warningsConfig.hideAddressWarning,
+                subscribedToNotifications:
+                    preferencesConfig.subscribedToNotifications,
+                hideAddressWarning: preferencesConfig.hideAddressWarning,
                 hideEstimatedGasExceedsThresholdWarning:
-                    warningsConfig.hideEstimatedGasExceedsThresholdWarning,
+                    preferencesConfig.hideEstimatedGasExceedsThresholdWarning,
                 hideBridgeInsufficientNativeTokenWarning:
-                    warningsConfig.hideBridgeInsufficientNativeTokenWarning,
+                    preferencesConfig.hideBridgeInsufficientNativeTokenWarning,
             })
         )
     }
     if (isError) {
-        throw new Error("Could not update the address warning configuration.")
+        throw new Error(
+            "Could not update the address notifications and warning configuration."
+        )
     }
 
     return (
         <PopupLayout
-            header={<PopupHeader title="Warnings" close="/" />}
+            header={<PopupHeader title="Notifications & Warnings" close="/" />}
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
                         label="Save"
                         disabled={deepEqual(
-                            warningsConfig,
+                            preferencesConfig,
                             initialState.current
                         )}
                         onClick={onSave}
@@ -71,15 +77,32 @@ const WarningsPreferencesPage = () => {
         >
             <div className="flex flex-col p-6 space-y-6 w-full">
                 <span className="text-sm text-gray-500">
+                    Receive BlockWallet's browser notifications.
+                </span>
+
+                <ToggleButton
+                    id="notifications"
+                    label="Show Browser Notifications"
+                    defaultChecked={preferencesConfig.subscribedToNotifications}
+                    onToggle={(value) =>
+                        setPreferencesConfig({
+                            subscribedToNotifications: value,
+                        })
+                    }
+                />
+
+                <hr />
+                <span className="text-sm text-gray-500">
                     Warn me when my selected account address is different from
                     transaction's address.
                 </span>
 
                 <ToggleButton
+                    id="addressWarning"
                     label="Show Different Addresses Warning"
-                    defaultChecked={!warningsConfig.hideAddressWarning}
+                    defaultChecked={!preferencesConfig.hideAddressWarning}
                     onToggle={(value) =>
-                        setWarningsConfig({
+                        setPreferencesConfig({
                             hideAddressWarning: !value,
                         })
                     }
@@ -92,13 +115,12 @@ const WarningsPreferencesPage = () => {
                 </span>
                 <ToggleButton
                     id="gasWarning"
-                    //inputName="gasWarning"
                     label="Show Gas Price Warning"
                     defaultChecked={
-                        !warningsConfig.hideEstimatedGasExceedsThresholdWarning
+                        !preferencesConfig.hideEstimatedGasExceedsThresholdWarning
                     }
                     onToggle={(value) =>
-                        setWarningsConfig({
+                        setPreferencesConfig({
                             hideEstimatedGasExceedsThresholdWarning: !value,
                         })
                     }
@@ -113,10 +135,10 @@ const WarningsPreferencesPage = () => {
                     id="bridgeNativeTokenWarning"
                     label="Show Bridging Warning"
                     defaultChecked={
-                        !warningsConfig.hideBridgeInsufficientNativeTokenWarning
+                        !preferencesConfig.hideBridgeInsufficientNativeTokenWarning
                     }
                     onToggle={(value) =>
-                        setWarningsConfig({
+                        setPreferencesConfig({
                             hideBridgeInsufficientNativeTokenWarning: !value,
                         })
                     }
@@ -124,13 +146,13 @@ const WarningsPreferencesPage = () => {
             </div>
             <SuccessDialog
                 open={isSuccess}
-                title="Warnings"
+                title="Notifications & Warnings"
                 timeout={800}
-                message="Your changes have been succesfully saved!"
+                message="Your changes have been successfully saved!"
                 onDone={history.goBack}
             />
         </PopupLayout>
     )
 }
 
-export default WarningsPreferencesPage
+export default NotificationsAndWarningsPage

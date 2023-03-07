@@ -39,6 +39,7 @@ import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnima
 import TransparentOverlay from "../components/loading/TransparentOverlay"
 import Icon, { IconName } from "../components/ui/Icon"
 import useNetWorthBalance from "../context/hooks/useNetWorthBalance"
+import { AiFillInfoCircle } from "react-icons/ai"
 
 const AccountDisplay = () => {
     const accountAddress = useSelectedAddressWithChainIdChecksum()
@@ -243,38 +244,46 @@ const PopupPage = () => {
                             <TokenSummary.TokenBalance title={netWorth}>
                                 {netWorth}
                             </TokenSummary.TokenBalance>
-                            <a
-                                href="https://ethereum.org/en/developers/docs/gas/"
-                                target="_blank"
-                                rel="noreferrer"
-                                className="contents"
-                            >
-                                <TokenSummary.ExchangeRateBalance className="group relative">
-                                    Net Worth
-                                    <Tooltip
-                                        content={
-                                            <div className="flex flex-col font-normal items-start text-xs text-white-500">
-                                                <div className="flex flex-row items-end space-x-7">
-                                                    <span>
-                                                        Your NET worth is the
-                                                        summed{" "}
-                                                        {state.nativeCurrency.toUpperCase()}{" "}
-                                                        value
-                                                        <br /> of all assets in
-                                                        your asset list.
-                                                    </span>{" "}
+
+                            <TokenSummary.ExchangeRateBalance className="flex items-center">
+                                <div className="group relative">
+                                    <a
+                                        href="https://ethereum.org/en/developers/docs/gas/"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="contents"
+                                    >
+                                        <AiFillInfoCircle
+                                            size={23}
+                                            className="pr-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
+                                        />
+
+                                        <Tooltip
+                                            content={
+                                                <div className="flex flex-col font-normal items-start text-xs text-white-500">
+                                                    <div className="flex flex-row items-end space-x-7">
+                                                        <span>
+                                                            Your NET worth is
+                                                            the summed{" "}
+                                                            {state.nativeCurrency.toUpperCase()}{" "}
+                                                            value
+                                                            <br /> of all assets
+                                                            in your asset list.
+                                                        </span>{" "}
+                                                    </div>
+                                                    <div className="flex flex-row items-end space-x-4">
+                                                        <span>
+                                                            Click to learn more.
+                                                        </span>{" "}
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-row items-end space-x-4">
-                                                    <span>
-                                                        Click to learn more.
-                                                    </span>{" "}
-                                                </div>
-                                            </div>
-                                        }
-                                        className="!-mb-4 !text-primary-black-default !-translate-x-[37.3%]"
-                                    />
-                                </TokenSummary.ExchangeRateBalance>
-                            </a>
+                                            }
+                                            className="!-mb-4 !text-primary-black-default"
+                                        />
+                                    </a>
+                                </div>
+                                Net Worth
+                            </TokenSummary.ExchangeRateBalance>
                         </TokenSummary.Balances>
                         <TokenSummary.Actions>
                             <Link

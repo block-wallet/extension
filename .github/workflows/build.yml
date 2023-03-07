@@ -200,7 +200,7 @@ jobs:
       DBUS_SESSION_BUS_ADDRESS: /dev/null
     steps:
       - name: Checkout e2e repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: block-wallet/e2e-tests
           ref: refs/heads/main

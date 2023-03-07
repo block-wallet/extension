@@ -42,6 +42,7 @@ import TokenSummary from "../components/token/TokenSummary"
 import GasPricesInfo from "../components/gas/GasPricesInfo"
 import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
 import TransparentOverlay from "../components/loading/TransparentOverlay"
+import Icon, { IconName } from "../components/ui/Icon"
 
 const AccountDisplay = () => {
     const accountAddress = useSelectedAddressWithChainIdChecksum()
@@ -59,7 +60,11 @@ const AccountDisplay = () => {
             className="relative flex flex-col group"
             onClick={copy}
         >
-            <span className="text-sm font-bold" data-testid="account-name">
+            <span
+                className="text-sm font-bold truncate max-w-[96px]"
+                data-testid="account-name"
+                title={account.name}
+            >
                 {formatName(account.name, 18)}
             </span>
             <span className="text-xs text-gray-600 truncate">
@@ -155,6 +160,8 @@ const PopupPage = () => {
 
     const isLoading =
         state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+
+    const disabledActions = !isSendEnabled || !state.isUserNetworkOnline
 
     return (
         <PageLayout screen className="max-h-screen popup-layout">
@@ -291,13 +298,13 @@ const PopupPage = () => {
                                 draggable={false}
                                 className={classnames(
                                     "flex flex-col items-center space-y-2 group",
-                                    !isSendEnabled && "pointer-events-none"
+                                    disabledActions && "pointer-events-none"
                                 )}
                             >
                                 <div
                                     className={classnames(
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        !isSendEnabled
+                                        disabledActions
                                             ? "bg-gray-300"
                                             : "bg-primary-300"
                                     )}
@@ -326,16 +333,13 @@ const PopupPage = () => {
                                     draggable={false}
                                     className={classnames(
                                         "flex flex-col items-center space-y-2 group",
-                                        (!isSendEnabled ||
-                                            !state.isUserNetworkOnline) &&
-                                            "pointer-events-none"
+                                        disabledActions && "pointer-events-none"
                                     )}
                                 >
                                     <div
                                         className={classnames(
                                             "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                            !isSendEnabled ||
-                                                !state.isUserNetworkOnline
+                                            disabledActions
                                                 ? "bg-gray-300"
                                                 : "bg-primary-300"
                                         )}
@@ -365,16 +369,13 @@ const PopupPage = () => {
                                     draggable={false}
                                     className={classnames(
                                         "flex flex-col items-center space-y-2 group",
-                                        (!isSendEnabled ||
-                                            !state.isUserNetworkOnline) &&
-                                            "pointer-events-none"
+                                        disabledActions && "pointer-events-none"
                                     )}
                                 >
                                     <div
                                         className={classnames(
                                             "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                            !isSendEnabled ||
-                                                !state.isUserNetworkOnline
+                                            disabledActions
                                                 ? "bg-gray-300"
                                                 : "bg-primary-300"
                                         )}
@@ -390,10 +391,23 @@ const PopupPage = () => {
                                                 />
                                             </div>
                                         ) : (
-                                            <AnimatedIcon
-                                                icon={AnimatedIconName.Bridge}
-                                                className="cursor-pointer"
-                                            />
+                                            <>
+                                                {disabledActions ? (
+                                                    <Icon
+                                                        name={
+                                                            IconName.DISABLED_BRIDGE
+                                                        }
+                                                        size="xl"
+                                                    />
+                                                ) : (
+                                                    <AnimatedIcon
+                                                        icon={
+                                                            AnimatedIconName.Bridge
+                                                        }
+                                                        className="cursor-pointer"
+                                                    />
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                     <span className="text-xs font-medium">

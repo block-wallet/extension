@@ -528,6 +528,64 @@
                 }
             ],
             "version": "0.5.6"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Improved swaps messages and warnings."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added option to restore default RPCs."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Networking performance improvements."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed wallet loading state."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.5.7"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Updates",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Token allowances: manage and revoke your allowances right in the wallet."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improved the allowance set interface to give you more control."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Minor visual tweaks."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.6.0"
         }
     ]
 }

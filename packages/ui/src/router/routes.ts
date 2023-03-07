@@ -27,6 +27,7 @@ import AddEthereumChain from "../routes/dApp/AddEthereumChain"
 import LockTimeout from "../routes/settings/LockTimeout"
 import AccountMenu from "../components/account/AccountMenu"
 import ResetAccountPage from "../routes/account/ResetAccountPage"
+import AllowancesPage from "../routes/account/AllowancesPage"
 import EditAccountPage from "../routes/account/EditAccountPage"
 import WatchAssetPage from "../routes/dApp/WatchAsset"
 import SpeedUpPage from "../routes/transaction/SpeedUpPage"
@@ -41,7 +42,7 @@ import DefaultGasPreferencesPage from "../routes/preferences/DefaultGasPreferenc
 import ReleaseNotesPreferencesPage from "../routes/preferences/ReleaseNotesPreferencesPage"
 import OnDemandReleaseNotesPage from "../components/releaseNotes/OnDemandReleaseNotesPage"
 import WelcomeInfo from "../components/info/WelcomeInfo"
-import WarningsPreferencesPage from "../routes/preferences/WarningsPreferencesPage"
+import NotificationsAndWarningsPage from "../routes/preferences/NotificationsAndWarningsPage"
 import { TransitionRouteProps } from "./TransitionRoute"
 import ApprovePage from "../routes/transaction/ApprovePage"
 import AddAccountPage from "../routes/account/AddAccountPage"
@@ -108,6 +109,11 @@ export const ROUTES_DEFINITION = [
         exact: true,
         component: ResetAccountPage,
     },
+    {
+        path: "/accounts/menu/allowances",
+        exact: true,
+        component: AllowancesPage,
+    },
     /* Send */
     { path: "/send", exact: true, component: SendPage },
     {
@@ -154,9 +160,9 @@ export const ROUTES_DEFINITION = [
     },
 
     {
-        path: "/settings/preferences/warnings",
+        path: "/settings/preferences/notificationsAndWarnings",
         exact: true,
-        component: WarningsPreferencesPage,
+        component: NotificationsAndWarningsPage,
     },
 
     {

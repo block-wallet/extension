@@ -389,15 +389,10 @@ const SwapPage = () => {
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
-                        label={
-                            error ? error : hasAllowance ? "Review" : "Approve"
-                        }
+                        label={hasAllowance ? "Review" : "Approve"}
                         disabled={!!(error || !quote)}
                         isLoading={isLoading}
                         onClick={onSubmit}
-                        buttonClass={classnames(
-                            error && `${Classes.redButton} opacity-100`
-                        )}
                     />
                 </PopupFooter>
             }
@@ -410,7 +405,7 @@ const SwapPage = () => {
                     rate={rate}
                 />
             ) : null}
-            <div className="flex flex-col p-6">
+            <div className="flex flex-col px-6 py-4 h-full">
                 <div
                     className={classnames(
                         "flex flex-row",
@@ -549,7 +544,7 @@ const SwapPage = () => {
                 <p className="text-sm text-gray-600 pb-3">Swap To</p>
                 <AssetSelection
                     displayIcon
-                    selectedAssetList={AssetListType.ALL}
+                    selectedAssetList={AssetListType.DEFAULT}
                     selectedAsset={
                         tokenTo
                             ? {
@@ -585,10 +580,19 @@ const SwapPage = () => {
                         <span>{`BlockWallet fee (${BASE_SWAP_FEE}%): ${swapFee}`}</span>
                     </div>
                 )}
+                <div className="h-full flex flex-col justify-end space-y-3">
+                    {error && (
+                        <div>
+                            <ErrorMessage>{error}</ErrorMessage>
+                        </div>
+                    )}
+                    {remainingSuffix && (
+                        <div className="flex flex-col justify-end">
+                            <RefreshLabel value={remainingSuffix} />
+                        </div>
+                    )}
+                </div>
             </div>
-            {remainingSuffix && (
-                <RefreshLabel value={remainingSuffix} className="ml-6 mt-12" />
-            )}
         </PopupLayout>
     )
 }

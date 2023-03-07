@@ -47,7 +47,8 @@ const request = async <T>(
     params: Record<string, any> | undefined,
     method = GET,
     timeout = 60000,
-    cache: RequestCache = 'default'
+    cache: RequestCache = 'default',
+    headers: Record<string, string> | undefined
 ): Promise<T> => {
     const options: RequestInit & { timeout?: number } = {
         method,
@@ -73,7 +74,9 @@ const request = async <T>(
     } else {
         options.body = JSON.stringify(params);
     }
-
+    if (headers !== undefined) {
+        options.headers = headers;
+    }
     // Fetch with timeout
     const response = await fetchWithTimeout(url, options);
 
@@ -104,8 +107,9 @@ const get = async <
     url: string,
     params?: P,
     timeout?: number,
-    cache?: RequestCache
-) => request<T>(url, params, GET, timeout, cache);
+    cache?: RequestCache,
+    headers?: Record<string, string>
+) => request<T>(url, params, GET, timeout, cache, headers);
 
 const post = async <
     T,
@@ -114,8 +118,9 @@ const post = async <
     url: string,
     params?: P,
     timeout?: number,
-    cache?: RequestCache
-) => request<T>(url, params, POST, timeout, cache);
+    cache?: RequestCache,
+    headers?: Record<string, string>
+) => request<T>(url, params, POST, timeout, cache, headers);
 
 interface HttpClient {
     /**
@@ -129,7 +134,8 @@ interface HttpClient {
         url: string,
         params?: P,
         timeout?: number,
-        cache?: RequestCache
+        cache?: RequestCache,
+        headers?: Record<string, string>
     ): Promise<T>;
 
     /**
@@ -143,7 +149,8 @@ interface HttpClient {
         url: string,
         params?: P,
         timeout?: number,
-        cache?: RequestCache
+        cache?: RequestCache,
+        headers?: Record<string, string>
     ): Promise<T>;
 }
 

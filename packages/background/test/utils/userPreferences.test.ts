@@ -51,6 +51,7 @@ describe('userPreferences tests', () => {
                     {
                         settings: {
                             subscribedToReleaseaNotes: false,
+                            subscribedToNotifications: true,
                             hideAddressWarning: false,
                             useAntiPhishingProtection: true,
                             defaultBrowserWallet: true,
@@ -74,6 +75,7 @@ describe('userPreferences tests', () => {
                     {
                         settings: {
                             subscribedToReleaseaNotes: true,
+                            subscribedToNotifications: true,
                             hideAddressWarning: false,
                             useAntiPhishingProtection: true,
                             defaultBrowserWallet: true,
@@ -101,6 +103,7 @@ describe('userPreferences tests', () => {
                     {
                         settings: {
                             subscribedToReleaseaNotes: true,
+                            subscribedToNotifications: true,
                             hideAddressWarning: false,
                             useAntiPhishingProtection: true,
                             defaultBrowserWallet: true,

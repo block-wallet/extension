@@ -12,7 +12,7 @@ const KeystoneConnectionPage = () => {
     const vendor = Devices.KEYSTONE
     const history = useOnMountHistory()
 
-    const { connect, isLoading } = useHardwareWalletConnect(true)
+    const { connect } = useHardwareWalletConnect(true)
     const [deviceNotReady, setDeviceNotReady] = useState(false)
 
     const onQRRead = async (qr: string) => {

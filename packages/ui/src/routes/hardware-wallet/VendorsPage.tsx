@@ -18,6 +18,7 @@ import OpenExplorerIcon from "../../components/icons/OpenExplorerIcon"
 
 const HardwareWalletVendorsPage = () => {
     const history = useOnMountHistory()
+    const [displayKeystoneSpan, setDisplayKeystoneSpan] = useState(false)
     const [selectedVendor, setSelectedVendor] = useState<Devices>()
     const next = () => {
         history.push({
@@ -37,7 +38,10 @@ const HardwareWalletVendorsPage = () => {
                 <div className="flex flex-row space-x-4 items-center justify-evenly p-8">
                     <button
                         type="button"
-                        onClick={() => setSelectedVendor(Devices.LEDGER)}
+                        onClick={() => {
+                            setSelectedVendor(Devices.LEDGER)
+                            setDisplayKeystoneSpan(false)
+                        }}
                         className={classnames(
                             "bg-white rounded-md p-4 w-1/2 flex flex-col items-center justify-center space-y-3 cursor-pointer border hover:border-primary-300",
                             selectedVendor === Devices.LEDGER
@@ -54,7 +58,10 @@ const HardwareWalletVendorsPage = () => {
                     </button>
                     <button
                         type="button"
-                        onClick={() => setSelectedVendor(Devices.TREZOR)}
+                        onClick={() => {
+                            setSelectedVendor(Devices.TREZOR)
+                            setDisplayKeystoneSpan(false)
+                        }}
                         className={classnames(
                             "bg-white rounded-md justify-center p-4 w-1/2 flex flex-col items-center group space-y-3 cursor-pointer border  hover:border-primary-300",
                             selectedVendor === Devices.TREZOR
@@ -71,7 +78,10 @@ const HardwareWalletVendorsPage = () => {
                     </button>
                     <button
                         type="button"
-                        onClick={() => setSelectedVendor(Devices.KEYSTONE)}
+                        onClick={() => {
+                            setSelectedVendor(Devices.KEYSTONE)
+                            setDisplayKeystoneSpan(true)
+                        }}
                         className={classnames(
                             "bg-white rounded-md justify-center p-4 w-1/2 flex flex-col items-center group space-y-3 cursor-pointer border  hover:border-primary-300",
                             selectedVendor === Devices.KEYSTONE
@@ -83,6 +93,12 @@ const HardwareWalletVendorsPage = () => {
                         <img src={keystone} alt="Connect Keystone" />
                     </button>
                 </div>
+                {displayKeystoneSpan && (
+                    <span className="text-xs w-10/12 text-center self-center mb-3 bg-gray-400 font-bold -mt-4">
+                        Keystone Wallet requires a camera. Please, make sure
+                        it's connected and installed properly.
+                    </span>
+                )}
                 <Divider />
                 <div className="p-8 w-full flex space-x-5">
                     <ButtonWithLoading

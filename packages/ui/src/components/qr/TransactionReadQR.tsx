@@ -1,6 +1,5 @@
 import { FC, useState } from "react"
 import QrContainer from "./QRReader"
-import useVideoDeviceConnect from "../../util/hooks/useVideoDeviceConnect"
 import Divider from "../Divider"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
 import { Classes } from "../../styles"
@@ -8,20 +7,12 @@ import { Classes } from "../../styles"
 interface Props {
     onBack: () => void
     onCancel: () => void
-    onSuccess: (qrSignature: string) => void
+    onSuccess: (qrSignature: string) => Promise<boolean>
 }
 
 const SendSignReadQR: FC<Props> = ({ onBack, onCancel, onSuccess }) => {
-    const { connect } = useVideoDeviceConnect(true)
-    const [deviceNotReady, setDeviceNotReady] = useState(false)
-
     const onQRRead = async (qr: string): Promise<boolean> => {
-        const resultOk = await connect()
-        if (resultOk) {
-            setDeviceNotReady(resultOk)
-            onSuccess(qr)
-        }
-        return resultOk
+        return onSuccess(qr)
     }
 
     return (
@@ -36,7 +27,6 @@ const SendSignReadQR: FC<Props> = ({ onBack, onCancel, onSuccess }) => {
                         <div className="items-center">
                             <QrContainer
                                 onRead={onQRRead}
-                                deviceNotReady={deviceNotReady}
                                 className="w-64 h-64"
                             />
                             <Divider />

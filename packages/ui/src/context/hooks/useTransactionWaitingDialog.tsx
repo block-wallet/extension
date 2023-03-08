@@ -234,14 +234,14 @@ export const useTransactionWaitingDialog = (
                                             qrSignature: string
                                         ) => {
                                             if (transaction.qrParams) {
-                                                hardwareQrSubmitSignature(
+                                                return hardwareQrSubmitSignature(
                                                     transaction.qrParams
                                                         .requestId,
                                                     qrSignature
                                                 )
                                             } else {
                                                 callbacks.reject()
-                                                hardwareQrCancelSignRequest()
+                                                return hardwareQrCancelSignRequest()
                                             }
                                         }}
                                     />

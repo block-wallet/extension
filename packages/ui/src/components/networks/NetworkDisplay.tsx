@@ -203,12 +203,23 @@ const NetworkDisplay = ({
                                 className="text-gray-500 mr-2"
                                 size={20}
                             />
-                            <span
-                                className={"h-2 w-2 rounded-xl mr-2"}
-                                style={{
-                                    backgroundColor: networkInfo.color,
-                                }}
-                            />
+                            {networkInfo.iconUrls &&
+                            networkInfo.iconUrls.length > 0 ? (
+                                <img
+                                    src={networkInfo.iconUrls[0]}
+                                    alt="network icon"
+                                    className="w-4 h-4 mr-2"
+                                />
+                            ) : (
+                                <span
+                                    className={
+                                        "h-2 w-2 rounded-xl ml-[0.20rem] mr-3"
+                                    }
+                                    style={{
+                                        backgroundColor: networkInfo.color,
+                                    }}
+                                />
+                            )}
                         </div>
                         <span className="text-sm font-bold text-ellipsis overflow-hidden whitespace-nowrap">
                             {networkInfo.desc}

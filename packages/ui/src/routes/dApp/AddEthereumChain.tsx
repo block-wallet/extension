@@ -232,7 +232,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                         expandable: true,
                     },
                     {
-                        title: "Currency Icon URL",
+                        title: "Network Icon URL",
                         content: iconUrl,
                         expandable: true,
                     },
@@ -337,8 +337,8 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                             <div className="flex flex-row w-full">
                                 <p className="font-bold text-primary-black-default mr-2">
                                     {validations.knownIcon
-                                        ? "Currency Icon"
-                                        : "Currency Icon URL"}
+                                        ? "Network Icon"
+                                        : "Network Icon URL"}
                                 </p>
                                 {!validations.knownIcon && (
                                     <RPCValidationEndLabelInfo

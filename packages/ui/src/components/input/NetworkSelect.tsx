@@ -1,4 +1,4 @@
-import { FunctionComponent, useRef, useState } from "react"
+import { FunctionComponent, useMemo, useRef, useState } from "react"
 import { RiArrowDownSLine, RiArrowUpSLine } from "react-icons/ri"
 import { BsCheck } from "react-icons/bs"
 import { useHistory } from "react-router-dom"
@@ -31,10 +31,19 @@ const NetworkOption: FunctionComponent<{
             )}
             onClick={async () => await handleNetworkChange(option.name)}
         >
-            <span
-                className={"h-2 w-2 rounded-xl mr-2"}
-                style={{ backgroundColor: networkColor }}
-            />
+            {option.iconUrls && option.iconUrls.length > 0 ? (
+                <img
+                    src={option.iconUrls[0]}
+                    alt="network icon"
+                    className="w-4 h-4 mx-2"
+                />
+            ) : (
+                <span
+                    className={"h-2 w-2 rounded-xl mx-3"}
+                    style={{ backgroundColor: networkColor }}
+                />
+            )}
+
             <span
                 className={classnames(
                     "leading-loose text-ellipsis overflow-hidden whitespace-nowrap",
@@ -69,11 +78,11 @@ const NetworkSelect: FunctionComponent<{
         changeNetwork(network)
     }
 
-    const getNetworkData = (): { color: string; desc: string } => {
-        const network = availableNetworks[selectedNetwork.toUpperCase()]
-        const color = getNetworkColor(network)
-        return { color: color, desc: network.desc }
-    }
+    const networkData = availableNetworks[selectedNetwork.toUpperCase()]
+
+    const networkColor = useMemo(() => {
+        return getNetworkColor(networkData)
+    }, [networkData])
 
     return (
         <div
@@ -96,18 +105,26 @@ const NetworkSelect: FunctionComponent<{
                     networkList && "border-primary-blue-default"
                 )}
             >
-                <span
-                    className={"justify-start h-2 rounded-xl ml-1 mr-2"}
-                    style={{
-                        backgroundColor: getNetworkData().color,
-                        width: "8px",
-                    }}
-                />
+                {networkData.iconUrls && networkData.iconUrls.length > 0 ? (
+                    <img
+                        src={networkData.iconUrls[0]}
+                        alt="network icon"
+                        className="w-4 h-4 mx-2"
+                    />
+                ) : (
+                    <span
+                        className={"justify-start h-2 rounded-xl ml-1 mr-2"}
+                        style={{
+                            backgroundColor: networkColor,
+                            width: "8px",
+                        }}
+                    />
+                )}
                 <span
                     data-testid="selected-network"
                     className="justify-start select-none w-36 text-ellipsis overflow-hidden whitespace-nowrap"
                 >
-                    {getNetworkData().desc}
+                    {networkData.desc}
                 </span>
                 {networkList ? (
                     <RiArrowUpSLine size={16} />

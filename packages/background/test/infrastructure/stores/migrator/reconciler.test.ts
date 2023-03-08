@@ -226,6 +226,7 @@ const initialState: newBlankAppState = {
         settings: {
             hideAddressWarning: false,
             subscribedToReleaseaNotes: true,
+            subscribedToNotifications: true,
             useAntiPhishingProtection: true,
             defaultBrowserWallet: true,
             hideEstimatedGasExceedsThresholdWarning: false,
@@ -450,6 +451,7 @@ describe('State reconciler', () => {
                 showDefaultWalletPreferences: false,
                 popupTab: 'activity',
                 settings: {
+                    subscribedToNotifications: true,
                     subscribedToReleaseaNotes: true,
                     hideAddressWarning: false,
                     useAntiPhishingProtection: true,

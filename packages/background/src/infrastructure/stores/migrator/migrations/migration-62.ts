@@ -1,6 +1,6 @@
 import { FEATURES } from '../../../../utils/constants/features';
 import { BlankAppState } from '../../../../utils/constants/initialState';
-import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES, SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES } from '../../../../utils/constants/networks';
+import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES } from '../../../../utils/constants/networks';
 import { normalizeNetworksOrder } from '../../../../utils/networks';
 import { IMigration } from '../IMigration';
 

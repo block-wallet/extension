@@ -587,7 +587,7 @@ export const INITIAL_NETWORKS: Networks = {
         defaultRpcUrl: `https://zksync-mainnet-node.blockwallet.io`,
         blockExplorerUrls: ['https://explorer.zksync.io/'],
         blockExplorerName: 'zkSync Explorer',
-        actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
+        actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
             derivationsForward: DERIVATIONS_FORWARD,

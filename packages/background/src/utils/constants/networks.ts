@@ -534,7 +534,7 @@ export const INITIAL_NETWORKS: Networks = {
     },
     ZKSYNC_ALPHA_TESTNET: {
         name: 'zksync_alpha_testnet',
-        desc: 'zkSync Alpha Testnet',
+        desc: 'zkSync Era Testnet',
         chainId: 280,
         networkVersion: '280',
         nativeCurrency: {
@@ -555,7 +555,7 @@ export const INITIAL_NETWORKS: Networks = {
         rpcUrls: [`https://zksync-testnet-node.blockwallet.io`],
         defaultRpcUrl: `https://zksync-testnet-node.blockwallet.io`,
         blockExplorerUrls: ['https://goerli.explorer.zksync.io'],
-        blockExplorerName: 'zkSync Explorer',
+        blockExplorerName: 'zkSync Testnet Explorer',
         actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
@@ -563,30 +563,30 @@ export const INITIAL_NETWORKS: Networks = {
         },
         nativelySupported: true,
     },
-    SCROLL_L1_TESTNET: {
-        name: 'scroll_l1_testnet',
-        desc: 'Scroll L1 Testnet',
-        chainId: 534351,
-        networkVersion: '534351',
+    ZKSYNC_ERA_MAINNET: {
+        name: 'zksync_era_mainnet',
+        desc: 'zkSync Era Mainnet',
+        chainId: 280,
+        networkVersion: '280',
         nativeCurrency: {
             name: 'Ether',
-            symbol: 'TSETH',
+            symbol: 'ETH',
             decimals: 18,
         },
         iconUrls: [
-            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/scroll/info/logo.png',
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zksync/info/logo.png',
         ],
         hasFixedGasCost: false,
         enable: true,
-        test: true,
-        order: 8,
+        test: false,
+        order: 7,
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,
-        rpcUrls: [`https://scroll-l1-testnet-node.blockwallet.io`],
-        defaultRpcUrl: `https://scroll-l1-testnet-node.blockwallet.io`,
-        blockExplorerUrls: ['https://l1scan.scroll.io/'],
-        blockExplorerName: 'Scroll L1 Explorer',
+        rpcUrls: [`https://zksync-mainnet-node.blockwallet.io`],
+        defaultRpcUrl: `https://zksync-mainnet-node.blockwallet.io`,
+        blockExplorerUrls: ['https://explorer.zksync.io/'],
+        blockExplorerName: 'zkSync Explorer',
         actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
@@ -596,9 +596,9 @@ export const INITIAL_NETWORKS: Networks = {
     },
     SCROLL_L2_TESTNET: {
         name: 'scroll_l2_testnet',
-        desc: 'Scroll L2 Testnet',
-        chainId: 534354,
-        networkVersion: '534354',
+        desc: 'Scroll Alpha Testnet',
+        chainId: 534353,
+        networkVersion: '534353',
         nativeCurrency: {
             name: 'Ether',
             symbol: 'TSETH',
@@ -616,7 +616,7 @@ export const INITIAL_NETWORKS: Networks = {
         showGasLevels: false,
         rpcUrls: [`https://scroll-l2-testnet-node.blockwallet.io`],
         defaultRpcUrl: `https://scroll-l2-testnet-node.blockwallet.io`,
-        blockExplorerUrls: ['https://l2scan.scroll.io/'],
+        blockExplorerUrls: ['https://blockscout.scroll.io/'],
         blockExplorerName: 'Scroll L2 Explorer',
         actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {

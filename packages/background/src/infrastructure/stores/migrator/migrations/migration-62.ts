@@ -45,8 +45,8 @@ export default {
             features: [FEATURES.SENDS],
             ens: false,
             showGasLevels: false,
-            rpcUrls: [`https://zksync-mainnet-node.blockwallet.io`],
-            defaultRpcUrl: `https://zksync-mainnet-node.blockwallet.io`,
+            rpcUrls: [`https://zksync-node.blockwallet.io`],
+            defaultRpcUrl: `https://zksync-node.blockwallet.io`,
             blockExplorerUrls: ['https://explorer.zksync.io/'],
             blockExplorerName: 'zkSync Explorer',
             actionsTimeIntervals: {

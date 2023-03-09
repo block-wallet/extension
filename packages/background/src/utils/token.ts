@@ -12,6 +12,8 @@ import {
 } from './types/ethereum';
 import { BigNumber } from 'ethers';
 import { MaxUint256 } from '@ethersproject/constants';
+import { formatUnits } from '@ethersproject/units';
+import { FixedNumber } from '@ethersproject/bignumber';
 
 const IS_BASE64_IMAGE = 'IS_BASE64_IMAGE';
 
@@ -168,3 +170,26 @@ export function mergeTokens(
         totalSupply: baseToken.totalSupply || mergeToken.totalSupply,
     };
 }
+
+/**
+ * Formats the token amount.
+ * @param amount - The token amount.
+ * @param decimals - The token decimals.
+ * @param symbol - The token symbol.
+ * @returns The formatted token amount + symbol.
+ * @example
+ * formatTokenAmount('1000000000000000000', 18, 'ETH') // '1 ETH'
+ * formatTokenAmount('2000000000000000000', 18) // '2 tokens'
+ * formatTokenAmount('1000000000000000000') // 'some tokens'
+ * formatTokenAmount() // 'some tokens'
+ * formatTokenAmount(undefined, 18, 'ETH') // 'some ETH'
+ */
+export const formatTokenAmount = (
+    amount: BigNumber | string,
+    decimals: number,
+    symbol: string
+) => {
+    return `${FixedNumber.fromString(formatUnits(amount, decimals))
+        .round(5)
+        .toString()} ${symbol}`;
+};

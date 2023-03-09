@@ -3,6 +3,7 @@ import { classnames } from "../../styles"
 import { getNetworkColor } from "../../util/getNetworkColor"
 import GenericTooltip from "../label/GenericTooltip"
 import useIsHovering from "../../util/hooks/useIsHovering"
+import { useState } from "react"
 
 const NetworkDisplayBadge = ({
     network,
@@ -18,6 +19,7 @@ const NetworkDisplayBadge = ({
     const networkDesc = network.desc
     const networkColor = getNetworkColor(network)
     const { isHovering, getIsHoveringProps } = useIsHovering()
+    const [hasImageError, setHasImageError] = useState(false)
 
     // We limit the string chars here regardless of the truncate flag
     // and the truncate class to prevent issues with the animated bullet size
@@ -31,7 +33,8 @@ const NetworkDisplayBadge = ({
     const displayFull =
         isHovering ||
         !(network.iconUrls && network.iconUrls.length > 0) ||
-        !truncate
+        !truncate ||
+        hasImageError
 
     return (
         <div
@@ -43,11 +46,16 @@ const NetworkDisplayBadge = ({
                 className
             )}
         >
-            {network.iconUrls && network.iconUrls.length > 0 ? (
+            {!hasImageError &&
+            network.iconUrls &&
+            network.iconUrls.length > 0 ? (
                 <img
                     src={network.iconUrls[0]}
                     alt="network icon"
                     className={classnames("w-4 h-4", displayFull && "mr-2")}
+                    onError={() => {
+                        setHasImageError(true)
+                    }}
                 />
             ) : (
                 <span

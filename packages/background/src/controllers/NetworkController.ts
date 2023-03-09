@@ -54,7 +54,8 @@ export interface NetworkControllerState {
     isEIP1559Compatible: { [chainId in number]: boolean };
 }
 
-const CHECK_PROVIDER_TIMEOUT = 5 * SECOND;
+const CHECK_PROVIDER_SCHEDULED_TIME = 5 * SECOND;
+const CHECK_PROVIDER_REQUEST_TIMEOUT = 10 * SECOND;
 
 export default class NetworkController extends BaseController<NetworkControllerState> {
     public static readonly CURRENT_HARDFORK: string = 'london';
@@ -105,7 +106,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         this.checkProviderTimeout = setTimeout(
             this._checkProviderNetworkStatus.bind(this),
-            CHECK_PROVIDER_TIMEOUT
+            CHECK_PROVIDER_SCHEDULED_TIME
         );
     }
 
@@ -870,7 +871,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                     throw error;
                 }
             },
-            { timeout: 10000, retryLimit: 5 }
+            { timeout: CHECK_PROVIDER_REQUEST_TIMEOUT, retryLimit: 5 }
         );
     }
 

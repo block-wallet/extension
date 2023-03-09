@@ -20,6 +20,8 @@ const NetworkOption: FunctionComponent<{
     disabled?: boolean
 }> = ({ option, selectedNetwork, handleNetworkChange, disabled = false }) => {
     const networkColor = getNetworkColor(option)
+    const [hasImageError, setHasImageError] = useState(false)
+
     return (
         <li
             title={option.desc}
@@ -31,11 +33,14 @@ const NetworkOption: FunctionComponent<{
             )}
             onClick={async () => await handleNetworkChange(option.name)}
         >
-            {option.iconUrls && option.iconUrls.length > 0 ? (
+            {!hasImageError && option.iconUrls && option.iconUrls.length > 0 ? (
                 <img
                     src={option.iconUrls[0]}
                     alt="network icon"
                     className="w-4 h-4 mx-2"
+                    onError={() => {
+                        setHasImageError(true)
+                    }}
                 />
             ) : (
                 <span
@@ -63,6 +68,8 @@ const NetworkSelect: FunctionComponent<{
 }> = ({ className, optionsContainerClassName }) => {
     const history = useHistory()!
     const [networkList, setNetworkList] = useState(false)
+    const [hasImageError, setHasImageError] = useState(false)
+
     const {
         selectedNetwork,
         availableNetworks,
@@ -73,9 +80,10 @@ const NetworkSelect: FunctionComponent<{
     const ref = useRef(null)
     useOnClickOutside(ref, () => setNetworkList(false))
 
-    const handleNetworkChange = (network: string) => {
+    const handleNetworkChange = async (network: string) => {
         setNetworkList(false)
-        changeNetwork(network)
+        await changeNetwork(network)
+        setHasImageError(false)
     }
 
     const networkData = availableNetworks[selectedNetwork.toUpperCase()]
@@ -105,11 +113,16 @@ const NetworkSelect: FunctionComponent<{
                     networkList && "border-primary-blue-default"
                 )}
             >
-                {networkData.iconUrls && networkData.iconUrls.length > 0 ? (
+                {!hasImageError &&
+                networkData.iconUrls &&
+                networkData.iconUrls.length > 0 ? (
                     <img
                         src={networkData.iconUrls[0]}
                         alt="network icon"
                         className="w-4 h-4 mx-2"
+                        onError={() => {
+                            setHasImageError(true)
+                        }}
                     />
                 ) : (
                     <span

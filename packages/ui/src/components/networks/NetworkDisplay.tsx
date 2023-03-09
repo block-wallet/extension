@@ -55,6 +55,7 @@ const NetworkDisplay = ({
     const { isOpen, status, dispatch } = useWaitingDialog()
 
     const [confirmSwitchNetwork, setConfirmSwitchNetwork] = useState(false)
+    const [hasImageError, setHasImageError] = useState(false)
 
     const [dropAnimation, setDropAnimation] = useState(false)
     const dropRef = useRef<HTMLDivElement>(null)
@@ -203,12 +204,16 @@ const NetworkDisplay = ({
                                 className="text-gray-500 mr-2"
                                 size={20}
                             />
-                            {networkInfo.iconUrls &&
+                            {!hasImageError &&
+                            networkInfo.iconUrls &&
                             networkInfo.iconUrls.length > 0 ? (
                                 <img
                                     src={networkInfo.iconUrls[0]}
                                     alt="network icon"
                                     className="w-4 h-4 mr-2"
+                                    onError={() => {
+                                        setHasImageError(true)
+                                    }}
                                 />
                             ) : (
                                 <span

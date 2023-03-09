@@ -560,6 +560,11 @@ export default class BlankController extends EventEmitter {
             isAppUnlocked,
             activeSubscription
         );
+
+        this.networkController.setActiveSubscriptions(
+            isAppUnlocked,
+            activeSubscription
+        );
     }
 
     /**

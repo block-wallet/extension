@@ -37,6 +37,7 @@ import {
     customHeadersForBlockWalletNode,
 } from '../utils/nodes';
 import { toChecksumAddress } from 'ethereumjs-util';
+import { SECOND } from '../utils/constants/time';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -53,9 +54,14 @@ export interface NetworkControllerState {
     isEIP1559Compatible: { [chainId in number]: boolean };
 }
 
+const CHECK_PROVIDER_TIMEOUT = 5 * SECOND;
+
 export default class NetworkController extends BaseController<NetworkControllerState> {
     public static readonly CURRENT_HARDFORK: string = 'london';
     private provider: StaticJsonRpcProvider;
+    private activeSubscriptions = false;
+    private checkProviderTimeout: ReturnType<typeof setTimeout> | undefined =
+        undefined;
 
     constructor(initialState: NetworkControllerState) {
         super({
@@ -73,18 +79,53 @@ export default class NetworkController extends BaseController<NetworkControllerS
         this._updateProviderNetworkStatus();
 
         // Set the error handler for the provider to check for network status
-        this.provider.on('error', (err) => {
-            return this._updateProviderNetworkStatus({ err });
-        });
-
-        // Periodical checks when provider is down
-        setInterval(async () => {
-            if (!this.getState().isProviderNetworkOnline) {
-                await this._updateProviderNetworkStatus({ timeout: 3000 });
-            }
-        }, 3000);
+        this.provider.on('error', this._updateProviderNetworkStatus.bind(this));
 
         this.setMaxListeners(30); // currently, we need 16
+    }
+
+    /**
+     * Checks the provider's network status when there is an active subscription to the bakcground.
+     * If the provider is online, we don't check its stauts and schedule a future check.
+     * If the provider is offline, we check the status and schedule a future check.
+     * If there is no active subscription, the scheduled check is cleared.
+     */
+    private async _checkProviderNetworkStatus() {
+        if (!this.activeSubscriptions) {
+            if (this.checkProviderTimeout) {
+                clearTimeout(this.checkProviderTimeout);
+            }
+            return;
+        }
+        const { isProviderNetworkOnline } = this.getState();
+
+        if (!isProviderNetworkOnline) {
+            await this._updateProviderNetworkStatus();
+        }
+
+        this.checkProviderTimeout = setTimeout(
+            this._checkProviderNetworkStatus.bind(this),
+            CHECK_PROVIDER_TIMEOUT
+        );
+    }
+
+    /**
+     * setActiveSubscriptions
+     *
+     * It sets if there is at least one active subscription to the background
+     *
+     * @param isUnlocked Whether the extension is unlocked or not
+     * @param activeSubscription If there is any block wallet instance active.
+     */
+    public setActiveSubscriptions(
+        isUnlocked: boolean,
+        activeSubscription: boolean
+    ): void {
+        const prevActiveSubscriptions = this.activeSubscriptions;
+        this.activeSubscriptions = isUnlocked && activeSubscription;
+        if (this.activeSubscriptions != prevActiveSubscriptions) {
+            this._checkProviderNetworkStatus();
+        }
     }
 
     /**
@@ -499,22 +540,11 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * @returns {StaticJsonRpcProvider}
      */
     public getProviderFromName = (
-        networkName: string,
-        timeout?: number
+        networkName: string
     ): StaticJsonRpcProvider => {
         const network = this.searchNetworkByName(networkName);
-        return this._getProviderForNetwork(
-            network.chainId,
-            network.rpcUrls[0],
-            timeout
-        );
+        return this._getProviderForNetwork(network.chainId, network.rpcUrls[0]);
     };
-
-    private _getCurrentProviderWithTimeout(
-        timeout: number
-    ): StaticJsonRpcProvider {
-        return this.getProviderFromName(this.network.name, timeout);
-    }
 
     /**
      * Gets a provider for a given chainId.
@@ -554,11 +584,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         }
     };
 
-    private _getProviderForNetwork(
-        chainId: number,
-        rpcUrl: string,
-        timeout?: number
-    ) {
+    private _getProviderForNetwork(chainId: number, rpcUrl: string) {
         const blockWalletNode = isABlockWalletNode(rpcUrl);
         return this._overloadProviderMethods(
             { chainId },
@@ -566,7 +592,6 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 {
                     url: rpcUrl,
                     allowGzip: blockWalletNode,
-                    timeout,
                     headers: blockWalletNode
                         ? customHeadersForBlockWalletNode
                         : undefined,
@@ -790,23 +815,14 @@ export default class NetworkController extends BaseController<NetworkControllerS
         this.emit(NetworkEvents.USER_NETWORK_CHANGE, newValue);
     }
 
-    private _updateProviderNetworkStatus = (
-        options: {
-            err?: {
-                code: ErrorCode;
-                body?: string;
-            };
-            timeout?: number;
-        } = {}
-    ) => {
-        const { timeout, err } = options;
+    private _updateProviderNetworkStatus = (err?: {
+        code: ErrorCode;
+        body?: string;
+    }) => {
         const errorCodes = [ErrorCode.SERVER_ERROR, ErrorCode.TIMEOUT];
+        const checkingChainId = this.provider.network.chainId;
         if (!err || errorCodes.includes(err.code)) {
-            let provider = this.provider;
-            if (timeout) {
-                provider = this._getCurrentProviderWithTimeout(timeout);
-            }
-            this._isProviderReady(provider)
+            return this._isProviderReady()
                 .then(() => {
                     return Promise.resolve(true);
                 })
@@ -814,7 +830,12 @@ export default class NetworkController extends BaseController<NetworkControllerS
                     return Promise.resolve(false);
                 })
                 .then((newStatus) => {
-                    if (this.getState().isProviderNetworkOnline === newStatus) {
+                    const currentChainId = this.provider.network.chainId;
+                    if (
+                        this.getState().isProviderNetworkOnline === newStatus ||
+                        //Discard response if the user switched the network
+                        currentChainId !== checkingChainId
+                    ) {
                         return;
                     }
 

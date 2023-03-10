@@ -429,6 +429,29 @@ export default class BridgeController extends BaseController<
             }
         }
 
+        // check gas estimations
+        const gasEstimation = await this._transactionController.estimateGas({
+            chainId: quote.fromChainId,
+            transactionParams: {
+                from: quote.transactionRequest.from,
+                to: quote.transactionRequest.to,
+                value: BigNumber.from(quote.transactionRequest.value),
+                data: quote.transactionRequest.data,
+            },
+        } as TransactionMeta);
+
+        // if our estimation is higher, the transaction will use it.
+        if (gasEstimation.estimationSucceeded) {
+            if (
+                gasEstimation.gasLimit.gt(
+                    BigNumber.from(quote.transactionRequest.gasLimit)
+                )
+            ) {
+                quote.transactionRequest.gasLimit =
+                    gasEstimation.gasLimit.toString();
+            }
+        }
+
         const methodSignature =
             await contractSignatureParser.getMethodSignature(
                 quote.transactionRequest.data,

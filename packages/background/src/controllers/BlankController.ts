@@ -114,6 +114,7 @@ import {
     SubmitQRHardwareCryptoHDKeyOrAccountMessage,
     SubmitQRHardwareSignatureMessage,
     CancelQRHardwareSignRequestMessage,
+    RequestUpdateTransactionStatus,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -883,6 +884,10 @@ export default class BlankController extends EventEmitter {
                 return this.rejectTransaction(
                     request as RequestRejectTransaction
                 );
+            case Messages.TRANSACTION.UPDATE_STATUS:
+                return this.updateTransactionStatus(
+                    request as RequestUpdateTransactionStatus
+                );
             case Messages.TRANSACTION.REJECT_REPLACEMENT_TRANSACTION:
                 return this.rejectReplacementTransaction(
                     request as RequestRejectTransaction
@@ -1569,12 +1574,27 @@ export default class BlankController extends EventEmitter {
      * Method to reject transaction proposed by external source
      *
      * @param transactionMeta - transaction data
-     * @param tabId - id of the tab where the extension is opened (needed to close the window)
      */
     private rejectTransaction = async ({
         transactionId,
     }: RequestRejectTransaction) => {
         return this.transactionController.rejectTransaction(transactionId);
+    };
+
+    /**
+     * Method to update transaction status
+     *
+     * @param transactionId - transaction id
+     * @param tabId - id of the tab where the extension is opened (needed to close the window)
+     */
+    private updateTransactionStatus = async ({
+        transactionId,
+        status,
+    }: RequestUpdateTransactionStatus) => {
+        return this.transactionController.updateTransactionStatus(
+            transactionId,
+            status
+        );
     };
 
     /**

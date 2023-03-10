@@ -12,6 +12,7 @@ import React, {
     useRef,
     FC,
     useCallback,
+    useLayoutEffect,
 } from "react"
 import TransactionDetails from "../../components/transactions/TransactionDetails"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
@@ -87,6 +88,11 @@ export interface SwapConfirmPageLocalState {
     allowanceTransactionId?: string
 }
 
+interface SwapConfirmPagePersistedState {
+    submitted: boolean
+    txId: string
+}
+
 const NOT_ENOUGH_BALANCE_ERROR =
     "Balance too low to cover swap and gas cost. Please review gas configuration."
 
@@ -111,25 +117,45 @@ const SwapPageConfirm: FC<{}> = () => {
         QUOTE_REFRESH_TIMEOUT
     )
 
-    const [persistedData, setPersistedData] = useLocalStorageState(
-        "swaps.confirm",
-        {
+    const [persistedData, setPersistedData] =
+        useLocalStorageState<SwapConfirmPagePersistedState>("swaps.confirm", {
             initialValue: {
                 submitted: false,
+                txId: "",
             },
             volatile: true,
-        }
-    )
+        })
 
     const { clear: clearLocationRecovery } = useLocationRecovery()
     const { transaction: inProgressTransaction, clearTransaction } =
         useInProgressInternalTransaction({
             categories: [TransactionCategories.EXCHANGE],
+            txId: persistedData.txId,
         })
+    const selectedAccount = useSelectedAccount()
 
     useEffect(() => {
+        if (
+            inProgressTransaction?.id &&
+            persistedData.submitted &&
+            persistedData.txId !== inProgressTransaction?.id
+        ) {
+            if (isHardwareWallet(selectedAccount.accountType)) {
+                setPersistedData((prev: SwapConfirmPagePersistedState) => ({
+                    ...prev,
+                    txId: inProgressTransaction?.id,
+                }))
+            }
+        }
+    }, [inProgressTransaction?.id])
+
+    useLayoutEffect(() => {
         // Redirect to homepage if there is no pending transaction
-        if (!inProgressTransaction?.id && persistedData.submitted) {
+        if (
+            !inProgressTransaction?.id &&
+            persistedData.submitted &&
+            !persistedData.txId
+        ) {
             history.push("/")
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -137,7 +163,6 @@ const SwapPageConfirm: FC<{}> = () => {
 
     const { gasPricesLevels } = useGasPriceData()
     const { isEIP1559Compatible } = useSelectedNetwork()
-    const selectedAccount = useSelectedAccount()
     const { defaultGasOption } = useBlankState()!
     const { nativeToken } = useTokensList()
     const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
@@ -284,9 +309,10 @@ const SwapPageConfirm: FC<{}> = () => {
                 clearLocationRecovery()
             }
 
-            setPersistedData({
+            setPersistedData((prev: SwapConfirmPagePersistedState) => ({
+                ...prev,
                 submitted: true,
-            })
+            }))
 
             const swapTransactionParams: SwapTransaction = {
                 ...swapParameters,
@@ -496,9 +522,13 @@ const SwapPageConfirm: FC<{}> = () => {
                 onDone={React.useCallback(() => {
                     if (status === "error") {
                         closeDialog()
-                        setPersistedData({
-                            submitted: false,
-                        })
+                        setPersistedData(
+                            (prev: SwapConfirmPagePersistedState) => ({
+                                ...prev,
+                                submitted: true,
+                                txId: "",
+                            })
+                        )
                         clearTransaction()
                         return
                     }

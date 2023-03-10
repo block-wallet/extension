@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useState } from "react"
 
 import { useForm } from "react-hook-form"
 
@@ -228,12 +228,14 @@ interface SendConfirmPersistedState {
     amount: string
     submitted: boolean
     asset: TokenWithBalance | null
+    txId: string
 }
 
 const INITIAL_VALUE_PERSISTED_DATA = {
     asset: null,
     amount: "",
     submitted: false,
+    txId: "",
 }
 
 // Page
@@ -257,13 +259,32 @@ const SendConfirmPage = () => {
         })
 
     const { transaction: currentTransaction, clearTransaction } =
-        useInProgressInternalTransaction()
+        useInProgressInternalTransaction({ txId: persistedData.txId })
 
     useEffect(() => {
+        if (
+            currentTransaction?.id &&
+            persistedData.submitted &&
+            persistedData.txId !== currentTransaction?.id
+        ) {
+            if (isHardwareWallet(accountType)) {
+                setPersistedData((prev: SendConfirmPersistedState) => ({
+                    ...prev,
+                    txId: currentTransaction?.id,
+                }))
+            }
+        }
+    }, [currentTransaction?.id])
+
+    useLayoutEffect(() => {
         // Tx was either rejected or submitted when the pop-up was closed.
         // If we opened back the pop-up, and there aren't any pending transactions,
         // we should redirect to the home page (this is only checked on component mount)
-        if (!currentTransaction?.id && persistedData.submitted) {
+        if (
+            !currentTransaction?.id &&
+            persistedData.submitted &&
+            !persistedData.txId
+        ) {
             setPersistedData(() => ({
                 ...INITIAL_VALUE_PERSISTED_DATA,
                 submitted: false,
@@ -724,6 +745,7 @@ const SendConfirmPage = () => {
                         setPersistedData((prev: SendConfirmPersistedState) => ({
                             ...prev,
                             submitted: false,
+                            txId: "",
                         }))
                         clearTransaction()
                         return

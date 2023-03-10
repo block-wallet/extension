@@ -14,7 +14,7 @@ import {
     RequestEditNetwork,
     RequestEditNetworksOrder,
 } from "@block-wallet/background/utils/types/communication"
-import { Devices, ExchangeType, Messages } from "./commTypes"
+import { Devices, ExchangeType, Messages, TransactionStatus } from "./commTypes"
 import {
     IToken,
     ITokens,
@@ -1011,6 +1011,21 @@ export const confirmTransaction = async (
  */
 export const rejectTransaction = async (transactionId: string) => {
     return sendMessage(Messages.TRANSACTION.REJECT, { transactionId })
+}
+
+/**
+ * Updates the transaction status specified by id.
+ * @param transactionId
+ * @param status
+ */
+export const updateTransactionStatus = async (
+    transactionId: string,
+    status: TransactionStatus
+) => {
+    return sendMessage(Messages.TRANSACTION.UPDATE_STATUS, {
+        transactionId,
+        status,
+    })
 }
 
 /**

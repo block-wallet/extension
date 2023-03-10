@@ -11,6 +11,7 @@ import {
     FunctionComponent,
     useMemo,
     useCallback,
+    useLayoutEffect,
 } from "react"
 import {
     approveBridgeAllowance,
@@ -72,11 +73,13 @@ export enum ApproveOperation {
 interface ApprovePageState {
     assetAllowance: BigNumber
     submitted: boolean
+    txId: string
 }
 
 const INITIAL_VALUE_PERSISTED_DATA = {
     assetAllowance: UNLIMITED_ALLOWANCE,
     submitted: false,
+    txId: "",
 }
 
 export interface ApprovePageLocalState {
@@ -99,6 +102,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
         () => history.location.state as ApprovePageLocalState,
         [history.location.state]
     )
+    const selectedAccount = useSelectedAccount()
 
     // Get data from window.localStorage
     const [persistedData, setPersistedData] =
@@ -109,19 +113,42 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
     // Hooks
     const { transaction: inProgressTransaction, clearTransaction } =
-        useInProgressInternalTransaction()
+        useInProgressInternalTransaction({ txId: persistedData.txId })
+
     useEffect(() => {
+        if (
+            inProgressTransaction?.id &&
+            persistedData.submitted &&
+            persistedData.txId !== inProgressTransaction?.id
+        ) {
+            if (isHardwareWallet(selectedAccount.accountType)) {
+                setPersistedData((prev: ApprovePageState) => ({
+                    ...prev,
+                    txId: inProgressTransaction?.id,
+                }))
+            }
+        }
+    }, [inProgressTransaction?.id])
+
+    useLayoutEffect(() => {
         // Tx was either rejected or submitted when the pop-up was closed.
         // If we opened back the pop-up, and there aren't any pending transactions,
         // we should redirect to the home page (this is only checked on component mount)
-        if (!inProgressTransaction?.id && persistedData.submitted) {
+        if (
+            !inProgressTransaction?.id &&
+            persistedData.submitted &&
+            !persistedData.txId
+        ) {
+            setPersistedData(() => ({
+                ...INITIAL_VALUE_PERSISTED_DATA,
+                submitted: false,
+            }))
             history.push("/")
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
     const selectedAccountBalance = useSelectedAccountBalance()
 
-    const selectedAccount = useSelectedAccount()
     const { chainId, isEIP1559Compatible } = useSelectedNetwork()
     const { defaultGasOption, selectedNetwork, availableNetworks } =
         useBlankState()!
@@ -423,6 +450,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
             setPersistedData((prev: ApprovePageState) => ({
                 ...prev,
                 submitted: false,
+                txId: "",
             }))
             clearTransaction()
             return

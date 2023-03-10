@@ -19,6 +19,7 @@ import {
 import {
     TransactionAdvancedData,
     TransactionMeta,
+    TransactionStatus,
 } from '../../controllers/transactions/utils/types';
 import { ImportStrategy, ImportArguments } from '../account';
 import {
@@ -189,6 +190,7 @@ enum TRANSACTION {
     CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT = 'CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT',
     CONFIRM = 'CONFIRM_TRANSACTION',
     REJECT = 'REJECT_TRANSACTION',
+    UPDATE_STATUS = 'UPDATE_STATUS',
     GET_LATEST_GAS_PRICE = 'GET_LATEST_GAS_PRICE',
     FETCH_LATEST_GAS_PRICE = 'FETCH_LATEST_GAS_PRICE',
     SEND_ETHER = 'SEND_ETHER',
@@ -407,6 +409,10 @@ export interface RequestSignatures {
     [Messages.UD.RESOLVE_NAME]: [RequestUDResolve, string | null];
     [Messages.TRANSACTION.CONFIRM]: [RequestConfirmTransaction, string];
     [Messages.TRANSACTION.REJECT]: [RequestRejectTransaction, boolean];
+    [Messages.TRANSACTION.UPDATE_STATUS]: [
+        RequestUpdateTransactionStatus,
+        boolean
+    ];
     [Messages.TRANSACTION.REJECT_REPLACEMENT_TRANSACTION]: [
         RequestRejectTransaction,
         boolean
@@ -1007,6 +1013,11 @@ export interface RequestSetDefaultGas {
 
 export interface RequestRejectTransaction {
     transactionId: string;
+}
+
+export interface RequestUpdateTransactionStatus {
+    transactionId: string;
+    status: TransactionStatus;
 }
 
 export interface RequestAddressBookClear {}

@@ -1235,6 +1235,27 @@ export class TransactionController extends BaseController<
     }
 
     /**
+     * Updates transaction status
+     *
+     * @param transactionID - The ID of the transaction to update.
+     * @param status - the new transaction status
+     */
+    public updateTransactionStatus(
+        transactionID: string,
+        status: TransactionStatus
+    ): void {
+        const transactionMeta = this.getTransaction(transactionID);
+        if (!transactionMeta) {
+            throw new Error('The specified transaction does not exist');
+        }
+        transactionMeta.status = status;
+        if (status === TransactionStatus.REJECTED) {
+            this.hub.emit(`${transactionMeta.id}:finished`, transactionMeta);
+        }
+        this.updateTransaction(transactionMeta);
+    }
+
+    /**
      * Rejects a replacement transaction based on its ID by setting its status to `TransactionStatus.REJECTED`
      * @param transactionID The ID of the replacement transaction to reject.
      */

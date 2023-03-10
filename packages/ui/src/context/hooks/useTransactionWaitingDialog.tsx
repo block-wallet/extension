@@ -7,7 +7,10 @@ import {
     TransactionStatus,
 } from "../commTypes"
 import { getAwaitingSigningMessage } from "../../util/getAwaitingSigningMessage"
-import { isTransactionOrRequestAwaitingSigning } from "../../util/transactionUtils"
+import {
+    isTransactionOrRequestAwaitingSigning,
+    isTransactionOrRequestRejected,
+} from "../../util/transactionUtils"
 import { DappRequestSigningStatus } from "./useDappRequest"
 import AnimatedIcon, { AnimatedIconName } from "../../components/AnimatedIcon"
 import Divider from "../../components/Divider"
@@ -189,8 +192,11 @@ export const useTransactionWaitingDialog = (
 ) => {
     const keystoneVendor =
         getDeviceFromAccountType(accountType) === Devices.KEYSTONE
+    const trezorVendor =
+        getDeviceFromAccountType(accountType) === Devices.TREZOR
     const { texts, titles, dispatch, status, isOpen, gifs } = useWaitingDialog({
         defaultStatus: "idle",
+        defaultIsOpen: true,
     })
 
     const txTimeout = useTransactionTimeout()
@@ -271,7 +277,8 @@ export const useTransactionWaitingDialog = (
                 [
                     TransactionStatus.FAILED,
                     DappRequestSigningStatus.FAILED,
-                ].includes(transaction.status)
+                ].includes(transaction.status) &&
+                !trezorVendor
             ) {
                 const message = messages[operation]
                 dispatch({
@@ -289,10 +296,7 @@ export const useTransactionWaitingDialog = (
                     },
                 })
             } else if (
-                [
-                    TransactionStatus.REJECTED,
-                    DappRequestSigningStatus.REJECTED,
-                ].includes(transaction.status)
+                isTransactionOrRequestRejected(transaction.status, trezorVendor)
             ) {
                 const message = messages[operation]
                 dispatch({

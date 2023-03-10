@@ -57,21 +57,23 @@ const QrContainer: FC<Props> = ({
                 </>
             ) : !isCameraReady && !deviceNotReady ? (
                 <>
-                    <div className="mt-6 mb-2">
-                        <img
-                            src={no_camera}
-                            alt="icon"
-                            className="w-14 block ml-auto mr-auto"
-                        />
-                    </div>
-                    <div className="mb-6">
-                        <div
-                            className={classnames(
-                                "break-words ml-3 text-lg text-center"
-                            )}
-                        >
-                            We can't find your camera, make sure it's connected
-                            and installed properly.
+                    <div className="flex items-center w-64 h-64 ml-auto mr-auto">
+                        <div className="border border-primary-100 mt-6 mb-6 rounded-md">
+                            <div className="mb-4 mt-4">
+                                <img
+                                    src={no_camera}
+                                    alt="icon"
+                                    className="w-10 block ml-auto mr-auto"
+                                />
+                            </div>
+                            <div
+                                className={classnames(
+                                    "break-words ml-3 text-sm text-center mb-6"
+                                )}
+                            >
+                                We can't find your camera, make sure it's
+                                connected and installed properly.
+                            </div>
                         </div>
                     </div>
                 </>

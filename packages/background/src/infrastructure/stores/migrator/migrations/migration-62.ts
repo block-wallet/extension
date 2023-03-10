@@ -28,8 +28,8 @@ export default {
         updatedNetworks.ZKSYNC_ERA_MAINNET = {
             name: 'zksync_era_mainnet',
             desc: 'zkSync Era Mainnet',
-            chainId: 280,
-            networkVersion: '280',
+            chainId: 324,
+            networkVersion: '324',
             nativeCurrency: {
                 name: 'Ether',
                 symbol: 'ETH',

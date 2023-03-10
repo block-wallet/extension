@@ -594,7 +594,6 @@ export const INITIAL_NETWORKS: Networks = {
         },
         nativelySupported: true,
     },
-
     SCROLL_L2_TESTNET: {
         name: 'scroll_l2_testnet',
         desc: 'Scroll Alpha Testnet',

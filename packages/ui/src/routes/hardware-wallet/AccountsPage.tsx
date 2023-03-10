@@ -522,7 +522,7 @@ const AdvancedSettings = ({
                 </div>
 
                 <div className="flex flex-col px-6">
-                    <hr className="absolute left-0 border-0.5 border-gray-200 w-full" />
+                    <hr className="absolute left-0 border-0.5 border-primary-grey-hover w-full" />
                     <div className="flex flex-row w-full items-center pt-5 justify-between space-x-4">
                         <button
                             className={classnames(Classes.liteButton)}

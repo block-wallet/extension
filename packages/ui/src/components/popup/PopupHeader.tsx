@@ -160,7 +160,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                     </Dropdown>
                 )}
                 {networkIndicator && (
-                    <NetworkDisplayBadge truncate network={network} />
+                    <NetworkDisplayBadge network={network} />
                 )}
                 {close && (
                     <button

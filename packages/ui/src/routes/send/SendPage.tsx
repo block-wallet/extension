@@ -194,7 +194,7 @@ const SendPage = () => {
             }
         >
             {/* Search or Input */}
-            <div className="flex flex-col space-y-2 fixed w-full bg-white z-10">
+            <div className="flex flex-col space-y-2 fixed w-full bg-white z-[9]">
                 <div className="w-full p-6 pb-0">
                     <SearchInput
                         label="Enter public address, name or select contact"

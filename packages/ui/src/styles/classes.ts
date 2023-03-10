@@ -47,7 +47,7 @@ export class Classes {
 
     static actionButton = classnames(
         Classes.iconButton,
-        "bg-primary-grey-default border border-primary-grey-default hover:border-black"
+        "border border-primary-grey-hover hover:border-black"
     )
 
     static logoutButton = classnames(
@@ -86,20 +86,20 @@ export class Classes {
     )
     static inputLabel = classnames("text-xs")
     static inputBordered = classnames(
-        "text-sm rounded-md border-1 border-gray-200 placeholder-gray-400 focus:ring-0"
+        "text-sm rounded-md border-1 border-primary-grey-hover placeholder-gray-400 focus:ring-0"
     )
     static input = classnames(
         "w-full text-xs px-0 py-2 border-0 border-b-2 border-primary-black-default placeholder-gray-400 focus:ring-0"
     )
     static inputBorder = classnames(
-        "w-full text-xs px-2 py-2 mt-1 rounded-md border-1 border-gray-200 placeholder-gray-400 focus:ring-0"
+        "w-full text-xs px-2 py-2 mt-1 rounded-md border-1 border-primary-grey-hover placeholder-gray-400 focus:ring-0"
     )
 
     static checkbox = classnames(
         "w-5 h-5 border-2 border-gray-800 rounded-md focus:ring-0"
     )
     static checkboxAlt = classnames(
-        "w-6 h-6 border-2 border-gray-200 rounded-md focus:ring-0 cursor-pointer"
+        "w-6 h-6 border-2 border-primary-grey-hover rounded-md focus:ring-0 cursor-pointer"
     )
     static placeholder = classnames("overflow-hidden relative placeholder")
 
@@ -125,7 +125,7 @@ export class Classes {
     )
 
     static roundedIcon = classnames(
-        "flex items-center justify-center w-9 h-9 p-1.5 bg-white border border-gray-200 rounded-full"
+        "flex items-center justify-center w-9 h-9 p-1.5 bg-white border border-primary-grey-hover rounded-full"
     )
 
     static roundedFilledIcon = classnames(

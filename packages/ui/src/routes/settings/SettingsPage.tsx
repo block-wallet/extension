@@ -127,7 +127,7 @@ const SettingsPage = () => {
         >
             <div className="flex flex-col space-y-6 p-6">
                 {!isSeedPhraseBackedUp && (
-                    <div className="w-full border border-gray-200 rounded-md flex justify-between items-center p-4">
+                    <div className="w-full border border-primary-grey-hover rounded-md flex justify-between items-center p-4">
                         <span className="text-xs mr-2">
                             Back up your seed phrase to secure your funds.
                         </span>

@@ -165,8 +165,7 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
                         <NetworkDisplayBadge
                             className="min-w-[50%] py-1 m-auto"
                             network={currentNetwork}
-                            truncate={false}
-                            fill={false}
+                            showName
                         />
                     )}
 
@@ -177,7 +176,7 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
                             style={{ width: "calc(100%)" }}
                         ></div>
                         {/* Arrow icon */}
-                        <div className="flex flex-row items-center justify-center w-9 h-9 p-1.5 bg-white border border-gray-200 rounded-full z-0">
+                        <div className="flex flex-row items-center justify-center w-9 h-9 p-1.5 bg-white border border-primary-grey-hover rounded-full z-0">
                             <CgArrowsExchangeV fontStyle="bold" fontSize="48" />
                         </div>
                     </div>
@@ -187,8 +186,7 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
                         <NetworkDisplayBadge
                             className="min-w-[50%] py-1 m-auto"
                             network={newNetwork}
-                            truncate={false}
-                            fill={false}
+                            showName
                         />
                     )}
                 </div>

@@ -156,7 +156,7 @@ const ErrorFallbackPage: FunctionComponent<{
                         </a>
                     </div>
                 </div>
-                <div className="w-full border border-gray-200 rounded-md flex justify-between items-center p-4 py-2">
+                <div className="w-full border border-primary-grey-hover rounded-md flex justify-between items-center p-4 py-2">
                     <span className="text-xs mr-2">
                         Download state logs for support
                     </span>

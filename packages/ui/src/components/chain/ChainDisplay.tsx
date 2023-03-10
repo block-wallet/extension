@@ -43,7 +43,7 @@ const ChainDisplay: FC<Props> = ({
                 className="flex justify-start items-center flex-row py-3"
                 title={name}
             >
-                <div className="flex flex-row items-center justify-center w-9 h-9 p-1.5 bg-white border border-gray-200 rounded-full">
+                <div className="flex flex-row items-center justify-center w-9 h-9 p-1.5 bg-white border border-primary-grey-hover rounded-full">
                     <img
                         src={logoUrl || unkownLogoUrl}
                         onError={(e) => {

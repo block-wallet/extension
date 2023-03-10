@@ -2,46 +2,25 @@ import { Network } from "@block-wallet/background/utils/constants/networks"
 import { classnames } from "../../styles"
 import { getNetworkColor } from "../../util/getNetworkColor"
 import GenericTooltip from "../label/GenericTooltip"
-import useIsHovering from "../../util/hooks/useIsHovering"
 import { useState } from "react"
 
 const NetworkDisplayBadge = ({
     network,
     className,
-    fill = false,
-    truncate = false,
+    showName = false,
 }: {
     network: Network
-    fill?: boolean
-    truncate?: boolean
     className?: string
+    showName?: boolean
 }) => {
     const networkDesc = network.desc
     const networkColor = getNetworkColor(network)
-    const { isHovering, getIsHoveringProps } = useIsHovering()
     const [hasImageError, setHasImageError] = useState(false)
-
-    // We limit the string chars here regardless of the truncate flag
-    // and the truncate class to prevent issues with the animated bullet size
-    // and to have a limit on huge network descriptions.
-    const formattedNetworkName = truncate
-        ? networkDesc.length > 42
-            ? `${networkDesc.slice(0, 42)}...`
-            : networkDesc
-        : networkDesc
-
-    const displayFull =
-        isHovering ||
-        !(network.iconUrls && network.iconUrls.length > 0) ||
-        !truncate ||
-        hasImageError
 
     return (
         <div
-            {...getIsHoveringProps()}
             className={classnames(
-                "flex flex-row items-center py-1.5 px-1.5 text-gray-600 rounded-md group bg-primary-grey-default border-primary-200 text-xs",
-                fill && "bg-green-100",
+                "flex flex-row items-center py-1.5 px-1.5 text-gray-600 rounded-md group bg-primary-grey-default hover:bg-primary-grey-hover border-primary-200 text-xs",
                 "w-auto",
                 className
             )}
@@ -52,7 +31,7 @@ const NetworkDisplayBadge = ({
                 <img
                     src={network.iconUrls[0]}
                     alt="network icon"
-                    className={classnames("w-4 h-4", displayFull && "mr-2")}
+                    className={classnames("w-4 h-4", showName && "mr-2")}
                     onError={() => {
                         setHasImageError(true)
                     }}
@@ -60,32 +39,26 @@ const NetworkDisplayBadge = ({
             ) : (
                 <span
                     className={classnames(
-                        "justify-end h-2 rounded-xl ml-1 animate-pulse pointer-events-none",
-                        displayFull && "mr-2"
+                        "justify-end h-2 rounded-xl mx-1 animate-pulse pointer-events-none",
+                        showName && "mr-1"
                     )}
                     style={{ backgroundColor: networkColor, width: "8px" }}
                 />
             )}
 
-            <span
-                className={classnames(
-                    displayFull
-                        ? truncate
-                            ? "flex justify-center truncate ..."
-                            : "flex justify-center whitespace-normal break-all flex-1"
-                        : "hidden"
-                )}
-                style={
-                    displayFull && truncate
-                        ? { maxWidth: 80, display: "block" }
-                        : {}
-                }
-            >
-                {formattedNetworkName}
-            </span>
+            {showName && (
+                <span
+                    className={classnames(
+                        "flex justify-center whitespace-normal break-all flex-1"
+                    )}
+                >
+                    {networkDesc}
+                </span>
+            )}
+
             <GenericTooltip
                 left
-                className="translate-y-5 translate-x-3 shadow-md min-w-max"
+                className="!translate-y-5 !translate-x-3 shadow-md min-w-max"
                 content={<p className=" p-1 text-left">{networkDesc}</p>}
             />
         </div>

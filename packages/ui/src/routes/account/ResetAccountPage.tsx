@@ -78,7 +78,7 @@ const ResetAccountPage = ({}) => {
                         your seed phrase and your on-chain balance will not
                         change. You will be able to use your account normally.
                     </span>
-                    <div className="w-full border border-gray-200 rounded-md flex justify-between items-center p-4 py-2 my-6">
+                    <div className="w-full border border-primary-grey-hover rounded-md flex justify-between items-center p-4 py-2 my-6">
                         <span className="text-xs mr-2">
                             Download state logs for support
                         </span>

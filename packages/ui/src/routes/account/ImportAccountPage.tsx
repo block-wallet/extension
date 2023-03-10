@@ -231,7 +231,7 @@ const ImportAccountPage = () => {
                             </div>
                         )}
                     </div>
-                    <hr className="border-0.5 border-gray-200 w-full" />
+                    <hr className="border-0.5 border-primary-grey-hover w-full" />
                     <PopupFooter>
                         <ButtonWithLoading
                             type="submit"

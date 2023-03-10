@@ -284,7 +284,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                         BlockWallet
                     </span>
                 </div>
-                <div className="flex flex-col border border-gray-200 rounded-lg space-y-2 px-4 py-3">
+                <div className="flex flex-col border border-primary-grey-hover rounded-lg space-y-2 px-4 py-3">
                     <div>
                         <p className="font-bold text-primary-black-default">
                             Network Name

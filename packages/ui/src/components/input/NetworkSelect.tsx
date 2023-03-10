@@ -1,4 +1,4 @@
-import { FunctionComponent, useMemo, useRef, useState } from "react"
+import { FunctionComponent, useEffect, useMemo, useRef, useState } from "react"
 import { RiArrowDownSLine, RiArrowUpSLine } from "react-icons/ri"
 import { BsCheck } from "react-icons/bs"
 import { useHistory } from "react-router-dom"
@@ -26,7 +26,7 @@ const NetworkOption: FunctionComponent<{
         <li
             title={option.desc}
             className={classnames(
-                "cursor-pointer flex flex-row pl-2 pr-2 pt-1 pb-1 items-center hover:bg-gray-100",
+                "cursor-pointer flex flex-row pr-2 pt-1 pb-1 items-center hover:bg-gray-100",
                 !option.enable && "bg-gray-200 pointer-events-none",
                 disabled && "opacity-50 pointer-events-none",
                 option.name === selectedNetwork && "pointer-events-none"
@@ -82,14 +82,27 @@ const NetworkSelect: FunctionComponent<{
 
     const handleNetworkChange = async (network: string) => {
         setNetworkList(false)
-        await changeNetwork(network)
-        setHasImageError(false)
+        changeNetwork(network)
     }
 
     const networkData = availableNetworks[selectedNetwork.toUpperCase()]
 
     const networkColor = useMemo(() => {
         return getNetworkColor(networkData)
+    }, [networkData])
+
+    // Check if the network icon is valid before render. if not show the colored circle
+    useEffect(() => {
+        if (networkData.iconUrls && networkData.iconUrls.length > 0) {
+            const image = new Image()
+            image.src = networkData.iconUrls[0]
+            image.onerror = () => {
+                setHasImageError(true)
+            }
+            image.onload = () => {
+                setHasImageError(false)
+            }
+        }
     }, [networkData])
 
     return (
@@ -106,7 +119,7 @@ const NetworkSelect: FunctionComponent<{
                     }
                 }}
                 className={classNames(
-                    "relative flex flex-row items-center justify-start p-1 text-gray-600 bg-primary-grey-default rounded-md group border-primary-200 w-44 text-xs hover:border-primary-blue-default",
+                    "relative flex flex-row items-center justify-start p-1 text-gray-600 bg-primary-grey-default rounded-md group border-primary-200 w-44 text-xs hover:bg-primary-grey-hover",
                     !isImportingDeposits
                         ? "cursor-pointer select-none"
                         : "disabled:pointer-events-none opacity-50",
@@ -119,14 +132,11 @@ const NetworkSelect: FunctionComponent<{
                     <img
                         src={networkData.iconUrls[0]}
                         alt="network icon"
-                        className="w-4 h-4 mx-2"
-                        onError={() => {
-                            setHasImageError(true)
-                        }}
+                        className="w-4 h-4 mr-2 ml-1"
                     />
                 ) : (
                     <span
-                        className={"justify-start h-2 rounded-xl ml-1 mr-2"}
+                        className={"justify-start h-2 rounded-xl ml-2 mr-2"}
                         style={{
                             backgroundColor: networkColor,
                             width: "8px",
@@ -177,7 +187,7 @@ const NetworkSelect: FunctionComponent<{
                         <input
                             id="showTestNetworks"
                             type="checkbox"
-                            className="border-2 border-gray-200 rounded-md focus:ring-0 cursor-pointer"
+                            className="border-2 border-primary-grey-hover rounded-md focus:ring-0 cursor-pointer"
                             checked={showTestNetworks}
                             onChange={() => {}}
                         />

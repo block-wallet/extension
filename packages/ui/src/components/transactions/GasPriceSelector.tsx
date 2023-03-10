@@ -307,7 +307,7 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                     </div>
                 </div>
                 <div>
-                    <hr className="absolute left-0 border-0.5 border-gray-200 w-full" />
+                    <hr className="absolute left-0 border-0.5 border-primary-grey-hover w-full" />
                     <div className="flex flex-row w-full items-center pt-5 justify-between space-x-4 mt-auto px-4">
                         <button
                             type="button"
@@ -701,7 +701,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                                             ${
                                                 tab === value
                                                     ? "border-primary-blue-default border-b-2 text-primary-blue-default font-bold"
-                                                    : "border-gray-200 text-gray-500 border-b"
+                                                    : "border-primary-grey-hover text-gray-500 border-b"
                                             }`
                                 }
                                 containerClassName="flex flex-row -ml-3"

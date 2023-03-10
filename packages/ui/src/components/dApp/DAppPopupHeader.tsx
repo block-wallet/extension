@@ -44,7 +44,7 @@ const DAppPopupHeader: React.FC<Props> = ({
                 </div>
             )}
             {showNetworkIndicator && (
-                <NetworkDisplayBadge network={network} truncate />
+                <NetworkDisplayBadge network={network} />
             )}
         </PopupHeader>
     )

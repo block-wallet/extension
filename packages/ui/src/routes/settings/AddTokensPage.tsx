@@ -131,7 +131,7 @@ const AddTokensPage = () => {
                         />
                     )}
                 </div>
-                <hr className="border-0.5 border-gray-200 w-full" />
+                <hr className="border-0.5 border-primary-grey-hover w-full" />
                 {/* FOOTER */}
                 <PopupFooter>
                     <ButtonWithLoading

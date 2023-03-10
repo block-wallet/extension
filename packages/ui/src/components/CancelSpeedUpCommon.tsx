@@ -689,7 +689,7 @@ const CancelAndSpeedUpComponent = ({
                             )}
                         </div>
                         <hr
-                            className="border-0.5 border-gray-200"
+                            className="border-0.5 border-primary-grey-hover"
                             style={{
                                 width: "calc(100% + 3rem)",
                                 marginLeft: "-1.5rem",

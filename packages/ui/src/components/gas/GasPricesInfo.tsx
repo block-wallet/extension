@@ -229,14 +229,14 @@ const GasPricesInfo: FC = () => {
                                                 ]
                                             return (
                                                 <div
-                                                    className="flex flex-col border border-gray-200 rounded-lg space-y-1"
+                                                    className="flex flex-col border border-primary-grey-hover rounded-lg space-y-1"
                                                     key={level}
                                                 >
                                                     <div
                                                         className={classnames(
                                                             "flex flex-row  items-center space-x-1 p-3",
                                                             isEIP1559Compatible &&
-                                                                "border-b border-gray-200"
+                                                                "border-b border-primary-grey-hover"
                                                         )}
                                                     >
                                                         <img

@@ -67,7 +67,7 @@ const CheckBoxDialog: FunctionComponent<{
                     </div>
                 </span>
                 <div className="">
-                    <hr className="absolute left-0 border-0.5 border-gray-200 w-full" />
+                    <hr className="absolute left-0 border-0.5 border-primary-grey-hover w-full" />
                     <div className="flex flex-row w-full items-center pt-5 justify-between space-x-4 mt-auto">
                         {showCloseButton && (
                             <button

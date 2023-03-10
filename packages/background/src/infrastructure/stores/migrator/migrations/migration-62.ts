@@ -41,7 +41,7 @@ export default {
             hasFixedGasCost: false,
             enable: true,
             test: false,
-            order: 7,
+            order: 10,
             features: [FEATURES.SENDS],
             ens: false,
             showGasLevels: false,

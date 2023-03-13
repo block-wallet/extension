@@ -32,13 +32,12 @@ export class EtherscanFetcher {
                 status: string;
                 message: string;
                 result: T[];
-            }>(
-                `${this.etherscanApiUrl}/api`,
-                {
+            }>(`${this.etherscanApiUrl}/api`, {
+                params: {
                     ...params,
                 },
-                30000
-            );
+                timeout: 30000,
+            });
 
             if (result.status === '0' && result.message === 'NOTOK') {
                 await sleep(this.config.explorerAPIDelay);

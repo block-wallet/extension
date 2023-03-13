@@ -460,11 +460,11 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                     httpClient.get<FeeDataResponse>(
                         `${CHAIN_FEE_DATA_SERVICE_URL}/fee_data`,
                         {
-                            c: chainId,
-                        },
-                        undefined,
-                        undefined,
-                        CHAIN_FEE_CUSTOM_HEADER
+                            params: {
+                                c: chainId,
+                            },
+                            headers: CHAIN_FEE_CUSTOM_HEADER,
+                        }
                     ),
                 API_CALLS_DELAY,
                 API_CALLS_RETRIES

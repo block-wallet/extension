@@ -238,22 +238,21 @@ export default class SwapController extends BaseController<
     }: OneInchSwapQuoteParams): Promise<SwapQuote> => {
         try {
             const res = await retryHandling<OneInchSwapQuoteResponse>(() =>
-                httpClient.get<
-                    OneInchSwapQuoteResponse,
-                    OneInchSwapQuoteParams
-                >(
+                httpClient.get<OneInchSwapQuoteResponse>(
                     `${ONEINCH_SWAPS_ENDPOINT}${this._networkController.network.chainId}/quote`,
                     {
-                        fromTokenAddress:
-                            fromTokenAddress === '0x0'
-                                ? ONEINCH_NATIVE_ADDRESS
-                                : fromTokenAddress,
-                        toTokenAddress:
-                            toTokenAddress === '0x0'
-                                ? ONEINCH_NATIVE_ADDRESS
-                                : toTokenAddress,
-                        amount,
-                        fee: BASE_SWAP_FEE,
+                        params: {
+                            fromTokenAddress:
+                                fromTokenAddress === '0x0'
+                                    ? ONEINCH_NATIVE_ADDRESS
+                                    : fromTokenAddress,
+                            toTokenAddress:
+                                toTokenAddress === '0x0'
+                                    ? ONEINCH_NATIVE_ADDRESS
+                                    : toTokenAddress,
+                            amount,
+                            fee: BASE_SWAP_FEE,
+                        },
                     }
                 )
             );
@@ -288,15 +287,17 @@ export default class SwapController extends BaseController<
 
         try {
             const res = await retryHandling<OneInchSwapRequestResponse>(() =>
-                httpClient.get<
-                    OneInchSwapRequestResponse,
-                    OneInchSwapRequestParams
-                >(`${ONEINCH_SWAPS_ENDPOINT}${chainId}/swap`, {
-                    ...swapParams,
-                    fee: BASE_SWAP_FEE,
-                    referrerAddress: REFERRER_ADDRESS,
-                    allowPartialFill: false,
-                })
+                httpClient.get<OneInchSwapRequestResponse>(
+                    `${ONEINCH_SWAPS_ENDPOINT}${chainId}/swap`,
+                    {
+                        params: {
+                            ...swapParams,
+                            fee: BASE_SWAP_FEE,
+                            referrerAddress: REFERRER_ADDRESS,
+                            allowPartialFill: false,
+                        },
+                    }
+                )
             );
 
             const methodSignature =

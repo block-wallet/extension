@@ -48,7 +48,7 @@ const request = async <T>(
     method = GET,
     timeout = 60000,
     cache: RequestCache = 'default',
-    headers: Record<string, string> | undefined
+    headers: HeadersInit | undefined
 ): Promise<T> => {
     const options: RequestInit & { timeout?: number } = {
         method,
@@ -100,58 +100,49 @@ const request = async <T>(
     );
 };
 
-const get = async <
-    T,
-    P extends Record<string, any> | undefined = Record<string, any>
->(
-    url: string,
-    params?: P,
-    timeout?: number,
-    cache?: RequestCache,
-    headers?: Record<string, string>
-) => request<T>(url, params, GET, timeout, cache, headers);
+const get = async <T>(url: string, options: RequestOptions) =>
+    request<T>(
+        url,
+        options.params,
+        GET,
+        options.timeout,
+        options.cache,
+        options.headers
+    );
 
-const post = async <
-    T,
-    P extends Record<string, any> | undefined = Record<string, any>
->(
-    url: string,
-    params?: P,
-    timeout?: number,
-    cache?: RequestCache,
-    headers?: Record<string, string>
-) => request<T>(url, params, POST, timeout, cache, headers);
+const post = async <T>(url: string, options: RequestOptions) =>
+    request<T>(
+        url,
+        options.params,
+        POST,
+        options.timeout,
+        options.cache,
+        options.headers
+    );
+
+export interface RequestOptions extends RequestInit {
+    params?: Record<string, any> | undefined;
+    timeout?: number;
+}
 
 interface HttpClient {
     /**
      * Performs an HTTP GET request
      *
      * @param url the URL
-     * @param params query parameters
+     * @param options options of the request
      * @returns The parsed JSON response
      */
-    get<T, P extends Record<string, any> | undefined = Record<string, any>>(
-        url: string,
-        params?: P,
-        timeout?: number,
-        cache?: RequestCache,
-        headers?: Record<string, string>
-    ): Promise<T>;
+    get<T>(url: string, options?: RequestOptions): Promise<T>;
 
     /**
      * Performs an HTTP POST request
      *
      * @param url the URL
-     * @param params The body content
+     * @param  options options of the request
      * @returns The parsed JSON response
      */
-    post<T, P extends Record<string, any> | undefined = Record<string, any>>(
-        url: string,
-        params?: P,
-        timeout?: number,
-        cache?: RequestCache,
-        headers?: Record<string, string>
-    ): Promise<T>;
+    post<T>(url: string, options?: RequestOptions): Promise<T>;
 }
 
 export default {

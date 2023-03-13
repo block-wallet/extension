@@ -373,15 +373,12 @@ export class OffChainBlockFetchService {
                 () =>
                     httpClient.get<{
                         bn: string;
-                    }>(
-                        `${OFF_CHAIN_BLOCK_FETCH_SERVICE_URL}/bn`,
-                        {
+                    }>(`${OFF_CHAIN_BLOCK_FETCH_SERVICE_URL}/bn`, {
+                        params: {
                             c: chainId,
                         },
-                        undefined,
-                        undefined,
-                        OFF_CHAIN_BLOCK_CUSTOM_HEADER
-                    ),
+                        headers: OFF_CHAIN_BLOCK_CUSTOM_HEADER,
+                    }),
                 API_CALLS_DELAY,
                 API_CALLS_RETRIES
             );

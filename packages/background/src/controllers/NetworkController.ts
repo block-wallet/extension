@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import Common from '@ethereumjs/common';
+import { Common } from '@ethereumjs/common';
 import { BaseController } from '../infrastructure/BaseController';
 import {
     Network,
@@ -406,7 +406,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
         const explorerUrl =
             getUrlWithoutTrailingSlash(network.blockExplorerUrls) ||
             getUrlWithoutTrailingSlash(
-                chainDataFromList?.explorers?.map(({ url }) => url)
+                chainDataFromList?.explorers?.map(
+                    ({ url }: { url: string }) => url
+                )
             ) ||
             '';
         if (explorerUrl && explorerUrl.indexOf('https://') === -1) {
@@ -415,11 +417,11 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         // Check if we have the explorer name
         const blockExplorerName = chainDataFromList?.explorers
-            ?.map((t) => ({
+            ?.map((t: any) => ({
                 ...t,
                 url: t.url.endsWith('/') ? t.url.slice(0, -1) : t.url,
             }))
-            .find((e) => e.url.includes(explorerUrl))?.name;
+            .find((e: any) => e.url.includes(explorerUrl))?.name;
 
         const nativeCurrencySymbol =
             network.nativeCurrency?.symbol ||

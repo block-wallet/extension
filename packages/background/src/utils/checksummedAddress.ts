@@ -1,4 +1,4 @@
-import { toChecksumAddress } from 'ethereumjs-util';
+import { toChecksumAddress } from '@ethereumjs/util';
 import { memoize } from 'lodash';
 
 const checksummedAddress = memoize((address: string) =>

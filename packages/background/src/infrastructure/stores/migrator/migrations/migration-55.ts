@@ -9,7 +9,7 @@ import {
 import NetworkController from '../../../../controllers/NetworkController';
 import { TokenOperationsController } from '../../../../controllers/erc-20/transactions/TokenOperationsController';
 import { Accounts } from '@block-wallet/background/controllers/AccountTrackerController';
-import { toChecksumAddress } from 'ethereumjs-util';
+import { toChecksumAddress } from '@ethereumjs/util';
 
 const hasRecords = (records: Record<any, any>): boolean => {
     return records && Object.keys(records).length > 0;

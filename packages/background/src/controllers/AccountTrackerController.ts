@@ -1544,6 +1544,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 assetAddressToGetBalance
             );
 
+            const network =
+                this._networkController.getNetworkFromChainId(chainId);
+
             for (const tokenAddress in balances) {
                 const balance = balances[tokenAddress];
 
@@ -1566,7 +1569,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             if (
                                 balance.gt(zero) &&
                                 !userTokens.includes(tokenAddress) &&
-                                knownTokens.includes(tokenAddress) // the token has to be known (not spam)
+                                (network?.test ||
+                                    knownTokens.includes(tokenAddress)) // the token has to be known (not spam) in mainnets
                             ) {
                                 await this._tokenController.addCustomToken(
                                     token,

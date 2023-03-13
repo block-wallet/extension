@@ -1,67 +1,69 @@
-import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
-import { IMigration } from '../IMigration';
-import { INITIAL_NETWORKS } from '../../../../utils/constants/networks';
+import { FEATURES } from '../../../../utils/constants/features';
+import { BlankAppState } from '../../../../utils/constants/initialState';
+import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES } from '../../../../utils/constants/networks';
 import { normalizeNetworksOrder } from '../../../../utils/networks';
+import { IMigration } from '../IMigration';
 
 /**
- * Update Network and native currency logos
+ * This migration updates Scroll and zkSync networks
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
         const { availableNetworks } = persistedState.NetworkController;
         const updatedNetworks = { ...availableNetworks };
 
-        updatedNetworks.MAINNET = {
-            ...updatedNetworks.MAINNET,
-            iconUrls: INITIAL_NETWORKS.MAINNET.iconUrls,
+        // Remove Scroll L1 testnet
+        delete updatedNetworks['SCROLL_L1_TESTNET'];
+
+        // Update Scroll L2 Alpha
+        updatedNetworks.SCROLL_L2_TESTNET = {
+            ...updatedNetworks.SCROLL_L2_TESTNET,
+            desc: 'Scroll Alpha Testnet',
+            chainId: 534353,
+            networkVersion: '534353',
+            blockExplorerUrls: ['https://blockscout.scroll.io/'],
         };
 
-        updatedNetworks.ARBITRUM = {
-            ...updatedNetworks.ARBITRUM,
-            iconUrls: INITIAL_NETWORKS.ARBITRUM.iconUrls,
+        // Add new zkSync Era Mainnet
+        updatedNetworks.ZKSYNC_ERA_MAINNET = {
+            name: 'zksync_era_mainnet',
+            desc: 'zkSync Era Mainnet',
+            chainId: 324,
+            networkVersion: '324',
             nativeCurrency: {
-                ...updatedNetworks.ARBITRUM.nativeCurrency,
-                logo: INITIAL_NETWORKS.ARBITRUM.nativeCurrency.logo,
+                name: 'Ether',
+                symbol: 'ETH',
+                decimals: 18,
             },
-        };
-
-        updatedNetworks.OPTIMISM = {
-            ...updatedNetworks.OPTIMISM,
-            iconUrls: INITIAL_NETWORKS.OPTIMISM.iconUrls,
-            nativeCurrency: {
-                ...updatedNetworks.OPTIMISM.nativeCurrency,
-                logo: INITIAL_NETWORKS.OPTIMISM.nativeCurrency.logo,
+            iconUrls: [
+                'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zksync/info/logo.png',
+            ],
+            hasFixedGasCost: false,
+            enable: true,
+            test: false,
+            order: 10,
+            features: [FEATURES.SENDS],
+            ens: false,
+            showGasLevels: false,
+            rpcUrls: [`https://zksync-node.blockwallet.io`],
+            defaultRpcUrl: `https://zksync-node.blockwallet.io`,
+            blockExplorerUrls: ['https://explorer.zksync.io/'],
+            blockExplorerName: 'zkSync Explorer',
+            actionsTimeIntervals: {
+                ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
             },
-        };
-
-        updatedNetworks.XDAI = {
-            ...updatedNetworks.XDAI,
-            iconUrls: INITIAL_NETWORKS.XDAI.iconUrls,
-            nativeCurrency: {
-                ...updatedNetworks.XDAI.nativeCurrency,
-                logo: INITIAL_NETWORKS.XDAI.nativeCurrency.logo,
+            tornadoIntervals: {
+                depositConfirmations: 0,
+                derivationsForward: 0,
             },
+            nativelySupported: true,
         };
 
-        updatedNetworks.GOERLI = {
-            ...updatedNetworks.GOERLI,
-            iconUrls: INITIAL_NETWORKS.GOERLI.iconUrls,
-        };
-
+        // Update zkSync Era Testnet
         updatedNetworks.ZKSYNC_ALPHA_TESTNET = {
             ...updatedNetworks.ZKSYNC_ALPHA_TESTNET,
-            nativeCurrency: {
-                ...updatedNetworks.ZKSYNC_ALPHA_TESTNET.nativeCurrency,
-                logo: INITIAL_NETWORKS.ZKSYNC_ALPHA_TESTNET.nativeCurrency.logo,
-            },
-        };
-
-        updatedNetworks.LOCALHOST = {
-            ...updatedNetworks.LOCALHOST,
-            nativeCurrency: {
-                ...updatedNetworks.LOCALHOST.nativeCurrency,
-                logo: INITIAL_NETWORKS.LOCALHOST.nativeCurrency.logo,
-            },
+            desc: 'zkSync Era Testnet',
+            blockExplorerName: 'zkSync Testnet Explorer',
         };
 
         const orderedNetworks = normalizeNetworksOrder(updatedNetworks);

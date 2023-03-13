@@ -72,12 +72,12 @@ export class Classes {
     static darkButton = classnames(
         Classes.centered,
         Classes.baseButton,
-        "bg-primary-black-default text-white hover:bg-primary-black-hover border-primary-black-default hover:border-primary-black-hover"
+        "bg-primary-blue-default text-white hover:bg-primary-blue-hover border-primary-blue-default hover:border-primary-blue-hover"
     )
     static disabledDarkButton = classnames(
         Classes.centered,
         Classes.baseButton,
-        "bg-primary-black-disabled border-primary-black-disabled text-white pointer-events-none"
+        "bg-primary-blue-disabled border-primary-blue-disabled text-white pointer-events-none"
     )
     static liteButton = classnames(
         Classes.centered,

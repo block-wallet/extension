@@ -173,7 +173,7 @@ const PopupPage = () => {
             />
             {state.isNetworkChanging && <TransparentOverlay />}
             <div
-                className="absolute top-0 left-0 z-10 flex flex-col items-start w-full p-6 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
+                className="absolute top-0 left-0 z-10 flex flex-col items-start w-full px-6 py-4 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
                 style={{ backdropFilter: "blur(4px)" }}
             >
                 <div className="flex flex-row items-center justify-between w-full">
@@ -221,7 +221,7 @@ const PopupPage = () => {
                     </div>
                 </div>
             </div>
-            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-24 space-y-2 overflow-auto hide-scroll">
+            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-20 space-y-2 overflow-auto hide-scroll">
                 <div className="w-full">
                     <div className="flex flex-row items-start w-full justify-between pt-1 pb-2">
                         <GenericTooltip

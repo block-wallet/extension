@@ -69,10 +69,10 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     return (
         <div
             className={classnames(
-                "z-10 flex flex-row items-center p-6 bg-white bg-opacity-75 max-w-full",
+                "z-10 flex flex-row items-center px-6 py-4 bg-white bg-opacity-75 max-w-full",
                 className
             )}
-            style={{ backdropFilter: "blur(4px)", minHeight: "76px" }}
+            style={{ backdropFilter: "blur(4px)", minHeight: "69px" }}
         >
             {backButton && (
                 <button
@@ -159,9 +159,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                         </Dropdown.Menu>
                     </Dropdown>
                 )}
-                {networkIndicator && (
-                    <NetworkDisplayBadge network={network} />
-                )}
+                {networkIndicator && <NetworkDisplayBadge network={network} />}
                 {close && (
                     <button
                         onClick={(e) => {

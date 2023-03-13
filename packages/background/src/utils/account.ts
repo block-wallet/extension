@@ -5,7 +5,7 @@ import {
     isValidPrivate,
     stripHexPrefix,
     toBuffer,
-} from 'ethereumjs-util';
+} from '@ethereumjs/util';
 
 export enum ImportStrategy {
     PRIVATE_KEY = 'PRIVATE_KEY',

@@ -16,6 +16,7 @@ import { isAddress } from "@ethersproject/address"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
+import log from "loglevel"
 
 // Types
 export type TokenResponse = {
@@ -59,7 +60,7 @@ const AddTokensPage = () => {
 
                         return setResults([...exacts, ...others])
                     })
-                    .catch((err) => console.log(err))
+                    .catch((err) => log.error(err))
             } else {
                 setResults([])
             }

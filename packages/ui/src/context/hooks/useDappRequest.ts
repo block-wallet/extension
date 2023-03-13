@@ -46,6 +46,7 @@ export const useDappRequest = () => {
             status,
             error,
             approveTime,
+            qrParams,
         },
     ] = requests[0]
 
@@ -62,5 +63,6 @@ export const useDappRequest = () => {
         status,
         error,
         type,
+        qrParams,
     }
 }

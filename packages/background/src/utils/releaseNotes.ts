@@ -1,5 +1,5 @@
 import { ReleaseNote } from '../controllers/PreferencesController';
-import compareVersions from 'compare-versions';
+import { compareVersions, validate } from 'compare-versions';
 interface Options {
     lastVersionSeen?: string;
     stackNotes?: boolean;
@@ -16,7 +16,7 @@ const generateReleaseNotesNews = (
     userCurrentVersion: string,
     options: Options = defaultOptions
 ): ReleaseNote[] | null => {
-    if (!compareVersions.validate(userCurrentVersion)) {
+    if (!validate(userCurrentVersion)) {
         return null;
     }
     const safeOptions = {

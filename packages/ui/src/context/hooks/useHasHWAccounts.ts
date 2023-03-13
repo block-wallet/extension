@@ -1,6 +1,8 @@
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import { useMemo } from "react"
-import { AccountType, Devices } from "../commTypes"
+import { HARDWARE_TYPES } from "../../util/account"
+import { getAccountTypeFromDevice } from "../../util/hardwareDevice"
+import { Devices } from "../commTypes"
 import { useSortedAccounts } from "./useSortedAccounts"
 
 export const useHasHWAccounts = (
@@ -11,12 +13,8 @@ export const useHasHWAccounts = (
     })
     return useMemo(() => {
         const devices = device
-            ? [
-                  device === Devices.LEDGER
-                      ? AccountType.LEDGER
-                      : AccountType.TREZOR,
-              ]
-            : [AccountType.LEDGER, AccountType.TREZOR]
+            ? [getAccountTypeFromDevice(device)]
+            : HARDWARE_TYPES
         return accounts.some((account: AccountInfo) =>
             devices.includes(account.accountType)
         )

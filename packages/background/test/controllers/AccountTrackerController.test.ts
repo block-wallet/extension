@@ -36,6 +36,8 @@ import { TypedTransaction } from '@ethereumjs/tx';
 import { mockedPermissionsController } from 'test/mocks/mock-permissions';
 import { GasPricesController } from '@block-wallet/background/controllers/GasPricesController';
 import PermissionsController from '@block-wallet/background/controllers/PermissionsController';
+import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
+import { Devices } from '@block-wallet/background/utils/types/hardware';
 
 describe('AccountTracker controller implementation', function () {
     const accounts = {
@@ -106,11 +108,12 @@ describe('AccountTracker controller implementation', function () {
             gasPricesController,
             tokenController,
             blockUpdatesController,
+            mockKeyringController,
             {
                 transactions: [],
                 txSignTimeout: 0,
             },
-            async (ethTx: TypedTransaction) => {
+            async (_: string, ethTx: TypedTransaction) => {
                 const privateKey = Buffer.from(accounts.goerli[0].key, 'hex');
                 return Promise.resolve(ethTx.sign(privateKey));
             },
@@ -1600,5 +1603,28 @@ describe('AccountTracker controller implementation', function () {
                 },
             } as Accounts);
         });
+    });
+
+    it('getAccountTypeFromDevice', () => {
+        let device = accountTrackerController.getAccountTypeFromDevice(
+            Devices.KEYSTONE
+        );
+        expect(device).equal(AccountType.KEYSTONE);
+
+        device = accountTrackerController.getAccountTypeFromDevice(
+            Devices.LEDGER
+        );
+        expect(device).equal(AccountType.LEDGER);
+
+        device = accountTrackerController.getAccountTypeFromDevice(
+            Devices.TREZOR
+        );
+        expect(device).equal(AccountType.TREZOR);
+
+        try {
+            accountTrackerController.getAccountTypeFromDevice(Devices.TREZOR);
+        } catch (error) {
+            expect(error).equal(new Error('Invalid device'));
+        }
     });
 });

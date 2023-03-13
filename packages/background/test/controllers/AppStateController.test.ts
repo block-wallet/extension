@@ -78,11 +78,12 @@ describe('AppState Controller', function () {
                 ),
                 tokenController,
                 blockUpdatesController,
+                mockKeyringController,
                 {
                     transactions: [],
                     txSignTimeout: 0,
                 },
-                async (ethTx: TypedTransaction) => {
+                async (_: string, ethTx: TypedTransaction) => {
                     const privateKey = Buffer.from(
                         accounts.goerli[0].key,
                         'hex'

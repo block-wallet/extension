@@ -33,6 +33,7 @@ import { BASE_SWAP_FEE } from '../../src/utils/types/1inch';
 import httpClient from './../../src/utils/http';
 import { TypedTransaction } from '@ethereumjs/tx';
 import TokenAllowanceController from '@block-wallet/background/controllers/erc-20/transactions/TokenAllowanceController';
+import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
 
 const BLANK_TOKEN_ADDRESS = '0x41a3dba3d677e573636ba691a70ff2d606c29666';
 
@@ -107,11 +108,12 @@ describe('Swap Controller', function () {
             gasPricesController,
             tokenController,
             blockUpdatesController,
+            mockKeyringController,
             {
                 transactions: [],
                 txSignTimeout: 0,
             },
-            async (ethTx: TypedTransaction) => {
+            async (_: string, ethTx: TypedTransaction) => {
                 const privateKey = Buffer.from(accounts.goerli[0].key, 'hex');
                 return Promise.resolve(ethTx.sign(privateKey));
             },

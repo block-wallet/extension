@@ -28,6 +28,7 @@
         "react-json-view": "^1.21.3",
         "react-modal": "^3.12.1",
         "react-password-strength-bar": "^0.4.1",
+        "react-qr-reader": "^3.0.0-beta-1",
         "react-refresh": "^0.13.0",
         "react-router-dom": "^5.2.0",
         "react-router-last-location": "^2.0.1",

@@ -16,6 +16,7 @@ interface ConnectDeviceProps {
     isLoading: boolean
     title: string
     subtitle: string
+    stepFontSize?: "sm" | "md" | "lg" | undefined
 }
 
 const ConnectDeviceStepsLayout: React.FC<ConnectDeviceProps> = ({
@@ -25,6 +26,7 @@ const ConnectDeviceStepsLayout: React.FC<ConnectDeviceProps> = ({
     isLoading,
     title,
     subtitle,
+    stepFontSize,
 }) => {
     const history = useHistory()
     return (
@@ -57,7 +59,12 @@ const ConnectDeviceStepsLayout: React.FC<ConnectDeviceProps> = ({
             <div className="w-full p-8 space-y-4">
                 {steps.map((step, index) => (
                     <div className="flex flex-row items-center space-x-2">
-                        <Step step={index + 1} text={step.label} key={index} />
+                        <Step
+                            step={index + 1}
+                            text={step.label}
+                            key={index}
+                            size={stepFontSize}
+                        />
                         {step.info && (
                             <div className="group relative">
                                 <AiFillInfoCircle

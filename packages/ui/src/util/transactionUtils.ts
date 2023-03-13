@@ -125,6 +125,27 @@ export const isTransactionOrRequestAwaitingSigning = (
     return validStatuses.includes(status)
 }
 
+export const isTransactionOrRequestRejected = (
+    status: TransactionStatus | DappRequestSigningStatus,
+    trezorVendor: boolean
+): boolean => {
+    return (
+        [
+            TransactionStatus.REJECTED,
+            DappRequestSigningStatus.REJECTED,
+        ].includes(status) ||
+        (trezorVendor &&
+            ![
+                TransactionStatus.UNAPPROVED,
+                TransactionStatus.SUBMITTED,
+                TransactionStatus.CONFIRMED,
+                TransactionStatus.SIGNED,
+                DappRequestSigningStatus.SIGNED,
+                DappRequestSigningStatus.PENDING,
+            ].includes(status))
+    )
+}
+
 export const canUserSubmitTransaction = (
     status: TransactionStatus
 ): boolean => {

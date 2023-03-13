@@ -10,7 +10,7 @@ import { ITokens, Token } from '../../../src/controllers/erc-20/Token';
 import NetworkController from '../../../src/controllers/NetworkController';
 import sinon from 'sinon';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
-import { toChecksumAddress } from 'ethereumjs-util';
+import { toChecksumAddress } from '@ethereumjs/util';
 import { getNetworkControllerInstance } from '../../mocks/mock-network-instance';
 import { PreferencesController } from '@block-wallet/background/controllers/PreferencesController';
 import { mockPreferencesController } from '../../mocks/mock-preferences';

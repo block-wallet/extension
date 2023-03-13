@@ -213,7 +213,10 @@ const HardwareWalletAccountsPage = () => {
                         disabled={isImportingAccounts}
                         onClick={() =>
                             history.push({
-                                pathname: "/hardware-wallet/connect",
+                                pathname:
+                                    vendor === Devices.KEYSTONE
+                                        ? "/hardware-wallet/keystone-connect"
+                                        : "/hardware-wallet/connect",
                                 state: { vendor },
                             })
                         }
@@ -291,16 +294,18 @@ const HardwareWalletAccountsPage = () => {
                         pages={6}
                     />
                 </div>
-                <AdvancedSettings
-                    currentHDPath={
-                        hdPath ||
-                        HDPaths[vendor].find((p) => p.default)?.path ||
-                        BIP44_PATH
-                    }
-                    disabled={state.gettingAccounts}
-                    vendor={vendor}
-                    setHDPath={updateHDPath}
-                />
+                {vendor !== Devices.KEYSTONE && (
+                    <AdvancedSettings
+                        currentHDPath={
+                            hdPath ||
+                            HDPaths[vendor].find((p) => p.default)?.path ||
+                            BIP44_PATH
+                        }
+                        disabled={state.gettingAccounts}
+                        vendor={vendor}
+                        setHDPath={updateHDPath}
+                    />
+                )}
             </div>
         </HardwareWalletSetupLayout>
     )

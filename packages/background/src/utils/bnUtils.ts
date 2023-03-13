@@ -1,5 +1,5 @@
 import BN from 'bn.js';
-import { addHexPrefix } from 'ethereumjs-util';
+import { addHexPrefix } from '@ethereumjs/util';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 
 /**

@@ -1,4 +1,4 @@
-import { isValidAddress, toChecksumAddress } from 'ethereumjs-util';
+import { isValidAddress, toChecksumAddress } from '@ethereumjs/util';
 import { BaseController } from '../infrastructure/BaseController';
 import { compareAddresses, normalizeEnsName } from './transactions/utils/utils';
 import NetworkController from './NetworkController';

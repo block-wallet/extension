@@ -8,6 +8,7 @@ import {
 
 export interface TransactionFilters {
     categories?: TransactionCategories[]
+    txId?: string
 }
 
 const applyCustomFilters = (
@@ -19,6 +20,9 @@ const applyCustomFilters = (
         matched =
             matched &&
             filters.categories.includes(transaction.transactionCategory!)
+    }
+    if (filters?.txId) {
+        matched = matched && filters.txId.includes(transaction.id!)
     }
     return matched
 }
@@ -38,12 +42,17 @@ export const useWaitingForSigningInternalTransaction = (
         TransactionStatus.APPROVED,
         TransactionStatus.SIGNED,
     ]
-    const filteredTransactions = transactions.filter(
-        (t) =>
-            validStates.includes(t.status) &&
-            t.metaType === MetaType.REGULAR &&
-            t.origin === "blank" &&
-            applyCustomFilters(t, txFilters)
-    )
+    const filteredTransactions = transactions.filter((t) => {
+        if (txFilters.txId) {
+            return applyCustomFilters(t, txFilters)
+        } else {
+            return (
+                validStates.includes(t.status) &&
+                t.metaType === MetaType.REGULAR &&
+                t.origin === "blank" &&
+                applyCustomFilters(t, txFilters)
+            )
+        }
+    })
     return filteredTransactions.length > 0 ? filteredTransactions[0] : undefined
 }

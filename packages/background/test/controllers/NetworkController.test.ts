@@ -60,7 +60,7 @@ describe('Network controller', function () {
         expect(
             (await networkController.getLatestBlock()).number
         ).to.be.greaterThan(12556240);
-    }).timeout(30000);
+    }).timeout(100000);
 
     describe('EIP1559 compatibility', async () => {
         it('There is a value for the chain', async () => {

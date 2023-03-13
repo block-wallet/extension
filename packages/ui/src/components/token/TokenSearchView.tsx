@@ -10,6 +10,7 @@ import searchIcon from "../../assets/images/icons/search.svg"
 import { TokenResponse } from "../../routes/settings/AddTokensPage"
 import { useEffect, useState } from "react"
 import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
+import log from "loglevel"
 
 export interface tokenSearchView {
     isSearchEmpty?: boolean
@@ -48,9 +49,9 @@ const SearchedTokenView = ({
                 // Prevent manual form submission
                 setMessage("Please select a token first.")
             }
-        } catch (event) {
+        } catch (error) {
             // Invalid form data
-            console.log(event)
+            log.error(error)
         }
     }
 

@@ -17,7 +17,6 @@ import BlockUpdatesController from '@block-wallet/background/controllers/block-u
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import httpClient, { RequestError } from './../../src/utils/http';
 
-// TODO(REC): FIX US!
 describe('GasPrices Controller', () => {
     let gasPricesController: GasPricesController;
     let networkController: NetworkController;

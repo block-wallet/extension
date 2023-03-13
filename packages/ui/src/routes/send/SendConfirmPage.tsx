@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useState } from "react"
 
 import { useForm } from "react-hook-form"
 
@@ -67,6 +67,7 @@ import { rejectTransaction } from "../../context/commActions"
 import { getValueByKey } from "../../util/objectUtils"
 import { AddressDisplay } from "../../components/addressBook/AddressDisplay"
 import { useAccountNameByAddress } from "../../context/hooks/useAccountNameByAddress"
+import log from "loglevel"
 
 // Schema
 const GetAmountYupSchema = (
@@ -227,12 +228,14 @@ interface SendConfirmPersistedState {
     amount: string
     submitted: boolean
     asset: TokenWithBalance | null
+    txId: string
 }
 
 const INITIAL_VALUE_PERSISTED_DATA = {
     asset: null,
     amount: "",
     submitted: false,
+    txId: "",
 }
 
 // Page
@@ -256,13 +259,32 @@ const SendConfirmPage = () => {
         })
 
     const { transaction: currentTransaction, clearTransaction } =
-        useInProgressInternalTransaction()
+        useInProgressInternalTransaction({ txId: persistedData.txId })
 
     useEffect(() => {
+        if (
+            currentTransaction?.id &&
+            persistedData.submitted &&
+            persistedData.txId !== currentTransaction?.id
+        ) {
+            if (isHardwareWallet(accountType)) {
+                setPersistedData((prev: SendConfirmPersistedState) => ({
+                    ...prev,
+                    txId: currentTransaction?.id,
+                }))
+            }
+        }
+    }, [currentTransaction?.id])
+
+    useLayoutEffect(() => {
         // Tx was either rejected or submitted when the pop-up was closed.
         // If we opened back the pop-up, and there aren't any pending transactions,
         // we should redirect to the home page (this is only checked on component mount)
-        if (!currentTransaction?.id && persistedData.submitted) {
+        if (
+            !currentTransaction?.id &&
+            persistedData.submitted &&
+            !persistedData.txId
+        ) {
             setPersistedData(() => ({
                 ...INITIAL_VALUE_PERSISTED_DATA,
                 submitted: false,
@@ -329,6 +351,7 @@ const SendConfirmPage = () => {
                       status: currentTransaction?.status,
                       error: currentTransaction?.error as Error,
                       epochTime: currentTransaction?.approveTime,
+                      qrParams: currentTransaction.qrParams,
                   }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,
@@ -401,7 +424,6 @@ const SendConfirmPage = () => {
                   data.amount.toString(),
                   selectedToken!.token.decimals || DEFAULT_DECIMALS // Default to eth decimals
               )
-
         dispatch({ type: "open", payload: { status: "loading" } })
 
         const isLinked = await checkDeviceIsLinked()
@@ -646,7 +668,7 @@ const SendConfirmPage = () => {
                     gasLimit: BigNumber.from(gasLimit),
                 })
             } catch (error) {
-                console.log("error ", error)
+                log.error("error ", error)
             } finally {
                 setIsGasLoading(false)
             }
@@ -723,6 +745,7 @@ const SendConfirmPage = () => {
                         setPersistedData((prev: SendConfirmPersistedState) => ({
                             ...prev,
                             submitted: false,
+                            txId: "",
                         }))
                         clearTransaction()
                         return

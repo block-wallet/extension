@@ -77,7 +77,9 @@ import {
     validateChainId,
 } from '../utils/ethereumChain';
 import log from 'loglevel';
-import KeyringControllerDerivated from './KeyringControllerDerivated';
+import KeyringControllerDerivated, {
+    KeyringControllerEvents,
+} from './KeyringControllerDerivated';
 import { randomBytes } from '../utils/randomBytes';
 import BlockUpdatesController, {
     BlockUpdatesEvents,
@@ -1085,8 +1087,15 @@ export default class BlankProviderController extends BaseController<BlankProvide
             intervalRef && clearInterval(intervalRef);
             timeoutRef && clearTimeout(timeoutRef);
         };
+        const __clearListeners = () => {
+            this.removeAllListeners(
+                KeyringControllerEvents.QR_MESSAGE_SIGNATURE_REQUEST_GENERATED
+            );
+        };
 
         try {
+            __clearListeners();
+
             if (!isAccepted) {
                 throw new Error(ProviderError.USER_REJECTED_REQUEST);
             }
@@ -1095,6 +1104,18 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 status: DappRequestSigningStatus.APPROVED,
                 approveTime: Date.now(),
             });
+
+            this._keyringController.on(
+                KeyringControllerEvents.QR_MESSAGE_SIGNATURE_REQUEST_GENERATED,
+                (requestId: string, qrSignRequest: string[]) => {
+                    this.updateDappRequest(reqId, {
+                        qrParams: {
+                            requestId,
+                            qrSignRequest,
+                        },
+                    });
+                }
+            );
 
             signedMessage = await new Promise<string>((resolve, reject) => {
                 intervalRef = setInterval(() => {
@@ -1130,6 +1151,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 execPromise
                     .then((data) => {
                         __clearTimeouts();
+                        __clearListeners();
                         const { dappRequests } = this.store.getState();
                         if (reqId in dappRequests) {
                             // At this point the promise has been already rejected by the setInterval function.
@@ -1144,6 +1166,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
                     })
                     .catch((e) => {
                         __clearTimeouts();
+                        __clearListeners();
                         const { dappRequests } = this.store.getState();
                         if (reqId in dappRequests) {
                             reject(e);
@@ -1174,6 +1197,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
             }
         } finally {
             __clearTimeouts();
+            __clearListeners();
 
             // Resolve the handleDapRequest callback only if the request
             // did not have an unexpected error

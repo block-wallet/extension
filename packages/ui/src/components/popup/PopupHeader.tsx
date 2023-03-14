@@ -99,8 +99,8 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     }
 
     useHotKey({
-        onClose: onCloseAction,
-        onBack: onBackAction,
+        onClose: close && onCloseAction,
+        onBack: backButton && onBackAction,
     } as UseHotKeyProps)
 
     useEffect(() => {

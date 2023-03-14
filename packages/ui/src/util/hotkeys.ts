@@ -237,6 +237,72 @@ const locations: HotkeyMap = {
         ],
         CTRLOPT: [],
     },
+    "/accounts": {
+        ALT: [
+            {
+                hotkey: "c",
+                action: "/accounts/create",
+                hotkeyDescription: "ALT+c",
+                description: "ALT+c - Create Account",
+            },
+        ],
+        OPT: [
+            {
+                hotkey: "c",
+                action: "/accounts/create",
+                hotkeyDescription: "ALT+c",
+                description: "OPT+c - Create Account",
+            },
+        ],
+        CTRL: [],
+        CTRLALT: [],
+        CTRLOPT: [],
+    },
+    "/accounts/create": {
+        ALT: [
+            {
+                hotkey: "c",
+                action: "/accounts/create/add",
+                hotkeyDescription: "ALT+c",
+                description: "ALT+c - Create Account",
+            },
+            {
+                hotkey: "i",
+                action: "/accounts/create/import",
+                hotkeyDescription: "ALT+i",
+                description: "ALT+i - Import Account",
+            },
+            {
+                hotkey: "h",
+                action: openHardwareConnect,
+                hotkeyDescription: "ALT+h",
+                description: "ALT+h - Connect Hardware Wallet",
+            },
+        ],
+        OPT: [
+            {
+                hotkey: "c",
+                action: "/accounts/create/add",
+                hotkeyDescription: "ALT+c",
+                description: "OPT+c - Create Account",
+            },
+            {
+                hotkey: "i",
+                action: "/accounts/create/import",
+                hotkeyDescription: "ALT+i",
+                description: "OPT+i - Import Account",
+            },
+            {
+                hotkey: "h",
+                action: openHardwareConnect,
+                hotkeyDescription: "ALT+h",
+                description: "OPT+h - Connect Hardware Wallet",
+            },
+        ],
+        CTRL: [],
+        CTRLALT: [],
+        CTRLOPT: [],
+    },
     "/accounts/menu": {
         ALT: [
             {
@@ -254,8 +320,8 @@ const locations: HotkeyMap = {
             {
                 hotkey: "e",
                 action: "/accounts/menu/export",
-                hotkeyDescription: "ALT+e",
-                description: "ALT+E - Export",
+                hotkeyDescription: "ALT+x",
+                description: "ALT+X - Export Account Data",
             },
             {
                 hotkey: "",

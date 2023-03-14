@@ -11,13 +11,6 @@ export interface UseHotKeyProps {
     onBack?: (event: any) => void // in case we want to replace default back behavior
     onTabChange?: (value: any) => void //It is used in activityAssetsView to move between tabs
 }
-type FormTags =
-    | "input"
-    | "textarea"
-    | "select"
-    | "INPUT"
-    | "TEXTAREA"
-    | "SELECT"
 
 const useHotKey = (
     { onClose, onBack }: UseHotKeyProps = {
@@ -74,14 +67,14 @@ const useHotKey = (
                             //Acordarse revisar el estado del state
                         },
                     })
-
+                    console.log("PAsa por aca? ")
                     return
                 }
-
+                console.log("Tambien pora ca")
                 navigateTo()
             }
         },
-        []
+        { enableOnFormTags: true }
     )
 }
 

@@ -40,6 +40,7 @@ import { useCallback } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
 import { GetAmountYupSchema } from "../../util/yup/GetAmountSchema"
 import { ApproveOperation } from "../transaction/ApprovePage"
+import { useHotkeys } from "react-hotkeys-hook"
 
 interface SwapPageLocalState {
     fromToken?: Token

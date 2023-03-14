@@ -111,7 +111,7 @@ const AddTokensPage = () => {
                             onChange={(e: any) =>
                                 setSearchedValue(e.target.value)
                             }
-                            autoFocus={false}
+                            autoFocus={true}
                             debounced
                             minSearchChar={3}
                             defaultValue={searchedValue}

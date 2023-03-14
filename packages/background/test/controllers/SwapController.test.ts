@@ -259,7 +259,7 @@ describe('Swap Controller', function () {
                 })
             );
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     address: '0x1111111254fb6c44bac0bed2854e76f90643097d',
                 })
@@ -286,7 +286,7 @@ describe('Swap Controller', function () {
                 })
             );
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     address: '0x1111111254fb6c44bac0bed2854e76f90643097d',
                 })
@@ -314,7 +314,7 @@ describe('Swap Controller', function () {
         });
 
         it('Should fail to submit an approve transaction', async function () {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     address: '0x1111111254fb6c44bac0bed2854e76f90643097d',
                 })
@@ -364,7 +364,7 @@ describe('Swap Controller', function () {
         });
 
         it('Should submit an approve transaction', async function () {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     address: '0x1111111254fb6c44bac0bed2854e76f90643097d',
                 })
@@ -390,7 +390,7 @@ describe('Swap Controller', function () {
         });
 
         it('Should fail to get a swap quote', async function () {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     statusCode: 400,
                     error: 'Bad Request',
@@ -423,7 +423,7 @@ describe('Swap Controller', function () {
         });
 
         it('Should get a swap quote', async function () {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     fromToken: {
                         symbol: 'ETH',
@@ -494,7 +494,7 @@ describe('Swap Controller', function () {
         });
 
         it('Should fail to get a swap transaction parameters', async function () {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     statusCode: 400,
                     error: 'Bad Request',
@@ -531,7 +531,7 @@ describe('Swap Controller', function () {
         });
 
         it('Should get a swap transaction parameters', async function () {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     fromToken: {
                         symbol: 'ETH',

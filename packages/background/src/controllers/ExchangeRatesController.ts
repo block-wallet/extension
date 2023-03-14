@@ -264,9 +264,11 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
 
         const query = `${BaseApiEndpoint}token_price/${this.networkNativeCurrency.coingeckoPlatformId}`;
 
-        return httpClient.get(query, {
-            contract_addresses: tokenContracts,
-            vs_currencies: this._preferencesController.nativeCurrency,
+        return httpClient.request(query, {
+            params: {
+                contract_addresses: tokenContracts,
+                vs_currencies: this._preferencesController.nativeCurrency,
+            },
         });
     };
 

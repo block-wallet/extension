@@ -14,24 +14,27 @@ const AppIcon = ({
     iconSize,
     background = true,
     title,
-}: AppIconProps) => (
-    <div
-        className={classnames(
-            "flex flex-row items-center justify-center rounded-full",
-            `w-${size} h-${size}`,
-            background && "bg-primary-grey-default"
-        )}
-    >
-        {iconURL ? (
-            <img
-                alt="icon"
-                src={iconURL}
-                draggable={false}
-                className={iconSize ? `max-h-${iconSize}` : `max-h-${size - 3}`}
-                title={title}
-            />
-        ) : null}
-    </div>
-)
+}: AppIconProps) => {
+    const imgClassName = iconSize ? `max-h-${iconSize}` : `max-h-${size - 3}`
 
+    return (
+        <div
+            className={classnames(
+                "flex flex-row items-center justify-center rounded-full",
+                `w-${size} h-${size}`,
+                background && "bg-primary-grey-default"
+            )}
+        >
+            {iconURL ? (
+                <img
+                    alt="icon"
+                    src={iconURL}
+                    draggable={false}
+                    className={classnames("h-auto", imgClassName)}
+                    title={title}
+                />
+            ) : null}
+        </div>
+    )
+}
 export default AppIcon

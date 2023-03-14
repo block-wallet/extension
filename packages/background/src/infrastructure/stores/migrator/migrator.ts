@@ -1,4 +1,4 @@
-import compareVersions from 'compare-versions';
+import { compareVersions } from 'compare-versions';
 import migrations from './migrations';
 
 import { BlankAppState } from '../../../utils/constants/initialState';

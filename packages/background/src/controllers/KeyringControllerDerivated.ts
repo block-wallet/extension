@@ -5,11 +5,44 @@ import KeyringController, {
 import { Hash, Hasheable } from '../utils/hasher';
 import { Mutex } from 'async-mutex';
 import LedgerBridgeKeyring from '@block-wallet/eth-ledger-bridge-keyring';
-import TrezorKeyring from 'eth-trezor-keyring';
+import TrezorKeyring from '@block-wallet/eth-trezor-keyring';
 import { Devices } from '../utils/types/hardware';
 import log from 'loglevel';
 import { HDPaths, BIP44_PATH } from '../utils/types/hardware';
-import { TypedTransaction } from '@ethereumjs/tx';
+import {
+    AccessListEIP2930Transaction,
+    Transaction,
+    TypedTransaction,
+} from '@ethereumjs/tx';
+import { concatSig, SignTypedDataVersion } from '@metamask/eth-sig-util';
+import {
+    MetaMaskKeyring as QRKeyring,
+    MetaMaskKeyring as QRHardwareKeyring,
+} from '@keystonehq/metamask-airgapped-keyring';
+import {
+    DataType,
+    ETHSignature,
+    EthSignRequest,
+} from '@keystonehq/bc-ur-registry-eth';
+
+import rlp from 'rlp';
+import { v4 } from 'uuid';
+import { SignatureData } from './transactions/utils/types';
+import { FeeMarketEIP1559Transaction } from '@ethereumjs/tx';
+import {
+    arrToBufArr,
+    bigIntToBuffer,
+    bufferToBigInt,
+    bufferToHex,
+} from '@ethereumjs/util';
+import { hexToString } from '../utils/signature';
+
+export enum KeyringControllerEvents {
+    QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED = 'QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED',
+    QR_MESSAGE_SIGNATURE_REQUEST_GENERATED = 'QR_MESSAGE_SIGNATURE_REQUEST_GENERATED',
+    QR_SIGNATURE_SUBMIT = 'QR_SIGNATURE_SUBMIT',
+}
+
 /**
  * Available keyring types
  */
@@ -18,16 +51,24 @@ export enum KeyringTypes {
     HD_KEY_TREE = 'HD Key Tree',
     TREZOR = 'Trezor Hardware',
     LEDGER = 'Ledger Hardware',
+    QR = 'QR Hardware Wallet Device',
+}
+
+interface QRSignatureRequest {
+    requestId: string;
+    qrSignRequest: string[];
 }
 
 export default class KeyringControllerDerivated extends KeyringController {
     private readonly _mutex: Mutex;
+    private readonly _qrHardwareKeyring: QRHardwareKeyring;
 
     constructor(opts: KeyringControllerProps) {
-        opts.keyringTypes = [LedgerBridgeKeyring, TrezorKeyring];
+        opts.keyringTypes = [LedgerBridgeKeyring, TrezorKeyring, QRKeyring];
         super(opts);
 
         this._mutex = new Mutex();
+        this._qrHardwareKeyring = new QRHardwareKeyring();
     }
 
     /**
@@ -155,7 +196,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             KeyringTypes.HD_KEY_TREE
         )[0];
         const serialized = await primaryKeyring.serialize();
-        const seedPhrase = serialized.mnemonic;
+        const seedPhrase = hexToString(bufferToHex(serialized.mnemonic));
 
         return seedPhrase;
     }
@@ -308,7 +349,10 @@ export default class KeyringControllerDerivated extends KeyringController {
                 );
             }
             keyring.setHdPath(hdPath);
-            if (!keyring.isUnlocked()) await keyring.unlock();
+
+            if (device !== Devices.KEYSTONE) {
+                if (!keyring.isUnlocked()) await keyring.unlock();
+            }
         }
     }
 
@@ -339,9 +383,13 @@ export default class KeyringControllerDerivated extends KeyringController {
 
         // If the keyring doesn't exist, create it
         if (!keyring) {
-            keyring = await this.addNewKeyring(keyringType, {
-                hdPath: this._HDPathForDevice(device),
-            });
+            if (device === Devices.KEYSTONE) {
+                keyring = await this.addNewKeyring(keyringType);
+            } else {
+                keyring = await this.addNewKeyring(keyringType, {
+                    hdPath: this._HDPathForDevice(device),
+                });
+            }
             // Prevents manifest error, research if we can avoid this
             device === Devices.TREZOR &&
                 (await new Promise((resolve) => setTimeout(resolve, 5000)));
@@ -356,10 +404,16 @@ export default class KeyringControllerDerivated extends KeyringController {
         // Unlock the keyring. If it's already unlocked it will resolve.
         // For Trezor devices, we force the unlock to prevent displaying
         // old accounts or accounts from a different device
-        await keyring.unlock(device === Devices.TREZOR);
+        if (keyring.unlock) {
+            await keyring.unlock(device === Devices.TREZOR);
+        }
 
         // Return whether we connected and unlocked the keyring successfully
-        return keyring.isUnlocked();
+        if (device === Devices.KEYSTONE) {
+            return keyring.initialized;
+        } else {
+            return keyring.isUnlocked();
+        }
     }
 
     /**
@@ -402,12 +456,14 @@ export default class KeyringControllerDerivated extends KeyringController {
      */
     private _getKeyringTypeFromDevice(
         device: Devices
-    ): KeyringTypes.LEDGER | KeyringTypes.TREZOR {
+    ): KeyringTypes.LEDGER | KeyringTypes.TREZOR | KeyringTypes.QR {
         switch (device) {
             case Devices.LEDGER:
                 return KeyringTypes.LEDGER;
             case Devices.TREZOR:
                 return KeyringTypes.TREZOR;
+            case Devices.KEYSTONE:
+                return KeyringTypes.QR;
             default:
                 throw new Error('Invalid device');
         }
@@ -491,6 +547,8 @@ export default class KeyringControllerDerivated extends KeyringController {
                 return Devices.LEDGER;
             case KeyringTypes.TREZOR:
                 return Devices.TREZOR;
+            case KeyringTypes.QR:
+                return Devices.KEYSTONE;
             default:
                 return undefined;
         }
@@ -533,14 +591,63 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @returns {Promise<TypedTransaction>} The signed transactio object.
      */
     /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-    public async signTransaction(
+    public async signEthTransaction(
+        transactionId: string,
         ethTx: TypedTransaction,
         _fromAddress: string,
         opts?: any
     ): Promise<TypedTransaction> {
-        return this._mutex.runExclusive(async () =>
-            super.signTransaction(ethTx, _fromAddress, opts)
-        );
+        const keyringType = await this.getKeyringTypeFromAccount(_fromAddress);
+        if (keyringType === KeyringTypes.QR) {
+            // cancels any previous signature request
+            this.cancelQRHardwareSignRequest();
+            this.removeAllListeners(
+                KeyringControllerEvents.QR_SIGNATURE_SUBMIT
+            );
+
+            const signRequest = await this.getQRETHSignRequest(
+                ethTx,
+                _fromAddress
+            );
+
+            this.emit(
+                KeyringControllerEvents.QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED,
+                transactionId,
+                signRequest.requestId,
+                signRequest.qrSignRequest
+            );
+
+            try {
+                const { v, r, s } = await this.QRsignatureSubmission(
+                    signRequest
+                );
+
+                // 0 means legacy
+                if (ethTx.type === 0) {
+                    return (ethTx as Transaction)['_processSignature'](v, r, s);
+                } else if (ethTx.type === 1) {
+                    return (
+                        ethTx as AccessListEIP2930Transaction
+                    )._processSignature(v, r, s);
+                } else {
+                    return (
+                        ethTx as FeeMarketEIP1559Transaction
+                    )._processSignature(v + BigInt(27), r, s);
+                }
+            } catch (error) {
+                log.error('signature request error', error);
+                return ethTx;
+            }
+        } else {
+            return this._mutex.runExclusive(
+                async (): Promise<TypedTransaction> => {
+                    if (keyringType === KeyringTypes.TREZOR) {
+                        await this.connectHardwareKeyring(Devices.TREZOR);
+                    }
+                    return super.signTransaction(ethTx, _fromAddress, opts);
+                }
+            );
+        }
     }
 
     /**
@@ -559,9 +666,19 @@ export default class KeyringControllerDerivated extends KeyringController {
         },
         opts?: { withAppKeyOrigin: boolean }
     ): Promise<string> {
-        return this._mutex.runExclusive(async () =>
-            super.signMessage(msgParams, opts)
+        const keyringType = await this.getKeyringTypeFromAccount(
+            msgParams.from
         );
+        if (keyringType === KeyringTypes.QR) {
+            return await this._signQRMessage(msgParams, opts);
+        } else {
+            return this._mutex.runExclusive(async () => {
+                if (keyringType === KeyringTypes.TREZOR) {
+                    await this.connectHardwareKeyring(Devices.TREZOR);
+                }
+                return super.signMessage(msgParams, opts);
+            });
+        }
     }
 
     /**
@@ -581,9 +698,19 @@ export default class KeyringControllerDerivated extends KeyringController {
         },
         opts?: any
     ): Promise<string> {
-        return this._mutex.runExclusive(async () =>
-            super.signPersonalMessage(msgParams, opts)
+        const keyringType = await this.getKeyringTypeFromAccount(
+            msgParams.from
         );
+        if (keyringType === KeyringTypes.QR) {
+            return await this._signQRMessage(msgParams, opts);
+        } else {
+            return this._mutex.runExclusive(async () => {
+                if (keyringType === KeyringTypes.TREZOR) {
+                    await this.connectHardwareKeyring(Devices.TREZOR);
+                }
+                return super.signPersonalMessage(msgParams, opts);
+            });
+        }
     }
 
     /**
@@ -602,9 +729,52 @@ export default class KeyringControllerDerivated extends KeyringController {
             version: 'V1' | 'V3' | 'V4';
         }
     ): Promise<string> {
-        return this._mutex.runExclusive(async () =>
-            super.signTypedMessage(msgParams, opts)
+        const keyringType = await this.getKeyringTypeFromAccount(
+            msgParams.from
         );
+        if (keyringType === KeyringTypes.QR) {
+            return await this._signQRMessage(msgParams, opts, true);
+        } else {
+            return this._mutex.runExclusive(async () => {
+                if (keyringType === KeyringTypes.TREZOR) {
+                    await this.connectHardwareKeyring(Devices.TREZOR);
+                }
+                return super.signTypedMessage(msgParams, opts);
+            });
+        }
+    }
+
+    private async _signQRMessage(
+        msgParams: {
+            from: string;
+            data: string;
+        },
+        opts?: any,
+        typedData?: boolean
+    ): Promise<string> {
+        // cancels any previous signature request
+        this.cancelQRHardwareSignRequest();
+        this.removeAllListeners(KeyringControllerEvents.QR_SIGNATURE_SUBMIT);
+
+        let signRequest: QRSignatureRequest;
+
+        if (typedData) {
+            signRequest = await this.getQRTypedMessageSignRequest(
+                msgParams,
+                opts
+            );
+        } else {
+            signRequest = await this.getQRMessageSignRequest(msgParams);
+        }
+
+        this.emit(
+            KeyringControllerEvents.QR_MESSAGE_SIGNATURE_REQUEST_GENERATED,
+            signRequest.requestId,
+            signRequest.qrSignRequest
+        );
+
+        const { v, r, s } = await this.QRsignatureSubmission(signRequest);
+        return concatSig(bigIntToBuffer(v), r, s);
     }
 
     /**
@@ -620,5 +790,286 @@ export default class KeyringControllerDerivated extends KeyringController {
                 log.error('setLedgerWebHIDTransportType', e.message);
             });
         }
+    }
+
+    // QR Hardware related methods
+
+    /**
+     * Get qr hardware keyring.
+     *
+     * @returns The added keyring
+     */
+    async getOrAddQRKeyring(): Promise<QRKeyring> {
+        let keyring = await this.getKeyringFromDevice(Devices.KEYSTONE);
+        if (!keyring) {
+            await this.connectHardwareKeyring(Devices.KEYSTONE);
+            keyring = await this.getKeyringFromDevice(Devices.KEYSTONE);
+        }
+        return keyring;
+    }
+
+    /**
+     * Returns accounts from the QR device by page
+     *
+     * @param page
+     * @returns
+     */
+    async getQRPage(
+        page: number
+    ): Promise<{ balance: string; address: string; index: number }[]> {
+        try {
+            const keyring = await this.getOrAddQRKeyring();
+            const currentPage = (await keyring.serialize()).page;
+
+            let accounts;
+            if (page > currentPage) {
+                // increments
+                for (let i = 1; i < page - currentPage; i++) {
+                    await keyring.getNextPage();
+                }
+                accounts = await keyring.getNextPage();
+            } else if (page < currentPage) {
+                // decrements
+                for (let i = 1; i < currentPage - page; i++) {
+                    await keyring.getPreviousPage();
+                }
+                accounts = await keyring.getPreviousPage();
+            } else {
+                await keyring.getNextPage();
+                accounts = await keyring.getPreviousPage();
+            }
+
+            return accounts.map((account: any) => {
+                return {
+                    ...account,
+                    balance: '0x0',
+                };
+            });
+        } catch (e) {
+            throw new Error(`Unspecified error when connect QR Hardware, ${e}`);
+        }
+    }
+
+    /**
+     * Submites the HDKey of the QR device
+     *
+     * @param cbor
+     */
+    async submitQRHardwareCryptoHDKey(cbor: string) {
+        return this._mutex.runExclusive(async () => {
+            const read = this._qrHardwareKeyring.readKeyring();
+            this._qrHardwareKeyring.submitCryptoHDKey(cbor);
+            await read;
+            this.fullUpdate();
+        });
+    }
+
+    /**
+     * Submites the account of the QR device
+     *
+     * @param cbor
+     */
+    async submitQRHardwareCryptoAccount(cbor: string) {
+        return this._mutex.runExclusive(async () => {
+            const r = this._qrHardwareKeyring.readKeyring();
+            this._qrHardwareKeyring.submitCryptoAccount(cbor);
+            await r;
+            this.fullUpdate();
+        });
+    }
+
+    /**
+     * Generates a ETH Sign request to be signed with a QR device
+     *
+     *
+     * @param {TypedTransaction} ethTx - The transaction to sign.
+     * @param {string} _fromAddress - The transaction 'from' address.
+     * @returns {Promise<QRSignatureRequest>} The transaction sign request object QR as string.
+     */
+    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+    public async getQRETHSignRequest(
+        ethTx: TypedTransaction,
+        _fromAddress: string
+    ): Promise<QRSignatureRequest> {
+        return this._mutex.runExclusive(async () => {
+            const dataType =
+                ethTx.type === 0
+                    ? DataType.transaction
+                    : DataType.typedTransaction;
+
+            let messageToSign;
+            if (ethTx.type === 0) {
+                messageToSign = rlp.encode(ethTx.getMessageToSign(false));
+            } else {
+                messageToSign = ethTx.getMessageToSign(false);
+            }
+
+            const hdPath = await this._qrHardwareKeyring._pathFromAddress(
+                _fromAddress
+            );
+            const chainId = ethTx.common.chainId();
+            const requestId = v4();
+            const xfp = (this._qrHardwareKeyring as any)['xfp'];
+
+            const ethSignRequest = EthSignRequest.constructETHRequest(
+                messageToSign as Buffer,
+                dataType,
+                hdPath,
+                xfp,
+                requestId,
+                Number(chainId),
+                _fromAddress
+            );
+
+            return {
+                requestId,
+                qrSignRequest: ethSignRequest.toUREncoder(200).encodeWhole(),
+            };
+        });
+    }
+
+    /**
+     * Generates a message sign request to be signed with a QR device
+     *
+     *
+     * @param {Object} msgParams - The message parameters to sign.
+     * @returns {Promise<QRSignatureRequest>} The message sign request object QR as string.
+     */
+    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+    public async getQRMessageSignRequest(msgParams: {
+        from: string;
+        data: string;
+    }): Promise<QRSignatureRequest> {
+        return this._mutex.runExclusive(async () => {
+            const dataHex = Buffer.from(msgParams.data, 'hex');
+            const requestId = v4();
+            const xfp = (this._qrHardwareKeyring as any)['xfp'];
+            const hdPath = await this._qrHardwareKeyring._pathFromAddress(
+                msgParams.from
+            );
+
+            const ethSignRequest = EthSignRequest.constructETHRequest(
+                dataHex,
+                DataType.personalMessage,
+                hdPath,
+                xfp,
+                requestId,
+                undefined,
+                msgParams.from
+            );
+
+            return {
+                requestId,
+                qrSignRequest: ethSignRequest.toUREncoder(200).encodeWhole(),
+            };
+        });
+    }
+
+    /**
+     * Generates a typed message sign request to be signed with a QR device
+     *
+     *
+     * @param {Object} msgParams - The message parameters to sign.
+     * @returns {Promise<QRSignatureRequest>} The typed message sign request object QR as string.
+     */
+    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+    public async getQRTypedMessageSignRequest(
+        msgParams: {
+            from: string;
+            data: any;
+        },
+        opts: {
+            version: 'V1' | 'V3' | 'V4';
+        }
+    ): Promise<QRSignatureRequest> {
+        return this._mutex.runExclusive(async () => {
+            if (
+                opts.version !== SignTypedDataVersion.V1 &&
+                typeof msgParams.data === 'string'
+            ) {
+                msgParams.data = JSON.parse(msgParams.data);
+            }
+            const dataHex = Buffer.from(
+                JSON.stringify(msgParams.data),
+                'utf-8'
+            );
+            const requestId = v4();
+            const xfp = (this._qrHardwareKeyring as any)['xfp'];
+            const hdPath = await this._qrHardwareKeyring._pathFromAddress(
+                msgParams.from
+            );
+
+            const ethSignRequest = EthSignRequest.constructETHRequest(
+                dataHex,
+                DataType.typedData,
+                hdPath,
+                xfp,
+                requestId,
+                undefined,
+                msgParams.from
+            );
+
+            return {
+                requestId,
+                qrSignRequest: ethSignRequest.toUREncoder(200).encodeWhole(),
+            };
+        });
+    }
+
+    /**
+     * After requesting a QR sign this function waits for the signed message
+     * @param signRequest
+     * @returns
+     */
+    private async QRsignatureSubmission(
+        signRequest: QRSignatureRequest
+    ): Promise<SignatureData> {
+        return new Promise((resolve, reject) => {
+            this.on(
+                KeyringControllerEvents.QR_SIGNATURE_SUBMIT,
+                (_requestId: string, signatureData: SignatureData) => {
+                    if (_requestId === signRequest.requestId) {
+                        this.removeAllListeners(
+                            KeyringControllerEvents.QR_SIGNATURE_SUBMIT
+                        );
+                        resolve(signatureData);
+                    } else {
+                        reject(
+                            `got a signature of another request. current request requestId: ${signRequest.requestId}, received requestId: ${_requestId}`
+                        );
+                    }
+                }
+            );
+        });
+    }
+
+    /**
+     * Submits the signature generate by the QR device
+     *
+     * @param requestId
+     * @param cbor
+     */
+    public submitQRHardwareSignature(requestId: string, cbor: Buffer) {
+        const ethSignature = ETHSignature.fromCBOR(cbor);
+        const signature = ethSignature.getSignature(); // it will return the signature r,s,v
+        const slice = Uint8Array.prototype.slice.call(signature);
+        const v = bufferToBigInt(arrToBufArr(slice.slice(64, 65)));
+        const r = arrToBufArr(slice.slice(0, 32));
+        const s = arrToBufArr(slice.slice(32, 64));
+
+        const signatureData: SignatureData = { v, r, s };
+
+        this.emit(
+            KeyringControllerEvents.QR_SIGNATURE_SUBMIT,
+            requestId,
+            signatureData
+        );
+    }
+
+    /**
+     * Cancels an ongoing sign request
+     */
+    public cancelQRHardwareSignRequest() {
+        this.emit(KeyringControllerEvents.QR_SIGNATURE_SUBMIT);
     }
 }

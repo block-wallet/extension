@@ -12,7 +12,6 @@ export class RequestError extends Error {
 }
 
 const GET = 'GET';
-const POST = 'POST';
 
 function isJsonResponse(r: Response) {
     return r.headers.get('content-type')?.includes('application/json');
@@ -42,23 +41,22 @@ const fetchWithTimeout = async (
     return response;
 };
 
+const defaultOptions = {
+    method: GET,
+    timeout: 60000,
+};
 const request = async <T>(
     url: string,
-    params: Record<string, any> | undefined,
-    method = GET,
-    timeout = 60000,
-    cache: RequestCache = 'default',
-    headers: HeadersInit | undefined
+    options: RequestOptions = defaultOptions
 ): Promise<T> => {
-    const options: RequestInit & { timeout?: number } = {
-        method,
-        timeout,
-        cache,
+    const safeOptions: RequestOptions = {
+        ...defaultOptions,
+        ...options,
     };
 
     // Check the method and set the options accordingly
-    if (method === GET) {
-        const safeParams = Object.entries(params || {}).reduce(
+    if (safeOptions.method === GET) {
+        const safeParams = Object.entries(safeOptions.params || {}).reduce(
             (acc, [key, value]) => {
                 if (isNil(value)) {
                     return acc;
@@ -71,14 +69,10 @@ const request = async <T>(
             {}
         );
         url += '?' + new URLSearchParams(safeParams).toString();
-    } else {
-        options.body = JSON.stringify(params);
     }
-    if (headers !== undefined) {
-        options.headers = headers;
-    }
+
     // Fetch with timeout
-    const response = await fetchWithTimeout(url, options);
+    const response = await fetchWithTimeout(url, safeOptions);
 
     // If response ok, we assume data is JSON type
     if (response.ok) {
@@ -100,26 +94,6 @@ const request = async <T>(
     );
 };
 
-const get = async <T>(url: string, options: RequestOptions) =>
-    request<T>(
-        url,
-        options.params,
-        GET,
-        options.timeout,
-        options.cache,
-        options.headers
-    );
-
-const post = async <T>(url: string, options: RequestOptions) =>
-    request<T>(
-        url,
-        options.params,
-        POST,
-        options.timeout,
-        options.cache,
-        options.headers
-    );
-
 export interface RequestOptions extends RequestInit {
     params?: Record<string, any> | undefined;
     timeout?: number;
@@ -133,19 +107,9 @@ interface HttpClient {
      * @param options options of the request
      * @returns The parsed JSON response
      */
-    get<T>(url: string, options?: RequestOptions): Promise<T>;
-
-    /**
-     * Performs an HTTP POST request
-     *
-     * @param url the URL
-     * @param  options options of the request
-     * @returns The parsed JSON response
-     */
-    post<T>(url: string, options?: RequestOptions): Promise<T>;
+    request<T>(url: string, options?: RequestOptions): Promise<T>;
 }
 
 export default {
-    get,
-    post,
+    request,
 } as HttpClient;

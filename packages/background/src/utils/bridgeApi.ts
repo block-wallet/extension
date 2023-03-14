@@ -174,14 +174,14 @@ const LiFiBridge: IBridge = {
     getSupportedTokensForChain: async function (
         chainId: number
     ): Promise<IToken[]> {
-        const response = await httpClient.get<GetLifiTokensResponse>(
+        const response = await httpClient.request<GetLifiTokensResponse>(
             `${LIFI_BRIDGE_ENDPOINT}/tokens`
         );
         const chainTokens = response.tokens[chainId] || [];
         return chainTokens.map(lifiTokenToIToken);
     },
     getSupportedChains: async function (): Promise<IChain[]> {
-        const response = await httpClient.get<GetLifiChainsResponse>(
+        const response = await httpClient.request<GetLifiChainsResponse>(
             `${LIFI_BRIDGE_ENDPOINT}/chains`
         );
         const chains = response.chains || [];
@@ -195,7 +195,7 @@ const LiFiBridge: IBridge = {
     getRoutes: async function (
         request: getBridgeRoutesRequest
     ): Promise<IBridgeRoute[]> {
-        const response = await httpClient.get<GetLifiConnectionsResponse>(
+        const response = await httpClient.request<GetLifiConnectionsResponse>(
             `${LIFI_BRIDGE_ENDPOINT}/connections`,
             {
                 params: {
@@ -217,7 +217,7 @@ const LiFiBridge: IBridge = {
     },
     getQuote: async function (r: getBridgeQuoteRequest): Promise<IBridgeQuote> {
         try {
-            const response = await httpClient.get<
+            const response = await httpClient.request<
                 GetLiFiQuoteResponse | LiFiErrorResponse
             >(`${LIFI_BRIDGE_ENDPOINT}/quote`, {
                 params: {
@@ -267,7 +267,7 @@ const LiFiBridge: IBridge = {
         }
     },
     getStatus: async function (r: getStatusRequest): Promise<IBridgeStatus> {
-        const response = await httpClient.get<
+        const response = await httpClient.request<
             GetLiFiStatusResponse | LiFiErrorResponse
         >(`${LIFI_BRIDGE_ENDPOINT}/status`, {
             params: {

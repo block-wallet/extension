@@ -28,14 +28,12 @@ export class EtherscanFetcher {
     ): Promise<{ result: T[]; status: string }> {
         let retry = 0;
         while (retry < this.config.maxRetries) {
-            const result = await httpClient.get<{
+            const result = await httpClient.request<{
                 status: string;
                 message: string;
                 result: T[];
             }>(`${this.etherscanApiUrl}/api`, {
-                params: {
-                    ...params,
-                },
+                params: params,
                 timeout: 30000,
             });
 

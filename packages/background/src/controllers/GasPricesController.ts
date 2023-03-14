@@ -457,7 +457,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
             // If the chain has support request the service
             const feeDataResponse = await retryHandling(
                 () =>
-                    httpClient.get<FeeDataResponse>(
+                    httpClient.request<FeeDataResponse>(
                         `${CHAIN_FEE_DATA_SERVICE_URL}/fee_data`,
                         {
                             params: {

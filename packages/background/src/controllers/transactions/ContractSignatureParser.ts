@@ -236,7 +236,7 @@ export class ContractSignatureParser {
             // this retry is for network/http errors
             const result = await retryHandling(
                 () =>
-                    httpClient.get<{
+                    httpClient.request<{
                         status: string;
                         result: string;
                         message?: string;
@@ -341,7 +341,7 @@ export class ContractSignatureParser {
             try {
                 fourByteResponse = await retryHandling(
                     () =>
-                        httpClient.get<FourByteResponse>(
+                        httpClient.request<FourByteResponse>(
                             `https://www.4byte.directory/api/v1/signatures/`,
                             {
                                 params: {

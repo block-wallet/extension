@@ -371,7 +371,7 @@ export class OffChainBlockFetchService {
         try {
             const blockDataResponse = await retryHandling(
                 () =>
-                    httpClient.get<{
+                    httpClient.request<{
                         bn: string;
                     }>(`${OFF_CHAIN_BLOCK_FETCH_SERVICE_URL}/bn`, {
                         params: {

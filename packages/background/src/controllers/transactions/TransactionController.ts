@@ -2327,7 +2327,7 @@ export class TransactionController extends BaseController<
     ): Promise<[TransactionMeta, boolean]> {
         const baseUrl = 'https://protect.flashbots.net/tx/';
 
-        const response = await httpClient.get<FlashbotsStatusResponse>(
+        const response = await httpClient.request<FlashbotsStatusResponse>(
             baseUrl + meta.transactionParams.hash
         );
 

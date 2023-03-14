@@ -81,7 +81,7 @@ describe('Contract Signature Parser', () => {
             entries: (_: string) => Promise.resolve(),
         } as any;
 
-        sinon.stub(httpClient, 'get').callsFake(() =>
+        sinon.stub(httpClient, 'request').callsFake(() =>
             Promise.resolve({
                 count: 1,
                 results: [{ text_signature: 'transfer(address,uint256)' }],
@@ -96,7 +96,7 @@ describe('Contract Signature Parser', () => {
 
     it('Should try to lookup for a method signature, throw and return undefined', async () => {
         sinon
-            .stub(httpClient, 'get')
+            .stub(httpClient, 'request')
             .callsFake(() => Promise.reject('Error fetching'));
 
         contractSignatureParser['signatureRegistry'] = {

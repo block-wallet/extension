@@ -27,7 +27,7 @@ describe('OffChainBlockFetchService', () => {
 
     describe('fetchBlockNumber', async () => {
         it('should return an error if the service is not available', async () => {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((_, reject) => {
                     reject('service not available');
                 })
@@ -42,7 +42,7 @@ describe('OffChainBlockFetchService', () => {
             }
         });
         it('should return an error if the service returns an invalid status code', async () => {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((_, reject) => {
                     reject(new RequestError('400', 400, {}));
                 })
@@ -57,7 +57,7 @@ describe('OffChainBlockFetchService', () => {
             }
         });
         it('should return an error if the service returns an invalid payload', async () => {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((resolve, _) => {
                     resolve({});
                 })
@@ -73,7 +73,7 @@ describe('OffChainBlockFetchService', () => {
         });
         it('should return an error if the service returns an invalid block number', async () => {
             sinon
-                .stub(httpClient, 'get')
+                .stub(httpClient, 'request')
                 .onFirstCall()
                 .returns(
                     new Promise((resolve, _) => {
@@ -108,7 +108,7 @@ describe('OffChainBlockFetchService', () => {
             }
         });
         it('should return a block number if the service returns ok', async () => {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((resolve, _) => {
                     resolve({ bn: '50120221117' });
                 })
@@ -126,7 +126,7 @@ describe('OffChainBlockFetchService', () => {
             let set = false;
             let errorCount = 0;
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((resolve, _) => {
                     resolve({ bn: mockBlockNumber.toString() });
                 })
@@ -189,7 +189,7 @@ describe('OffChainBlockFetchService', () => {
             let watchedError: Error = new Error('not set');
             let atLeastOneErrorDetected = false;
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((_, reject) => {
                     reject(new RequestError('500', 500, {}));
                 })
@@ -245,7 +245,7 @@ describe('OffChainBlockFetchService', () => {
             let watchedError: Error = new Error('not set');
             let atLeastOneErrorDetected = false;
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((resolve, _) => {
                     resolve({ bn: '50120221117' });
                 })
@@ -297,7 +297,7 @@ describe('OffChainBlockFetchService', () => {
             let watchedError: Error | null = null;
             let atLeastOneErrorDetected = false;
 
-            const stubGet = sinon.stub(httpClient, 'get');
+            const stubGet = sinon.stub(httpClient, 'request');
             for (let i = 0; i < 200; i++) {
                 stubGet.onCall(i).returns(
                     new Promise((resolve, _) => {
@@ -380,7 +380,7 @@ describe('BlockFetchController', () => {
                 lastBlockOffChainChecked: 10,
             } as Partial<BlockFetchData>);
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((resolve, _) => {
                     resolve({ bn: '20000' });
                 })
@@ -405,7 +405,7 @@ describe('BlockFetchController', () => {
                 lastBlockOffChainChecked: 10,
             } as Partial<BlockFetchData>);
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((resolve, _) => {
                     resolve({ blockNumber: '500' });
                 })
@@ -430,7 +430,7 @@ describe('BlockFetchController', () => {
                 lastBlockOffChainChecked: 10,
             } as Partial<BlockFetchData>);
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((_, reject) => {
                     reject(new RequestError('500', 500, {}));
                 })
@@ -471,7 +471,7 @@ describe('BlockFetchController', () => {
     describe('getBlockNumberCallback', async () => {
         it('it should switch from off chain to on chain', async () => {
             sinon
-                .stub(httpClient, 'get')
+                .stub(httpClient, 'request')
                 .onFirstCall()
                 .returns(
                     new Promise((resolve, _) => {
@@ -533,7 +533,7 @@ describe('BlockFetchController', () => {
             });
         });
         it('it should switch from on chain to off chain', async () => {
-            const stubGet = sinon.stub(httpClient, 'get');
+            const stubGet = sinon.stub(httpClient, 'request');
             for (let i = 0; i < 500; i++) {
                 stubGet.onCall(i).returns(
                     new Promise((resolve, _) => {

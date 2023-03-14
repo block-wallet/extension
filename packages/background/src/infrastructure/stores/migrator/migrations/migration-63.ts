@@ -43,6 +43,24 @@ export default {
             },
         };
 
+        updatedNetworks.ZKSYNC_ERA_MAINNET = {
+            ...updatedNetworks.ZKSYNC_ERA_MAINNET,
+            iconUrls: INITIAL_NETWORKS.ZKSYNC_ERA_MAINNET.iconUrls,
+            nativeCurrency: {
+                ...updatedNetworks.ZKSYNC_ERA_MAINNET.nativeCurrency,
+                logo: INITIAL_NETWORKS.ZKSYNC_ERA_MAINNET.nativeCurrency.logo,
+            },
+        };
+
+        updatedNetworks.RSK = {
+            ...updatedNetworks.RSK,
+            iconUrls: INITIAL_NETWORKS.RSK.iconUrls,
+            nativeCurrency: {
+                ...updatedNetworks.RSK.nativeCurrency,
+                logo: INITIAL_NETWORKS.RSK.nativeCurrency.logo,
+            },
+        };
+
         updatedNetworks.GOERLI = {
             ...updatedNetworks.GOERLI,
             iconUrls: INITIAL_NETWORKS.GOERLI.iconUrls,
@@ -53,6 +71,15 @@ export default {
             nativeCurrency: {
                 ...updatedNetworks.ZKSYNC_ALPHA_TESTNET.nativeCurrency,
                 logo: INITIAL_NETWORKS.ZKSYNC_ALPHA_TESTNET.nativeCurrency.logo,
+            },
+        };
+
+        updatedNetworks.RSK_TESTNET = {
+            ...updatedNetworks.RSK_TESTNET,
+            iconUrls: INITIAL_NETWORKS.RSK_TESTNET.iconUrls,
+            nativeCurrency: {
+                ...updatedNetworks.RSK_TESTNET.nativeCurrency,
+                logo: INITIAL_NETWORKS.RSK_TESTNET.nativeCurrency.logo,
             },
         };
 

@@ -434,6 +434,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Smart Bitcoin',
             symbol: 'RBTC',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
         },
         hasFixedGasCost: false,
         enable: true,
@@ -443,7 +444,7 @@ export const INITIAL_NETWORKS: Networks = {
         ens: false,
         showGasLevels: false, // "Slow" gas level might be lower than the minimumGasPrice so the tx will be rejected
         iconUrls: [
-            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/info/logo.png',
         ],
         rpcUrls: ['https://rsk-node.blockwallet.io'],
         defaultRpcUrl: 'https://rsk-node.blockwallet.io',
@@ -465,6 +466,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/assets/0x/logo.png',
         },
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zksync/info/logo.png',
@@ -652,6 +654,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Testnet Smart Bitcoin',
             symbol: 'tRBTC',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
         },
         hasFixedGasCost: false,
         enable: true,
@@ -661,7 +664,7 @@ export const INITIAL_NETWORKS: Networks = {
         ens: false,
         showGasLevels: true,
         iconUrls: [
-            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/info/logo.png',
         ],
         rpcUrls: ['https://did.testnet.rsk.co:4444'],
         blockExplorerName: 'RSK Testnet Explorer',

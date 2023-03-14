@@ -44,6 +44,7 @@ const fetchWithTimeout = async (
 const defaultOptions = {
     method: GET,
     timeout: 60000,
+    cache: 'default' as RequestCache,
 };
 const request = async <T>(
     url: string,

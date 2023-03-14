@@ -121,7 +121,7 @@ const UnlockPage = () => {
                                     className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
                                 />
                                 <Tooltip
-                                    className="!w-52 !break-word !whitespace-normal  border boder-gray-300 -translate-x-44"
+                                    className="!w-52 !break-word !whitespace-normal  border boder-gray-300 !-translate-x-44"
                                     content="Locked too soon? Click to learn how to increase the lock timeout."
                                 />
                             </a>

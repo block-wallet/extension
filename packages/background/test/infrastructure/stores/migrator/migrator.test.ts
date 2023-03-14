@@ -8,7 +8,7 @@ import { IMigration } from '@block-wallet/background/infrastructure/stores/migra
 import { expect } from 'chai';
 import { lt, lte, valid } from 'semver';
 import { version } from '../../../../package.json';
-import { sha256 } from 'ethereumjs-util';
+import { sha256 } from '@ethersproject/sha2';
 
 describe('Migrations integrity', () => {
     it('package version integrity', () => {
@@ -63,9 +63,8 @@ describe('Migrations integrity', () => {
                 return allMigrations.some((b: IMigration, j: number) => {
                     return (
                         i !== j &&
-                        sha256(Buffer.from(a.migrate.toString())).equals(
+                        sha256(Buffer.from(a.migrate.toString())) ===
                             sha256(Buffer.from(b.migrate.toString()))
-                        )
                     );
                 });
             }

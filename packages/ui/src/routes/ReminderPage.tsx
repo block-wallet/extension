@@ -16,6 +16,7 @@ import PasswordInput from "../components/input/PasswordInput"
 import { useBlankState } from "../context/background/backgroundHooks"
 import getRequestRouteAndStatus from "../context/util/getRequestRouteAndStatus"
 import { verifyPassword, requestSeedPhrase } from "../context/commActions"
+import log from "loglevel"
 
 const schema = yup.object().shape({
     password: yup.string().required("Password required."),
@@ -67,7 +68,7 @@ const ReminderPage = () => {
                 setPassword(data.password)
                 setSeedPhrase(seedPhrase)
             })
-            .catch(console.log)
+            .catch(log.error)
     })
 
     useEffect(() => {

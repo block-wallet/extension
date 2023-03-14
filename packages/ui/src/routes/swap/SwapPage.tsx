@@ -501,7 +501,7 @@ const SwapPage = () => {
                                     tokenFrom ? tokenFrom.symbol : ""
                                 }`}
                                 autoComplete="off"
-                                autoFocus={false}
+                                autoFocus={true}
                                 onFocus={() => setInputFocus(true)}
                                 onBlur={() => setInputFocus(false)}
                             />

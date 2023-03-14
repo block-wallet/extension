@@ -50,9 +50,6 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
 
     //Adding useHotkey to add new token, only on Assets View
     useHotkeys("alt+n", () => {
-        console.log("Entra")
-        console.log(tab.label)
-        console.log(currentTabLabel)
         if (currentTabLabel.toLocaleLowerCase() === "assets") {
             history.push({
                 pathname: "/settings/tokens/add",

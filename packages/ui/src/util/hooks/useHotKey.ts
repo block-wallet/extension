@@ -11,6 +11,13 @@ export interface UseHotKeyProps {
     onBack?: (event: any) => void // in case we want to replace default back behavior
     onTabChange?: (value: any) => void //It is used in activityAssetsView to move between tabs
 }
+type FormTags =
+    | "input"
+    | "textarea"
+    | "select"
+    | "INPUT"
+    | "TEXTAREA"
+    | "SELECT"
 
 const useHotKey = (
     { onClose, onBack }: UseHotKeyProps = {
@@ -27,8 +34,13 @@ const useHotKey = (
             if (!e.key) {
                 return
             }
-            const keyPressed = e.key.toLowerCase()
+            const keyPressed = e.code
+                .replace(/key/i, "")
+                .replace(/digit/i, "")
+                .replace(/numpad/i, "")
+                .toLowerCase()
 
+            console.log(keyPressed)
             //logout --ctrl+alt+l
             if (e.ctrlKey && e.altKey && keyPressed === "l") {
                 lockApp()
@@ -55,7 +67,6 @@ const useHotKey = (
 
             if (navigateTo) {
                 if (typeof navigateTo === "string") {
-                    console.log("NavigateTo")
                     history.push({
                         pathname: navigateTo,
                         state: {

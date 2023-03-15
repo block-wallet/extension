@@ -466,7 +466,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
-            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/assets/0x/logo.png',
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zksync/info/logo.png',

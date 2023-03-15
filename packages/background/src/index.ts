@@ -7,7 +7,7 @@ import BlankController, {
 import BlankStorageStore from './infrastructure/stores/BlankStorageStore';
 import initialState, { BlankAppState } from './utils/constants/initialState';
 import reconcileState from './infrastructure/stores/migrator/reconcileState';
-import compareVersions from 'compare-versions';
+import { compareVersions } from 'compare-versions';
 import { getVersion, openExtensionInBrowser } from './utils/window';
 import { setupConnection } from './infrastructure/connection';
 import { migrator } from './infrastructure/stores/migrator/migrator';

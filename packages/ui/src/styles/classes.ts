@@ -74,6 +74,11 @@ export class Classes {
         Classes.baseButton,
         "bg-primary-blue-default text-white hover:bg-primary-blue-hover border-primary-blue-default hover:border-primary-blue-hover"
     )
+    static whiteButton = classnames(
+        Classes.centered,
+        Classes.baseButton,
+        "text-black hover:bg-gray-900 border-gray-900 hover:border-gray-800 hover:text-white"
+    )
     static disabledDarkButton = classnames(
         Classes.centered,
         Classes.baseButton,

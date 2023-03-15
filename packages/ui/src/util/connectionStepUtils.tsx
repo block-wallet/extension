@@ -1,4 +1,6 @@
 import { Devices } from "../context/commTypes"
+import menu from "../assets/images/icons/menu.svg"
+
 export interface ConnectionSeptInfo {
     label: string | string[] | React.ReactElement[]
     info?: string
@@ -20,6 +22,7 @@ export const DEVICE_RECONNECTION_WARNING_STEPS: StepData = {
         { label: "Only a single Trezor is plugged in" },
         { label: "You have followed the steps on Trezor Connect page" },
     ],
+    KEYSTONE: [{ label: "Show Keystone QR code to camera" }],
 }
 
 export const DEVICE_CONNECTION_STEPS: StepData = {
@@ -36,5 +39,20 @@ export const DEVICE_CONNECTION_STEPS: StepData = {
         { label: "Plug in a your Trezor device" },
         { label: 'Click "Continue" below' },
         { label: "Follow steps on Trezor Connect page" },
+    ],
+    KEYSTONE: [
+        {
+            label: "Make sure your camera is connected and installed properly.",
+        },
+        {
+            label: "Unlock your Keystone.",
+        },
+        {
+            label: 'Select "Options" then "Connect Software Wallet".',
+        },
+        {
+            label: 'Click "Continue" below',
+        },
+        { label: "Show the Keystone QR code to the camera." },
     ],
 }

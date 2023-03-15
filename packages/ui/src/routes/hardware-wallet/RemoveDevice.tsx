@@ -1,14 +1,15 @@
-import { useState } from "react"
+import { Dispatch, FC, SetStateAction, useState } from "react"
 import classnames from "classnames"
 
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
-import { AccountType, Devices } from "../../context/commTypes"
+import { Devices } from "../../context/commTypes"
 import Divider from "../../components/Divider"
 
 // Assets & icons
-import ledger from "../../assets/images/icons/ledger.svg"
-import trezor from "../../assets/images/icons/trezor.svg"
+import ledgerImg from "../../assets/images/icons/ledger.svg"
+import trezorImg from "../../assets/images/icons/trezor.svg"
+import keystoneImg from "../../assets/images/icons/keystone.svg"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes } from "../../styles"
 
@@ -16,10 +17,71 @@ import HardwareWalletSetupLayout from "./SetupLayout"
 import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import { removeHardwareWallet } from "../../context/commActions"
+import { getAccountTypeFromDevice } from "../../util/hardwareDevice"
+import { capitalize } from "../../util/capitalize"
+import { bool } from "yup"
+
+type DeviceButtonProps = {
+    device: Devices
+    onClick: Dispatch<SetStateAction<Devices | undefined>>
+    className: string
+}
+
+const DETAILS = {
+    [Devices.LEDGER]: {
+        imgSrc: ledgerImg,
+        name: capitalize(Devices.LEDGER),
+    },
+    [Devices.TREZOR]: {
+        imgSrc: trezorImg,
+        name: capitalize(Devices.TREZOR),
+    },
+    [Devices.KEYSTONE]: {
+        imgSrc: keystoneImg,
+        name: capitalize(Devices.KEYSTONE),
+    },
+}
+
+const DeviceButton: FC<DeviceButtonProps> = ({
+    device,
+    onClick,
+    className,
+}) => {
+    const details = DETAILS[device]
+    const accounts = useSortedAccounts({ includeHiddenAccounts: true })
+    const getImportedDevices = (device: Devices): number => {
+        const accountType = getAccountTypeFromDevice(device)
+        return accounts.filter(
+            (account: AccountInfo) => account.accountType === accountType
+        ).length
+    }
+    const importedDevices = getImportedDevices(device)
+    const isDeviceImported = importedDevices > 0
+    return (
+        <button
+            type="button"
+            onClick={() => isDeviceImported && onClick(device)}
+            className={classnames(
+                "bg-white rounded-md p-4 w-1/2 flex flex-col items-center justify-center space-y-3 cursor-pointer border hover:border-primary-300",
+                className,
+                !isDeviceImported && "opacity-50 pointer-events-none"
+            )}
+            style={{ height: "120px" }}
+        >
+            <img
+                src={details.imgSrc}
+                alt={`Remove ${details.name} hardware wallet`}
+                className="h-8 mb-2"
+            />
+            {importedDevices === 1
+                ? "1 Account"
+                : importedDevices + " Accounts"}
+        </button>
+    )
+}
 
 const HardwareWalletRemoveDevicePage = () => {
     const history = useOnMountHistory()
-    const accounts = useSortedAccounts({ includeHiddenAccounts: true })
     const [selectedVendor, setSelectedVendor] = useState<Devices>()
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
@@ -44,14 +106,6 @@ const HardwareWalletRemoveDevicePage = () => {
         }
     }
 
-    const isDeviceImported = (device: Devices): number => {
-        const accountType =
-            device === Devices.LEDGER ? AccountType.LEDGER : AccountType.TREZOR
-        return accounts.filter(
-            (account: AccountInfo) => account.accountType === accountType
-        ).length
-    }
-
     return (
         <HardwareWalletSetupLayout
             title="Remove device"
@@ -68,52 +122,33 @@ const HardwareWalletRemoveDevicePage = () => {
         >
             <div className="flex flex-col">
                 <div className="flex flex-row space-x-4 items-center justify-evenly p-8">
-                    <button
-                        type="button"
-                        onClick={() =>
-                            isDeviceImported(Devices.LEDGER) &&
-                            setSelectedVendor(Devices.LEDGER)
-                        }
-                        className={classnames(
-                            "bg-white rounded-md p-4 w-1/2 flex flex-col items-center justify-center space-y-3 cursor-pointer border hover:border-primary-blue-default",
+                    <DeviceButton
+                        device={Devices.LEDGER}
+                        onClick={setSelectedVendor}
+                        className={
                             selectedVendor === Devices.LEDGER
-                                ? "border-primary-blue-default"
-                                : "border-primary-100",
-                            !isDeviceImported(Devices.LEDGER) &&
-                                "opacity-50 pointer-events-none"
-                        )}
-                        style={{ height: "120px" }}
-                    >
-                        <img
-                            src={ledger}
-                            alt="Connect Ledger"
-                            className="h-8"
-                        />
-                        {isDeviceImported(Devices.LEDGER)} Accounts
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() =>
-                            isDeviceImported(Devices.TREZOR) &&
-                            setSelectedVendor(Devices.TREZOR)
+                                ? "border-primary-300"
+                                : "border-primary-100"
                         }
-                        className={classnames(
-                            "bg-white rounded-md justify-center p-4 w-1/2 flex flex-col items-center group space-y-3 cursor-pointer border hover:border-primary-blue-default",
+                    />
+                    <DeviceButton
+                        device={Devices.TREZOR}
+                        onClick={setSelectedVendor}
+                        className={
                             selectedVendor === Devices.TREZOR
-                                ? "border-primary-blue-default"
-                                : "border-primary-100",
-                            !isDeviceImported(Devices.TREZOR) &&
-                                "opacity-50 pointer-events-none"
-                        )}
-                        style={{ height: "120px" }}
-                    >
-                        <img
-                            src={trezor}
-                            alt="Connect Trezor"
-                            className="h-8"
-                        />
-                        {isDeviceImported(Devices.TREZOR)} Accounts
-                    </button>
+                                ? "border-primary-300"
+                                : "border-primary-100"
+                        }
+                    />
+                    <DeviceButton
+                        device={Devices.KEYSTONE}
+                        onClick={setSelectedVendor}
+                        className={
+                            selectedVendor === Devices.KEYSTONE
+                                ? "border-primary-300"
+                                : "border-primary-100"
+                        }
+                    />
                 </div>
                 <Divider />
             </div>

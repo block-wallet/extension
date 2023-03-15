@@ -54,11 +54,13 @@ describe("Account helpers tests", () => {
         it("Should return that it is a hardware wallet", () => {
             expect(isHardwareWallet(AccountType.TREZOR)).toBeTruthy()
             expect(isHardwareWallet(AccountType.LEDGER)).toBeTruthy()
+            expect(isHardwareWallet(AccountType.KEYSTONE)).toBeTruthy()
         })
         it("Should return that it is not an internal account", () => {
             expect(isInternalAccount(AccountType.TREZOR)).toBeFalsy()
             expect(isInternalAccount(AccountType.EXTERNAL)).toBeFalsy()
             expect(isInternalAccount(AccountType.LEDGER)).toBeFalsy()
+            expect(isInternalAccount(AccountType.KEYSTONE)).toBeFalsy()
         })
         it("Should return that it is an internal account", () => {
             expect(isInternalAccount(AccountType.HD_ACCOUNT)).toBeTruthy()

@@ -2,7 +2,7 @@ import {
     addHexPrefix,
     isValidAddress,
     toChecksumAddress,
-} from 'ethereumjs-util';
+} from '@ethereumjs/util';
 import { compareAddresses } from '../controllers/transactions/utils/utils';
 import { IToken, Token } from '../controllers/erc-20/Token';
 import {
@@ -10,7 +10,7 @@ import {
     WatchAssetParameters,
     WatchAssetReq,
 } from './types/ethereum';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { MaxUint256 } from '@ethersproject/constants';
 import { formatUnits } from '@ethersproject/units';
 import { FixedNumber } from '@ethersproject/bignumber';

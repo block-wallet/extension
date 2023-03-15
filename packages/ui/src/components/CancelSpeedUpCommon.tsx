@@ -55,6 +55,7 @@ import { useSelectedAccount } from "../context/hooks/useSelectedAccount"
 import useCheckAccountDeviceLinked from "../util/hooks/useCheckAccountDeviceLinked"
 import HardwareDeviceNotLinkedDialog from "./dialog/HardwareDeviceNotLinkedDialog"
 import { getDeviceFromAccountType } from "../util/hardwareDevice"
+import log from "loglevel"
 
 // Schema
 export const formSchema = yup.object({
@@ -241,6 +242,7 @@ const CancelAndSpeedUpComponent = ({
                       status: replacementTx.status,
                       error: replacementTx.error as Error,
                       epochTime: replacementTx?.approveTime,
+                      qrParams: transaction?.qrParams,
                   }
                 : undefined,
             type === "cancel"
@@ -316,7 +318,7 @@ const CancelAndSpeedUpComponent = ({
                 setIsLoading(false)
             })
             .catch((e) => {
-                console.log(e)
+                log.error(e)
 
                 history.push({
                     pathname: "/home",

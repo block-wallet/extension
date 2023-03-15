@@ -587,7 +587,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     }}
                     buttonDisplay={false}
                 />
-                <ErrorMessage>
+                <ErrorMessage className="!mt-0">
                     {hasBalance ? undefined : "Insufficient funds"}
                 </ErrorMessage>
             </div>

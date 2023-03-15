@@ -44,7 +44,10 @@ const DAppPopupHeader: React.FC<Props> = ({
                 </div>
             )}
             {showNetworkIndicator && (
-                <NetworkDisplayBadge network={network} />
+                <NetworkDisplayBadge
+                    network={network}
+                    className="min-h-[28px]"
+                />
             )}
         </PopupHeader>
     )

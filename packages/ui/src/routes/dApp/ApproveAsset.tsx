@@ -556,7 +556,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     buttonDisplay={false}
                     transactionId={transaction.id}
                 />
-                <div className="text-xs text-red-500">
+                <div className="text-xs text-red-500 !mt-0">
                     {!hasBalance && "Insufficient funds."}
                 </div>
             </div>

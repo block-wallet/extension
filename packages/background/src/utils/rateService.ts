@@ -5,6 +5,7 @@ import { formatUnits } from '@ethersproject/units';
 import { RATES_IDS_LIST } from '@block-wallet/chains-assets';
 import CHAINLINK_DATAFEEDS_CONTRACTS from './chain-link/dataFeeds';
 import httpClient from '../utils/http';
+import log from 'loglevel';
 interface getRateOptions {
     networkProvider?: StaticJsonRpcProvider;
 }
@@ -46,7 +47,7 @@ export const chainLinkService: RateService = {
             //At this point there is no dataFeedPair in CHAINLINK_DATAFEEDS_CONTRACTS
             return 0;
         } catch (e) {
-            console.log('Failed fecthing price from ChainLink. Ex: ' + e);
+            log.error('Failed fecthing price from ChainLink. Ex: ' + e);
             return 0;
         }
     },
@@ -62,16 +63,15 @@ export const coingekoService: RateService = {
                 ]
             );
 
-            const response = await httpClient.get<
+            const response = await httpClient.request<
                 Record<string, Record<string, number>>
             >(query, {
-                ids: currencyApiId,
-                vs_currencies: currency,
+                params: { ids: currencyApiId, vs_currencies: currency },
             });
 
             return response[currencyApiId][currency];
         } catch (e) {
-            console.log('Failed fecthing price from Coingeko. Ex: ' + e);
+            log.error('Failed fecthing price from Coingeko. Ex: ' + e);
             return 0;
         }
     },

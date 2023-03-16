@@ -1,10 +1,11 @@
-import { toChecksumAddress } from 'ethereumjs-util';
+import { toChecksumAddress } from '@ethereumjs/util';
 import { BaseController } from '../infrastructure/BaseController';
 
 export interface UserSettings {
     // Setting that indicates if a warning is shown when receiving a transaction from an address different from the selected one.
     hideAddressWarning: boolean;
     subscribedToReleaseaNotes: boolean;
+    subscribedToNotifications: boolean;
     useAntiPhishingProtection: boolean;
     defaultBrowserWallet: boolean;
     hideEstimatedGasExceedsThresholdWarning: boolean;

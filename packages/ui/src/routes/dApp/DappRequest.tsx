@@ -2,6 +2,7 @@ import type {
     DappRequestSigningStatus,
     DappSignatureReq,
     NormalizedSwitchEthereumChainParameters,
+    QRSignParams,
     RawSignatureData,
     WatchAssetReq,
 } from "@block-wallet/background/utils/types/ethereum"
@@ -13,6 +14,7 @@ import { Redirect } from "react-router"
 import { SiteMetadata } from "@block-wallet/provider/types"
 import useDebouncedState from "../../util/hooks/useDebouncedState"
 import { DAPP_FEEDBACK_WINDOW_TIMEOUT } from "../../util/constants"
+import { QRTransactionParams } from "@block-wallet/background/controllers/transactions/utils/types"
 
 export interface DappRequestProps {
     dappReqData:
@@ -27,6 +29,7 @@ export interface DappRequestProps {
     approveTime?: number
     error?: Error
     siteMetadata: SiteMetadata
+    qrParams?: QRSignParams
 }
 
 export const DappRequest: FunctionComponent<{
@@ -67,6 +70,7 @@ export const DappRequest: FunctionComponent<{
         siteMetadata: nextRequest.siteMetadata,
         status: nextRequest.status,
         approveTime: nextRequest.approveTime,
+        qrParams: nextRequest.qrParams,
         error: nextRequest.error,
     })
 }

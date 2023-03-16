@@ -42,7 +42,7 @@ import DefaultGasPreferencesPage from "../routes/preferences/DefaultGasPreferenc
 import ReleaseNotesPreferencesPage from "../routes/preferences/ReleaseNotesPreferencesPage"
 import OnDemandReleaseNotesPage from "../components/releaseNotes/OnDemandReleaseNotesPage"
 import WelcomeInfo from "../components/info/WelcomeInfo"
-import WarningsPreferencesPage from "../routes/preferences/WarningsPreferencesPage"
+import NotificationsAndWarningsPage from "../routes/preferences/NotificationsAndWarningsPage"
 import { TransitionRouteProps } from "./TransitionRoute"
 import ApprovePage from "../routes/transaction/ApprovePage"
 import AddAccountPage from "../routes/account/AddAccountPage"
@@ -160,9 +160,9 @@ export const ROUTES_DEFINITION = [
     },
 
     {
-        path: "/settings/preferences/warnings",
+        path: "/settings/preferences/notificationsAndWarnings",
         exact: true,
-        component: WarningsPreferencesPage,
+        component: NotificationsAndWarningsPage,
     },
 
     {

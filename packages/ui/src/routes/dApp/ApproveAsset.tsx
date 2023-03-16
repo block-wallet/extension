@@ -141,9 +141,11 @@ const ApproveAssetPage = () => {
         currentTx.transactionCategory !==
             TransactionCategories.TOKEN_METHOD_APPROVE ||
         currentTx.advancedData?.tokenId ||
-        [TransactionStatus.CONFIRMED, TransactionStatus.REJECTED, TransactionStatus.SUBMITTED].includes(
-            currentTx.status
-        )
+        [
+            TransactionStatus.CONFIRMED,
+            TransactionStatus.REJECTED,
+            TransactionStatus.SUBMITTED,
+        ].includes(currentTx.status)
     ) {
         return (
             <Redirect

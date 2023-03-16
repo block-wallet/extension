@@ -568,7 +568,10 @@ export const getHotkeyByPath = (currentLocation: string) => {
     }
 }
 
-export const getHotkeyAndDescByPath = (currentLocation?: string) => {
+export const getHotkeyAndDescByPath = (
+    currentLocation?: string,
+    permissions?: { [action: string]: boolean }
+) => {
     const history = useOnMountHistory()
     currentLocation = currentLocation ?? history.location.pathname
 
@@ -580,7 +583,23 @@ export const getHotkeyAndDescByPath = (currentLocation?: string) => {
     if (currentOS === "win") {
         hotkeyAndDesc = locations[currentLocation]["ALT"].map(
             (hotkeyAction) => {
-                return hotkeyAction.description
+                /// Will only add permissions logic to ALT and OPT. If any other permission appear it should be added to the handler key
+                const action =
+                    typeof hotkeyAction.action === "string"
+                        ? hotkeyAction.action
+                        : undefined
+                console.log("Action")
+                console.log(action)
+                console.log(permissions)
+                if (permissions && action) console.log(permissions[action])
+                if (
+                    permissions &&
+                    action &&
+                    permissions[action] !== undefined &&
+                    !permissions[action]
+                ) {
+                    return ""
+                } else return hotkeyAction.description
             }
         )
 
@@ -598,7 +617,19 @@ export const getHotkeyAndDescByPath = (currentLocation?: string) => {
     } else {
         hotkeyAndDesc = locations[currentLocation]["OPT"].map(
             (hotkeyAction) => {
-                return hotkeyAction.description
+                /// Will only add permissions logic to ALT and OPT. If any other permission appear it should be added to the handler key
+                const action =
+                    typeof hotkeyAction.action === "string"
+                        ? hotkeyAction.action
+                        : undefined
+                if (
+                    permissions &&
+                    action &&
+                    permissions[action] !== undefined &&
+                    permissions[action]
+                ) {
+                    return hotkeyAction.description
+                } else return ""
             }
         )
 

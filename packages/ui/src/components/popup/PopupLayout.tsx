@@ -35,12 +35,14 @@ const CollapsedMessage: FunctionComponent<{ hotkeyByPath: string[] }> = ({
                         message: (
                             <>
                                 {hotkeyByPath.map((hotkeyAndDesc) => {
-                                    return (
-                                        <span key={hotkeyAndDesc}>
-                                            <b>{hotkeyAndDesc}</b>
-                                            <br />
-                                        </span>
-                                    )
+                                    if (hotkeyAndDesc !== "") {
+                                        return (
+                                            <span key={hotkeyAndDesc}>
+                                                <b>{hotkeyAndDesc}</b>
+                                                <br />
+                                            </span>
+                                        )
+                                    }
                                 })}
                             </>
                         ),
@@ -68,7 +70,8 @@ const PopupLayout: FunctionComponent<{
     footer?: React.ReactNode
     children: React.ReactNode | undefined
     submitOnEnter?: submitOnEnterProps
-}> = ({ header, children, footer, submitOnEnter }) => {
+    hotkeysPermissions?: { [action: string]: boolean }
+}> = ({ header, children, footer, submitOnEnter, hotkeysPermissions }) => {
     const { preventResize, cancelPreventResize } = usePreventWindowResize()
     const fullHeader = (
         <>
@@ -91,7 +94,7 @@ const PopupLayout: FunctionComponent<{
     useSubmitOnEnter(submitOnEnter ?? {})
 
     //Lets check if this currentLocation has hotkeys, in case we have something we show it in footer.
-    const hotkeyByPath = getHotkeyAndDescByPath()
+    const hotkeyByPath = getHotkeyAndDescByPath(undefined, hotkeysPermissions)
     return (
         <PageLayout screen className="max-h-screen popup-layout">
             <div className="absolute top-0 left-0 w-full popup-layout z-10">

@@ -239,6 +239,7 @@ const PopupPage = () => {
                     </div>
                 </PopupHeader>
             }
+            hotkeysPermissions={hotkeysPermissions}
         >
             <ErrorDialog
                 title="Error!"

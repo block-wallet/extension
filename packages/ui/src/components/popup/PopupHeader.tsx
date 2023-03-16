@@ -33,6 +33,7 @@ export interface PopupHeaderProps {
     children?: React.ReactNode | undefined
     className?: string
     goBackState?: object
+    permissions?: { [action: string]: boolean } //used to validate hotkeys actions
 }
 
 const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
@@ -50,6 +51,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     actions,
     className,
     goBackState,
+    permissions,
 }) => {
     const history = useOnMountHistory()
     const lastLocation = useOnMountLastLocation()
@@ -101,6 +103,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     useHotKey({
         onClose: close && onCloseAction,
         onBack: backButton && onBackAction,
+        permissions: permissions,
     } as UseHotKeyProps)
 
     useEffect(() => {

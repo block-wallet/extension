@@ -49,11 +49,12 @@ const CollapsedMessage: FunctionComponent<{ hotkeyByPath: string[] }> = ({
                     isCollapsedByDefault
                     showCollapsedMessage={isMessageVisible}
                     collapsedMessage={
-                        <AiFillQuestionCircle
-                            size={26}
-                            className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
-                            title="Hotkeys - Alt+H"
-                        />
+                        ""
+                        // <AiFillQuestionCircle
+                        //     size={26}
+                        //     className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                        //     title="Hotkeys - Alt+H"
+                        // />
                     }
                     onDismiss={() => setIsMessageVisible(false)}
                 />

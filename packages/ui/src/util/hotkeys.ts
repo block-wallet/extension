@@ -1,7 +1,7 @@
 import { openHardwareConnect } from "../context/commActions"
 import { updatePopupTab } from "../context/commActions"
 import { useOnMountHistory } from "../context/hooks/useOnMount"
-import { currentOS } from "../context/util/platform"
+import { getCurrentOS } from "../context/util/platform"
 
 type Action = string | ((p?: any) => Promise<any>)
 
@@ -72,7 +72,7 @@ const locations: HotkeyMap = {
                 hotkey: "",
                 action: "",
                 hotkeyDescription: "",
-                description: "ALT+N - Add token(On asset view)",
+                description: "ALT+N - Add Token(On asset view)",
             },
             {
                 hotkey: "",
@@ -138,7 +138,7 @@ const locations: HotkeyMap = {
                 hotkey: "",
                 action: "",
                 hotkeyDescription: "",
-                description: "OPT+N - Add token(On asset view)",
+                description: "OPT+N - Add Token(On asset view)",
             },
             {
                 hotkey: "",
@@ -243,7 +243,7 @@ const locations: HotkeyMap = {
                 hotkey: "c",
                 action: "/accounts/create",
                 hotkeyDescription: "ALT+c",
-                description: "ALT+c - Create Account",
+                description: "ALT+C - Create Account",
             },
         ],
         OPT: [
@@ -251,7 +251,7 @@ const locations: HotkeyMap = {
                 hotkey: "c",
                 action: "/accounts/create",
                 hotkeyDescription: "ALT+c",
-                description: "OPT+c - Create Account",
+                description: "OPT+C - Create Account",
             },
         ],
         CTRL: [],
@@ -264,19 +264,19 @@ const locations: HotkeyMap = {
                 hotkey: "c",
                 action: "/accounts/create/add",
                 hotkeyDescription: "ALT+c",
-                description: "ALT+c - Create Account",
+                description: "ALT+C - Create Account",
             },
             {
                 hotkey: "i",
                 action: "/accounts/create/import",
                 hotkeyDescription: "ALT+i",
-                description: "ALT+i - Import Account",
+                description: "ALT+I - Import Account",
             },
             {
                 hotkey: "h",
                 action: openHardwareConnect,
                 hotkeyDescription: "ALT+h",
-                description: "ALT+h - Connect Hardware Wallet",
+                description: "ALT+H - Connect Hardware Wallet",
             },
         ],
         OPT: [
@@ -284,19 +284,19 @@ const locations: HotkeyMap = {
                 hotkey: "c",
                 action: "/accounts/create/add",
                 hotkeyDescription: "ALT+c",
-                description: "OPT+c - Create Account",
+                description: "OPT+C - Create Account",
             },
             {
                 hotkey: "i",
                 action: "/accounts/create/import",
                 hotkeyDescription: "ALT+i",
-                description: "OPT+i - Import Account",
+                description: "OPT+I - Import Account",
             },
             {
                 hotkey: "h",
                 action: openHardwareConnect,
                 hotkeyDescription: "ALT+h",
-                description: "OPT+h - Connect Hardware Wallet",
+                description: "OPT+H - Connect Hardware Wallet",
             },
         ],
         CTRL: [],
@@ -327,7 +327,7 @@ const locations: HotkeyMap = {
                 hotkey: "",
                 action: "",
                 hotkeyDescription: "",
-                description: "ALT+v - View on Etherscan",
+                description: "ALT+V - View on Etherscan",
             },
             {
                 hotkey: "m",
@@ -361,7 +361,7 @@ const locations: HotkeyMap = {
                 hotkey: "",
                 action: "",
                 hotkeyDescription: "",
-                description: "OPT+v - View on Etherscan",
+                description: "OPT+V - View on Etherscan",
             },
             {
                 hotkey: "m",
@@ -497,17 +497,18 @@ const locations: HotkeyMap = {
     },
 }
 
-const currentOperatingSystem = currentOS()
+const currentOS = getCurrentOS()
 
 export const getActionByHotkeyAndPath = (
     currentLocation: string,
     hotkey: string,
     handler: "CTRL" | "ALT" | "CTRLALT" | "OPT" | "CTRLOPT"
 ): Action => {
-    if (currentOperatingSystem === "mac") {
+    if (currentOS === "mac") {
         if (handler === "ALT") handler = "OPT"
         if (handler === "CTRLALT") handler = "CTRLOPT"
     }
+
     return locations[currentLocation][handler].filter(
         (hotkeyAction) => hotkeyAction.hotkey === hotkey
     )[0].action
@@ -524,7 +525,7 @@ export const getHotkeyByPath = (currentLocation: string) => {
         })
         .join(",")
 
-    if (currentOperatingSystem === "mac") {
+    if (currentOS === "mac") {
         const optHotkeysByPath = locations[currentLocation]["OPT"]
             .map((hotkeyAction) => {
                 return hotkeyAction.hotkeyDescription
@@ -576,7 +577,7 @@ export const getHotkeyAndDescByPath = (currentLocation?: string) => {
     }
 
     let hotkeyAndDesc = [""]
-    if (currentOperatingSystem === "win") {
+    if (currentOS === "win") {
         hotkeyAndDesc = locations[currentLocation]["ALT"].map(
             (hotkeyAction) => {
                 return hotkeyAction.description

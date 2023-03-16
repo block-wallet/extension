@@ -34,11 +34,15 @@ export const getPlatformInfo = (): Promise<chrome.runtime.PlatformInfo> => {
     })
 }
 
-export const currentOS = () => {
-    let currentOS = ""
-    getPlatformInfo().then((platformInfo) => {
-        currentOS = platformInfo.os
-    })
-
-    return currentOS
+export const getCurrentOS = () => {
+    const os = navigator.userAgent
+    if (os.search("Windows") !== -1) {
+        return "win"
+    } else if (os.search("Mac") !== -1) {
+        return "mac"
+    } else if (os.search("X11") !== -1 && !(os.search("Linux") !== -1)) {
+        return "UNIX"
+    } else if (os.search("Linux") !== -1 && os.search("X11") !== -1) {
+        return "Linux"
+    }
 }

@@ -166,11 +166,20 @@ const PopupPage = () => {
         state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
 
     const disabledActions = !isSendEnabled || !state.isUserNetworkOnline
-
+    const hotkeysPermissions = {
+        ["/send"]: isSendEnabled,
+        ["/swap"]: isSwapEnabled,
+        ["/bridge"]: isBridgeEnabled !== undefined,
+    }
     return (
         <PopupLayout
             header={
-                <PopupHeader title="" close={false} backButton={false}>
+                <PopupHeader
+                    title=""
+                    close={false}
+                    backButton={false}
+                    permissions={hotkeysPermissions}
+                >
                     {state.isNetworkChanging && <TransparentOverlay />}
                     <div className="flex flex-row items-center justify-between w-full">
                         <div className="flex flex-row items-center space-x-3">

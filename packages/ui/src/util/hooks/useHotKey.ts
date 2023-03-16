@@ -9,11 +9,11 @@ import { getActionByHotkeyAndPath, getHotkeyByPath } from "../hotkeys"
 export interface UseHotKeyProps {
     onClose?: (event: any) => void
     onBack?: (event: any) => void // in case we want to replace default back behavior
-    onTabChange?: (value: any) => void //It is used in activityAssetsView to move between tabs
+    permissions?: { [action: string]: boolean }
 }
 
 const useHotKey = (
-    { onClose, onBack }: UseHotKeyProps = {
+    { onClose, onBack, permissions }: UseHotKeyProps = {
         onClose: undefined,
         onBack: undefined,
     }
@@ -21,9 +21,10 @@ const useHotKey = (
     const history = useOnMountHistory()
     const currentLocation = history.location.pathname
     const hotKeys = getHotkeyByPath(currentLocation)
+
     useHotkeys(
         hotKeys + ",ctrl+alt+l,alt+backspace,alt+q",
-        (e, handler) => {
+        (e) => {
             if (!e.key) {
                 return
             }
@@ -33,7 +34,6 @@ const useHotKey = (
                 .replace(/numpad/i, "")
                 .toLowerCase()
 
-            console.log(keyPressed)
             //logout --ctrl+alt+l
             if (e.ctrlKey && e.altKey && keyPressed === "l") {
                 lockApp()
@@ -60,6 +60,15 @@ const useHotKey = (
 
             if (navigateTo) {
                 if (typeof navigateTo === "string") {
+                    //Need to validate permissions
+                    if (
+                        permissions &&
+                        permissions[navigateTo] !== undefined &&
+                        !permissions[navigateTo]
+                    ) {
+                        return
+                    }
+
                     history.push({
                         pathname: navigateTo,
                         state: {
@@ -67,14 +76,13 @@ const useHotKey = (
                             //Acordarse revisar el estado del state
                         },
                     })
-                    console.log("PAsa por aca? ")
                     return
                 }
-                console.log("Tambien pora ca")
+
                 navigateTo()
             }
         },
-        { enableOnFormTags: true }
+        { enableOnFormTags: true, preventDefault: true }
     )
 }
 

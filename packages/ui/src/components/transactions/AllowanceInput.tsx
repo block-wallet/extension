@@ -10,6 +10,7 @@ import { Classes } from "../../styles"
 import ErrorMessage from "../error/ErrorMessage"
 import Dialog from "../dialog/Dialog"
 import CloseIcon from "../icons/CloseIcon"
+import { formatRoundedUp } from "../../util/formatRounded"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
@@ -139,7 +140,7 @@ const AllowanceInput = ({
     currentAllowance?: BigNumber
 }) => {
     const [allowanceAmount, setAllowanceAmount] = useState(
-        formatUnits(defaultValue, tokenDecimals)
+        formatRoundedUp(formatUnits(defaultValue, tokenDecimals))
     )
     const [error, setError] = useState("")
 
@@ -230,7 +231,9 @@ const AllowanceInput = ({
 
         setUsingRevoke(isRevoke)
         setUsingUnlimited(isUnlimited)
-        setAllowanceAmount(formatUnits(defaultValue, tokenDecimals))
+        setAllowanceAmount(
+            formatRoundedUp(formatUnits(defaultValue, tokenDecimals))
+        )
         // Needed in dependency array to update the input value when the defaultValue changes if there is multiple allowance approvals in the queue
     }, [defaultValue])
 

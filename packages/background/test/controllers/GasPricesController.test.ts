@@ -17,7 +17,6 @@ import BlockUpdatesController from '@block-wallet/background/controllers/block-u
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import httpClient, { RequestError } from './../../src/utils/http';
 
-// TODO(REC): FIX US!
 describe('GasPrices Controller', () => {
     let gasPricesController: GasPricesController;
     let networkController: NetworkController;
@@ -1035,7 +1034,7 @@ describe('GasPrices Controller', () => {
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise<FeeDataResponse>((resolve) => {
                     resolve({
                         blockNumber: '22332861',
@@ -1102,7 +1101,7 @@ describe('GasPrices Controller', () => {
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((resolve) => {
                     resolve({
                         blockNumber: '13775611',
@@ -1174,7 +1173,7 @@ describe('GasPrices Controller', () => {
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((_, reject) => {
                     reject(new RequestError('400', 400, {}));
                 })
@@ -1244,7 +1243,7 @@ describe('GasPrices Controller', () => {
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((_, reject) => {
                     reject(new RequestError('400', 400, {}));
                 })
@@ -1389,7 +1388,7 @@ describe('GasPrices Controller', () => {
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(false);
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((_, reject) => {
                     reject(new RequestError('400', 400, {}));
                 })
@@ -1470,7 +1469,7 @@ describe('GasPrices Controller', () => {
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((_, reject) => {
                     reject(new RequestError('500', 500, {}));
                 })
@@ -1540,7 +1539,7 @@ describe('GasPrices Controller', () => {
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((_, reject) => {
                     reject(new RequestError('500', 500, {}));
                 })
@@ -1621,7 +1620,7 @@ describe('GasPrices Controller', () => {
                 .stub(gasPricesController as any, '_shouldRequestChainService')
                 .returns(true);
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 new Promise((_, reject) => {
                     reject(new RequestError('400', 400, {}));
                 })

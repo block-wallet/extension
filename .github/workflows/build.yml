@@ -200,7 +200,7 @@ jobs:
       DBUS_SESSION_BUS_ADDRESS: /dev/null
     steps:
       - name: Checkout e2e repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: block-wallet/e2e-tests
           ref: refs/heads/main
@@ -301,7 +301,7 @@ jobs:
           sha256sum $EXTENSION_NAME.zip > $EXTENSION_NAME.checksum
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_RELEASE_BUCKET }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_RELEASE_BUCKET }}

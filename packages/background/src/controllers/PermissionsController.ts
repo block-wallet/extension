@@ -1,4 +1,4 @@
-import { toChecksumAddress } from 'ethereumjs-util';
+import { toChecksumAddress } from '@ethereumjs/util';
 import { BaseController } from '../infrastructure/BaseController';
 import {
     PreferencesController,

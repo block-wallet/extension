@@ -33,6 +33,7 @@ import { BASE_SWAP_FEE } from '../../src/utils/types/1inch';
 import httpClient from './../../src/utils/http';
 import { TypedTransaction } from '@ethereumjs/tx';
 import TokenAllowanceController from '@block-wallet/background/controllers/erc-20/transactions/TokenAllowanceController';
+import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
 
 const BLANK_TOKEN_ADDRESS = '0x41a3dba3d677e573636ba691a70ff2d606c29666';
 
@@ -107,11 +108,12 @@ describe('Swap Controller', function () {
             gasPricesController,
             tokenController,
             blockUpdatesController,
+            mockKeyringController,
             {
                 transactions: [],
                 txSignTimeout: 0,
             },
-            async (ethTx: TypedTransaction) => {
+            async (_: string, ethTx: TypedTransaction) => {
                 const privateKey = Buffer.from(accounts.goerli[0].key, 'hex');
                 return Promise.resolve(ethTx.sign(privateKey));
             },
@@ -257,7 +259,7 @@ describe('Swap Controller', function () {
                 })
             );
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     address: '0x1111111254fb6c44bac0bed2854e76f90643097d',
                 })
@@ -284,7 +286,7 @@ describe('Swap Controller', function () {
                 })
             );
 
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     address: '0x1111111254fb6c44bac0bed2854e76f90643097d',
                 })
@@ -312,7 +314,7 @@ describe('Swap Controller', function () {
         });
 
         it('Should fail to submit an approve transaction', async function () {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     address: '0x1111111254fb6c44bac0bed2854e76f90643097d',
                 })
@@ -362,7 +364,7 @@ describe('Swap Controller', function () {
         });
 
         it('Should submit an approve transaction', async function () {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     address: '0x1111111254fb6c44bac0bed2854e76f90643097d',
                 })
@@ -388,7 +390,7 @@ describe('Swap Controller', function () {
         });
 
         it('Should fail to get a swap quote', async function () {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     statusCode: 400,
                     error: 'Bad Request',
@@ -421,7 +423,7 @@ describe('Swap Controller', function () {
         });
 
         it('Should get a swap quote', async function () {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     fromToken: {
                         symbol: 'ETH',
@@ -492,7 +494,7 @@ describe('Swap Controller', function () {
         });
 
         it('Should fail to get a swap transaction parameters', async function () {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     statusCode: 400,
                     error: 'Bad Request',
@@ -529,7 +531,7 @@ describe('Swap Controller', function () {
         });
 
         it('Should get a swap transaction parameters', async function () {
-            sinon.stub(httpClient, 'get').returns(
+            sinon.stub(httpClient, 'request').returns(
                 mockHttpClientResponse({
                     fromToken: {
                         symbol: 'ETH',

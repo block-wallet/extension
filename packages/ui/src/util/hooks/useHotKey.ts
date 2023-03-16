@@ -73,7 +73,6 @@ const useHotKey = (
                         pathname: navigateTo,
                         state: {
                             from: history.location.pathname,
-                            //Acordarse revisar el estado del state
                         },
                     })
                     return

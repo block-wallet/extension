@@ -38,13 +38,14 @@ const AllowanceItem = ({
     const history = useOnMountHistory()
     const { selectedNetwork, availableNetworks } = useBlankState()!
 
-    const isPendingUpdate =
-        allowance.status === TokenAllowanceStatus.AWAITING_TRANSACTION_RESULT
-
     const [open, setOpen] = useState(false)
     const [isRevokeDisabled, setIsRevokeDisabled] = useState(false)
 
     const { isHovering: isHoveringButton, getIsHoveringProps } = useIsHovering()
+
+    const isPendingUpdate =
+        allowance.status === TokenAllowanceStatus.AWAITING_TRANSACTION_RESULT ||
+        isRevokeDisabled
 
     const revoke = async () => {
         if (!isRevokeDisabled) {

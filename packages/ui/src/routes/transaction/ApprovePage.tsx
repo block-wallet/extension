@@ -32,7 +32,7 @@ import {
     formatHashLastChars,
     formatName,
 } from "../../util/formatAccount"
-import { formatRounded, formatRoundedUp } from "../../util/formatRounded"
+import { formatRounded } from "../../util/formatRounded"
 import { formatUnits, parseUnits } from "@ethersproject/units"
 import { getAccountColor } from "../../util/getAccountColor"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
@@ -194,7 +194,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const [isAllowanceValid, setIsAllowanceValid] = useState(true)
     const [allowanceAmount, setAllowanceAmount] = useState(
         minAllowance
-            ? formatRoundedUp(formatUnits(minAllowance, assetDecimals))
+            ? formatUnits(minAllowance, assetDecimals)
             : formatUnits(UNLIMITED_ALLOWANCE, assetDecimals)
     )
 

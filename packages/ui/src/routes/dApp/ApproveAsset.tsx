@@ -64,7 +64,7 @@ import {
     formatHashLastChars,
     formatName,
 } from "../../util/formatAccount"
-import { formatRounded, formatRoundedUp } from "../../util/formatRounded"
+import { formatRounded } from "../../util/formatRounded"
 import { getAccountColor } from "../../util/getAccountColor"
 import { parseAllowance } from "../../util/approval"
 import useDebouncedState from "../../util/hooks/useDebouncedState"
@@ -272,13 +272,11 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const defaultAllowance = transaction.advancedData?.allowance!
 
     const [allowance, setAllowance] = useState(
-        formatRoundedUp(formatUnits(defaultAllowance, tokenDecimals))
+        formatUnits(defaultAllowance, tokenDecimals)
     )
     useEffect(() => {
         // To reset the default value if there is multiple queued transactions
-        setAllowance(
-            formatRoundedUp(formatUnits(defaultAllowance, tokenDecimals))
-        )
+        setAllowance(formatUnits(defaultAllowance, tokenDecimals))
     }, [defaultAllowance])
 
     useEffect(() => {

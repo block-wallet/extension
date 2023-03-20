@@ -42,6 +42,7 @@ interface AccountDisplayProps {
     selected?: boolean
     showSelectedCheckmark?: boolean
     showAddress?: boolean
+    truncateName?: boolean
     showConnected?: boolean
     copyAddressToClipboard?: boolean
     menu?: AccountDisplayMenuOption[]
@@ -54,6 +55,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
     selected,
     showSelectedCheckmark = true,
     showAddress = false,
+    truncateName = true,
     showConnected = false,
     copyAddressToClipboard = false,
     actionButtons,
@@ -121,7 +123,8 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             <div className="flex flex-row space-x-1">
                                 <label
                                     className={classnames(
-                                        "font-bold truncate max-w-[96px]",
+                                        "font-bold",
+                                        truncateName && "truncate max-w-[96px]",
                                         hoverStyle && "cursor-pointer"
                                     )}
                                     title={account.name}

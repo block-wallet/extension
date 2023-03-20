@@ -100,6 +100,7 @@ const AddressBookPage: FunctionComponent<{
                                     } as AccountInfo
                                 }
                                 selected={false}
+                                truncateName={false}
                                 showAddress
                                 copyAddressToClipboard
                                 menu={[

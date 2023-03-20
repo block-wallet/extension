@@ -146,6 +146,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                 </div>
             )}
             <div className="ml-auto flex space-x-1">
+                {networkIndicator && <NetworkDisplayBadge network={network} />}
                 {actions && (
                     <Dropdown>
                         <Dropdown.Menu id="popup-actions">
@@ -159,7 +160,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                         </Dropdown.Menu>
                     </Dropdown>
                 )}
-                {networkIndicator && <NetworkDisplayBadge network={network} />}
+
                 {close && (
                     <button
                         onClick={(e) => {

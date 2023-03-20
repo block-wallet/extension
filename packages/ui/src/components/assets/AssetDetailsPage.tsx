@@ -89,6 +89,7 @@ const AssetDetailsPage = () => {
                     )}`}
                     close={false}
                     disabled={isRemoving}
+                    networkIndicator
                     actions={
                         !isNative
                             ? [

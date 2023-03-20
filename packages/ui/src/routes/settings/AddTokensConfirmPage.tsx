@@ -49,6 +49,7 @@ const AddTokensConfirmPage = (props: any) => {
             header={
                 <PopupHeader
                     title="Add Tokens"
+                    networkIndicator
                     onBack={() => {
                         history.push({
                             pathname: "/settings/tokens/add",

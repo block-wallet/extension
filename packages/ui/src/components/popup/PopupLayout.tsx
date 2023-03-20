@@ -38,7 +38,7 @@ const PopupLayout: FunctionComponent<{
 
     return (
         <PageLayout screen className="max-h-screen popup-layout">
-            <div className="absolute top-0 left-0 w-full popup-layout z-10">
+            <div className="absolute top-0 left-0 w-full popup-layout z-40">
                 {fullHeader}
             </div>
             <div className="invisible w-full">{fullHeader}</div>

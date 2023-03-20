@@ -273,7 +273,7 @@ const PopupPage = () => {
                                                     </div>
                                                     <div className="flex flex-row items-end space-x-4">
                                                         <span>
-                                                            Click to learn more.
+                                                            Click on this icon to learn more.
                                                         </span>{" "}
                                                     </div>
                                                 </div>

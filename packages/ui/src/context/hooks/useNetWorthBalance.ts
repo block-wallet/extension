@@ -14,7 +14,7 @@ const useNetWorthBalance = () => {
 
     let netWorth = toCurrencyAmount(
         nativeTokenBalance,
-        state.exchangeRates[nativeToken.symbol],
+        state.exchangeRates[nativeToken.symbol.toUpperCase()],
         nativeToken.decimals
     )
 

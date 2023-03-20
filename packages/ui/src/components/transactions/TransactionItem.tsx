@@ -456,7 +456,7 @@ const TransactionItem: React.FC<{
         amount: value ? value : BigNumber.from("0"),
         currency: networkNativeCurrency.symbol,
         decimals: networkNativeCurrency.decimals,
-        logo: defaultNetworkLogo,
+        logo: networkNativeCurrency.logo ?? defaultNetworkLogo,
     }
 
     const isBlankWithdraw: boolean =

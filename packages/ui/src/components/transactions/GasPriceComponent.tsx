@@ -587,7 +587,10 @@ const GasPriceComponent: FunctionComponent<{
 
     const {
         defaultNetworkLogo,
-        nativeCurrency: { decimals: nativeCurrencyDecimals },
+        nativeCurrency: {
+            decimals: nativeCurrencyDecimals,
+            logo: nativeCurrencyLogo,
+        },
     } = useSelectedNetwork()
 
     const [baseFee, setBaseFee] = useState<BigNumber>(
@@ -795,7 +798,10 @@ const GasPriceComponent: FunctionComponent<{
                                     </span>
                                     <div className="flex flex-row space-x-1 items-center">
                                         <img
-                                            src={defaultNetworkLogo}
+                                            src={
+                                                nativeCurrencyLogo ??
+                                                defaultNetworkLogo
+                                            }
                                             alt={networkNativeCurrency.symbol}
                                             width="20px"
                                             draggable={false}
@@ -813,7 +819,10 @@ const GasPriceComponent: FunctionComponent<{
                                     <div className="flex flex-row space-x-1 items-center justify-self-end">
                                         <div className="justify-self-start">
                                             <img
-                                                src={defaultNetworkLogo}
+                                                src={
+                                                    nativeCurrencyLogo ??
+                                                    defaultNetworkLogo
+                                                }
                                                 alt={
                                                     networkNativeCurrency.symbol
                                                 }
@@ -912,7 +921,9 @@ const GasPriceComponent: FunctionComponent<{
                         />
                         <TabComponent
                             symbol={networkNativeCurrency.symbol}
-                            nativeCurrencyIcon={defaultNetworkLogo}
+                            nativeCurrencyIcon={
+                                nativeCurrencyLogo ?? defaultNetworkLogo
+                            }
                             options={gasOptions}
                             gasFees={defaultGas.feeData}
                             selectedOption={selectedGas!}

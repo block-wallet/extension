@@ -65,7 +65,7 @@ interface GasPriceSelectorProps {
 }
 
 interface GasTabProps {
-    defaultNetworkLogo: string
+    nativeCurrencyLogo: string
     symbol: string
     options: TransactionSpeedOption[]
     selectedGasPrice: TransactionSpeedOption
@@ -328,7 +328,7 @@ const GasSelectorBasic = (props: GasTabProps) => {
         options,
         selectedGasPrice,
         handlePriceSelection,
-        defaultNetworkLogo,
+        nativeCurrencyLogo,
         symbol,
     } = props
     return (
@@ -369,7 +369,7 @@ const GasSelectorBasic = (props: GasTabProps) => {
                                 <div className="flex flex-row space-x-2 items-center justify-start w-44">
                                     <div className="justify-self-start">
                                         <img
-                                            src={defaultNetworkLogo}
+                                            src={nativeCurrencyLogo}
                                             alt={symbol}
                                             width="20px"
                                             draggable={false}
@@ -455,7 +455,10 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
     const {
         showGasLevels,
         defaultNetworkLogo,
-        nativeCurrency: { decimals: nativeCurrencyDecimals },
+        nativeCurrency: {
+            decimals: nativeCurrencyDecimals,
+            logo: nativeCurrencyLogo,
+        },
     } = useSelectedNetwork()
 
     const [transactionSpeeds, setTransactionSpeeds] =
@@ -612,7 +615,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                                 <>
                                     <div className="justify-self-start">
                                         <img
-                                            src={defaultNetworkLogo}
+                                            src={nativeCurrencyLogo ?? defaultNetworkLogo}
                                             alt={networkNativeCurrency.symbol}
                                             width="20px"
                                             draggable={false}
@@ -712,7 +715,9 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                         )}
 
                         <TabComponent
-                            defaultNetworkLogo={defaultNetworkLogo}
+                            nativeCurrencyLogo={
+                                nativeCurrencyLogo ?? defaultNetworkLogo
+                            }
                             symbol={networkNativeCurrency.symbol}
                             options={speeds}
                             selectedGasPrice={selectedGasPrice!}

@@ -30,7 +30,7 @@ const AppIcon = ({
                     alt="icon"
                     src={iconURL}
                     draggable={false}
-                    className={classnames("h-auto", imgClassName)}
+                    className={classnames("h-full", imgClassName)}
                     title={title}
                 />
             ) : null}

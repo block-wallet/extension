@@ -55,7 +55,7 @@ const WelcomeInfo: FC<WelcomeInfoProps> = ({ onDismiss }) => {
                                     target="_blank"
                                     rel="noreferrer"
                                     href={LINKS.TELEGRAM}
-                                    className="text-decoration-line: underline; text-blue-600 hover:text-blue-800"
+                                    className="text-decoration-line: underline; text-primary-blue-default hover:text-primary-blue-hover"
                                 >
                                     Telegram group
                                 </a>{" "}

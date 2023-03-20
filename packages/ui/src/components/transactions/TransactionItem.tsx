@@ -262,7 +262,7 @@ const getTransactionTime = (
             return [
                 displayTime,
                 {
-                    color: "text-blue-600",
+                    color: "text-primary-blue-default",
                     label: "Sped up",
                 },
             ]
@@ -279,7 +279,7 @@ const getTransactionTime = (
             failedStatuses.includes(status) &&
             metaType === MetaType.REGULAR_CANCELLING
         )
-            return [{ color: "text-blue-600", label: "Cancelled" }]
+            return [{ color: "text-primary-blue-default", label: "Cancelled" }]
         // /!\ Really specific case /!\
         // the DROPPED + SPEEDING_UP is supposed to mean that the speed up work
         // However, the transaction is supposed to be filtered an not shown.
@@ -651,7 +651,7 @@ const TransactionItem: React.FC<{
                                 <button
                                     type="button"
                                     className={classnames(
-                                        "rounded-md cursor-pointer text-blue-500 border-current border p-1 font-bold hover:bg-blue-500 hover:text-white transition-colors",
+                                        "rounded-md cursor-pointer text-primary-blue-default border-current border p-1 font-bold hover:bg-blue-500 hover:text-white transition-colors",
                                         isQueued
                                             ? "opacity-50 pointer-events-none"
                                             : ""

@@ -183,7 +183,7 @@ const ConnectSteps = ({
                                 The DApp URL you are connecting to seems
                                 malicious. Make sure{" "}
                                 <a
-                                    className="underline text-blue-600 hover:text-blue-800"
+                                    className="underline text-primary-blue-default hover:text-primary-blue-hover"
                                     href={LINKS.ARTICLES.MALICIOUS_DAPPS}
                                     target="_blank"
                                     rel="noreferrer"

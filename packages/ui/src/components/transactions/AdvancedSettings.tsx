@@ -487,7 +487,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
 
                     <p
                         onClick={() => resetSettings()}
-                        className="text-xs text-blue-500 hover:text-blue-800 cursor-pointer w-min"
+                        className="text-xs text-primary-blue-default hover:text-primary-blue-hover cursor-pointer w-min"
                     >
                         Reset
                     </p>

@@ -57,7 +57,7 @@ const TransactionDetailItem: FC<{ item: DetailedItem }> = ({ item }) => {
                                 href={item.link}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-blue-500 flex items-center"
+                                className="text-primary-blue-default flex items-center"
                             >
                                 {item.value && isNativeValue
                                     ? item.decimals

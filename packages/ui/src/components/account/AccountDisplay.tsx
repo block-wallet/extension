@@ -96,7 +96,8 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
             <div
                 className={classnames(
                     "flex flex-row items-center justify-between w-full rounded-md",
-                    hoverStyle && "hover:bg-primary-grey-default cursor-pointer",
+                    hoverStyle &&
+                        "hover:bg-primary-grey-default cursor-pointer",
                     confirmationDialog.isOpen && "!cursor-default"
                 )}
                 onClick={() => onClickAccount && onClickAccount(account)}

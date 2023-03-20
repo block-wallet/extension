@@ -769,6 +769,7 @@ const TransactionConfirm: React.FC<{
                             flashbots: newSettings.flashbots,
                         })
                     }}
+                    buttonDisplay={false}
                 />
             </div>
             <HardwareDeviceNotLinkedDialog

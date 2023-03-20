@@ -396,7 +396,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     BlockWallet does not verify custom networks. Make sure you
                     understand{" "}
                     <a
-                        className="underline text-blue-600 hover:text-blue-800"
+                        className="underline text-primary-blue-default hover:text-primary-blue-hover"
                         href={LINKS.ARTICLES.CUSTOM_NETWORK_RISKS}
                         target="_blank"
                         rel="noreferrer"

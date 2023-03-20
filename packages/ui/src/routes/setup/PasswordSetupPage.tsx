@@ -153,7 +153,7 @@ const PasswordSetupPage = () => {
                                     href="https://blockwallet.io/terms-of-use-of-block-wallet.html"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-500"
+                                    className="text-primary-blue-default"
                                 >
                                     Terms of Use
                                 </a>

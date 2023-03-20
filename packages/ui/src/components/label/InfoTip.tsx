@@ -47,7 +47,7 @@ const InfoTip: FunctionComponent<{
                     <div className={"w-5"}></div>
                     <div
                         className={
-                            "absolute right-3 cursor-pointer hover:text-blue-500"
+                            "absolute right-3 cursor-pointer hover:text-primary-blue-default"
                         }
                         onClick={() => setIsClosed(true)}
                     >

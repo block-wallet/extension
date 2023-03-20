@@ -49,7 +49,7 @@ export const DropdownIconButton: React.FC<DropdownIconButtonProps> = ({
         <div
             {...getIsHoveringProps()}
             className={classnames(
-                "p-2 transition duration-300 rounded-full hover:bg-primary-grey-default cursor-pointer select-none",
+                "p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default cursor-pointer select-none",
                 isShowingMenu && "bg-primary-grey-default"
             )}
             onClick={onClick}

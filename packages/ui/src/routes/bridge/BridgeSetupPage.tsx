@@ -516,7 +516,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                     "ml-auto text-sm",
                                     isUsingNetworkNativeCurrency && "invisible",
                                     isMaxAmountEnabled
-                                        ? "text-blue-500 hover:text-blue-800 cursor-pointer"
+                                        ? "text-primary-blue-default hover:text-primary-blue-hover cursor-pointer"
                                         : "text-gray-600 cursor-default"
                                 )}
                                 onClick={() => {

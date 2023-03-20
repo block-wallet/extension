@@ -131,7 +131,7 @@ const ErrorFallbackPage: FunctionComponent<{
                             href={LINKS.GITHUB_BUG_REPORT}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
+                            className="flex flex-row items-center space-x-3 hover:text-primary-blue-default hover:cursor-pointer"
                         >
                             <FaGithub size={22} />
                             <p>Create an Issue in GitHub.</p>
@@ -140,7 +140,7 @@ const ErrorFallbackPage: FunctionComponent<{
                             href={LINKS.WEBSITE_BUG_REPORT}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
+                            className="flex flex-row items-center space-x-3 hover:text-primary-blue-default hover:cursor-pointer"
                         >
                             <FaGlobe size={22} />
                             <p>Report it using our Bug Report Form.</p>
@@ -149,7 +149,7 @@ const ErrorFallbackPage: FunctionComponent<{
                             href={LINKS.TELEGRAM}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
+                            className="flex flex-row items-center space-x-3 hover:text-primary-blue-default hover:cursor-pointer"
                         >
                             <FaTelegram size={22} />
                             <p>Contact us on Telegram.</p>

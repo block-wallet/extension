@@ -89,7 +89,7 @@ const PendingBridgeStatus: FC<{ transaction: Partial<TransactionMeta> }> = ({
         <GenericTooltip content={pendingMessage?.info ?? ""}>
             <Status>
                 <Spinner color="text-blue-200" size="1rem" />
-                <span className="whitespace-nowrap text-ellipsis overflow-hidden text-blue-600 ml-1 max-w-[200px]">
+                <span className="whitespace-nowrap text-ellipsis overflow-hidden text-primary-blue-default ml-1 max-w-[200px]">
                     {pendingMessage.label}
                 </span>
             </Status>

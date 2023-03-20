@@ -13,7 +13,7 @@ const PROFILE_COLORS = {
     },
     success: {
         backgroundColor: "bg-secondary-green-default",
-        textColor: "text-green-600",
+        textColor: "text-white",
         borderColor: "border-green-300",
     },
     error: {

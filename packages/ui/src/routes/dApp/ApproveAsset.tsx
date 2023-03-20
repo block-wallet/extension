@@ -136,13 +136,16 @@ const ApproveAssetPage = () => {
         inProgressTransaction,
         setPersistedData,
     ])
-
     if (
         !currentTx ||
         currentTx.transactionCategory !==
             TransactionCategories.TOKEN_METHOD_APPROVE ||
         currentTx.advancedData?.tokenId ||
-        currentTx.status == TransactionStatus.SUBMITTED
+        [
+            TransactionStatus.CONFIRMED,
+            TransactionStatus.REJECTED,
+            TransactionStatus.SUBMITTED,
+        ].includes(currentTx.status)
     ) {
         return (
             <Redirect
@@ -230,6 +233,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const [isTokenLoading, setIsTokenLoading] = useState(true)
     const [isNameLoading, setIsNameLoading] = useState(true)
 
+    const [isManuallyRejected, setIsManuallyRejected] = useState(false)
+
     const [transactionAdvancedData, setTransactionAdvancedData] =
         useState<TransactionAdvancedData>({})
 
@@ -273,6 +278,10 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         // To reset the default value if there is multiple queued transactions
         setAllowance(formatUnits(defaultAllowance, tokenDecimals))
     }, [defaultAllowance])
+
+    useEffect(() => {
+        setIsManuallyRejected(false)
+    }, [transactionId])
 
     const [isAllowanceValid, setIsAllowanceValid] = useState(true)
 
@@ -393,6 +402,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     }
 
     const reject = async () => {
+        setIsManuallyRejected(true)
         dispatch({
             type: "open",
             payload: {
@@ -554,7 +564,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     buttonDisplay={false}
                     transactionId={transaction.id}
                 />
-                <div className="text-xs text-red-500">
+                <div className="text-xs text-red-500 !mt-0">
                     {!hasBalance && "Insufficient funds."}
                 </div>
             </div>
@@ -629,7 +639,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 txHash={transaction.transactionParams.hash}
                 timeout={DAPP_FEEDBACK_WINDOW_TIMEOUT}
                 onDone={() => {
-                    if (status === "error") {
+                    if (!isManuallyRejected && status === "error") {
                         updateTransactionStatus(
                             transaction.id,
                             TransactionStatus.UNAPPROVED

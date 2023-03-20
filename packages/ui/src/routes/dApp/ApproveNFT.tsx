@@ -459,7 +459,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                         })
                     }}
                 />
-                <div className="text-xs text-red-500">
+                <div className="text-xs text-red-500 !mt-0">
                     {!hasBalance && "Insufficient funds."}
                 </div>
             </div>

@@ -77,7 +77,7 @@ module.exports = {
                 gray: "#8093AB",
                 danger: "red",
                 black: theme("colors.black"),
-                selected: theme("colors.primary.300"),
+                selected: theme("colors.primary.blue.default"),
             }),
             stroke: () => ({
                 gray: "#8093AB",

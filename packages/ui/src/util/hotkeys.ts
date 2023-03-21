@@ -588,10 +588,7 @@ export const getHotkeyAndDescByPath = (
                     typeof hotkeyAction.action === "string"
                         ? hotkeyAction.action
                         : undefined
-                console.log("Action")
-                console.log(action)
-                console.log(permissions)
-                if (permissions && action) console.log(permissions[action])
+
                 if (
                     permissions &&
                     action &&

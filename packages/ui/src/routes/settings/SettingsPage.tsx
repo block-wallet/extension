@@ -26,7 +26,6 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import classNames from "classnames"
 import GenericTooltip from "../../components/label/GenericTooltip"
-import AppVersion from "../../components/AppVersion"
 import { openHardwareConnect } from "../../context/commActions"
 
 const SettingsPage = () => {
@@ -86,44 +85,7 @@ const SettingsPage = () => {
                     onBack={() => history.push("/")}
                 />
             }
-            footer={
-                <PopupFooter>
-                    <GenericTooltip
-                        top
-                        divFull
-                        disabled={!isImportingDeposits}
-                        content={
-                            <p className="w-full text-center">
-                                Please wait until deposits are done loading
-                                before locking the wallet. This can take up to
-                                15 minutes
-                            </p>
-                        }
-                    >
-                        <button
-                            type="button"
-                            onClick={logout}
-                            className={classnames(
-                                !isImportingDeposits
-                                    ? Classes.logoutButton
-                                    : Classes.disabledLogoutButton,
-                                "w-full"
-                            )}
-                            disabled={isImportingDeposits}
-                        >
-                            <img
-                                alt="Logout"
-                                src={logoutIcon}
-                                className={classnames(
-                                    Classes.buttonIcon,
-                                    isImportingDeposits && "opacity-30"
-                                )}
-                            />
-                            Logout
-                        </button>
-                    </GenericTooltip>
-                </PopupFooter>
-            }
+            // footer={<PopupFooter></PopupFooter>}
         >
             <div className="flex flex-col space-y-6 p-6">
                 <div className="flex flex-col space-y-1">
@@ -193,11 +155,43 @@ const SettingsPage = () => {
                                 </button>
                             </div>
                         )}
+
+                        <GenericTooltip
+                            top
+                            divFull
+                            disabled={!isImportingDeposits}
+                            content={
+                                <p className="w-full text-center">
+                                    Please wait until deposits are done loading
+                                    before locking the wallet. This can take up
+                                    to 15 minutes
+                                </p>
+                            }
+                        >
+                            <button
+                                type="button"
+                                onClick={logout}
+                                className={classnames(
+                                    !isImportingDeposits
+                                        ? Classes.logoutButton
+                                        : Classes.disabledLogoutButton,
+                                    "w-full"
+                                )}
+                                disabled={isImportingDeposits}
+                            >
+                                <img
+                                    alt="Logout"
+                                    src={logoutIcon}
+                                    className={classnames(
+                                        Classes.buttonIcon,
+                                        isImportingDeposits && "opacity-30"
+                                    )}
+                                />
+                                Logout
+                            </button>
+                        </GenericTooltip>
                     </div>
                 </div>
-            </div>
-            <div className="mb-1 mx-auto mt-auto text-xxs ">
-                <AppVersion />
             </div>
         </PopupLayout>
     )

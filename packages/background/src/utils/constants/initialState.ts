@@ -127,6 +127,7 @@ const initialState: BlankAppState = {
         isAppUnlocked: false,
         lastActiveTime: 0,
         lockedByTimeout: false,
+        isHotkeyEnabled: true,
     },
     BlockUpdatesController: { blockData: {} },
     KeyringController: {

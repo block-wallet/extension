@@ -49,6 +49,11 @@ const PreferencesPage = () => {
             label: "Phishing Protection",
             to: "/settings/preferences/phishing",
         },
+        {
+            icon: bell,
+            label: "Hotkeys",
+            to: "/settings/preferences/hotkeys",
+        },
     ]
 
     return (

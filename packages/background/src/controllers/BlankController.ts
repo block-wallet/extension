@@ -115,6 +115,7 @@ import {
     SubmitQRHardwareSignatureMessage,
     CancelQRHardwareSignRequestMessage,
     RequestUpdateTransactionStatus,
+    RequestSetHotkeys,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -758,6 +759,10 @@ export default class BlankController extends EventEmitter {
                 return this.refreshAccountTokenAllowances();
             case Messages.APP.GET_IDLE_TIMEOUT:
                 return this.getIdleTimeout();
+            case Messages.APP.SET_HOTKEYS_ENABLED:
+                return this.setHotkeysStatus(request as RequestSetHotkeys);
+            case Messages.APP.GET_HOTKEYS_ENABLED:
+                return this.getHotkeysStatus();
             case Messages.APP.SET_IDLE_TIMEOUT:
                 return this.setIdleTimeout(request as RequestSetIdleTimeout);
             case Messages.APP.SET_LAST_USER_ACTIVE_TIME:
@@ -3366,5 +3371,24 @@ export default class BlankController extends EventEmitter {
         version,
     }: RequestGenerateOnDemandReleaseNotes): Promise<ReleaseNote[]> {
         return generateOnDemandReleaseNotes(version);
+    }
+
+    /**
+     * Set hotkeys enabled/disabled
+     *
+     * @param enabled the new timeout in minutes, should be greater than zero
+     */
+    private async setHotkeysStatus({
+        enabled,
+    }: RequestSetHotkeys): Promise<void> {
+        return this.appStateController.setHotkeysStatus(enabled);
+    }
+
+    /**
+     * Returns hotkeys status (enabled/disabled)
+     *
+     */
+    private async getHotkeysStatus(): Promise<boolean> {
+        return this.appStateController.getHotkeysStatus();
     }
 }

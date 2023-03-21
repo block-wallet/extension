@@ -193,6 +193,7 @@ const initialState: newBlankAppState = {
         isAppUnlocked: true,
         lastActiveTime: 0,
         lockedByTimeout: false,
+        isHotkeyEnabled: true,
     },
     KeyringController: {
         isUnlocked: false,
@@ -369,6 +370,7 @@ describe('State reconciler', () => {
                 isAppUnlocked: true,
                 lastActiveTime: 0,
                 lockedByTimeout: false,
+                isHotkeyEnabled: true,
             },
             BlankDepositController: {
                 pendingWithdrawals: {

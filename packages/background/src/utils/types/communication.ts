@@ -96,6 +96,8 @@ enum APP {
     UPDATE_POPUP_TAB = 'UPDATE_POPUP_TAB',
     REJECT_UNCONFIRMED_REQUESTS = 'REJECT_UNCONFIRMED_REQUESTS',
     SET_USER_ONLINE = 'SET_USER_ONLINE',
+    GET_HOTKEYS_ENABLED = 'GET_HOTKEYS_ENABLED',
+    SET_HOTKEYS_ENABLED = 'SET_HOTKEYS_ENABLED',
 }
 
 enum BACKGROUND {
@@ -565,6 +567,8 @@ export interface RequestSignatures {
         CancelQRHardwareSignRequestMessage,
         boolean
     ];
+    [Messages.APP.GET_HOTKEYS_ENABLED]: [undefined, boolean];
+    [Messages.APP.SET_HOTKEYS_ENABLED]: [RequestSetHotkeys, void];
 }
 
 export type MessageTypes = keyof RequestSignatures;
@@ -1179,4 +1183,8 @@ export type Handlers = Record<string, Handler>;
 
 export enum BackgroundActions {
     CLOSE_WINDOW = 'CLOSE_WINDOW',
+}
+
+export interface RequestSetHotkeys {
+    enabled: boolean;
 }

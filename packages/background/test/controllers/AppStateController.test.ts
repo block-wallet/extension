@@ -65,6 +65,7 @@ describe('AppState Controller', function () {
                 isAppUnlocked: true,
                 lastActiveTime: new Date().getTime(),
                 lockedByTimeout: false,
+                isHotkeyEnabled: true,
             },
             mockKeyringController,
             new TransactionController(

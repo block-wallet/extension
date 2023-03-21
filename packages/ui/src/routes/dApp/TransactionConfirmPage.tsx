@@ -748,7 +748,7 @@ const TransactionConfirm: React.FC<{
                                 {formatCurrency(totalInNativeCurrency, {
                                     currency: nativeCurrency,
                                     locale_info: localeInfo,
-                                    showSymbol: true,
+                                    showSymbol: false,
                                 })}
                             </span>
                             <span className="text-xs text-red-500">

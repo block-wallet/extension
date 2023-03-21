@@ -145,7 +145,7 @@ const SwapPage = () => {
                       currency: nativeCurrency,
                       locale_info: localeInfo,
                       returnNonBreakingSpace: false,
-                      showSymbol: true,
+                      showSymbol: false,
                   }
               )
             : undefined

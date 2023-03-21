@@ -57,14 +57,14 @@ const Price: FunctionComponent<{
                             currency: state.nativeCurrency,
                             locale_info: state.localeInfo,
                             returnNonBreakingSpace: true,
-                            showSymbol: true,
+                            showSymbol: false,
                         })}
                     >
                         {formatCurrency(currencyAmount, {
                             currency: state.nativeCurrency,
                             locale_info: state.localeInfo,
                             returnNonBreakingSpace: true,
-                            showSymbol: true,
+                            showSymbol: false,
                             showCurrency: false,
                         })}
                     </span>

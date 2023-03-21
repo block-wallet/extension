@@ -204,7 +204,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                       currency: nativeCurrency,
                       locale_info: localeInfo,
                       returnNonBreakingSpace: false,
-                      showSymbol: true,
+                      showSymbol: false,
                   }
               )
             : undefined

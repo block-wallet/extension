@@ -490,7 +490,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                 {
                     currency: nativeCurrency,
                     locale_info: localeInfo,
-                    showSymbol: true,
+                    showSymbol: false,
                 }
             ),
         }

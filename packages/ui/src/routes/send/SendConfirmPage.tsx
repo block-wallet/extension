@@ -870,7 +870,7 @@ const SendConfirmPage = () => {
                                         {formatCurrency(nativeCurrencyAmt, {
                                             currency: blankState.nativeCurrency,
                                             locale_info: blankState.localeInfo,
-                                            showSymbol: true,
+                                            showSymbol: false,
                                         })}
                                     </span>
                                 </div>

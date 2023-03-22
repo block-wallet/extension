@@ -681,8 +681,3 @@ export const INITIAL_NETWORKS: Networks = {
         nativelySupported: true,
     },
 };
-
-export const HARDFORKS = {
-    BERLIN: 'berlin',
-    LONDON: 'london',
-};

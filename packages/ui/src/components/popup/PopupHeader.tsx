@@ -136,7 +136,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                     <a href={tooltip.link} target="_blank" rel="noreferrer">
                         <AiFillInfoCircle
                             size={26}
-                            className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
+                            className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                         />
                         <Tooltip
                             content={tooltip.content}

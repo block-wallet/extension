@@ -30,14 +30,14 @@ const SeedImportPage = () => {
 
     return (
         <PageLayout header maxWidth="max-w-lg">
-            <span className="my-6 text-lg font-semibold font-title">
+            <span className="my-6 text-lg font-semibold">
                 Import an Account
             </span>
             <Divider />
             <div className="flex flex-col p-6 space-y-6">
                 <div className="flex flex-col space-y-4">
                     <div className="flex flex-col px-6 my-2 space-y-1">
-                        <span className="text-sm leading-relaxed text-center text-gray-600">
+                        <span className="text-sm leading-relaxed text-center text-primary-grey-dark">
                             Select the length of your seed phrase and enter it
                             to import your account.
                         </span>

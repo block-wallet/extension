@@ -65,7 +65,7 @@ const RateUpdateDialog: FC<RateUpdateDialogProps> = ({
                     Rate expired. Please acknowledge the receiving amount
                     update.
                 </p>
-                <p className="text-xs text-gray-500">OLD AMOUNT</p>
+                <p className="text-xs text-primary-grey-dark">OLD AMOUNT</p>
                 <p className="text-sm font-bold">
                     {`${formatNumberLength(
                         formatUnits(
@@ -75,7 +75,9 @@ const RateUpdateDialog: FC<RateUpdateDialogProps> = ({
                         10
                     )} ${assetName}`}
                 </p>
-                <p className="text-xs text-gray-500 pt-2">NEW AMOUNT</p>
+                <p className="text-xs text-primary-grey-dark pt-2">
+                    NEW AMOUNT
+                </p>
                 <p className="text-sm font-bold">
                     {`${formatNumberLength(
                         formatUnits(rate || BigNumber.from(0), assetDecimals),

@@ -183,13 +183,13 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                         <span className="text-sm font-bold">
                             {savedToken!.symbol}
                         </span>
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-primary-grey-dark">
                             {formatHash(savedToken!.address)}
                         </span>
                         <CopyTooltip copied={copied} />
                     </button>
                 </div>
-                <span className="font-medium px-6 text-xxs text-gray-500">
+                <span className="font-medium px-6 text-xxs text-primary-grey-dark">
                     WITH ASSET:
                 </span>
             </>
@@ -260,7 +260,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                     onClick={() => copyAssetAddress()}
                 >
                     <span className="text-sm font-bold">{token.symbol}</span>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-primary-grey-dark">
                         {formatHash(token.address)}
                     </span>
                     <CopyTooltip copied={copied} />
@@ -271,7 +271,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                     </span>
                     {balance === UNKNOWN_BALANCE ? (
                         <div className="flex flex-row items-end">
-                            <span className="pr-1 text-xs text-gray-600">
+                            <span className="pr-1 text-xs text-primary-grey-dark">
                                 Unknown
                             </span>
                             <GenericTooltip
@@ -291,13 +291,13 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                             </GenericTooltip>
                         </div>
                     ) : (
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-primary-grey-dark">
                             {balance} {token.symbol}
                         </span>
                     )}
                 </div>
             </div>
-            <span className="font-medium px-6 pt-3 text-xxs text-gray-500">
+            <span className="font-medium px-6 pt-3 text-xxs text-primary-grey-dark">
                 {isUpdate ? "IN " : "TO "} ACCOUNT:
             </span>
             <div className="flex flex-col px-6 pb-6 pt-3">
@@ -319,7 +319,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                             )}
                             {` ${nativeToken.token.symbol})`}
                         </span>
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-primary-grey-dark">
                             {formatHash(accountData.address)}
                         </span>
                     </div>
@@ -329,12 +329,14 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
             <div className="flex flex-col px-6 py-3 space-y-2 text-xs text-gray-800 break-words">
                 <div className="flex flex-col space-y-0.5">
                     <span className="font-bold">Decimals</span>
-                    <span className="text-gray-600">{token.decimals}</span>
+                    <span className="text-primary-grey-dark">
+                        {token.decimals}
+                    </span>
                 </div>
                 {token!.image && !isBase64Image ? (
                     <div className="flex flex-col space-y-0.5">
                         <span className="font-bold pt-1">Image URL</span>
-                        <span className="text-gray-600 pb-2">
+                        <span className="text-primary-grey-dark pb-2">
                             {token!.image}
                         </span>
                         <WarningTip

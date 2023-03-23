@@ -34,7 +34,7 @@ const DAppPopupHeader: React.FC<Props> = ({
                 <div className="group relative flex-1">
                     <AiFillInfoCircle
                         size={26}
-                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
+                        className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                     />
                     <Tooltip
                         content={`${requestCount - 1} more ${

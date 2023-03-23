@@ -22,7 +22,7 @@ export class Classes {
         Classes.centered,
         Classes.animated,
         Classes.transform,
-        "flex-1 h-12 px-6 py-3 font-normal font-title text-sm shadow-sm rounded-md",
+        "flex-1 h-12 px-6 py-3 font-normal text-sm shadow-sm rounded-md",
         "border-2",
         "cursor-pointer disabled:pointer-events-none"
     )
@@ -130,11 +130,11 @@ export class Classes {
     )
 
     static roundedIcon = classnames(
-        "flex items-center justify-center w-9 h-9 p-1.5 bg-white border border-primary-grey-hover rounded-full"
+        "flex items-center justify-center w-10 h-10 p-1.5 bg-white border border-primary-grey-hover rounded-full"
     )
 
     static roundedFilledIcon = classnames(
-        "flex items-center justify-center w-9 h-9 p-0 rounded-full"
+        "flex items-center justify-center w-10 h-10 p-0 rounded-full"
     )
 
     static clickableText = classnames(
@@ -145,7 +145,7 @@ export class Classes {
     )
     static selectStyle = classnames(
         this.selectBaseStyle,
-        "text-gray-600 border rounded-md group border-primary-200 hover:border-primary-blue-default px-3 py-2"
+        "text-primary-grey-dark border rounded-md group border-primary-200 hover:border-primary-blue-default px-3 py-2"
     )
     static selectStyleDisabled = classnames(
         this.selectStyle,

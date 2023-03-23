@@ -8,10 +8,10 @@ const IntroductionPage = () => (
     <PageLayout header className="relative overflow-hidden">
         <div className="flex flex-col items-center relative my-10 mx-18 z-10">
             <div className="flex flex-col items-center my-12 space-y-6">
-                <span className="font-title font-semibold text-5xl">
+                <span className="font-semibold text-5xl">
                     Welcome to BlockWallet
                 </span>
-                <div className="flex flex-col md:flex-row items-center space-x-1 w-52 md:w-full mx-auto text-gray-600 text-lg justify-center text-center">
+                <div className="flex flex-col md:flex-row items-center space-x-1 w-52 md:w-full mx-auto text-primary-grey-dark text-lg justify-center text-center">
                     <span>Protecting you on Web3 without compromise.</span>
                 </div>
             </div>

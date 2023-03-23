@@ -113,7 +113,7 @@ const AccountMenu = () => {
                 />
             }
         >
-            <div className="flex flex-col p-6 space-y-4 text-sm text-gray-500">
+            <div className="flex flex-col p-6 pt-4 space-y-4 text-sm text-primary-grey-dark">
                 <div className="flex flex-col">
                     <AccountDisplay
                         account={account}

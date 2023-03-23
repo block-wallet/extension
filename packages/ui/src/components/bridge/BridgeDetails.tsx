@@ -109,7 +109,7 @@ const BridgeDetails: FC<{
                                     ${
                                         selectedTab.label === value.label
                                             ? "border-primary-blue-default border-b-2 text-primary-blue-default font-bold"
-                                            : "border-primary-grey-hover text-gray-500 border-b"
+                                            : "border-primary-grey-hover text-primary-grey-dark border-b"
                                     }`,
                             value.disabled && "cursor-default"
                         )

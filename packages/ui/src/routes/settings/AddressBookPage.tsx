@@ -41,7 +41,7 @@ const AddressBookPage: FunctionComponent<{
                 />
             }
         >
-            <div className="flex flex-col p-6 space-y-5 text-sm text-gray-500">
+            <div className="flex flex-col p-6 space-y-5 text-sm text-primary-grey-dark">
                 <ActionButton
                     icon={accountAdd}
                     label="Create New Contact"
@@ -139,7 +139,7 @@ const AddressBookPage: FunctionComponent<{
                 )}
                 {!Object.keys(addressBook).length &&
                     !Object.keys(recentAddresses).length && (
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-primary-grey-dark">
                             No contacts.
                         </span>
                     )}

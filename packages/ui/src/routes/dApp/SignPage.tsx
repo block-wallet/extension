@@ -209,7 +209,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                         <span className="font-bold pt-1">
                             {formattedDomainKeyNames[displayOrder[i]]}
                         </span>
-                        <span className="text-gray-600 allow-select-all">
+                        <span className="text-primary-grey-dark allow-select-all">
                             {param}
                         </span>
                     </>
@@ -271,7 +271,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                                 <span className="font-bold pt-1">
                                     {param.name}
                                 </span>
-                                <span className="text-gray-600 allow-select-all">
+                                <span className="text-primary-grey-dark allow-select-all">
                                     {`${param.value}`}
                                 </span>
                             </>
@@ -402,7 +402,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                             )}
                             {` ${nativeToken.token.symbol})`}
                         </span>
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-primary-grey-dark">
                             {formatHash(accountData.address)}
                         </span>
                         <CopyTooltip copied={copied} />

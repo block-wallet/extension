@@ -884,7 +884,7 @@ const CancelAndSpeedUpComponent = ({
                                 View all details
                             </ClickableText>
                             {baseFeePerGas && (
-                                <span className="block text-gray-500 text-xs mt-px">
+                                <span className="block text-primary-grey-dark text-xs mt-px">
                                     Last base fee:{" "}
                                     {formatUnits(baseFeePerGas, "gwei")} GWEI
                                 </span>

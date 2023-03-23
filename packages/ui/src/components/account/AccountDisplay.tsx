@@ -144,7 +144,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             </div>
                             {!showAddress ? (
                                 <span
-                                    className="text-gray-500"
+                                    className="text-primary-grey-dark"
                                     title={`${formatUnits(
                                         nativeTokenBalance
                                     )} ${nativeCurrency.symbol}`}
@@ -156,7 +156,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                                     {nativeCurrency.symbol}
                                 </span>
                             ) : (
-                                <span className="text-gray-500">
+                                <span className="text-primary-grey-dark">
                                     {formatHash(checksumAddress)}
                                 </span>
                             )}

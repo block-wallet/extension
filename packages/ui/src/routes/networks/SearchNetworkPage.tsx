@@ -161,7 +161,7 @@ const SearchNetworkPage = () => {
                                 />
                                 <div className="w-20 h-20 bg-primary-grey-default rounded-full relative z-0"></div>
                             </div>
-                            <span className="text-sm text-gray-600 text-center">
+                            <span className="text-sm text-primary-grey-dark text-center">
                                 Search the networks you want to add by name or
                                 chain identification. Or add{" "}
                                 <ClickableText onClick={manuallyAddNetwork}>
@@ -177,7 +177,7 @@ const SearchNetworkPage = () => {
                     )}
                     {isSuccess && (
                         <div className="flex flex-col space-y-1 pb-4 h-full">
-                            <div className="text-xs text-gray-500 pt-2 pb-1">
+                            <div className="text-xs text-primary-grey-dark pt-2 pb-1">
                                 SEARCH NETWORKS
                             </div>
                             <div className="flex flex-col overflow-y-auto h-50">

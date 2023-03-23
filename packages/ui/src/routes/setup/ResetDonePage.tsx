@@ -55,10 +55,10 @@ const ResetDonePage = () => {
             <PageLayout header centered className="relative overflow-hidden">
                 <div className="flex flex-col items-center relative py-14 z-10">
                     <div className="flex flex-col items-center my-12 space-y-6">
-                        <span className="font-title font-semibold text-5xl">
+                        <span className="font-semibold text-5xl">
                             Reset completed!
                         </span>
-                        <div className="flex flex-col items-center space-x-1 w-92 px-4 mx-auto text-gray-600 text-base text-center leading-loose">
+                        <div className="flex flex-col items-center space-x-1 w-92 px-4 mx-auto text-primary-grey-dark text-base text-center leading-loose">
                             <span>
                                 You can start using BlockWallet again.
                                 <br />

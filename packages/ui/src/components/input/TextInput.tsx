@@ -144,7 +144,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                                     size={16}
                                     onClick={onClickInfo}
                                     className={classnames(
-                                        "text-primary-200 hover:text-primary-blue-default cursor-default",
+                                        "text-primary-grey-dark hover:text-primary-blue-default cursor-default",
                                         onClickInfo && "!cursor-pointer"
                                     )}
                                 />

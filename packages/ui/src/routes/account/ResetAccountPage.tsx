@@ -71,7 +71,7 @@ const ResetAccountPage = ({}) => {
                 timeout={1100}
             />
             <div className="flex flex-col p-6 space-y-6 w-full">
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-primary-grey-dark">
                     <span>
                         Resetting your account will clear the transaction
                         history and added tokens. You will not need to re-import

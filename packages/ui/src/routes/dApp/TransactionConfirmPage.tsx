@@ -613,9 +613,9 @@ const TransactionConfirm: React.FC<{
                 <div className="flex flex-row w-full items-center justify-start py-0.5 ">
                     <HiOutlineExclamationCircle
                         size={20}
-                        className="text-gray-600 font-bold"
+                        className="text-primary-grey-dark font-bold"
                     />
-                    <div className="text-xs text-gray-600 pl-2 font-medium capitalize flex items-center justify-between w-full">
+                    <div className="text-xs text-primary-grey-dark pl-2 font-medium capitalize flex items-center justify-between w-full">
                         {description ? (
                             <>
                                 <GenericTooltip
@@ -646,7 +646,7 @@ const TransactionConfirm: React.FC<{
                     <label
                         className={classnames(
                             Classes.inputLabel,
-                            "text-gray-600 pb-2"
+                            "text-primary-grey-dark pb-2"
                         )}
                     >
                         Gas Price
@@ -700,7 +700,7 @@ const TransactionConfirm: React.FC<{
                                 htmlFor="amount"
                                 className={classnames(
                                     Classes.inputLabel,
-                                    "text-gray-500"
+                                    "text-primary-grey-dark"
                                 )}
                             >
                                 AMOUNT + {isEIP1559Compatible && " MAX "} GAS
@@ -744,7 +744,7 @@ const TransactionConfirm: React.FC<{
                                     {selectedCurrency.toUpperCase()} */}
                                 </span>
                             </div>
-                            <span className="ml-auto text-xs text-gray-500">
+                            <span className="ml-auto text-xs text-primary-grey-dark">
                                 {formatCurrency(totalInNativeCurrency, {
                                     currency: nativeCurrency,
                                     locale_info: localeInfo,

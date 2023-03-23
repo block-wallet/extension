@@ -174,7 +174,7 @@ const SeedImport: FunctionComponent<{
 
     return (
         <form
-            className="flex flex-col w-full text-gray-600"
+            className="flex flex-col w-full text-primary-grey-dark"
             onSubmit={onSubmit}
         >
             <div className="flex flex-col px-6 space-y-4">

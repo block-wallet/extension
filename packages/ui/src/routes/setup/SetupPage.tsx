@@ -21,10 +21,10 @@ const SetupOption: FunctionComponent<{
         <img
             src={icon}
             alt="icon"
-            className="mb-4 text-4xl text-gray-500 w-8 h-8"
+            className="mb-4 text-4xl text-primary-grey-dark w-8 h-8"
         />
-        <span className="text-sm font-semibold font-title">{title}</span>
-        <span className="h-16 mt-4 text-xs text-gray-500 text-center">
+        <span className="text-sm font-semibold">{title}</span>
+        <span className="h-16 mt-4 text-xs text-primary-grey-dark text-center">
             {description}
         </span>
         <Link
@@ -43,7 +43,7 @@ const SetupPage = () => {
 
     return (
         <PageLayout header className="relative">
-            <span className="my-6 text-lg font-semibold font-title">
+            <span className="my-6 text-lg font-semibold  ">
                 How do you want to proceed?
             </span>
             <Divider />

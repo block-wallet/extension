@@ -64,7 +64,7 @@ const AccountDisplay = () => {
             >
                 {formatName(account.name, 18)}
             </span>
-            <span className="text-xs text-gray-600 truncate">
+            <span className="text-xs text-primary-grey-dark truncate">
                 {formatHash(accountAddress)}
             </span>
             <CopyTooltip copied={copied} />
@@ -105,7 +105,7 @@ const DAppConnection = () => {
                     }
                 }}
                 className={classnames(
-                    "relative flex flex-row items-center p-1 px-2 pr-1  text-gray-600 rounded-md group border-primary-200  text-xs cursor-pointer",
+                    "relative flex flex-row items-center p-1 px-2 pr-1  text-primary-grey-dark rounded-md group border-primary-200  text-xs cursor-pointer",
                     dAppConnected === "connected" &&
                         "bg-green-100 hover:border-green-300",
                     dAppConnected === "connected-warning" &&
@@ -202,6 +202,18 @@ const PopupPage = () => {
                         </div>
                         <div className="flex flex-row items-center space-x-1">
                             <AccountDisplay />
+                            <Link
+                                to="/accounts/menu/receive"
+                                draggable={false}
+                                onClick={(e) => {
+                                    e.preventDefault()
+
+                                    history.push("/accounts/menu/receive")
+                                }}
+                                className="p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                            >
+                                <QRIcon />
+                            </Link>
                         </div>
                     </div>
                     <div className="flex flex-row items-center -mr-1 space-x-2">
@@ -245,7 +257,7 @@ const PopupPage = () => {
                                 {netWorth}
                             </TokenSummary.TokenBalance>
 
-                            <TokenSummary.ExchangeRateBalance className="flex items-center">
+                            <TokenSummary.ExchangeRateBalance className="flex items-center text-xs">
                                 <div className="group relative">
                                     <a
                                         href="https://ethereum.org/en/developers/docs/gas/"
@@ -255,7 +267,7 @@ const PopupPage = () => {
                                     >
                                         <AiFillInfoCircle
                                             size={23}
-                                            className="pr-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
+                                            className="pr-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                         />
 
                                         <Tooltip
@@ -273,7 +285,8 @@ const PopupPage = () => {
                                                     </div>
                                                     <div className="flex flex-row items-end space-x-4">
                                                         <span>
-                                                            Click on this icon to learn more.
+                                                            Click on this icon
+                                                            to learn more.
                                                         </span>{" "}
                                                     </div>
                                                 </div>
@@ -316,41 +329,8 @@ const PopupPage = () => {
                                         <ArrowHoverAnimation />
                                     )}
                                 </div>
-                                <span className="text-xs font-medium">
+                                <span className="text-sm font-medium">
                                     Send
-                                </span>
-                            </Link>
-                            <Link
-                                to="/accounts/menu/receive"
-                                draggable={false}
-                                className={classnames(
-                                    "flex flex-col items-center space-y-2 group",
-                                    disabledActions && "pointer-events-none"
-                                )}
-                            >
-                                <div
-                                    className={classnames(
-                                        "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        disabledActions
-                                            ? "bg-gray-300"
-                                            : "bg-primary-blue-default"
-                                    )}
-                                >
-                                    {isLoading ? (
-                                        <div className="flex flex-row items-center justify-center w-full h-full">
-                                            <AnimatedIcon
-                                                icon={
-                                                    AnimatedIconName.BlueCircleLoadingSkeleton
-                                                }
-                                                className="w-4 h-4 pointer-events-none"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <ArrowHoverAnimation />
-                                    )}
-                                </div>
-                                <span className="text-xs font-medium">
-                                    Receive
                                 </span>
                             </Link>
                             {isSwapEnabled && (
@@ -384,7 +364,7 @@ const PopupPage = () => {
                                             <DoubleArrowHoverAnimation />
                                         )}
                                     </div>
-                                    <span className="text-xs font-medium">
+                                    <span className="text-sm font-medium">
                                         Swap
                                     </span>
                                 </Link>
@@ -436,7 +416,7 @@ const PopupPage = () => {
                                             </>
                                         )}
                                     </div>
-                                    <span className="text-xs font-medium">
+                                    <span className="text-sm font-medium">
                                         Bridge
                                     </span>
                                 </Link>

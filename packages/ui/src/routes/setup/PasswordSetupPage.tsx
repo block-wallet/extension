@@ -112,7 +112,7 @@ const PasswordSetupPage = () => {
     }, [passwordValues.password, trigger])
     return (
         <PageLayout header maxWidth="max-w-md">
-            <span className="my-6 text-lg font-semibold font-title">
+            <span className="my-6 text-lg font-semibold">
                 Create a Password
             </span>
             <Divider />

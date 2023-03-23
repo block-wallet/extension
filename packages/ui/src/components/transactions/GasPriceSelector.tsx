@@ -605,7 +605,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                             : capitalize(selectedGasPrice!.label)}
                     </div>
                     <div className="flex flex-row w-full items-center justify-start space-x-3 text-xs">
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-primary-grey-dark">
                             {!isParentLoading && isLoaded
                                 ? selectedGasPrice!.nativeCurrencyAmount
                                 : ""}
@@ -615,7 +615,10 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                                 <>
                                     <div className="justify-self-start">
                                         <img
-                                            src={nativeCurrencyLogo ?? defaultNetworkLogo}
+                                            src={
+                                                nativeCurrencyLogo ??
+                                                defaultNetworkLogo
+                                            }
                                             alt={networkNativeCurrency.symbol}
                                             width="20px"
                                             draggable={false}
@@ -668,7 +671,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                                 >
                                     <AiFillInfoCircle
                                         size={26}
-                                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
+                                        className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                     />
                                 </a>
                                 <Tooltip
@@ -704,7 +707,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                                             ${
                                                 tab === value
                                                     ? "border-primary-blue-default border-b-2 text-primary-blue-default font-bold"
-                                                    : "border-primary-grey-hover text-gray-500 border-b"
+                                                    : "border-primary-grey-hover text-primary-grey-dark border-b"
                                             }`
                                 }
                                 containerClassName="flex flex-row -ml-3"

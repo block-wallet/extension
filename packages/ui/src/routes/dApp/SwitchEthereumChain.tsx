@@ -153,7 +153,7 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
                     <span className="font-bold text-primary-black-default">
                         Allow this site to switch the network?
                     </span>
-                    <span className="text-gray-500">
+                    <span className="text-primary-grey-dark">
                         This will switch the selected network within BlockWallet
                         to a previously added network:
                     </span>

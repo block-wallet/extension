@@ -167,8 +167,8 @@ const AssetDetailsPage = () => {
             />
 
             <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 space-y-6 overflow-auto hide-scroll">
-                <TokenSummary minHeight="13rem" className="mt-2">
-                    <TokenSummary.Balances className="mt-2">
+                <TokenSummary>
+                    <TokenSummary.Balances>
                         <AssetIcon filled asset={token} />
                         <TokenSummary.TokenName>
                             {token.name}
@@ -193,7 +193,7 @@ const AssetDetailsPage = () => {
                             )}
                         </TokenSummary.ExchangeRateBalance>
                     </TokenSummary.Balances>
-                    <TokenSummary.Actions className="mb-4">
+                    <TokenSummary.Actions className="pb-4">
                         <Link
                             to={{
                                 pathname: "/send",

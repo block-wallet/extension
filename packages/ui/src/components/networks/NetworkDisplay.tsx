@@ -201,7 +201,7 @@ const NetworkDisplay = ({
                             title="Drag to sort"
                         >
                             <HiDotsVertical
-                                className="text-gray-500 mr-2"
+                                className="text-primary-grey-dark mr-2"
                                 size={20}
                             />
                             {!hasImageError &&

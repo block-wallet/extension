@@ -65,7 +65,7 @@ const DefaultWalletPreferencesPage: FC<DefaultWalletPreferencesProps> = ({
             }
         >
             <div className="flex flex-col p-6 space-y-6 w-full">
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-primary-grey-dark">
                     {wasDefaultBrowserWallet ? (
                         <span>
                             BlockWallet is set as your default browser wallet.
@@ -96,7 +96,7 @@ const DefaultWalletPreferencesPage: FC<DefaultWalletPreferencesProps> = ({
                     onToggle={setDefaultBrowserWallet}
                 />
 
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-primary-grey-dark">
                     {wasDefaultBrowserWallet ? (
                         <span>
                             Turning this off will make BlockWallet unable to

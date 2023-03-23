@@ -148,7 +148,9 @@ const NetworksPage = () => {
                 />
                 <DndProvider backend={HTML5Backend}>
                     <div className="flex flex-col space-y-2">
-                        <span className="text-xs text-gray-500">MAINNET</span>
+                        <span className="text-xs text-primary-grey-dark">
+                            MAINNET
+                        </span>
                         <div className="flex flex-col space-y-2">
                             {mainNetworks.map((network) => (
                                 <NetworkDisplay
@@ -163,7 +165,7 @@ const NetworksPage = () => {
                                 />
                             ))}
                         </div>
-                        <span className="text-xs text-gray-500 mt-4">
+                        <span className="text-xs text-primary-grey-dark mt-4">
                             TESTNET
                         </span>
                         <div className="flex flex-col space-y-2">

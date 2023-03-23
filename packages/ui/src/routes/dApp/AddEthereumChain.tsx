@@ -279,7 +279,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     <span className="font-bold text-primary-black-default">
                         Allow this site to add a network?
                     </span>
-                    <span className="text-gray-500">
+                    <span className="text-primary-grey-dark">
                         This will allow this network to be used within
                         BlockWallet
                     </span>
@@ -289,7 +289,9 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                         <p className="font-bold text-primary-black-default">
                             Network Name
                         </p>
-                        <p className="text-gray-500">{chainName || "-"}</p>
+                        <p className="text-primary-grey-dark">
+                            {chainName || "-"}
+                        </p>
                     </div>
                     <div>
                         <div className="flex flex-row w-full">
@@ -307,7 +309,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                                 wrapperClassName="z-0"
                             />
                         </div>
-                        <p className="text-gray-500">{chainId}</p>
+                        <p className="text-primary-grey-dark">{chainId}</p>
                     </div>
                     <div>
                         <div className="flex flex-row w-full">
@@ -327,7 +329,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                                 />
                             )}
                         </div>
-                        <ExpandableText className="text-gray-500">
+                        <ExpandableText className="text-primary-grey-dark">
                             {rpcUrl}
                         </ExpandableText>
                     </div>
@@ -353,7 +355,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                             </div>
                             {!validations.knownIcon ? (
                                 <>
-                                    <ExpandableText className="text-gray-500">
+                                    <ExpandableText className="text-primary-grey-dark">
                                         {iconUrl}
                                     </ExpandableText>
                                     <div className="pt-1 flex flex-row items-center">

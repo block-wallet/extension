@@ -56,7 +56,7 @@ const ArgumentValue = ({
 
     return (
         <div className="flex">
-            <ExpandableText className="allow-select text-gray-600 pt-1">
+            <ExpandableText className="allow-select text-primary-grey-dark pt-1">
                 {parsedValue as string}
             </ExpandableText>
             {isValidAddress(parsedValue as string) && (
@@ -126,7 +126,7 @@ export const TransactionDetails: FunctionComponent<
     if (!signature) {
         return (
             <div className="h-full flex items-center">
-                <p className="w-full text-lg text-center text-gray-600">
+                <p className="w-full text-lg text-center text-primary-grey-dark">
                     Details are not available
                 </p>
             </div>

@@ -87,7 +87,7 @@ const GasDataInfo: FC<{ label: string; value: string }> = ({
     return (
         <li className="flex flex-row space-x-2 justify-between space-y-1">
             <span className="font-semibold text-xs">{label}:</span>
-            <span className="text-xs text-gray-500">{value}</span>
+            <span className="text-xs text-primary-grey-dark">{value}</span>
         </li>
     )
 }
@@ -195,7 +195,7 @@ const GasPricesInfo: FC = () => {
                                 >
                                     <AiFillInfoCircle
                                         size={26}
-                                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
+                                        className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                     />
                                 </a>
                                 <Tooltip
@@ -257,7 +257,7 @@ const GasPricesInfo: FC = () => {
                                                             }{" "}
                                                             GWEI
                                                         </span>
-                                                        <span className="text-gray-500 text-xs">
+                                                        <span className="text-primary-grey-dark text-xs">
                                                             ~
                                                             {gasPriceToNativeCurrency(
                                                                 gasPriceData.totalTransactionCost,

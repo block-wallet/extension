@@ -119,7 +119,7 @@ const NetworkSelect: FunctionComponent<{
                     }
                 }}
                 className={classNames(
-                    "relative flex flex-row items-center justify-start p-1 text-gray-600 bg-primary-grey-default rounded-md group border-primary-200 w-44 text-xs hover:bg-primary-grey-hover",
+                    "relative flex flex-row items-center justify-start p-1 text-primary-grey-dark bg-primary-grey-default rounded-md group border-primary-200 w-[151px] text-xs hover:bg-primary-grey-hover",
                     !isImportingDeposits
                         ? "cursor-pointer select-none"
                         : "disabled:pointer-events-none opacity-50",
@@ -150,15 +150,15 @@ const NetworkSelect: FunctionComponent<{
                     {networkData.desc}
                 </span>
                 {networkList ? (
-                    <RiArrowUpSLine size={16} />
+                    <RiArrowUpSLine size={16} className="w-5" />
                 ) : (
-                    <RiArrowDownSLine size={16} />
+                    <RiArrowDownSLine size={16} className="w-5" />
                 )}
             </div>
 
             <div
                 hidden={!networkList}
-                className={`absolute shadow-md rounded-md w-48 max-h-96 overflow-y-auto mt-2 bg-white z-50 select-none ${optionsContainerClassName}`}
+                className={`absolute shadow-md rounded-md w-44 max-h-96 overflow-y-auto mt-2 bg-white z-50 select-none ${optionsContainerClassName}`}
             >
                 <ul className="text-xs">
                     {Object.values(availableNetworks)
@@ -179,7 +179,7 @@ const NetworkSelect: FunctionComponent<{
                         onClick={() => setShowTestNetworks(!showTestNetworks)}
                     >
                         <label
-                            className="leading-loose text-gray-500 cursor-pointer"
+                            className="leading-loose text-primary-grey-dark cursor-pointer"
                             htmlFor="showTestNetworks"
                         >
                             Show Test Networks

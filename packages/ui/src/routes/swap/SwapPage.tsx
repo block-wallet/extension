@@ -405,17 +405,19 @@ const SwapPage = () => {
                     rate={rate}
                 />
             ) : null}
-            <div className="flex flex-col px-6 py-4 h-full">
+            <div className="flex flex-col p-6 h-full">
                 <div
                     className={classnames(
                         "flex flex-row",
                         // Error message height
-                        !errors.amount?.message && "mb-[22px]"
+                        !errors.amount?.message && "mb-5"
                     )}
                 >
                     {/* Asset */}
                     <div className="flex flex-col space w-1/2 pr-1.5">
-                        <p className="mb-2 text-sm text-gray-600">Swap From</p>
+                        <p className="mb-2 text-sm text-primary-grey-dark">
+                            Swap From
+                        </p>
                         <AssetSelection
                             selectedAssetList={AssetListType.DEFAULT}
                             selectedAsset={
@@ -460,7 +462,7 @@ const SwapPage = () => {
                                     isUsingNetworkNativeCurrency && "invisible",
                                     isMaxAmountEnabled
                                         ? "text-primary-blue-default hover:text-primary-blue-hover cursor-pointer"
-                                        : "text-gray-600 cursor-default"
+                                        : "text-primary-grey-dark cursor-default"
                                 )}
                                 onClick={() => {
                                     if (isMaxAmountEnabled) {
@@ -505,7 +507,7 @@ const SwapPage = () => {
                             />
                             <p
                                 className={classnames(
-                                    "text-xs text-gray-600 mt-1",
+                                    "text-xs text-primary-grey-dark mt-1",
                                     !formattedAmount && "hidden"
                                 )}
                             >
@@ -525,7 +527,7 @@ const SwapPage = () => {
                 </div>
 
                 {/* Switch Inputs */}
-                <div className="pt-6">
+                <div className="pt-6 pb-2">
                     <hr className="-mx-5" />
                     <button
                         type="button"
@@ -541,7 +543,7 @@ const SwapPage = () => {
                     </button>
                 </div>
 
-                <p className="text-sm text-gray-600 pb-3">Swap To</p>
+                <p className="text-sm text-primary-grey-dark pb-3">Swap To</p>
                 <AssetSelection
                     displayIcon
                     selectedAssetList={AssetListType.DEFAULT}
@@ -576,7 +578,7 @@ const SwapPage = () => {
                     }}
                 />
                 {swapFee && (
-                    <div className="flex items-center pt-2 text-xs text-gray-600 pt-0.5 mr-1 mt-2">
+                    <div className="flex items-center pt-2 text-xs text-primary-grey-dark pt-0.5 mr-1 mt-2">
                         <span>{`BlockWallet fee (${BASE_SWAP_FEE}%): ${swapFee}`}</span>
                     </div>
                 )}

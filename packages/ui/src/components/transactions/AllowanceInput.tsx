@@ -243,13 +243,13 @@ const AllowanceInput = ({
                 <div className="flex items-center w-1/3 mb-1">
                     <label
                         htmlFor="allowanceAmount"
-                        className="text-sm text-gray-600"
+                        className="text-sm text-primary-grey-dark"
                     >
                         Allowance
                     </label>
                     <AiFillInfoCircle
                         size={25}
-                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
+                        className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                         onClick={() => setShowOptionsInfo(true)}
                     />
                 </div>
@@ -418,7 +418,7 @@ const AllowanceInput = ({
                                 <h4 className="text-primary-black-default font-semibold">
                                     {item.title}
                                 </h4>
-                                <p className="text-gray-600">
+                                <p className="text-primary-grey-dark">
                                     {item.description}
                                 </p>
                             </div>

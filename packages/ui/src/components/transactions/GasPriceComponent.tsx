@@ -142,7 +142,7 @@ const GasSelectorBasic = (props: GasComponentProps) => {
                                 <div>
                                     <span
                                         className={classnames(
-                                            "text-gray-600 text-xs",
+                                            "text-primary-grey-dark text-xs",
                                             selectedOption.label ===
                                                 option.label &&
                                                 "!text-primary-blue-default"
@@ -517,7 +517,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                         {errors.maxFeePerGas?.message || maxFeeWarning || ""}
                     </span>
                 </div>
-                <span className="text-gray-500 text-xs">
+                <span className="text-primary-grey-dark text-xs">
                     Last base fee: {formatUnits(baseFeePerGas!, "gwei")} GWEI
                 </span>
             </div>
@@ -793,7 +793,7 @@ const GasPriceComponent: FunctionComponent<{
                             isLoaded &&
                             (displayOnlyMaxValue ? (
                                 <div className="flex flex-row w-full items-center space-x-4">
-                                    <span className="text-xs text-gray-600">
+                                    <span className="text-xs text-primary-grey-dark">
                                         {selectedGas!.totalNativeCurrencyCost}
                                     </span>
                                     <div className="flex flex-row space-x-1 items-center">
@@ -813,7 +813,7 @@ const GasPriceComponent: FunctionComponent<{
                                 </div>
                             ) : (
                                 <>
-                                    <span className="text-xs text-gray-600">
+                                    <span className="text-xs text-primary-grey-dark">
                                         {selectedGas!.totalNativeCurrencyCost}
                                     </span>
                                     <div className="flex flex-row space-x-1 items-center justify-self-end">
@@ -877,7 +877,7 @@ const GasPriceComponent: FunctionComponent<{
                                 >
                                     <AiFillInfoCircle
                                         size={26}
-                                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
+                                        className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                     />
                                 </a>
                                 <Tooltip
@@ -911,7 +911,7 @@ const GasPriceComponent: FunctionComponent<{
                                             ${
                                                 tab === value
                                                     ? "border-primary-blue-default border-b-2 text-primary-blue-default font-bold"
-                                                    : "border-primary-grey-hover text-gray-500 border-b"
+                                                    : "border-primary-grey-hover text-primary-grey-dark border-b"
                                             }`
                             }
                             containerClassName="flex flex-row -ml-3"

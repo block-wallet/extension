@@ -93,7 +93,7 @@ const BridgeDetilsFees: FC<{
                         ))}
                     </div>
                 ) : (
-                    <span className="text-gray-500">
+                    <span className="text-primary-grey-dark">
                         There are no fees for this operation!
                     </span>
                 )}

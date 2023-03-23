@@ -63,11 +63,9 @@ const BackupNoticePage = () => {
     return (
         <IdleComponent>
             <PageLayout header maxWidth="max-w-[800px]" className="text-center">
-                <span className="my-6 text-lg font-bold font-title">
-                    Secret Phrase
-                </span>
+                <span className="my-6 text-lg font-bold">Secret Phrase</span>
                 <Divider />
-                <div className="flex flex-col p-8 space-y-8 text-sm text-gray-600">
+                <div className="flex flex-col p-8 space-y-8 text-sm text-primary-grey-dark">
                     <span>
                         Your seed phrase is the key to your wallet. Use it to
                         recover your funds or access your wallet on other

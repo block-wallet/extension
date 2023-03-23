@@ -472,12 +472,12 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     className={classnames(
                         "flex flex-row",
                         // Error message height
-                        !errors.amount?.message && "mb-[22px]"
+                        !errors.amount?.message && "mb-6"
                     )}
                 >
                     {/* Asset */}
                     <div className="flex flex-col w-1/2 pr-1.5">
-                        <p className="text-sm text-gray-600 pb-2">
+                        <p className="text-sm text-primary-grey-dark pb-2">
                             Bridge Asset
                         </p>
                         <AssetSelection
@@ -517,7 +517,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                     isUsingNetworkNativeCurrency && "invisible",
                                     isMaxAmountEnabled
                                         ? "text-primary-blue-default hover:text-primary-blue-hover cursor-pointer"
-                                        : "text-gray-600 cursor-default"
+                                        : "text-primary-grey-dark cursor-default"
                                 )}
                                 onClick={() => {
                                     if (isMaxAmountEnabled) {
@@ -563,7 +563,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             />
                             <p
                                 className={classnames(
-                                    "text-xs text-gray-600 mt-1",
+                                    "text-xs text-primary-grey-dark mt-1",
                                     !formattedAmount && "hidden"
                                 )}
                             >
@@ -595,7 +595,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Network selector */}
-                <p className="text-sm text-gray-600 pb-2">To Network</p>
+                <p className="text-sm text-primary-grey-dark pb-2">
+                    To Network
+                </p>
                 <NetworkSelector
                     topMargin={60}
                     bottomMargin={200}
@@ -642,7 +644,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         </div>
                         {!bridgeQuoteError ? (
                             <div className="flex flex-col mt-2">
-                                <div className="text-gray-600 flex flex-row space-x-2 items-center">
+                                <div className="text-primary-grey-dark flex flex-row space-x-2 items-center">
                                     <span>
                                         Estimated duration:{" "}
                                         <span className="font-bold">

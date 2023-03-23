@@ -149,7 +149,7 @@ const ConnectSteps = ({
                         <div className="group relative">
                             <AiFillInfoCircle
                                 size={26}
-                                className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
+                                className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                             />
                             <Tooltip
                                 content={`${requestCount - 1} more ${
@@ -158,7 +158,7 @@ const ConnectSteps = ({
                             />
                         </div>
                     )}
-                    <span className="ml-auto text-sm text-gray-600">
+                    <span className="ml-auto text-sm text-primary-grey-dark">
                         {step} of 2
                     </span>
                 </PopupHeader>
@@ -262,7 +262,7 @@ const ConnectSteps = ({
                         />
                     </div>
 
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-primary-grey-dark">
                         Only connect with sites you trust.
                     </span>
                 </div>
@@ -293,13 +293,13 @@ const ConnectSteps = ({
                                 id="selectAll"
                             />
                             <label
-                                className="text-gray-600 cursor-pointer"
+                                className="text-primary-grey-dark cursor-pointer"
                                 htmlFor="selectAll"
                             >
                                 Please select accounts:
                             </label>
                         </div>
-                        <div className="flex flex-col space-y-3 text-sm text-gray-600">
+                        <div className="flex flex-col space-y-3 text-sm text-primary-grey-dark">
                             <AccountMultipleSelect
                                 accounts={filteredAccounts}
                                 selectedAccount={account}
@@ -310,10 +310,10 @@ const ConnectSteps = ({
                     </div>
                 ) : (
                     <div className="flex flex-col p-6 space-y-6">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-primary-grey-dark">
                             Allow this site to:
                         </span>
-                        <div className="flex flex-row items-center space-x-4 text-sm text-gray-600 cursor-pointer">
+                        <div className="flex flex-row items-center space-x-4 text-sm text-primary-grey-dark cursor-pointer">
                             <input
                                 type="checkbox"
                                 className={Classes.checkboxAlt}

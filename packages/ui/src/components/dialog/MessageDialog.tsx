@@ -40,7 +40,7 @@ const MessageDialog: FunctionComponent<messageDialogProps> = ({
                         wideMargins ? "px-5 " : "px-1"
                     )}
                 >
-                    <span className="text-sm text-center w-full text-gray-500">
+                    <span className="text-sm text-center w-full text-primary-grey-dark">
                         {message}
                     </span>
                 </div>

@@ -116,7 +116,7 @@ const SeedPhraseBlock = (props: any) => {
     return (
         <div
             className={classnames(
-                "flex flex-col text-gray-600 text-sm",
+                "flex flex-col text-primary-grey-dark text-sm",
                 isReminder ? "space-y-6 p-4" : "space-y-8 p-8"
             )}
         >
@@ -237,7 +237,7 @@ const BackupConfirmPage = () => {
                     maxWidth={isReminder ? "" : "max-w-md"}
                     className={"text-center"}
                 >
-                    <span className="font-semibold my-6 font-title text-lg">
+                    <span className="font-semibold my-6   text-lg">
                         Confirm Secret Phrase
                     </span>
                     <Divider />

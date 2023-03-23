@@ -17,7 +17,7 @@ const EndLabel = ({
                 className
             )}
         >
-            <span className="text-gray-500 text-sm">{label}</span>
+            <span className="text-primary-grey-dark text-sm">{label}</span>
         </div>
     </div>
 )

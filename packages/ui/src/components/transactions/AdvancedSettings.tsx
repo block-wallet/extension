@@ -452,7 +452,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                 <div className="group relative">
                                     <AiFillInfoCircle
                                         size={20}
-                                        className="pl-1 text-primary-200  hover:text-primary-blue-default"
+                                        className="pl-1 text-primary-grey-dark  hover:text-primary-blue-default"
                                     />
                                     <Tooltip
                                         content={

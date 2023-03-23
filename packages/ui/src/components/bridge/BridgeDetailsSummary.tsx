@@ -158,7 +158,7 @@ const BridgeDetailsSummary: FC<BridgeDetailsSummaryProps> = ({
             {transaction.transactionCategory ===
                 TransactionCategories.INCOMING_BRIDGE_REFUND && (
                 <>
-                    <i className="text-gray-500 text-center py-2">
+                    <i className="text-primary-grey-dark text-center py-2">
                         This is a refund transaction of a failed bridge.
                     </i>
                 </>

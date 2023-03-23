@@ -76,7 +76,7 @@ const NotificationsAndWarningsPage = () => {
             }
         >
             <div className="flex flex-col p-6 space-y-6 w-full">
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-primary-grey-dark">
                     Receive BlockWallet's browser notifications.
                 </span>
 
@@ -92,7 +92,7 @@ const NotificationsAndWarningsPage = () => {
                 />
 
                 <hr />
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-primary-grey-dark">
                     Warn me when my selected account address is different from
                     transaction's address.
                 </span>
@@ -109,7 +109,7 @@ const NotificationsAndWarningsPage = () => {
                 />
 
                 <hr />
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-primary-grey-dark">
                     Warn me when a dApp suggests fees much lower/higher than
                     recommended.
                 </span>
@@ -127,7 +127,7 @@ const NotificationsAndWarningsPage = () => {
                 />
 
                 <hr />
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-primary-grey-dark">
                     Warn me when I haven't enough funds in the destination
                     network of a bridge
                 </span>

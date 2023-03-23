@@ -10,7 +10,9 @@ interface FeeDetailsProps {
 const FeeDetails: FC<FeeDetailsProps> = ({ summary, details }) => {
     return (
         <div className="flex items-center pt-2">
-            <p className="text-xs text-gray-600 pt-0.5 mr-1">{summary}</p>
+            <p className="text-xs text-primary-grey-dark pt-0.5 mr-1">
+                {summary}
+            </p>
             {details && (
                 <GenericTooltip
                     divFull={false}
@@ -20,7 +22,7 @@ const FeeDetails: FC<FeeDetailsProps> = ({ summary, details }) => {
                 >
                     <AiFillInfoCircle
                         size={18}
-                        className="cursor-pointer text-primary-200 hover:text-primary-blue-default"
+                        className="cursor-pointer text-primary-grey-dark hover:text-primary-blue-default"
                     />
                 </GenericTooltip>
             )}

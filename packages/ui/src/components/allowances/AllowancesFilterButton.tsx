@@ -31,7 +31,7 @@ const AllowancesFilterButton = ({
                     <DropdownOutlinedIconButton iconName={IconName.GROUP} />
                 </Dropdown.Button>
                 <Dropdown.Menu id="filter-menu" className="w-36 py-2">
-                    <div className="p-2 px-3 text-xs text-gray-600 font-normal">
+                    <div className="p-2 px-3 text-xs text-primary-grey-dark font-normal">
                         GROUP BY
                     </div>
                     {filterOptions.map(({ value, label }) => {

@@ -242,7 +242,7 @@ const HardwareWalletAccountsPage = () => {
                 isOpen={state.deviceNotReady}
             />
             {(isImportingAccounts || isLoadingHDPath) && <LoadingOverlay />}
-            <div className="flex flex-col space-y-2 text-sm text-gray-600 p-8">
+            <div className="flex flex-col space-y-2 text-sm text-primary-grey-dark p-8">
                 <div style={{ minHeight: "280px" }}>
                     {state.deviceAccounts.length > 0 &&
                     !state.gettingAccounts ? (
@@ -274,7 +274,7 @@ const HardwareWalletAccountsPage = () => {
 
                 <div className="flex w-full justify-between pt-6 items-center pl-2 space-x-2">
                     <div className="space-x-4 flex items-center max-h-10">
-                        <span className="text-gray-500">Show:</span>
+                        <span className="text-primary-grey-dark">Show:</span>
                         <Select
                             onChange={onUpdatePageSize}
                             currentValue={state.pageSize}
@@ -388,7 +388,7 @@ const HardwareWalletAccount = ({
             />
             <div className="flex flex-col">
                 <span className="font-bold">{account.name}</span>
-                <div className="flex space-x-2 w-full text-gray-500 text-xs">
+                <div className="flex space-x-2 w-full text-primary-grey-dark text-xs">
                     <span className="w-20" title={account.address}>
                         {formatHash(account.address)}
                     </span>
@@ -486,7 +486,7 @@ const AdvancedSettings = ({
                             >
                                 <AiFillInfoCircle
                                     size={26}
-                                    className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
+                                    className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                 />
                             </a>
                             <Tooltip

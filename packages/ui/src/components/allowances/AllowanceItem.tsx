@@ -191,7 +191,7 @@ const AllowanceItem = ({
                         {name}
                     </span>
                     <span
-                        className="text-xs text-gray-600 w-32 truncate"
+                        className="text-xs text-primary-grey-dark w-32 truncate"
                         title={allowanceValue}
                     >
                         {allowanceValue}

@@ -62,7 +62,7 @@ const DefaultGasPreferencesPage = () => {
                 onDone={history.goBack}
             />
             <div className="flex flex-col p-6 space-y-4 w-full">
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-primary-grey-dark">
                     Set your preferred gas setting for all future transactions.
                 </span>
                 <div className="flex flex-col w-full space-y-4">

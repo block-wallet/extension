@@ -78,7 +78,7 @@ const HardwareDeviceNotLinkedDialog: React.FC<{
                                         <div className="group relative">
                                             <AiFillInfoCircle
                                                 size={26}
-                                                className="pl-2 text-primary-200 cursor-pointer hover:text-primary-blue-default"
+                                                className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                             />
                                             <Tooltip
                                                 className="!-translate-x-48 !w-60 !break-word !whitespace-normal border boder-gray-300"

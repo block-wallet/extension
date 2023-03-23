@@ -118,7 +118,7 @@ const SearchedTokenView = ({
                         />
                         <div className="w-20 h-20 bg-primary-grey-default rounded-full relative z-0"></div>
                     </div>
-                    <span className="text-sm text-gray-600 text-center">
+                    <span className="text-sm text-primary-grey-dark text-center">
                         Add the tokens that you've acquired using BlockWallet.
                         <br />
                         Enter an address for adding a custom token.
@@ -127,7 +127,7 @@ const SearchedTokenView = ({
             ) : (
                 <div className="w-full h-0 max-h-screen px-6 pb-0 mt-16">
                     <div
-                        className={`text-xs text-gray-500 pt-4 pb-0 ${
+                        className={`text-xs text-primary-grey-dark pt-4 pb-0 ${
                             selected.length <= 0 ? "hidden" : "visible"
                         }`}
                     >
@@ -153,7 +153,7 @@ const SearchedTokenView = ({
                         })}
                     </div>
                     <div
-                        className={`text-xs text-gray-500 pt-4 pb-1 ${
+                        className={`text-xs text-primary-grey-dark pt-4 pb-1 ${
                             isSearchEmpty ? "hidden" : "visible"
                         }`}
                     >

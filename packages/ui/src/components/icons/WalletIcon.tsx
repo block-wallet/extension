@@ -40,32 +40,6 @@ const WalletIcon: React.FC<{ className?: string }> = ({ className }) => {
                     />
                 </g>
             </g>
-            <defs>
-                <filter
-                    id="filter0_d_1_725"
-                    x="-4.1665"
-                    y="-0.166016"
-                    width="28.3335"
-                    height="28.334"
-                    filterUnits="userSpaceOnUse"
-                    color-interpolation-filters="sRGB"
-                >
-                    <feBlend
-                        mode="normal"
-                        in2="BackgroundImageFix"
-                        result="effect1_dropShadow_1_725"
-                    />
-                    <feBlend
-                        mode="normal"
-                        in="SourceGraphic"
-                        in2="effect1_dropShadow_1_725"
-                        result="shape"
-                    />
-                </filter>
-                <clipPath id="clip0_1_725">
-                    <rect width="20" height="20" fill="white" />
-                </clipPath>
-            </defs>
         </svg>
     )
 }

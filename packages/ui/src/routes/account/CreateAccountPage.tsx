@@ -47,7 +47,9 @@ const CreateAccountCard: React.FC<{
             <Icon className="mr-3" name={iconName} size="lg" />
             <div className="flex-1 flex flex-col justify-start space-y-2">
                 <span className="font-bold text-sm leading-6">{title}</span>
-                <p className="text-xs text-gray-500 leading-5">{description}</p>
+                <p className="text-xs text-primary-grey-dark leading-5">
+                    {description}
+                </p>
             </div>
             <div className="w-6 m-auto">
                 <Icon name={IconName.RIGHT_CHEVRON} />
@@ -67,7 +69,7 @@ const CreateAccountPage = () => {
                 />
             }
         >
-            <div className="flex flex-col space-y-6 p-6">
+            <div className="flex flex-col space-y-4 p-6">
                 <CreateAccountCard
                     title="Create Account"
                     iconName={IconName.WALLET}

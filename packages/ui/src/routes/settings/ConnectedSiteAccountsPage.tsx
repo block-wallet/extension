@@ -241,7 +241,7 @@ const ConnectedSiteAccountsPage = () => {
                 ></PopupHeader>
             }
         >
-            <div className="flex flex-col p-6 space-y-8 text-sm text-gray-500">
+            <div className="flex flex-col p-6 space-y-8 text-sm text-primary-grey-dark">
                 {!isSelectedAccountConnected && (
                     <div>
                         <WarningTip

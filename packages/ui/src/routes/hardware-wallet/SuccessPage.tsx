@@ -44,11 +44,11 @@ const HardwareWalletSuccessPage = () => {
                 <div className="flex flex-col items-center relative py-14 z-10">
                     <LogoHeader />
                     <div className="flex flex-col items-center my-12 space-y-6">
-                        <span className="font-title font-semibold text-5xl text-center">
+                        <span className="font-semibold text-5xl text-center">
                             {vendorName}{" "}
                             {!reconnect ? "import completed!" : "reconnected!"}
                         </span>
-                        <div className="flex flex-col md:flex-row items-center space-x-1 w-92 px-4 md:px-0 md:w-full mx-auto text-gray-600 text-sm text-center leading-loose justify-center">
+                        <div className="flex flex-col md:flex-row items-center space-x-1 w-92 px-4 md:px-0 md:w-full mx-auto text-primary-grey-dark text-sm text-center leading-loose justify-center">
                             {!reconnect ? (
                                 <span>
                                     Your {vendorName} accounts were imported

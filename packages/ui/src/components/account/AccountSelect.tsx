@@ -145,7 +145,7 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
     }
 
     return (
-        <div className="flex flex-col p-6 space-y-5 text-sm text-gray-500 pb-3">
+        <div className="flex flex-col p-6 space-y-5 text-sm text-primary-grey-dark pb-3">
             <div className="flex flex-row justify-between space-x-2 w-full">
                 <AccountSearchBar
                     onChange={onChangeSearch}

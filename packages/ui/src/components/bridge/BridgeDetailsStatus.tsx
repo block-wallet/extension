@@ -69,7 +69,7 @@ const NotInitializedBridgeStatus = () => {
     return (
         <Status>
             <span className="relative inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-gray-400 pointer-events-none" />
-            <span className="text-gray-600">Not initialized</span>
+            <span className="text-primary-grey-dark">Not initialized</span>
         </Status>
     )
 }

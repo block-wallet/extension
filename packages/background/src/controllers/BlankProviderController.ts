@@ -107,7 +107,6 @@ import {
     SignTimeoutError,
 } from '../utils/hardware';
 import { GasPricesController } from './GasPricesController';
-import { bnGreaterThanZero } from '../utils/bnUtils';
 import { recoverPersonalSignature } from '@metamask/eth-sig-util';
 import checksummedAddress from '../utils/checksummedAddress';
 

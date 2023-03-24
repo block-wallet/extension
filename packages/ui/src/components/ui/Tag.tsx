@@ -25,7 +25,7 @@ const PROFILE_COLORS = {
         textColor: "bg-yellow-100",
     },
     info: {
-        backgroundColor: "bg-blue-500",
+        backgroundColor: "bg-primary-blue-default",
         textColor: "text-white",
     },
     dark: {

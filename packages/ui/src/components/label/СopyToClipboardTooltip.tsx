@@ -10,7 +10,7 @@ const CopyTooltip: FunctionComponent<{
 }> = ({ copied = false, text }) => (
     <div
         className={classnames(
-            "pointer-events-none absolute bottom-0 -mb-4 left-1/2 transform -translate-x-1/2 translate-y-full p-2 rounded-md text-xs font-bold bg-gray-900 text-white whitespace-nowrap",
+            "pointer-events-none absolute bottom-0 -mb-4 left-1/2 transform -translate-x-1/2 translate-y-full p-2 rounded-md text-xs font-semibold bg-gray-900 text-white whitespace-nowrap",
             "invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200"
         )}
         style={{ width: "fit-content", height: "fit-content", zIndex: 100 }}

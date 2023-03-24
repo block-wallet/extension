@@ -32,7 +32,7 @@ const BridgeErrorDisplay = ({
 
     return (
         <div>
-            <span className="text-xs text-primary-grey-dark font-bold">
+            <span className="text-xs text-primary-grey-dark font-semibold">
                 {tool}
             </span>
             {Array.from(errors.keys()).map((code) => {

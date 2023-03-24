@@ -532,7 +532,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const mainSection = (
         <>
             <div className="flex flex-col space-y-3 px-6 py-4">
-                <p className="text-sm font-bold">{`You are about to update your ${assetName} allowance`}</p>
+                <p className="text-sm font-semibold">{`You are about to update your ${assetName} allowance`}</p>
                 <p className="text-sm text-primary-grey-dark">
                     {mainSectionText}
                 </p>
@@ -680,7 +680,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     fill={getAccountColor(selectedAccount.address)}
                 />
                 <div className="relative flex flex-col group space-y-1 ml-4">
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-semibold">
                         {formatName(selectedAccount.name, 15)}
                     </span>
                     <span

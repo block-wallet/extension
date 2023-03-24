@@ -54,7 +54,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
             </span>
 
             <div className="flex flex-col w-full h-full">
-                <h2 className="px-2 pr-0 pb-4 mt-2 text-lg font-bold">
+                <h2 className="px-2 pr-0 pb-4 mt-2 text-lg font-semibold">
                     Unable to generate a quote
                 </h2>
                 <Divider />
@@ -63,7 +63,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                     style={{ width: "calc(100% + 1.5rem)" }}
                 >
                     <div className="p-1">
-                        <span className="text-sm font-bold">Summary</span>
+                        <span className="text-sm font-semibold">Summary</span>
                         <div className="mt-2">{details.message}</div>
 
                         {errorsByTool && errorsByTool.size > 0 && (
@@ -73,7 +73,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                                 </div>
                                 <div className="flex-1 flex flex-col">
                                     <main className="p-1">
-                                        <span className="text-sm font-bold">
+                                        <span className="text-sm font-semibold">
                                             Errors by tool
                                         </span>
                                         <br />
@@ -111,7 +111,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                             href={LINKS.ARTICLES.BRIDGES}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-blue-default"
+                            className="flex flex-row items-center space-x-2 text-xs font-semibold text-primary-blue-default"
                         >
                             <span>Read about bridges</span>
                             <img
@@ -127,7 +127,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                             target="_blank"
                             rel="noopener noreferrer"
                             download={"quote_not_found.json"}
-                            className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-blue-default"
+                            className="flex flex-row items-center space-x-2 text-xs font-semibold text-primary-blue-default"
                         >
                             <span>Download report</span>
                             <img

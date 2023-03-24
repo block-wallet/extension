@@ -208,7 +208,7 @@ const AddTokenManualView = ({
                 onSubmit={onSubmit}
             >
                 <div className="flex justify-center items-center space-x-2 pb-3">
-                    <div className="text-base font-bold text-primary-black-default text-center">
+                    <div className="text-base font-semibold text-primary-black-default text-center">
                         Custom Token
                     </div>
 

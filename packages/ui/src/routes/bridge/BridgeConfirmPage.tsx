@@ -619,11 +619,11 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     collapsedMessage={
                         <div
                             className={classnames(
-                                "text-center opacity-90 w-full p-2 bg-yellow-200 hover:bg-yellow-100 space-x-2 flex tems-center font-bold justify-center"
+                                "text-center opacity-90 w-full p-2 bg-yellow-200 hover:bg-yellow-100 space-x-2 flex tems-center font-semibold justify-center"
                             )}
                         >
                             <AiOutlineWarning className="w-4 h-4 yellow-300" />
-                            <span className="font-bold">
+                            <span className="font-semibold">
                                 {bridgeWarningMessage.title}
                             </span>
                         </div>
@@ -756,7 +756,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                             !quote && "cursor-not-allowed hover:border-default"
                         )}
                     >
-                        <span className="font-bold text-sm">Details</span>
+                        <span className="font-semibold text-sm">Details</span>
                         <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
                     </OutlinedButton>
                 </div>

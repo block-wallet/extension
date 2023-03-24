@@ -647,7 +647,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                 <div className="text-primary-grey-dark flex flex-row space-x-2 items-center">
                                     <span>
                                         Estimated duration:{" "}
-                                        <span className="font-bold">
+                                        <span className="font-semibold">
                                             {secondsToEstimatedMinutes(
                                                 quote.bridgeParams.params
                                                     .estimatedDurationInSeconds

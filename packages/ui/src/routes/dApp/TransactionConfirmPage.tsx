@@ -391,7 +391,7 @@ const TransactionConfirm: React.FC<{
                 content={
                     <div>
                         <p>
-                            <span className="font-bold">Total value: </span>
+                            <span className="font-semibold">Total value: </span>
                             {formatUnits(
                                 params.value!,
                                 network.nativeCurrency.decimals
@@ -399,7 +399,7 @@ const TransactionConfirm: React.FC<{
                             {networkNativeCurrency.symbol}
                         </p>
                         <p>
-                            <span className="font-bold">Origin: </span>
+                            <span className="font-semibold">Origin: </span>
                             <span data-testid="transaction-origin">
                                 {transaction.origin}
                             </span>
@@ -558,7 +558,7 @@ const TransactionConfirm: React.FC<{
                     </div>
                     <span
                         title={accountName}
-                        className="pl-2 font-bold text-sm truncate ..."
+                        className="pl-2 font-semibold text-sm truncate ..."
                     >
                         {formatName(accountName, 24)}
                     </span>
@@ -594,7 +594,7 @@ const TransactionConfirm: React.FC<{
                         onClick={() => onCopy(params?.to)}
                     >
                         <AccountIcon className="h-6 w-6" fill="black" />
-                        <span className="pl-2 font-bold text-sm">
+                        <span className="pl-2 font-semibold text-sm">
                             ...{params.to!.slice(-6)}
                         </span>
                         <CopyTooltip copied={copied} />
@@ -602,7 +602,7 @@ const TransactionConfirm: React.FC<{
                 ) : (
                     <div className="flex flex-row items-center relative w-2/5 justify-end">
                         <BsFileEarmarkText size={24} />
-                        <span className="pl-1 font-bold text-sm">
+                        <span className="pl-1 font-semibold text-sm">
                             New Contract
                         </span>
                     </div>
@@ -613,7 +613,7 @@ const TransactionConfirm: React.FC<{
                 <div className="flex flex-row w-full items-center justify-start py-0.5 ">
                     <HiOutlineExclamationCircle
                         size={20}
-                        className="text-primary-grey-dark font-bold"
+                        className="text-primary-grey-dark font-semibold"
                     />
                     <div className="text-xs text-primary-grey-dark pl-2 font-medium capitalize flex items-center justify-between w-full">
                         {description ? (
@@ -708,7 +708,7 @@ const TransactionConfirm: React.FC<{
                             </label>
                         </div>
                         <div className="flex flex-col w-full space-y-1">
-                            <div className="flex flex-row items-center justify-between w-full font-bold">
+                            <div className="flex flex-row items-center justify-between w-full font-semibold">
                                 <span className="w-2/12 text-sm">Total:</span>
                                 <span className="flex flex-row items-center justify-end w-10/12">
                                     <img

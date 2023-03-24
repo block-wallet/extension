@@ -351,13 +351,13 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                     onClick={() => setIsOpen(true)}
                     className="w-full py-3"
                 >
-                    <span className="font-bold text-sm">{label}</span>
+                    <span className="font-semibold text-sm">{label}</span>
                     <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
                 </OutlinedButton>
             ) : (
                 <div className="flex flex-col items-end">
                     <span
-                        className="text-xs font-bold text-primary-blue-default cursor-pointer hover:underline"
+                        className="text-xs font-semibold text-primary-blue-default cursor-pointer hover:underline"
                         onClick={() => setIsOpen(true)}
                     >
                         {label}
@@ -380,7 +380,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                     className="flex flex-col w-full px-3"
                     ref={clickOutsideRef}
                 >
-                    <p className="text-base font-bold pb-3">{label}</p>
+                    <p className="text-base font-semibold pb-3">{label}</p>
 
                     {display.slippage && (
                         <div className="w-full pb-2">

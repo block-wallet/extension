@@ -382,7 +382,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                     fill={getAccountColor(account.address)}
                 />
                 <div className="relative flex flex-col group space-y-1 ml-4">
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-semibold">
                         {formatName(account.name, 15)}
                     </span>
                     <span className="text-xs text-primary-grey-dark">
@@ -404,7 +404,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
             </div>
             <Divider />
             <div className="px-6 py-3">
-                <p className="text-sm font-bold pb-3 break-word">
+                <p className="text-sm font-semibold pb-3 break-word">
                     Allow {origin} to transfer your {tokenName}
                 </p>
                 <p className="text-sm text-primary-grey-dark break-word">

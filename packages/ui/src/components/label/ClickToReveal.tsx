@@ -15,11 +15,11 @@ const ClickToReveal: FunctionComponent<{
                 className="absolute top-0 left-0 z-10 flex flex-col items-center justify-center w-full h-full space-y-2 bg-opacity-25 bg-primary-grey-hover"
             >
                 <img src={lockIcon} alt="lock" className="w-5 h-5" />
-                <span className="font-bold">{revealMessage}</span>
+                <span className="font-semibold">{revealMessage}</span>
             </button>
         ) : null}
         <span
-            className="font-bold break-words allow-select"
+            className="font-semibold break-words allow-select"
             style={revealed ? {} : { filter: "blur(0.15rem)" }}
         >
             {hiddenText}

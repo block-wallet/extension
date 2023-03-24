@@ -78,7 +78,7 @@ const BridgeDetails: FC<{
                 </div>
             </span>
             <div className="flex flex-col w-full h-full">
-                <h2 className="px-2 pr-0 pb-2 mt-2 text-lg font-bold">
+                <h2 className="px-2 pr-0 pb-2 mt-2 text-lg font-semibold">
                     Bridge details
                 </h2>
                 <HorizontalSelect
@@ -108,7 +108,7 @@ const BridgeDetails: FC<{
                             `flex-1 flex flex-row items-center justify-center p-3 text-sm group
                                     ${
                                         selectedTab.label === value.label
-                                            ? "border-primary-blue-default border-b-2 text-primary-blue-default font-bold"
+                                            ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
                                             : "border-primary-grey-hover text-primary-grey-dark border-b"
                                     }`,
                             value.disabled && "cursor-default"

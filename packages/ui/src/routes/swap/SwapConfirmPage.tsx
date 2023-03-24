@@ -694,7 +694,7 @@ const SwapPageConfirm: FC<{}> = () => {
                                 "cursor-not-allowed hover:border-default"
                         )}
                     >
-                        <span className="font-bold text-sm">Details</span>
+                        <span className="font-semibold text-sm">Details</span>
                         <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
                     </OutlinedButton>
                 </div>
@@ -710,7 +710,7 @@ const SwapPageConfirm: FC<{}> = () => {
                                     type="warn"
                                     className={classnames(
                                         "p-2",
-                                        "font-bold",
+                                        "font-semibold",
                                         "cursor-pointer hover:opacity-50",
                                         "text-left"
                                     )}

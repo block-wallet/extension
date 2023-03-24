@@ -58,13 +58,13 @@ const AccountDisplay = () => {
             onClick={copy}
         >
             <span
-                className="text-sm font-bold truncate max-w-[96px]"
+                className="text-sm font-semibold truncate max-w-[96px]"
                 data-testid="account-name"
                 title={account.name}
             >
                 {formatName(account.name, 18)}
             </span>
-            <span className="text-xs text-primary-grey-dark truncate">
+            <span className="text-[11px] text-primary-grey-dark truncate">
                 {formatHash(accountAddress)}
             </span>
             <CopyTooltip copied={copied} />
@@ -191,7 +191,7 @@ const PopupPage = () => {
                                 />
                             </Link>
                             <Tooltip
-                                className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-bold bg-gray-900 text-white"
+                                className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-semibold bg-gray-900 text-white"
                                 content={
                                     <>
                                         <div className="border-t-4 border-r-4 border-gray-900 absolute top-0 left-2 w-2 h-2 -mt-2.5 transform -rotate-45 -translate-x-1/2" />
@@ -235,7 +235,7 @@ const PopupPage = () => {
             </div>
             <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-20 space-y-2 overflow-auto hide-scroll">
                 <div className="w-full">
-                    <div className="flex flex-row items-start w-full justify-between pt-1 pb-2">
+                    <div className="flex flex-row items-start w-full justify-between pt-1 pb-1">
                         <GenericTooltip
                             bottom
                             disabled={!state.isImportingDeposits}
@@ -252,7 +252,7 @@ const PopupPage = () => {
                         <DAppConnection />
                     </div>
                     <TokenSummary className="p-4">
-                        <TokenSummary.Balances>
+                        <TokenSummary.Balances className="!space-y-0">
                             <TokenSummary.TokenBalance title={netWorth}>
                                 {netWorth}
                             </TokenSummary.TokenBalance>
@@ -329,7 +329,7 @@ const PopupPage = () => {
                                         <ArrowHoverAnimation />
                                     )}
                                 </div>
-                                <span className="text-sm font-medium">
+                                <span className="text-[13px] font-medium">
                                     Send
                                 </span>
                             </Link>
@@ -364,7 +364,7 @@ const PopupPage = () => {
                                             <DoubleArrowHoverAnimation />
                                         )}
                                     </div>
-                                    <span className="text-sm font-medium">
+                                    <span className="text-[13px] font-medium">
                                         Swap
                                     </span>
                                 </Link>
@@ -416,7 +416,7 @@ const PopupPage = () => {
                                             </>
                                         )}
                                     </div>
-                                    <span className="text-sm font-medium">
+                                    <span className="text-[13px] font-medium">
                                         Bridge
                                     </span>
                                 </Link>

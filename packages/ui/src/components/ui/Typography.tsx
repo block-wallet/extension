@@ -6,7 +6,7 @@ export enum TypographyType {
 
 const Styles = {
     [TypographyType.TITLE]:
-        "text-2xl font-bold leading-10 text-primary-black-default",
+        "text-2xl font-semibold leading-10 text-primary-black-default",
 }
 
 interface TypographyProps {

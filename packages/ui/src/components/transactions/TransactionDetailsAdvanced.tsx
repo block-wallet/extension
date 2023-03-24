@@ -102,7 +102,7 @@ const Argument = ({
                         <ArrowUpDown active={!isCollapsed} />
                     </div>
                 )}
-                <p className="pl-1 pt-1 font-bold">{name}</p>
+                <p className="pl-1 pt-1 font-semibold">{name}</p>
             </div>
             <div
                 className={classNames(
@@ -141,7 +141,7 @@ export const TransactionDetails: FunctionComponent<
                 <div className="overflow-x-auto whitespace-nowrap horizontal-custom-scroll py-1">
                     <pre className="bg-gray-100 w-full p-4 rounded">
                         <code className="allow-select">
-                            <span className="font-bold allow-select">
+                            <span className="font-semibold allow-select">
                                 <GenericTooltip
                                     bottom
                                     disabled={parsedName.length < 25}

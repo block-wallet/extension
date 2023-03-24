@@ -46,7 +46,7 @@ const CreateAccountCard: React.FC<{
         >
             <Icon className="mr-3" name={iconName} size="lg" />
             <div className="flex-1 flex flex-col justify-start space-y-2">
-                <span className="font-bold text-sm leading-6">{title}</span>
+                <span className="font-semibold text-sm leading-6">{title}</span>
                 <p className="text-xs text-primary-grey-dark leading-5">
                     {description}
                 </p>

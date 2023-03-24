@@ -72,7 +72,7 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                         <h2
                             className={classnames(
                                 titleSize,
-                                "font-bold pl-2 pb-3"
+                                "font-semibold pl-2 pb-3"
                             )}
                         >
                             {title}
@@ -97,7 +97,7 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                         </div>
                     </span>
                     {!fixedTitle && (
-                        <h2 className={classnames(titleSize, "font-bold")}>
+                        <h2 className={classnames(titleSize, "font-semibold")}>
                             {title}
                         </h2>
                     )}
@@ -122,7 +122,7 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                                                 <h3
                                                     className={classnames(
                                                         itemTitleSize,
-                                                        "font-bold mr-2"
+                                                        "font-semibold mr-2"
                                                     )}
                                                 >
                                                     {option.title}

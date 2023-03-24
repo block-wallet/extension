@@ -55,7 +55,7 @@ const ConfirmDialog: FunctionComponent<{
     return (
         <Dialog open={open} onClickOutside={onClose} className="px-6">
             <div>
-                <h2 className="text-lg font-bold text-primary-black-default text-left">
+                <h2 className="text-lg font-semibold text-primary-black-default text-left">
                     {title}
                 </h2>
                 <div className="py-5 text-left">

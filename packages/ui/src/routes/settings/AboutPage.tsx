@@ -46,7 +46,7 @@ const AboutPage = () => {
                             alt="Blockwallet logo"
                             className="w-5 h-5"
                         />
-                        <span className="ml-2 text-lg font-bold">
+                        <span className="ml-2 text-lg font-semibold">
                             BlockWallet
                         </span>
                     </div>
@@ -62,13 +62,13 @@ const AboutPage = () => {
                     </div>
                 </div>
                 <div className="rounded border border-primary-grey-hover p-4">
-                    <span className="text-lg font-bold">Contacts</span>
+                    <span className="text-lg font-semibold">Contacts</span>
                     <div className="space-y-4 mt-4">
                         {links.map(({ text, link, icon }) => (
                             <a
                                 href={link}
                                 target="_blank"
-                                className="text-sm font-bold hover:underline flex items-center"
+                                className="text-sm font-semibold hover:underline flex items-center"
                                 rel="noopener noreferrer"
                             >
                                 {icon}

@@ -65,7 +65,7 @@ const Asset: FunctionComponent<{
                 <AssetIcon asset={asset.token} />
                 <div className="flex flex-col ml-2">
                     <span
-                        className="text-sm font-bold"
+                        className="text-sm font-semibold"
                         title={`
                                     ${formatUnits(
                                         asset.balance || "0",
@@ -84,7 +84,7 @@ const Asset: FunctionComponent<{
                                     ${asset.token.symbol}
                                 `}
                     </span>
-                    <span className="text-xs text-primary-grey-dark">
+                    <span className="text-[11px] text-primary-grey-dark">
                         {formatter.format(
                             asset.balance || BigNumber.from(0),
                             asset.token.symbol,

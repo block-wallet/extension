@@ -161,7 +161,7 @@ const SearchedTokenView = ({
                     </div>
                     <div className="flex flex-col">
                         {results.length < 1 && selected.length <= 0 ? (
-                            <div className="text-base font-bold text-primary-black-default w-full text-center mt-4">
+                            <div className="text-base font-semibold text-primary-black-default w-full text-center mt-4">
                                 No match
                             </div>
                         ) : (

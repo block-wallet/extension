@@ -198,10 +198,10 @@ const ConnectSteps = ({
                     }}
                     isCollapsedByDefault
                     collapsedMessage={
-                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-bold justify-center">
+                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-semibold justify-center">
                             <AiOutlineWarning className="w-4 h-4 yellow-300" />
                             <span className="text-xs text-yellow-900">
-                                <span className="font-bold">
+                                <span className="font-semibold">
                                     This DApp URL seems malicious.
                                 </span>
                             </span>
@@ -249,7 +249,7 @@ const ConnectSteps = ({
                             content={
                                 <div>
                                     <p>
-                                        <span className="font-bold">
+                                        <span className="font-semibold">
                                             Origin:
                                         </span>
                                         <br />

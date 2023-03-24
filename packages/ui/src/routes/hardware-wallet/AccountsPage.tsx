@@ -387,7 +387,7 @@ const HardwareWalletAccount = ({
                 fill={getAccountColor(account.address)}
             />
             <div className="flex flex-col">
-                <span className="font-bold">{account.name}</span>
+                <span className="font-semibold">{account.name}</span>
                 <div className="flex space-x-2 w-full text-primary-grey-dark text-xs">
                     <span className="w-20" title={account.address}>
                         {formatHash(account.address)}
@@ -475,7 +475,7 @@ const AdvancedSettings = ({
             <FullScreenDialog open={openModal}>
                 <div className="flex items-center justify-between px-6 pb-6">
                     <div className="flex flex-row items-center">
-                        <span className="p-0 text-xl font-bold">
+                        <span className="p-0 text-xl font-semibold">
                             Advanced Settings
                         </span>
                         <div className="group relative">

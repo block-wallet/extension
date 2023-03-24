@@ -101,7 +101,7 @@ const HardwareWalletVendorsPage = () => {
                         title="How do Hardware Wallets work?"
                     >
                         <OpenExplorerIcon className="inline-block" />
-                        <span className="ml-2 font-bold">
+                        <span className="ml-2 font-semibold">
                             How do Hardware Wallets work?
                         </span>
                     </a>

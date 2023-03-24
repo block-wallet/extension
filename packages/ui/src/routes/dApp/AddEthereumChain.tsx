@@ -193,7 +193,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     {
                         title: (
                             <div className="flex flex-row w-full">
-                                <h3 className="text-sm font-bold mr-2">
+                                <h3 className="text-sm font-semibold mr-2">
                                     Chain ID
                                 </h3>
                                 <RPCValidationEndLabelInfo
@@ -212,7 +212,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     {
                         title: (
                             <div className="flex flex-row w-full">
-                                <h3 className="text-sm font-bold mr-2">
+                                <h3 className="text-sm font-semibold mr-2">
                                     Network URL
                                 </h3>
                                 {validations.knownChainId && (
@@ -247,7 +247,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     {
                         title: (
                             <div className="flex flex-row w-full">
-                                <h3 className="text-sm font-bold mr-2">
+                                <h3 className="text-sm font-semibold mr-2">
                                     Block Explorer URL
                                 </h3>
                                 {validations.knownChainId && (
@@ -276,7 +276,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
             <div className="flex flex-col px-6 pt-3 pb-1 space-y-2 h-full justify-between">
                 {/* Header */}
                 <div className="flex flex-col space-y-1 text-sm">
-                    <span className="font-bold text-primary-black-default">
+                    <span className="font-semibold text-primary-black-default">
                         Allow this site to add a network?
                     </span>
                     <span className="text-primary-grey-dark">
@@ -286,7 +286,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                 </div>
                 <div className="flex flex-col border border-primary-grey-hover rounded-lg space-y-2 px-4 py-3">
                     <div>
-                        <p className="font-bold text-primary-black-default">
+                        <p className="font-semibold text-primary-black-default">
                             Network Name
                         </p>
                         <p className="text-primary-grey-dark">
@@ -295,7 +295,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     </div>
                     <div>
                         <div className="flex flex-row w-full">
-                            <p className="font-bold text-primary-black-default mr-2">
+                            <p className="font-semibold text-primary-black-default mr-2">
                                 Chain ID
                             </p>
                             <RPCValidationEndLabelInfo
@@ -313,7 +313,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     </div>
                     <div>
                         <div className="flex flex-row w-full">
-                            <p className="font-bold text-primary-black-default mr-2">
+                            <p className="font-semibold text-primary-black-default mr-2">
                                 Network URL
                             </p>
                             {validations.knownChainId && (
@@ -337,7 +337,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     {iconUrl && (
                         <div>
                             <div className="flex flex-row w-full">
-                                <p className="font-bold text-primary-black-default mr-2">
+                                <p className="font-semibold text-primary-black-default mr-2">
                                     {validations.knownIcon
                                         ? "Network Icon"
                                         : "Network Icon URL"}
@@ -383,7 +383,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     )}
                     <div>
                         <ClickableText
-                            className="font-bold"
+                            className="font-semibold"
                             onClick={(e) => {
                                 e.preventDefault()
                                 setHasDialog(true)

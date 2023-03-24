@@ -266,7 +266,7 @@ const BackupConfirmPage = () => {
                             type="button"
                             className={classnames(
                                 Classes.button,
-                                "font-bold border-2 border-primary-blue-default max-w-[170px]",
+                                "font-semibold border-2 border-primary-blue-default max-w-[170px]",
                                 (!isPhraseValid() ||
                                     isVerificationInProgress) &&
                                     "opacity-50 pointer-events-none"

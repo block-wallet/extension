@@ -211,7 +211,10 @@ const SelectOption: FC<ItemProps> & CompoundMember = ({
             onClick={() => (onClick && !disabled ? onClick(value) : void 0)}
         >
             <span
-                className={classnames("leading-loose", selected && "font-bold")}
+                className={classnames(
+                    "leading-loose",
+                    selected && "font-semibold"
+                )}
             >
                 {children}
             </span>

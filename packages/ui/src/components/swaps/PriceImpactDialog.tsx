@@ -37,7 +37,7 @@ const HighPriceImpactExplained: FC<
             difference in the values you are about to swap.
             <div className="flex flex-col space-y-2 text-left mt-2">
                 <div>
-                    <span className="font-bold text-primary-black-default">
+                    <span className="font-semibold text-primary-black-default">
                         You pay
                     </span>
                     <br />
@@ -49,7 +49,7 @@ const HighPriceImpactExplained: FC<
                     )}`}
                 </div>
                 <div className="mt-2">
-                    <span className="font-bold text-primary-black-default">
+                    <span className="font-semibold text-primary-black-default">
                         You get
                     </span>
                     <br />

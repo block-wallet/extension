@@ -87,7 +87,7 @@ const PreferencesPage = () => {
                                                 }
                                             />
                                         </div>
-                                        <span className="font-bold">
+                                        <span className="font-semibold">
                                             {option.label}
                                         </span>
                                     </>

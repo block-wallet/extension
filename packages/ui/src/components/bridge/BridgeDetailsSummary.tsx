@@ -39,7 +39,7 @@ const Explorer = ({
                 className="flex flex-row items-center space-x-1"
                 title={explorerName}
             >
-                <span className="text-sm font-bold text-primary-blue-default whitespace-nowrap text-ellipsis overflow-hidden">
+                <span className="text-sm font-semibold text-primary-blue-default whitespace-nowrap text-ellipsis overflow-hidden">
                     {explorerName}
                 </span>
                 <img src={openIcon} alt="Open icon" className="w-3 h-3" />

@@ -43,7 +43,7 @@ const SeedImportPage = () => {
                         </span>
                     </div>
                     <div className="w-full px-4 py-4 text-sm text-center text-secondary-red-default bg-red-100 rounded">
-                        <strong className="font-bold">Warning: </strong>
+                        <strong className="font-semibold">Warning: </strong>
                         <span>
                             Never disclose your seed phrase. Anyone asking for
                             your seed phrase is most likely trying to steal your

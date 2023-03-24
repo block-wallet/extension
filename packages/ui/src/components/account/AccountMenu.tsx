@@ -13,7 +13,7 @@ import resetIcon from "../../assets/images/icons/reset.svg"
 import allowancesIcon from "../../assets/images/icons/allowances.svg"
 import qrIcon from "../../assets/images/icons/qr_icon.svg"
 import sites from "../../assets/images/icons/connected_sites.svg"
-import editIcon from "../../assets/images/icons/pencil.svg"
+import EditIcon from "../icons/EditIcon"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import classnames from "classnames"
@@ -130,9 +130,9 @@ const AccountMenu = () => {
                                         },
                                     })
                                 }}
-                                className="cursor-pointer p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                                className="cursor-pointer p-2 transition duration-300 rounded-full text-primary-black-default hover:bg-primary-grey-default hover:text-primary-blue-default"
                             >
-                                <img src={editIcon} alt="Edit"></img>
+                                <EditIcon />
                             </div>,
                         ]}
                     />
@@ -177,7 +177,7 @@ const AccountMenu = () => {
                                                 }
                                             />
                                         </div>
-                                        <span className="font-bold">
+                                        <span className="font-semibold">
                                             {option.label}
                                         </span>
                                     </>

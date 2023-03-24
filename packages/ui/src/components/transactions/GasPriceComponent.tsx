@@ -868,7 +868,9 @@ const GasPriceComponent: FunctionComponent<{
                 <div>
                     <div className="flex flex-col w-full space-y-2">
                         <div className="z-10 flex flex-row items-center p-2 bg-white bg-opacity-75">
-                            <h2 className="p-0 text-lg font-bold">Gas Price</h2>
+                            <h2 className="p-0 text-lg font-semibold">
+                                Gas Price
+                            </h2>
                             <div className="group relative">
                                 <a
                                     href="https://ethereum.org/en/developers/docs/gas/"
@@ -910,7 +912,7 @@ const GasPriceComponent: FunctionComponent<{
                                 `flex-1 flex flex-row items-center justify-center p-3 text-sm
                                             ${
                                                 tab === value
-                                                    ? "border-primary-blue-default border-b-2 text-primary-blue-default font-bold"
+                                                    ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
                                                     : "border-primary-grey-hover text-primary-grey-dark border-b"
                                             }`
                             }

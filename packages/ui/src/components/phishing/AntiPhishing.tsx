@@ -40,7 +40,7 @@ const AntiPhishing: FunctionComponent<{
                     <Tooltip
                         className={translateTooltip}
                         content={
-                            <div className="flex flex-col font-normal items-start text-xs text-white-500 font-bold p-1">
+                            <div className="flex flex-col font-normal items-start text-xs text-white-500 font-semibold p-1">
                                 <div className="flex flex-row items-end space-x-7">
                                     <span>Phishing Protection</span>{" "}
                                 </div>

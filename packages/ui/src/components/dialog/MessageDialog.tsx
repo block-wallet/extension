@@ -33,7 +33,9 @@ const MessageDialog: FunctionComponent<messageDialogProps> = ({
         >
             <>
                 {header}
-                <h2 className="text-lg font-bold text-center mt-4">{title}</h2>
+                <h2 className="text-lg font-semibold text-center mt-4">
+                    {title}
+                </h2>
                 <div
                     className={classnames(
                         "flex mt-2 mb-4",

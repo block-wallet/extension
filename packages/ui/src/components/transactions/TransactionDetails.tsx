@@ -54,7 +54,7 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
             </span>
 
             <div className="flex flex-col w-full h-full">
-                <h2 className="px-2 pr-0 pb-2 mt-2 text-lg font-bold">
+                <h2 className="px-2 pr-0 pb-2 text-lg font-semibold">
                     Transaction details
                 </h2>
                 <HorizontalSelect
@@ -83,8 +83,8 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
                         `flex-1 flex flex-row items-center justify-center p-3 text-sm group
                                     ${
                                         tab.label === value.label
-                                            ? "border-primary-blue-default border-b-2 text-primary-blue-default font-bold"
-                                            : "border-primary-grey-hover text-primary-grey-dark border-b"
+                                            ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
+                                            : "border-primary-grey-hover text-primary-grey-dark border-b hover:text-primary-blue-default hover:font-medium"
                                     }`
                     }
                     containerClassName="flex flex-row -ml-3"
@@ -104,7 +104,7 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
             </div>
             <button
                 onClick={onClose}
-                className={classnames(Classes.liteButton, "mt-4")}
+                className={classnames(Classes.liteButton, "mt-4 -mb-2")}
                 type="button"
             >
                 Close

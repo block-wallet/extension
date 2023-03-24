@@ -37,7 +37,7 @@ const CheckBoxDialog: FunctionComponent<{
     return (
         <Dialog open={open} onClickOutside={onClose}>
             <div className="px-3">
-                <h2 className="text-lg font-bold">{title}</h2>
+                <h2 className="text-lg font-semibold">{title}</h2>
                 <div className="py-5">
                     <span className="text-sm whitespace-pre-line">
                         {message}

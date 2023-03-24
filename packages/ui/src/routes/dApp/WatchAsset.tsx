@@ -180,7 +180,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                         className="relative flex flex-col group space-y-1 ml-4"
                         onClick={() => copyAssetAddress()}
                     >
-                        <span className="text-sm font-bold">
+                        <span className="text-sm font-semibold">
                             {savedToken!.symbol}
                         </span>
                         <span className="text-xs text-primary-grey-dark">
@@ -259,14 +259,16 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                     className="relative ml-4 flex flex-col group space-y-1"
                     onClick={() => copyAssetAddress()}
                 >
-                    <span className="text-sm font-bold">{token.symbol}</span>
+                    <span className="text-sm font-semibold">
+                        {token.symbol}
+                    </span>
                     <span className="text-xs text-primary-grey-dark">
                         {formatHash(token.address)}
                     </span>
                     <CopyTooltip copied={copied} />
                 </button>
                 <div className="flex flex-col ml-auto h-full">
-                    <span className="text-sm font-bold mb-auto text-left">
+                    <span className="text-sm font-semibold mb-auto text-left">
                         Balance
                     </span>
                     {balance === UNKNOWN_BALANCE ? (
@@ -307,7 +309,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                         fill={getAccountColor(accountData.address)}
                     />
                     <div className="relative flex flex-col group space-y-1">
-                        <span className="text-sm font-bold">
+                        <span className="text-sm font-semibold">
                             {formatName(accountData.name, 15)}
                             {" ("}
                             {formatNumberLength(
@@ -328,21 +330,21 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
             <Divider />
             <div className="flex flex-col px-6 py-3 space-y-2 text-xs text-gray-800 break-words">
                 <div className="flex flex-col space-y-0.5">
-                    <span className="font-bold">Decimals</span>
+                    <span className="font-semibold">Decimals</span>
                     <span className="text-primary-grey-dark">
                         {token.decimals}
                     </span>
                 </div>
                 {token!.image && !isBase64Image ? (
                     <div className="flex flex-col space-y-0.5">
-                        <span className="font-bold pt-1">Image URL</span>
+                        <span className="font-semibold pt-1">Image URL</span>
                         <span className="text-primary-grey-dark pb-2">
                             {token!.image}
                         </span>
                         <WarningTip
                             text={
                                 <span>
-                                    <span className="font-bold">
+                                    <span className="font-semibold">
                                         Attention!{" "}
                                     </span>
                                     Your IP address will be exposed to this

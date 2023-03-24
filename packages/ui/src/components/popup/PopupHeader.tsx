@@ -127,7 +127,10 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
             )}
             <span
                 title={title}
-                className={classnames("text-base font-bold", icon && "w-56")}
+                className={classnames(
+                    "text-base font-semibold",
+                    icon && "w-56"
+                )}
             >
                 {title}
             </span>

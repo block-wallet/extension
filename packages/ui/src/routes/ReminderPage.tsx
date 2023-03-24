@@ -120,7 +120,7 @@ const ReminderPage = () => {
             {shouldEnterPassword ? (
                 <div className="p-6 flex flex-col space-y-8">
                     <div className="flex flex-col space-y-2">
-                        <span className="text-center text-base font-bold">
+                        <span className="text-center text-base font-semibold">
                             Enter your password to back up your seed phrase.
                         </span>
                     </div>

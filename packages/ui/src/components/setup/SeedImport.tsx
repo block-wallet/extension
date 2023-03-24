@@ -302,7 +302,7 @@ const SeedImport: FunctionComponent<{
                     type="submit"
                     className={classnames(
                         Classes.button,
-                        "w-1/2 font-bold border-2 border-primary-blue-default",
+                        "w-1/2 font-semibold border-2 border-primary-blue-default",
                         (isLoading || isImportDisabled) &&
                             "opacity-50 pointer-events-none"
                     )}

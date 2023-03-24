@@ -51,7 +51,7 @@ const VerticalSelect: FunctionComponent<{
                     disabled:pointer-events-none
                     ${
                         isActive(option)
-                            ? "bg-primary-grey-hover text-white font-bold"
+                            ? "bg-primary-grey-hover text-white font-semibold"
                             : "bg-primary-grey-default hover:bg-primary-grey-hover"
                     }
                     ${

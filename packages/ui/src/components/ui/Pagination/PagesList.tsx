@@ -50,7 +50,7 @@ const StickyFirstPage = ({
     return (
         <>
             {button}
-            <span className="font-bold text-sm p-3">...</span>
+            <span className="font-semibold text-sm p-3">...</span>
         </>
     )
 }

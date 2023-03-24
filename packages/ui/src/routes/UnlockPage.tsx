@@ -153,7 +153,7 @@ const UnlockPage = () => {
             <div className="p-6 pb-0 flex flex-col space-y-8">
                 <div className="flex flex-col space-y-2">
                     <img src={logo} alt="logo" className="w-12 h-12 mx-auto" />
-                    <span className="text-center text-base font-bold  ">
+                    <span className="text-center text-base font-semibold  ">
                         Enter your password to continue.
                     </span>
                 </div>

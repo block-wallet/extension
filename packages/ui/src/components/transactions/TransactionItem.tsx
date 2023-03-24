@@ -321,9 +321,9 @@ const getTransactionTime = (
 
     return (
         <>
-            <span className={`text-xs ${color}`}>{label}</span>
+            <span className={`text-[11px] ${color}`}>{label}</span>
             {extraInfo && (
-                <span className={`text-xs ${extraInfo.color} mt-0.5`}>
+                <span className={`text-[11px] ${extraInfo.color} mt-0.5`}>
                     {extraInfo.label}
                 </span>
             )}
@@ -385,7 +385,7 @@ const getTransactionTimeOrStatus = (
 ) => {
     if (forceDrop) {
         return (
-            <span className="text-xs text-red-600">
+            <span className="text-[11px] text-red-600">
                 {capitalize(TransactionStatus.DROPPED.toLowerCase())}
             </span>
         )
@@ -393,7 +393,7 @@ const getTransactionTimeOrStatus = (
 
     if (failedStatuses.includes(status) && metaType === MetaType.REGULAR) {
         return (
-            <span className="text-xs text-red-600">
+            <span className="text-[11px] text-red-600">
                 {capitalize(
                     status === TransactionStatus.CANCELLED
                         ? "failed"
@@ -408,7 +408,7 @@ const getTransactionTimeOrStatus = (
         bridgeParams.role !== "RECEIVING"
     ) {
         return (
-            <span className="text-xs text-red-600">
+            <span className="text-[11px] text-red-600">
                 Failed bridge: Refunded
             </span>
         )
@@ -590,7 +590,7 @@ const TransactionItem: React.FC<{
                             style={typeCss}
                         >
                             <span
-                                className="text-sm font-bold truncate"
+                                className="text-sm font-semibold truncate"
                                 title={label}
                             >
                                 {formattedLabel}
@@ -653,7 +653,7 @@ const TransactionItem: React.FC<{
                                 <button
                                     type="button"
                                     className={classnames(
-                                        "rounded-md cursor-pointer text-primary-blue-default border-current border p-1 font-bold hover:bg-blue-500 hover:text-white transition-colors",
+                                        "rounded-md cursor-pointer text-primary-blue-default border-current border p-1 font-semibold hover:bg-primary-blue-default hover:text-white transition-colors",
                                         isQueued
                                             ? "opacity-50 pointer-events-none"
                                             : ""
@@ -673,7 +673,7 @@ const TransactionItem: React.FC<{
                                 </button>
                                 <button
                                     type="button"
-                                    className="ml-1.5 border p-1 rounded-md cursor-pointer text-primary-grey-dark border-current font-bold hover:bg-gray-500 hover:text-white transition-colors"
+                                    className="ml-1.5 border p-1 rounded-md cursor-pointer text-primary-grey-dark border-current font-semibold hover:bg-gray-500 hover:text-white transition-colors"
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         history.push({
@@ -718,7 +718,7 @@ const TransactionItem: React.FC<{
                                 >
                                     <span
                                         className={classNames(
-                                            "text-sm font-bold text-right truncate max-w-[130px]"
+                                            "text-sm font-semibold text-right truncate max-w-[130px]"
                                         )}
                                     >
                                         {transaction.approveAllowanceParams
@@ -754,7 +754,7 @@ const TransactionItem: React.FC<{
                             >
                                 <span
                                     className={classNames(
-                                        "text-sm font-bold text-right truncate max-w-[130px]"
+                                        "text-sm font-semibold text-right truncate max-w-[130px]"
                                     )}
                                 >
                                     {`${valueLabel} ${transfer.currency.toUpperCase()}`}
@@ -762,7 +762,7 @@ const TransactionItem: React.FC<{
                             </div>
                             <div className="w-full flex justify-end">
                                 <span
-                                    className="text-xs text-primary-grey-dark truncate"
+                                    className="text-[11px] text-primary-grey-dark truncate"
                                     title={transferCurrencyAmount}
                                 >
                                     {transferCurrencyAmount}

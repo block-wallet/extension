@@ -180,7 +180,7 @@ const SettingsPage = () => {
                                                 }
                                             />
                                         </div>
-                                        <span className="font-bold">
+                                        <span className="font-semibold">
                                             {option.label}
                                         </span>
                                     </>

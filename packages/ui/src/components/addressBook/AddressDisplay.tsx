@@ -44,8 +44,8 @@ export const AddressDisplay: FunctionComponent<{
                     <span
                         className={
                             displayAddressSpan
-                                ? "font-bold text-green-500 ml-1 truncate"
-                                : "font-bold text-green-500 ml-1 truncate cursor-pointer"
+                                ? "font-semibold text-green-500 ml-1 truncate"
+                                : "font-semibold text-green-500 ml-1 truncate cursor-pointer"
                         }
                         title={receivingAddress}
                     >
@@ -75,7 +75,7 @@ export const AddressDisplay: FunctionComponent<{
                                 size="16"
                             />
                             <span
-                                className="font-bold text-yellow-500 ml-1 truncate"
+                                className="font-semibold text-yellow-500 ml-1 truncate"
                                 title={receivingAddress}
                             >
                                 Null Address

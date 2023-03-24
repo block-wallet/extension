@@ -401,7 +401,7 @@ const AllowanceInput = ({
                 </span>
                 <div className="flex flex-col w-full space-y-2">
                     <div className="z-10 flex flex-row items-center p-2 bg-white bg-opacity-75">
-                        <h2 className="px-2 pr-0 text-lg font-bold">
+                        <h2 className="px-2 pr-0 text-lg font-semibold">
                             Allowance Options
                         </h2>
                     </div>

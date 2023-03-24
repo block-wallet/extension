@@ -164,7 +164,7 @@ const GasPricesInfo: FC = () => {
                         svgClassName="rounded-md"
                     />
                 ) : (
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-semibold">
                         {displayGasPrices.average.totalGwei}
                     </span>
                 )}
@@ -184,7 +184,7 @@ const GasPricesInfo: FC = () => {
                     </span>
                     <div className="flex flex-col w-full space-y-2">
                         <div className="z-10 flex flex-row items-center p-2 bg-white bg-opacity-75">
-                            <h2 className="px-2 pr-0 text-lg font-bold">
+                            <h2 className="px-2 pr-0 text-lg font-semibold">
                                 Gas Prices
                             </h2>
                             <div className="group relative">

@@ -468,7 +468,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const mainSection = (
         <>
             <div className="px-6 py-3">
-                <p className="text-sm font-bold pb-2 break-word">
+                <p className="text-sm font-semibold pb-2 break-word">
                     {mainSectionTitle}
                 </p>
                 <p className="text-sm text-primary-grey-dark break-word">
@@ -677,7 +677,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     fill={getAccountColor(account.address)}
                 />
                 <div className="relative flex flex-col group space-y-1 ml-4">
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-semibold">
                         {formatName(account.name, 15)}
                     </span>
                     <span

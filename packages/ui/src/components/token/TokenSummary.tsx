@@ -73,7 +73,7 @@ const TokenBalance: FC<{
 }> = ({ children, title, className }) => {
     return (
         <span
-            className={classnames("text-3xl font-semibold", className)}
+            className={classnames("text-[32px] font-semibold", className)}
             title={title}
         >
             {children}

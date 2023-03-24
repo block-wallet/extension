@@ -15,14 +15,14 @@ export class Classes {
         Classes.start,
         Classes.animated,
         Classes.transform,
-        "h-12 space-x-2 p-4 rounded-md text-sm font-bold text-primary-black-default cursor-pointer disabled:pointer-events-none"
+        "h-12 space-x-2 p-4 rounded-md text-sm font-semibold text-primary-black-default cursor-pointer disabled:pointer-events-none"
     )
 
     static baseButton = classnames(
         Classes.centered,
         Classes.animated,
         Classes.transform,
-        "flex-1 h-12 px-6 py-3 font-normal text-sm shadow-sm rounded-md",
+        "flex-1 h-12 px-6 py-3 text-sm font-semibold shadow-sm rounded-md",
         "border-2",
         "cursor-pointer disabled:pointer-events-none"
     )
@@ -35,7 +35,7 @@ export class Classes {
     static smallButton = classnames(
         Classes.centered,
         primaryButton,
-        "text-xs shadow-sm rounded-md p-1 border-2 cursor-pointer disabled:pointer-events-none"
+        "text-[11px] shadow-sm rounded-md p-1 border-2 cursor-pointer disabled:pointer-events-none"
     )
 
     static menuButton = classnames(
@@ -126,7 +126,7 @@ export class Classes {
 
     static blueSectionActive = classnames("bg-primary-grey-hover")
     static blueSectionInput = classnames(
-        "bg-transparent p-0 mb-1 border-none font-bold"
+        "bg-transparent p-0 mb-1 border-none font-semibold"
     )
 
     static roundedIcon = classnames(

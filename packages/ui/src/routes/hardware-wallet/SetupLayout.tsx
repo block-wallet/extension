@@ -21,7 +21,7 @@ const HardwareWalletSetupLayout: FC<PropsWithChildren<SetupLayoutProps>> = ({
 }) => (
     <PageLayout header style={{ maxWidth: "500px" }}>
         <IsLockedDialog />
-        <span className="my-8 text-2xl font-bold">{title}</span>
+        <span className="my-8 text-2xl font-semibold">{title}</span>
         <Divider />
         {subtitle && (
             <div className="pt-8 px-8 flex w-full">

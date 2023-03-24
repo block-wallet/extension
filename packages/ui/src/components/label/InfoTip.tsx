@@ -36,7 +36,7 @@ const InfoTip: FunctionComponent<{
             </div>
             <p
                 className={classnames(
-                    "font-bold text-primary-black-default break-words ml-3",
+                    "font-semibold text-primary-black-default break-words ml-3",
                     fontSize ?? "text-lg"
                 )}
             >

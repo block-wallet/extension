@@ -12,7 +12,7 @@ const LogoHeader: FunctionComponent<{
         )}
     >
         <img src={logo} alt="logo" className="w-6 h-6 rounded-md" />
-        <span className="font-bold text-2xl">BlockWallet</span>
+        <span className="font-semibold text-2xl">BlockWallet</span>
     </div>
 )
 

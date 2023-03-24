@@ -54,7 +54,7 @@ const ReleaseNotesInfo: FC<ReleaseNotesInfoProps> = ({
                             )
                             return (
                                 <div key={title}>
-                                    <span className="font-bold text-sm">
+                                    <span className="font-semibold text-sm">
                                         {title}
                                     </span>
                                     <Info.List className="pt-3">

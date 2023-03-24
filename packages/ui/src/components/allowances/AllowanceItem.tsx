@@ -185,13 +185,13 @@ const AllowanceItem = ({
                 <AssetIcon asset={{ logo: logo, symbol: name }} />
                 <div className="flex flex-col ml-2">
                     <span
-                        className="text-sm font-bold truncate w-36"
+                        className="text-sm font-semibold truncate w-36"
                         title={name}
                     >
                         {name}
                     </span>
                     <span
-                        className="text-xs text-primary-grey-dark w-32 truncate"
+                        className="text-[11px] text-primary-grey-dark w-32 truncate"
                         title={allowanceValue}
                     >
                         {allowanceValue}
@@ -224,8 +224,8 @@ const AllowanceItem = ({
                         disabled={isPendingUpdate}
                     >
                         <img
-                            width="13"
-                            height="13"
+                            width="12"
+                            height="12"
                             src={revokeIcon}
                             alt="Revoke"
                             className="mr-2"

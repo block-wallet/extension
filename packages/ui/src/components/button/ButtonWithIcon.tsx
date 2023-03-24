@@ -12,7 +12,7 @@ export const ButtonWithIcon: FunctionComponent<{
     const children = (
         <>
             {icon && <img src={icon} alt="icon" className="w-5 h-5" />}
-            <span className="font-bold">{label}</span>
+            <span className="font-semibold">{label}</span>
         </>
     )
 

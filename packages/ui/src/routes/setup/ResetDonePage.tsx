@@ -75,7 +75,7 @@ const ResetDonePage = () => {
                                     <a
                                         href={link}
                                         target="_blank"
-                                        className="text-sm font-bold hover:underline flex items-center"
+                                        className="text-sm font-semibold hover:underline flex items-center"
                                         rel="noopener noreferrer"
                                     >
                                         {icon}

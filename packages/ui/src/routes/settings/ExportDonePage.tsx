@@ -101,7 +101,7 @@ const ExportDonePage = () => {
                     </div>
                 )}
                 <div className="w-full px-4 py-4 text-sm text-center text-red-500 bg-red-100 rounded">
-                    <strong className="font-bold">Warning: </strong>
+                    <strong className="font-semibold">Warning: </strong>
                     <span>
                         Never disclose this information. Anyone with your
                         private keys can steal any assets held in your account.

@@ -84,7 +84,7 @@ const BridgeDetilsFees: FC<{
                                             </div>
                                         }
                                     >
-                                        <span className="text-sm font-bold">
+                                        <span className="text-sm font-semibold">
                                             {getChainName(Number(chainId))}
                                         </span>
                                     </ExpandableItem>

@@ -23,7 +23,7 @@ const BridgeNotFoundItem = ({
             >
                 <ArrowUpDown active={!isCollapsed} />
                 <div>
-                    <span className="ml-1 font-bold">{tool}</span>
+                    <span className="ml-1 font-semibold">{tool}</span>
                 </div>
             </div>
             <div

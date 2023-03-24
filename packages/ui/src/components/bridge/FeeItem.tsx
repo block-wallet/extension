@@ -39,7 +39,7 @@ const FeeItem = ({
                 }
             >
                 <div>
-                    <span className="font-bold">{detail.name}:</span>
+                    <span className="font-semibold">{detail.name}:</span>
                     <span className="ml-1">{amountStr}</span>
                 </div>
             </ExpandableItem>

@@ -397,7 +397,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                 </div>
                 <div className="flex flex-row items-center ml-auto p-1 px-2 pr-1 text-primary-grey-dark rounded-md border border-primary-200 text-xs bg-green-100">
                     <span className="inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-green-400 pointer-events-none" />
-                    <span className="mr-1 pointer-events-none text-green-600">
+                    <span className="mr-1 pointer-events-none text-secondary-green-default">
                         {networkName}
                     </span>
                 </div>

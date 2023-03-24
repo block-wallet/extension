@@ -21,7 +21,7 @@ const BridgeCompletedStatus = () => {
     return (
         <Status>
             <span className="relative inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-green-400 pointer-events-none"></span>
-            <span className="text-green-600">Completed</span>
+            <span className="text-secondary-green-default">Completed</span>
         </Status>
     )
 }

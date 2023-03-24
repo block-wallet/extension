@@ -40,7 +40,7 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
                     `flex-1 flex flex-row items-center justify-center p-3 text-sm hover:text-primary-blue-default ${
                         tab === value
                             ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
-                            : "border-primary-grey-hover text-primary-grey-dark border-b hover:text-primary-blue-default hover:font-medium"
+                            : "border-primary-grey-hover text-primary-grey-dark border-b hover:text-primary-blue-default font-medium"
                     }`
                 }
                 containerClassName="flex flex-row -ml-6"

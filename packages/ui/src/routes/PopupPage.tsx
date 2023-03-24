@@ -131,7 +131,8 @@ const DAppConnection = () => {
                 <span
                     className={classnames(
                         "mr-1 pointer-events-none",
-                        dAppConnected === "connected" && "text-green-600",
+                        dAppConnected === "connected" &&
+                            "text-secondary-green-default",
                         dAppConnected === "connected-warning" &&
                             "text-yellow-600"
                     )}

@@ -233,12 +233,12 @@ const NetworkDisplay = ({
                     <div className="flex flex-row items-center h-full">
                         {isSelectedNetwork ? (
                             <div
-                                className="px-2 text-green-600"
+                                className="px-2 text-secondary-green-default"
                                 title="Current network"
                             >
                                 <Icon
                                     name={IconName.CHECKMARK}
-                                    className="fill-green-600"
+                                    className="fill-secondary-green-default"
                                 />
                             </div>
                         ) : (

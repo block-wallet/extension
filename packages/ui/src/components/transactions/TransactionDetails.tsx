@@ -84,7 +84,7 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
                                     ${
                                         tab.label === value.label
                                             ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
-                                            : "border-primary-grey-hover text-primary-grey-dark border-b hover:text-primary-blue-default hover:font-medium"
+                                            : "border-primary-grey-hover text-primary-grey-dark border-b hover:text-primary-blue-default font-medium"
                                     }`
                     }
                     containerClassName="flex flex-row -ml-3"

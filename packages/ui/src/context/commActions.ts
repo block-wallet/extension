@@ -1674,13 +1674,5 @@ export const executeBridge = async (
  * @param enabled Allow hotkeys on the extension
  */
 export const setHotkeysEnabled = async (enabled: boolean): Promise<void> => {
-    return sendMessage(Messages.APP.SET_HOTKEYS_ENABLED, { enabled })
-}
-
-/**
- * Returns if hotkeys are allowed on the extension
- *
- */
-export const getHotkeysEnabled = async (): Promise<boolean> => {
-    return sendMessage(Messages.APP.GET_HOTKEYS_ENABLED)
+    return sendMessage(Messages.WALLET.SET_HOTKEYS_ENABLED, { enabled })
 }

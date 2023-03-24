@@ -10,7 +10,6 @@ export interface AppStateControllerState {
     isAppUnlocked: boolean;
     lockedByTimeout: boolean;
     lastActiveTime: number;
-    isHotkeyEnabled: boolean;
 }
 
 export enum AppStateEvents {
@@ -198,21 +197,5 @@ export default class AppStateController extends BaseController<AppStateControlle
                 idleTimeout * 60 * 1000
             );
         }
-    };
-
-    /**
-     * Set if hotkeys are allowed in the extension
-     *
-     * @param enabled hotkeys status
-     */
-    public setHotkeysStatus = (enabled: boolean): void => {
-        this.store.updateState({ isHotkeyEnabled: enabled });
-    };
-
-    /**
-     * @returns Returns the hotkeys status
-     */
-    public getHotkeysStatus = (): boolean => {
-        return this.store.getState().isHotkeyEnabled;
     };
 }

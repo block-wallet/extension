@@ -1,4 +1,5 @@
 import { useHotkeys } from "react-hotkeys-hook"
+import { useBlankState } from "../../context/background/backgroundHooks"
 import { lockApp } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { getActionByHotkeyAndPath, getHotkeyByPath } from "../hotkeys"
@@ -18,6 +19,7 @@ const useHotKey = (
         onBack: undefined,
     }
 ) => {
+    const { hotkeysEnabled } = useBlankState()!
     const history = useOnMountHistory()
     const currentLocation = history.location.pathname
     const hotKeys = getHotkeyByPath(currentLocation)
@@ -25,6 +27,7 @@ const useHotKey = (
     useHotkeys(
         hotKeys + ",ctrl+alt+l,alt+backspace,alt+q",
         (e) => {
+            if (!hotkeysEnabled) return
             if (!e.key) {
                 return
             }

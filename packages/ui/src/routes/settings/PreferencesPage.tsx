@@ -7,6 +7,7 @@ import gas from "../../assets/images/icons/gas.svg"
 import news from "../../assets/images/icons/news.svg"
 import bell from "../../assets/images/icons/bell.svg"
 import shield from "../../assets/images/icons/shield.svg"
+import hotkeys from "../../assets/images/icons/hotkeys.svg"
 import { useHistory } from "react-router-dom"
 import classnames from "classnames"
 import VerticalSelect from "../../components/input/VerticalSelect"
@@ -50,7 +51,7 @@ const PreferencesPage = () => {
             to: "/settings/preferences/phishing",
         },
         {
-            icon: bell,
+            icon: hotkeys,
             label: "Hotkeys",
             to: "/settings/preferences/hotkeys",
         },

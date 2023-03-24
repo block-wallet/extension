@@ -1,35 +1,25 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import PopupFooter from "../../components/popup/PopupFooter"
-import { getHotkeysEnabled, setHotkeysEnabled } from "../../context/commActions"
+import { setHotkeysEnabled } from "../../context/commActions"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import ToggleButton from "../../components/button/ToggleButton"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import Divider from "../../components/Divider"
+import { DisplayHotkey } from "../../components/hotkeys/DisplayHotkey"
+import { getCurrentOS } from "../../context/util/platform"
 
 const LockTimeout = () => {
     const history = useOnMountHistory()!
-    const [hotkeysEnabledCurrentStatus, setHotkeysEnabledCurrentStatus] =
-        useState(true)
+    const hotkeysEnabledCurrentStatus = useBlankState()?.hotkeysEnabled ?? true
     const [hotkeysEnabled, setHotkeysAllowed] = useState(true)
-
     const { isOpen, status, dispatch } = useWaitingDialog()
-
-    useEffect(() => {
-        getHotkeysEnabled().then((currentStatus) => {
-            setHotkeysEnabledCurrentStatus(currentStatus)
-        })
-    }, [])
-
-    // useEffect(() => {
-    //     setSelectedTimeout(
-    //         timeoutEnabled ? (currentTimeout === 0 ? 5 : currentTimeout) : 0
-    //     )
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, [timeoutEnabled])
+    const currentOS = getCurrentOS()
 
     const onSave = useCallback(async () => {
         try {
@@ -88,16 +78,48 @@ const LockTimeout = () => {
             />
             <div className="flex flex-col p-6 space-y-6 w-full">
                 <span className="text-sm text-gray-500">
-                    BlockWallet will allow you navigate throw the extension
-                    using hotkeys. You can see the hotkey's list here.
+                    You can press these buttons anytime on your keyboard to use
+                    BlockWallet faster.
                 </span>
                 <ToggleButton
-                    label="Enabled"
+                    label="Enabled shortcuts"
                     defaultChecked={hotkeysEnabledCurrentStatus}
                     onToggle={(checked: boolean) => {
                         setHotkeysAllowed(checked)
                     }}
                 />
+                <DisplayHotkey
+                    description="Shortcuts"
+                    alt
+                    hotkey="K"
+                    currentOS={currentOS}
+                />
+                <Divider />
+                <DisplayHotkey
+                    description="Lock Wallet"
+                    ctrl
+                    alt
+                    hotkey="L"
+                    currentOS={currentOS}
+                />
+                <Divider />
+                <DisplayHotkey
+                    description="Close Wallet"
+                    alt
+                    hotkey="Q"
+                    currentOS={currentOS}
+                />
+                <Divider />
+                <DisplayHotkey
+                    description="Go Back"
+                    alt
+                    hotkey="Backspace"
+                    currentOS={currentOS}
+                />
+                <Divider />
+                <span className="text-sm">
+                    Click here to see all keyboard shortcuts
+                </span>
             </div>
         </PopupLayout>
     )

@@ -96,8 +96,6 @@ enum APP {
     UPDATE_POPUP_TAB = 'UPDATE_POPUP_TAB',
     REJECT_UNCONFIRMED_REQUESTS = 'REJECT_UNCONFIRMED_REQUESTS',
     SET_USER_ONLINE = 'SET_USER_ONLINE',
-    GET_HOTKEYS_ENABLED = 'GET_HOTKEYS_ENABLED',
-    SET_HOTKEYS_ENABLED = 'SET_HOTKEYS_ENABLED',
 }
 
 enum BACKGROUND {
@@ -233,6 +231,8 @@ enum WALLET {
     HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT = 'HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT',
     HARDWARE_QR_SUBMIT_SIGNATURE = 'HARDWARE_QR_SUBMIT_SIGNATURE',
     HARDWARE_QR_CANCEL_SIGN_REQUEST = 'HARDWARE_QR_CANCEL_SIGN_REQUEST',
+    //hotkeys
+    SET_HOTKEYS_ENABLED = 'SET_HOTKEYS_ENABLED',
 }
 
 enum TOKEN {
@@ -567,8 +567,7 @@ export interface RequestSignatures {
         CancelQRHardwareSignRequestMessage,
         boolean
     ];
-    [Messages.APP.GET_HOTKEYS_ENABLED]: [undefined, boolean];
-    [Messages.APP.SET_HOTKEYS_ENABLED]: [RequestSetHotkeys, void];
+    [Messages.WALLET.SET_HOTKEYS_ENABLED]: [RequestSetHotkeys, void];
 }
 
 export type MessageTypes = keyof RequestSignatures;

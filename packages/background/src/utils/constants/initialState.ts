@@ -127,7 +127,6 @@ const initialState: BlankAppState = {
         isAppUnlocked: false,
         lastActiveTime: 0,
         lockedByTimeout: false,
-        isHotkeyEnabled: true,
     },
     BlockUpdatesController: { blockData: {} },
     KeyringController: {
@@ -167,6 +166,7 @@ const initialState: BlankAppState = {
             account: [],
         },
         defaultGasOption: 'medium',
+        hotkeysEnabled: true,
     },
     TransactionController: {
         transactions: [],

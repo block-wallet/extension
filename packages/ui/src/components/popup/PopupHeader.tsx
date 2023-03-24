@@ -17,7 +17,7 @@ import { DropdownMenuItem } from "../ui/Dropdown/DropdownMenu"
 import useHotKey, { UseHotKeyProps } from "../../util/hooks/useHotKey"
 import { AiFillInfoCircle } from "react-icons/ai"
 import Tooltip from "../label/Tooltip"
-import { getHotkeysEnabled } from "../../context/commActions"
+import { useBlankState } from "../../context/background/backgroundHooks"
 
 export interface PopupHeaderProps {
     title: string
@@ -59,7 +59,6 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     const network = useSelectedNetwork()
     const [fromAction, setFromAction] = useState(false)
     const [mounted, setMounted] = useState(false)
-    const [isHotkeysEnabled, setIsHotkeysEnabled] = useState(true)
 
     const onBackAction = (e: any) => {
         if (onBack) return onBack(e)
@@ -104,22 +103,17 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
 
     useEffect(() => {
         setFromAction(history.location.state?.fromAction)
-        getHotkeysEnabled().then((enabled) => {
-            setIsHotkeysEnabled(enabled)
-        })
         setMounted(true)
 
         return () => setMounted(false)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    if (isHotkeysEnabled) {
-        useHotKey({
-            onClose: close && onCloseAction,
-            onBack: backButton && onBackAction,
-            permissions: permissions,
-        } as UseHotKeyProps)
-    }
+    useHotKey({
+        onClose: close && onCloseAction,
+        onBack: backButton && onBackAction,
+        permissions: permissions,
+    } as UseHotKeyProps)
 
     return (
         <div

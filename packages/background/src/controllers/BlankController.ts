@@ -115,6 +115,10 @@ import {
     RequestAddAsNewApproveTransaction,
     RequestGetExchangeSpender,
     Origin,
+    SubmitQRHardwareCryptoHDKeyOrAccountMessage,
+    SubmitQRHardwareSignatureMessage,
+    CancelQRHardwareSignRequestMessage,
+    RequestUpdateTransactionStatus,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -154,7 +158,6 @@ import { ExchangeRatesController } from './ExchangeRatesController';
 import {
     AccountInfo,
     AccountTrackerController,
-    AccountType,
     DeviceAccountInfo,
 } from './AccountTrackerController';
 
@@ -188,7 +191,6 @@ import {
     AddressBookEntry,
     NetworkAddressBook,
 } from './AddressBookController';
-import { Devices } from '../utils/types/hardware';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 
 import { showSetUpCompleteNotification } from '../utils/notifications';
@@ -237,6 +239,7 @@ import RemoteConfigsController, {
     RemoteConfigsControllerState,
 } from './RemoteConfigsController';
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
+import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -374,8 +377,11 @@ export default class BlankController extends EventEmitter {
             this.gasPricesController,
             this.tokenController,
             this.blockUpdatesController,
+            this.keyringController,
             initState.TransactionController,
-            this.keyringController.signTransaction.bind(this.keyringController)
+            this.keyringController.signEthTransaction.bind(
+                this.keyringController
+            )
         );
 
         this.privacyController = new PrivacyAsyncController({
@@ -583,6 +589,11 @@ export default class BlankController extends EventEmitter {
             this.appStateController.store.getState().isAppUnlocked;
 
         this.blockUpdatesController.setActiveSubscriptions(
+            isAppUnlocked,
+            activeSubscription
+        );
+
+        this.networkController.setActiveSubscriptions(
             isAppUnlocked,
             activeSubscription
         );
@@ -910,6 +921,10 @@ export default class BlankController extends EventEmitter {
                 return this.rejectTransaction(
                     request as RequestRejectTransaction
                 );
+            case Messages.TRANSACTION.UPDATE_STATUS:
+                return this.updateTransactionStatus(
+                    request as RequestUpdateTransactionStatus
+                );
             case Messages.TRANSACTION.REJECT_REPLACEMENT_TRANSACTION:
                 return this.rejectReplacementTransaction(
                     request as RequestRejectTransaction
@@ -1079,6 +1094,18 @@ export default class BlankController extends EventEmitter {
             case Messages.WALLET.HARDWARE_REMOVE:
                 return this.removeHardwareWallet(
                     request as RequestRemoveHardwareWallet
+                );
+            case Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT:
+                return this.hardwareQrSubmitCryptoHdKeyOrAccount(
+                    request as SubmitQRHardwareCryptoHDKeyOrAccountMessage
+                );
+            case Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE:
+                return this.hardwareQrSubmitSignature(
+                    request as SubmitQRHardwareSignatureMessage
+                );
+            case Messages.WALLET.HARDWARE_QR_CANCEL_SIGN_REQUEST:
+                return this.hardwareQrCancelSignRequest(
+                    request as CancelQRHardwareSignRequestMessage
                 );
             case Messages.APP.OPEN_HW_CONNECT:
                 return this.openHardwareConnect();
@@ -1582,12 +1609,27 @@ export default class BlankController extends EventEmitter {
      * Method to reject transaction proposed by external source
      *
      * @param transactionMeta - transaction data
-     * @param tabId - id of the tab where the extension is opened (needed to close the window)
      */
     private rejectTransaction = async ({
         transactionId,
     }: RequestRejectTransaction) => {
         return this.transactionController.rejectTransaction(transactionId);
+    };
+
+    /**
+     * Method to update transaction status
+     *
+     * @param transactionId - transaction id
+     * @param tabId - id of the tab where the extension is opened (needed to close the window)
+     */
+    private updateTransactionStatus = async ({
+        transactionId,
+        status,
+    }: RequestUpdateTransactionStatus) => {
+        return this.transactionController.updateTransactionStatus(
+            transactionId,
+            status
+        );
     };
 
     /**
@@ -3262,7 +3304,7 @@ export default class BlankController extends EventEmitter {
         device,
     }: RequestRemoveHardwareWallet): Promise<boolean> {
         const accountType =
-            device === Devices.LEDGER ? AccountType.LEDGER : AccountType.TREZOR;
+            this.accountTrackerController.getAccountTypeFromDevice(device);
         const removeAccountPromises: Promise<boolean>[] = [];
 
         const accounts =
@@ -3285,6 +3327,69 @@ export default class BlankController extends EventEmitter {
 
         await this.keyringController.removeDeviceKeyring(device);
 
+        return true;
+    }
+
+    private async hardwareQrSubmitCryptoHdKeyOrAccount({
+        qr,
+    }: SubmitQRHardwareCryptoHDKeyOrAccountMessage): Promise<boolean> {
+        try {
+            const decoder = new URRegistryDecoder();
+            if (!decoder.receivePart(qr)) {
+                return false;
+            }
+
+            if (!decoder.isSuccess() || decoder.isError()) {
+                throw new Error(decoder.resultError());
+            }
+
+            const result = decoder.resultRegistryType();
+            const ur = result.toUR();
+            if (ur.type === 'crypto-hdkey') {
+                await this.keyringController.submitQRHardwareCryptoHDKey(
+                    ur.cbor.toString('hex')
+                );
+            } else {
+                await this.keyringController.submitQRHardwareCryptoAccount(
+                    ur.cbor.toString('hex')
+                );
+            }
+            return true;
+        } catch (err) {
+            log.error(err);
+            return false;
+        }
+    }
+
+    private async hardwareQrSubmitSignature({
+        requestId,
+        qr,
+    }: SubmitQRHardwareSignatureMessage): Promise<boolean> {
+        try {
+            const decoder = new URRegistryDecoder();
+            if (!decoder.receivePart(qr)) {
+                return false;
+            }
+
+            if (!decoder.isSuccess() || decoder.isError()) {
+                throw new Error(decoder.resultError());
+            }
+
+            const ur = decoder.resultUR();
+
+            this.keyringController.submitQRHardwareSignature(
+                requestId,
+                ur.cbor
+            );
+            return true;
+        } catch (err) {
+            log.error(err);
+            return false;
+        }
+    }
+
+    private async hardwareQrCancelSignRequest({}: CancelQRHardwareSignRequestMessage): Promise<boolean> {
+        this.keyringController.cancelQRHardwareSignRequest();
         return true;
     }
 

@@ -42,7 +42,7 @@ import { TransactionByHash } from './TransactionWatcherController';
 import { sleep } from '../utils/sleep';
 import { HOUR, MILISECOND, MINUTE, SECOND } from '../utils/constants/time';
 import { TransactionReceipt } from '@ethersproject/providers';
-import { toChecksumAddress } from 'ethereumjs-util';
+import { toChecksumAddress } from '@ethereumjs/util';
 import { fetchBlockWithRetries } from '../utils/blockFetch';
 import { isNil } from 'lodash';
 import { BaseController } from '../infrastructure/BaseController';

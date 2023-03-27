@@ -20,6 +20,7 @@ import { retryHandling } from '../utils/retryHandling';
 
 const CHAIN_FEE_DATA_SERVICE_URL = 'https://chain-fee.blockwallet.io/v1';
 const BLOCKS_TO_WAIT_BEFORE_CHECKING_FOR_CHAIN_SUPPORT = 100;
+const CHAIN_FEE_CUSTOM_HEADER = { wallet: 'BlockWallet' };
 const API_CALLS_DELAY = 100 * MILISECOND;
 const API_CALLS_RETRIES = 5;
 
@@ -456,10 +457,13 @@ export class GasPricesController extends BaseController<GasPricesControllerState
             // If the chain has support request the service
             const feeDataResponse = await retryHandling(
                 () =>
-                    httpClient.get<FeeDataResponse>(
+                    httpClient.request<FeeDataResponse>(
                         `${CHAIN_FEE_DATA_SERVICE_URL}/fee_data`,
                         {
-                            c: chainId,
+                            params: {
+                                c: chainId,
+                            },
+                            headers: CHAIN_FEE_CUSTOM_HEADER,
                         }
                     ),
                 API_CALLS_DELAY,

@@ -24,6 +24,7 @@ import {
 import {
     TransactionAdvancedData,
     TransactionMeta,
+    TransactionStatus,
 } from '../../controllers/transactions/utils/types';
 import { ImportStrategy, ImportArguments } from '../account';
 import {
@@ -66,6 +67,7 @@ import {
 } from '@block-wallet/background/controllers/BridgeController';
 import { GasPriceData } from '@block-wallet/background/controllers/GasPricesController';
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
+import { TypedTransaction } from '@ethereumjs/tx';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -193,6 +195,7 @@ enum TRANSACTION {
     CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT = 'CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT',
     CONFIRM = 'CONFIRM_TRANSACTION',
     REJECT = 'REJECT_TRANSACTION',
+    UPDATE_STATUS = 'UPDATE_STATUS',
     GET_LATEST_GAS_PRICE = 'GET_LATEST_GAS_PRICE',
     FETCH_LATEST_GAS_PRICE = 'FETCH_LATEST_GAS_PRICE',
     SEND_ETHER = 'SEND_ETHER',
@@ -229,6 +232,10 @@ enum WALLET {
     HARDWARE_SET_HD_PATH = 'HARDWARE_SET_HD_PATH',
     HARDWARE_IS_LINKED = 'HARDWARE_IS_LINKED',
     SET_DEFAULT_GAS = 'SET_DEFAULT_GAS',
+    // qr hardware devices
+    HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT = 'HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT',
+    HARDWARE_QR_SUBMIT_SIGNATURE = 'HARDWARE_QR_SUBMIT_SIGNATURE',
+    HARDWARE_QR_CANCEL_SIGN_REQUEST = 'HARDWARE_QR_CANCEL_SIGN_REQUEST',
 }
 
 enum TOKEN {
@@ -416,6 +423,10 @@ export interface RequestSignatures {
     [Messages.UD.RESOLVE_NAME]: [RequestUDResolve, string | null];
     [Messages.TRANSACTION.CONFIRM]: [RequestConfirmTransaction, string];
     [Messages.TRANSACTION.REJECT]: [RequestRejectTransaction, boolean];
+    [Messages.TRANSACTION.UPDATE_STATUS]: [
+        RequestUpdateTransactionStatus,
+        boolean
+    ];
     [Messages.TRANSACTION.REJECT_REPLACEMENT_TRANSACTION]: [
         RequestRejectTransaction,
         boolean
@@ -550,6 +561,18 @@ export interface RequestSignatures {
     [Messages.WALLET.GENERATE_ON_DEMAND_RELEASE_NOTES]: [
         RequestGenerateOnDemandReleaseNotes,
         ReleaseNote[]
+    ];
+    [Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT]: [
+        SubmitQRHardwareCryptoHDKeyOrAccountMessage,
+        boolean
+    ];
+    [Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE]: [
+        SubmitQRHardwareSignatureMessage,
+        boolean
+    ];
+    [Messages.WALLET.HARDWARE_QR_CANCEL_SIGN_REQUEST]: [
+        CancelQRHardwareSignRequestMessage,
+        boolean
     ];
 }
 
@@ -1001,6 +1024,11 @@ export interface RequestRejectTransaction {
     transactionId: string;
 }
 
+export interface RequestUpdateTransactionStatus {
+    transactionId: string;
+    status: TransactionStatus;
+}
+
 export interface RequestAddressBookClear {}
 
 export interface RequestAddressBookDelete {
@@ -1124,7 +1152,21 @@ export interface WindowTransportResponseMessage
     origin: Origin;
 }
 
+export interface SubmitQRHardwareCryptoHDKeyOrAccountMessage {
+    qr: string;
+}
+export interface SubmitQRHardwareSignatureMessage {
+    requestId: string;
+    qr: string;
+}
+export interface CancelQRHardwareSignRequestMessage {}
+
 export interface DismissMessage {}
+
+export interface GetQRHardwareETHSignRequestMessage {
+    ethTx: TypedTransaction;
+    _fromAddress: string;
+}
 
 export enum Origin {
     BACKGROUND = 'BLANK_BACKGROUND',

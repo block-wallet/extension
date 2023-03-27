@@ -28,17 +28,14 @@ export class EtherscanFetcher {
     ): Promise<{ result: T[]; status: string }> {
         let retry = 0;
         while (retry < this.config.maxRetries) {
-            const result = await httpClient.get<{
+            const result = await httpClient.request<{
                 status: string;
                 message: string;
                 result: T[];
-            }>(
-                `${this.etherscanApiUrl}/api`,
-                {
-                    ...params,
-                },
-                30000
-            );
+            }>(`${this.etherscanApiUrl}/api`, {
+                params: params,
+                timeout: 30000,
+            });
 
             if (result.status === '0' && result.message === 'NOTOK') {
                 await sleep(this.config.explorerAPIDelay);

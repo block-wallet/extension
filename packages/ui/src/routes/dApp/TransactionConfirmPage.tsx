@@ -207,6 +207,7 @@ const TransactionConfirm: React.FC<{
                       status: transaction.status,
                       error: transaction.error as Error,
                       epochTime: transaction?.approveTime,
+                      qrParams: transaction?.qrParams,
                   }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,

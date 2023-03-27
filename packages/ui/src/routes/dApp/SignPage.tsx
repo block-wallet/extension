@@ -73,6 +73,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
     dappReqData,
     status: requestStatus,
     approveTime,
+    qrParams,
     error,
 }) => {
     const { accounts, availableNetworks, selectedAddress, settings } =
@@ -104,6 +105,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                 status: requestStatus,
                 error,
                 epochTime: approveTime,
+                qrParams,
             },
             HardwareWalletOpTypes.SIGN_MESSAGE,
             accountData.accountType,

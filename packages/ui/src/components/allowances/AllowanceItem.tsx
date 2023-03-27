@@ -1,5 +1,5 @@
 import { BigNumber } from "@ethersproject/bignumber"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { formatUnits } from "@ethersproject/units"
 import { TokenAllowance } from "@block-wallet/background/controllers/AccountTrackerController"
 import { Classes, classnames } from "../../styles"
@@ -40,13 +40,14 @@ const AllowanceItem = ({
     const history = useOnMountHistory()
     const { selectedNetwork, availableNetworks } = useBlankState()!
 
-    const isPendingUpdate =
-        allowance.status === TokenAllowanceStatus.AWAITING_TRANSACTION_RESULT
-
     const [open, setOpen] = useState(false)
     const [isRevokeDisabled, setIsRevokeDisabled] = useState(false)
 
     const { isHovering: isHoveringButton, getIsHoveringProps } = useIsHovering()
+
+    const isPendingUpdate =
+        allowance.status === TokenAllowanceStatus.AWAITING_TRANSACTION_RESULT ||
+        isRevokeDisabled
 
     const revoke = async () => {
         if (!isRevokeDisabled) {

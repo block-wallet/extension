@@ -21,7 +21,13 @@ import {
     ResponseGetActivityListState,
     ActivityListStateSubscription,
 } from "@block-wallet/background/utils/types/communication"
-import { Devices, ExchangeType, Messages, StateType } from "./commTypes"
+import {
+    Devices,
+    ExchangeType,
+    Messages,
+    StateType,
+    TransactionStatus,
+} from "./commTypes"
 import {
     IToken,
     ITokens,
@@ -1115,6 +1121,21 @@ export const rejectTransaction = async (transactionId: string) => {
 }
 
 /**
+ * Updates the transaction status specified by id.
+ * @param transactionId
+ * @param status
+ */
+export const updateTransactionStatus = async (
+    transactionId: string,
+    status: TransactionStatus
+) => {
+    return sendMessage(Messages.TRANSACTION.UPDATE_STATUS, {
+        transactionId,
+        status,
+    })
+}
+
+/**
  * Rejects an speedUp/cancel transaction
  * @param transactionId
  */
@@ -1515,6 +1536,31 @@ export const removeHardwareWallet = async (
 
 export const refreshTokenAllowances = (): Promise<void> => {
     return sendMessage(Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES)
+}
+
+export const hardwareQrSubmitCryptoHdKeyOrAccount = async (
+    qr: string
+): Promise<boolean> => {
+    return sendMessage(
+        Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT,
+        {
+            qr,
+        }
+    )
+}
+
+export const hardwareQrSubmitSignature = async (
+    requestId: string,
+    qr: string
+): Promise<boolean> => {
+    return sendMessage(Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE, {
+        requestId,
+        qr,
+    })
+}
+
+export const hardwareQrCancelSignRequest = async (): Promise<boolean> => {
+    return sendMessage(Messages.WALLET.HARDWARE_QR_CANCEL_SIGN_REQUEST)
 }
 
 /**

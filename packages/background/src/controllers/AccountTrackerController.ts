@@ -1,7 +1,10 @@
 import NetworkController, { NetworkEvents } from './NetworkController';
 import { BaseController } from '../infrastructure/BaseController';
 import { BigNumber } from '@ethersproject/bignumber';
-import { StaticJsonRpcProvider } from '@ethersproject/providers/';
+import {
+    StaticJsonRpcProvider,
+    TransactionResponse,
+} from '@ethersproject/providers';
 import { Zero } from '@ethersproject/constants';
 import {
     ImportStrategy,
@@ -14,7 +17,7 @@ import {
     TokenControllerEvents,
 } from './erc-20/TokenController';
 import { Token } from './erc-20/Token';
-import { toChecksumAddress } from 'ethereumjs-util';
+import { toChecksumAddress } from '@ethereumjs/util';
 import { TokenOperationsController } from './erc-20/transactions/TokenOperationsController';
 import { Mutex } from 'async-mutex';
 import initialState from '../utils/constants/initialState';
@@ -54,7 +57,6 @@ import {
     WatchedTransactionType,
 } from './transactions/utils/types';
 import { retryHandling } from '../utils/retryHandling';
-import { providers } from 'ethers';
 import { RPCLogsFetcher } from '../utils/rpc/RPCLogsFetcher';
 import { getTokenApprovalLogsTopics } from '../utils/logsQuery';
 import { runPromiseSafely } from '../utils/promises';
@@ -126,6 +128,7 @@ export enum AccountType {
     HD_ACCOUNT = 'HD Account',
     LEDGER = 'Ledger',
     TREZOR = 'Trezor',
+    KEYSTONE = 'Keystone',
     EXTERNAL = 'External',
 }
 
@@ -972,7 +975,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         if (lastTxHash) {
             try {
                 const oldTtransaction =
-                    await retryHandling<providers.TransactionResponse>(() =>
+                    await retryHandling<TransactionResponse>(() =>
                         provider.getTransaction(lastTxHash)
                     );
                 if (oldTtransaction.blockNumber) {
@@ -1103,6 +1106,27 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     }
 
     /**
+     * getAccountTypeFromDevice
+     *
+     * @param device The device type
+     * @returns The Account Type instance name
+     */
+    public getAccountTypeFromDevice(
+        device: Devices
+    ): AccountType.LEDGER | AccountType.TREZOR | AccountType.KEYSTONE {
+        switch (device) {
+            case Devices.LEDGER:
+                return AccountType.LEDGER;
+            case Devices.TREZOR:
+                return AccountType.TREZOR;
+            case Devices.KEYSTONE:
+                return AccountType.KEYSTONE;
+            default:
+                throw new Error('Invalid device');
+        }
+    }
+
+    /**
      * importHardwareWalletAccounts
      *
      * Imports all the accounts that the user has specified from the device
@@ -1142,14 +1166,14 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             // Calculates new account index
             const accountIndex = this._getNewAccountIndex(trackedAccounts);
 
+            // Gets the account type
+            const accountType = this.getAccountTypeFromDevice(device);
+
             // Add new account to the account tracker
             const accountInfo: AccountInfo = {
                 address: newAccount,
                 name,
-                accountType:
-                    device === Devices.LEDGER
-                        ? AccountType.LEDGER
-                        : AccountType.TREZOR, // HW wallet account
+                accountType,
                 index: accountIndex,
                 balances: {},
                 status: AccountStatus.ACTIVE,
@@ -1520,6 +1544,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 assetAddressToGetBalance
             );
 
+            const network =
+                this._networkController.getNetworkFromChainId(chainId);
+
             for (const tokenAddress in balances) {
                 const balance = balances[tokenAddress];
 
@@ -1542,7 +1569,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             if (
                                 balance.gt(zero) &&
                                 !userTokens.includes(tokenAddress) &&
-                                knownTokens.includes(tokenAddress) // the token has to be known (not spam)
+                                (network?.test ||
+                                    knownTokens.includes(tokenAddress)) // the token has to be known (not spam) in mainnets
                             ) {
                                 await this._tokenController.addCustomToken(
                                     token,
@@ -1934,12 +1962,22 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
 
             // Check if the keyring is unlocked, if not unlock it
-            if (!keyring.isUnlocked()) {
-                await keyring.unlock();
+            if (device !== Devices.KEYSTONE) {
+                if (!keyring.isUnlocked()) {
+                    await keyring.unlock();
+                }
             }
 
             keyring.perPage = pageSize;
-            const deviceAccounts = await keyring.getPage(pageIndex);
+            let deviceAccounts: [] = [];
+
+            if (device === Devices.KEYSTONE) {
+                deviceAccounts = (await this._keyringController.getQRPage(
+                    pageIndex
+                )) as [];
+            } else {
+                deviceAccounts = await keyring.getPage(pageIndex);
+            }
 
             if (deviceAccounts) {
                 const checkIfAccountNameExists = (

@@ -6,6 +6,9 @@ import { RATES_IDS_LIST } from '@block-wallet/chains-assets';
 import CHAINLINK_DATAFEEDS_CONTRACTS from './chain-link/dataFeeds';
 import httpClient from '../utils/http';
 import log from 'loglevel';
+
+export const BASE_API_ENDPOINT = 'https://api.coingecko.com/api/v3/simple/';
+
 interface getRateOptions {
     networkProvider?: StaticJsonRpcProvider;
 }
@@ -17,8 +20,6 @@ export interface RateService {
         options?: getRateOptions
     ): Promise<number>;
 }
-
-export const BaseApiEndpoint = 'https://api.coingecko.com/api/v3/simple/';
 
 export const chainLinkService: RateService = {
     async getRate(currency, symbol, options: getRateOptions = {}) {
@@ -56,7 +57,7 @@ export const chainLinkService: RateService = {
 export const coingekoService: RateService = {
     async getRate(currency, symbol) {
         try {
-            const query = `${BaseApiEndpoint}price`;
+            const query = `${BASE_API_ENDPOINT}price`;
             const currencyApiId = overloadCurrencyApiId(
                 RATES_IDS_LIST[
                     symbol.toUpperCase() as keyof typeof RATES_IDS_LIST

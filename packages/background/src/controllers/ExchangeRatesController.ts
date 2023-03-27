@@ -22,7 +22,7 @@ import httpClient from '../utils/http';
 import {
     getRateService,
     RateService,
-    BaseApiEndpoint,
+    BASE_API_ENDPOINT,
     chainLinkService,
     coingekoService,
 } from '../utils/rateService';
@@ -93,7 +93,14 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
                     });
 
                     this.updateNetworkNativeCurrencyId(network);
-                    await this.updateExchangeRates();
+
+                    //Still use interval manager to avoid multiple request but execute immeditately.
+                    this._exchangeRateFetchIntervalController.tick(
+                        0,
+                        async () => {
+                            await this.updateExchangeRates();
+                        }
+                    );
                 } catch (error) {
                     log.error(error);
                 } finally {
@@ -262,7 +269,7 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         const tokens = { ...this.staticTokens, ...this.getTokens() };
         const tokenContracts = Object.keys(tokens).join(',');
 
-        const query = `${BaseApiEndpoint}token_price/${this.networkNativeCurrency.coingeckoPlatformId}`;
+        const query = `${BASE_API_ENDPOINT}token_price/${this.networkNativeCurrency.coingeckoPlatformId}`;
 
         return httpClient.request(query, {
             params: {

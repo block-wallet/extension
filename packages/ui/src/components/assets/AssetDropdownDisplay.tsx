@@ -70,7 +70,7 @@ const AssetDropdownDisplay: FC<AssetDropdownDisplayProps> = ({
         </div>
     ) : (
         <div className="flex flex-col justify-center w-full">
-            <div className="text-base font-semibold">Select...</div>
+            <div className="text-base font-semibold">Select token</div>
         </div>
     )
 }

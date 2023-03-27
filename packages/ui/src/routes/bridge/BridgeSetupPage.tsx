@@ -583,7 +583,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Divider */}
-                <div className="pt-3 h-8">
+                <div className="pt-3 h-8 mb-2">
                     <hr className="-mx-5" />
                     <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-grey-200 bg-white z-10">
                         <img

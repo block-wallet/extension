@@ -240,7 +240,7 @@ const AssetDetailsPage = () => {
                                 >
                                     <DoubleArrowHoverAnimation />
                                 </div>
-                                <span className="text-xs font-medium">
+                                <span className="text-[13px] font-medium">
                                     Swap
                                 </span>
                             </Link>
@@ -282,7 +282,7 @@ const AssetDetailsPage = () => {
                                         />
                                     )}
                                 </div>
-                                <span className="text-xs font-medium">
+                                <span className="text-[13px] font-medium">
                                     Bridge
                                 </span>
                             </Link>

@@ -527,7 +527,7 @@ const SwapPage = () => {
                 </div>
 
                 {/* Switch Inputs */}
-                <div className="pt-6 pb-2">
+                <div className="pt-6">
                     <hr className="-mx-5" />
                     <button
                         type="button"

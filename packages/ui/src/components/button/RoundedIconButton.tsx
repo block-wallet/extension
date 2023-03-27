@@ -23,7 +23,7 @@ const RoundedIconButton: FC<RoundedIconButtonProps> = ({
             >
                 <Icon />
             </div>
-            <span className="text-xs font-medium">{children}</span>
+            <span className="text-[13px] font-medium">{children}</span>
         </>
     )
 }

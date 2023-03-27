@@ -70,9 +70,9 @@ const DefaultGasPreferencesPage = () => {
                         <div
                             key={option.name}
                             className={classnames(
-                                "w-full flex flex-row p-4 justify-between cursor-pointer rounded-md hover:border-primary-blue-default hover:text-primary-blue-default border",
+                                "w-full flex flex-row p-4 justify-between cursor-pointer rounded-md hover:border-primary-black-default hover:text-primary-black-default border",
                                 selectedOption === option.name &&
-                                    "text-primary-blue-default border-primary-blue-default"
+                                    "text-primary-black-default border-primary-black-default"
                             )}
                             onClick={() => {
                                 setSelectedOption(
@@ -92,14 +92,14 @@ const DefaultGasPreferencesPage = () => {
                             </div>
                             {selectedOption === option.name && (
                                 <div className="h-full flex items-center">
-                                    <MiniCheckmark fill="#1673FF" />
+                                    <MiniCheckmark fill="#08090A" />
                                 </div>
                             )}
                         </div>
                     ))}
                 </div>
                 <div className="flex flex-row space-x-2 w-full ">
-                    <InfoComponent>
+                    <InfoComponent className="!space-x-2">
                         This setting will apply on all transactions on all
                         networks. You will still be able to change the gas
                         amount before submitting your transactions.

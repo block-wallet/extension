@@ -77,7 +77,7 @@ export class Classes {
     static whiteButton = classnames(
         Classes.centered,
         Classes.baseButton,
-        "text-black hover:bg-gray-900 border-gray-900 hover:border-gray-800 hover:text-white"
+        "text-black hover:bg-primary-black-default border-primary-black-default hover:border-gray-800 hover:text-white"
     )
     static disabledDarkButton = classnames(
         Classes.centered,
@@ -87,7 +87,7 @@ export class Classes {
     static liteButton = classnames(
         Classes.centered,
         Classes.baseButton,
-        "text-gray-900 border-gray-900 hover:text-white hover:bg-gray-900"
+        "text-gray-900 border-primary-black-default hover:text-white hover:bg-primary-black-default"
     )
     static inputLabel = classnames("text-xs")
     static inputBordered = classnames(

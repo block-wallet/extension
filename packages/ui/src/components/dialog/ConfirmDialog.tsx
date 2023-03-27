@@ -94,7 +94,7 @@ const ConfirmDialog: FunctionComponent<{
                             className={classnames(
                                 Classes.button,
                                 isButtonDisabled &&
-                                    "bg-gray-900 border-gray-900 opacity-50"
+                                    "bg-primary-black-default border-primary-black-default opacity-50"
                             )}
                             disabled={isButtonDisabled}
                         >

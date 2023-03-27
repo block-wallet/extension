@@ -192,10 +192,9 @@ const PopupPage = () => {
                                 />
                             </Link>
                             <Tooltip
-                                className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-semibold bg-gray-900 text-white"
+                                className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-medium bg-primary-black-default text-white"
                                 content={
                                     <>
-                                        <div className="border-t-4 border-r-4 border-gray-900 absolute top-0 left-2 w-2 h-2 -mt-2.5 transform -rotate-45 -translate-x-1/2" />
                                         <span>My Accounts</span>
                                     </>
                                 }
@@ -292,7 +291,7 @@ const PopupPage = () => {
                                                     </div>
                                                 </div>
                                             }
-                                            className="!-mb-4 !text-primary-black-default"
+                                            className="!-mb-4"
                                         />
                                     </a>
                                 </div>

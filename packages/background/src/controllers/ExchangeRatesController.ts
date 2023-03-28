@@ -18,20 +18,17 @@ import { ActionIntervalController } from './block-updates/ActionIntervalControll
 import BlockUpdatesController, {
     BlockUpdatesEvents,
 } from './block-updates/BlockUpdatesController';
-import httpClient from '../utils/http';
 import {
     getRateService,
     RateService,
-    BASE_API_ENDPOINT,
     chainLinkService,
-    coingekoService,
+    getCoingekoService,
 } from '../utils/rateService';
 import {
     AccountTrackerController,
     AccountTrackerEvents,
 } from './AccountTrackerController';
 import { isNativeTokenAddress } from '../utils/token';
-
 export interface ExchangeRatesControllerState {
     exchangeRates: Rates;
     networkNativeCurrency: {
@@ -230,7 +227,7 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
             rates[symbol] === 0 &&
             this._exchangeRateService === chainLinkService
         ) {
-            rates[symbol] = await coingekoService.getRate(
+            rates[symbol] = await getCoingekoService().getRate(
                 nativeCurrency,
                 symbol
             );
@@ -267,16 +264,12 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         [lowerCaseAddress: string]: { [currency: string]: number };
     }> => {
         const tokens = { ...this.staticTokens, ...this.getTokens() };
-        const tokenContracts = Object.keys(tokens).join(',');
-
-        const query = `${BASE_API_ENDPOINT}token_price/${this.networkNativeCurrency.coingeckoPlatformId}`;
-
-        return httpClient.request(query, {
-            params: {
-                contract_addresses: tokenContracts,
-                vs_currencies: this._preferencesController.nativeCurrency,
-            },
-        });
+        const service = getCoingekoService();
+        return service.getTokensRates(
+            this.networkNativeCurrency.coingeckoPlatformId,
+            Object.keys(tokens),
+            this._preferencesController.nativeCurrency
+        );
     };
 
     /**

@@ -212,15 +212,15 @@
   version "0.0.27"
   resolved "https://github.com/block-wallet/chains-assets#e85446cac33b09c7e3a9893644ad3091eba806fd"
 
-"@block-wallet/eth-ledger-bridge-keyring@https://github.com/block-wallet/eth-ledger-bridge-keyring#v0.14.0":
+"@block-wallet/eth-ledger-bridge-keyring@https://github.com/block-wallet/eth-ledger-bridge-keyring#v0.14.1":
   version "0.14.0"
-  resolved "https://github.com/block-wallet/eth-ledger-bridge-keyring#2152741a1ed1f777eca8f1f80e3d57f8aeb8296d"
+  resolved "https://github.com/block-wallet/eth-ledger-bridge-keyring#503cca048bf588cf654387113ecd873c64c7386a"
   dependencies:
-    "@ethereumjs/rlp" "^4.0.0"
     "@ethereumjs/tx" "^4.0.2"
     "@ethereumjs/util" "^8.0.3"
     eth-sig-util "^2.0.0"
     hdkey "0.8.0"
+    rlp "^2.2.4"
 
 "@block-wallet/eth-trezor-keyring@https://github.com/block-wallet/eth-trezor-keyring#v0.11.0":
   version "0.11.0"

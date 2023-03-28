@@ -164,11 +164,11 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: true,
         showGasLevels: true,
-        rpcUrls: [`https://mainnet-node.blockwallet.io`],
+        rpcUrls: [`https://mainnet.blockwallet.io`],
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         ],
-        defaultRpcUrl: `https://mainnet-node.blockwallet.io`,
+        defaultRpcUrl: `https://mainnet.blockwallet.io`,
         blockExplorerUrls: ['https://etherscan.io'],
         blockExplorerName: 'Etherscan',
         etherscanApiUrl: 'https://api.etherscan.io',
@@ -272,8 +272,8 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
-        rpcUrls: ['https://bsc-node.blockwallet.io'],
-        defaultRpcUrl: 'https://bsc-node.blockwallet.io',
+        rpcUrls: ['https://bsc.blockwallet.io'],
+        defaultRpcUrl: 'https://bsc.blockwallet.io',
         blockExplorerUrls: ['https://bscscan.com'],
         blockExplorerName: 'Bscscan',
         etherscanApiUrl: 'https://api.bscscan.com',
@@ -309,8 +309,8 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
-        rpcUrls: [`https://polygon-node.blockwallet.io`],
-        defaultRpcUrl: `https://polygon-node.blockwallet.io`,
+        rpcUrls: [`https://polygon.blockwallet.io`],
+        defaultRpcUrl: `https://polygon.blockwallet.io`,
         blockExplorerUrls: ['https://polygonscan.com'],
         blockExplorerName: 'Polygonscan',
         etherscanApiUrl: 'https://api.polygonscan.com',
@@ -702,9 +702,4 @@ export const INITIAL_NETWORKS: Networks = {
         },
         nativelySupported: true,
     },
-};
-
-export const HARDFORKS = {
-    BERLIN: 'berlin',
-    LONDON: 'london',
 };

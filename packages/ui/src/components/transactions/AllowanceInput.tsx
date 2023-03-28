@@ -289,7 +289,7 @@ const AllowanceInput = ({
                         ref={inputRef}
                         className={classnames(
                             Classes.blueSectionInput,
-                            "mb-0 text-sm",
+                            "mb-0 text-sm w-[130px]",
                             usingUnlimited && "hidden"
                         )}
                         placeholder={`0 ${tokenName}`}

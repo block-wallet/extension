@@ -34,6 +34,7 @@ import {
     bigIntToBuffer,
     bufferToBigInt,
     bufferToHex,
+    stripHexPrefix,
 } from '@ethereumjs/util';
 import { hexToString } from '../utils/signature';
 
@@ -941,7 +942,8 @@ export default class KeyringControllerDerivated extends KeyringController {
         data: string;
     }): Promise<QRSignatureRequest> {
         return this._mutex.runExclusive(async () => {
-            const dataHex = Buffer.from(msgParams.data, 'hex');
+            const usignedHex = stripHexPrefix(msgParams.data);
+            const dataHex = Buffer.from(usignedHex, 'hex');
             const requestId = v4();
             const xfp = (this._qrHardwareKeyring as any)['xfp'];
             const hdPath = await this._qrHardwareKeyring._pathFromAddress(

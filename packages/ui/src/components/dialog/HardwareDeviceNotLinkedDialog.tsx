@@ -81,7 +81,7 @@ const HardwareDeviceNotLinkedDialog: React.FC<{
                                                 className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                             />
                                             <Tooltip
-                                                className="!-translate-x-48 !w-60 !break-word !whitespace-normal border boder-gray-300"
+                                                className="!-translate-x-48 !w-60 !break-word !whitespace-normal"
                                                 content={step.info}
                                             />
                                         </div>

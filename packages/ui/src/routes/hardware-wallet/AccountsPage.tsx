@@ -490,7 +490,7 @@ const AdvancedSettings = ({
                                 />
                             </a>
                             <Tooltip
-                                className="!w-52 !break-word !whitespace-normal border boder-gray-300"
+                                className="!w-52 !break-word !whitespace-normal"
                                 content="Click here to learn what the HD Path is and the implications of changing it."
                             />
                         </div>

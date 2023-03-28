@@ -149,7 +149,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                                     )}
                                 />
                                 <Tooltip
-                                    className="!w-60 !break-word !whitespace-normal border boder-gray-300 !-translate-y-6 translate-x-1"
+                                    className="!w-60 !break-word !whitespace-normal !-translate-y-6 translate-x-1"
                                     content={info}
                                 />
                             </div>

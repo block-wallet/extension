@@ -70,9 +70,10 @@ export const chainLinkService: RateService = {
     },
 };
 
-export const coingekoService: (endpoint: string) => CoingekoService = (
-    baseEndpoint: string
-) => ({
+export const coingekoService: (
+    endpoint: string,
+    fallbackEndpoint?: string
+) => CoingekoService = (baseEndpoint: string, fallbackEndpoint?: string) => ({
     async getRate(currency, symbol) {
         try {
             const query = `${baseEndpoint}/price`;
@@ -92,6 +93,15 @@ export const coingekoService: (endpoint: string) => CoingekoService = (
 
             return response[currencyApiId][currency];
         } catch (e) {
+            if (fallbackEndpoint) {
+                log.error(
+                    `Primary endpoint failed: ${baseEndpoint}. Ex: ${e}.\nUsing fallback endpoint: ${fallbackEndpoint}`
+                );
+                return coingekoService(fallbackEndpoint).getRate(
+                    currency,
+                    symbol
+                );
+            }
             log.error('Failed fecthing price from Coingeko. Ex: ' + e);
             return 0;
         }
@@ -104,15 +114,28 @@ export const coingekoService: (endpoint: string) => CoingekoService = (
         [lowerCaseAddress: string]: { [currency: string]: number };
     }> {
         const query = `${baseEndpoint}/token_price/${coingekoPlatformId}`;
-
-        return httpClient.request(query, {
-            params: {
-                contract_addresses: tokenContracts.join(','),
-                vs_currencies: nativeCurrency,
-            },
-            headers: customHeadersForBlockWalletNode,
-            timeout: 1.5 * MINUTE, //Sometimes coingeko takes more than 1 minute to respond
-        });
+        try {
+            return httpClient.request(query, {
+                params: {
+                    contract_addresses: tokenContracts.join(','),
+                    vs_currencies: nativeCurrency,
+                },
+                headers: customHeadersForBlockWalletNode,
+                timeout: 1.5 * MINUTE, //Sometimes coingeko takes more than 1 minute to respond
+            });
+        } catch (e) {
+            if (fallbackEndpoint) {
+                log.error(
+                    `Primary endpoint failed: ${baseEndpoint}. Ex: ${e}.\nUsing fallback endpoint: ${fallbackEndpoint}`
+                );
+                return coingekoService(fallbackEndpoint).getTokensRates(
+                    coingekoPlatformId,
+                    tokenContracts,
+                    nativeCurrency
+                );
+            }
+            throw e;
+        }
     },
 });
 
@@ -130,10 +153,13 @@ const rateProvider: Record<string, RateService> = {
 };
 
 export const getCoingekoService = (): CoingekoService => {
+    if (isDevEnvironment()) {
+        return coingekoService(COINGEKO_PUBLIC_ENDPOINT);
+    }
+
     return coingekoService(
-        isDevEnvironment()
-            ? COINGEKO_PUBLIC_ENDPOINT
-            : BLOCK_WALLET_COINS_ENDPOINT
+        BLOCK_WALLET_COINS_ENDPOINT,
+        COINGEKO_PUBLIC_ENDPOINT
     );
 };
 

@@ -107,7 +107,6 @@ import {
     SignTimeoutError,
 } from '../utils/hardware';
 import { GasPricesController } from './GasPricesController';
-import { bnGreaterThanZero } from '../utils/bnUtils';
 import { recoverPersonalSignature } from '@metamask/eth-sig-util';
 import checksummedAddress from '../utils/checksummedAddress';
 
@@ -483,24 +482,18 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 } as TransactionParams,
             } as TransactionMeta);
 
+            if (!estimation.estimationSucceeded) {
+                throw new Error('gas estimation has failed');
+            }
+
             gasLimit = estimation.gasLimit;
         } catch (error) {
             log.debug('error estimating gas:', error);
-            try {
-                gasLimit = BigNumber.from(
-                    await this._networkController
-                        .getProvider()
-                        .send(JSONRPCMethod.eth_estimateGas, params)
-                );
-            } catch {
-                let { blockGasLimit } = this._gasPricesController.getState();
-                if (!bnGreaterThanZero(blockGasLimit)) {
-                    // London block size 30 millon gas units
-                    // https://ethereum.org/en/developers/docs/gas/#block-size
-                    blockGasLimit = BigNumber.from(30_000_000);
-                }
-                gasLimit = blockGasLimit;
-            }
+            gasLimit = BigNumber.from(
+                await this._networkController
+                    .getProvider()
+                    .send(JSONRPCMethod.eth_estimateGas, params)
+            );
         }
 
         return gasLimit._hex;

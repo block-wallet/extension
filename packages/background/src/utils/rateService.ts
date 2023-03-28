@@ -8,6 +8,7 @@ import httpClient from '../utils/http';
 import log from 'loglevel';
 import { customHeadersForBlockWalletNode } from './nodes';
 import { isDevEnvironment } from './env';
+import { MINUTE } from './constants/time';
 
 export const BLOCK_WALLET_COINS_ENDPOINT = 'https://coin.blockwallet.io/simple';
 
@@ -86,6 +87,7 @@ export const coingekoService: (endpoint: string) => CoingekoService = (
             >(query, {
                 params: { ids: currencyApiId, vs_currencies: currency },
                 headers: customHeadersForBlockWalletNode,
+                timeout: 1.5 * MINUTE, //Sometimes coingeko takes more than 1 minute to respond
             });
 
             return response[currencyApiId][currency];
@@ -109,6 +111,7 @@ export const coingekoService: (endpoint: string) => CoingekoService = (
                 vs_currencies: nativeCurrency,
             },
             headers: customHeadersForBlockWalletNode,
+            timeout: 1.5 * MINUTE, //Sometimes coingeko takes more than 1 minute to respond
         });
     },
 });

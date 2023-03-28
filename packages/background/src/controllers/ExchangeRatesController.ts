@@ -22,7 +22,7 @@ import {
     getRateService,
     RateService,
     chainLinkService,
-    getCoingekoService,
+    getCoingeckoService,
 } from '../utils/rateService';
 import {
     AccountTrackerController,
@@ -222,12 +222,12 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
             // this._networkController.getProvider()
         );
 
-        //In case chainlink returns 0, we will retrieve value from Coingeko, in case of failure from chainlink
+        //In case chainlink returns 0, we will retrieve value from Coingecko, in case of failure from chainlink
         if (
             rates[symbol] === 0 &&
             this._exchangeRateService === chainLinkService
         ) {
-            rates[symbol] = await getCoingekoService().getRate(
+            rates[symbol] = await getCoingeckoService().getRate(
                 nativeCurrency,
                 symbol
             );
@@ -264,7 +264,7 @@ export class ExchangeRatesController extends BaseController<ExchangeRatesControl
         [lowerCaseAddress: string]: { [currency: string]: number };
     }> => {
         const tokens = { ...this.staticTokens, ...this.getTokens() };
-        const service = getCoingekoService();
+        const service = getCoingeckoService();
         return service.getTokensRates(
             this.networkNativeCurrency.coingeckoPlatformId,
             Object.keys(tokens),

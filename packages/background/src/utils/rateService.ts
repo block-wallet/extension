@@ -12,7 +12,7 @@ import { MINUTE } from './constants/time';
 
 export const BLOCK_WALLET_COINS_ENDPOINT = 'https://coin.blockwallet.io/simple';
 
-export const COINGEKO_PUBLIC_ENDPOINT =
+export const COINGECKO_PUBLIC_ENDPOINT =
     'https://api.coingecko.com/api/v3/simple';
 
 interface getRateOptions {
@@ -27,9 +27,9 @@ export interface RateService {
     ): Promise<number>;
 }
 
-export interface CoingekoService extends RateService {
+export interface CoingeckoService extends RateService {
     getTokensRates(
-        coingekoPlatformId: string,
+        coingeckoPlatformId: string,
         tokenContracts: string[],
         nativeCurrency: string
     ): Promise<{
@@ -70,10 +70,10 @@ export const chainLinkService: RateService = {
     },
 };
 
-export const coingekoService: (
+export const coingeckoService: (
     endpoint: string,
     fallbackEndpoint?: string
-) => CoingekoService = (baseEndpoint: string, fallbackEndpoint?: string) => ({
+) => CoingeckoService = (baseEndpoint: string, fallbackEndpoint?: string) => ({
     async getRate(currency, symbol) {
         try {
             const query = `${baseEndpoint}/price`;
@@ -88,7 +88,7 @@ export const coingekoService: (
             >(query, {
                 params: { ids: currencyApiId, vs_currencies: currency },
                 headers: customHeadersForBlockWalletNode,
-                timeout: 1.5 * MINUTE, //Sometimes coingeko takes more than 1 minute to respond
+                timeout: 1.5 * MINUTE, //Sometimes coingecko takes more than 1 minute to respond
             });
 
             return response[currencyApiId][currency];
@@ -97,23 +97,23 @@ export const coingekoService: (
                 log.error(
                     `Primary endpoint failed: ${baseEndpoint}. Ex: ${e}.\nUsing fallback endpoint: ${fallbackEndpoint}`
                 );
-                return coingekoService(fallbackEndpoint).getRate(
+                return coingeckoService(fallbackEndpoint).getRate(
                     currency,
                     symbol
                 );
             }
-            log.error('Failed fecthing price from Coingeko. Ex: ' + e);
+            log.error('Failed fecthing price from Coingecko. Ex: ' + e);
             return 0;
         }
     },
     async getTokensRates(
-        coingekoPlatformId: string,
+        coingeckoPlatformId: string,
         tokenContracts: string[],
         nativeCurrency: string
     ): Promise<{
         [lowerCaseAddress: string]: { [currency: string]: number };
     }> {
-        const query = `${baseEndpoint}/token_price/${coingekoPlatformId}`;
+        const query = `${baseEndpoint}/token_price/${coingeckoPlatformId}`;
         try {
             return httpClient.request(query, {
                 params: {
@@ -121,15 +121,15 @@ export const coingekoService: (
                     vs_currencies: nativeCurrency,
                 },
                 headers: customHeadersForBlockWalletNode,
-                timeout: 1.5 * MINUTE, //Sometimes coingeko takes more than 1 minute to respond
+                timeout: 1.5 * MINUTE, //Sometimes coingecko takes more than 1 minute to respond
             });
         } catch (e) {
             if (fallbackEndpoint) {
                 log.error(
                     `Primary endpoint failed: ${baseEndpoint}. Ex: ${e}.\nUsing fallback endpoint: ${fallbackEndpoint}`
                 );
-                return coingekoService(fallbackEndpoint).getTokensRates(
-                    coingekoPlatformId,
+                return coingeckoService(fallbackEndpoint).getTokensRates(
+                    coingeckoPlatformId,
                     tokenContracts,
                     nativeCurrency
                 );
@@ -152,14 +152,14 @@ const rateProvider: Record<string, RateService> = {
     'usd-eth': chainLinkService,
 };
 
-export const getCoingekoService = (): CoingekoService => {
+export const getCoingeckoService = (): CoingeckoService => {
     if (isDevEnvironment()) {
-        return coingekoService(COINGEKO_PUBLIC_ENDPOINT);
+        return coingeckoService(COINGECKO_PUBLIC_ENDPOINT);
     }
 
-    return coingekoService(
+    return coingeckoService(
         BLOCK_WALLET_COINS_ENDPOINT,
-        COINGEKO_PUBLIC_ENDPOINT
+        COINGECKO_PUBLIC_ENDPOINT
     );
 };
 
@@ -169,5 +169,5 @@ export const getRateService = (
 ): RateService => {
     const provider =
         rateProvider[`${nativeCurrency}-${tokenSymbol}`.toLowerCase()];
-    return provider || getCoingekoService();
+    return provider || getCoingeckoService();
 };

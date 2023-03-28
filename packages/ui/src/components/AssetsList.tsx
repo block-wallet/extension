@@ -104,8 +104,7 @@ const Asset: FunctionComponent<{
 const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
     const state = useBlankState()!
 
-    const isLoading =
-        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+    const isLoading = state.isNetworkChanging
 
     const [deletedTokens, setDeletedTokens] = useState([] as string[])
     const pushDeleteTokens = (deleteToken: string) => {

@@ -15,8 +15,7 @@ const TransactionsList: React.FC<{
 }> = ({ transactions }) => {
     const state = useBlankState()!
 
-    const isLoading =
-        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+    const isLoading = state.isNetworkChanging
 
     const [transactionCount, setTransactionCount] = useState(() =>
         getInitialCount(transactions)

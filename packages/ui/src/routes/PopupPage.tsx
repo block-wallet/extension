@@ -162,8 +162,7 @@ const PopupPage = () => {
     const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
 
-    const isLoading =
-        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+    const isLoading = state.isNetworkChanging
 
     const disabledActions = !isSendEnabled || !state.isUserNetworkOnline
     const hotkeysPermissions = {

@@ -141,10 +141,7 @@ const GasPricesInfo: FC = () => {
         GAS_LIMITS[calculateGasCost]
     )
 
-    const isLoading =
-        isNetworkChanging ||
-        isRatesChangingAfterNetworkChange ||
-        !displayGasPrices
+    const isLoading = isNetworkChanging || !displayGasPrices
 
     useHotkeys("alt+g,enter", (e) => {
         if (!hotkeysEnabled) return

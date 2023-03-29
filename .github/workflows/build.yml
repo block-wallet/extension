@@ -72,7 +72,8 @@ jobs:
       - name: Compare release version with the latest tag
         id: tag_comparison
         run: |
-          latest_tag=$(git ls-remote --tags --sort='v:refname' origin | cut --delimiter='/' --fields=3 | tail -n 1)
+          git fetch --all --tags
+          latest_tag=$(git tag -l | tail -n 1)
           if [[ -z $latest_tag ]]
           then
             exit 0

@@ -475,7 +475,7 @@ export const INITIAL_NETWORKS: Networks = {
     },
     POLYGON_ZKEVM: {
         name: 'polygon_zkevm',
-        desc: 'Polygon zkEvm',
+        desc: 'Polygon zkEVM',
         chainId: 1101,
         networkVersion: '1101',
         nativeCurrency: {

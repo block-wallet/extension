@@ -1,11 +1,13 @@
 import classnames from "classnames"
+import React from "react"
 import { FC } from "react"
 import { getCurrentOS } from "../../context/util/platform"
 import { getHotkeysByPath } from "../../util/hotkeys"
+import Divider from "../Divider"
 
 interface DisplayHotkeyProps {
     description: string
-    alt: boolean
+    alt?: boolean
     ctrl?: boolean
     hotkey: string
     className?: string
@@ -15,6 +17,7 @@ interface DisplayHotkeyProps {
 interface DisplayHotkeysByPathProp {
     pathName: string
     permissions?: { [action: string]: boolean }
+    includeDivider?: boolean
 }
 
 export const DisplayHotkey: FC<DisplayHotkeyProps> = ({
@@ -36,21 +39,38 @@ export const DisplayHotkey: FC<DisplayHotkeyProps> = ({
             <div className="flex">
                 {ctrl && (
                     <>
-                        <div className="border border-gray-400 rounded-sm p-2 font-bold">
+                        <div
+                            className="border border-gray-400 rounded-sm p-2 font-medium text-sm"
+                            style={{
+                                boxShadow:
+                                    "0px 2px 0px 0px rgba(240, 240, 240, 1)",
+                            }}
+                        >
                             Ctrl
                         </div>
-                        <div className="p-2">+</div>
+                        <div className="p-2 font-medium text-sm">+</div>
                     </>
                 )}
                 {alt && (
                     <>
-                        <div className="border border-gray-400 rounded-sm p-2 font-bold">
-                            {currentOS === "mac" ? "Opt" : "Alt"}
+                        <div
+                            className="border border-gray-400 rounded-sm p-2 font-medium text-sm"
+                            style={{
+                                boxShadow:
+                                    "0px 2px 0px 0px rgba(240, 240, 240, 1)",
+                            }}
+                        >
+                            {currentOS === "mac" ? "⌥" : "Alt"}
                         </div>
-                        <div className="p-2">+</div>
+                        <div className="p-2 font-medium text-sm">+</div>
                     </>
                 )}
-                <div className="border border-gray-400 rounded-sm p-2 font-bold">
+                <div
+                    className="border border-gray-400 rounded-sm p-2 font-medium w-7 text-sm"
+                    style={{
+                        boxShadow: "0px 2px 0px 0px rgba(240, 240, 240, 1)",
+                    }}
+                >
                     {hotkey}
                 </div>
             </div>
@@ -61,53 +81,77 @@ export const DisplayHotkey: FC<DisplayHotkeyProps> = ({
 export const DisplayHotkeysByPath: FC<DisplayHotkeysByPathProp> = ({
     pathName,
     permissions,
+    includeDivider,
 }) => {
     const hotkeys = getHotkeysByPath(pathName)
     const currentOS = getCurrentOS()
 
     let hotkeysElement: JSX.Element[]
+    let showDivider = false
     if (hotkeys !== "") {
-        hotkeysElement = hotkeys["ALT"].map((hotkey) => {
+        hotkeysElement = hotkeys["ALT"].map((hotkey, index) => {
             const action =
                 typeof hotkey.action === "string" ? hotkey.action : undefined
 
             if (
-                permissions &&
-                action &&
-                permissions[action] !== undefined &&
-                !permissions[action]
+                !(
+                    permissions &&
+                    action &&
+                    permissions[action] !== undefined &&
+                    !permissions[action]
+                )
             ) {
-                return <></>
-            } else
+                if (index > 0 && !showDivider) showDivider = true
                 return (
+                    <React.Fragment key={index}>
+                        {includeDivider && showDivider && (
+                            <Divider className="my-4 border-gray-300" />
+                        )}
+                        <DisplayHotkey
+                            alt
+                            description={hotkey.description}
+                            hotkey={hotkey.hotkey}
+                            currentOS={currentOS}
+                        />
+                    </React.Fragment>
+                )
+            } else {
+                return <React.Fragment key={index}></React.Fragment>
+            }
+        })
+
+        hotkeys["CTRLALT"].map((hotkey, index) => {
+            if (index > 0 && !showDivider) showDivider = true
+            hotkeysElement.push(
+                <React.Fragment key={index}>
+                    {includeDivider && showDivider && (
+                        <Divider className="my-4 border-gray-300" />
+                    )}
                     <DisplayHotkey
+                        ctrl
                         alt
                         description={hotkey.description}
                         hotkey={hotkey.hotkey}
                         currentOS={currentOS}
                     />
-                )
-        })
-
-        hotkeys["CTRLALT"].map((hotkey) => {
-            hotkeysElement.push(
-                <DisplayHotkey
-                    alt
-                    description={hotkey.description}
-                    hotkey={hotkey.hotkey}
-                    currentOS={currentOS}
-                />
+                </React.Fragment>
             )
         })
 
-        hotkeys["CTRL"].map((hotkey) => {
+        hotkeys["CTRL"].map((hotkey, index) => {
+            if (index > 0 && !showDivider) showDivider = true
             hotkeysElement.push(
-                <DisplayHotkey
-                    alt
-                    description={hotkey.description}
-                    hotkey={hotkey.hotkey}
-                    currentOS={currentOS}
-                />
+                <React.Fragment key={index}>
+                    {includeDivider && showDivider && (
+                        <Divider className="my-4 border-gray-300" />
+                    )}
+                    <DisplayHotkey
+                        ctrl
+                        description={hotkey.description}
+                        hotkey={hotkey.hotkey}
+                        currentOS={currentOS}
+                    />
+                </React.Fragment>
             )
         })
 

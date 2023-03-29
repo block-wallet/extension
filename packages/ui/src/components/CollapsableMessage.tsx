@@ -1,11 +1,14 @@
 import { useState } from "react"
+import { Classes } from "../styles"
+import { ButtonWithLoading } from "./button/ButtonWithLoading"
 import ErrorDialog from "./dialog/ErrorDialog"
+import HotkeysDialog from "./dialog/HotkeysDialog"
 import MessageDialog from "./dialog/MessageDialog"
 import WarningDialog from "./dialog/WarningDialog"
 
 interface CollapsableMessageProps {
     isCollapsedByDefault: boolean
-    type?: "warn" | "error" | "info"
+    type?: "warn" | "error" | "info" | "hotkeys"
     onDismiss?: () => void
     dialog: {
         title: string
@@ -13,6 +16,7 @@ interface CollapsableMessageProps {
     }
     collapsedMessage: JSX.Element | string
     showCollapsedMessage?: boolean
+    onConfirm?: () => void
 }
 const CollapsableMessage = ({
     isCollapsedByDefault,
@@ -21,6 +25,7 @@ const CollapsableMessage = ({
     type = "warn",
     collapsedMessage,
     showCollapsedMessage = false,
+    onConfirm,
 }: CollapsableMessageProps) => {
     const [isCollapsed, setIsCollapsed] = useState(isCollapsedByDefault)
 
@@ -28,6 +33,13 @@ const CollapsableMessage = ({
         setIsCollapsed(true)
         if (onDismiss) {
             onDismiss()
+        }
+    }
+
+    const hotkeysOnDone = () => {
+        setIsCollapsed(true)
+        if (onConfirm) {
+            onConfirm()
         }
     }
 
@@ -41,6 +53,10 @@ const CollapsableMessage = ({
             break
         case "info":
             Dialog = MessageDialog
+            break
+        case "hotkeys":
+            Dialog = HotkeysDialog
+            break
     }
 
     return (
@@ -58,7 +74,7 @@ const CollapsableMessage = ({
                     message={dialog.message}
                     buttonLabel="OK"
                     onCancel={onClose}
-                    onDone={onClose}
+                    onDone={type === "hotkeys" ? hotkeysOnDone : onClose}
                     onClickOutside={onClose}
                 />
             )}

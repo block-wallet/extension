@@ -23,7 +23,7 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
     initialTab,
 }) => {
     const history = useOnMountHistory()
-    const state = useBlankState()!
+    const { popupTab, hotkeysEnabled } = useBlankState()!
     const initialTabIndex = initialTab === "activity" ? 0 : 1
     const [tab, setTab] = useState(tabs[initialTabIndex])
     const [currentTabLabel, setCurrentTabLabel] = useState(tab.label)
@@ -39,17 +39,18 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
 
     //UseHotkeys changes state.popupTab, we do it to change the tab in real time, otherwise it will change only next time we open the extension
     useEffect(() => {
-        setCurrentTabLabel(state.popupTab)
-        if (state.popupTab !== tab.label.toLocaleLowerCase()) {
+        setCurrentTabLabel(popupTab)
+        if (popupTab !== tab.label.toLocaleLowerCase()) {
             const newTab = tabs.find(
-                (l) => l.label.toLocaleLowerCase() === state.popupTab
+                (l) => l.label.toLocaleLowerCase() === popupTab
             )
             if (newTab) onTabChange(newTab)
         }
-    }, [state.popupTab])
+    }, [popupTab])
 
     //Adding useHotkey to add new token, only on Assets View
     useHotkeys("alt+n", () => {
+        if (!hotkeysEnabled) return
         if (currentTabLabel.toLocaleLowerCase() === "assets") {
             history.push({
                 pathname: "/settings/tokens/add",

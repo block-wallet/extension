@@ -117,7 +117,13 @@ const AddContactPage = () => {
                 onSubmit,
                 isFormValid: Object.keys(errors).length === 0,
             }}
-            header={<PopupHeader title={pageTitle} close="/" />}
+            header={
+                <PopupHeader
+                    title={pageTitle}
+                    close="/"
+                    onBack={() => history.push("/settings/addressBook")}
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading

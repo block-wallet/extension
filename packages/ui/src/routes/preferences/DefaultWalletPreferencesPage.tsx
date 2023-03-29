@@ -52,6 +52,9 @@ const DefaultWalletPreferencesPage: FC<DefaultWalletPreferencesProps> = ({
                     title="Default Browser Wallet"
                     backButton={!isWelcome}
                     close={isWelcome ? false : "/"}
+                    onBack={() =>
+                        !isWelcome && history.push("/settings/preferences")
+                    }
                 />
             }
             footer={

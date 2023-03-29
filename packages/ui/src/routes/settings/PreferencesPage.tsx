@@ -52,13 +52,23 @@ const PreferencesPage = () => {
         },
         {
             icon: hotkeys,
-            label: "Hotkeys",
+            label: "Keyboard Shortcuts",
             to: "/settings/preferences/hotkeys",
         },
     ]
 
     return (
-        <PopupLayout header={<PopupHeader title="Preferences" close="/" />}>
+        <PopupLayout
+            header={
+                <PopupHeader
+                    title="Preferences"
+                    close="/"
+                    onBack={() => {
+                        history.push("/settings")
+                    }}
+                />
+            }
+        >
             <div className="flex flex-col space-y-6 p-6">
                 <div className="flex flex-col space-y-1">
                     <div className="flex flex-col space-y-4">

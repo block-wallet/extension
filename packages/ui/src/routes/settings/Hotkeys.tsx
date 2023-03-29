@@ -40,7 +40,13 @@ const LockTimeout = () => {
                 onSubmit: onSave,
                 isEnabled: true,
             }}
-            header={<PopupHeader title="Hotkeys" />}
+            header={
+                <PopupHeader
+                    title="Keyboard Shortcuts"
+                    close="/"
+                    onBack={() => history.push("/settings/preferences")}
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
@@ -76,7 +82,7 @@ const LockTimeout = () => {
                     history.push("/")
                 }}
             />
-            <div className="flex flex-col p-6 space-y-6 w-full">
+            <div className="flex flex-col p-6 pt-2 space-y-4 w-full">
                 <span className="text-sm text-gray-500">
                     You can press these buttons anytime on your keyboard to use
                     BlockWallet faster.
@@ -110,12 +116,31 @@ const LockTimeout = () => {
                     currentOS={currentOS}
                 />
                 <Divider />
-                <DisplayHotkey
-                    description="Go Back"
-                    alt
-                    hotkey="Backspace"
-                    currentOS={currentOS}
-                />
+                {/* Dont use component to show backspace as it is a different key name */}
+                <div className="flex items-center justify-between w-full">
+                    <div className="font-bold text-sm">Go Back</div>
+                    <div className="flex">
+                        <div
+                            className="border border-gray-400 rounded-sm p-2 font-medium text-sm"
+                            style={{
+                                boxShadow:
+                                    "0px 2px 0px 0px rgba(240, 240, 240, 1)",
+                            }}
+                        >
+                            {currentOS === "mac" ? "⌥" : "Alt"}
+                        </div>
+                        <div className="p-2">+</div>
+                        <div
+                            className="border border-gray-400 rounded-sm p-2 font-medium w-20 text-sm inline-table"
+                            style={{
+                                boxShadow:
+                                    "0px 2px 0px 0px rgba(240, 240, 240, 1)",
+                            }}
+                        >
+                            Backspace
+                        </div>
+                    </div>
+                </div>
                 <Divider />
                 <span className="text-sm">
                     Click here to see all keyboard shortcuts

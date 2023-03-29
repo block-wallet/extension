@@ -23,7 +23,8 @@ import { openHardwareRemove } from "../../context/commActions"
 import { useHotkeys } from "react-hotkeys-hook"
 
 const AccountMenu = () => {
-    const { availableNetworks, selectedNetwork } = useBlankState()!
+    const { availableNetworks, selectedNetwork, hotkeysEnabled } =
+        useBlankState()!
     const account = useSelectedAccount()
     const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const history = useOnMountHistory()
@@ -65,6 +66,7 @@ const AccountMenu = () => {
     ]
 
     useHotkeys("alt+v", () => {
+        if (!hotkeysEnabled) return
         chrome.tabs.create({
             url: generateExplorerLink(
                 availableNetworks,

@@ -23,31 +23,31 @@ const locations: HotkeyMap = {
     "/home": {
         ALT: [
             {
-                hotkey: "a",
+                hotkey: "A",
                 action: "/accounts",
                 hotkeyDescription: "ALT+A",
                 description: "Accounts",
             },
             {
-                hotkey: "b",
+                hotkey: "B",
                 action: "/bridge",
                 hotkeyDescription: "ALT+B",
                 description: "Bridge",
             },
             {
-                hotkey: "s",
+                hotkey: "S",
                 action: "/send",
                 hotkeyDescription: "ALT+S",
                 description: "Send",
             },
             {
-                hotkey: "w",
+                hotkey: "W",
                 action: "/swap",
                 hotkeyDescription: "ALT+W",
                 description: "Swap",
             },
             {
-                hotkey: "r",
+                hotkey: "R",
                 action: "/accounts/menu/receive",
                 hotkeyDescription: "ALT+R",
                 description: "Receive Founds",
@@ -66,13 +66,13 @@ const locations: HotkeyMap = {
             },
             {
                 //Leave empty to show it on Hotkeys popup, but it is executed from ActivityAssetsView
-                hotkey: "",
+                hotkey: "N",
                 action: "",
                 hotkeyDescription: "",
                 description: "Add Token(On asset view)",
             },
             {
-                hotkey: "",
+                hotkey: "G",
                 action: "",
                 hotkeyDescription: "",
                 description: "View Gas Prices",
@@ -80,7 +80,7 @@ const locations: HotkeyMap = {
         ],
         CTRLALT: [
             {
-                hotkey: "s",
+                hotkey: "S",
                 action: "/settings",
                 hotkeyDescription: "CTRL+ALT+S",
                 description: "Settings",
@@ -133,7 +133,7 @@ const locations: HotkeyMap = {
     "/accounts": {
         ALT: [
             {
-                hotkey: "c",
+                hotkey: "C",
                 action: "/accounts/create",
                 hotkeyDescription: "ALT+C",
                 description: "Create Account",
@@ -145,19 +145,19 @@ const locations: HotkeyMap = {
     "/accounts/create": {
         ALT: [
             {
-                hotkey: "c",
+                hotkey: "C",
                 action: "/accounts/create/add",
                 hotkeyDescription: "ALT+C",
                 description: "Create Account",
             },
             {
-                hotkey: "i",
+                hotkey: "I",
                 action: "/accounts/create/import",
                 hotkeyDescription: "ALT+I",
                 description: "Import Account",
             },
             {
-                hotkey: "h",
+                hotkey: "H",
                 action: openHardwareConnect,
                 hotkeyDescription: "ALT+H",
                 description: "Connect Hardware Wallet",
@@ -169,33 +169,33 @@ const locations: HotkeyMap = {
     "/accounts/menu": {
         ALT: [
             {
-                hotkey: "r",
+                hotkey: "R",
                 action: "/accounts/menu/receive",
                 hotkeyDescription: "ALT+R",
                 description: "Receive Founds",
             },
             {
-                hotkey: "c",
+                hotkey: "C",
                 action: "/accounts/menu/connectedsites",
                 hotkeyDescription: "ALT+C",
                 description: "Connected Sites",
             },
             {
-                hotkey: "e",
+                hotkey: "E",
                 action: "/accounts/menu/export",
                 hotkeyDescription: "ALT+X",
                 description: "Export Account Data",
             },
             {
-                hotkey: "",
+                hotkey: "V",
                 action: "",
                 hotkeyDescription: "",
                 description: "View on Etherscan",
             },
             {
-                hotkey: "m",
+                hotkey: "A",
                 action: "/accounts",
-                hotkeyDescription: "ALT+M",
+                hotkeyDescription: "ALT+A",
                 description: "Accounts",
             },
         ],
@@ -205,7 +205,7 @@ const locations: HotkeyMap = {
     "/settings/networks": {
         ALT: [
             {
-                hotkey: "n",
+                hotkey: "N",
                 action: "/settings/networks/search",
                 hotkeyDescription: "ALT+N",
                 description: "Add Network",
@@ -217,7 +217,7 @@ const locations: HotkeyMap = {
     "/settings/addressBook": {
         ALT: [
             {
-                hotkey: "n",
+                hotkey: "N",
                 action: "/settings/addressBook/add",
                 hotkeyDescription: "ALT+N",
                 description: "Add Address To Book",
@@ -229,46 +229,52 @@ const locations: HotkeyMap = {
     "/settings/preferences": {
         ALT: [
             {
-                hotkey: "t",
+                hotkey: "T",
                 action: "/settings/preferences/locktimeout",
                 hotkeyDescription: "ALT+T",
                 description: "Lock Timeout",
             },
             {
-                hotkey: "l",
+                hotkey: "L",
                 action: "/settings/preferences/locale",
                 hotkeyDescription: "ALT+L",
-                description: "Locale",
+                description: "Locale Configuration",
             },
             {
-                hotkey: "r",
+                hotkey: "R",
                 action: "/settings/preferences/releasenotes",
                 hotkeyDescription: "ALT+R",
                 description: "Release Notes",
             },
             {
-                hotkey: "d",
+                hotkey: "D",
                 action: "/settings/preferences/defaultwallet",
                 hotkeyDescription: "ALT+D",
-                description: "Default Wallet",
+                description: "Default Browser Wallet",
             },
             {
-                hotkey: "w",
+                hotkey: "W",
                 action: "/settings/preferences/warnings",
                 hotkeyDescription: "ALT+W",
-                description: "Warnings",
+                description: "Notifications & Warnings",
             },
             {
-                hotkey: "p",
+                hotkey: "P",
                 action: "/settings/preferences/phishing",
                 hotkeyDescription: "ALT+P",
-                description: "Phishing",
+                description: "Phishing Protection",
             },
             {
-                hotkey: "h",
+                hotkey: "H",
                 action: "/settings/preferences/hotkeys",
                 hotkeyDescription: "ALT+H",
                 description: "Hotkeys",
+            },
+            {
+                hotkey: "G",
+                action: "/settings/preferences/defaultGas",
+                hotkeyDescription: "ALT+G",
+                description: "Default Gas Setting",
             },
         ],
         CTRL: [],
@@ -282,7 +288,8 @@ export const getActionByHotkeyAndPath = (
     handler: "CTRL" | "ALT" | "CTRLALT"
 ): Action => {
     return locations[currentLocation][handler].filter(
-        (hotkeyAction) => hotkeyAction.hotkey === hotkey
+        (hotkeyAction) =>
+            hotkeyAction.hotkey.toLowerCase() === hotkey.toLowerCase()
     )[0].action
 }
 

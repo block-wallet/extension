@@ -28,7 +28,13 @@ const ReleaseNotesPreferencesPage = () => {
         subscribedReleaseNotes !== settings.subscribedToReleaseaNotes
     return (
         <PopupLayout
-            header={<PopupHeader title="Release Notes" close="/" />}
+            header={
+                <PopupHeader
+                    title="Release Notes"
+                    close="/"
+                    onBack={() => history.push("/settings/preferences")}
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading

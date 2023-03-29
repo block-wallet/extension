@@ -121,6 +121,7 @@ const GasPricesInfo: FC = () => {
         networkNativeCurrency,
         isNetworkChanging,
         isRatesChangingAfterNetworkChange,
+        hotkeysEnabled,
     } = useBlankState()!
 
     const {
@@ -145,11 +146,19 @@ const GasPricesInfo: FC = () => {
         isRatesChangingAfterNetworkChange ||
         !displayGasPrices
 
-    useHotkeys("alt+g,enter", (e, handler) => {
+    useHotkeys("alt+g,enter", (e) => {
+        if (!hotkeysEnabled) return
+
+        const keyPressed = e.code
+            .replace(/key/i, "")
+            .replace(/digit/i, "")
+            .replace(/numpad/i, "")
+            .toLowerCase()
+
         if (showGasLevels) {
-            if (handler.alt) {
+            if (e.altKey && keyPressed === "g") {
                 setActive(!active)
-            } else if (handler.keys && handler.keys[0] === "enter") {
+            } else if (keyPressed === "enter") {
                 setActive(false)
             }
         }

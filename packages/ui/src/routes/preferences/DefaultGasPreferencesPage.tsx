@@ -41,7 +41,12 @@ const DefaultGasPreferencesPage = () => {
     return (
         <PopupLayout
             header={
-                <PopupHeader title="Default Gas Setting" disabled={isLoading} />
+                <PopupHeader
+                    title="Default Gas Setting"
+                    disabled={isLoading}
+                    close="/"
+                    onBack={() => history.push("/settings/preferences")}
+                />
             }
             footer={
                 <PopupFooter>

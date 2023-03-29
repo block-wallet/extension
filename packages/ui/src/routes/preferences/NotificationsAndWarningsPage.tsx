@@ -60,7 +60,13 @@ const NotificationsAndWarningsPage = () => {
 
     return (
         <PopupLayout
-            header={<PopupHeader title="Notifications & Warnings" close="/" />}
+            header={
+                <PopupHeader
+                    title="Notifications & Warnings"
+                    close="/"
+                    onBack={() => history.push("/settings/preferences")}
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading

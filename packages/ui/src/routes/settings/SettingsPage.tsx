@@ -85,7 +85,6 @@ const SettingsPage = () => {
                     onBack={() => history.push("/")}
                 />
             }
-            // footer={<PopupFooter></PopupFooter>}
         >
             <div className="flex flex-col space-y-6 p-6">
                 <div className="flex flex-col space-y-1">

@@ -1,62 +1,14 @@
-import { FC, FunctionComponent, useLayoutEffect, useState } from "react"
-import { useHotkeys } from "react-hotkeys-hook"
+import { FunctionComponent, useLayoutEffect } from "react"
 import { rejectUnconfirmedRequests } from "../../context/commActions"
 import useBeforeunload from "../../context/hooks/useBeforeUnload"
-import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import usePreventWindowResize from "../../context/hooks/usePreventWindowResize"
 import { isAutomaticClose } from "../../context/setup"
 import useSubmitOnEnter, {
     submitOnEnterProps,
 } from "../../util/hooks/useSubmitOnEnter"
 import { checkLocationHotkeys } from "../../util/hotkeys"
-import CollapsableMessage from "../CollapsableMessage"
-import { DisplayHotkeysByPath } from "../hotkeys/DisplayHotkey"
 import PageLayout from "../PageLayout"
-
-const CollapsedMessage: FC<{
-    hotkeysPermissions?: { [action: string]: boolean }
-}> = ({ hotkeysPermissions }) => {
-    const history = useOnMountHistory()
-    const [isMessageVisible, setIsMessageVisible] = useState(false)
-    const currentLocation = history.location.pathname
-
-    useHotkeys("alt+k, enter", (e) => {
-        const keyPressed = e.code
-            .replace(/key/i, "")
-            .replace(/digit/i, "")
-            .replace(/numpad/i, "")
-            .toLowerCase()
-        if (e.altKey && keyPressed === "k") {
-            setIsMessageVisible(true)
-        } else {
-            setIsMessageVisible(false)
-        }
-    })
-    return (
-        <div className="w-full pr-6">
-            <div className="flex flex-row items-start w-full justify-end pt-1 pb-2">
-                <CollapsableMessage
-                    dialog={{
-                        title: "Screen hotkeys",
-                        message: (
-                            <div className="flex flex-col p-6 space-y-1 w-full">
-                                <DisplayHotkeysByPath
-                                    pathName={currentLocation}
-                                    permissions={hotkeysPermissions}
-                                />
-                            </div>
-                        ),
-                    }}
-                    type="info"
-                    isCollapsedByDefault
-                    showCollapsedMessage={isMessageVisible}
-                    collapsedMessage={""}
-                    onDismiss={() => setIsMessageVisible(false)}
-                />
-            </div>
-        </div>
-    )
-}
+import HotkeysCollapsedMessage from "../hotkeys/HotkeysCollapsedMessage"
 
 const PopupLayout: FunctionComponent<{
     header?: React.ReactNode
@@ -66,6 +18,7 @@ const PopupLayout: FunctionComponent<{
     hotkeysPermissions?: { [action: string]: boolean }
 }> = ({ header, children, footer, submitOnEnter, hotkeysPermissions }) => {
     const { preventResize, cancelPreventResize } = usePreventWindowResize()
+
     const fullHeader = (
         <>
             {header}
@@ -102,14 +55,16 @@ const PopupLayout: FunctionComponent<{
                     <hr className="border-0.5 border-gray-200 w-full" />
                     {footer}
                     {hotkeyByPath && (
-                        <CollapsedMessage
+                        <HotkeysCollapsedMessage
                             hotkeysPermissions={hotkeysPermissions}
                         />
                     )}
                 </>
             ) : (
                 hotkeyByPath && (
-                    <CollapsedMessage hotkeysPermissions={hotkeysPermissions} />
+                    <HotkeysCollapsedMessage
+                        hotkeysPermissions={hotkeysPermissions}
+                    />
                 )
             )}
         </PageLayout>

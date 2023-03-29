@@ -1,6 +1,9 @@
 import { FEATURES } from '../../../../utils/constants/features';
 import { BlankAppState } from '../../../../utils/constants/initialState';
-import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES, INITIAL_NETWORKS } from '../../../../utils/constants/networks';
+import {
+    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+    INITIAL_NETWORKS,
+} from '../../../../utils/constants/networks';
 import { normalizeNetworksOrder } from '../../../../utils/networks';
 import { IMigration } from '../IMigration';
 
@@ -11,7 +14,6 @@ export default {
     migrate: async (persistedState: BlankAppState) => {
         const { availableNetworks } = persistedState.NetworkController;
         const updatedNetworks = { ...availableNetworks };
-
 
         updatedNetworks.MAINNET = {
             ...updatedNetworks.MAINNET,
@@ -30,7 +32,6 @@ export default {
             rpcUrls: INITIAL_NETWORKS.BSC.rpcUrls,
             defaultRpcUrl: INITIAL_NETWORKS.BSC.defaultRpcUrl,
         };
-
 
         // Add new Polygon zkEVM
         updatedNetworks.POLYGON_ZKEVM = {
@@ -74,5 +75,5 @@ export default {
             },
         };
     },
-    version: '1.1.2',
+    version: '1.1.4',
 } as IMigration;

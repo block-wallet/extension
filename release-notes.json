@@ -642,6 +642,41 @@
                 }
             ],
             "version": "0.7.0"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added Polygon zkEVM as default network with full proxy and failover support."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added $ARB token."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Fixed Ledger interactions on specific networks."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed handling signing message behavior with Keystone."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed wallet behavior and experience when loading rates."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.7.2"
         }
     ]
 }

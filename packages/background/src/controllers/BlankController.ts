@@ -115,6 +115,7 @@ import {
     SubmitQRHardwareSignatureMessage,
     CancelQRHardwareSignRequestMessage,
     RequestUpdateTransactionStatus,
+    RequestIsEnrolled,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -234,6 +235,7 @@ import RemoteConfigsController, {
 } from './RemoteConfigsController';
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
+import CampaignsController from './CampaignsController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -274,6 +276,7 @@ export default class BlankController extends EventEmitter {
     private readonly transactionWatcherController: TransactionWatcherController;
     private readonly tokenAllowanceController: TokenAllowanceController;
     private readonly remoteConfigsController: RemoteConfigsController;
+    private readonly campaignsController: CampaignsController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -406,6 +409,11 @@ export default class BlankController extends EventEmitter {
             initState.AccountTrackerController
         );
 
+        this.campaignsController = new CampaignsController(
+            this.accountTrackerController,
+            initState.CampaignsController
+        );
+
         this.exchangeRatesController = new ExchangeRatesController(
             initState.ExchangeRatesController,
             this.preferencesController,
@@ -484,6 +492,7 @@ export default class BlankController extends EventEmitter {
             TransactionWatcherControllerState:
                 this.transactionWatcherController.store,
             BridgeController: this.bridgeController.store,
+            CampaignsController: this.campaignsController.store,
         });
 
         this.UIStore = new ComposedStore<BlankAppUIState>({
@@ -829,6 +838,8 @@ export default class BlankController extends EventEmitter {
                 return this.setProviderIcon(request as RequestSetIcon, portId);
             case Messages.EXTERNAL.GET_PROVIDER_CONFIG:
                 return this.getProviderRemoteConfig();
+            case Messages.EXTERNAL.IS_ENROLLED:
+                return this.isEnrolledInCampaign(request as RequestIsEnrolled);
             case Messages.NETWORK.CHANGE:
                 return this.networkChange(request as RequestNetworkChange);
             case Messages.NETWORK.SET_SHOW_TEST_NETWORKS:
@@ -2089,6 +2100,10 @@ export default class BlankController extends EventEmitter {
 
     private getProviderRemoteConfig(): RemoteConfigsControllerState['provider'] {
         return this.remoteConfigsController.providerConfig;
+    }
+
+    private async isEnrolledInCampaign(r: RequestIsEnrolled): Promise<boolean> {
+        return this.campaignsController.isEnrolled(r.campaignId);
     }
 
     /**

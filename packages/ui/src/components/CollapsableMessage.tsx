@@ -17,6 +17,7 @@ interface CollapsableMessageProps {
     collapsedMessage: JSX.Element | string
     showCollapsedMessage?: boolean
     onConfirm?: () => void
+    showSubHeader?: boolean
 }
 const CollapsableMessage = ({
     isCollapsedByDefault,
@@ -26,6 +27,7 @@ const CollapsableMessage = ({
     collapsedMessage,
     showCollapsedMessage = false,
     onConfirm,
+    showSubHeader,
 }: CollapsableMessageProps) => {
     const [isCollapsed, setIsCollapsed] = useState(isCollapsedByDefault)
 
@@ -76,6 +78,7 @@ const CollapsableMessage = ({
                     onCancel={onClose}
                     onDone={type === "hotkeys" ? hotkeysOnDone : onClose}
                     onClickOutside={onClose}
+                    showSubHeader={showSubHeader}
                 />
             )}
         </>

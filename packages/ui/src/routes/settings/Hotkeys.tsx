@@ -17,7 +17,9 @@ import { getCurrentOS } from "../../context/util/platform"
 const LockTimeout = () => {
     const history = useOnMountHistory()!
     const hotkeysEnabledCurrentStatus = useBlankState()?.hotkeysEnabled ?? true
-    const [hotkeysEnabled, setHotkeysAllowed] = useState(true)
+    const [hotkeysEnabled, setHotkeysAllowed] = useState(
+        hotkeysEnabledCurrentStatus
+    )
     const { isOpen, status, dispatch } = useWaitingDialog()
     const currentOS = getCurrentOS()
 
@@ -88,7 +90,7 @@ const LockTimeout = () => {
                     BlockWallet faster.
                 </span>
                 <ToggleButton
-                    label="Enabled shortcuts"
+                    label="Enable shortcuts"
                     defaultChecked={hotkeysEnabledCurrentStatus}
                     onToggle={(checked: boolean) => {
                         setHotkeysAllowed(checked)
@@ -100,51 +102,61 @@ const LockTimeout = () => {
                     hotkey="K"
                     currentOS={currentOS}
                 />
-                <Divider />
-                <DisplayHotkey
-                    description="Lock Wallet"
-                    ctrl
-                    alt
-                    hotkey="L"
-                    currentOS={currentOS}
-                />
-                <Divider />
-                <DisplayHotkey
-                    description="Close Wallet"
-                    alt
-                    hotkey="Q"
-                    currentOS={currentOS}
-                />
-                <Divider />
-                {/* Dont use component to show backspace as it is a different key name */}
-                <div className="flex items-center justify-between w-full">
-                    <div className="font-bold text-sm">Go Back</div>
-                    <div className="flex">
-                        <div
-                            className="border border-gray-400 rounded-sm p-2 font-medium text-sm"
-                            style={{
-                                boxShadow:
-                                    "0px 2px 0px 0px rgba(240, 240, 240, 1)",
-                            }}
-                        >
-                            {currentOS === "mac" ? "⌥" : "Alt"}
+                {hotkeysEnabled && (
+                    <>
+                        <Divider />
+                        <DisplayHotkey
+                            description="Lock Wallet"
+                            ctrl
+                            alt
+                            hotkey="L"
+                            currentOS={currentOS}
+                        />
+                        <Divider />
+                        <DisplayHotkey
+                            description="Close Wallet"
+                            alt
+                            hotkey="Q"
+                            currentOS={currentOS}
+                        />
+                        <Divider />
+                        {/* Dont use component to show backspace as it is a different key name */}
+                        <div className="flex items-center justify-between w-full">
+                            <div className="font-bold text-sm">Go Back</div>
+                            <div className="flex">
+                                <div
+                                    className="border border-gray-400 rounded-sm font-medium text-sm w-8 h-8 text-center grid content-center"
+                                    style={{
+                                        boxShadow:
+                                            "0px 2px 0px 0px rgba(240, 240, 240, 1)",
+                                    }}
+                                >
+                                    {currentOS === "mac" ? "⌥" : "Alt"}
+                                </div>
+                                <div className="p-2">+</div>
+                                <div
+                                    className="border border-zinc-300 rounded-sm font-medium text-sm w-20 h-8 text-center grid content-center"
+                                    style={{
+                                        boxShadow:
+                                            "0px 2px 0px 0px rgba(240, 240, 240, 1)",
+                                    }}
+                                >
+                                    Backspace
+                                </div>
+                            </div>
                         </div>
-                        <div className="p-2">+</div>
-                        <div
-                            className="border border-gray-400 rounded-sm p-2 font-medium w-20 text-sm inline-table"
-                            style={{
-                                boxShadow:
-                                    "0px 2px 0px 0px rgba(240, 240, 240, 1)",
-                            }}
-                        >
-                            Backspace
-                        </div>
-                    </div>
-                </div>
-                <Divider />
-                <span className="text-sm">
-                    Click here to see all keyboard shortcuts
-                </span>
+                        <Divider className="border-gray-300" />
+                        <span className="text-sm">
+                            <a
+                                href="https://www.notion.so/getblockwallet/Keyboard-Shortcuts-draft-a22c74e2c1d24bc692f7bbf4fbdc02b1?pvs=4"
+                                target="_blank"
+                            >
+                                Click here
+                            </a>{" "}
+                            to see all keyboard shortcuts
+                        </span>
+                    </>
+                )}
             </div>
         </PopupLayout>
     )

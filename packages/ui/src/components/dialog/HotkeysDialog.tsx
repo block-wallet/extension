@@ -11,6 +11,7 @@ export type messageDialogProps = {
     onClickOutside?: () => void
     onDone?: () => void
     onCancel?: () => void
+    showSubHeader?: boolean
 }
 
 const HotkeysDialog: FunctionComponent<messageDialogProps> = ({
@@ -19,6 +20,7 @@ const HotkeysDialog: FunctionComponent<messageDialogProps> = ({
     onClickOutside,
     onDone,
     onCancel,
+    showSubHeader,
 }) => {
     return (
         <>
@@ -28,27 +30,26 @@ const HotkeysDialog: FunctionComponent<messageDialogProps> = ({
                 className={"overflow-scroll"}
             >
                 <>
-                    <div className="flex mb-1">
-                        <div className="mr-16">
-                            <h2 className="text-lg font-bold text-start ml-5 mb-5">
+                    <span className="absolute top-0 right-0 p-4 z-50">
+                        <div
+                            onClick={onCancel}
+                            className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                        >
+                            <CloseIcon size="10" />
+                        </div>
+                    </span>
+                    <div className="flex flex-col w-full space-y-2">
+                        <div className="z-10 flex flex-row items-center p-4 bg-white bg-opacity-75">
+                            <h2 className="text-lg font-bold">
                                 Keyboard Shortcuts
                             </h2>
                         </div>
-                        <div>
-                            <button
-                                onClick={onCancel}
-                                className={classnames(
-                                    "p-2 -mr-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
-                                )}
-                                type="button"
-                            >
-                                <CloseIcon />
-                            </button>
-                        </div>
                     </div>
-                    <h3 className="font-normal ml-5 text-sm">
-                        This is current page keyboard shortcuts.
-                    </h3>
+                    {showSubHeader && (
+                        <h3 className="font-normal px-4 text-sm">
+                            Shortcuts for current screen.
+                        </h3>
+                    )}
                     <div className="overflow-scroll">
                         <div className={classnames("flex mt-1 mb-2")}>
                             {message}

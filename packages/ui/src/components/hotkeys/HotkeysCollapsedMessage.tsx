@@ -14,8 +14,6 @@ export const HotkeysCollapsedMessage: FC<{
     const { hotkeysEnabled } = useBlankState()!
 
     useHotkeys("alt+k, enter", (e) => {
-        if (!hotkeysEnabled) return
-
         const keyPressed = e.code
             .replace(/key/i, "")
             .replace(/digit/i, "")
@@ -32,13 +30,18 @@ export const HotkeysCollapsedMessage: FC<{
         <CollapsableMessage
             dialog={{
                 title: "",
-                message: (
-                    <div className="flex flex-col p-6 w-full font-semibold text-sm">
+                message: hotkeysEnabled ? (
+                    <div className="flex flex-col p-4 w-full font-semibold text-sm">
                         <DisplayHotkeysByPath
                             pathName={currentLocation}
                             permissions={hotkeysPermissions}
                             includeDivider={true}
                         />
+                    </div>
+                ) : (
+                    <div className="flex flex-col p-4 w-full text-sm text-gray-500">
+                        Keyboard shortcuts are turned off. Turn them on in
+                        Settings
                     </div>
                 ),
             }}
@@ -50,6 +53,7 @@ export const HotkeysCollapsedMessage: FC<{
             onConfirm={() => {
                 history.push("/settings/preferences/hotkeys")
             }}
+            showSubHeader={hotkeysEnabled}
         />
     )
 }

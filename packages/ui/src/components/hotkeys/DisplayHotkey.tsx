@@ -40,7 +40,7 @@ export const DisplayHotkey: FC<DisplayHotkeyProps> = ({
                 {ctrl && (
                     <>
                         <div
-                            className="border border-gray-400 rounded-sm p-2 font-medium text-sm"
+                            className="border border-gray-300 rounded-sm font-medium text-sm w-10 h-8 text-center grid content-center"
                             style={{
                                 boxShadow:
                                     "0px 2px 0px 0px rgba(240, 240, 240, 1)",
@@ -54,7 +54,7 @@ export const DisplayHotkey: FC<DisplayHotkeyProps> = ({
                 {alt && (
                     <>
                         <div
-                            className="border border-gray-400 rounded-sm p-2 font-medium text-sm"
+                            className="border border-gray-300 rounded-sm font-medium text-sm w-8 h-8 text-center grid content-center"
                             style={{
                                 boxShadow:
                                     "0px 2px 0px 0px rgba(240, 240, 240, 1)",
@@ -66,7 +66,7 @@ export const DisplayHotkey: FC<DisplayHotkeyProps> = ({
                     </>
                 )}
                 <div
-                    className="border border-gray-400 rounded-sm p-2 font-medium w-7 text-sm"
+                    className="border border-gray-300 rounded-sm font-medium text-sm w-8 h-8 text-center grid content-center"
                     style={{
                         boxShadow: "0px 2px 0px 0px rgba(240, 240, 240, 1)",
                     }}
@@ -103,7 +103,7 @@ export const DisplayHotkeysByPath: FC<DisplayHotkeysByPathProp> = ({
             ) {
                 if (index > 0 && !showDivider) showDivider = true
                 return (
-                    <React.Fragment key={index}>
+                    <React.Fragment key={index + hotkey.hotkey}>
                         {includeDivider && showDivider && (
                             <Divider className="my-4 border-gray-300" />
                         )}

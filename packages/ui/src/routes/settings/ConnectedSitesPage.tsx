@@ -39,7 +39,7 @@ const ConnectedSite: FunctionComponent<{
             </div>
             <button
                 onClick={() => setConfirmOpen(true)}
-                className="hover:bg-primary-grey-hover p-2 rounded-full"
+                className="text-primary-black-default hover:text-primary-blue-default hover:bg-primary-grey-hover p-2 rounded-full"
             >
                 <Icon name={IconName.TRASH_BIN} />
             </button>

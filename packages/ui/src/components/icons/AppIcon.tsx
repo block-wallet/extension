@@ -15,8 +15,6 @@ const AppIcon = ({
     background = true,
     title,
 }: AppIconProps) => {
-    const imgClassName = iconSize ? `max-h-${iconSize}` : `max-h-${size - 3}`
-
     return (
         <div
             className={classnames(
@@ -30,7 +28,10 @@ const AppIcon = ({
                     alt="icon"
                     src={iconURL}
                     draggable={false}
-                    className={classnames("h-full", imgClassName)}
+                    className={classnames(
+                        "h-full",
+                        background ? "max-h-6" : "max-h-11"
+                    )}
                     title={title}
                 />
             ) : null}

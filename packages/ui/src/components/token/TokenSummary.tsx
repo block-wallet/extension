@@ -46,8 +46,7 @@ const Balances = ({
 }) => {
     const state = useBlankState()!
 
-    const isLoading =
-        state.isNetworkChanging || state.isRatesChangingAfterNetworkChange
+    const isLoading = state.isNetworkChanging
 
     return (
         <>

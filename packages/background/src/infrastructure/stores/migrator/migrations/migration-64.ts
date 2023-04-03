@@ -1,10 +1,14 @@
-import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
-import { IMigration } from '../IMigration';
-import { INITIAL_NETWORKS } from '../../../../utils/constants/networks';
+import { FEATURES } from '../../../../utils/constants/features';
+import { BlankAppState } from '../../../../utils/constants/initialState';
+import {
+    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+    INITIAL_NETWORKS,
+} from '../../../../utils/constants/networks';
 import { normalizeNetworksOrder } from '../../../../utils/networks';
+import { IMigration } from '../IMigration';
 
 /**
- * Update Network and native currency logos
+ * This migration adds polygon zkEvm network
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
@@ -13,84 +17,54 @@ export default {
 
         updatedNetworks.MAINNET = {
             ...updatedNetworks.MAINNET,
-            iconUrls: INITIAL_NETWORKS.MAINNET.iconUrls,
+            rpcUrls: INITIAL_NETWORKS.MAINNET.rpcUrls,
+            defaultRpcUrl: INITIAL_NETWORKS.MAINNET.defaultRpcUrl,
         };
 
-        updatedNetworks.ARBITRUM = {
-            ...updatedNetworks.ARBITRUM,
-            iconUrls: INITIAL_NETWORKS.ARBITRUM.iconUrls,
+        updatedNetworks.POLYGON = {
+            ...updatedNetworks.POLYGON,
+            rpcUrls: INITIAL_NETWORKS.POLYGON.rpcUrls,
+            defaultRpcUrl: INITIAL_NETWORKS.POLYGON.defaultRpcUrl,
+        };
+
+        updatedNetworks.BSC = {
+            ...updatedNetworks.BSC,
+            rpcUrls: INITIAL_NETWORKS.BSC.rpcUrls,
+            defaultRpcUrl: INITIAL_NETWORKS.BSC.defaultRpcUrl,
+        };
+
+        // Add new Polygon zkEVM
+        updatedNetworks.POLYGON_ZKEVM = {
+            name: 'polygon_zkevm',
+            desc: 'Polygon zkEVM',
+            chainId: 1101,
+            networkVersion: '1101',
             nativeCurrency: {
-                ...updatedNetworks.ARBITRUM.nativeCurrency,
-                logo: INITIAL_NETWORKS.ARBITRUM.nativeCurrency.logo,
+                name: 'Ether',
+                symbol: 'ETH',
+                decimals: 18,
             },
-        };
-
-        updatedNetworks.OPTIMISM = {
-            ...updatedNetworks.OPTIMISM,
-            iconUrls: INITIAL_NETWORKS.OPTIMISM.iconUrls,
-            nativeCurrency: {
-                ...updatedNetworks.OPTIMISM.nativeCurrency,
-                logo: INITIAL_NETWORKS.OPTIMISM.nativeCurrency.logo,
+            iconUrls: [
+                'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/polygonzkevm/info/logo.png',
+            ],
+            hasFixedGasCost: false,
+            enable: true,
+            test: false,
+            order: 11,
+            features: [FEATURES.SENDS],
+            ens: false,
+            showGasLevels: false,
+            rpcUrls: [`https://polygon-zkevm-node.blockwallet.io`],
+            defaultRpcUrl: `https://polygon-zkevm-node.blockwallet.io`,
+            blockExplorerUrls: ['https://zkevm.polygonscan.com/'],
+            blockExplorerName: 'Polygon zkEVM Explorer',
+            actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
+            tornadoIntervals: {
+                depositConfirmations: 0,
+                derivationsForward: 0,
             },
+            nativelySupported: true,
         };
-
-        updatedNetworks.XDAI = {
-            ...updatedNetworks.XDAI,
-            iconUrls: INITIAL_NETWORKS.XDAI.iconUrls,
-            nativeCurrency: {
-                ...updatedNetworks.XDAI.nativeCurrency,
-                logo: INITIAL_NETWORKS.XDAI.nativeCurrency.logo,
-            },
-        };
-
-        updatedNetworks.ZKSYNC_ERA_MAINNET = {
-            ...updatedNetworks.ZKSYNC_ERA_MAINNET,
-            iconUrls: INITIAL_NETWORKS.ZKSYNC_ERA_MAINNET.iconUrls,
-            nativeCurrency: {
-                ...updatedNetworks.ZKSYNC_ERA_MAINNET.nativeCurrency,
-                logo: INITIAL_NETWORKS.ZKSYNC_ERA_MAINNET.nativeCurrency.logo,
-            },
-        };
-
-        updatedNetworks.RSK = {
-            ...updatedNetworks.RSK,
-            iconUrls: INITIAL_NETWORKS.RSK.iconUrls,
-            nativeCurrency: {
-                ...updatedNetworks.RSK.nativeCurrency,
-                logo: INITIAL_NETWORKS.RSK.nativeCurrency.logo,
-            },
-        };
-
-        updatedNetworks.GOERLI = {
-            ...updatedNetworks.GOERLI,
-            iconUrls: INITIAL_NETWORKS.GOERLI.iconUrls,
-        };
-
-        updatedNetworks.ZKSYNC_ALPHA_TESTNET = {
-            ...updatedNetworks.ZKSYNC_ALPHA_TESTNET,
-            nativeCurrency: {
-                ...updatedNetworks.ZKSYNC_ALPHA_TESTNET.nativeCurrency,
-                logo: INITIAL_NETWORKS.ZKSYNC_ALPHA_TESTNET.nativeCurrency.logo,
-            },
-        };
-
-        updatedNetworks.RSK_TESTNET = {
-            ...updatedNetworks.RSK_TESTNET,
-            iconUrls: INITIAL_NETWORKS.RSK_TESTNET.iconUrls,
-            nativeCurrency: {
-                ...updatedNetworks.RSK_TESTNET.nativeCurrency,
-                logo: INITIAL_NETWORKS.RSK_TESTNET.nativeCurrency.logo,
-            },
-        };
-
-        updatedNetworks.LOCALHOST = {
-            ...updatedNetworks.LOCALHOST,
-            nativeCurrency: {
-                ...updatedNetworks.LOCALHOST.nativeCurrency,
-                logo: INITIAL_NETWORKS.LOCALHOST.nativeCurrency.logo,
-            },
-        };
-
         const orderedNetworks = normalizeNetworksOrder(updatedNetworks);
 
         return {

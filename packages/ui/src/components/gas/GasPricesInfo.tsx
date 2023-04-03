@@ -119,7 +119,6 @@ const GasPricesInfo: FC = () => {
         localeInfo,
         networkNativeCurrency,
         isNetworkChanging,
-        isRatesChangingAfterNetworkChange,
     } = useBlankState()!
 
     const {
@@ -139,10 +138,7 @@ const GasPricesInfo: FC = () => {
         GAS_LIMITS[calculateGasCost]
     )
 
-    const isLoading =
-        isNetworkChanging ||
-        isRatesChangingAfterNetworkChange ||
-        !displayGasPrices
+    const isLoading = isNetworkChanging || !displayGasPrices
 
     return (
         <>

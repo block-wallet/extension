@@ -12,10 +12,8 @@ export default {
 
         updatedNetworks.MAINNET = {
             ...updatedNetworks.MAINNET,
-            actionsTimeIntervals: FAST_TIME_INTERVALS_DEFAULT_VALUES
+            actionsTimeIntervals: FAST_TIME_INTERVALS_DEFAULT_VALUES,
         };
-
-
 
         return {
             ...persistedState,

@@ -22,7 +22,8 @@ export const useTokensList = (): TokenListInfo => {
         decimals: nativeCurrency.decimals,
         name: nativeCurrency.name,
         symbol: nativeCurrency.symbol,
-        logo: defaultNetworkLogo,
+        // Use Network Logo if nativeCurrency logo is not available
+        logo: nativeCurrency.logo ?? defaultNetworkLogo,
     }
 
     if (chainId in balances) {

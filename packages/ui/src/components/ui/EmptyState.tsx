@@ -16,7 +16,7 @@ const EmptyState: React.FC<PropsWithChildren<EmptyStateProps>> = ({
     return (
         <div
             className={classnames(
-                "items-center flex flex-col space-y-1 text-center",
+                "items-center flex flex-col space-y-1 text-center text-sm",
                 className || ""
             )}
         >

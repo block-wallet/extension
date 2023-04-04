@@ -26,6 +26,7 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import classNames from "classnames"
 import GenericTooltip from "../../components/label/GenericTooltip"
+import AppVersion from "../../components/AppVersion"
 import { openHardwareConnect } from "../../context/commActions"
 
 const SettingsPage = () => {
@@ -87,6 +88,21 @@ const SettingsPage = () => {
             }
         >
             <div className="flex flex-col space-y-6 p-6">
+                {!isSeedPhraseBackedUp && (
+                    <div className="w-full border border-primary-grey-hover rounded-md flex justify-between items-center p-4">
+                        <span className="text-xs mr-2">
+                            Back up your seed phrase to secure your funds.
+                        </span>
+                        <button
+                            className={classNames(Classes.smallButton)}
+                            onClick={() => {
+                                history.push("/reminder")
+                            }}
+                        >
+                            Backup
+                        </button>
+                    </div>
+                )}
                 <div className="flex flex-col space-y-1">
                     <div className="flex flex-col space-y-4">
                         <VerticalSelect
@@ -126,7 +142,7 @@ const SettingsPage = () => {
                                                 }
                                             />
                                         </div>
-                                        <span className="font-bold">
+                                        <span className="font-semibold">
                                             {option.label}
                                         </span>
                                     </>
@@ -138,23 +154,6 @@ const SettingsPage = () => {
                                 )
                             }}
                         />
-                        {!isSeedPhraseBackedUp && (
-                            <div className="w-full border border-gray-200 rounded-md flex justify-between items-center p-4">
-                                <span className="text-xs mr-2">
-                                    Back your seed phrase up and store it in a
-                                    safe place.
-                                </span>
-                                <button
-                                    className={classNames(Classes.smallButton)}
-                                    onClick={() => {
-                                        history.push("/reminder")
-                                    }}
-                                >
-                                    Backup
-                                </button>
-                            </div>
-                        )}
-
                         <GenericTooltip
                             top
                             divFull

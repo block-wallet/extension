@@ -10,7 +10,7 @@ import { WindowIdProvider } from "./context/hooks/useWindowId"
 
 const AppLoading = () => {
     return (
-        <div className="w-full h-full flex flex-row items-center justify-center bg-primary-100">
+        <div className="w-full h-full flex flex-row items-center justify-center bg-primary-grey-default">
             <Spinner />
         </div>
     )

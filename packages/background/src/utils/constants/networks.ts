@@ -20,9 +20,10 @@ export type Network = {
         name: string;
         symbol: string;
         decimals: number;
+        logo?: string; // Used if the native currency logo is different from network logo
     };
     hasFixedGasCost?: boolean;
-    iconUrls?: string[];
+    iconUrls?: string[]; // Network logo
     enable: boolean;
     features: BlankSupportedFeatures[];
     test: boolean;
@@ -69,6 +70,7 @@ export interface AddNetworkType {
         symbol: string;
         name?: string;
         decimals?: number;
+        logo?: string;
     };
     rpcUrls?: string[];
     test: boolean;
@@ -164,6 +166,9 @@ export const INITIAL_NETWORKS: Networks = {
         showGasLevels: true,
         rpcUrls: [`https://mainnet-node.blockwallet.io`],
         defaultRpcUrl: `https://mainnet-node.blockwallet.io`,
+        iconUrls: [
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
+        ],
         blockExplorerUrls: ['https://etherscan.io'],
         blockExplorerName: 'Etherscan',
         etherscanApiUrl: 'https://api.etherscan.io',
@@ -185,6 +190,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         hasFixedGasCost: false,
         enable: true,
@@ -194,6 +200,9 @@ export const INITIAL_NETWORKS: Networks = {
         ens: false,
         showGasLevels: false,
         rpcUrls: ['https://arbitrum-node.blockwallet.io'],
+        iconUrls: [
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/arbitrum/info/logo.png',
+        ],
         defaultRpcUrl: 'https://arbitrum-node.blockwallet.io',
         blockExplorerUrls: ['https://arbiscan.io'],
         blockExplorerName: 'Arbiscan',
@@ -216,6 +225,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         hasFixedGasCost: false,
         gasLowerCap: {
@@ -228,6 +238,9 @@ export const INITIAL_NETWORKS: Networks = {
         ens: false,
         showGasLevels: false,
         rpcUrls: ['https://optimism-node.blockwallet.io'],
+        iconUrls: [
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/optimism/info/logo.png',
+        ],
         defaultRpcUrl: 'https://optimism-node.blockwallet.io',
         blockExplorerUrls: ['https://optimistic.etherscan.io'],
         blockExplorerName: 'Etherscan',
@@ -388,6 +401,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'xDAI',
             symbol: 'xDAI',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/xdai/assets/0x/logo.png',
         },
         hasFixedGasCost: false,
         enable: true,
@@ -397,7 +411,7 @@ export const INITIAL_NETWORKS: Networks = {
         ens: false,
         showGasLevels: false,
         iconUrls: [
-            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/xdai/assets/0x/logo.png',
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/xdai/info/logo.png',
         ],
         rpcUrls: ['https://xdai-node.blockwallet.io'],
         defaultRpcUrl: 'https://xdai-node.blockwallet.io',
@@ -420,6 +434,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Smart Bitcoin',
             symbol: 'RBTC',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
         },
         hasFixedGasCost: false,
         enable: true,
@@ -429,7 +444,7 @@ export const INITIAL_NETWORKS: Networks = {
         ens: false,
         showGasLevels: false, // "Slow" gas level might be lower than the minimumGasPrice so the tx will be rejected
         iconUrls: [
-            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/info/logo.png',
         ],
         rpcUrls: ['https://rsk-node.blockwallet.io'],
         defaultRpcUrl: 'https://rsk-node.blockwallet.io',
@@ -451,6 +466,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zksync/info/logo.png',
@@ -482,6 +498,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/polygonzkevm/info/logo.png',
@@ -522,6 +539,9 @@ export const INITIAL_NETWORKS: Networks = {
         ens: true,
         showGasLevels: true,
         rpcUrls: [`https://goerli-node.blockwallet.io`],
+        iconUrls: [
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
+        ],
         defaultRpcUrl: `https://goerli-node.blockwallet.io`,
         blockExplorerUrls: ['https://goerli.etherscan.io'],
         blockExplorerName: 'Etherscan',
@@ -603,6 +623,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zksync/info/logo.png',
@@ -665,6 +686,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Testnet Smart Bitcoin',
             symbol: 'tRBTC',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
         },
         hasFixedGasCost: false,
         enable: true,
@@ -674,7 +696,7 @@ export const INITIAL_NETWORKS: Networks = {
         ens: false,
         showGasLevels: true,
         iconUrls: [
-            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/info/logo.png',
         ],
         rpcUrls: ['https://did.testnet.rsk.co:4444'],
         blockExplorerName: 'RSK Testnet Explorer',
@@ -695,6 +717,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         hasFixedGasCost: false,
         enable: true,

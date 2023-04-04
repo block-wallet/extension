@@ -42,6 +42,7 @@ interface AccountDisplayProps {
     selected?: boolean
     showSelectedCheckmark?: boolean
     showAddress?: boolean
+    truncateName?: boolean
     showConnected?: boolean
     copyAddressToClipboard?: boolean
     menu?: AccountDisplayMenuOption[]
@@ -54,6 +55,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
     selected,
     showSelectedCheckmark = true,
     showAddress = false,
+    truncateName = true,
     showConnected = false,
     copyAddressToClipboard = false,
     actionButtons,
@@ -94,7 +96,8 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
             <div
                 className={classnames(
                     "flex flex-row items-center justify-between w-full rounded-md",
-                    hoverStyle && "hover:bg-primary-100 cursor-pointer",
+                    hoverStyle &&
+                        "hover:bg-primary-grey-default cursor-pointer",
                     confirmationDialog.isOpen && "!cursor-default"
                 )}
                 onClick={() => onClickAccount && onClickAccount(account)}
@@ -121,7 +124,8 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             <div className="flex flex-row space-x-1">
                                 <label
                                     className={classnames(
-                                        "font-bold truncate max-w-[96px]",
+                                        "font-semibold",
+                                        truncateName && "truncate max-w-[96px]",
                                         hoverStyle && "cursor-pointer"
                                     )}
                                     title={account.name}
@@ -131,7 +135,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                                 </label>
                                 {!showAddress && (
                                     <span
-                                        className="font-bold"
+                                        className="font-semibold"
                                         title={checksumAddress}
                                     >
                                         {formatHashLastChars(checksumAddress)}
@@ -140,7 +144,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             </div>
                             {!showAddress ? (
                                 <span
-                                    className="text-gray-500"
+                                    className="text-xs text-primary-grey-dark"
                                     title={`${formatUnits(
                                         nativeTokenBalance
                                     )} ${nativeCurrency.symbol}`}
@@ -152,7 +156,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                                     {nativeCurrency.symbol}
                                 </span>
                             ) : (
-                                <span className="text-gray-500">
+                                <span className="text-primary-grey-dark">
                                     {formatHash(checksumAddress)}
                                 </span>
                             )}
@@ -165,7 +169,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             <div className="flex flex-row space-x-1 text-xxs text-white pt-1">
                                 {account.accountType && (
                                     <Tag profile="dark">
-                                        <span className="font-bold">
+                                        <span className="font-semibold">
                                             {account.accountType.toString()}
                                         </span>
                                     </Tag>

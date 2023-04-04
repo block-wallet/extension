@@ -37,14 +37,16 @@ const MessageDialog: FunctionComponent<messageDialogProps> = ({
         >
             <>
                 {header}
-                <h2 className="text-lg font-bold text-center mt-4">{title}</h2>
+                <h2 className="text-lg font-semibold text-center mt-4">
+                    {title}
+                </h2>
                 <div
                     className={classnames(
                         "flex mt-2 mb-4",
                         wideMargins ? "px-5 " : "px-1"
                     )}
                 >
-                    <span className="text-sm text-center w-full text-gray-500">
+                    <span className="text-sm text-center w-full text-primary-grey-dark">
                         {message}
                     </span>
                 </div>

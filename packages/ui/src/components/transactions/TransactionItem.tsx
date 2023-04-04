@@ -193,7 +193,10 @@ const failedStatuses = [
 const PendingSpinner: React.FC<{
     size?: string
 }> = ({ size = "1rem" }) => (
-    <ImSpinner size={size} className="animate-spin text-black opacity-50" />
+    <ImSpinner
+        size={size}
+        className="animate-spin text-primary-black-default opacity-50"
+    />
 )
 
 const TransactionIcon: React.FC<{
@@ -236,7 +239,7 @@ const getTransactionTime = (
 ) => {
     const [{ color, label }, extraInfo] = (() => {
         const displayTime = {
-            color: "text-gray-600",
+            color: "text-primary-grey-dark",
             label: getDisplayTime(new Date(time)),
         }
         // If the transaction that we wanted to cancel is sent
@@ -259,7 +262,7 @@ const getTransactionTime = (
             return [
                 displayTime,
                 {
-                    color: "text-blue-600",
+                    color: "text-primary-blue-default",
                     label: "Sped up",
                 },
             ]
@@ -276,7 +279,7 @@ const getTransactionTime = (
             failedStatuses.includes(status) &&
             metaType === MetaType.REGULAR_CANCELLING
         )
-            return [{ color: "text-blue-600", label: "Cancelled" }]
+            return [{ color: "text-primary-blue-default", label: "Cancelled" }]
         // /!\ Really specific case /!\
         // the DROPPED + SPEEDING_UP is supposed to mean that the speed up work
         // However, the transaction is supposed to be filtered an not shown.
@@ -303,22 +306,24 @@ const getTransactionTime = (
             return [{ color: "text-red-600", label: "Cancelled" }]
         // If we're here, we're waiting to see if the transaction will be cancelled
         else if (metaType === MetaType.REGULAR_CANCELLING)
-            return [{ color: "text-gray-600", label: "Cancelling..." }]
+            return [{ color: "text-primary-grey-dark", label: "Cancelling..." }]
         // If we're here, we're waiting to see if the transaction will be sped up
         else if (metaType === MetaType.REGULAR_SPEEDING_UP)
-            return [{ color: "text-gray-600", label: "Speeding up..." }]
+            return [
+                { color: "text-primary-grey-dark", label: "Speeding up..." },
+            ]
         else if (status === TransactionStatus.SUBMITTED)
             return !isQueued
-                ? [{ color: "text-gray-600", label: "Pending..." }]
+                ? [{ color: "text-primary-grey-dark", label: "Pending..." }]
                 : [{ color: "text-yellow-600", label: "Queued" }]
         else return [displayTime]
     })()
 
     return (
         <>
-            <span className={`text-xs ${color}`}>{label}</span>
+            <span className={`text-[11px] ${color}`}>{label}</span>
             {extraInfo && (
-                <span className={`text-xs ${extraInfo.color} mt-0.5`}>
+                <span className={`text-[11px] ${extraInfo.color} mt-0.5`}>
                     {extraInfo.label}
                 </span>
             )}
@@ -380,7 +385,7 @@ const getTransactionTimeOrStatus = (
 ) => {
     if (forceDrop) {
         return (
-            <span className="text-xs text-red-600">
+            <span className="text-[11px] text-red-600">
                 {capitalize(TransactionStatus.DROPPED.toLowerCase())}
             </span>
         )
@@ -388,7 +393,7 @@ const getTransactionTimeOrStatus = (
 
     if (failedStatuses.includes(status) && metaType === MetaType.REGULAR) {
         return (
-            <span className="text-xs text-red-600">
+            <span className="text-[11px] text-red-600">
                 {capitalize(
                     status === TransactionStatus.CANCELLED
                         ? "failed"
@@ -403,7 +408,7 @@ const getTransactionTimeOrStatus = (
         bridgeParams.role !== "RECEIVING"
     ) {
         return (
-            <span className="text-xs text-red-600">
+            <span className="text-[11px] text-red-600">
                 Failed bridge: Refunded
             </span>
         )
@@ -453,7 +458,7 @@ const TransactionItem: React.FC<{
         amount: value ? value : BigNumber.from("0"),
         currency: networkNativeCurrency.symbol,
         decimals: networkNativeCurrency.decimals,
-        logo: defaultNetworkLogo,
+        logo: networkNativeCurrency.logo ?? defaultNetworkLogo,
     }
 
     const isBlankWithdraw: boolean =
@@ -554,7 +559,7 @@ const TransactionItem: React.FC<{
             />
 
             <div
-                className={`flex flex-col px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 ${
+                className={`flex flex-col px-6 py-4 -ml-6 transition duration-300 hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 ${
                     !(txHash && transaction.transactionParams.from) &&
                     "cursor-default"
                 }`}
@@ -585,7 +590,7 @@ const TransactionItem: React.FC<{
                             style={typeCss}
                         >
                             <span
-                                className="text-sm font-bold truncate"
+                                className="text-sm font-semibold truncate"
                                 title={label}
                             >
                                 {formattedLabel}
@@ -608,7 +613,7 @@ const TransactionItem: React.FC<{
                                         >
                                             <AiFillInfoCircle
                                                 size={24}
-                                                className="pl-2 pb-1 text-primary-200 cursor-pointer hover:text-primary-300"
+                                                className="pl-2 pb-1 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                             />
                                         </a>
                                         <Tooltip
@@ -648,7 +653,7 @@ const TransactionItem: React.FC<{
                                 <button
                                     type="button"
                                     className={classnames(
-                                        "rounded-md cursor-pointer text-blue-500 border-current border p-1 font-bold hover:bg-blue-500 hover:text-white transition-colors",
+                                        "rounded-md cursor-pointer text-primary-blue-default border-current border p-1 font-semibold hover:bg-primary-blue-default hover:text-white transition-colors",
                                         isQueued
                                             ? "opacity-50 pointer-events-none"
                                             : ""
@@ -668,7 +673,7 @@ const TransactionItem: React.FC<{
                                 </button>
                                 <button
                                     type="button"
-                                    className="ml-1.5 border p-1 rounded-md cursor-pointer text-gray-500 border-current font-bold hover:bg-gray-500 hover:text-white transition-colors"
+                                    className="ml-1.5 border p-1 rounded-md cursor-pointer text-primary-grey-dark border-current font-semibold hover:bg-gray-500 hover:text-white transition-colors"
                                     onClick={(e) => {
                                         e.stopPropagation()
                                         history.push({
@@ -713,7 +718,7 @@ const TransactionItem: React.FC<{
                                 >
                                     <span
                                         className={classNames(
-                                            "text-sm font-bold text-right mr-1 truncate max-w-[130px]"
+                                            "text-sm font-semibold text-right truncate max-w-[130px]"
                                         )}
                                     >
                                         {transaction.approveAllowanceParams
@@ -749,7 +754,7 @@ const TransactionItem: React.FC<{
                             >
                                 <span
                                     className={classNames(
-                                        "text-sm font-bold text-right mr-1 truncate max-w-[130px]"
+                                        "text-sm font-semibold text-right truncate max-w-[130px]"
                                     )}
                                 >
                                     {`${valueLabel} ${transfer.currency.toUpperCase()}`}
@@ -757,7 +762,7 @@ const TransactionItem: React.FC<{
                             </div>
                             <div className="w-full flex justify-end">
                                 <span
-                                    className="text-xs text-gray-600 truncate"
+                                    className="text-[11px] text-primary-grey-dark truncate"
                                     title={transferCurrencyAmount}
                                 >
                                     {transferCurrencyAmount}
@@ -771,7 +776,7 @@ const TransactionItem: React.FC<{
                 bridgeParams &&
                 BRIDGE_PENDING_STATUS.includes(bridgeParams!.status! || "") ? (
                     <div className="ml-11 mt-2">
-                        <i className="text-gray-500">
+                        <i className="text-primary-grey-dark">
                             <>
                                 {
                                     getBridgePendingMessage(

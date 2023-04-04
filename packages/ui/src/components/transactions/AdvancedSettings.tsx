@@ -351,13 +351,13 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                     onClick={() => setIsOpen(true)}
                     className="w-full py-3"
                 >
-                    <span className="font-bold text-sm">{label}</span>
+                    <span className="font-semibold text-sm">{label}</span>
                     <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
                 </OutlinedButton>
             ) : (
                 <div className="flex flex-col items-end">
                     <span
-                        className="text-xs font-bold text-primary-300 cursor-pointer hover:underline"
+                        className="text-xs font-semibold text-primary-blue-default cursor-pointer hover:underline"
                         onClick={() => setIsOpen(true)}
                     >
                         {label}
@@ -371,7 +371,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                         onClick={() => {
                             setIsOpen(false)
                         }}
-                        className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                        className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                     >
                         <CloseIcon size="10" />
                     </div>
@@ -380,7 +380,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                     className="flex flex-col w-full px-3"
                     ref={clickOutsideRef}
                 >
-                    <p className="text-base font-bold pb-3">{label}</p>
+                    <p className="text-base font-semibold pb-3">{label}</p>
 
                     {display.slippage && (
                         <div className="w-full pb-2">
@@ -452,7 +452,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                 <div className="group relative">
                                     <AiFillInfoCircle
                                         size={20}
-                                        className="pl-1 text-primary-200  hover:text-primary-300"
+                                        className="pl-1 text-primary-grey-dark  hover:text-primary-blue-default"
                                     />
                                     <Tooltip
                                         content={
@@ -487,7 +487,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
 
                     <p
                         onClick={() => resetSettings()}
-                        className="text-xs text-blue-500 hover:text-blue-800 cursor-pointer w-min"
+                        className="text-xs text-primary-blue-default hover:text-primary-blue-hover cursor-pointer w-min"
                     >
                         Reset
                     </p>

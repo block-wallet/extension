@@ -89,6 +89,7 @@ const AssetDetailsPage = () => {
                     )}`}
                     close={false}
                     disabled={isRemoving}
+                    networkIndicator
                     actions={
                         !isNative
                             ? [
@@ -166,8 +167,8 @@ const AssetDetailsPage = () => {
             />
 
             <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 space-y-6 overflow-auto hide-scroll">
-                <TokenSummary minHeight="13rem" className="mt-2">
-                    <TokenSummary.Balances className="mt-2">
+                <TokenSummary>
+                    <TokenSummary.Balances>
                         <AssetIcon filled asset={token} />
                         <TokenSummary.TokenName>
                             {token.name}
@@ -192,7 +193,7 @@ const AssetDetailsPage = () => {
                             )}
                         </TokenSummary.ExchangeRateBalance>
                     </TokenSummary.Balances>
-                    <TokenSummary.Actions className="mb-4">
+                    <TokenSummary.Actions className="pb-4">
                         <Link
                             to={{
                                 pathname: "/send",
@@ -233,13 +234,13 @@ const AssetDetailsPage = () => {
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
                                         disabledActions
                                             ? "bg-gray-300"
-                                            : "bg-primary-300"
+                                            : "bg-primary-blue-default"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
                                     <DoubleArrowHoverAnimation />
                                 </div>
-                                <span className="text-xs font-medium">
+                                <span className="text-[13px] font-medium">
                                     Swap
                                 </span>
                             </Link>
@@ -265,7 +266,7 @@ const AssetDetailsPage = () => {
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
                                         disabledActions
                                             ? "bg-gray-300"
-                                            : "bg-primary-300"
+                                            : "bg-primary-blue-default"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
@@ -281,7 +282,7 @@ const AssetDetailsPage = () => {
                                         />
                                     )}
                                 </div>
-                                <span className="text-xs font-medium">
+                                <span className="text-[13px] font-medium">
                                     Bridge
                                 </span>
                             </Link>

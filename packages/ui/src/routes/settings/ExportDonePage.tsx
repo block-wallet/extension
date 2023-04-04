@@ -51,7 +51,7 @@ const ExportDonePage = () => {
                         />
                         <button
                             type="button"
-                            className="relative flex flex-row items-stretch justify-between w-full rounded group bg-primary-100 hover:bg-primary-200"
+                            className="relative flex flex-row items-stretch justify-between w-full rounded group bg-primary-grey-default hover:bg-primary-grey-hover"
                             onClick={copyToClipboard}
                         >
                             <span className="flex-grow px-4 py-4 text-sm ">
@@ -82,7 +82,7 @@ const ExportDonePage = () => {
                         />
                         <a
                             type="button"
-                            className="relative flex flex-row items-stretch justify-between w-full rounded group bg-primary-100 hover:bg-primary-200"
+                            className="relative flex flex-row items-stretch justify-between w-full rounded group bg-primary-grey-default hover:bg-primary-grey-hover"
                             href={`data:text/json;charset=utf-8,${encodeURIComponent(
                                 exportData
                             )}`}
@@ -101,7 +101,7 @@ const ExportDonePage = () => {
                     </div>
                 )}
                 <div className="w-full px-4 py-4 text-sm text-center text-red-500 bg-red-100 rounded">
-                    <strong className="font-bold">Warning: </strong>
+                    <strong className="font-semibold">Warning: </strong>
                     <span>
                         Never disclose this information. Anyone with your
                         private keys can steal any assets held in your account.

@@ -393,7 +393,7 @@ const NetworkFormPage = ({
                                 BlockWallet does not verify custom networks.
                                 Make sure you understand{" "}
                                 <a
-                                    className="underline text-blue-600 hover:text-blue-800"
+                                    className="underline text-primary-blue-default hover:text-primary-blue-hover"
                                     href={LINKS.ARTICLES.CUSTOM_NETWORK_RISKS}
                                     target="_blank"
                                     rel="noreferrer"
@@ -407,10 +407,10 @@ const NetworkFormPage = ({
                     }}
                     isCollapsedByDefault
                     collapsedMessage={
-                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-bold justify-center">
+                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-semibold justify-center">
                             <AiOutlineWarning className="w-4 h-4 yellow-300" />
                             <span className="text-xs text-yellow-900">
-                                <span className="font-bold">
+                                <span className="font-semibold">
                                     BlockWallet does not verify custom networks.
                                 </span>
                             </span>
@@ -491,7 +491,7 @@ const NetworkFormPage = ({
                 }}
             />
             <div className="flex flex-col w-full justify-between flex-1 h-full">
-                <div className="flex flex-col flex-1 p-6 pt-4 space-y-3">
+                <div className="flex flex-col flex-1 p-6 space-y-4">
                     <div className="flex flex-col space-y-1">
                         <TextInput
                             appearance="outline"
@@ -537,7 +537,7 @@ const NetworkFormPage = ({
                         {defaultRpcUrl && !isUsingDefaultRPC && (
                             <div className="flex flex-col items-end mt-2 -mb-4">
                                 <span
-                                    className="text-xs font-bold text-primary-300 cursor-pointer hover:underline"
+                                    className="text-xs font-semibold text-primary-blue-default cursor-pointer hover:underline"
                                     onClick={() => {
                                         setValue("rpcUrl", defaultRpcUrl)
                                     }}
@@ -567,8 +567,8 @@ const NetworkFormPage = ({
                                 and it must match with the chain ID returned by
                                 the RPC endpoint configured above. You can enter
                                 a decimal or a{" "}
-                                <span className="font-bold">0x</span> prefixed
-                                hexadecimal number.
+                                <span className="font-semibold">0x</span>{" "}
+                                prefixed hexadecimal number.
                             </span>
                         }
                         defaultValue={network?.chainId}
@@ -613,7 +613,7 @@ const NetworkFormPage = ({
                     />
                     {networkAlreadyExistError && (
                         <Alert type="error">
-                            <span className="font-bold">Error: </span>
+                            <span className="font-semibold">Error: </span>
                             <span className="font-medium">
                                 The network you're trying to add already exists.
                                 Try editing the existing network instead.

@@ -67,7 +67,7 @@ const DefaultGasPreferencesPage = () => {
                 onDone={history.goBack}
             />
             <div className="flex flex-col p-6 space-y-4 w-full">
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-primary-grey-dark">
                     Set your preferred gas setting for all future transactions.
                 </span>
                 <div className="flex flex-col w-full space-y-4">
@@ -75,9 +75,9 @@ const DefaultGasPreferencesPage = () => {
                         <div
                             key={option.name}
                             className={classnames(
-                                "w-full flex flex-row p-4 justify-between cursor-pointer rounded-md hover:border-primary-300 hover:text-primary-300 border",
+                                "w-full flex flex-row p-4 justify-between cursor-pointer rounded-md hover:border-primary-black-default hover:text-primary-black-default border",
                                 selectedOption === option.name &&
-                                    "text-primary-300 border-primary-300"
+                                    "text-primary-black-default border-primary-black-default"
                             )}
                             onClick={() => {
                                 setSelectedOption(
@@ -97,14 +97,14 @@ const DefaultGasPreferencesPage = () => {
                             </div>
                             {selectedOption === option.name && (
                                 <div className="h-full flex items-center">
-                                    <MiniCheckmark fill="#1673FF" />
+                                    <MiniCheckmark fill="#08090A" />
                                 </div>
                             )}
                         </div>
                     ))}
                 </div>
                 <div className="flex flex-row space-x-2 w-full ">
-                    <InfoComponent>
+                    <InfoComponent className="!space-x-2">
                         This setting will apply on all transactions on all
                         networks. You will still be able to change the gas
                         amount before submitting your transactions.

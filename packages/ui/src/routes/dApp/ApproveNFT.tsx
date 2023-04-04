@@ -287,7 +287,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                         <div className="group relative">
                             <AiFillInfoCircle
                                 size={26}
-                                className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                             />
                             <Tooltip
                                 content={`${transactionCount - 1} more ${
@@ -382,10 +382,10 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                     fill={getAccountColor(account.address)}
                 />
                 <div className="relative flex flex-col group space-y-1 ml-4">
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-semibold">
                         {formatName(account.name, 15)}
                     </span>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-primary-grey-dark">
                         {formatRounded(
                             formatUnits(
                                 balance || "0",
@@ -395,26 +395,28 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                         {` ${nativeToken.token.symbol}`}
                     </span>
                 </div>
-                <div className="flex flex-row items-center ml-auto p-1 px-2 pr-1 text-gray-600 rounded-md border border-primary-200 text-xs bg-green-100">
+                <div className="flex flex-row items-center ml-auto p-1 px-2 pr-1 text-primary-grey-dark rounded-md border border-primary-200 text-xs bg-green-100">
                     <span className="inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-green-400 pointer-events-none" />
-                    <span className="mr-1 pointer-events-none text-green-600">
+                    <span className="mr-1 pointer-events-none text-secondary-green-default">
                         {networkName}
                     </span>
                 </div>
             </div>
             <Divider />
             <div className="px-6 py-3">
-                <p className="text-sm font-bold pb-3 break-word">
+                <p className="text-sm font-semibold pb-3 break-word">
                     Allow {origin} to transfer your {tokenName}
                 </p>
-                <p className="text-sm text-gray-500 break-word">
+                <p className="text-sm text-primary-grey-dark break-word">
                     By granting this permission, you are allowing {origin} to
                     transfer your {tokenName} #{tokenId} from your account.
                 </p>
             </div>
             <Divider />
             <div className="flex flex-col space-y-2 px-6 py-3">
-                <label className="text-sm text-gray-600">Gas Price</label>
+                <label className="text-sm text-primary-grey-dark">
+                    Gas Price
+                </label>
                 {!isEIP1559Compatible ? (
                     <GasPriceSelector
                         defaultLevel={defaultGasOption || "medium"}

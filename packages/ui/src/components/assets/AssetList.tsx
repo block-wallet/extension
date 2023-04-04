@@ -51,7 +51,7 @@ const AssetList: FC<{
             })}
             {searchValue && assets.length === 0 && (
                 <div className="px-3">
-                    <p className="text-xs text-black text-center p-4">
+                    <p className="text-xs text-primary-black-default text-center p-4">
                         The asset couldn&#8217;t be found, try adding it
                         manually.
                     </p>

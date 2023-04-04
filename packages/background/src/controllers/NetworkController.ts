@@ -452,10 +452,16 @@ export default class NetworkController extends BaseController<NetworkControllerS
             // Set the network key
             const key = `CHAIN-${network.chainId}`;
 
+            // Set the native currency icon to undefined if not found and we will use network icon instead in UI
             const nativeCurrencyIcon =
+                network.nativeCurrency?.logo ||
                 chainDataFromList?.nativeCurrencyIcon ||
-                chainDataFromList?.logo ||
-                network.iconUrls?.[0];
+                nativeCurrencySymbol === 'ETH'
+                    ? 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png'
+                    : undefined;
+
+            const networkIcon =
+                network.iconUrls?.[0] || chainDataFromList?.logo;
 
             // Add the network
             this.networks[key] = {
@@ -471,6 +477,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                         nativeCurrencySymbol,
                     symbol: nativeCurrencySymbol,
                     decimals: chainDataFromList?.nativeCurrency.decimals || 18,
+                    logo: nativeCurrencyIcon,
                 },
                 networkVersion: (
                     chainDataFromList?.networkId || network.chainId
@@ -486,7 +493,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                         .filter((n) => n.test === network.test)
                         .map((c) => c.order)
                         .sort((a, b) => b - a)[0] + 1,
-                iconUrls: nativeCurrencyIcon ? [nativeCurrencyIcon] : undefined,
+                iconUrls: networkIcon ? [networkIcon] : undefined,
                 nativelySupported: false,
                 hasFixedGasCost: false,
                 etherscanApiUrl: chainDataFromList?.scanApi,

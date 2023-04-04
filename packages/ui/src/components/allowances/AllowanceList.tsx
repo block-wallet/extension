@@ -13,7 +13,7 @@ const AllowanceList = ({ allowances }: { allowances: GroupedAllowances }) => {
                 allowances.map((accountAllowance, accountAllowanceIndex) => (
                     <div key={accountAllowance.groupBy.address}>
                         <span
-                            className="text-gray-600"
+                            className="text-primary-grey-dark"
                             title={accountAllowance.groupBy.address}
                         >
                             {groupedByToken

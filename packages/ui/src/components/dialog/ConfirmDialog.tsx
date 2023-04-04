@@ -55,7 +55,7 @@ const ConfirmDialog: FunctionComponent<{
     return (
         <Dialog open={open} onClickOutside={onClose} className="px-6">
             <div>
-                <h2 className="text-lg font-bold text-black text-left">
+                <h2 className="text-lg font-semibold text-primary-black-default text-left">
                     {title}
                 </h2>
                 <div className="py-5 text-left">
@@ -67,13 +67,13 @@ const ConfirmDialog: FunctionComponent<{
                             e.stopPropagation()
                             onClose()
                         }}
-                        className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                        className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                     >
                         <CloseIcon size="10" />
                     </div>
                 </span>
                 <div className="">
-                    <hr className="absolute left-0 border-0.5 border-gray-200 w-full" />
+                    <hr className="absolute left-0 border-0.5 border-primary-grey-hover w-full" />
                     <div className="flex flex-row w-full items-center pt-5 justify-between space-x-4 mt-auto">
                         <button
                             className={classnames(Classes.liteButton)}
@@ -94,7 +94,7 @@ const ConfirmDialog: FunctionComponent<{
                             className={classnames(
                                 Classes.button,
                                 isButtonDisabled &&
-                                    "bg-gray-900 border-gray-900 opacity-50"
+                                    "bg-primary-black-default border-primary-black-default opacity-50"
                             )}
                             disabled={isButtonDisabled}
                         >

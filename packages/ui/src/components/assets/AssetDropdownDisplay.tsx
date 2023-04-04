@@ -40,7 +40,7 @@ const AssetDropdownDisplay: FC<AssetDropdownDisplayProps> = ({
                         <span
                             title={assetBalance}
                             className={classnames(
-                                "text-xs text-gray-600 mt-1 truncate",
+                                "text-xs text-primary-grey-dark mt-1 truncate",
                                 assetBalanceClassName
                             )}
                         >
@@ -70,7 +70,7 @@ const AssetDropdownDisplay: FC<AssetDropdownDisplayProps> = ({
         </div>
     ) : (
         <div className="flex flex-col justify-center w-full">
-            <div className="text-base font-semibold">Select...</div>
+            <div className="text-base font-semibold">Select token</div>
         </div>
     )
 }

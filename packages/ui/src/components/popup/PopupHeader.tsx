@@ -118,10 +118,10 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     return (
         <div
             className={classnames(
-                "z-10 flex flex-row items-center p-6 bg-white bg-opacity-75 max-w-full",
+                "z-10 flex flex-row items-center px-6 py-4 bg-white bg-opacity-75 max-w-full",
                 className
             )}
-            style={{ backdropFilter: "blur(4px)", minHeight: "76px" }}
+            style={{ backdropFilter: "blur(4px)", minHeight: "69px" }}
         >
             {backButton && (
                 <button
@@ -129,7 +129,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                     onClick={onBackAction}
                     disabled={disabled || !mounted}
                     className={classnames(
-                        "p-2 -ml-2 mr-1 cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300",
+                        "p-2 -ml-2 mr-1 cursor-pointer transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default",
                         disabled && "pointer-events-none text-gray-300"
                     )}
                 >
@@ -143,7 +143,10 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
             )}
             <span
                 title={title}
-                className={classnames("text-base font-bold", icon && "w-56")}
+                className={classnames(
+                    "text-base font-semibold",
+                    icon && "w-56"
+                )}
             >
                 {title}
             </span>
@@ -152,7 +155,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                     <a href={tooltip.link} target="_blank" rel="noreferrer">
                         <AiFillInfoCircle
                             size={26}
-                            className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                            className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                         />
                         <Tooltip
                             content={tooltip.content}
@@ -162,6 +165,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                 </div>
             )}
             <div className="ml-auto flex space-x-1">
+                {networkIndicator && <NetworkDisplayBadge network={network} />}
                 {actions && (
                     <Dropdown>
                         <Dropdown.Menu id="popup-actions">
@@ -175,15 +179,13 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
                         </Dropdown.Menu>
                     </Dropdown>
                 )}
-                {networkIndicator && (
-                    <NetworkDisplayBadge truncate network={network} />
-                )}
+
                 {close && (
                     <button
                         onClick={onCloseAction}
                         disabled={disabled}
                         className={classnames(
-                            "p-2 -mr-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300",
+                            "p-2 -mr-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default",
                             disabled && "pointer-events-none text-gray-300"
                         )}
                         type="button"

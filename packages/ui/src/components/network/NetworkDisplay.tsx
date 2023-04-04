@@ -21,7 +21,7 @@ const NetworkDisplay: FunctionComponent<NetworkDisplayProps> = ({
             className={classnames(
                 "flex flex-row items-center w-full rounded-md",
                 padding && "p-4",
-                !transparent && "bg-primary-100"
+                !transparent && "bg-primary-grey-default"
             )}
         >
             <NetworkLogo

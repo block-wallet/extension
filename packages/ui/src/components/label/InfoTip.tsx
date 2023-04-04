@@ -4,11 +4,6 @@ import classnames from "classnames"
 import ExclamationCircleIconFull from "../icons/ExclamationCircleIconFull"
 import CloseIcon from "../icons/CloseIcon"
 
-const infoBgStyle = {
-    backgroundColor: "#e2f6ff",
-    color: "#00529B",
-}
-
 /**
  * Info tip component.
  *
@@ -31,17 +26,17 @@ const InfoTip: FunctionComponent<{
         <div
             className={classnames(
                 "relative flex flex-row p-3 items-center rounded",
+                "bg-primary-grey-default text-primary-black-default",
                 justify ?? "justify-center",
                 className ?? className
             )}
-            style={infoBgStyle}
         >
             <div>
                 <ExclamationCircleIconFull size="20" profile="info" />
             </div>
             <p
                 className={classnames(
-                    "font-bold text-blue-400 break-words ml-3",
+                    "font-semibold text-primary-black-default break-words ml-3",
                     fontSize ?? "text-lg"
                 )}
             >
@@ -52,7 +47,7 @@ const InfoTip: FunctionComponent<{
                     <div className={"w-5"}></div>
                     <div
                         className={
-                            "absolute right-3 cursor-pointer hover:text-blue-500"
+                            "absolute right-3 cursor-pointer hover:text-primary-blue-default"
                         }
                         onClick={() => setIsClosed(true)}
                     >

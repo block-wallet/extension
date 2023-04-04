@@ -113,7 +113,7 @@ const Timer = ({
     let timeData = secondsToMMSS(seconds)
     return (
         <span>
-            {initialCaption} <span className="font-bold">{timeData}</span>
+            {initialCaption} <span className="font-semibold">{timeData}</span>
         </span>
     )
 }

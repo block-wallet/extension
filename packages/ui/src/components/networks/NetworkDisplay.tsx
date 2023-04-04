@@ -55,6 +55,7 @@ const NetworkDisplay = ({
     const { isOpen, status, dispatch } = useWaitingDialog()
 
     const [confirmSwitchNetwork, setConfirmSwitchNetwork] = useState(false)
+    const [hasImageError, setHasImageError] = useState(false)
 
     const [dropAnimation, setDropAnimation] = useState(false)
     const dropRef = useRef<HTMLDivElement>(null)
@@ -146,8 +147,8 @@ const NetworkDisplay = ({
             className={classnames(
                 "rounded-md",
                 dropAnimation &&
-                    "bg-blue-100 transition-colors animate-[pulse_0.8s]",
-                cardHoverStyle && "hover:bg-primary-100"
+                    "bg-primary-grey-default transition-colors animate-[pulse_0.8s]",
+                cardHoverStyle && "hover:bg-primary-grey-default"
             )}
             ref={dropRef}
             style={{ opacity }}
@@ -200,35 +201,50 @@ const NetworkDisplay = ({
                             title="Drag to sort"
                         >
                             <HiDotsVertical
-                                className="text-gray-500 mr-2"
+                                className="text-primary-grey-dark mr-2"
                                 size={20}
                             />
-                            <span
-                                className={"h-2 w-2 rounded-xl mr-2"}
-                                style={{
-                                    backgroundColor: networkInfo.color,
-                                }}
-                            />
+                            {!hasImageError &&
+                            networkInfo.iconUrls &&
+                            networkInfo.iconUrls.length > 0 ? (
+                                <img
+                                    src={networkInfo.iconUrls[0]}
+                                    alt="network icon"
+                                    className="w-4 h-4 mr-2"
+                                    onError={() => {
+                                        setHasImageError(true)
+                                    }}
+                                />
+                            ) : (
+                                <span
+                                    className={
+                                        "h-2 w-2 rounded-xl ml-[0.20rem] mr-3"
+                                    }
+                                    style={{
+                                        backgroundColor: networkInfo.color,
+                                    }}
+                                />
+                            )}
                         </div>
-                        <span className="text-sm font-bold text-ellipsis overflow-hidden whitespace-nowrap">
+                        <span className="text-base font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
                             {networkInfo.desc}
                         </span>
                     </div>
                     <div className="flex flex-row items-center h-full">
                         {isSelectedNetwork ? (
                             <div
-                                className="px-2 text-green-600"
+                                className="px-2 text-secondary-green-default"
                                 title="Current network"
                             >
                                 <Icon
                                     name={IconName.CHECKMARK}
-                                    className="fill-green-600"
+                                    className="fill-secondary-green-default"
                                 />
                             </div>
                         ) : (
                             <div
                                 {...getIsHoveringProps()}
-                                className="p-2 hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                                className="p-2 hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                                 title="Switch network"
                                 onClick={() => setConfirmSwitchNetwork(true)}
                             >
@@ -237,7 +253,7 @@ const NetworkDisplay = ({
                         )}
                         <div
                             {...getIsHoveringProps()}
-                            className="p-2 hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                            className="p-2 hover:cursor-pointer transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                             title="Edit network"
                             onClick={onClick}
                         >

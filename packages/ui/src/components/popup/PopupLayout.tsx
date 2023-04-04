@@ -22,7 +22,7 @@ const PopupLayout: FunctionComponent<{
     const fullHeader = (
         <>
             {header}
-            <hr className="border-0.5 border-gray-200 w-full" />
+            <hr className="border-0.5 border-primary-grey-hover w-full" />
         </>
     )
 
@@ -43,7 +43,7 @@ const PopupLayout: FunctionComponent<{
     const hotkeyByPath = checkLocationHotkeys(hotkeysPermissions)
     return (
         <PageLayout screen className="max-h-screen popup-layout">
-            <div className="absolute top-0 left-0 w-full popup-layout z-10">
+            <div className="absolute top-0 left-0 w-full popup-layout z-40">
                 {fullHeader}
             </div>
             <div className="invisible w-full">{fullHeader}</div>
@@ -52,7 +52,7 @@ const PopupLayout: FunctionComponent<{
             </div>
             {footer ? (
                 <>
-                    <hr className="border-0.5 border-gray-200 w-full" />
+                    <hr className="border-0.5 border-primary-grey-hover w-full" />
                     {footer}
                     {hotkeyByPath && (
                         <HotkeysCollapsedMessage

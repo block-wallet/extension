@@ -85,7 +85,7 @@ const PhishingProtectionPreferencesPage = () => {
                 onDone={history.goBack}
             />
             <div className="flex flex-col p-6 space-y-6 w-full">
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-primary-grey-dark">
                     The following image is uniquely created for you to prevent
                     phishing attempts. Ensure this graphic is on every
                     login/seed phrase page.

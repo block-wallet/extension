@@ -242,7 +242,7 @@ const HardwareWalletAccountsPage = () => {
                 isOpen={state.deviceNotReady}
             />
             {(isImportingAccounts || isLoadingHDPath) && <LoadingOverlay />}
-            <div className="flex flex-col space-y-2 text-sm text-gray-600 p-8">
+            <div className="flex flex-col space-y-2 text-sm text-primary-grey-dark p-8">
                 <div style={{ minHeight: "280px" }}>
                     {state.deviceAccounts.length > 0 &&
                     !state.gettingAccounts ? (
@@ -274,7 +274,7 @@ const HardwareWalletAccountsPage = () => {
 
                 <div className="flex w-full justify-between pt-6 items-center pl-2 space-x-2">
                     <div className="space-x-4 flex items-center max-h-10">
-                        <span className="text-gray-500">Show:</span>
+                        <span className="text-primary-grey-dark">Show:</span>
                         <Select
                             onChange={onUpdatePageSize}
                             currentValue={state.pageSize}
@@ -364,7 +364,9 @@ const HardwareWalletAccount = ({
         <label
             className={classnames(
                 "flex flex-row items-center space-x-4 rounded-md pl-2 py-2",
-                disabled ? "bg-gray-50" : "cursor-pointer hover:bg-primary-100"
+                disabled
+                    ? "bg-gray-50"
+                    : "cursor-pointer hover:bg-primary-grey-default"
             )}
             key={account.index}
             htmlFor={`account-${account.index}`}
@@ -385,8 +387,8 @@ const HardwareWalletAccount = ({
                 fill={getAccountColor(account.address)}
             />
             <div className="flex flex-col">
-                <span className="font-bold">{account.name}</span>
-                <div className="flex space-x-2 w-full text-gray-500 text-xs">
+                <span className="font-semibold">{account.name}</span>
+                <div className="flex space-x-2 w-full text-primary-grey-dark text-xs">
                     <span className="w-20" title={account.address}>
                         {formatHash(account.address)}
                     </span>
@@ -397,7 +399,7 @@ const HardwareWalletAccount = ({
             <div className="flex space-x-3 items-center">
                 <div
                     className={classnames(
-                        "text-black hover:text-primary-300",
+                        "text-primary-black-default hover:text-primary-blue-default",
                         !isLoading && "cursor-pointer"
                     )}
                     title="Fetch Balance"
@@ -473,7 +475,7 @@ const AdvancedSettings = ({
             <FullScreenDialog open={openModal}>
                 <div className="flex items-center justify-between px-6 pb-6">
                     <div className="flex flex-row items-center">
-                        <span className="p-0 text-xl font-bold">
+                        <span className="p-0 text-xl font-semibold">
                             Advanced Settings
                         </span>
                         <div className="group relative">
@@ -484,18 +486,18 @@ const AdvancedSettings = ({
                             >
                                 <AiFillInfoCircle
                                     size={26}
-                                    className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                    className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                 />
                             </a>
                             <Tooltip
-                                className="!w-52 !break-word !whitespace-normal border boder-gray-300"
+                                className="!w-52 !break-word !whitespace-normal"
                                 content="Click here to learn what the HD Path is and the implications of changing it."
                             />
                         </div>
                     </div>
                     <div
                         onClick={() => setOpenModal(false)}
-                        className=" cursor-pointer p-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                        className=" cursor-pointer p-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                     >
                         <CloseIcon size="12" />
                     </div>
@@ -525,7 +527,7 @@ const AdvancedSettings = ({
                 </div>
 
                 <div className="flex flex-col px-6">
-                    <hr className="absolute left-0 border-0.5 border-gray-200 w-full" />
+                    <hr className="absolute left-0 border-0.5 border-primary-grey-hover w-full" />
                     <div className="flex flex-row w-full items-center pt-5 justify-between space-x-4">
                         <button
                             className={classnames(Classes.liteButton)}

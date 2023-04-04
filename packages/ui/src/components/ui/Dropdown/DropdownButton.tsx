@@ -49,8 +49,8 @@ export const DropdownIconButton: React.FC<DropdownIconButtonProps> = ({
         <div
             {...getIsHoveringProps()}
             className={classnames(
-                "p-2 transition duration-300 rounded-full hover:bg-primary-100 cursor-pointer select-none",
-                isShowingMenu && "bg-primary-100"
+                "p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default cursor-pointer select-none",
+                isShowingMenu && "bg-primary-grey-default"
             )}
             onClick={onClick}
         >
@@ -73,7 +73,7 @@ export const DropdownOutlinedIconButton: React.FC<DropdownIconButtonProps> = ({
 }) => {
     return (
         <OutlinedButton
-            className={isShowingMenu ? "!bg-primary-100" : ""}
+            className={isShowingMenu ? "!bg-primary-grey-default" : ""}
             onClick={onClick}
         >
             <Icon

@@ -47,12 +47,12 @@ const VerticalSelect: FunctionComponent<{
                     key={option.label || option.name || option}
                     className={
                         !disableStyles
-                            ? `w-full flex flex-row items-center justify-between p-4 rounded-md text-sm transform transition-all duration-300 active:scale-95
+                            ? `w-full flex flex-row items-center justify-between p-4 rounded-md text-sm text-primary-black-default transform transition-all duration-300 active:scale-95
                     disabled:pointer-events-none
                     ${
                         isActive(option)
-                            ? "bg-primary-300 text-white font-bold"
-                            : "bg-primary-100 hover:bg-primary-200"
+                            ? "bg-primary-grey-hover text-white font-semibold"
+                            : "bg-primary-grey-default hover:bg-primary-grey-hover"
                     }
                     ${
                         isDisabled(option, i)

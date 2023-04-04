@@ -15,7 +15,7 @@ const Spinner: FunctionComponent<{
     >
         <CgSpinner
             size={size}
-            className="animate-spin text-black opacity-50"
+            className="animate-spin text-primary-black-default opacity-50"
             style={{
                 display: "inline",
                 marginRight: text && iconTextSeparation,

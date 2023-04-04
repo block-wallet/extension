@@ -145,7 +145,7 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
     }
 
     return (
-        <div className="flex flex-col p-6 space-y-5 text-sm text-gray-500 pb-3">
+        <div className="flex flex-col p-6 space-y-5 text-sm text-primary-grey-dark pb-3">
             <div className="flex flex-row justify-between space-x-2 w-full">
                 <AccountSearchBar
                     onChange={onChangeSearch}
@@ -220,7 +220,7 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                                                           },
                                                       })
                                                   }}
-                                                  className="cursor-pointer p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                                                  className="cursor-pointer p-2 transition duration-300 text-primary-black-default rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                                               >
                                                   <GearIcon />
                                               </div>,

@@ -11,7 +11,7 @@ const AssetsLoadingSkeleton = () => {
 
                     <div className="flex items-center justify-between py-5">
                         <div className="flex items-center space-x-2">
-                            <div className="flex justify-center items-center h-9 w-9 rounded-full border">
+                            <div className="flex justify-center items-center h-10 w-10 rounded-full border">
                                 <AnimatedIcon
                                     icon={
                                         AnimatedIconName.GreyCircleLoadingSkeleton

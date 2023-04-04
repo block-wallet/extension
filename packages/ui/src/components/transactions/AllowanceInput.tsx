@@ -10,6 +10,7 @@ import { Classes } from "../../styles"
 import ErrorMessage from "../error/ErrorMessage"
 import Dialog from "../dialog/Dialog"
 import CloseIcon from "../icons/CloseIcon"
+import { formatRoundedUp } from "../../util/formatRounded"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
@@ -139,7 +140,7 @@ const AllowanceInput = ({
     currentAllowance?: BigNumber
 }) => {
     const [allowanceAmount, setAllowanceAmount] = useState(
-        formatUnits(defaultValue, tokenDecimals)
+        formatRoundedUp(formatUnits(defaultValue, tokenDecimals))
     )
     const [error, setError] = useState("")
 
@@ -230,7 +231,9 @@ const AllowanceInput = ({
 
         setUsingRevoke(isRevoke)
         setUsingUnlimited(isUnlimited)
-        setAllowanceAmount(formatUnits(defaultValue, tokenDecimals))
+        setAllowanceAmount(
+            formatRoundedUp(formatUnits(defaultValue, tokenDecimals))
+        )
         // Needed in dependency array to update the input value when the defaultValue changes if there is multiple allowance approvals in the queue
     }, [defaultValue])
 
@@ -240,13 +243,13 @@ const AllowanceInput = ({
                 <div className="flex items-center w-1/3 mb-1">
                     <label
                         htmlFor="allowanceAmount"
-                        className="text-sm text-gray-600"
+                        className="text-sm text-primary-grey-dark"
                     >
                         Allowance
                     </label>
                     <AiFillInfoCircle
                         size={25}
-                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                        className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                         onClick={() => setShowOptionsInfo(true)}
                     />
                 </div>
@@ -254,9 +257,9 @@ const AllowanceInput = ({
 
             <div
                 className={classnames(
-                    Classes.blueSection,
+                    Classes.greySection,
                     "px-4 py-3",
-                    inputFocus && "bg-primary-200",
+                    inputFocus && "bg-primary-grey-hover",
                     error && "border-red-400"
                 )}
             >
@@ -341,8 +344,8 @@ const AllowanceInput = ({
                         className={classnames(
                             "w-16 text-center float-right rounded-md cursor-pointer border p-1",
                             usingRevoke
-                                ? "bg-primary-300 border-primary-300 text-white hover:bg-blue-600 hover:border-blue-600"
-                                : "bg-blue-200 border-blue-200 hover:bg-blue-300 hover:border-blue-300"
+                                ? "bg-gray-500 border-gray-500 text-white hover:bg-gray-400 hover:border-gray-400"
+                                : "bg-gray-300 border-gray-300 hover:bg-gray-400 hover:border-gray-400"
                         )}
                         title={`Revoke value`}
                         onClick={() => {
@@ -358,8 +361,8 @@ const AllowanceInput = ({
                         className={classnames(
                             "w-16 text-center float-right rounded-md cursor-pointer border p-1",
                             usingUnlimited
-                                ? "bg-primary-300 border-primary-300 text-white hover:bg-blue-600 hover:border-blue-600"
-                                : "bg-blue-200 border-blue-200 hover:bg-blue-300 hover:border-blue-300"
+                                ? "bg-gray-500 border-gray-500 text-white hover:bg-gray-400 hover:border-gray-400"
+                                : "bg-gray-300 border-gray-300 hover:bg-gray-400 hover:border-gray-400"
                         )}
                         title={`Unlimited value`}
                         onClick={() => {
@@ -391,18 +394,18 @@ const AllowanceInput = ({
                 <span className="absolute top-0 right-0 p-4 z-50">
                     <div
                         onClick={() => setShowOptionsInfo(false)}
-                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                     >
                         <CloseIcon size="10" />
                     </div>
                 </span>
                 <div className="flex flex-col w-full space-y-2">
                     <div className="z-10 flex flex-row items-center p-2 bg-white bg-opacity-75">
-                        <h2 className="px-2 pr-0 text-lg font-bold">
+                        <h2 className="px-2 pr-0 text-lg font-semibold">
                             Allowance Options
                         </h2>
                     </div>
-                    <div className="px-4 space-y-2 text-black pb-2">
+                    <div className="px-4 space-y-2 text-primary-black-default pb-2">
                         <h3 className="text-md font-medium">
                             Allowances let DApps automate transactions for you.
                             These are your options.
@@ -412,10 +415,10 @@ const AllowanceInput = ({
                                 className="flex flex-col space-y-1"
                                 key={index}
                             >
-                                <h4 className="text-black font-semibold">
+                                <h4 className="text-primary-black-default font-semibold">
                                     {item.title}
                                 </h4>
-                                <p className="text-gray-600">
+                                <p className="text-primary-grey-dark">
                                     {item.description}
                                 </p>
                             </div>

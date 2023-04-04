@@ -106,6 +106,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    if: startsWith(github.head_ref, 'dependabot/') == false
     steps:
       - name: Checkout monorepo
         uses: actions/checkout@v3

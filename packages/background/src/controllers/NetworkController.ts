@@ -38,6 +38,12 @@ import {
 import { toChecksumAddress } from 'ethereumjs-util';
 import { SECOND } from '../utils/constants/time';
 
+export interface NetworkRPCs {
+    selectedRpcUrl?: string;
+    defaultRpcUrl?: string;
+    backupRpcUrl?: string;
+}
+
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
     USER_NETWORK_CHANGE = 'USER_NETWORK_CHANGE',
@@ -350,7 +356,11 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         const newNetworks = cloneDeep(this.networks);
         newNetworks[networkKey].desc = updates.name;
-        newNetworks[networkKey].rpcUrls = [rpcUrl];
+        // replace only first rpc url (selected by default) and leave the rest (backup urls)
+        newNetworks[networkKey].rpcUrls = [
+            rpcUrl,
+            ...newNetworks[networkKey].rpcUrls.slice(1),
+        ];
         newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
         newNetworks[networkKey].test = updates.test;
         this.networks = newNetworks;

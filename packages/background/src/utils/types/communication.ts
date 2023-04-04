@@ -63,6 +63,7 @@ import {
 import { GasPriceData } from '@block-wallet/background/controllers/GasPricesController';
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import { TypedTransaction } from '@ethereumjs/tx';
+import { NetworkRPCs } from '@block-wallet/background/controllers/NetworkController';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -148,7 +149,9 @@ enum NETWORK {
     REMOVE_NETWORK = 'REMOVE_NETWORK',
     GET_SPECIFIC_CHAIN_DETAILS = 'GET_SPECIFIC_CHAIN_DETAILS',
     GET_DEFAULT_RPC = 'GET_DEFAULT_RPC',
+    GET_RPCS = 'GET_RPCS',
     GET_RPC_CHAIN_ID = 'GET_RPC_CHAIN_ID',
+    IS_RPC_VALID = 'IS_RPC_VALID',
     SEARCH_CHAINS = 'SEARCH_CHAINS',
 }
 
@@ -382,7 +385,9 @@ export interface RequestSignatures {
         RequestGetChainData,
         string | undefined
     ];
+    [Messages.NETWORK.GET_RPCS]: [RequestGetChainData, NetworkRPCs];
     [Messages.NETWORK.GET_RPC_CHAIN_ID]: [RequestGetRpcChainId, number];
+    [Messages.NETWORK.IS_RPC_VALID]: [RequestIsRpcValid, boolean];
     [Messages.NETWORK.SEARCH_CHAINS]: [
         RequestSearchChains,
         { name: string; logo: string }
@@ -765,6 +770,11 @@ export interface RequestGetChainData {
 
 export interface RequestGetRpcChainId {
     rpcUrl: string;
+}
+
+export interface RequestIsRpcValid {
+    rpcUrl: string;
+    chainId: number;
 }
 
 export interface RequestSearchChains {

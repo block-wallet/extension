@@ -115,6 +115,7 @@ import {
     SubmitQRHardwareSignatureMessage,
     CancelQRHardwareSignRequestMessage,
     RequestUpdateTransactionStatus,
+    RequestIsRpcValid,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -849,8 +850,12 @@ export default class BlankController extends EventEmitter {
                 return this.getChainData(request as RequestGetChainData);
             case Messages.NETWORK.GET_DEFAULT_RPC:
                 return this.getChainDefaultRpc(request as RequestGetChainData);
+            case Messages.NETWORK.GET_RPCS:
+                return this.getChainRpcs(request as RequestGetChainData);
             case Messages.NETWORK.GET_RPC_CHAIN_ID:
                 return this.getRpcChainId(request as RequestGetRpcChainId);
+            case Messages.NETWORK.IS_RPC_VALID:
+                return this.isRpcValid(request as RequestIsRpcValid);
             case Messages.NETWORK.SEARCH_CHAINS:
                 return this.searchChainsByTerm(request as RequestSearchChains);
             case Messages.PASSWORD.VERIFY:
@@ -2007,6 +2012,73 @@ export default class BlankController extends EventEmitter {
         return Object.values(INITIAL_NETWORKS).find(
             (network) => network.chainId === chainId
         )?.defaultRpcUrl;
+    }
+
+    /**
+     * getChainRpcs
+     *
+     * Gets the selected rpc url, the default rpc url and a working backup rpc url for the network from the array or backup rpc urls
+     *
+     * @param chainId chain identifier of the network
+     * @returns selected rpc url, default rpc url and a working backup rpc url for the network
+     */
+    private async getChainRpcs({ chainId }: RequestGetChainData) {
+        const defaultNetwork = Object.values(INITIAL_NETWORKS).find(
+            (network) => network.chainId === chainId
+        );
+        const selectedRpcUrl =
+            this.networkController.getNetworkFromChainId(chainId)?.rpcUrls[0];
+
+        const rpcUrls = Object.values(INITIAL_NETWORKS).find(
+            (network) => network.chainId === chainId
+        )?.rpcUrls;
+
+        let workingBackUpRpcUrl: string | undefined;
+
+        if (rpcUrls && rpcUrls.length > 1) {
+            // Remove the first rpc url from the array as it is the selected rpc url (currently in use)
+            const backupRpcUrls = rpcUrls.slice(1);
+
+            for (const rpcUrl of backupRpcUrls) {
+                const isRpcValid = await this.isRpcValid({
+                    rpcUrl,
+                    chainId,
+                });
+                if (isRpcValid) {
+                    workingBackUpRpcUrl = rpcUrl;
+                    break;
+                }
+            }
+        }
+
+        const defaultRpcUrl = defaultNetwork?.defaultRpcUrl;
+
+        return {
+            selectedRpcUrl,
+            defaultRpcUrl,
+            backupRpcUrl: workingBackUpRpcUrl,
+        };
+    }
+
+    /**
+     *  isRpcValid
+     *
+     *  Checks if the rpc url is working
+     *  @param rpcUrl rpc url of the network
+     *  @param chainId chain identifier of the network
+     *  @returns true if the rpc url is valid, false otherwise
+     */
+    private async isRpcValid({ rpcUrl, chainId }: RequestIsRpcValid) {
+        let isValid = false;
+        try {
+            const returnedChainId = await getCustomRpcChainId(rpcUrl);
+            if (returnedChainId === chainId) {
+                isValid = true;
+            }
+        } catch (error) {
+            // isValid is false
+        }
+        return isValid;
     }
 
     /**

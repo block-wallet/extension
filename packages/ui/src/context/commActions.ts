@@ -953,6 +953,25 @@ export const getDefaultRpc = async (chainId: number) => {
 }
 
 /**
+ * Gets selected Rpc, default Rpc and a working backup rpc url for the specified chain
+ * @param chainId The chainId of the network to fetch the details from
+ * @returns The selected Rpc, default Rpc and a working backup rpc url for the specified chain
+ */
+export const getChainRpcs = async (chainId: number) => {
+    return sendMessage(Messages.NETWORK.GET_RPCS, { chainId })
+}
+
+/**
+ *  Checks if the rpc url is valid
+ *  @param rpcUrl The rpc url to check
+ *  @param chainId The chainId of the network
+ *  @returns true if the rpc url is valid, false otherwise
+ */
+export const isRpcValid = async (rpcUrl: string, chainId: number) => {
+    return sendMessage(Messages.NETWORK.IS_RPC_VALID, { rpcUrl, chainId })
+}
+
+/**
  * Adds a new network.
  *
  * @param networkInput The network information to be added.

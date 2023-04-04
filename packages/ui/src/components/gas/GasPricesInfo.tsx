@@ -120,7 +120,6 @@ const GasPricesInfo: FC = () => {
         localeInfo,
         networkNativeCurrency,
         isNetworkChanging,
-        isRatesChangingAfterNetworkChange,
         hotkeysEnabled,
     } = useBlankState()!
 

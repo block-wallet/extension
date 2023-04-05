@@ -45,7 +45,7 @@ const ProviderStatus = () => {
 
     const isUsingDefaultRpc = selectedRpcUrl === defaultRpcUrl
 
-    const isUsingBackupRpc = selectedRpcUrl === backupRpcUrl
+    const isUsingBackupRpc = persistedData[chainId]
 
     const isUsingCustomRpc =
         selectedRpcUrl !== defaultRpcUrl && selectedRpcUrl !== backupRpcUrl
@@ -102,7 +102,7 @@ const ProviderStatus = () => {
             }
         }
 
-        if (!defaultRpcUp && persistedData[chainId]) {
+        if (!defaultRpcUp && isUsingBackupRpc) {
             intervalId = setInterval(() => {
                 checkDefaultRpcValidity()
             }, 60 * 1000)
@@ -111,7 +111,7 @@ const ProviderStatus = () => {
         return () => {
             if (intervalId) clearInterval(intervalId)
         }
-    }, [chainId, persistedData])
+    }, [chainId, persistedData, defaultRpcUp])
 
     const switchProvider = async () => {
         if (

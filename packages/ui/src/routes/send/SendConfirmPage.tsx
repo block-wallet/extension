@@ -405,7 +405,7 @@ const SendConfirmPage = () => {
         setValue,
         getValues,
         trigger,
-
+        watch,
         formState: { errors },
     } = useForm<AmountFormData>({
         resolver: yupResolver(schema),
@@ -626,54 +626,64 @@ const SendConfirmPage = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    useEffect(() => {
-        const fetch = async () => {
-            try {
-                setIsGasLoading(true)
+    const fetchGasLimit = useCallback(async () => {
+        try {
+            setIsGasLoading(true)
 
-                const hasTokenBalance = BigNumber.from(
-                    selectedToken.balance
-                ).gt(Zero)
+            const amount = watch("amount")
 
-                const estimateValue = hasTokenBalance ? One : Zero
+            const hasTokenBalance = BigNumber.from(selectedToken.balance).gt(
+                Zero
+            )
 
-                let { gasLimit, estimationSucceeded } =
-                    await getSendTransactionGasLimit(
-                        selectedToken.token.address,
-                        receivingAddress,
-                        estimateValue
-                    )
+            const estimateValue = hasTokenBalance
+                ? parseUnits(amount || "1", selectedToken.token.decimals)
+                : Zero
 
-                // In case the estimation failed but user has no balance on the selected token, we won't display the estimation error.
-                if (!hasTokenBalance && !estimationSucceeded) {
-                    estimationSucceeded = true
-                }
+            let { gasLimit, estimationSucceeded } =
+                await getSendTransactionGasLimit(
+                    selectedToken.token.address,
+                    receivingAddress,
+                    estimateValue
+                )
 
-                setGasEstimationFailed(!estimationSucceeded)
-
-                let gasPrice
-                if (!isEIP1559Compatible) {
-                    gasPrice = await getLatestGasPrice()
-                }
-
-                setDefaultGas({
-                    gasLimit: BigNumber.from(gasLimit),
-                    gasPrice: isEIP1559Compatible
-                        ? undefined
-                        : BigNumber.from(gasPrice),
-                })
-
-                setSelectedGas({
-                    ...selectedGas,
-                    gasLimit: BigNumber.from(gasLimit),
-                })
-            } catch (error) {
-                log.error("error ", error)
-            } finally {
-                setIsGasLoading(false)
+            // In case the estimation failed but user has no balance on the selected token, we won't display the estimation error.
+            if (!hasTokenBalance && !estimationSucceeded) {
+                estimationSucceeded = true
             }
-        }
 
+            setGasEstimationFailed(!estimationSucceeded)
+
+            let gasPrice
+            if (!isEIP1559Compatible) {
+                gasPrice = await getLatestGasPrice()
+            }
+
+            setDefaultGas({
+                gasLimit: BigNumber.from(gasLimit),
+                gasPrice: isEIP1559Compatible
+                    ? undefined
+                    : BigNumber.from(gasPrice),
+            })
+
+            setSelectedGas({
+                ...selectedGas,
+                gasLimit: BigNumber.from(gasLimit),
+            })
+        } catch (error) {
+            log.error("error ", error)
+        } finally {
+            setIsGasLoading(false)
+        }
+    }, [
+        setIsGasLoading,
+        setSelectedGas,
+        selectedToken,
+        receivingAddress,
+        isEIP1559Compatible,
+    ])
+
+    useEffect(() => {
         const checkIfSendingToTokenAddress = async () => {
             if (
                 receivingAddress.toLowerCase() ===
@@ -683,10 +693,10 @@ const SendConfirmPage = () => {
             }
         }
 
-        fetch()
+        fetchGasLimit()
         checkIfSendingToTokenAddress()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedToken])
+    }, [selectedToken, fetchGasLimit])
 
     // Effect triggered on selected gas change to update max amount if needed and recalculate validations.
     useEffect(() => {
@@ -847,7 +857,10 @@ const SendConfirmPage = () => {
                                         autoComplete="off"
                                         autoFocus={true}
                                         onFocus={() => setInputFocus(true)}
-                                        onBlur={() => setInputFocus(false)}
+                                        onBlur={() => {
+                                            setInputFocus(false)
+                                            fetchGasLimit()
+                                        }}
                                         onKeyDown={(e) => {
                                             setUsingMax(false)
                                             const amt = Number(

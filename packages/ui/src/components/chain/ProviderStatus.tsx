@@ -16,6 +16,10 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { NetworkRPCs } from "@block-wallet/background/controllers/NetworkController"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 
+interface isChainUsingBackupObject {
+    [x: number]: boolean
+}
+
 const ProviderStatus = () => {
     const { isProviderNetworkOnline, isUserNetworkOnline, isNetworkChanging } =
         useBlankState()!
@@ -33,15 +37,14 @@ const ProviderStatus = () => {
     const [defaultRpcUp, setDefaultRpcUp] = useState(true)
     const [backupRpcUp, setBackupRpcUp] = useState(true)
 
-    const [persistedData, setPersistedData] = useLocalStorageState(
-        "provider.switchedToBackup",
-        {
-            initialValue: {
-                [chainId]: false,
-            },
-            volatile: false,
-        }
-    )
+    const [persistedData, setPersistedData] =
+        useLocalStorageState<isChainUsingBackupObject>(
+            "provider.switchedToBackup",
+            {
+                initialValue: {},
+                volatile: false,
+            }
+        )
 
     const isUsingDefaultRpc = selectedRpcUrl === defaultRpcUrl
 
@@ -63,24 +66,12 @@ const ProviderStatus = () => {
         ((!isProviderNetworkOnline && isUserNetworkOnline) ||
             showDefaultProviderRestored)
 
-    const fetchChainRpcs = async () => {
-        const rpcs = await getChainRpcs(chainId)
-        const { defaultRpcUrl, backupRpcUrl } = rpcs
-        setChainRpcs(rpcs)
-
-        const [isDefaultRpcUp, isBackupRpcUp] = await Promise.all([
-            isRpcValid(defaultRpcUrl ?? "", chainId),
-            isRpcValid(backupRpcUrl ?? "", chainId),
-        ])
-
-        setDefaultRpcUp(isDefaultRpcUp)
-        setBackupRpcUp(isBackupRpcUp)
-    }
-
+    // Fetch chain RPCs(selected, default & backup) with network change or after provider status changes(after switching RPCs)
     useEffect(() => {
-        fetchChainRpcs()
-    }, [chainId])
+        getChainRpcs(chainId).then(setChainRpcs)
+    }, [chainId, isProviderNetworkOnline])
 
+    // Check RPCs validity whenever they change or if the provider status changes
     useEffect(() => {
         Promise.all([
             isRpcValid(defaultRpcUrl ?? "", chainId),
@@ -91,6 +82,7 @@ const ProviderStatus = () => {
         })
     }, [defaultRpcUrl, backupRpcUrl, isProviderNetworkOnline])
 
+    // After switching to a Backup Provider check if the default if back online each minute
     useEffect(() => {
         let intervalId: NodeJS.Timer | null = null
 
@@ -128,6 +120,11 @@ const ProviderStatus = () => {
                     rpcUrl,
                     name: network?.desc,
                     test: !!network?.test,
+                    blockExplorerUrl:
+                        network?.blockExplorerUrls &&
+                        network?.blockExplorerUrls.length > 0
+                            ? network.blockExplorerUrls[0]
+                            : undefined,
                 },
             })
             if (showSwitchToBackup) {
@@ -141,7 +138,6 @@ const ProviderStatus = () => {
                     [chainId]: false,
                 }))
             }
-            await fetchChainRpcs()
         } else {
             history.push({
                 pathname: "/settings/networks/details",
@@ -156,9 +152,7 @@ const ProviderStatus = () => {
     const bannerTitle = showSwitchToBackup
         ? "Default provider down."
         : showDefaultProviderRestored
-        ? "Default Provider restored."
-        : showSwitchToDefault
-        ? "Your Provider down."
+        ? "Default provider restored."
         : "Provider down."
 
     const bannerCta = showSwitchToBackup

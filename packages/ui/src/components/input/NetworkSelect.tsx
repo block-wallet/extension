@@ -119,7 +119,7 @@ const NetworkSelect: FunctionComponent<{
                     }
                 }}
                 className={classNames(
-                    "relative flex flex-row items-center justify-start p-1 text-primary-black-default bg-primary-grey-default rounded-md group border-primary-200 w-[151px] text-xs hover:bg-primary-grey-hover",
+                    "relative flex flex-row items-center justify-start p-1 text-primary-black-default bg-primary-grey-default rounded-md group border-primary-200 w-[155px] text-xs hover:bg-primary-grey-hover",
                     !isImportingDeposits
                         ? "cursor-pointer select-none"
                         : "disabled:pointer-events-none opacity-50",

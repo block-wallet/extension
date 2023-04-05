@@ -259,7 +259,7 @@ const PopupPage = () => {
                             <TokenSummary.ExchangeRateBalance className="flex items-center text-xs">
                                 <div className="group relative">
                                     <a
-                                        href="https://ethereum.org/en/developers/docs/gas/"
+                                        href="https://help.blockwallet.io/hc/en-us/articles/14296951040785"
                                         target="_blank"
                                         rel="noreferrer"
                                         className="contents"

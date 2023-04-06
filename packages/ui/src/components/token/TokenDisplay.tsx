@@ -64,7 +64,7 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
                 </span>
                 {balance && (
                     <span
-                        className={"text-xs text-primary-grey-dark mt-1"}
+                        className={"text-xs text-primary-grey-dark"}
                         title={formatUnits(balance, data.decimals)}
                     >
                         {formatRounded(formatUnits(balance, data.decimals), 6)}

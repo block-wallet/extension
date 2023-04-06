@@ -384,7 +384,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
 
                     {display.slippage && (
                         <div className="w-full pb-2">
-                            <p className="text-xs font-medium pb-1">
+                            <p className="text-[13px] font-medium text-primary-grey-dark">
                                 Slippage percentage (%)
                             </p>
                             <input
@@ -416,7 +416,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
 
                     {display.nonce && (
                         <div className="w-full pb-2">
-                            <p className="text-xs font-medium pb-1">
+                            <p className="text-[13px] font-medium text-primary-grey-dark">
                                 Custom Nonce
                             </p>
                             <input

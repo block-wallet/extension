@@ -414,7 +414,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
             </div>
             <Divider />
             <div className="flex flex-col space-y-2 px-6 py-3">
-                <label className="text-sm text-primary-grey-dark">
+                <label className="text-[13px] font-medium text-primary-grey-dark">
                     Gas Price
                 </label>
                 {!isEIP1559Compatible ? (

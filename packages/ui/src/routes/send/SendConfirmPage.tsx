@@ -785,7 +785,7 @@ const SendConfirmPage = () => {
                                 !errors.asset?.message && "mb-3"
                             )}
                         >
-                            <p className="ml-1 mb-2 text-sm text-primary-grey-dark">
+                            <p className="ml-1 mb-2 text-[13px] font-medium text-primary-grey-dark">
                                 Asset
                             </p>
                             <AssetSelection
@@ -817,7 +817,7 @@ const SendConfirmPage = () => {
                                 <div className="flex items-start w-1/3">
                                     <label
                                         htmlFor="amount"
-                                        className="ml-1 mb-2 text-sm text-primary-grey-dark"
+                                        className="ml-1 mb-2 text-[13px] font-medium text-primary-grey-dark"
                                     >
                                         Amount
                                     </label>
@@ -909,7 +909,7 @@ const SendConfirmPage = () => {
                         </div>
 
                         {/* Speed */}
-                        <label className="ml-1 mb-2 text-sm text-primary-grey-dark">
+                        <label className="ml-1 mb-2 text-[13px] font-medium text-primary-grey-dark">
                             Gas Price
                         </label>
 

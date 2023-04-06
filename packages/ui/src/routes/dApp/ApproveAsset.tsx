@@ -516,7 +516,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     currentAllowance={currentAllowanceValue}
                 />
                 <div className="flex flex-col">
-                    <label className="text-sm text-primary-grey-dark mb-2">
+                    <label className="text-[13px] font-medium text-primary-grey-dark mb-2">
                         Gas Price
                     </label>
                     {!isEIP1559Compatible ? (

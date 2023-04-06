@@ -695,7 +695,8 @@ const SendConfirmPage = () => {
                         disabled={
                             errors.amount !== undefined ||
                             isLoading ||
-                            isGasLoading
+                            isGasLoading ||
+                            inputFocus
                         }
                         onClick={onSubmit}
                     />

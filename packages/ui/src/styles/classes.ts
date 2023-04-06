@@ -128,7 +128,7 @@ export class Classes {
 
     static blueSectionActive = classnames("bg-primary-grey-hover")
     static blueSectionInput = classnames(
-        "bg-transparent p-0 mb-1 border-none font-semibold"
+        "bg-transparent p-0 border-none font-semibold"
     )
 
     static roundedIcon = classnames(

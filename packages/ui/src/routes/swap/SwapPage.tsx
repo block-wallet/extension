@@ -479,7 +479,7 @@ const SwapPage = () => {
                         </div>
                         <div
                             className={classnames(
-                                "flex flex-col items-stretch rounded-md p-4 h-[4.5rem] hover:bg-primary-grey-hover w-full",
+                                "flex flex-col items-stretch rounded-md p-4 h-[4rem] hover:bg-primary-grey-hover w-full",
                                 inputFocus
                                     ? "bg-primary-grey-hover"
                                     : "bg-primary-grey-default",
@@ -507,7 +507,7 @@ const SwapPage = () => {
                             />
                             <p
                                 className={classnames(
-                                    "text-xs text-primary-grey-dark mt-1",
+                                    "text-xs text-primary-grey-dark",
                                     !formattedAmount && "hidden"
                                 )}
                             >

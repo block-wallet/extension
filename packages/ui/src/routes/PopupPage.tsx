@@ -42,9 +42,6 @@ import Icon, { IconName } from "../components/ui/Icon"
 import useNetWorthBalance from "../context/hooks/useNetWorthBalance"
 import { AiFillInfoCircle } from "react-icons/ai"
 
-// change network (alt + 'c')
-// see gas (alt + 'g')
-
 const AccountDisplay = () => {
     const accountAddress = useSelectedAddressWithChainIdChecksum()
     const account = useSelectedAccount()
@@ -155,7 +152,7 @@ const PopupPage = () => {
     const state = useBlankState()!
     const history = useHistory()
     const netWorth = useNetWorthBalance()
-    const { isSendEnabled, isSwapEnabled, isBridgeEnabled } =
+    const { isSendEnabled, isSwapEnabled, isBridgeEnabled, showGasLevels } =
         useSelectedNetwork()
     const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
@@ -164,9 +161,10 @@ const PopupPage = () => {
 
     const disabledActions = !isSendEnabled || !state.isUserNetworkOnline
     const hotkeysPermissions = {
-        ["/send"]: isSendEnabled,
-        ["/swap"]: isSwapEnabled,
-        ["/bridge"]: isBridgeEnabled !== undefined,
+        ["/home/alt/s"]: isSendEnabled, //Send
+        ["/home/alt/w"]: isSwapEnabled, //Swap
+        ["/home/alt/b"]: isBridgeEnabled !== undefined, //Bridge
+        ["/home/alt/g"]: showGasLevels,
     }
     return (
         <PopupLayout

@@ -4,6 +4,7 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import CollapsableMessage from "../CollapsableMessage"
 import { DisplayHotkeysByPath } from "../hotkeys/DisplayHotkey"
+import ConfirmDialog from "../dialog/ConfirmDialog"
 
 export const HotkeysCollapsedMessage: FC<{
     hotkeysPermissions?: { [action: string]: boolean }
@@ -26,22 +27,17 @@ export const HotkeysCollapsedMessage: FC<{
         }
     })
 
-    return (
+    return hotkeysEnabled ? (
         <CollapsableMessage
             dialog={{
                 title: "",
-                message: hotkeysEnabled ? (
-                    <div className="flex flex-col p-4 w-full font-semibold text-sm">
+                message: (
+                    <div className="flex flex-col w-full font-semibold text-sm">
                         <DisplayHotkeysByPath
                             pathName={currentLocation}
                             permissions={hotkeysPermissions}
                             includeDivider={true}
                         />
-                    </div>
-                ) : (
-                    <div className="flex flex-col p-4 w-full text-sm text-gray-500">
-                        Keyboard shortcuts are turned off. Turn them on in
-                        Settings
                     </div>
                 ),
             }}
@@ -54,6 +50,19 @@ export const HotkeysCollapsedMessage: FC<{
                 history.push("/settings/preferences/hotkeys")
             }}
             showSubHeader={hotkeysEnabled}
+        />
+    ) : (
+        <ConfirmDialog
+            title="Keyboard Shortcuts"
+            message={
+                "Keyboard shortcuts are turned off. Turn them on in Settings"
+            }
+            open={isMessageVisible}
+            onClose={() => setIsMessageVisible(false)}
+            onConfirm={() => {
+                history.push("/settings/preferences/hotkeys")
+            }}
+            confirmText="Settings"
         />
     )
 }

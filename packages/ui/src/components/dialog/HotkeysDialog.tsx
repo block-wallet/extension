@@ -27,35 +27,35 @@ const HotkeysDialog: FunctionComponent<messageDialogProps> = ({
             <Dialog
                 open={open}
                 onClickOutside={onClickOutside}
-                className={"overflow-scroll"}
+                className={"overflow-scroll mt-6 mb-6 pt-0 pb-12"}
             >
                 <>
-                    <span className="absolute top-0 right-0 p-4 z-50">
+                    <span className="absolute top-0 right-0 p-5 z-50">
                         <div
                             onClick={onCancel}
-                            className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                            className=" cursor-pointer ml-auto text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
                         >
                             <CloseIcon size="10" />
                         </div>
                     </span>
-                    <div className="flex flex-col w-full space-y-2">
-                        <div className="z-10 flex flex-row items-center p-4 bg-white bg-opacity-75">
-                            <h2 className="text-lg font-bold">
+                    <div className="flex flex-col w-full h-12">
+                        <div className="z-10 flex flex-row items-center bg-white bg-opacity-75 m-6">
+                            <h2 className="text-lg font-semibold">
                                 Keyboard Shortcuts
                             </h2>
                         </div>
                     </div>
                     {showSubHeader && (
-                        <h3 className="font-normal px-4 text-sm">
+                        <h3 className="font-normal ml-6 mt-3 mb-6 text-sm text-gray-500">
                             Shortcuts for current screen.
                         </h3>
                     )}
-                    <div className="overflow-scroll">
+                    <div className="overflow-scroll ml-6 pr-6 mr-1">
                         <div className={classnames("flex mt-1 mb-2")}>
                             {message}
                         </div>
                     </div>
-                    <div className="flex -mb-6">
+                    <div className="flex -mb-12">
                         <Divider className="absolute bottom-16" />
                         <div className="flex w-full">
                             <ButtonWithLoading

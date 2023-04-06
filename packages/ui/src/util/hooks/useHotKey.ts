@@ -55,6 +55,23 @@ const useHotKey = (
                 return
             }
 
+            const permissionsIndex = currentLocation
+                .concat(
+                    e.altKey && e.ctrlKey
+                        ? "/ctrlalt/"
+                        : e.altKey
+                        ? "/alt/"
+                        : "/ctrl/"
+                )
+                .concat(keyPressed)
+            if (
+                permissions &&
+                permissions[permissionsIndex] !== undefined &&
+                !permissions[permissionsIndex]
+            ) {
+                return
+            }
+
             const navigateTo = getActionByHotkeyAndPath(
                 currentLocation,
                 keyPressed,
@@ -64,14 +81,6 @@ const useHotKey = (
             if (navigateTo) {
                 if (typeof navigateTo === "string") {
                     //Need to validate permissions
-                    if (
-                        permissions &&
-                        permissions[navigateTo] !== undefined &&
-                        !permissions[navigateTo]
-                    ) {
-                        return
-                    }
-
                     history.push({
                         pathname: navigateTo,
                         state: {

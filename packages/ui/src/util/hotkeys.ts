@@ -50,32 +50,32 @@ const locations: HotkeyMap = {
                 hotkey: "R",
                 action: "/accounts/menu/receive",
                 hotkeyDescription: "ALT+R",
-                description: "Receive Founds",
+                description: "Receive funds",
             },
             {
                 hotkey: "1",
                 action: () => updatePopupTab("activity"),
                 hotkeyDescription: "ALT+1",
-                description: "Switch To Activity List",
+                description: "Switch to activity list",
             },
             {
                 hotkey: "2",
                 action: () => updatePopupTab("assets"),
                 hotkeyDescription: "ALT+2",
-                description: "Switch To Assets List",
+                description: "Switch to assets list",
             },
             {
                 //Leave empty to show it on Hotkeys popup, but it is executed from ActivityAssetsView
                 hotkey: "N",
                 action: "",
                 hotkeyDescription: "",
-                description: "Add Token(On asset view)",
+                description: "Add token (on assets)",
             },
             {
                 hotkey: "G",
                 action: "",
                 hotkeyDescription: "",
-                description: "View Gas Prices",
+                description: "View gas prices",
             },
         ],
         CTRLALT: [
@@ -106,7 +106,7 @@ const locations: HotkeyMap = {
                 hotkey: "3",
                 action: "/settings/addressBook",
                 hotkeyDescription: "ALT+3",
-                description: "Address Book",
+                description: "Address book",
             },
             {
                 hotkey: "4",
@@ -118,7 +118,7 @@ const locations: HotkeyMap = {
                 hotkey: "5",
                 action: openHardwareConnect,
                 hotkeyDescription: "ALT+5",
-                description: "Connect Hardware Wallet",
+                description: "Connect hardware wallet",
             },
             {
                 hotkey: "6",
@@ -136,7 +136,7 @@ const locations: HotkeyMap = {
                 hotkey: "C",
                 action: "/accounts/create",
                 hotkeyDescription: "ALT+C",
-                description: "Create Account",
+                description: "Create account",
             },
         ],
         CTRL: [],
@@ -148,19 +148,19 @@ const locations: HotkeyMap = {
                 hotkey: "C",
                 action: "/accounts/create/add",
                 hotkeyDescription: "ALT+C",
-                description: "Create Account",
+                description: "Create account",
             },
             {
                 hotkey: "I",
                 action: "/accounts/create/import",
                 hotkeyDescription: "ALT+I",
-                description: "Import Account",
+                description: "Import account",
             },
             {
                 hotkey: "H",
                 action: openHardwareConnect,
                 hotkeyDescription: "ALT+H",
-                description: "Connect Hardware Wallet",
+                description: "Connect hardware wallet",
             },
         ],
         CTRL: [],
@@ -172,43 +172,56 @@ const locations: HotkeyMap = {
                 hotkey: "R",
                 action: "/accounts/menu/receive",
                 hotkeyDescription: "ALT+R",
-                description: "Receive Founds",
+                description: "Receive funds",
             },
             {
                 hotkey: "C",
                 action: "/accounts/menu/connectedsites",
                 hotkeyDescription: "ALT+C",
-                description: "Connected Sites",
+                description: "Connected sites",
             },
             {
                 hotkey: "E",
                 action: "/accounts/menu/export",
                 hotkeyDescription: "ALT+X",
-                description: "Export Account Data",
+                description: "Export",
             },
             {
                 hotkey: "V",
                 action: "",
                 hotkeyDescription: "",
-                description: "View on Etherscan",
+                description: "View on explorer",
             },
             {
-                hotkey: "A",
+                hotkey: "T",
+                action: "/accounts/menu/allowances",
+                hotkeyDescription: "ALT+T",
+                description: "Token allowances",
+            },
+            {
+                hotkey: "M",
                 action: "/accounts",
-                hotkeyDescription: "ALT+A",
-                description: "Accounts",
+                hotkeyDescription: "ALT+M",
+                description: "My accounts",
+            },
+            {
+                hotkey: "S",
+                action: "/accounts/menu/reset",
+                hotkeyDescription: "ALT+S",
+                description: "Reset account",
             },
         ],
         CTRL: [],
         CTRLALT: [],
     },
+    "/accounts/menu/allowances": { ALT: [], CTRL: [], CTRLALT: [] },
     "/settings/networks": {
         ALT: [
             {
                 hotkey: "N",
                 action: "/settings/networks/search",
                 hotkeyDescription: "ALT+N",
-                description: "Add Network",
+                description: "Add network",
             },
         ],
         CTRL: [],
@@ -220,7 +233,7 @@ const locations: HotkeyMap = {
                 hotkey: "N",
                 action: "/settings/addressBook/add",
                 hotkeyDescription: "ALT+N",
-                description: "Add Address To Book",
+                description: "New contact",
             },
         ],
         CTRL: [],
@@ -232,37 +245,37 @@ const locations: HotkeyMap = {
                 hotkey: "T",
                 action: "/settings/preferences/locktimeout",
                 hotkeyDescription: "ALT+T",
-                description: "Lock Timeout",
+                description: "Lock timeout",
             },
             {
                 hotkey: "L",
                 action: "/settings/preferences/locale",
                 hotkeyDescription: "ALT+L",
-                description: "Locale Configuration",
+                description: "Locale configuration",
             },
             {
                 hotkey: "R",
                 action: "/settings/preferences/releasenotes",
                 hotkeyDescription: "ALT+R",
-                description: "Release Notes",
+                description: "Release notes",
             },
             {
                 hotkey: "D",
                 action: "/settings/preferences/defaultwallet",
                 hotkeyDescription: "ALT+D",
-                description: "Default Browser Wallet",
+                description: "Default wallet",
             },
             {
                 hotkey: "W",
                 action: "/settings/preferences/warnings",
                 hotkeyDescription: "ALT+W",
-                description: "Notifications & Warnings",
+                description: "Notifications & warnings",
             },
             {
                 hotkey: "P",
                 action: "/settings/preferences/phishing",
                 hotkeyDescription: "ALT+P",
-                description: "Phishing Protection",
+                description: "Phishing protection",
             },
             {
                 hotkey: "H",
@@ -274,7 +287,7 @@ const locations: HotkeyMap = {
                 hotkey: "G",
                 action: "/settings/preferences/defaultGas",
                 hotkeyDescription: "ALT+G",
-                description: "Default Gas Setting",
+                description: "Default gas setting",
             },
         ],
         CTRL: [],
@@ -336,20 +349,24 @@ export const checkLocationHotkeys = (
     const hotkeyAndDesc = locations[currentLocation]["ALT"].map(
         (hotkeyAction) => {
             /// Will only add permissions logic to ALT and OPT. If any other permission appear it should be added to the handler key
-
-            const action =
-                typeof hotkeyAction.action === "string"
-                    ? hotkeyAction.action
-                    : undefined
-
-            if (
-                permissions &&
-                action &&
-                permissions[action] !== undefined &&
-                !permissions[action]
-            ) {
-                return ""
-            } else return hotkeyAction.description
+            if (permissions) {
+                if (
+                    permissions[
+                        currentLocation +
+                            "/alt/" +
+                            hotkeyAction.hotkey.toLowerCase()
+                    ] === undefined ||
+                    permissions[
+                        currentLocation +
+                            "/alt/" +
+                            hotkeyAction.hotkey.toLowerCase()
+                    ]
+                ) {
+                    return hotkeyAction.description
+                }
+            } else {
+                return hotkeyAction.description
+            }
         }
     )
 

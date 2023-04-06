@@ -24,6 +24,8 @@ import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
+import { useHotkeys } from "react-hotkeys-hook"
+import { useBlankState } from "../../context/background/backgroundHooks"
 
 export type AllowancePageLocalState = {
     fromAssetDetails: boolean
@@ -42,7 +44,7 @@ const timeToDisableRefresh = 5 * 60 * 1000
 
 const AllowancesPage = () => {
     const history = useOnMountHistory()
-
+    const { hotkeysEnabled } = useBlankState()!
     const searchInputRef = useRef<HTMLInputElement>(null)
 
     const [search, setSearch] = useState("")
@@ -150,6 +152,30 @@ const AllowancesPage = () => {
         )
         setShowEmptyState(allowances.length === 0)
     }, [allowances])
+
+    useHotkeys("alt+r, alt+s, alt+t", (e) => {
+        if (!hotkeysEnabled) return
+        if (!e.key) {
+            return
+        }
+        const keyPressed = e.code
+            .replace(/key/i, "")
+            .replace(/digit/i, "")
+            .replace(/numpad/i, "")
+            .toLowerCase()
+
+        switch (keyPressed) {
+            case "r":
+                setConfirmRefresh(true)
+                break
+            case "s":
+                onFilterChange(AllowancesFilters.SPENDER)
+                break
+            case "t":
+                onFilterChange(AllowancesFilters.TOKEN)
+                break
+        }
+    })
 
     return (
         <PopupLayout

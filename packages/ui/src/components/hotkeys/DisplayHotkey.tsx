@@ -35,7 +35,7 @@ export const DisplayHotkey: FC<DisplayHotkeyProps> = ({
                 className
             )}
         >
-            <div className="font-bold text-sm">{description}</div>
+            <div className="font-semibold text-sm">{description}</div>
             <div className="flex">
                 {ctrl && (
                     <>
@@ -48,7 +48,7 @@ export const DisplayHotkey: FC<DisplayHotkeyProps> = ({
                         >
                             Ctrl
                         </div>
-                        <div className="p-2 font-medium text-sm">+</div>
+                        <div className="p-1 font-medium text-sm">+</div>
                     </>
                 )}
                 {alt && (
@@ -62,7 +62,7 @@ export const DisplayHotkey: FC<DisplayHotkeyProps> = ({
                         >
                             {currentOS === "mac" ? "⌥" : "Alt"}
                         </div>
-                        <div className="p-2 font-medium text-sm">+</div>
+                        <div className="p-1 font-medium text-sm">+</div>
                     </>
                 )}
                 <div
@@ -90,17 +90,15 @@ export const DisplayHotkeysByPath: FC<DisplayHotkeysByPathProp> = ({
     let showDivider = false
     if (hotkeys !== "") {
         hotkeysElement = hotkeys["ALT"].map((hotkey, index) => {
-            const action =
-                typeof hotkey.action === "string" ? hotkey.action : undefined
+            //If we have permissions array, check if that hotkey is there. If it is check if enabled, if it is not we allow it.
+            const enabledHotkey = permissions
+                ? permissions[
+                      pathName + "/alt/" + hotkey.hotkey.toLowerCase()
+                  ] === undefined ||
+                  permissions[pathName + "/alt/" + hotkey.hotkey.toLowerCase()]
+                : true
 
-            if (
-                !(
-                    permissions &&
-                    action &&
-                    permissions[action] !== undefined &&
-                    !permissions[action]
-                )
-            ) {
+            if (enabledHotkey) {
                 if (index > 0 && !showDivider) showDivider = true
                 return (
                     <React.Fragment key={index + hotkey.hotkey}>

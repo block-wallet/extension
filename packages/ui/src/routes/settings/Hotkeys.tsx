@@ -84,10 +84,10 @@ const LockTimeout = () => {
                     history.push("/")
                 }}
             />
-            <div className="flex flex-col p-6 pt-2 space-y-4 w-full">
-                <span className="text-sm text-gray-500">
-                    You can press these buttons anytime on your keyboard to use
-                    BlockWallet faster.
+            <div className="flex flex-col p-6 pt-2 w-full">
+                <span className="text-sm text-gray-500 mb-6">
+                    Use keyboard shortcuts for faster navigation and actions in
+                    the wallet.
                 </span>
                 <ToggleButton
                     label="Enable shortcuts"
@@ -101,6 +101,7 @@ const LockTimeout = () => {
                     alt
                     hotkey="K"
                     currentOS={currentOS}
+                    className="mt-7 mb-4"
                 />
                 {hotkeysEnabled && (
                     <>
@@ -111,6 +112,7 @@ const LockTimeout = () => {
                             alt
                             hotkey="L"
                             currentOS={currentOS}
+                            className="mt-4 mb-4"
                         />
                         <Divider />
                         <DisplayHotkey
@@ -118,14 +120,15 @@ const LockTimeout = () => {
                             alt
                             hotkey="Q"
                             currentOS={currentOS}
+                            className="mt-4 mb-4"
                         />
                         <Divider />
-                        {/* Dont use component to show backspace as it is a different key name */}
-                        <div className="flex items-center justify-between w-full">
+                        {/* Dont use DisplayHotkey component to show backspace as it is a different key name */}
+                        <div className="flex items-center justify-between w-full mt-4 mb-4">
                             <div className="font-bold text-sm">Go Back</div>
                             <div className="flex">
                                 <div
-                                    className="border border-gray-400 rounded-sm font-medium text-sm w-8 h-8 text-center grid content-center"
+                                    className="border border-gray-300 rounded-sm font-medium text-sm w-8 h-8 text-center grid content-center"
                                     style={{
                                         boxShadow:
                                             "0px 2px 0px 0px rgba(240, 240, 240, 1)",
@@ -133,7 +136,7 @@ const LockTimeout = () => {
                                 >
                                     {currentOS === "mac" ? "⌥" : "Alt"}
                                 </div>
-                                <div className="p-2">+</div>
+                                <div className="p-1 font-medium text-sm">+</div>
                                 <div
                                     className="border border-zinc-300 rounded-sm font-medium text-sm w-20 h-8 text-center grid content-center"
                                     style={{
@@ -146,10 +149,11 @@ const LockTimeout = () => {
                             </div>
                         </div>
                         <Divider className="border-gray-300" />
-                        <span className="text-sm">
+                        <span className="text-sm mt-4">
                             <a
-                                href="https://www.notion.so/getblockwallet/Keyboard-Shortcuts-draft-a22c74e2c1d24bc692f7bbf4fbdc02b1?pvs=4"
+                                href="https://help.blockwallet.io/hc/en-us/articles/14296948056209"
                                 target="_blank"
+                                className="text-primary-blue-default"
                             >
                                 Click here
                             </a>{" "}

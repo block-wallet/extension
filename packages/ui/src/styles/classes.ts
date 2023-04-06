@@ -89,15 +89,17 @@ export class Classes {
         Classes.baseButton,
         "text-gray-900 border-primary-black-default hover:text-white hover:bg-primary-black-default"
     )
-    static inputLabel = classnames("text-xs")
+    static inputLabel = classnames(
+        "text-[13px] font-medium text-primary-grey-dark"
+    )
     static inputBordered = classnames(
-        "text-sm rounded-md border-1 border-primary-grey-hover placeholder-gray-400 focus:ring-0"
+        "text-xs mt-2 font-semibold text-primary-black-default rounded-md border-1 border-[#D7D9D7] placeholder-gray-300 focus:ring-0"
     )
     static input = classnames(
-        "w-full text-xs px-0 py-2 border-0 border-b-2 border-primary-black-default placeholder-gray-400 focus:ring-0"
+        "w-full text-xs font-semibold rounded text-primary-black-default p-2 mt-2 border-1 border-[#D7D9D7] placeholder-gray-300 focus:ring-0"
     )
     static inputBorder = classnames(
-        "w-full text-xs px-2 py-2 mt-1 rounded-md border-1 border-primary-grey-hover placeholder-gray-400 focus:ring-0"
+        "w-full text-xs px-2 py-2 mt-1 rounded-md border-1 border-primary-grey-hover placeholder-gray-300 focus:ring-0"
     )
 
     static checkbox = classnames(

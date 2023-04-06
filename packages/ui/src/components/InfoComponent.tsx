@@ -7,7 +7,7 @@ const InfoComponent: FunctionComponent<
 > = ({ children, className }) => (
     <div
         className={classnames(
-            "flex flex-row items-start space-x-4 text-xs text-primary-grey-dark",
+            "flex flex-row items-start space-x-2 text-xs text-primary-grey-dark",
             className
         )}
     >

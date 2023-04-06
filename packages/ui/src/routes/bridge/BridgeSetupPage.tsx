@@ -477,7 +477,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 >
                     {/* Asset */}
                     <div className="flex flex-col w-1/2 pr-1.5">
-                        <p className="text-sm text-primary-grey-dark pb-2">
+                        <p className="text-[13px] font-medium text-primary-grey-dark pb-2">
                             Bridge Asset
                         </p>
                         <AssetSelection
@@ -595,7 +595,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Network selector */}
-                <p className="text-sm text-primary-grey-dark pb-2">
+                <p className="text-[13px] font-medium text-primary-grey-dark pb-2">
                     To Network
                 </p>
                 <NetworkSelector

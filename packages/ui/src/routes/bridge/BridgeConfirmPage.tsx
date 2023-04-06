@@ -673,7 +673,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Gas */}
-                <p className="text-sm text-primary-grey-dark pt-1 pb-2">
+                <p className="text-[13px] font-medium pt-1 pb-2 text-primary-grey-dark">
                     Gas Price
                 </p>
                 {isEIP1559Compatible ? (

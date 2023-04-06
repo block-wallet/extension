@@ -415,7 +415,7 @@ const SwapPage = () => {
                 >
                     {/* Asset */}
                     <div className="flex flex-col space w-1/2 pr-1.5">
-                        <p className="mb-2 text-sm text-primary-grey-dark">
+                        <p className="mb-2 text-[13px] font-medium text-primary-grey-dark">
                             Swap From
                         </p>
                         <AssetSelection
@@ -543,7 +543,9 @@ const SwapPage = () => {
                     </button>
                 </div>
 
-                <p className="text-sm text-primary-grey-dark pb-3">Swap To</p>
+                <p className="text-[13px] font-medium text-primary-grey-dark mb-2">
+                    Swap To
+                </p>
                 <AssetSelection
                     displayIcon
                     selectedAssetList={AssetListType.DEFAULT}

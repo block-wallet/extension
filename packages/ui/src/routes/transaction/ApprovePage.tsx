@@ -569,7 +569,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     currentAllowance={currentAllowanceValue}
                 />
 
-                <label className="text-sm text-primary-grey-dark">
+                <label className="text-[13px] font-medium text-primary-grey-dark">
                     Gas Price
                 </label>
                 {!isEIP1559Compatible ? (

@@ -21,6 +21,7 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { HARDWARE_TYPES } from "../../util/account"
 import { openHardwareRemove } from "../../context/commActions"
 import { useHotkeys } from "react-hotkeys-hook"
+import { componentsHotkeys } from "../../util/hotkeys"
 
 const AccountMenu = () => {
     const { availableNetworks, selectedNetwork, hotkeysEnabled } =
@@ -65,7 +66,8 @@ const AccountMenu = () => {
         },
     ]
 
-    useHotkeys("alt+v", () => {
+    const accountMenuHotkeys = componentsHotkeys.AccountMenu
+    useHotkeys(accountMenuHotkeys, () => {
         if (!hotkeysEnabled) return
         chrome.tabs.create({
             url: generateExplorerLink(

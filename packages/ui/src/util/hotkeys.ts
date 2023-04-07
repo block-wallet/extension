@@ -19,6 +19,14 @@ type HotkeyMap = {
     }
 }
 
+type ComponentHotkeyMap = {
+    [path: string]: {
+        CTRL: [string]
+        ALT: [string]
+        CTRLALT: [string]
+    }
+}
+
 const locations: HotkeyMap = {
     "/home": {
         ALT: [
@@ -76,6 +84,12 @@ const locations: HotkeyMap = {
                 action: "",
                 hotkeyDescription: "",
                 description: "View gas prices",
+            },
+            {
+                hotkey: "V",
+                action: "",
+                hotkeyDescription: "",
+                description: "View on explorer",
             },
         ],
         CTRLALT: [
@@ -214,7 +228,30 @@ const locations: HotkeyMap = {
         CTRL: [],
         CTRLALT: [],
     },
-    "/accounts/menu/allowances": { ALT: [], CTRL: [], CTRLALT: [] },
+    "/accounts/menu/allowances": {
+        ALT: [
+            {
+                hotkey: "R",
+                action: "",
+                hotkeyDescription: "",
+                description: "Refresh allowances",
+            },
+            {
+                hotkey: "S",
+                action: "",
+                hotkeyDescription: "",
+                description: "Group by spender",
+            },
+            {
+                hotkey: "T",
+                action: "",
+                hotkeyDescription: "",
+                description: "Group by token",
+            },
+        ],
+        CTRL: [],
+        CTRLALT: [],
+    },
     "/settings/networks": {
         ALT: [
             {
@@ -293,6 +330,15 @@ const locations: HotkeyMap = {
         CTRL: [],
         CTRLALT: [],
     },
+}
+
+export const componentsHotkeys = {
+    ActivityAssetsView: "ALT+N",
+    GasPricesInfo: "ALT+G,ENTER",
+    HotkeysCollapsedMessage: "ALT+K, ENTER",
+    AllowancesPage: "ALT+R, ALT+S, ALT+T",
+    AccountMenu: "ALT+V",
+    PopupPage: "ALT+V",
 }
 
 export const getActionByHotkeyAndPath = (

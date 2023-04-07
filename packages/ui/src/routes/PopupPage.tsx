@@ -41,6 +41,9 @@ import PopupHeader from "../components/popup/PopupHeader"
 import Icon, { IconName } from "../components/ui/Icon"
 import useNetWorthBalance from "../context/hooks/useNetWorthBalance"
 import { AiFillInfoCircle } from "react-icons/ai"
+import { useHotkeys } from "react-hotkeys-hook"
+import { componentsHotkeys } from "../util/hotkeys"
+import { generateExplorerLink } from "../util/getExplorer"
 
 const AccountDisplay = () => {
     const accountAddress = useSelectedAddressWithChainIdChecksum()
@@ -166,6 +169,21 @@ const PopupPage = () => {
         ["/home/alt/b"]: isBridgeEnabled !== undefined, //Bridge
         ["/home/alt/g"]: showGasLevels,
     }
+
+    const popupPageHotkeys = componentsHotkeys.PopupPage
+    useHotkeys(popupPageHotkeys, () => {
+        if (!state.hotkeysEnabled) return
+
+        chrome.tabs.create({
+            url: generateExplorerLink(
+                state.availableNetworks,
+                state.selectedNetwork,
+                checksumAddress,
+                "address"
+            ),
+        })
+    })
+
     return (
         <PopupLayout
             header={

@@ -5,6 +5,7 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import CollapsableMessage from "../CollapsableMessage"
 import { DisplayHotkeysByPath } from "../hotkeys/DisplayHotkey"
 import ConfirmDialog from "../dialog/ConfirmDialog"
+import { componentsHotkeys } from "../../util/hotkeys"
 
 export const HotkeysCollapsedMessage: FC<{
     hotkeysPermissions?: { [action: string]: boolean }
@@ -14,7 +15,9 @@ export const HotkeysCollapsedMessage: FC<{
     const [isMessageVisible, setIsMessageVisible] = useState(false)
     const { hotkeysEnabled } = useBlankState()!
 
-    useHotkeys("alt+k, enter", (e) => {
+    const hotkeysCollapsedMessageHotkeys =
+        componentsHotkeys.HotkeysCollapsedMessage
+    useHotkeys(hotkeysCollapsedMessageHotkeys, (e) => {
         const keyPressed = e.code
             .replace(/key/i, "")
             .replace(/digit/i, "")

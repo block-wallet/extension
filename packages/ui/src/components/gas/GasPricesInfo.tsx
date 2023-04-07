@@ -26,6 +26,7 @@ import car from "../../assets/images/icons/car.svg"
 import scooter from "../../assets/images/icons/scooter.svg"
 import plane from "../../assets/images/icons/plane.svg"
 import { useHotkeys } from "react-hotkeys-hook"
+import { componentsHotkeys } from "../../util/hotkeys"
 
 export type DisplayGasPricesData = {
     baseFee?: string
@@ -142,7 +143,8 @@ const GasPricesInfo: FC = () => {
 
     const isLoading = isNetworkChanging || !displayGasPrices
 
-    useHotkeys("alt+g,enter", (e) => {
+    const gasPricesInfoHotkeys = componentsHotkeys.GasPricesInfo
+    useHotkeys(gasPricesInfoHotkeys, (e) => {
         if (!hotkeysEnabled) return
 
         const keyPressed = e.code

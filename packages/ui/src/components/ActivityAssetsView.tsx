@@ -7,6 +7,7 @@ import { useOnMountHistory } from "../context/hooks/useOnMount"
 import ActivityList from "./ActivityList"
 import AssetsList from "./AssetsList"
 import HorizontalSelect from "./input/HorizontalSelect"
+import { componentsHotkeys } from "../util/hotkeys"
 
 const tabs = [
     {
@@ -49,7 +50,8 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
     }, [popupTab])
 
     //Adding useHotkey to add new token, only on Assets View
-    useHotkeys("alt+n", () => {
+    const activityAssetsViewHotkeys = componentsHotkeys.ActivityAssetsView
+    useHotkeys(activityAssetsViewHotkeys, () => {
         if (!hotkeysEnabled) return
         if (currentTabLabel.toLocaleLowerCase() === "assets") {
             history.push({

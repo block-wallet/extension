@@ -26,6 +26,7 @@ import WaitingDialog, {
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 import { useHotkeys } from "react-hotkeys-hook"
 import { useBlankState } from "../../context/background/backgroundHooks"
+import { componentsHotkeys } from "../../util/hotkeys"
 
 export type AllowancePageLocalState = {
     fromAssetDetails: boolean
@@ -153,7 +154,8 @@ const AllowancesPage = () => {
         setShowEmptyState(allowances.length === 0)
     }, [allowances])
 
-    useHotkeys("alt+r, alt+s, alt+t", (e) => {
+    const allowancesPageHotkeys = componentsHotkeys.AllowancesPage
+    useHotkeys(allowancesPageHotkeys, (e) => {
         if (!hotkeysEnabled) return
         if (!e.key) {
             return

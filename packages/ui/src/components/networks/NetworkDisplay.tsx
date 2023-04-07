@@ -210,7 +210,7 @@ const NetworkDisplay = ({
                                 }}
                             />
                         </div>
-                        <span className="text-sm font-bold text-ellipsis overflow-hidden whitespace-nowrap">
+                        <span className="text-sm font-bold text-ellipsis overflow-hidden whitespace-nowrap max-w-[190px]">
                             {networkInfo.desc}
                         </span>
                     </div>

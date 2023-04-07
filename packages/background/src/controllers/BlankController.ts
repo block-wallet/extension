@@ -2023,35 +2023,30 @@ export default class BlankController extends EventEmitter {
      * @returns selected rpc url, default rpc url and a working backup rpc url for the network
      */
     private async getChainRpcs({ chainId }: RequestGetChainData) {
-        const defaultNetwork = Object.values(INITIAL_NETWORKS).find(
+        const network = Object.values(INITIAL_NETWORKS).find(
             (network) => network.chainId === chainId
         );
         const selectedRpcUrl =
-            this.networkController.getNetworkFromChainId(chainId)?.rpcUrls[0];
+            this.networkController.getNetworkFromChainId(
+                chainId
+            )?.currentRpcUrl;
 
-        const rpcUrls = Object.values(INITIAL_NETWORKS).find(
-            (network) => network.chainId === chainId
-        )?.rpcUrls;
+        const defaultRpcUrl = network?.defaultRpcUrl;
+
+        const backupRpcUrls = network?.backupRpcUrls ?? [];
 
         let workingBackUpRpcUrl: string | undefined;
 
-        if (rpcUrls && rpcUrls.length > 1) {
-            // Remove the first rpc url from the array as it is the selected rpc url (currently in use)
-            const backupRpcUrls = rpcUrls.slice(1);
-
-            for (const rpcUrl of backupRpcUrls) {
-                const isRpcValid = await this.isRpcValid({
-                    rpcUrl,
-                    chainId,
-                });
-                if (isRpcValid) {
-                    workingBackUpRpcUrl = rpcUrl;
-                    break;
-                }
+        for (const backupRpcUrl of backupRpcUrls) {
+            const isRpcValid = await this.isRpcValid({
+                rpcUrl: backupRpcUrl,
+                chainId,
+            });
+            if (isRpcValid) {
+                workingBackUpRpcUrl = backupRpcUrl;
+                break;
             }
         }
-
-        const defaultRpcUrl = defaultNetwork?.defaultRpcUrl;
 
         return {
             selectedRpcUrl,

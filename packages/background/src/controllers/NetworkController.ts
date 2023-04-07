@@ -356,11 +356,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         const newNetworks = cloneDeep(this.networks);
         newNetworks[networkKey].desc = updates.name;
-        // replace only first rpc url (selected by default) and leave the rest (backup urls)
-        newNetworks[networkKey].rpcUrls = [
-            rpcUrl,
-            ...newNetworks[networkKey].rpcUrls.slice(1),
-        ];
+        newNetworks[networkKey].currentRpcUrl = rpcUrl;
         newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
         newNetworks[networkKey].test = updates.test;
         this.networks = newNetworks;
@@ -444,7 +440,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             const key = this._getNetworkKey(existingNetwork);
             const newNetworks = cloneDeep(this.networks);
             newNetworks[key].enable = true;
-            newNetworks[key].rpcUrls = [rpcUrl];
+            newNetworks[key].currentRpcUrl = rpcUrl;
             newNetworks[key].blockExplorerName =
                 blockExplorerName ||
                 newNetworks[key].blockExplorerName ||
@@ -492,7 +488,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 networkVersion: (
                     chainDataFromList?.networkId || network.chainId
                 ).toString(),
-                rpcUrls: [rpcUrl],
+                currentRpcUrl: rpcUrl,
                 showGasLevels: true,
                 blockExplorerUrls: [explorerUrl],
                 blockExplorerName: blockExplorerName || 'Explorer',
@@ -562,7 +558,10 @@ export default class NetworkController extends BaseController<NetworkControllerS
         networkName: string
     ): StaticJsonRpcProvider => {
         const network = this.searchNetworkByName(networkName);
-        return this._getProviderForNetwork(network.chainId, network.rpcUrls[0]);
+        return this._getProviderForNetwork(
+            network.chainId,
+            network.currentRpcUrl
+        );
     };
 
     /**
@@ -589,7 +588,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         if (userNetwork) {
             return this._getProviderForNetwork(
                 userNetwork.chainId,
-                userNetwork.rpcUrls[0]
+                userNetwork.currentRpcUrl
             );
         }
 

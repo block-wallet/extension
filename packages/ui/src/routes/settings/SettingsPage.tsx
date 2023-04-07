@@ -26,8 +26,9 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import classNames from "classnames"
 import GenericTooltip from "../../components/label/GenericTooltip"
-import AppVersion from "../../components/AppVersion"
 import { openHardwareConnect } from "../../context/commActions"
+import { useHotkeys } from "react-hotkeys-hook"
+import { componentsHotkeys } from "../../util/hotkeys"
 
 const SettingsPage = () => {
     const { isSeedPhraseBackedUp, isImportingDeposits } = useBlankState()!
@@ -76,6 +77,11 @@ const SettingsPage = () => {
             handleError("Error logging out")
         }
     }
+
+    const settingsPageHotkeys = componentsHotkeys.SettingsPage
+    useHotkeys(settingsPageHotkeys, () => {
+        openHardwareConnect()
+    })
 
     return (
         <PopupLayout

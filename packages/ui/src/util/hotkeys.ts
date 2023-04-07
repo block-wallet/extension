@@ -1,4 +1,3 @@
-import { openHardwareConnect } from "../context/commActions"
 import { updatePopupTab } from "../context/commActions"
 import { useOnMountHistory } from "../context/hooks/useOnMount"
 
@@ -130,8 +129,8 @@ const locations: HotkeyMap = {
             },
             {
                 hotkey: "5",
-                action: openHardwareConnect,
-                hotkeyDescription: "ALT+5",
+                action: "",
+                hotkeyDescription: "",
                 description: "Connect hardware wallet",
             },
             {
@@ -172,8 +171,8 @@ const locations: HotkeyMap = {
             },
             {
                 hotkey: "H",
-                action: openHardwareConnect,
-                hotkeyDescription: "ALT+H",
+                action: "",
+                hotkeyDescription: "",
                 description: "Connect hardware wallet",
             },
         ],
@@ -183,45 +182,45 @@ const locations: HotkeyMap = {
     "/accounts/menu": {
         ALT: [
             {
-                hotkey: "R",
+                hotkey: "1",
                 action: "/accounts/menu/receive",
-                hotkeyDescription: "ALT+R",
+                hotkeyDescription: "ALT+1",
                 description: "Receive funds",
             },
             {
-                hotkey: "C",
+                hotkey: "2",
                 action: "/accounts/menu/connectedsites",
-                hotkeyDescription: "ALT+C",
+                hotkeyDescription: "ALT+2",
                 description: "Connected sites",
             },
             {
-                hotkey: "E",
+                hotkey: "3",
                 action: "/accounts/menu/export",
-                hotkeyDescription: "ALT+X",
+                hotkeyDescription: "ALT+3",
                 description: "Export",
             },
             {
-                hotkey: "V",
+                hotkey: "4",
                 action: "",
                 hotkeyDescription: "",
                 description: "View on explorer",
             },
             {
-                hotkey: "T",
+                hotkey: "5",
                 action: "/accounts/menu/allowances",
-                hotkeyDescription: "ALT+T",
+                hotkeyDescription: "ALT+5",
                 description: "Token allowances",
             },
             {
-                hotkey: "M",
+                hotkey: "6",
                 action: "/accounts",
-                hotkeyDescription: "ALT+M",
+                hotkeyDescription: "ALT+6",
                 description: "My accounts",
             },
             {
-                hotkey: "S",
+                hotkey: "7",
                 action: "/accounts/menu/reset",
-                hotkeyDescription: "ALT+S",
+                hotkeyDescription: "ALT+7",
                 description: "Reset account",
             },
         ],
@@ -279,52 +278,52 @@ const locations: HotkeyMap = {
     "/settings/preferences": {
         ALT: [
             {
-                hotkey: "T",
+                hotkey: "1",
                 action: "/settings/preferences/locktimeout",
-                hotkeyDescription: "ALT+T",
+                hotkeyDescription: "ALT+1",
                 description: "Lock timeout",
             },
             {
-                hotkey: "L",
+                hotkey: "2",
                 action: "/settings/preferences/locale",
-                hotkeyDescription: "ALT+L",
+                hotkeyDescription: "ALT+2",
                 description: "Locale configuration",
             },
             {
-                hotkey: "R",
+                hotkey: "3",
                 action: "/settings/preferences/releasenotes",
-                hotkeyDescription: "ALT+R",
+                hotkeyDescription: "ALT+3",
                 description: "Release notes",
             },
             {
-                hotkey: "D",
+                hotkey: "4",
                 action: "/settings/preferences/defaultwallet",
-                hotkeyDescription: "ALT+D",
+                hotkeyDescription: "ALT+4",
                 description: "Default wallet",
             },
             {
-                hotkey: "W",
+                hotkey: "5",
+                action: "/settings/preferences/defaultGas",
+                hotkeyDescription: "ALT+5",
+                description: "Default gas setting",
+            },
+            {
+                hotkey: "6",
                 action: "/settings/preferences/warnings",
-                hotkeyDescription: "ALT+W",
+                hotkeyDescription: "ALT+6",
                 description: "Notifications & warnings",
             },
             {
-                hotkey: "P",
+                hotkey: "7",
                 action: "/settings/preferences/phishing",
-                hotkeyDescription: "ALT+P",
+                hotkeyDescription: "ALT+7",
                 description: "Phishing protection",
             },
             {
-                hotkey: "H",
+                hotkey: "8",
                 action: "/settings/preferences/hotkeys",
-                hotkeyDescription: "ALT+H",
+                hotkeyDescription: "ALT+8",
                 description: "Hotkeys",
-            },
-            {
-                hotkey: "G",
-                action: "/settings/preferences/defaultGas",
-                hotkeyDescription: "ALT+G",
-                description: "Default gas setting",
             },
         ],
         CTRL: [],
@@ -337,8 +336,10 @@ export const componentsHotkeys = {
     GasPricesInfo: "ALT+G,ENTER",
     HotkeysCollapsedMessage: "ALT+K, ENTER",
     AllowancesPage: "ALT+R, ALT+S, ALT+T",
-    AccountMenu: "ALT+V",
+    AccountMenu: "ALT+4",
     PopupPage: "ALT+V",
+    CreateAccountPage: "ALT+H",
+    SettingsPage: "ALT+5",
 }
 
 export const getActionByHotkeyAndPath = (

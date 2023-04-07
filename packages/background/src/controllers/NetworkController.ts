@@ -39,7 +39,7 @@ import { toChecksumAddress } from 'ethereumjs-util';
 import { SECOND } from '../utils/constants/time';
 
 export interface NetworkRPCs {
-    selectedRpcUrl?: string;
+    currentRpcUrl?: string;
     defaultRpcUrl?: string;
     backupRpcUrl?: string;
 }

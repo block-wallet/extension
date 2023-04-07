@@ -32,7 +32,7 @@ const ProviderStatus = () => {
     const [open, setOpen] = useState(false)
     const [chainRpcs, setChainRpcs] = useState<NetworkRPCs>({})
 
-    const { selectedRpcUrl, defaultRpcUrl, backupRpcUrl } = chainRpcs
+    const { currentRpcUrl, defaultRpcUrl, backupRpcUrl } = chainRpcs
 
     const [defaultRpcUp, setDefaultRpcUp] = useState(true)
     const [backupRpcUp, setBackupRpcUp] = useState(true)
@@ -46,12 +46,12 @@ const ProviderStatus = () => {
             }
         )
 
-    const isUsingDefaultRpc = selectedRpcUrl === defaultRpcUrl
+    const isUsingDefaultRpc = currentRpcUrl === defaultRpcUrl
 
     const isUsingBackupRpc = persistedData[chainId]
 
     const isUsingCustomRpc =
-        selectedRpcUrl !== defaultRpcUrl && selectedRpcUrl !== backupRpcUrl
+        currentRpcUrl !== defaultRpcUrl && currentRpcUrl !== backupRpcUrl
 
     const showDefaultProviderRestored = defaultRpcUp && isUsingBackupRpc
 

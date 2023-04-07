@@ -2026,7 +2026,7 @@ export default class BlankController extends EventEmitter {
         const network = Object.values(INITIAL_NETWORKS).find(
             (network) => network.chainId === chainId
         );
-        const selectedRpcUrl =
+        const currentRpcUrl =
             this.networkController.getNetworkFromChainId(
                 chainId
             )?.currentRpcUrl;
@@ -2049,7 +2049,7 @@ export default class BlankController extends EventEmitter {
         }
 
         return {
-            selectedRpcUrl,
+            currentRpcUrl,
             defaultRpcUrl,
             backupRpcUrl: workingBackUpRpcUrl,
         };

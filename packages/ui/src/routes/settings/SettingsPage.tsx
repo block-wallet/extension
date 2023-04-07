@@ -2,7 +2,6 @@ import { useErrorHandler } from "react-error-boundary"
 
 // Components
 import PopupHeader from "../../components/popup/PopupHeader"
-import PopupFooter from "../../components/popup/PopupFooter"
 import PopupLayout from "../../components/popup/PopupLayout"
 import VerticalSelect from "../../components/input/VerticalSelect"
 

@@ -18,14 +18,6 @@ type HotkeyMap = {
     }
 }
 
-type ComponentHotkeyMap = {
-    [path: string]: {
-        CTRL: [string]
-        ALT: [string]
-        CTRLALT: [string]
-    }
-}
-
 const locations: HotkeyMap = {
     "/home": {
         ALT: [

@@ -130,14 +130,16 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             >
                 {/* LABEL */}
                 {label ? (
-                    <label
-                        htmlFor={name}
-                        className={classnames(
-                            Classes.inputLabel,
-                            "flex flex-row items-center space-x-2"
-                        )}
-                    >
-                        <span>{label}</span>
+                    <div className="flex space-x-2 items-center">
+                        <label
+                            htmlFor={name}
+                            className={classnames(
+                                Classes.inputLabel,
+                                "flex flex-row items-center space-x-2 pointer-events-none"
+                            )}
+                        >
+                            <span>{label}</span>
+                        </label>
                         {info && (
                             <div className="group relative">
                                 <AiFillInfoCircle
@@ -154,16 +156,14 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                                 />
                             </div>
                         )}
-                    </label>
+                    </div>
                 ) : null}
 
                 {/* INPUT */}
                 {!endLabel ? (
                     input
                 ) : (
-                    <EndLabel label={endLabel}>
-                        {input}
-                    </EndLabel>
+                    <EndLabel label={endLabel}>{input}</EndLabel>
                 )}
 
                 {/* ERROR */}

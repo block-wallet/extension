@@ -9,7 +9,7 @@ const EndLabel = ({
     children: React.ReactNode
     className?: string
 }) => (
-    <div className="flex flex-row relative w-full">
+    <div className="flex flex-row relative w-full mt-2">
         {children}
         <div
             className={classnames(

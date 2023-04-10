@@ -93,7 +93,7 @@ export class Classes {
         "text-[13px] font-medium text-primary-grey-dark"
     )
     static inputBordered = classnames(
-        "text-xs mt-2 font-semibold text-primary-black-default rounded-md border-1 border-[#D7D9D7] placeholder-gray-300 focus:ring-0"
+        "text-xs font-semibold text-primary-black-default rounded-md border-1 border-[#D7D9D7] placeholder-gray-300 focus:ring-0"
     )
     static input = classnames(
         "w-full text-xs font-semibold rounded text-primary-black-default p-2 mt-2 border-1 border-[#D7D9D7] placeholder-gray-300 focus:ring-0"

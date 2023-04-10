@@ -161,7 +161,9 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                 {!endLabel ? (
                     input
                 ) : (
-                    <EndLabel label={endLabel}>{input}</EndLabel>
+                    <EndLabel label={endLabel}>
+                        {input}
+                    </EndLabel>
                 )}
 
                 {/* ERROR */}

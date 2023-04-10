@@ -383,7 +383,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                     <p className="text-base font-semibold pb-3">{label}</p>
 
                     {display.slippage && (
-                        <div className="w-full pb-2">
+                        <div className="w-full pb-3">
                             <p className="text-[13px] font-medium text-primary-grey-dark">
                                 Slippage percentage (%)
                             </p>
@@ -397,7 +397,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                     onSlippageChange(e)
                                 }}
                                 className={classnames(
-                                    "w-full",
+                                    "w-full mt-2",
                                     Classes.inputBordered,
                                     errors.slippage
                                         ? "border-red-400 focus:border-red-400"
@@ -429,7 +429,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                     onNonceChange(e)
                                 }}
                                 className={classnames(
-                                    "w-full",
+                                    "w-full mt-2",
                                     Classes.inputBordered,
                                     errors.nonce &&
                                         "border-red-400 focus:border-red-400"

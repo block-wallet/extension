@@ -131,7 +131,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
                         )}
                         className={classnames(
                             Classes.inputBordered,
-                            "w-full relative z-0 outline-none transition-all delay-100 !mt-0",
+                            "w-full relative z-0 outline-none transition-all delay-100",
                             isFocus ? "pl-2" : "pl-9",
                             inputClassName,
                             isValid

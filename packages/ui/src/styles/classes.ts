@@ -93,13 +93,13 @@ export class Classes {
         "text-[13px] font-medium text-primary-grey-dark"
     )
     static inputBordered = classnames(
-        "text-xs font-semibold text-primary-black-default rounded-md border-1 border-[#D7D9D7] placeholder-gray-300 focus:ring-0"
+        "text-xs font-semibold text-primary-black-default rounded-md border-1 border-[#D7D9D7] placeholder:font-normal placeholder-primary-grey-dark focus:ring-0"
     )
     static input = classnames(
-        "w-full text-xs font-semibold rounded text-primary-black-default p-2 mt-2 border-1 border-[#D7D9D7] placeholder-gray-300 focus:ring-0"
+        "w-full text-xs font-semibold rounded text-primary-black-default p-2 mt-2 border-1 border-[#D7D9D7] placeholder:font-normal placeholder-primary-grey-dark focus:ring-0"
     )
     static inputBorder = classnames(
-        "w-full text-xs px-2 py-2 mt-1 rounded-md border-1 border-primary-grey-hover placeholder-gray-300 focus:ring-0"
+        "w-full text-xs px-2 py-2 mt-1 font-semibold rounded-md border-1 border-primary-grey-hover placeholder:font-normal placeholder-primary-grey-dark focus:ring-0"
     )
 
     static checkbox = classnames(

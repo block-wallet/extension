@@ -20,7 +20,7 @@ export const ViewOnExplorerButton: FunctionComponent<{
 
     return mode === "button" ? (
         <a
-            className="flex flex-row items-center justify-start py-4 px-4 mt-4 w-full space-x-2 bg-primary-grey-default rounded-md text-primary-black-default text-sm font-semibold hover:bg-primary-grey-hover"
+            className="flex flex-row items-center justify-start py-4 px-4 mt-4 w-full space-x-2 bg-primary-grey-default rounded-lg text-primary-black-default text-sm font-semibold hover:bg-primary-grey-hover"
             href={explorerLink}
             target="_blank"
             rel="noopener noreferrer"

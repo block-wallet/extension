@@ -353,7 +353,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                         })}
                         className={classnames(
                             Classes.inputBordered,
-                            "w-full",
+                            "w-full mt-2",
                             !isCustom && "text-gray-400",
                             errors.gasLimit
                                 ? "border-red-400 focus:border-red-600"

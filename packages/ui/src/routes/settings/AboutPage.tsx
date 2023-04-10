@@ -39,7 +39,7 @@ const AboutPage = () => {
     return (
         <PopupLayout header={<PopupHeader title={"About"} close="/" />}>
             <div className="space-y-4 p-6 py-4">
-                <div className="rounded border border-primary-grey-hover p-4">
+                <div className="rounded-md border border-primary-grey-hover p-4">
                     <div className="flex items-center">
                         <img
                             src={logo}
@@ -61,7 +61,7 @@ const AboutPage = () => {
                         <AppVersion />
                     </div>
                 </div>
-                <div className="rounded border border-primary-grey-hover p-4">
+                <div className="rounded-md border border-primary-grey-hover p-4">
                     <span className="text-lg font-semibold">Contacts</span>
                     <div className="space-y-4 mt-4">
                         {links.map(({ text, link, icon }) => (

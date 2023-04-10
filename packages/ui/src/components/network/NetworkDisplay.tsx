@@ -19,7 +19,7 @@ const NetworkDisplay: FunctionComponent<NetworkDisplayProps> = ({
     return (
         <div
             className={classnames(
-                "flex flex-row items-center w-full rounded-md",
+                "flex flex-row items-center w-full rounded-lg",
                 padding && "p-4",
                 !transparent && "bg-primary-grey-default"
             )}

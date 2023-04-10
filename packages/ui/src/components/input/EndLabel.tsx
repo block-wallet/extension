@@ -13,7 +13,7 @@ const EndLabel = ({
         {children}
         <div
             className={classnames(
-                "absolute inset-y-0 right-2 flex items-center",
+                "absolute inset-y-0 right-3 flex items-center",
                 className
             )}
         >

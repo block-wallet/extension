@@ -47,7 +47,7 @@ const VerticalSelect: FunctionComponent<{
                     key={option.label || option.name || option}
                     className={
                         !disableStyles
-                            ? `w-full flex flex-row items-center justify-between p-4 rounded-md text-sm text-primary-black-default transform transition-all duration-300 active:scale-95
+                            ? `w-full flex flex-row items-center justify-between p-4 rounded-lg text-sm text-primary-black-default transform transition-all duration-300 active:scale-95
                     disabled:pointer-events-none
                     ${
                         isActive(option)

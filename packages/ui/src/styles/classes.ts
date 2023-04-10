@@ -15,14 +15,14 @@ export class Classes {
         Classes.start,
         Classes.animated,
         Classes.transform,
-        "h-12 space-x-2 p-4 rounded-md text-sm font-semibold text-primary-black-default cursor-pointer disabled:pointer-events-none"
+        "h-12 space-x-2 p-4 rounded-lg text-sm font-semibold text-primary-black-default cursor-pointer disabled:pointer-events-none"
     )
 
     static baseButton = classnames(
         Classes.centered,
         Classes.animated,
         Classes.transform,
-        "flex-1 h-12 px-6 py-3 text-sm font-semibold shadow-sm rounded-md",
+        "flex-1 h-12 px-6 py-3 text-sm font-semibold shadow-sm rounded-lg",
         "border-2",
         "cursor-pointer disabled:pointer-events-none"
     )
@@ -35,7 +35,7 @@ export class Classes {
     static smallButton = classnames(
         Classes.centered,
         primaryButton,
-        "text-[11px] shadow-sm rounded-md p-1 border-2 cursor-pointer disabled:pointer-events-none"
+        "text-[11px] shadow-sm rounded p-1 border-2 cursor-pointer disabled:pointer-events-none"
     )
 
     static menuButton = classnames(
@@ -93,13 +93,13 @@ export class Classes {
         "text-[13px] font-medium text-primary-grey-dark"
     )
     static inputBordered = classnames(
-        "text-xs font-semibold text-primary-black-default rounded-md border-1 border-[#D7D9D7] placeholder:font-normal placeholder-primary-grey-dark focus:ring-0"
+        "text-xs font-semibold text-primary-black-default rounded-lg border-1 border-[#D7D9D7] min-h-[40px] placeholder:font-normal placeholder-primary-grey-dark focus:ring-0 focus:ring-primary-blue-default hover:border-primary-blue-default"
     )
     static input = classnames(
-        "w-full text-xs font-semibold rounded text-primary-black-default p-2 mt-2 border-1 border-[#D7D9D7] placeholder:font-normal placeholder-primary-grey-dark focus:ring-0"
+        "w-full text-xs font-semibold rounded-lg text-primary-black-default py-2 px-3 mt-2 border-1 border-[#D7D9D7] min-h-[40px] placeholder:font-normal placeholder-primary-grey-dark focus:ring-0 focus:ring-primary-blue-default hover:border-primary-blue-default"
     )
     static inputBorder = classnames(
-        "w-full text-xs px-2 py-2 mt-1 font-semibold rounded-md border-1 border-primary-grey-hover placeholder:font-normal placeholder-primary-grey-dark focus:ring-0"
+        "w-full text-xs px-3 py-2 mt-1 font-semibold rounded-lg border-1 border-primary-grey-hover placeholder:font-normal min-h-[40px] placeholder-primary-grey-dark focus:ring-0 hover:border-primary-blue-default focus:ring-primary-blue-default"
     )
 
     static checkbox = classnames(
@@ -111,11 +111,11 @@ export class Classes {
     static placeholder = classnames("overflow-hidden relative placeholder")
 
     static blueSection = classnames(
-        "p-4 border-opacity-0 border-transparent flex justify-between items-center flex-row w-full rounded-md bg-primary-grey-default border cursor-pointer hover:bg-primary-grey-hover"
+        "p-4 border-opacity-0 border-transparent flex justify-between items-center flex-row w-full rounded-lg bg-primary-grey-default border cursor-pointer hover:bg-primary-grey-hover"
     )
 
     static greySection = classnames(
-        "p-4 border-opacity-0 border-transparent flex justify-between items-center flex-row w-full rounded-md bg-primary-grey-default border cursor-pointer hover:bg-primary-grey-hover"
+        "p-4 border-opacity-0 border-transparent flex justify-between items-center flex-row w-full rounded-lg bg-primary-grey-default border cursor-pointer hover:bg-primary-grey-hover"
     )
 
     static blueSelectionDisabled = classnames(
@@ -147,7 +147,7 @@ export class Classes {
     )
     static selectStyle = classnames(
         this.selectBaseStyle,
-        "text-primary-grey-dark border rounded-md group border-primary-200 hover:border-primary-blue-default px-3 py-2"
+        "text-primary-black-default border rounded-lg font-semibold placeholder:font-normal group border-[#D7D9D7] hover:border-primary-blue-default px-3 py-2 min-h-[40px]"
     )
     static selectStyleDisabled = classnames(
         this.selectStyle,

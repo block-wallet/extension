@@ -29,7 +29,6 @@ else
 	@echo "Building in production mode"
 	npx webpack --config ./webpack/webpack.config.js
 endif
-	@node ./rpch/apply_patch.js
 	@cp ./src/infrastructure/hardware/trezor/trezor-usb-permissions.html ../../dist/trezor-usb-permissions.html
 
 depcheck:

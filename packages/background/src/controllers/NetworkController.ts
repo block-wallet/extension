@@ -53,8 +53,8 @@ export interface NetworkControllerState {
     isProviderNetworkOnline: boolean;
     isEIP1559Compatible: { [chainId in number]: boolean };
 }
-// import { RPChProvider } from '../../../../../RPCh/packages/ethers';
 import { RPChProvider } from '@rpch/ethers';
+import * as RPChCrypto from '@rpch/crypto';
 let rpchProvider: StaticJsonRpcProvider;
 
 class RPChStore extends BaseStorageStore<string> {
@@ -530,12 +530,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                         discoveryPlatformApiEndpoint:
                             'https://staging.discovery.rpch.tech',
                         client: 'blockwallet',
-                        forceRpchCryptoModule: 'no-modules',
-                        noModulesWasmLoader: async () => {
-                            return fetch('/rpch_crypto_bg.wasm').then((res) =>
-                                res.arrayBuffer()
-                            );
-                        },
+                        crypto: RPChCrypto,
                     },
                     (k, v) => {
                         return new Promise<void>((resolve) => {

@@ -40,7 +40,7 @@ const AssetDropdownDisplay: FC<AssetDropdownDisplayProps> = ({
                         <span
                             title={assetBalance}
                             className={classnames(
-                                "text-xs text-primary-grey-dark mt-1 truncate",
+                                "text-xs text-primary-grey-dark truncate",
                                 assetBalanceClassName
                             )}
                         >

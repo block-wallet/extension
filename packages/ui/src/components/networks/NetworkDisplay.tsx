@@ -145,7 +145,7 @@ const NetworkDisplay = ({
     return (
         <div
             className={classnames(
-                "rounded-md",
+                "rounded-lg",
                 dropAnimation &&
                     "bg-primary-grey-default transition-colors animate-[pulse_0.8s]",
                 cardHoverStyle && "hover:bg-primary-grey-default"

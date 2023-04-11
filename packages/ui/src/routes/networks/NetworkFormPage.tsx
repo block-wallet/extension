@@ -491,7 +491,7 @@ const NetworkFormPage = ({
                 }}
             />
             <div className="flex flex-col w-full justify-between flex-1 h-full">
-                <div className="flex flex-col flex-1 p-6 space-y-4">
+                <div className="flex flex-col flex-1 p-6 space-y-3">
                     <div className="flex flex-col space-y-1">
                         <TextInput
                             appearance="outline"

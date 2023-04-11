@@ -617,7 +617,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 </p>
 
                 {/* Gas */}
-                <p className="text-sm text-primary-grey-dark pb-1 pt-0.5">
+                <p className="text-[13px] font-medium pb-1 pt-0.5 text-primary-grey-dark">
                     Gas Price
                 </p>
                 {isEIP1559Compatible ? (

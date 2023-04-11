@@ -21,7 +21,7 @@ const AssetAmountDisplay: FC<AssetAmountComponentProps> = ({
     )
 
     return (
-        <div className="flex flex-row items-center w-full p-4 rounded-md bg-primary-grey-default">
+        <div className="flex flex-row items-center w-full p-4 rounded-lg bg-primary-grey-default">
             <span className="flex items-center justify-center !w-6 !h-6 rounded-full">
                 <img
                     src={asset.logo || unknownTokenIcon}

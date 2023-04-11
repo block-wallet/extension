@@ -343,7 +343,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
         <div className="flex flex-col w-full">
             <div className="flex flex-col w-full space-y-3 px-3 pb-3">
                 <div className="flex flex-col">
-                    <label className="leading-loose text-xs font-medium mb-1 text-gra">
+                    <label className="text-[13px] font-medium text-primary-grey-dark">
                         Gas limit
                     </label>
                     <input
@@ -353,7 +353,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                         })}
                         className={classnames(
                             Classes.inputBordered,
-                            "w-full",
+                            "w-full mt-2",
                             !isCustom && "text-gray-400",
                             errors.gasLimit
                                 ? "border-red-400 focus:border-red-600"
@@ -403,7 +403,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                     </span>
                 </div>
                 <div className="flex flex-col relative">
-                    <label className="leading-loose text-xs font-medium  mb-1">
+                    <label className="text-[13px] font-medium text-primary-grey-dark">
                         Max tip (per gas unit)
                     </label>
                     <EndLabel label="GWEI">
@@ -462,7 +462,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                     </span>
                 </div>
                 <div className="flex flex-col relative">
-                    <label className="leading-loose text-xs font-medium  mb-1">
+                    <label className="text-[13px] font-medium  text-primary-grey-dark">
                         Max fee (per gas unit)
                     </label>
                     <EndLabel label="GWEI">

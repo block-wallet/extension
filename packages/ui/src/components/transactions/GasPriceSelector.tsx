@@ -189,7 +189,7 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                     <div className="flex flex-col">
                         <label
                             className={classnames(
-                                "leading-loose text-xs font-medium  mb-1",
+                                "leading-loose text-xs font-medium text-primary-grey-dark mb-1",
                                 !isCustom && "text-gray-400"
                             )}
                         >

@@ -243,7 +243,7 @@ const AllowanceInput = ({
                 <div className="flex items-center w-1/3 mb-1">
                     <label
                         htmlFor="allowanceAmount"
-                        className="text-sm text-primary-grey-dark"
+                        className="text-[13px] font-medium text-primary-grey-dark"
                     >
                         Allowance
                     </label>

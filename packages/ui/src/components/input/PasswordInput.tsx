@@ -114,7 +114,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                             />
                             <div
                                 className={classNames(
-                                    "w-6 h-6 p-1 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-grey-default hover:text-primary-blue-default text-primary-grey-dark rounded-full",
+                                    "w-6 h-6 p-1 mt-2 mr-3 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-grey-default hover:text-primary-blue-default text-primary-grey-dark rounded-full",
                                     showPassword === false
                                         ? "opacity-100 z-10"
                                         : "opacity-0 pointer-event-none z-0"
@@ -125,7 +125,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
                             </div>
                             <div
                                 className={classNames(
-                                    "w-6 h-6 p-1 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-grey-default  hover:text-primary-blue-default text-primary-grey-dark rounded-full flex items-center",
+                                    "w-6 h-6 p-1 mt-2 mr-3 absolute right-0 transition-all duration-300 cursor-pointer hover:bg-primary-grey-default  hover:text-primary-blue-default text-primary-grey-dark rounded-full flex items-center",
                                     showPassword === true
                                         ? "opacity-100 z-10"
                                         : "opacity-0 pointer-event-none z-0"

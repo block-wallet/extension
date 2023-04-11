@@ -112,7 +112,7 @@ const Select: FC<SelectProps> & CompoundProps = ({
         return null
     }, [currentValue, children])
     return (
-        <div className="space-y-1">
+        <div className="space-y-2">
             {label ? (
                 <label
                     htmlFor={id || "selectMenu"}

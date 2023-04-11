@@ -99,7 +99,7 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
             <div
                 className={classNames(
                     Classes.greySection,
-                    "h-[4.5rem]",
+                    "h-[4rem]",
                     "space-x-1",
                     active && Classes.blueSectionActive,
                     disabled && Classes.greySelectionDisabled,

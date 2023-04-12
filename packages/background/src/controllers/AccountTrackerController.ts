@@ -2034,4 +2034,11 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             return undefined;
         }
     }
+
+    public getAllAccountAddresses(): string[] {
+        const { accounts, hiddenAccounts } = this.store.getState();
+        return Object.keys(accounts || {}).concat(
+            Object.keys(hiddenAccounts || {})
+        );
+    }
 }

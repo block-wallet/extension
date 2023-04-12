@@ -269,7 +269,12 @@ export const initBackgroundState: BackgroundStateType = {
         selectedNetwork: "goerli",
         isNetworkChanging: false,
         isUserNetworkOnline: true,
-        isProviderNetworkOnline: true,
+        providerStatus: {
+            isCurrentProviderOnline: true,
+            isBackupProviderOnline: true,
+            isDefaultProviderOnline: true,
+            isUsingBackupProvider: false,
+        },
         localeInfo: "",
         nativeCurrency: "usd",
         permissions: {

@@ -1,9 +1,10 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
+import { INITIAL_NETWORKS } from '../../../../utils/constants/networks';
 import { normalizeNetworksOrder } from '../../../../utils/networks';
 
 /**
- * Add Network currentRpcUrl Property and remove rpcUrls
+ * Add Network currentRpcUrl, backupRpcUrls & defaultRpcUrl Properties and remove rpcUrls
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
@@ -11,12 +12,16 @@ export default {
         const updatedNetworks = { ...availableNetworks };
 
         Object.keys(updatedNetworks).forEach((key) => {
-            const network = updatedNetworks[key];
-            const { rpcUrls } = network;
+            const { rpcUrls } = updatedNetworks[key];
+            updatedNetworks[key] = {
+                ...updatedNetworks[key],
+                defaultRpcUrl: INITIAL_NETWORKS[key].defaultRpcUrl,
+                backupRpcUrls: INITIAL_NETWORKS[key].backupRpcUrls,
+            };
             if (rpcUrls && rpcUrls.length > 0) {
                 const currentRpcUrl = rpcUrls[0];
                 updatedNetworks[key] = {
-                    ...network,
+                    ...updatedNetworks[key],
                     currentRpcUrl,
                 };
                 delete updatedNetworks[key].rpcUrls;

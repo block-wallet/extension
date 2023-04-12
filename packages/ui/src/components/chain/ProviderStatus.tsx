@@ -1,10 +1,6 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import {
-    getChainRpcs,
-    isRpcValid,
-    editNetwork,
-} from "../../context/commActions"
+import { switchProvider } from "../../context/commActions"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { Classes, classnames } from "../../styles"
 import { AiFillInfoCircle } from "react-icons/ai"
@@ -13,131 +9,60 @@ import CloseIcon from "../icons/CloseIcon"
 import Divider from "../Divider"
 import switchIcon from "../../assets/images/icons/switch.svg"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import { NetworkRPCs } from "@block-wallet/background/controllers/NetworkController"
-import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 
-interface isChainUsingBackupObject {
-    [x: number]: boolean
+enum ProviderType {
+    DEFAULT = "DEFAULT",
+    BACKUP = "BACKUP",
+    CUSTOM = "CUSTOM",
+    CURRENT = "CURRENT",
 }
 
 const ProviderStatus = () => {
-    const { isProviderNetworkOnline, isUserNetworkOnline, isNetworkChanging } =
+    const { isUserNetworkOnline, isNetworkChanging, providerStatus } =
         useBlankState()!
 
+    const {
+        isCurrentProviderOnline,
+        isBackupProviderOnline,
+        isDefaultProviderOnline,
+        isUsingBackupProvider,
+    } = providerStatus
+
     const network = useSelectedNetwork()
-    const { chainId } = network
+    const { chainId, currentRpcUrl, defaultRpcUrl } = network
 
     const history = useOnMountHistory()
 
     const [open, setOpen] = useState(false)
-    const [chainRpcs, setChainRpcs] = useState<NetworkRPCs>({})
-
-    const { currentRpcUrl, defaultRpcUrl, backupRpcUrl } = chainRpcs
-
-    const [defaultRpcUp, setDefaultRpcUp] = useState(true)
-    const [backupRpcUp, setBackupRpcUp] = useState(true)
-
-    const [persistedData, setPersistedData] =
-        useLocalStorageState<isChainUsingBackupObject>(
-            "provider.switchedToBackup",
-            {
-                initialValue: {},
-                volatile: false,
-            }
-        )
 
     const isUsingDefaultRpc = currentRpcUrl === defaultRpcUrl
 
-    const isUsingBackupRpc = persistedData[chainId]
+    const isUsingCustomRpc = !isUsingDefaultRpc && !isUsingBackupProvider
 
-    const isUsingCustomRpc =
-        currentRpcUrl !== defaultRpcUrl && currentRpcUrl !== backupRpcUrl
-
-    const showDefaultProviderRestored = defaultRpcUp && isUsingBackupRpc
+    const showDefaultProviderRestored =
+        isDefaultProviderOnline && isUsingBackupProvider
 
     const showSwitchToBackup =
-        !isProviderNetworkOnline && isUsingDefaultRpc && backupRpcUp
+        !isCurrentProviderOnline && isUsingDefaultRpc && isBackupProviderOnline
 
     const showSwitchToDefault =
-        !isProviderNetworkOnline && isUsingCustomRpc && defaultRpcUp
+        !isCurrentProviderOnline && isUsingCustomRpc && isDefaultProviderOnline
 
     const showProviderStatus =
         !isNetworkChanging &&
-        ((!isProviderNetworkOnline && isUserNetworkOnline) ||
+        ((!isCurrentProviderOnline && isUserNetworkOnline) ||
             showDefaultProviderRestored)
 
-    // Fetch chain RPCs(selected, default & backup) with network change or after provider status changes(after switching RPCs)
-    useEffect(() => {
-        getChainRpcs(chainId).then(setChainRpcs)
-    }, [chainId, isProviderNetworkOnline])
-
-    // Check RPCs validity whenever they change or if the provider status changes
-    useEffect(() => {
-        Promise.all([
-            isRpcValid(defaultRpcUrl ?? "", chainId),
-            isRpcValid(backupRpcUrl ?? "", chainId),
-        ]).then(([isDefaultRpcUp, isBackupRpcUp]) => {
-            setDefaultRpcUp(isDefaultRpcUp)
-            setBackupRpcUp(isBackupRpcUp)
-        })
-    }, [defaultRpcUrl, backupRpcUrl, isProviderNetworkOnline])
-
-    // After switching to a Backup Provider check if the default if back online each minute
-    useEffect(() => {
-        let intervalId: NodeJS.Timer | null = null
-
-        async function checkDefaultRpcValidity() {
-            const isValid = await isRpcValid(defaultRpcUrl ?? "", chainId)
-            if (isValid) {
-                setDefaultRpcUp(true)
-                if (intervalId) clearInterval(intervalId)
-            }
-        }
-
-        if (!defaultRpcUp && isUsingBackupRpc) {
-            intervalId = setInterval(() => {
-                checkDefaultRpcValidity()
-            }, 60 * 1000)
-        }
-
-        return () => {
-            if (intervalId) clearInterval(intervalId)
-        }
-    }, [chainId, persistedData, defaultRpcUp])
-
-    const switchProvider = async () => {
+    const handleSwitch = async () => {
         if (
             showSwitchToBackup ||
             showSwitchToDefault ||
             showDefaultProviderRestored
         ) {
-            const rpcUrl = showSwitchToBackup
-                ? chainRpcs?.backupRpcUrl!
-                : chainRpcs?.defaultRpcUrl!
-            await editNetwork({
-                chainId: `${network?.chainId}`,
-                updates: {
-                    rpcUrl,
-                    name: network?.desc,
-                    test: !!network?.test,
-                    blockExplorerUrl:
-                        network?.blockExplorerUrls &&
-                        network?.blockExplorerUrls.length > 0
-                            ? network.blockExplorerUrls[0]
-                            : undefined,
-                },
-            })
-            if (showSwitchToBackup) {
-                setPersistedData((prevState) => ({
-                    ...prevState,
-                    [chainId]: true,
-                }))
-            } else {
-                setPersistedData((prevState) => ({
-                    ...prevState,
-                    [chainId]: false,
-                }))
-            }
+            const providerType = showSwitchToBackup
+                ? ProviderType.BACKUP
+                : ProviderType.DEFAULT
+            await switchProvider({ chainId, providerType })
         } else {
             history.push({
                 pathname: "/settings/networks/details",
@@ -238,7 +163,7 @@ const ProviderStatus = () => {
                             <Divider />
                         </div>
                         <button
-                            onClick={switchProvider}
+                            onClick={handleSwitch}
                             className={classnames(
                                 Classes.darkButton,
                                 "mt-4 -mb-2 mx-2"

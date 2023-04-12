@@ -26,6 +26,7 @@ import { getChainListItem } from '../utils/chainlist';
 import { FEATURES } from '../utils/constants/features';
 import {
     formatAndValidateRpcURL,
+    getCustomRpcChainId,
     getUrlWithoutTrailingSlash,
     validateNetworkChainId,
 } from '../utils/ethereumChain';
@@ -37,12 +38,7 @@ import {
 } from '../utils/nodes';
 import { toChecksumAddress } from 'ethereumjs-util';
 import { SECOND } from '../utils/constants/time';
-
-export interface NetworkRPCs {
-    currentRpcUrl?: string;
-    defaultRpcUrl?: string;
-    backupRpcUrl?: string;
-}
+import { ProviderType } from '../utils/types/communication';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -55,7 +51,12 @@ export interface NetworkControllerState {
     availableNetworks: Networks;
     isNetworkChanging: boolean;
     isUserNetworkOnline: boolean;
-    isProviderNetworkOnline: boolean;
+    providerStatus: {
+        isCurrentProviderOnline: boolean;
+        isDefaultProviderOnline: boolean;
+        isBackupProviderOnline: boolean;
+        isUsingBackupProvider: boolean;
+    };
     isEIP1559Compatible: { [chainId in number]: boolean };
 }
 
@@ -73,7 +74,12 @@ export default class NetworkController extends BaseController<NetworkControllerS
         super({
             ...initialState,
             isNetworkChanging: false,
-            isProviderNetworkOnline: true,
+            providerStatus: {
+                isCurrentProviderOnline: true,
+                isDefaultProviderOnline: true,
+                isBackupProviderOnline: true,
+                isUsingBackupProvider: false,
+            },
             isUserNetworkOnline: true,
         });
 
@@ -103,10 +109,21 @@ export default class NetworkController extends BaseController<NetworkControllerS
             }
             return;
         }
-        const { isProviderNetworkOnline } = this.getState();
+        const { isCurrentProviderOnline, isUsingBackupProvider } =
+            this.getState().providerStatus;
 
-        if (!isProviderNetworkOnline) {
+        if (!isCurrentProviderOnline) {
             await this._updateProviderNetworkStatus();
+            await this._updateProviderNetworkStatus(ProviderType.DEFAULT);
+
+            if (this.network.currentRpcUrl === this.network.defaultRpcUrl) {
+                await this._updateProviderNetworkStatus(ProviderType.BACKUP);
+            }
+        }
+
+        // If the provider is online and we are using the backup provider, check the default provider status
+        if (isCurrentProviderOnline && isUsingBackupProvider) {
+            await this._updateProviderNetworkStatus(ProviderType.DEFAULT);
         }
 
         this.checkProviderTimeout = setTimeout(
@@ -360,6 +377,15 @@ export default class NetworkController extends BaseController<NetworkControllerS
         newNetworks[networkKey].blockExplorerUrls = [explorerUrl];
         newNetworks[networkKey].test = updates.test;
         this.networks = newNetworks;
+
+        if (rpcUrl) {
+            this.store.updateState({
+                providerStatus: {
+                    ...this.getState().providerStatus,
+                    isUsingBackupProvider: false,
+                },
+            });
+        }
 
         // If network is currently selected & rpc is changed, update provider by resetting the network (only available if provider is down)
         if (this.network.chainId === chainId && updates.rpcUrls) {
@@ -791,6 +817,97 @@ export default class NetworkController extends BaseController<NetworkControllerS
     }
 
     /**
+     *  switchProvider
+     *
+     *  @param chainId chain identifier of the network
+     *  @param providerType type of provider to use (default, backup or custom)
+     *  @param customRpcUrl rpc url of the network
+     *
+     */
+    public async switchProvider(
+        chainId: number,
+        providerType: ProviderType,
+        customRpcUrl?: string
+    ): Promise<void> {
+        const network = this.getNetworkFromChainId(chainId);
+        if (!network) throw new Error('Network not found for given chainId');
+
+        let rpcUrl;
+        switch (providerType) {
+            case ProviderType.DEFAULT:
+                rpcUrl = network.defaultRpcUrl;
+                break;
+            case ProviderType.BACKUP: {
+                rpcUrl = await this._getWorkingBackupRpcUrl(chainId);
+                break;
+            }
+            case ProviderType.CUSTOM:
+                rpcUrl = customRpcUrl;
+                break;
+            default:
+                throw new Error('Invalid provider type');
+        }
+        if (!rpcUrl) throw new Error('Invalid rpc url');
+
+        await this.editNetwork(chainId, {
+            rpcUrls: [rpcUrl],
+            blockExplorerUrls: network.blockExplorerUrls,
+            name: network.desc,
+            test: network.test,
+        });
+
+        this.store.updateState({
+            providerStatus: {
+                ...this.getState().providerStatus,
+                isUsingBackupProvider: providerType === ProviderType.BACKUP,
+            },
+        });
+    }
+
+    /**
+     *  _isRpcValid
+     *
+     *  Checks if the rpc url is working
+     *  @param chainId chain identifier of the network
+     *  @param rpcUrl rpc url of the network
+     *  @returns true if the rpc url is valid, false otherwise
+     */
+    private async _isRpcValid(
+        chainId: number,
+        rpcUrl: string
+    ): Promise<boolean> {
+        let isValid = false;
+        try {
+            const returnedChainId = await getCustomRpcChainId(rpcUrl);
+            if (returnedChainId === chainId) {
+                isValid = true;
+            }
+        } catch (error) {
+            // isValid is false
+        }
+        return isValid;
+    }
+
+    /**
+     *  _getWorkingBackupRpcUrl
+     *
+     *  Returns the first working backup rpc url
+     *  @param chainId chain identifier of the network
+     *  @returns rpc url of the network
+     */
+    private async _getWorkingBackupRpcUrl(chainId: number) {
+        let rpcUrl;
+        const network = this.getNetworkFromChainId(chainId);
+        const backupRpcUrl = network?.backupRpcUrls?.find(
+            async (url) => await this._isRpcValid(chainId, url)
+        );
+        if (backupRpcUrl) {
+            rpcUrl = backupRpcUrl;
+        }
+        return rpcUrl;
+    }
+
+    /**
      * waitForTransaction
      */
     public waitForTransaction(
@@ -836,14 +953,53 @@ export default class NetworkController extends BaseController<NetworkControllerS
         this.emit(NetworkEvents.USER_NETWORK_CHANGE, newValue);
     }
 
-    private _updateProviderNetworkStatus = (err?: {
-        code: ErrorCode;
-        body?: string;
-    }) => {
+    private _updateProviderNetworkStatus = async (
+        providerType?: ProviderType,
+        err?: {
+            code: ErrorCode;
+            body?: string;
+        }
+    ) => {
         const errorCodes = [ErrorCode.SERVER_ERROR, ErrorCode.TIMEOUT];
+        const network = this.network;
         const checkingChainId = this.provider.network.chainId;
+
+        let providerInstance: StaticJsonRpcProvider | undefined;
+        if (providerType === ProviderType.DEFAULT) {
+            if (!network.defaultRpcUrl) {
+                this.store.updateState({
+                    providerStatus: {
+                        ...this.getState().providerStatus,
+                        isDefaultProviderOnline: false,
+                    },
+                });
+                return Promise.resolve(true);
+            }
+            providerInstance = this._getProviderForNetwork(
+                network.chainId,
+                network.defaultRpcUrl
+            );
+        } else if (providerType === ProviderType.BACKUP) {
+            const backupRpcUrl = await this._getWorkingBackupRpcUrl(
+                network.chainId
+            );
+            if (!backupRpcUrl) {
+                this.store.updateState({
+                    providerStatus: {
+                        ...this.getState().providerStatus,
+                        isBackupProviderOnline: false,
+                    },
+                });
+                return Promise.resolve(true);
+            }
+            providerInstance = this._getProviderForNetwork(
+                network.chainId,
+                backupRpcUrl
+            );
+        }
+
         if (!err || errorCodes.includes(err.code)) {
-            return this._isProviderReady()
+            return this._isProviderReady(providerInstance)
                 .then(() => {
                     return Promise.resolve(true);
                 })
@@ -852,18 +1008,36 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 })
                 .then((newStatus) => {
                     const currentChainId = this.provider.network.chainId;
+                    const providerStatus = this.getState().providerStatus;
+                    const currentProviderStatus =
+                        providerType === ProviderType.BACKUP
+                            ? providerStatus.isBackupProviderOnline
+                            : providerType === ProviderType.DEFAULT
+                            ? providerStatus.isDefaultProviderOnline
+                            : providerStatus.isCurrentProviderOnline;
+
                     if (
-                        this.getState().isProviderNetworkOnline === newStatus ||
-                        //Discard response if the user switched the network
+                        currentProviderStatus === newStatus ||
+                        // Discard response if the user switched the network
                         currentChainId !== checkingChainId
                     ) {
-                        return;
+                        return false;
                     }
 
+                    const updatedStatus =
+                        providerType === ProviderType.BACKUP
+                            ? { isBackupProviderOnline: newStatus }
+                            : providerType === ProviderType.DEFAULT
+                            ? { isDefaultProviderOnline: newStatus }
+                            : { isCurrentProviderOnline: newStatus };
+
                     this.store.updateState({
-                        isProviderNetworkOnline: newStatus,
+                        providerStatus: {
+                            ...providerStatus,
+                            ...updatedStatus,
+                        },
                     });
-                    this.emit(NetworkEvents.PROVIDER_NETWORK_CHANGE, newStatus);
+                    return true;
                 });
         }
         return Promise.resolve(true);

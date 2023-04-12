@@ -63,7 +63,6 @@ import {
 import { GasPriceData } from '@block-wallet/background/controllers/GasPricesController';
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import { TypedTransaction } from '@ethereumjs/tx';
-import { NetworkRPCs } from '@block-wallet/background/controllers/NetworkController';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -147,6 +146,7 @@ enum NETWORK {
     EDIT_NETWORK = 'EDIT_NETWORK',
     EDIT_NETWORKS_ORDER = 'EDIT_NETWORKS_ORDER',
     REMOVE_NETWORK = 'REMOVE_NETWORK',
+    SWITCH_PROVIDER = 'SWITCH_PROVIDER',
     GET_SPECIFIC_CHAIN_DETAILS = 'GET_SPECIFIC_CHAIN_DETAILS',
     GET_DEFAULT_RPC = 'GET_DEFAULT_RPC',
     GET_RPCS = 'GET_RPCS',
@@ -267,6 +267,13 @@ enum FILTERS {
     SET_ACCOUNT_FILTERS = 'SET_ACCOUNT_FILTERS',
 }
 
+export enum ProviderType {
+    DEFAULT = 'DEFAULT',
+    BACKUP = 'BACKUP',
+    CUSTOM = 'CUSTOM',
+    CURRENT = 'CURRENT',
+}
+
 export const Messages = {
     ACCOUNT,
     APP,
@@ -377,6 +384,7 @@ export interface RequestSignatures {
     [Messages.NETWORK.EDIT_NETWORK]: [RequestEditNetwork, void];
     [Messages.NETWORK.EDIT_NETWORKS_ORDER]: [RequestEditNetworksOrder, void];
     [Messages.NETWORK.REMOVE_NETWORK]: [RequestRemoveNetwork, void];
+    [Messages.NETWORK.SWITCH_PROVIDER]: [RequestSwitchProvider, void];
     [Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS]: [
         RequestGetChainData,
         ChainListItem
@@ -385,9 +393,7 @@ export interface RequestSignatures {
         RequestGetChainData,
         string | undefined
     ];
-    [Messages.NETWORK.GET_RPCS]: [RequestGetChainData, NetworkRPCs];
     [Messages.NETWORK.GET_RPC_CHAIN_ID]: [RequestGetRpcChainId, number];
-    [Messages.NETWORK.IS_RPC_VALID]: [RequestIsRpcValid, boolean];
     [Messages.NETWORK.SEARCH_CHAINS]: [
         RequestSearchChains,
         { name: string; logo: string }
@@ -764,17 +770,18 @@ export interface RequestRemoveNetwork {
     chainId: number;
 }
 
+export interface RequestSwitchProvider {
+    chainId: number;
+    providerType: ProviderType;
+    customRpcUrl?: string;
+}
+
 export interface RequestGetChainData {
     chainId: number;
 }
 
 export interface RequestGetRpcChainId {
     rpcUrl: string;
-}
-
-export interface RequestIsRpcValid {
-    rpcUrl: string;
-    chainId: number;
 }
 
 export interface RequestSearchChains {

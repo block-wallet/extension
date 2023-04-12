@@ -1,6 +1,7 @@
 import { BaseController } from '../infrastructure/BaseController';
 import { AccountTrackerController } from './AccountTrackerController';
 import httpClient from '../utils/http';
+import { retryHandling } from '../utils/retryHandling';
 
 const CAMPAIGNS_SERVICE_URL = 'https://campaigns.blockwallet.io/v1';
 
@@ -37,9 +38,16 @@ export default class CampaignsController extends BaseController<
             .getAllAccountAddresses()
             .map(toLower);
 
-        const enrolledAccounts = await httpClient.request<{
+        type CampaignAccountsResponse = {
             accounts: string[];
-        }>(`${CAMPAIGNS_SERVICE_URL}/api/campaigns/${campaignId}/accounts`);
+        };
+
+        const enrolledAccounts = await retryHandling<CampaignAccountsResponse>(
+            () =>
+                httpClient.request<CampaignAccountsResponse>(
+                    `${CAMPAIGNS_SERVICE_URL}/api/campaigns/${campaignId}/accounts`
+                )
+        );
 
         const enrolledAccount = enrolledAccounts.accounts.find((acc) =>
             accountAddresses.includes(acc.toLowerCase())

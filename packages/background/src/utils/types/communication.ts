@@ -132,6 +132,7 @@ export enum EXTERNAL {
     SW_REINIT = 'SW_REINIT',
     SET_ICON = 'SET_ICON',
     GET_PROVIDER_CONFIG = 'GET_PROVIDER_CONFIG',
+    IS_ENROLLED = 'IS_ENROLLED',
 }
 
 export enum CONTENT {
@@ -355,6 +356,7 @@ export interface RequestSignatures {
         undefined,
         RemoteConfigsControllerState['provider']
     ];
+    [Messages.EXTERNAL.IS_ENROLLED]: [RequestIsEnrolled, boolean];
     [Messages.BRIDGE.GET_BRIDGE_TOKENS]: [RequestGetBridgeTokens, IToken[]];
 
     [Messages.BRIDGE.APPROVE_BRIDGE_ALLOWANCE]: [
@@ -658,6 +660,10 @@ export interface RequestRejectDappRequest {
 
 export interface RequestReconnectDevice {
     address: string;
+}
+
+export interface RequestIsEnrolled {
+    campaignId: string;
 }
 export interface RequestCheckExchangeAllowance {
     account: string;

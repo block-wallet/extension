@@ -91,8 +91,16 @@ export default class NetworkController extends BaseController<NetworkControllerS
         this._updateProviderNetworkStatus();
 
         // Set the error handler for the provider to check for network status
-        this.provider.on('debug', ({ error }) => {
-            if (error) this._updateProviderNetworkStatus(undefined, error);
+        this.provider.on('debug', async ({ error }) => {
+            if (error) {
+                if (this.network.currentRpcUrl !== this.network.defaultRpcUrl) {
+                    await this._updateProviderNetworkStatus(
+                        ProviderType.DEFAULT,
+                        error
+                    );
+                }
+                this._updateProviderNetworkStatus(undefined, error);
+            }
         });
 
         this.setMaxListeners(30); // currently, we need 16

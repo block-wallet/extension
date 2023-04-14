@@ -115,11 +115,7 @@ const GasPricesInfo: FC = () => {
     const [active, setActive] = useState(false)
     const [calculateGasCost] = useState<"SEND">("SEND")
     const {
-        state: {
-            exchangeRates,
-            networkNativeCurrency,
-            isRatesChangingAfterNetworkChange,
-        },
+        state: { exchangeRates, networkNativeCurrency },
     } = useExchangeRatesState()
     const { nativeCurrency, localeInfo, isNetworkChanging } = useBlankState()!
 
@@ -140,10 +136,7 @@ const GasPricesInfo: FC = () => {
         GAS_LIMITS[calculateGasCost]
     )
 
-    const isLoading =
-        isNetworkChanging ||
-        isRatesChangingAfterNetworkChange ||
-        !displayGasPrices
+    const isLoading = isNetworkChanging || !displayGasPrices
 
     return (
         <>

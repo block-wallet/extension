@@ -642,6 +642,68 @@
                 }
             ],
             "version": "0.7.0"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added Polygon zkEVM as default network with full proxy and failover support."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added $ARB token."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Fixed Ledger interactions on specific networks."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed handling signing message behavior with Keystone."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed wallet behavior and experience when loading rates."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.7.2"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Faster fetching of transaction status, gas and balances."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improved gas estimation with dynamic calculation."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Fixed some minor display bugs."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.7.3"
         }
     ]
 }

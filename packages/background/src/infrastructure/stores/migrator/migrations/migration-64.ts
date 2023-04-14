@@ -1,104 +1,79 @@
-import { BridgeControllerState } from '@block-wallet/background/controllers/BridgeController';
-import { pruneTransaction } from '../../../../controllers/transactions/utils/utils';
-import { TransactionWatcherControllerState } from '../../../../controllers/TransactionWatcherController';
-import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
+import { FEATURES } from '../../../../utils/constants/features';
+import { BlankAppState } from '../../../../utils/constants/initialState';
+import {
+    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+    INITIAL_NETWORKS,
+} from '../../../../utils/constants/networks';
+import { normalizeNetworksOrder } from '../../../../utils/networks';
 import { IMigration } from '../IMigration';
-import { WatchedTransactionType } from '../../../../controllers/transactions/utils/types';
-
-const pruneBridgeTxs = (
-    txs: BridgeControllerState['bridgeReceivingTransactions']
-): BridgeControllerState['bridgeReceivingTransactions'] => {
-    const newTxs = { ...txs };
-    for (const chainId in newTxs) {
-        const chainTxs = newTxs[chainId];
-        if (chainTxs) {
-            for (const addr in chainTxs) {
-                const addrTxs = chainTxs[addr];
-                if (addrTxs) {
-                    newTxs[chainId][addr] = Object.entries(addrTxs).reduce(
-                        (acc, [txHash, tx]) => {
-                            return {
-                                ...acc,
-                                [txHash]: pruneTransaction(tx),
-                            };
-                        },
-                        addrTxs
-                    );
-                }
-            }
-        }
-    }
-    return newTxs;
-};
-
-const pruneWatchedTxs = (
-    txs: TransactionWatcherControllerState['transactions']
-): TransactionWatcherControllerState['transactions'] => {
-    const newTxs = { ...txs };
-    for (const chainId in newTxs) {
-        const chainTxs = newTxs[chainId];
-        if (chainTxs) {
-            for (const addr in chainTxs) {
-                const addrTxs = chainTxs[addr];
-                if (addrTxs) {
-                    for (const type in addrTxs) {
-                        const typeTxs = addrTxs[type as WatchedTransactionType];
-                        if (typeTxs && typeTxs.transactions) {
-                            newTxs[chainId][addr][
-                                type as WatchedTransactionType
-                            ].transactions = Object.entries(
-                                typeTxs.transactions
-                            ).reduce((acc, [txHash, tx]) => {
-                                return {
-                                    ...acc,
-                                    [txHash]: pruneTransaction(tx),
-                                };
-                            }, typeTxs.transactions);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return newTxs;
-};
 
 /**
- * This migration fixes zksync block explorer
+ * This migration adds polygon zkEvm network
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
-        const { transactions } = persistedState.TransactionController;
-        const { bridgeReceivingTransactions } = persistedState.BridgeController;
-        const { transactions: watchedTx } =
-            persistedState.TransactionWatcherControllerState;
+        const { availableNetworks } = persistedState.NetworkController;
+        const updatedNetworks = { ...availableNetworks };
 
-        const newTxsState = transactions
-            ? transactions.map(pruneTransaction)
-            : transactions;
+        updatedNetworks.MAINNET = {
+            ...updatedNetworks.MAINNET,
+            rpcUrls: INITIAL_NETWORKS.MAINNET.rpcUrls,
+            defaultRpcUrl: INITIAL_NETWORKS.MAINNET.defaultRpcUrl,
+        };
 
-        const newBridgeReceivingTxState = bridgeReceivingTransactions
-            ? pruneBridgeTxs(bridgeReceivingTransactions)
-            : bridgeReceivingTransactions;
+        updatedNetworks.POLYGON = {
+            ...updatedNetworks.POLYGON,
+            rpcUrls: INITIAL_NETWORKS.POLYGON.rpcUrls,
+            defaultRpcUrl: INITIAL_NETWORKS.POLYGON.defaultRpcUrl,
+        };
 
-        const newWatchedTxsState = watchedTx
-            ? pruneWatchedTxs(watchedTx)
-            : watchedTx;
+        updatedNetworks.BSC = {
+            ...updatedNetworks.BSC,
+            rpcUrls: INITIAL_NETWORKS.BSC.rpcUrls,
+            defaultRpcUrl: INITIAL_NETWORKS.BSC.defaultRpcUrl,
+        };
+
+        // Add new Polygon zkEVM
+        updatedNetworks.POLYGON_ZKEVM = {
+            name: 'polygon_zkevm',
+            desc: 'Polygon zkEVM',
+            chainId: 1101,
+            networkVersion: '1101',
+            nativeCurrency: {
+                name: 'Ether',
+                symbol: 'ETH',
+                decimals: 18,
+            },
+            iconUrls: [
+                'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/polygonzkevm/info/logo.png',
+            ],
+            hasFixedGasCost: false,
+            enable: true,
+            test: false,
+            order: 11,
+            features: [FEATURES.SENDS],
+            ens: false,
+            showGasLevels: false,
+            rpcUrls: [`https://polygon-zkevm-node.blockwallet.io`],
+            defaultRpcUrl: `https://polygon-zkevm-node.blockwallet.io`,
+            blockExplorerUrls: ['https://zkevm.polygonscan.com/'],
+            blockExplorerName: 'Polygon zkEVM Explorer',
+            actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
+            tornadoIntervals: {
+                depositConfirmations: 0,
+                derivationsForward: 0,
+            },
+            nativelySupported: true,
+        };
+        const orderedNetworks = normalizeNetworksOrder(updatedNetworks);
 
         return {
             ...persistedState,
-            TransactionController: {
-                ...persistedState.TransactionController,
-                transactions: newTxsState,
-            },
-            BridgeController: {
-                ...persistedState.BridgeController,
-                bridgeReceivingTransactions: newBridgeReceivingTxState,
-            },
-            TransactionWatcherControllerState: {
-                transactions: newWatchedTxsState,
+            NetworkController: {
+                ...persistedState.NetworkController,
+                availableNetworks: { ...orderedNetworks },
             },
         };
     },
-    version: '2.0.0',
+    version: '1.1.4',
 } as IMigration;

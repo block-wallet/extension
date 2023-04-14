@@ -53,6 +53,7 @@ import {
 import { SwapControllerMemState } from '@block-wallet/background/controllers/SwapController';
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import CACHED_INCOMPATIBLE_SITES from '@block-wallet/remote-configs/provider/incompatible_sites.json';
+import { CampaignsControllerState } from '@block-wallet/background/controllers/CampaignsController';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -73,6 +74,7 @@ export type BlankAppState = {
     TransactionWatcherControllerState: TransactionWatcherControllerState;
     BridgeController: BridgeControllerState;
     RemoteConfigsController: RemoteConfigsControllerState;
+    CampaignsController: CampaignsControllerState;
 };
 
 export type BlankAppUIState = {
@@ -143,6 +145,9 @@ const initialState: BlankAppState = {
         lockedByTimeout: false,
     },
     BlockUpdatesController: { blockData: {} },
+    CampaignsController: {
+        enrollments: {},
+    },
     KeyringController: {
         isUnlocked: false,
         keyringTypes: [],

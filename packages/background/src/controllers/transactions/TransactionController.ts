@@ -2488,6 +2488,18 @@ export class TransactionController extends BaseController<
                 error
             );
 
+            //Transaction will fail no matter how much gas the user sets
+            if (
+                error.reason &&
+                error.reason.match(
+                    /Transfer amount must be greater than zero/gi
+                )
+            ) {
+                throw new Error(
+                    'This token only allows transfers bigger than zero.'
+                );
+            }
+
             const hasFixedGasCost =
                 this._networkController.hasChainFixedGasCost(
                     txOrCurrentChainId

@@ -157,6 +157,9 @@ const initialState: newBlankAppState = {
         transactions: {},
         tokenAllowanceEvents: {},
     },
+    CampaignsController: {
+        enrollments: {},
+    },
     BridgeController: {
         bridgeReceivingTransactions: {},
         perndingBridgeReceivingTransactions: {},
@@ -330,6 +333,9 @@ describe('State reconciler', () => {
             },
             BlockUpdatesController: {
                 blockData: { 5: { blockNumber: -1 } },
+            },
+            CampaignsController: {
+                enrollments: {},
             },
             AddressBookController: {
                 addressBook: {} as AddressBook,

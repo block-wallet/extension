@@ -91,7 +91,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
         this._updateProviderNetworkStatus();
 
         // Set the error handler for the provider to check for network status
-        this.provider.on('error', this._updateProviderNetworkStatus.bind(this));
+        this.provider.on('debug', ({ error }) => {
+            if (error) this._updateProviderNetworkStatus(undefined, error);
+        });
 
         this.setMaxListeners(30); // currently, we need 16
     }
@@ -961,42 +963,43 @@ export default class NetworkController extends BaseController<NetworkControllerS
         }
     ) => {
         const errorCodes = [ErrorCode.SERVER_ERROR, ErrorCode.TIMEOUT];
-        const network = this.network;
+        const { defaultRpcUrl, currentRpcUrl, chainId } = this.network;
         const checkingChainId = this.provider.network.chainId;
 
-        let providerInstance: StaticJsonRpcProvider | undefined;
-        if (providerType === ProviderType.DEFAULT) {
-            if (!network.defaultRpcUrl) {
-                this.store.updateState({
-                    providerStatus: {
-                        ...this.getState().providerStatus,
-                        isDefaultProviderOnline: false,
-                    },
-                });
-                return Promise.resolve(true);
+        let rpcUrl = currentRpcUrl;
+
+        switch (providerType) {
+            case ProviderType.DEFAULT:
+                if (!defaultRpcUrl) {
+                    this.store.updateState({
+                        providerStatus: {
+                            ...this.getState().providerStatus,
+                            isDefaultProviderOnline: false,
+                        },
+                    });
+                    return Promise.resolve(true);
+                }
+                rpcUrl = defaultRpcUrl;
+                break;
+            case ProviderType.BACKUP: {
+                const backupRpcUrl = await this._getWorkingBackupRpcUrl(
+                    chainId
+                );
+                if (!backupRpcUrl) {
+                    this.store.updateState({
+                        providerStatus: {
+                            ...this.getState().providerStatus,
+                            isBackupProviderOnline: false,
+                        },
+                    });
+                    return Promise.resolve(true);
+                }
+                rpcUrl = backupRpcUrl;
+                break;
             }
-            providerInstance = this._getProviderForNetwork(
-                network.chainId,
-                network.defaultRpcUrl
-            );
-        } else if (providerType === ProviderType.BACKUP) {
-            const backupRpcUrl = await this._getWorkingBackupRpcUrl(
-                network.chainId
-            );
-            if (!backupRpcUrl) {
-                this.store.updateState({
-                    providerStatus: {
-                        ...this.getState().providerStatus,
-                        isBackupProviderOnline: false,
-                    },
-                });
-                return Promise.resolve(true);
-            }
-            providerInstance = this._getProviderForNetwork(
-                network.chainId,
-                backupRpcUrl
-            );
         }
+
+        const providerInstance = this._getProviderForNetwork(chainId, rpcUrl);
 
         if (!err || errorCodes.includes(err.code)) {
             return this._isProviderReady(providerInstance)

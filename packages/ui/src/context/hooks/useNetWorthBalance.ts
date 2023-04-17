@@ -2,10 +2,11 @@ import { useBlankState } from "../background/backgroundHooks"
 import { useTokensList } from "./useTokensList"
 
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
+import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 
-const useNetWorthBalance = () => {
+const useNetWorthBalance = (account?: AccountInfo) => {
     const state = useBlankState()!
-    const assets = useTokensList()
+    const assets = useTokensList(account)
 
     const tokenBalances = assets.currentNetworkTokens
 

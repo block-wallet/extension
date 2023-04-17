@@ -17,7 +17,7 @@ enum ProviderType {
     CURRENT = "CURRENT",
 }
 
-const ProviderStatus = () => {
+const ProviderStatus = ({ onHomepage }: { onHomepage?: boolean }) => {
     const { isUserNetworkOnline, isNetworkChanging, providerStatus } =
         useBlankState()!
 
@@ -117,12 +117,17 @@ const ProviderStatus = () => {
                 <>
                     <div
                         className={classnames(
-                            " text-sm -ml-6 p-3 px-6 -mt-[0.65rem] flex justify-between relative mb-2",
+                            "text-sm p-3 px-6 flex justify-between relative",
+                            onHomepage && "-ml-6 -mt-[0.65rem] mb-2",
                             showDefaultProviderRestored
                                 ? "text-primary-blue-default bg-[#f3f4ff]"
                                 : "bg-[#FFF8EE] text-[#C16C0E]"
                         )}
-                        style={{ width: "calc(100% + 2 * 1.5rem)" }}
+                        style={
+                            onHomepage
+                                ? { width: "calc(100% + 2 * 1.5rem)" }
+                                : {}
+                        }
                     >
                         <div className="flex space-x-2 items-center">
                             <AiFillInfoCircle size={18} />

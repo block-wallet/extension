@@ -623,6 +623,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     </>
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingDialog
                 open={isOpen}

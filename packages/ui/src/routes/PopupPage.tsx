@@ -235,7 +235,7 @@ const PopupPage = () => {
             </div>
             <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-20 space-y-2 overflow-auto hide-scroll">
                 <div className="w-full">
-                    <ProviderStatus />
+                    <ProviderStatus onHomepage />
                     <div className="flex flex-row items-start w-full justify-between pt-1 pb-1">
                         <GenericTooltip
                             bottom

@@ -8,13 +8,15 @@ import useSubmitOnEnter, {
     submitOnEnterProps,
 } from "../../util/hooks/useSubmitOnEnter"
 import PageLayout from "../PageLayout"
+import ProviderStatus from "../chain/ProviderStatus"
 
 const PopupLayout: FunctionComponent<{
     header?: React.ReactNode
+    showProviderStatus?: boolean
     footer?: React.ReactNode
     children: React.ReactNode | undefined
     submitOnEnter?: submitOnEnterProps
-}> = ({ header, children, footer, submitOnEnter }) => {
+}> = ({ header, showProviderStatus, children, footer, submitOnEnter }) => {
     const { preventResize, cancelPreventResize } = usePreventWindowResize()
     const fullHeader = (
         <>
@@ -43,6 +45,7 @@ const PopupLayout: FunctionComponent<{
             </div>
             <div className="invisible w-full">{fullHeader}</div>
             <div className="flex-1 flex flex-col w-full h-0 max-h-screen overflow-auto main-content">
+                {showProviderStatus && <ProviderStatus />}
                 {children}
             </div>
             {footer ? (

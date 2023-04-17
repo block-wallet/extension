@@ -457,6 +457,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             {quote && (
                 <BridgeDetails

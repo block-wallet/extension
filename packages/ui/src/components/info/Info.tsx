@@ -24,7 +24,9 @@ const Info: FC<{ children: React.ReactNode }> & InfoComponents = ({
 }
 
 const Title = ({ children }: { children: React.ReactNode }) => {
-    return <span className="text-2xl font-bold leading-10  ">{children}</span>
+    return (
+        <span className="text-[1.4rem] font-bold leading-10  ">{children}</span>
+    )
 }
 
 const InfoList: FC<ClassNameProp & { children: React.ReactNode }> = ({

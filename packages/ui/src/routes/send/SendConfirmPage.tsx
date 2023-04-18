@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useState } from "react"
 
 import { useForm } from "react-hook-form"
 
@@ -67,13 +67,15 @@ import { rejectTransaction } from "../../context/commActions"
 import { getValueByKey } from "../../util/objectUtils"
 import { AddressDisplay } from "../../components/addressBook/AddressDisplay"
 import { useAccountNameByAddress } from "../../context/hooks/useAccountNameByAddress"
+import log from "loglevel"
 
 // Schema
 const GetAmountYupSchema = (
     balance: BigNumber,
     asset: TokenWithBalance | undefined,
     selectedGas: TransactionFeeData,
-    isEIP1559Compatible: boolean | undefined
+    isEIP1559Compatible: boolean | undefined,
+    allowAmountZero: boolean
 ) => {
     return yup.object({
         asset: yup
@@ -108,71 +110,30 @@ const GetAmountYupSchema = (
                     return value === "0" || parseFloat(value) > 0
                 }
             )
+            .test(
+                "is-zero-allowed",
+                "Transfer amount must greater than zero for this token.",
+                (value) => {
+                    if (!allowAmountZero) {
+                        if (typeof value != "string") return false
+                        return parseFloat(value) > 0
+                    }
+                    return true
+                }
+            )
             .test("is-decimals", "Too many decimal numbers.", (value) => {
                 if (typeof value != "string") return false
                 if (!value.includes(".")) return true
                 const decimals = asset?.token.decimals || DEFAULT_DECIMALS
                 const valueDecimals = value.split(".")[1].length
                 return valueDecimals <= decimals
-            })
-            .test("is-correct", "Insufficient balance for gas cost.", () => {
-                return GasCostBalanceValidation(
-                    balance,
-                    selectedGas,
-                    isEIP1559Compatible
-                )
-            })
-            .test("is-correct", "Insufficient balance.", (value) => {
-                try {
-                    if (!asset) return false
-                    const decimals = asset.token.decimals || DEFAULT_DECIMALS
-                    const txAmount: BigNumber = parseUnits(
-                        value!.toString(),
-                        decimals
-                    )
-
-                    if (asset.token.address === "0x0") {
-                        return EtherSendBalanceValidation(
-                            asset.balance,
-                            txAmount,
-                            selectedGas,
-                            isEIP1559Compatible
-                        )
-                    } else {
-                        if (
-                            !GasCostBalanceValidation(
-                                balance,
-                                selectedGas,
-                                isEIP1559Compatible
-                            )
-                        ) {
-                            return false
-                        }
-                        return TokenSendBalanceValidation(
-                            asset.balance,
-                            txAmount
-                        )
-                    }
-                } catch (e: any) {
-                    return false
-                }
             }),
         selectedGas: yup.string(),
         isEIP1559Compatible: yup.boolean(),
     })
 }
-const schema = GetAmountYupSchema(
-    BigNumber.from("0"),
-    undefined,
-    {
-        gasPrice: BigNumber.from("0"),
-        gasLimit: BigNumber.from("0"),
-        maxFeePerGas: BigNumber.from("0"),
-        maxPriorityFeePerGas: BigNumber.from("0"),
-    },
-    false
-)
-type AmountFormData = InferType<typeof schema>
+
+type AmountFormData = InferType<ReturnType<typeof GetAmountYupSchema>>
 
 // Tools
 
@@ -227,18 +188,21 @@ interface SendConfirmPersistedState {
     amount: string
     submitted: boolean
     asset: TokenWithBalance | null
+    txId: string
 }
 
 const INITIAL_VALUE_PERSISTED_DATA = {
     asset: null,
     amount: "",
     submitted: false,
+    txId: "",
 }
 
 // Page
 const SendConfirmPage = () => {
     // Blank Hooks
     const { clear: clearLocationRecovery } = useLocationRecovery()
+    const [allowAmountZero, setAllowAmountZero] = useState<boolean>(true)
     const blankState = useBlankState()!
     const network = useSelectedNetwork()
     const history: any = useOnMountHistory()
@@ -256,13 +220,32 @@ const SendConfirmPage = () => {
         })
 
     const { transaction: currentTransaction, clearTransaction } =
-        useInProgressInternalTransaction()
+        useInProgressInternalTransaction({ txId: persistedData.txId })
 
     useEffect(() => {
+        if (
+            currentTransaction?.id &&
+            persistedData.submitted &&
+            persistedData.txId !== currentTransaction?.id
+        ) {
+            if (isHardwareWallet(accountType)) {
+                setPersistedData((prev: SendConfirmPersistedState) => ({
+                    ...prev,
+                    txId: currentTransaction?.id,
+                }))
+            }
+        }
+    }, [currentTransaction?.id])
+
+    useLayoutEffect(() => {
         // Tx was either rejected or submitted when the pop-up was closed.
         // If we opened back the pop-up, and there aren't any pending transactions,
         // we should redirect to the home page (this is only checked on component mount)
-        if (!currentTransaction?.id && persistedData.submitted) {
+        if (
+            !currentTransaction?.id &&
+            persistedData.submitted &&
+            !persistedData.txId
+        ) {
             setPersistedData(() => ({
                 ...INITIAL_VALUE_PERSISTED_DATA,
                 submitted: false,
@@ -329,6 +312,7 @@ const SendConfirmPage = () => {
                       status: currentTransaction?.status,
                       error: currentTransaction?.error as Error,
                       epochTime: currentTransaction?.approveTime,
+                      qrParams: currentTransaction.qrParams,
                   }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,
@@ -372,7 +356,8 @@ const SendConfirmPage = () => {
         balance,
         selectedToken,
         selectedGas,
-        isEIP1559Compatible
+        isEIP1559Compatible,
+        allowAmountZero
     )
 
     const {
@@ -382,7 +367,7 @@ const SendConfirmPage = () => {
         setValue,
         getValues,
         trigger,
-
+        watch,
         formState: { errors },
     } = useForm<AmountFormData>({
         resolver: yupResolver(schema),
@@ -401,7 +386,6 @@ const SendConfirmPage = () => {
                   data.amount.toString(),
                   selectedToken!.token.decimals || DEFAULT_DECIMALS // Default to eth decimals
               )
-
         dispatch({ type: "open", payload: { status: "loading" } })
 
         const isLinked = await checkDeviceIsLinked()
@@ -499,7 +483,6 @@ const SendConfirmPage = () => {
                 ...prev,
                 submitted: false,
             }))
-            console.error(error)
         }
     })
 
@@ -580,6 +563,7 @@ const SendConfirmPage = () => {
 
     const handleChangeAsset = (asset: TokenWithBalance, cleanAmount = true) => {
         setUsingMax(false)
+        setAllowAmountZero(true)
         if (cleanAmount) {
             handleChangeAmount("")
         }
@@ -604,54 +588,72 @@ const SendConfirmPage = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    useEffect(() => {
-        const fetch = async () => {
-            try {
-                setIsGasLoading(true)
+    const fetchGasLimit = useCallback(async () => {
+        try {
+            setIsGasLoading(true)
 
-                const hasTokenBalance = BigNumber.from(
-                    selectedToken.balance
-                ).gt(Zero)
+            const amount = watch("amount")
 
-                const estimateValue = hasTokenBalance ? One : Zero
+            const hasTokenBalance = BigNumber.from(selectedToken.balance).gt(
+                Zero
+            )
 
-                let { gasLimit, estimationSucceeded } =
-                    await getSendTransactionGasLimit(
-                        selectedToken.token.address,
-                        receivingAddress,
-                        estimateValue
-                    )
+            let estimateValue = hasTokenBalance
+                ? parseUnits(amount || "1", selectedToken.token.decimals)
+                : Zero
 
-                // In case the estimation failed but user has no balance on the selected token, we won't display the estimation error.
-                if (!hasTokenBalance && !estimationSucceeded) {
-                    estimationSucceeded = true
-                }
-
-                setGasEstimationFailed(!estimationSucceeded)
-
-                let gasPrice
-                if (!isEIP1559Compatible) {
-                    gasPrice = await getLatestGasPrice()
-                }
-
-                setDefaultGas({
-                    gasLimit: BigNumber.from(gasLimit),
-                    gasPrice: isEIP1559Compatible
-                        ? undefined
-                        : BigNumber.from(gasPrice),
-                })
-
-                setSelectedGas({
-                    ...selectedGas,
-                    gasLimit: BigNumber.from(gasLimit),
-                })
-            } catch (error) {
-                console.log("error ", error)
-            } finally {
-                setIsGasLoading(false)
+            //send a value bigger than the account's balance will make the request to fail
+            if (estimateValue.gt(selectedToken.balance)) {
+                estimateValue = BigNumber.from(selectedToken.balance)
             }
-        }
 
+            let { gasLimit, estimationSucceeded } =
+                await getSendTransactionGasLimit(
+                    selectedToken.token.address,
+                    receivingAddress,
+                    estimateValue
+                )
+
+            // In case the estimation failed but user has no balance on the selected token, we won't display the estimation error.
+            if (!hasTokenBalance && !estimationSucceeded) {
+                estimationSucceeded = true
+            }
+
+            setGasEstimationFailed(!estimationSucceeded)
+
+            let gasPrice
+            if (!isEIP1559Compatible) {
+                gasPrice = await getLatestGasPrice()
+            }
+
+            setDefaultGas({
+                gasLimit: BigNumber.from(gasLimit),
+                gasPrice: isEIP1559Compatible
+                    ? undefined
+                    : BigNumber.from(gasPrice),
+            })
+
+            setSelectedGas({
+                ...selectedGas,
+                gasLimit: BigNumber.from(gasLimit),
+            })
+        } catch (error) {
+            log.error("error ", error)
+            if (error.message.match(/bigger than zero/gi)) {
+                setAllowAmountZero(false)
+            }
+        } finally {
+            setIsGasLoading(false)
+        }
+    }, [
+        setIsGasLoading,
+        setSelectedGas,
+        selectedToken,
+        receivingAddress,
+        isEIP1559Compatible,
+    ])
+
+    useEffect(() => {
         const checkIfSendingToTokenAddress = async () => {
             if (
                 receivingAddress.toLowerCase() ===
@@ -661,10 +663,10 @@ const SendConfirmPage = () => {
             }
         }
 
-        fetch()
+        fetchGasLimit()
         checkIfSendingToTokenAddress()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedToken])
+    }, [selectedToken, fetchGasLimit])
 
     // Effect triggered on selected gas change to update max amount if needed and recalculate validations.
     useEffect(() => {
@@ -693,7 +695,8 @@ const SendConfirmPage = () => {
                         disabled={
                             errors.amount !== undefined ||
                             isLoading ||
-                            isGasLoading
+                            isGasLoading ||
+                            inputFocus
                         }
                         onClick={onSubmit}
                     />
@@ -723,6 +726,7 @@ const SendConfirmPage = () => {
                         setPersistedData((prev: SendConfirmPersistedState) => ({
                             ...prev,
                             submitted: false,
+                            txId: "",
                         }))
                         clearTransaction()
                         return
@@ -824,7 +828,10 @@ const SendConfirmPage = () => {
                                         autoComplete="off"
                                         autoFocus={true}
                                         onFocus={() => setInputFocus(true)}
-                                        onBlur={() => setInputFocus(false)}
+                                        onBlur={() => {
+                                            setInputFocus(false)
+                                            fetchGasLimit()
+                                        }}
                                         onKeyDown={(e) => {
                                             setUsingMax(false)
                                             const amt = Number(
@@ -867,6 +874,7 @@ const SendConfirmPage = () => {
                                                 setMaxTransactionAmount(
                                                     !usingMax
                                                 )
+                                                fetchGasLimit()
                                             }
                                         }}
                                     >
@@ -874,15 +882,19 @@ const SendConfirmPage = () => {
                                     </span>
                                 </div>
                             </div>
-                            <div
-                                className={`${
-                                    errors.amount?.message ? "pl-1 my-2" : null
-                                }`}
-                            >
-                                <ErrorMessage>
-                                    {errors.amount?.message}
-                                </ErrorMessage>
-                            </div>
+                            {!error && (
+                                <div
+                                    className={`${
+                                        errors.amount?.message
+                                            ? "pl-1 my-2"
+                                            : null
+                                    }`}
+                                >
+                                    <ErrorMessage>
+                                        {errors.amount?.message}
+                                    </ErrorMessage>
+                                </div>
+                            )}
                         </div>
 
                         {/* Speed */}
@@ -922,10 +934,6 @@ const SendConfirmPage = () => {
                                 displayOnlyMaxValue
                             />
                         )}
-                        <div className={`${error ? "pl-1 my-2" : null}`}>
-                            <ErrorMessage>{error}</ErrorMessage>
-                        </div>
-
                         <div className="mt-3">
                             <AdvancedSettings
                                 address={address}
@@ -944,6 +952,9 @@ const SendConfirmPage = () => {
                                 }}
                                 buttonDisplay={false}
                             />
+                        </div>
+                        <div className={`${error ? "pl-1 my-2" : null}`}>
+                            <ErrorMessage>{error}</ErrorMessage>
                         </div>
                     </div>
                 </div>

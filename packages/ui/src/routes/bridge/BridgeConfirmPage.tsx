@@ -50,6 +50,7 @@ import {
     useRef,
     useCallback,
     FunctionComponent,
+    useLayoutEffect,
 } from "react"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
@@ -92,6 +93,11 @@ export interface BridgeConfirmPageLocalState {
     allowanceTransactionId?: string
 }
 
+interface BridgeConfirmPagePersistedState {
+    submitted: boolean
+    txId: string
+}
+
 // 20s
 const QUOTE_REFRESH_TIMEOUT = 1000 * 20
 const DEFAULT_BRIDGE_SLIPPAGE = 3
@@ -111,21 +117,39 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         QUOTE_REFRESH_TIMEOUT
     )
 
-    const [persistedData, setPersistedData] = useLocalStorageState(
-        "bridge.confirm",
-        {
-            initialValue: {
-                submitted: false,
-            },
-            volatile: true,
-        }
-    )
+    const [persistedData, setPersistedData] =
+        useLocalStorageState<BridgeConfirmPagePersistedState>(
+            "bridge.confirm",
+            {
+                initialValue: {
+                    submitted: false,
+                    txId: "",
+                },
+                volatile: true,
+            }
+        )
 
     const { clear: clearLocationRecovery } = useLocationRecovery()
     const { transaction: inProgressTransaction, clearTransaction } =
         useInProgressInternalTransaction({
             categories: [TransactionCategories.BRIDGE],
+            txId: persistedData.txId,
         })
+
+    useEffect(() => {
+        if (
+            inProgressTransaction?.id &&
+            persistedData.submitted &&
+            persistedData.txId !== inProgressTransaction?.id
+        ) {
+            if (isHardwareWallet(selectedAccount.accountType)) {
+                setPersistedData((prev: BridgeConfirmPagePersistedState) => ({
+                    ...prev,
+                    txId: inProgressTransaction?.id,
+                }))
+            }
+        }
+    }, [inProgressTransaction?.id])
 
     const { transaction: allowanceTransaction } = useTransactionById(
         allowanceTransactionId
@@ -141,9 +165,13 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         closeDialog: closeAllowanceTxDialog,
     } = useAwaitAllowanceTransactionDialog(allowanceTransaction)
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         // Redirect to homepage if there is no pending transaction
-        if (!inProgressTransaction?.id && persistedData.submitted) {
+        if (
+            !inProgressTransaction?.id &&
+            persistedData.submitted &&
+            !persistedData.txId
+        ) {
             history.push("/")
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -172,6 +200,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                       status: inProgressTransaction.status,
                       error: inProgressTransaction.error as Error,
                       epochTime: inProgressTransaction?.approveTime,
+                      qrParams: inProgressTransaction?.qrParams,
                   }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,
@@ -330,9 +359,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 clearLocationRecovery()
             }
 
-            setPersistedData({
+            setPersistedData((prev: BridgeConfirmPagePersistedState) => ({
+                ...prev,
                 submitted: true,
-            })
+            }))
 
             const txParams: BridgeTransaction = {
                 ...quote.bridgeParams,
@@ -548,9 +578,13 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 onDone={useCallback(() => {
                     if (status === "error") {
                         closeDialog()
-                        setPersistedData({
-                            submitted: false,
-                        })
+                        setPersistedData(
+                            (prev: BridgeConfirmPagePersistedState) => ({
+                                ...prev,
+                                submitted: false,
+                                txId: "",
+                            })
+                        )
                         clearTransaction()
                         return
                     }

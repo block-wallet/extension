@@ -1,4 +1,10 @@
-import { useState, useEffect, FunctionComponent, useCallback } from "react"
+import {
+    useState,
+    useEffect,
+    FunctionComponent,
+    useCallback,
+    useLayoutEffect,
+} from "react"
 import { Redirect } from "react-router-dom"
 import { formatUnits } from "@ethersproject/units"
 import { getAddress } from "@ethersproject/address"
@@ -16,10 +22,12 @@ import {
     rejectTransaction,
     searchTokenInAssetsList,
     setUserSettings,
+    updateTransactionStatus,
 } from "../../context/commActions"
 import {
     HardwareWalletOpTypes,
     TransactionCategories,
+    TransactionStatus,
 } from "../../context/commTypes"
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
 import { useBlankState } from "../../context/background/backgroundHooks"
@@ -67,12 +75,17 @@ import { canUserSubmitTransaction } from "../../util/transactionUtils"
 import { generateExplorerLink } from "../../util/getExplorer"
 
 import unknownTokenIcon from "../../assets/images/unknown_token.svg"
+import useLocalStorageState from "../../util/hooks/useLocalStorageState"
+import { useInProgressInternalTransaction } from "../../context/hooks/useInProgressInternalTransaction"
 
 const UNKNOWN_BALANCE = "UNKNOWN_BALANCE"
 
 export interface ApproveAssetProps {
     transactionId: string
     transactionCount: number
+}
+interface ApproveAssetPageState {
+    txId: string
 }
 
 const ApproveAssetPage = () => {
@@ -82,22 +95,57 @@ const ApproveAssetPage = () => {
     const { transaction: nextTransaction, transactionCount } =
         useNonSubmittedCombinedTransaction()
     const route = useNextRequestRoute()
+
+    // Get data from window.localStorage
+    const [persistedData, setPersistedData] =
+        useLocalStorageState<ApproveAssetPageState>("approveasset.form", {
+            initialValue: { txId: "" },
+            volatile: true,
+        })
+
+    const { transaction: inProgressTransaction } =
+        useInProgressInternalTransaction({ txId: persistedData.txId })
+
     const [currentTx, setCurrentTx] = useDebouncedState<TransactionMeta>(
-        nextTransaction,
+        inProgressTransaction || nextTransaction,
         DAPP_FEEDBACK_WINDOW_TIMEOUT
     )
 
-    useEffect(() => {
-        //only override the transactionId when there is another one to process
-        //to avoid passing an empty transactionId to the child component and break the UI.
-        setCurrentTx(nextTransaction)
-    }, [nextTransaction, setCurrentTx])
+    useLayoutEffect(() => {
+        if (nextTransaction) {
+            //only override the transactionId when there is another one to process
+            //to avoid passing an empty transactionId to the child component and break the UI.
+            setCurrentTx(nextTransaction)
 
+            if (
+                nextTransaction.id &&
+                persistedData.txId !== nextTransaction?.id
+            ) {
+                setPersistedData((prev: ApproveAssetPageState) => ({
+                    ...prev,
+                    txId: nextTransaction.id,
+                }))
+            }
+        } else if (inProgressTransaction) {
+            setCurrentTx(inProgressTransaction)
+        }
+    }, [
+        nextTransaction,
+        setCurrentTx,
+        persistedData,
+        inProgressTransaction,
+        setPersistedData,
+    ])
     if (
         !currentTx ||
         currentTx.transactionCategory !==
             TransactionCategories.TOKEN_METHOD_APPROVE ||
-        currentTx.advancedData?.tokenId
+        currentTx.advancedData?.tokenId ||
+        [
+            TransactionStatus.CONFIRMED,
+            TransactionStatus.REJECTED,
+            TransactionStatus.SUBMITTED,
+        ].includes(currentTx.status)
     ) {
         return (
             <Redirect
@@ -131,6 +179,15 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const { hideAddressWarning } = useUserSettings()
     const selectedAccountBalance = useSelectedAccountBalance()
     const { nativeToken } = useTokensList()
+
+    // Get data from window.localStorage
+    const [, setPersistedData] = useLocalStorageState<ApproveAssetPageState>(
+        "approveasset.form",
+        {
+            initialValue: { txId: "" },
+            volatile: true,
+        }
+    )
 
     const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
         useCheckAccountDeviceLinked()
@@ -176,6 +233,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const [isTokenLoading, setIsTokenLoading] = useState(true)
     const [isNameLoading, setIsNameLoading] = useState(true)
 
+    const [isManuallyRejected, setIsManuallyRejected] = useState(false)
+
     const [transactionAdvancedData, setTransactionAdvancedData] =
         useState<TransactionAdvancedData>({})
 
@@ -220,6 +279,10 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         setAllowance(formatUnits(defaultAllowance, tokenDecimals))
     }, [defaultAllowance])
 
+    useEffect(() => {
+        setIsManuallyRejected(false)
+    }, [transactionId])
+
     const [isAllowanceValid, setIsAllowanceValid] = useState(true)
 
     const currentSpenderAllowances = useAccountAllowances(
@@ -250,6 +313,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                       status: transaction.status,
                       error: transaction.error as Error,
                       epochTime: transaction?.approveTime,
+                      qrParams: transaction?.qrParams,
                   }
                 : undefined,
             HardwareWalletOpTypes.APPROVE_ALLOWANCE,
@@ -338,6 +402,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     }
 
     const reject = async () => {
+        setIsManuallyRejected(true)
         dispatch({
             type: "open",
             payload: {
@@ -499,7 +564,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     buttonDisplay={false}
                     transactionId={transaction.id}
                 />
-                <div className="text-xs text-red-500">
+                <div className="text-xs text-red-500 !mt-0">
                     {!hasBalance && "Insufficient funds."}
                 </div>
             </div>
@@ -573,7 +638,17 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 clickOutsideToClose={false}
                 txHash={transaction.transactionParams.hash}
                 timeout={DAPP_FEEDBACK_WINDOW_TIMEOUT}
-                onDone={closeDialog}
+                onDone={() => {
+                    if (!isManuallyRejected && status === "error") {
+                        updateTransactionStatus(
+                            transaction.id,
+                            TransactionStatus.UNAPPROVED
+                        ).then(() => {
+                            transaction.status = TransactionStatus.UNAPPROVED
+                        })
+                    }
+                    closeDialog()
+                }}
                 gifs={gifs}
                 hideButton
             />

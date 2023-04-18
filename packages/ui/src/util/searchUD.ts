@@ -12,6 +12,8 @@ export const supportedSuffixes = [
     "888",
     "coin",
     "zil",
+    "polygon",
+    "blockchain"
 ]
 
 export const searchUD = async (

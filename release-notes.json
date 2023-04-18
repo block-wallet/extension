@@ -586,6 +586,124 @@
                 }
             ],
             "version": "0.6.0"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features & Improvements",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added support for Keystone hardware wallets."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improved notifications."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added support for new zkSync Era mainnet."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Updated Scroll Alpha testnet."
+                        }
+                    ]
+                },
+                {
+                    "title": "Core",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Improved provider reconnection to handle service outages better."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Updated third-party libraries to support new features & security improvements."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Hiding imported accounts on the My Accounts page is now possible."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "More accurate gas estimations are now available when sending funds to smart contract addresses."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Account name display on the home screen has been adjusted."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.7.0"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added Polygon zkEVM as default network with full proxy and failover support."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added $ARB token."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Fixed Ledger interactions on specific networks."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed handling signing message behavior with Keystone."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed wallet behavior and experience when loading rates."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.7.2"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Faster fetching of transaction status, gas and balances."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improved gas estimation with dynamic calculation."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Fixed some minor display bugs."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.7.3"
         }
     ]
 }

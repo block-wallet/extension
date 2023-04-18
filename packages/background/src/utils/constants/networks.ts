@@ -168,7 +168,7 @@ export const INITIAL_NETWORKS: Networks = {
         blockExplorerName: 'Etherscan',
         etherscanApiUrl: 'https://api.etherscan.io',
         actionsTimeIntervals: {
-            ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+            ...FAST_TIME_INTERVALS_DEFAULT_VALUES,
         },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
@@ -259,8 +259,8 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
-        rpcUrls: ['https://bsc-node.blockwallet.io'],
-        defaultRpcUrl: 'https://bsc-node.blockwallet.io',
+        rpcUrls: ['https://bsc.blockwallet.io'],
+        defaultRpcUrl: 'https://bsc.blockwallet.io',
         blockExplorerUrls: ['https://bscscan.com'],
         blockExplorerName: 'Bscscan',
         etherscanApiUrl: 'https://api.bscscan.com',
@@ -466,6 +466,37 @@ export const INITIAL_NETWORKS: Networks = {
         defaultRpcUrl: `https://zksync-node.blockwallet.io`,
         blockExplorerUrls: ['https://explorer.zksync.io/'],
         blockExplorerName: 'zkSync Explorer',
+        actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
+        tornadoIntervals: {
+            depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
+            derivationsForward: DERIVATIONS_FORWARD,
+        },
+        nativelySupported: true,
+    },
+    POLYGON_ZKEVM: {
+        name: 'polygon_zkevm',
+        desc: 'Polygon zkEVM',
+        chainId: 1101,
+        networkVersion: '1101',
+        nativeCurrency: {
+            name: 'Ether',
+            symbol: 'ETH',
+            decimals: 18,
+        },
+        iconUrls: [
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/polygonzkevm/info/logo.png',
+        ],
+        hasFixedGasCost: false,
+        enable: true,
+        test: false,
+        order: 11,
+        features: [FEATURES.SENDS],
+        ens: false,
+        showGasLevels: false,
+        rpcUrls: [`https://polygon-zkevm-node.blockwallet.io`],
+        defaultRpcUrl: `https://polygon-zkevm-node.blockwallet.io`,
+        blockExplorerUrls: ['https://zkevm.polygonscan.com/'],
+        blockExplorerName: 'Polygon zkEVM Explorer',
         actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
@@ -680,9 +711,4 @@ export const INITIAL_NETWORKS: Networks = {
         },
         nativelySupported: true,
     },
-};
-
-export const HARDFORKS = {
-    BERLIN: 'berlin',
-    LONDON: 'london',
 };

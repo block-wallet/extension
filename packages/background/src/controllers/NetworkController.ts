@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import Common from '@ethereumjs/common';
+import { Common, Hardfork } from '@ethereumjs/common';
 import { BaseController } from '../infrastructure/BaseController';
 import {
     Network,
     Networks,
-    HARDFORKS,
     AddNetworkType,
     EditNetworkUpdatesType,
     EditNetworkOrderType,
@@ -406,7 +405,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
         const explorerUrl =
             getUrlWithoutTrailingSlash(network.blockExplorerUrls) ||
             getUrlWithoutTrailingSlash(
-                chainDataFromList?.explorers?.map(({ url }) => url)
+                chainDataFromList?.explorers?.map(
+                    ({ url }: { url: string }) => url
+                )
             ) ||
             '';
         if (explorerUrl && explorerUrl.indexOf('https://') === -1) {
@@ -415,11 +416,11 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         // Check if we have the explorer name
         const blockExplorerName = chainDataFromList?.explorers
-            ?.map((t) => ({
+            ?.map((t: any) => ({
                 ...t,
                 url: t.url.endsWith('/') ? t.url.slice(0, -1) : t.url,
             }))
-            .find((e) => e.url.includes(explorerUrl))?.name;
+            .find((e: any) => e.url.includes(explorerUrl))?.name;
 
         const nativeCurrencySymbol =
             network.nativeCurrency?.symbol ||
@@ -800,10 +801,13 @@ export default class NetworkController extends BaseController<NetworkControllerS
 
         // this only matters, if a hardfork adds new transaction types
         const hardfork = (await this.getEIP1559Compatibility(chainId))
-            ? HARDFORKS.LONDON
-            : HARDFORKS.BERLIN;
+            ? Hardfork.London
+            : Hardfork.Berlin;
 
-        return Common.custom({ name, chainId }, { hardfork });
+        return Common.custom(
+            { name, chainId, networkId: chainId },
+            { hardfork }
+        );
     }
 
     public handleUserNetworkChange(isOnline: boolean) {

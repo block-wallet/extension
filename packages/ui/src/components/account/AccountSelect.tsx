@@ -11,15 +11,10 @@ import {
 } from "../../context/commActions"
 import { AccountType } from "../../context/commTypes"
 import { AccountMenuOptionType } from "./AccountDisplayMenu"
-import GearIcon from "../icons/GearIcon"
 import { useHistory } from "react-router-dom"
 import AccountsList from "./AccountsList"
 import useAccountSearch from "../../util/hooks/account/useAccountSearch"
-import {
-    isActiveAccount,
-    isHiddenAccount,
-    isInternalAccount,
-} from "../../util/account"
+import { isActiveAccount, isHiddenAccount } from "../../util/account"
 import type { LocationDescriptor } from "history"
 import useConnectedAccounts from "../../util/hooks/account/useConnectedAccounts"
 import { useBlankState } from "../../context/background/backgroundHooks"
@@ -102,30 +97,45 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
 
     const getAccountOptions = (account: AccountInfo) => {
         if (!showMenu) return undefined
+
+        const options = []
+
+        if (currentAccount?.address === account.address) {
+            options.push({
+                optionType: AccountMenuOptionType.SETTINGS,
+                handler: () => {
+                    history.push({
+                        pathname: "/accounts/menu",
+                        state: {
+                            fromAccountList: true,
+                        },
+                    })
+                },
+            })
+        }
+
         if (account.accountType === AccountType.HD_ACCOUNT) {
             if (isHiddenAccount(account)) {
-                return [
-                    {
-                        optionType: AccountMenuOptionType.UNHIDE_ACCOUNT,
-                        handler: unhideAccount,
-                    },
-                ]
-            }
-            return [
-                {
+                options.push({
+                    optionType: AccountMenuOptionType.UNHIDE_ACCOUNT,
+                    handler: unhideAccount,
+                })
+            } else {
+                options.push({
                     optionType: AccountMenuOptionType.HIDE_ACCOUNT,
                     handler: hideAccount,
                     disabled: accountsNumber === 1,
-                },
-            ]
-        }
-        return [
-            {
+                })
+            }
+        } else {
+            options.push({
                 optionType: AccountMenuOptionType.REMOVE_ACCOUNT,
                 handler: removeAccount,
                 disabled: accountsNumber === 1,
-            },
-        ]
+            })
+        }
+
+        return options
     }
 
     let searchedActiveAccounts = otherAccounts
@@ -204,28 +214,6 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                                 selected={
                                     selectedAccount.address ===
                                     currentAccount!.address
-                                }
-                                actionButtons={
-                                    showActionButtons
-                                        ? [
-                                              <div
-                                                  key={`current-account-action-button-1`}
-                                                  onClick={() => {
-                                                      history.push({
-                                                          pathname:
-                                                              "/accounts/menu",
-                                                          state: {
-                                                              fromAccountList:
-                                                                  true,
-                                                          },
-                                                      })
-                                                  }}
-                                                  className="cursor-pointer p-2 transition duration-300 text-primary-black-default rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
-                                              >
-                                                  <GearIcon />
-                                              </div>,
-                                          ]
-                                        : undefined
                                 }
                             />
                         </AccountsList>

@@ -75,6 +75,10 @@ export default class BlankProvider
         isUnlocked: () => Promise<boolean>;
     };
 
+    private _blockWallet: {
+        isEnrolled: (campaignId: string) => Promise<boolean>;
+    };
+
     constructor() {
         super();
 
@@ -103,6 +107,11 @@ export default class BlankProvider
             isEnabled: () => true,
             isApproved: async () => true,
             isUnlocked: async () => true,
+        };
+
+        this._blockWallet = {
+            isEnrolled: (campaignId: string) =>
+                this._checkCampaignEnrollment(campaignId),
         };
 
         // Bind non arrow functions
@@ -135,6 +144,22 @@ export default class BlankProvider
         );
         this.isBlockWallet = isBlockWallet;
         this.isMetaMask = !isBlockWallet;
+    }
+
+    /**
+     * Checks whether a BlockWallet instance is enrolled in the given campaign.
+     * @param campaignId
+     * @returns true if the instance has already been registered in that campaign
+     */
+    private async _checkCampaignEnrollment(
+        campaignId: string
+    ): Promise<boolean> {
+        const isEnrolled = await this._postMessage(
+            Messages.EXTERNAL.IS_ENROLLED,
+            { campaignId }
+        );
+
+        return isEnrolled;
     }
 
     private async reInitializeSubscriptions() {

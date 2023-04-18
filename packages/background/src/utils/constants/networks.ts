@@ -173,7 +173,7 @@ export const INITIAL_NETWORKS: Networks = {
         blockExplorerName: 'Etherscan',
         etherscanApiUrl: 'https://api.etherscan.io',
         actionsTimeIntervals: {
-            ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+            ...FAST_TIME_INTERVALS_DEFAULT_VALUES,
         },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,

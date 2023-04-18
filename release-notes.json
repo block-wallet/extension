@@ -677,6 +677,33 @@
                 }
             ],
             "version": "0.7.2"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Faster fetching of transaction status, gas and balances."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improved gas estimation with dynamic calculation."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Fixed some minor display bugs."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.7.3"
         }
     ]
 }

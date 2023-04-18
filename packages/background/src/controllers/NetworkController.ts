@@ -98,6 +98,11 @@ export default class NetworkController extends BaseController<NetworkControllerS
                         ProviderType.DEFAULT,
                         error
                     );
+                } else {
+                    await this._updateProviderNetworkStatus(
+                        ProviderType.BACKUP,
+                        error
+                    );
                 }
                 this._updateProviderNetworkStatus(undefined, error);
             }
@@ -906,14 +911,18 @@ export default class NetworkController extends BaseController<NetworkControllerS
      *  @returns rpc url of the network
      */
     private async _getWorkingBackupRpcUrl(chainId: number) {
-        let rpcUrl;
         const network = this.getNetworkFromChainId(chainId);
-        const backupRpcUrl = network?.backupRpcUrls?.find(
-            async (url) => await this._isRpcValid(chainId, url)
-        );
-        if (backupRpcUrl) {
-            rpcUrl = backupRpcUrl;
+        const backupRpcUrls = network?.backupRpcUrls ?? [];
+
+        let rpcUrl;
+
+        for (const url of backupRpcUrls) {
+            if (await this._isRpcValid(chainId, url)) {
+                rpcUrl = url;
+                break;
+            }
         }
+
         return rpcUrl;
     }
 

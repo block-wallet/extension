@@ -84,6 +84,8 @@ export const TransactionDetails: FunctionComponent<TransactionDetailsProps> = ({
                                     ${
                                         tab.label === value.label
                                             ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
+                                            : value.disabled
+                                            ? "border-primary-grey-hover text-primary-grey-dark border-b font-medium"
                                             : "border-primary-grey-hover text-primary-grey-dark border-b hover:text-primary-blue-default font-medium"
                                     }`
                     }

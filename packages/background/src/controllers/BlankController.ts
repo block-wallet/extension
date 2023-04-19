@@ -116,6 +116,7 @@ import {
     CancelQRHardwareSignRequestMessage,
     RequestUpdateTransactionStatus,
     RequestIsEnrolled,
+    AddressType,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -727,6 +728,8 @@ export default class BlankController extends EventEmitter {
         portId: string
     ): Promise<ResponseType<MessageTypes>> {
         switch (type) {
+            case Messages.ADDRESS.GET_TYPE:
+                return this.getAddressType(request as string);
             case Messages.ACCOUNT.CREATE:
                 return this.accountCreate(request as RequestAccountCreate);
             case Messages.ACCOUNT.EXPORT_JSON:
@@ -3381,5 +3384,26 @@ export default class BlankController extends EventEmitter {
         version,
     }: RequestGenerateOnDemandReleaseNotes): Promise<ReleaseNote[]> {
         return generateOnDemandReleaseNotes(version);
+    }
+
+    /**
+     * Get Address type (normal, native, smart contract, erc20)
+     * @param address - hex address
+     * @returns AddressType
+     */
+    private async getAddressType(address: string): Promise<AddressType> {
+        if (isNativeTokenAddress(address)) return AddressType.NULL;
+
+        const isContract = await this.networkController.isAddressContract(
+            address
+        );
+        if (isContract) {
+            const tokenSearch = await this.tokenController.search(address);
+            if (tokenSearch.tokens.length > 0 && tokenSearch.tokens[0].symbol)
+                return AddressType.ERC20;
+            return AddressType.SMART_CONTRACT;
+        }
+        
+        return AddressType.NORMAL;
     }
 }

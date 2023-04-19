@@ -13,6 +13,7 @@ import {
     RequestAddNetwork,
     RequestEditNetwork,
     RequestEditNetworksOrder,
+    AddressType,
 } from "@block-wallet/background/utils/types/communication"
 import { Devices, ExchangeType, Messages, TransactionStatus } from "./commTypes"
 import {
@@ -80,6 +81,15 @@ const sendMessage = <TMessageType extends MessageTypes>(
 
         port.postMessage({ id, message, request: request || {} })
     })
+}
+
+/**
+ * Gets the address type (normal, native, smart contract,erc20)
+ * @param address address to check
+ * @returns address type
+ */
+export const getAddressType = async (address: string): Promise<AddressType> => {
+    return sendMessage(Messages.ADDRESS.GET_TYPE, address)
 }
 
 /**

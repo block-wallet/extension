@@ -695,10 +695,6 @@ export class TokenController extends BaseController<TokenControllerState> {
                 token = mergeTokens(updatedToken.token, token);
             }
         }
-
-        if (!token.totalSupply) {
-            throw new Error('Unable to get token total supply');
-        }
         return token;
     }
 

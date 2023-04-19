@@ -272,9 +272,6 @@ export const INITIAL_NETWORKS: Networks = {
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/smartchain/info/logo.png',
         ],
-        rpcUrls: [
-            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/smartchain/info/logo.png',
-        ],
         enable: true,
         test: false,
         order: 4,
@@ -308,9 +305,6 @@ export const INITIAL_NETWORKS: Networks = {
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/polygon/info/logo.png',
         ],
-        rpcUrls: [
-            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/polygon/info/logo.png',
-        ],
         hasFixedGasCost: true,
         gasLowerCap: {
             maxPriorityFeePerGas: BigNumber.from('0x6fc23ac00'), // 30 GWEI,
@@ -321,7 +315,7 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
-        currentRpcUrl: `https://polygon-bor.publicnode.com`,
+        currentRpcUrl: `https://polygon-node.blockwallet.io`,
         defaultRpcUrl: `https://polygon-node.blockwallet.io`,
         backupRpcUrls: [
             'https://polygon.llamarpc.com',
@@ -364,10 +358,6 @@ export const INITIAL_NETWORKS: Networks = {
         showGasLevels: true,
         currentRpcUrl: `https://avax-node.blockwallet.io`,
         defaultRpcUrl: `https://avax-node.blockwallet.io`,
-        backupRpcUrls: [
-            'https://polygon.llamarpc.com',
-            'https://polygon-bor.publicnode.com',
-        ],
         blockExplorerUrls: ['https://snowtrace.io/'],
         blockExplorerName: 'Snowtrace',
         etherscanApiUrl: 'https://api.snowtrace.io/',

@@ -677,7 +677,8 @@ export class TokenController extends BaseController<TokenControllerState> {
 
     public async searchTokenWithTotalSupply(
         tokenAddress: string
-    ): Promise<Token> {
+    ): Promise<{ token: Token; fetchFailed: boolean }> {
+        let fetchFailed = false;
         const { tokens } = await this.search(tokenAddress);
         let token = tokens[0];
 
@@ -691,11 +692,15 @@ export class TokenController extends BaseController<TokenControllerState> {
                 this._networkController.network.chainId,
                 true
             );
+            fetchFailed = updatedToken.fetchFailed;
             if (updatedToken.token.totalSupply) {
                 token = mergeTokens(updatedToken.token, token);
             }
         }
-        return token;
+        return {
+            fetchFailed,
+            token,
+        };
     }
 
     /**

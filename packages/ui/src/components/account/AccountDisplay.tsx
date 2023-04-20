@@ -48,6 +48,7 @@ interface AccountDisplayProps {
     menu?: AccountDisplayMenuOption[]
     actionButtons?: JSX.Element[]
     onClickAccount?: (account: AccountInfo) => void
+    className?: string
 }
 
 const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
@@ -61,6 +62,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
     actionButtons,
     menu,
     onClickAccount,
+    className,
 }) => {
     const [confirmationDialog, setConfirmationDialog] =
         useState<ConfirmDialogState>({ isOpen: false })
@@ -98,7 +100,8 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                     "flex flex-row items-center justify-between w-full rounded-md",
                     hoverStyle &&
                         "hover:bg-primary-grey-default cursor-pointer",
-                    confirmationDialog.isOpen && "!cursor-default"
+                    confirmationDialog.isOpen && "!cursor-default",
+                    className
                 )}
                 onClick={() => onClickAccount && onClickAccount(account)}
                 role="button"

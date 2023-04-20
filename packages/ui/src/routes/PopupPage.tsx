@@ -40,6 +40,7 @@ import TransparentOverlay from "../components/loading/TransparentOverlay"
 import Icon, { IconName } from "../components/ui/Icon"
 import useNetWorthBalance from "../context/hooks/useNetWorthBalance"
 import { AiFillInfoCircle } from "react-icons/ai"
+import wallet from "../assets/images/icons/wallet.svg"
 
 const AccountDisplay = () => {
     const accountAddress = useSelectedAddressWithChainIdChecksum()
@@ -330,6 +331,42 @@ const PopupPage = () => {
                                 </div>
                                 <span className="text-[13px] font-medium">
                                     Send
+                                </span>
+                            </Link>
+                            <Link
+                                to="/buy"
+                                draggable={false}
+                                className={classnames(
+                                    "flex flex-col items-center space-y-2 group",
+                                    disabledActions && "pointer-events-none"
+                                )}
+                            >
+                                <div
+                                    className={classnames(
+                                        "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                        disabledActions
+                                            ? "bg-gray-300"
+                                            : "bg-primary-blue-default"
+                                    )}
+                                >
+                                    {isLoading ? (
+                                        <div className="flex flex-row items-center justify-center w-full h-full">
+                                            <AnimatedIcon
+                                                icon={
+                                                    AnimatedIconName.BlueCircleLoadingSkeleton
+                                                }
+                                                className="w-4 h-4 pointer-events-none"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <AnimatedIcon
+                                            icon={AnimatedIconName.Wallet}
+                                            className="cursor-pointer"
+                                        />
+                                    )}
+                                </div>
+                                <span className="text-[13px] font-medium">
+                                    Buy
                                 </span>
                             </Link>
                             {isSwapEnabled && (

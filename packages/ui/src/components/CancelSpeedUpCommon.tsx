@@ -478,7 +478,7 @@ const CancelAndSpeedUpComponent = ({
             maxFeePerGas: parseUnits(values.maxFeePerGas || "0", "gwei"),
         }
     }
- 
+
     const notEnoughFunds = currentBalance
         .sub(BigNumber.from(transaction.transactionParams.value ?? "0"))
         .sub(

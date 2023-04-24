@@ -36,7 +36,7 @@ const AssetsOverview = () => {
     return (
         <div
             className={classnames(
-                "flex flex-col w-full space-y-4 justify-between overflow-y-auto hide-scroll max-h-[450px]"
+                "flex flex-col w-full space-y-4 justify-between overflow-y-auto hide-scroll max-h-[470px]"
             )}
             data-testid="assets-list"
         >

@@ -140,6 +140,8 @@ export interface ApproveAllowanceParams {
     isUnlimited: boolean;
     spenderInfo?: ContractDetails;
     token: Token;
+    //In case it is an NFT
+    tokenId?: BigNumber;
 }
 
 export interface uiTransactionParams extends TransactionParams {

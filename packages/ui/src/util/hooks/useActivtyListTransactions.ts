@@ -48,8 +48,9 @@ const useActivtyListTransactions = () => {
                 t.transactionParams.value &&
                 BigNumber.from(t.transactionParams.value).eq(0) &&
                 t.transactionCategory === TransactionCategories.INCOMING
-            )
+            ) {
                 return []
+            }
 
             if (t.metaType === MetaType.REGULAR_SPEEDING_UP) {
                 const speedUpTx = transactions.find(
@@ -64,6 +65,8 @@ const useActivtyListTransactions = () => {
                     return [
                         {
                             ...t,
+                            //keep speedUp tx status
+                            status: speedUpTx.status,
                             transactionParams: {
                                 ...t.transactionParams,
                                 hash:
@@ -137,6 +140,15 @@ const useActivtyListTransactions = () => {
                 return []
             }
             return [t]
+        })
+        .sort((tx1, tx2) => {
+            //keep pending txs always to the top
+            const tx1Pending =
+                tx1.status === TransactionStatus.SUBMITTED ? 1 : 0
+            const tx2Pending =
+                tx2.status === TransactionStatus.SUBMITTED ? 1 : 0
+            const cmp = tx2Pending - tx1Pending
+            return cmp !== 0 ? cmp : tx1.time - tx2.time
         })
 
     return {

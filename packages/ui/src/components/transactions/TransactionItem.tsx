@@ -301,10 +301,10 @@ const getTransactionTime = (
         )
             return [{ color: "text-red-600", label: "Cancelled" }]
         // If we're here, we're waiting to see if the transaction will be cancelled
-        else if (metaType === MetaType.REGULAR_CANCELLING)
+        else if (metaType === MetaType.REGULAR_CANCELLING && !isQueued)
             return [{ color: "text-gray-600", label: "Cancelling..." }]
         // If we're here, we're waiting to see if the transaction will be sped up
-        else if (metaType === MetaType.REGULAR_SPEEDING_UP)
+        else if (metaType === MetaType.REGULAR_SPEEDING_UP && !isQueued)
             return [{ color: "text-gray-600", label: "Speeding up..." }]
         else if (status === TransactionStatus.SUBMITTED)
             return !isQueued

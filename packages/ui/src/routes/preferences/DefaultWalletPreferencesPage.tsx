@@ -66,6 +66,7 @@ const DefaultWalletPreferencesPage: FC<DefaultWalletPreferencesProps> = ({
                     />
                 </PopupFooter>
             }
+            submitOnEnter={{ onSubmit: isWelcome ? onNext : onSave }}
         >
             <div className="flex flex-col p-6 space-y-6 w-full">
                 <div className="text-sm text-primary-grey-dark">

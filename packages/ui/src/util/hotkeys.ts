@@ -307,7 +307,7 @@ const locations: HotkeyMap = {
             },
             {
                 hotkey: "6",
-                action: "/settings/preferences/warnings",
+                action: "/settings/preferences/notificationsAndWarnings",
                 hotkeyDescription: "ALT+6",
                 description: "Notifications & warnings",
             },

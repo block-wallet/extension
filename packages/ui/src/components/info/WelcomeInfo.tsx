@@ -7,7 +7,7 @@ import Info from "./Info"
 import { useBlankState } from "../../context/background/backgroundHooks"
 
 interface WelcomeInfoProps {
-    onDismiss: () => void
+    onDismiss: () => Promise<boolean>
 }
 const WelcomeInfo: FC<WelcomeInfoProps> = ({ onDismiss }) => {
     const { settings } = useBlankState()!
@@ -22,6 +22,7 @@ const WelcomeInfo: FC<WelcomeInfoProps> = ({ onDismiss }) => {
                     />
                 </PopupFooter>
             }
+            submitOnEnter={{ onSubmit: onDismiss }}
         >
             <div className="w-full p-6 pb-0 bg-white bg-opacity-75">
                 <Info>

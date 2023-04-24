@@ -16,7 +16,7 @@ import { getCurrentOS } from "../../context/util/platform"
 
 const LockTimeout = () => {
     const history = useOnMountHistory()!
-    const hotkeysEnabledCurrentStatus = useBlankState()?.hotkeysEnabled ?? true
+    const hotkeysEnabledCurrentStatus = useBlankState()?.hotkeysEnabled ?? false
     const [hotkeysEnabled, setHotkeysAllowed] = useState(
         hotkeysEnabledCurrentStatus
     )
@@ -97,11 +97,19 @@ const LockTimeout = () => {
                     }}
                 />
                 <DisplayHotkey
+                    description="Open/close the extension"
+                    alt
+                    hotkey="O"
+                    currentOS={currentOS}
+                    className="mt-7 mb-4"
+                />
+                <Divider />
+                <DisplayHotkey
                     description="Shortcuts"
                     alt
                     hotkey="K"
                     currentOS={currentOS}
-                    className="mt-7 mb-4"
+                    className="mt-4 mb-4"
                 />
                 {hotkeysEnabled && (
                     <>
@@ -116,7 +124,7 @@ const LockTimeout = () => {
                         />
                         <Divider />
                         <DisplayHotkey
-                            description="Close Wallet"
+                            description="Back to home"
                             alt
                             hotkey="Q"
                             currentOS={currentOS}

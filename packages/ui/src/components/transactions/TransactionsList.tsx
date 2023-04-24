@@ -4,6 +4,7 @@ import { VariableSizeList as List } from "react-window"
 import { RichedTransactionMeta } from "../../util/transactionUtils"
 import TransactionItem from "./TransactionItem"
 import {
+    MetaType,
     TransactionCategories,
     TransactionStatus,
 } from "../../context/commTypes"
@@ -14,15 +15,35 @@ import { TransactionMeta } from "@block-wallet/background/controllers/transactio
 import { useBlankState } from "../../context/background/backgroundHooks"
 import TransactionsLoadingSkeleton from "../skeleton/TransactionsLoadingSkeleton"
 
+//Default tx height
 const DEFAULT_TX_HEIGHT_IN_PX = 76
+
+//Tx with captions (Sped up/Bridge information)
+const TX_HEIHG_WITH_CAPTION = 95
+
+//Speed-up/Cancel buttons
+const TX_HEIGHT_WITH_BUTTONS = 110
+
+const pendingSpeedingCancellingMetaTypes = [
+    MetaType.REGULAR_SPEEDING_UP,
+    MetaType.REGULAR_CANCELLING,
+]
+
+const confirmedSpedCancelMetaTypes = [MetaType.SPEED_UP, MetaType.CANCEL]
+
 const getItemHeightInPx = (tx: TransactionMeta) => {
     if (tx.id) {
-        if (tx.status === TransactionStatus.SUBMITTED) {
-            return 110
+        if (
+            tx.status === TransactionStatus.SUBMITTED &&
+            !pendingSpeedingCancellingMetaTypes.includes(tx.metaType)
+        ) {
+            return TX_HEIGHT_WITH_BUTTONS
         } else if (tx.transactionCategory === TransactionCategories.BRIDGE) {
             return BRIDGE_PENDING_STATUS.includes(tx.bridgeParams!.status!)
-                ? 95
+                ? TX_HEIHG_WITH_CAPTION
                 : DEFAULT_TX_HEIGHT_IN_PX
+        } else if (confirmedSpedCancelMetaTypes.includes(tx.metaType)) {
+            return TX_HEIHG_WITH_CAPTION
         }
     }
     return DEFAULT_TX_HEIGHT_IN_PX

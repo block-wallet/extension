@@ -147,9 +147,8 @@ const useActivtyListTransactions = () => {
                 tx1.status === TransactionStatus.SUBMITTED ? 1 : 0
             const tx2Pending =
                 tx2.status === TransactionStatus.SUBMITTED ? 1 : 0
-            const cmp = tx2Pending - tx1Pending
 
-            if (cmp === 0) {
+            if (tx1Pending && tx2Pending) {
                 const tx1Nonce = tx1.transactionParams.nonce
                 const tx2Nonce = tx2.transactionParams.nonce
                 if (tx1Nonce !== undefined && tx2Nonce !== undefined) {
@@ -157,7 +156,8 @@ const useActivtyListTransactions = () => {
                 }
                 return tx1.time - tx2.time
             }
-            return cmp
+
+            return tx2Pending - tx1Pending
         })
 
     return {

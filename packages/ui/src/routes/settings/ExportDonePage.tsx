@@ -9,8 +9,14 @@ import CopyTooltip from "../../components/label/СopyToClipboardTooltip"
 import LinkButton from "../../components/button/LinkButton"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import ClickToReveal from "../../components/label/ClickToReveal"
-import ReactJson from "react-json-view"
+import {
+    JsonView,
+    defaultStyles,
+    collapseAllNested,
+} from "react-json-view-lite"
 import DownloadIcon from "../../assets/images/icons/download.svg"
+
+import "react-json-view-lite/dist/index.css"
 
 const ExportDonePage = () => {
     const history: any = useOnMountHistory()
@@ -69,16 +75,10 @@ const ExportDonePage = () => {
                     </div>
                 ) : (
                     <div className="flex flex-col space-y-4 overflow-x-hidden">
-                        <ReactJson
-                            src={JSON.parse(exportData)}
-                            name={false}
-                            enableClipboard={false}
-                            indentWidth={1}
-                            displayDataTypes={false}
-                            quotesOnKeys={false}
-                            iconStyle={"triangle"}
-                            collapseStringsAfterLength={32}
-                            collapsed={1}
+                        <JsonView
+                            data={JSON.parse(exportData)}
+                            shouldInitiallyExpand={collapseAllNested}
+                            style={{ ...defaultStyles, container: "" }}
                         />
                         <a
                             type="button"

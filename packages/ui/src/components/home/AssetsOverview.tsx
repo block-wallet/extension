@@ -6,14 +6,18 @@ import { useTokensList } from "../../context/hooks/useTokensList"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import AssetsLoadingSkeleton from "../skeleton/AssetsLoadingSkeleton"
 
-const AddTokenButton = () => {
+const AddTokenButton = ({ fixed }: { fixed: boolean }) => {
     return (
-        <div className="flex flex-col w-full space-y-1 py-2 flex px-6">
-            <ActionButton
-                icon={plus}
-                label="Add Token"
-                to="/settings/tokens/add"
-            />
+        <div
+            className={classnames(fixed ? "fixed bottom-6" : "py-4", "w-full")}
+        >
+            <div className="flex flex-col px-6">
+                <ActionButton
+                    icon={plus}
+                    label="Add Token"
+                    to="/settings/tokens/add"
+                />
+            </div>
         </div>
     )
 }
@@ -23,7 +27,7 @@ const AssetsOverview = () => {
     const { isNetworkChanging } = useBlankState()!
     const tokens = [nativeToken].concat(currentNetworkTokens)
 
-    const dislpayTopButton = tokens.length > 8
+    const displayFixedButton = tokens.length < 3
 
     if (isNetworkChanging) {
         return (
@@ -36,13 +40,13 @@ const AssetsOverview = () => {
     return (
         <div
             className={classnames(
-                "flex flex-col w-full space-y-4 justify-between overflow-y-auto hide-scroll max-h-[470px]"
+                "flex flex-col w-full justify-between overflow-y-auto hide-scroll max-h-[470px] min-h-[470px]",
+                displayFixedButton ? "flex-col-reverse" : "flex-col"
             )}
             data-testid="assets-list"
         >
-            {dislpayTopButton && <AddTokenButton />}
+            <AddTokenButton fixed={displayFixedButton} />
             <AssetsList assets={tokens} />
-            <AddTokenButton />
         </div>
     )
 }

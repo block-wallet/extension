@@ -48,7 +48,7 @@ function useStateSubscription<T>(
         if (!initialized.current) {
             generateSubscription()
         }
-    }, [])
+    }, [name, stateGetter, subscriber])
     return { state, isLoading }
 }
 

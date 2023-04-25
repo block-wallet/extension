@@ -694,7 +694,7 @@ export class TransactionController extends BaseController<
             );
 
             // Get token data
-            const token =
+            const { token, fetchFailed } =
                 await this._tokenController.searchTokenWithTotalSupply(
                     transactionMeta.transactionParams.to!
                 );
@@ -716,7 +716,7 @@ export class TransactionController extends BaseController<
                 token,
             };
 
-            if (!token.decimals) {
+            if (fetchFailed || !token.decimals || !token.totalSupply) {
                 // Check if it is an NFT
                 const nftContract = new NFTContract({
                     networkController: this._networkController,
@@ -728,8 +728,14 @@ export class TransactionController extends BaseController<
                 );
 
                 if (tokenURI) {
+                    //TODO remove advanced data (check where it use and run proper migrations)
                     advancedData = {
                         tokenId: _value,
+                    };
+                    approveAllowanceParams.tokenId = _value;
+                    approveAllowanceParams.token = {
+                        ...approveAllowanceParams.token,
+                        type: 'ERC721',
                     };
                 } else {
                     throw new Error('Failed fetching token data');

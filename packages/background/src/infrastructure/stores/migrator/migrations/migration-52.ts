@@ -34,10 +34,7 @@ export default {
             ...updatedNetworks.ZKSYNC_ALPHA_TESTNET,
             showGasLevels: false,
         };
-        updatedNetworks.SCROLL_L1_TESTNET = {
-            ...updatedNetworks.SCROLL_L1_TESTNET,
-            showGasLevels: false,
-        };
+
         updatedNetworks.SCROLL_L2_TESTNET = {
             ...updatedNetworks.SCROLL_L2_TESTNET,
             showGasLevels: false,

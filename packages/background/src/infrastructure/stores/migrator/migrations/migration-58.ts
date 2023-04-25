@@ -11,11 +11,6 @@ export default {
         const { availableNetworks } = persistedState.NetworkController;
         const updatedNetworks = { ...availableNetworks };
 
-        updatedNetworks.SCROLL_L1_TESTNET = {
-            ...updatedNetworks.SCROLL_L1_TESTNET,
-            rpcUrls: INITIAL_NETWORKS.SCROLL_L1_TESTNET.rpcUrls,
-        };
-
         updatedNetworks.SCROLL_L2_TESTNET = {
             ...updatedNetworks.SCROLL_L2_TESTNET,
             rpcUrls: INITIAL_NETWORKS.SCROLL_L2_TESTNET.rpcUrls,

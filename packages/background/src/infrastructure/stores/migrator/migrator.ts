@@ -11,14 +11,16 @@ export const migrator = async (
 ): Promise<BlankAppState> => {
     let newState = persistedState;
     for (const migration of migrations()) {
-
         if (compareVersions(migration.version, version) > 0) {
             try {
                 newState = await migration.migrate(newState);
             } catch (error) {
                 // This will catch any potential migration errors and continue the process so the extension can remain usable.
                 // Previously, the exception remained unhandled, breaking the initialization process.
-                log.error(`Could not apply migration ${migration.version} - `, error)
+                log.error(
+                    `Could not apply migration ${migration.version} - `,
+                    error
+                );
             }
         }
     }

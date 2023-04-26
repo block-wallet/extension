@@ -142,7 +142,7 @@
         "test:watch": "jest --watch",
         "lint": "prettier --check src/ '!**/*.{js,json,ts}'",
         "lint:fix": "prettier --write src/ '!**/*.{js,json,ts}'",
-        "eslint-report": "eslint src --ext .tsx,.ts"
+        "eslint": "eslint src --ext .tsx,.ts"
     },
     "browserslist": {
         "production": [

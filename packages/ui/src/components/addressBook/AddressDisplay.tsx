@@ -16,10 +16,10 @@ const NATIVE_ADDRESS_MESSAGE =
     "This address is not owned by any user, is often associated with token burn & mint/genesis events and used as a generic null address. Please, make sure the information is correct otherwise your assets will be permanently lost."
 
 const CONTRACT_ADDRESS_MESSAGE =
-    "This address is a smart contract address. Please, make sure the information is correct otherwise your assets will be permanently lost."
+    "You are about to send to a smart contract address which could result in the loss of your funds."
 
 const ERC20_CONTRACT_ADDRESS_MESSAGE =
-    "This address is an ERC20 smart contract address. Please, make sure the information is correct otherwise your assets will be permanently lost."
+    "You are about to send to an ERC20 smart contract address which could result in the loss of your funds."
 
 const getWarningTitle = (addressType: AddressType) => {
     switch (addressType) {
@@ -28,7 +28,7 @@ const getWarningTitle = (addressType: AddressType) => {
         case AddressType.SMART_CONTRACT:
             return "Smart Contract"
         case AddressType.ERC20:
-            return "ERC20 Contract"
+            return "ERC20 Contract Address"
         default:
             return ""
     }

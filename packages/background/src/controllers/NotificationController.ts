@@ -7,6 +7,8 @@ import {
     TransactionWatcherControllerEvents,
 } from './TransactionWatcherController';
 import TransactionController from './transactions/TransactionController';
+import { AccountTrackerController } from './AccountTrackerController';
+import { AddressBookController } from './AddressBookController';
 
 import { ChainListItem, getChainListItem } from '../utils/chainlist';
 import {
@@ -19,7 +21,7 @@ import {
 } from '../controllers/transactions/utils/types';
 import { formatTokenAmount } from '../utils/token';
 import { fetchContractDetails } from '../utils/contractsInfo';
-import { AccountTrackerController } from './AccountTrackerController';
+import { formatName } from '../utils/account';
 
 interface ChainListItemWithExplorerUrl extends ChainListItem {
     explorerUrl: string;
@@ -30,7 +32,8 @@ export class NotificationController {
         private readonly _preferencesController: PreferencesController,
         private readonly _transactionWatcherController: TransactionWatcherController,
         private readonly _transactionController: TransactionController,
-        private readonly _accountTrackerController: AccountTrackerController
+        private readonly _accountTrackerController: AccountTrackerController,
+        private readonly _addressBookController: AddressBookController
     ) {
         // Subscribe to Incoming transactions
         this._transactionWatcherController.on(
@@ -90,17 +93,25 @@ export class NotificationController {
             network
         );
 
-        const accountAddress = txMeta.transactionParams.from;
+        if (!txMeta.transactionCategory) return;
+
+        const isIncomingTransaction = [
+            TransactionCategories.INCOMING,
+            TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER,
+        ].includes(txMeta.transactionCategory);
+
+        const accountAddress = isIncomingTransaction
+            ? txMeta.transactionParams.to
+            : txMeta.transactionParams.from;
 
         if (!accountAddress) return;
 
         const accountName =
             this._accountTrackerController.getAccountName(accountAddress);
 
-        const accountInfo = `${accountName.slice(
-            0,
-            25 - 3
-        )}... (...${accountAddress?.slice(accountAddress.length - 4)})`;
+        const accountInfo = `${formatName(
+            accountName
+        )} (...${accountAddress?.slice(accountAddress.length - 4)})`;
 
         this.showNotification(title, message, url, accountInfo);
     }
@@ -271,19 +282,37 @@ export class NotificationController {
                 }
                 break;
             }
-            case TransactionCategories.SENT_ETHER:
+            case TransactionCategories.SENT_ETHER: {
+                const contactName =
+                    await this._addressBookController.getFormattedContactName(
+                        txParams.to
+                    );
                 title = `Transaction`;
-                message = `${txNetworkNativeToken.symbol} transfer on ${txNetworkName}`;
+                message = `${txNetworkNativeToken.symbol} transfer${
+                    contactName ? ` to ${contactName}` : ''
+                } on ${txNetworkName}`;
                 break;
-            case TransactionCategories.TOKEN_METHOD_TRANSFER:
+            }
+            case TransactionCategories.TOKEN_METHOD_TRANSFER: {
+                const contactName =
+                    await this._addressBookController.getFormattedContactName(
+                        transferType?.to
+                    );
                 if (!transferType) {
                     showDefaultNotification = true;
                     break;
                 }
                 title = `Transaction`;
-                message = `${transferType.currency} transfer on ${txNetworkName}`;
+                message = `${transferType.currency} transfer${
+                    contactName ? ` to ${contactName}` : ''
+                } on ${txNetworkName}`;
                 break;
-            case TransactionCategories.INCOMING:
+            }
+            case TransactionCategories.INCOMING: {
+                const contactName =
+                    await this._addressBookController.getFormattedContactName(
+                        txParams.from
+                    );
                 if (!txParams || !txParams.value) {
                     showDefaultNotification = true;
                     break;
@@ -293,9 +322,16 @@ export class NotificationController {
                     txParams.value,
                     txNetworkNativeToken.decimals,
                     txNetworkNativeToken.symbol
-                )} on ${txNetworkName}.`;
+                )}${
+                    contactName ? ` from ${contactName}` : ''
+                } on ${txNetworkName}.`;
                 break;
+            }
             case TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER: {
+                const contactName =
+                    await this._addressBookController.getFormattedContactName(
+                        txParams.from
+                    );
                 if (!transferType) {
                     showDefaultNotification = true;
                     break;
@@ -306,7 +342,9 @@ export class NotificationController {
                     transferType.amount,
                     transferType.decimals,
                     transferType.currency
-                )} on ${txNetworkName}.`;
+                )}${
+                    contactName ? ` from ${contactName}` : ''
+                } on ${txNetworkName}.`;
                 break;
             }
             case TransactionCategories.CONTRACT_INTERACTION: {

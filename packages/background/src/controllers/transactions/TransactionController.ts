@@ -296,8 +296,8 @@ export class TransactionController extends BaseController<
         public config: {
             txHistoryLimit: number;
         } = {
-                txHistoryLimit: 40,
-            }
+            txHistoryLimit: 40,
+        }
     ) {
         super(initialState);
 
@@ -761,8 +761,6 @@ export class TransactionController extends BaseController<
         const feeData = this._gasPricesController.getFeeData(chainId);
 
         if (chainIsEIP1559Compatible) {
-
-
             // Max fee per gas
             if (!transactionMeta.transactionParams.maxFeePerGas) {
                 if (feeData.maxFeePerGas) {
@@ -778,7 +776,6 @@ export class TransactionController extends BaseController<
                         BigNumber.from(feeData.maxPriorityFeePerGas);
                 }
             }
-
 
             /**
              * Checks if the network is compatible with EIP1559 but the
@@ -796,8 +793,6 @@ export class TransactionController extends BaseController<
                     transactionMeta.transactionParams.gasPrice;
                 transactionMeta.transactionParams.gasPrice = undefined;
             }
-
-
         } else {
             // Gas price
             if (!transactionMeta.transactionParams.gasPrice) {
@@ -811,10 +806,7 @@ export class TransactionController extends BaseController<
             // If the network is not EIP-1559 compatible, we remove maxPriority and maxFee parameters in case they come with a value, specially from dApps.
             transactionMeta.transactionParams.maxPriorityFeePerGas = undefined;
             transactionMeta.transactionParams.maxFeePerGas = undefined;
-
         }
-
-
 
         return transactionMeta;
     }
@@ -871,7 +863,8 @@ export class TransactionController extends BaseController<
 
                     // Subscribe confirmation and rejection listeners
                     this.hub.once(
-                        `${transactionMetaId}:${waitForConfirmation ? 'confirmed' : 'submitted'
+                        `${transactionMetaId}:${
+                            waitForConfirmation ? 'confirmed' : 'submitted'
                         }`,
                         confirmationListener
                     );
@@ -886,7 +879,8 @@ export class TransactionController extends BaseController<
             // Remove confirmation and rejection listeners on promise completion
             confirmationListener &&
                 this.hub.removeListener(
-                    `${transactionMetaId}:${!waitForConfirmation ? 'submitted' : 'confirmed'
+                    `${transactionMetaId}:${
+                        !waitForConfirmation ? 'submitted' : 'confirmed'
                     }`,
                     confirmationListener
                 );
@@ -1013,13 +1007,13 @@ export class TransactionController extends BaseController<
 
             const txParams = isEIP1559
                 ? {
-                    ...baseTxParams,
-                    maxFeePerGas:
-                        transactionMeta.transactionParams.maxFeePerGas,
-                    maxPriorityFeePerGas:
-                        transactionMeta.transactionParams
-                            .maxPriorityFeePerGas,
-                }
+                      ...baseTxParams,
+                      maxFeePerGas:
+                          transactionMeta.transactionParams.maxFeePerGas,
+                      maxPriorityFeePerGas:
+                          transactionMeta.transactionParams
+                              .maxPriorityFeePerGas,
+                  }
                 : baseTxParams;
 
             // delete gasPrice if maxFeePerGas and maxPriorityFeePerGas are set
@@ -1876,7 +1870,7 @@ export class TransactionController extends BaseController<
         // Check for token allowance update
         if (
             transactionMeta.transactionCategory ===
-            TransactionCategories.TOKEN_METHOD_APPROVE &&
+                TransactionCategories.TOKEN_METHOD_APPROVE &&
             transactionMeta.advancedData?.allowance &&
             advancedData?.allowance !== transactionMeta.advancedData?.allowance
         ) {
@@ -2039,7 +2033,7 @@ export class TransactionController extends BaseController<
         return !!transactions.find(
             (t) =>
                 t.transactionParams.nonce ===
-                transaction.transactionParams.nonce &&
+                    transaction.transactionParams.nonce &&
                 compareAddresses(
                     t.transactionParams.from,
                     transaction.transactionParams.from
@@ -2548,7 +2542,7 @@ export class TransactionController extends BaseController<
             .transactions.filter(
                 (t) =>
                     t.transactionCategory ===
-                    TransactionCategories.BLANK_DEPOSIT &&
+                        TransactionCategories.BLANK_DEPOSIT &&
                     t.status !== TransactionStatus.UNAPPROVED &&
                     t.chainId === fromChainId
             );

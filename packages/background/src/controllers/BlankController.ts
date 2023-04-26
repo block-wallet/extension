@@ -476,7 +476,8 @@ export default class BlankController extends EventEmitter {
         this.notificationController = new NotificationController(
             this.preferencesController,
             this.transactionWatcherController,
-            this.transactionController
+            this.transactionController,
+            this.accountTrackerController
         );
 
         this.store = new ComposedStore<BlankAppState>({

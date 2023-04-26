@@ -19,6 +19,7 @@ import {
 } from '../controllers/transactions/utils/types';
 import { formatTokenAmount } from '../utils/token';
 import { fetchContractDetails } from '../utils/contractsInfo';
+import { AccountTrackerController } from './AccountTrackerController';
 
 interface ChainListItemWithExplorerUrl extends ChainListItem {
     explorerUrl: string;
@@ -28,7 +29,8 @@ export class NotificationController {
     constructor(
         private readonly _preferencesController: PreferencesController,
         private readonly _transactionWatcherController: TransactionWatcherController,
-        private readonly _transactionController: TransactionController
+        private readonly _transactionController: TransactionController,
+        private readonly _accountTrackerController: AccountTrackerController
     ) {
         // Subscribe to Incoming transactions
         this._transactionWatcherController.on(
@@ -89,13 +91,18 @@ export class NotificationController {
         );
 
         const accountAddress = txMeta.transactionParams.from;
-        const accountName = accountAddress
-            ? `Account (${accountAddress?.slice(
-                  0,
-                  6
-              )}...${accountAddress?.slice(accountAddress.length - 4)})`
-            : undefined;
-        this.showNotification(title, message, url, accountName);
+
+        if (!accountAddress) return;
+
+        const accountName =
+            this._accountTrackerController.getAccountName(accountAddress);
+
+        const accountInfo = `${accountName.slice(
+            0,
+            25 - 3
+        )}... (...${accountAddress?.slice(accountAddress.length - 4)})`;
+
+        this.showNotification(title, message, url, accountInfo);
     }
 
     /**

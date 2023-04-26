@@ -7,6 +7,7 @@ import gas from "../../assets/images/icons/gas.svg"
 import news from "../../assets/images/icons/news.svg"
 import bell from "../../assets/images/icons/bell.svg"
 import shield from "../../assets/images/icons/shield.svg"
+import hotkeys from "../../assets/images/icons/hotkeys.svg"
 import { useHistory } from "react-router-dom"
 import classnames from "classnames"
 import VerticalSelect from "../../components/input/VerticalSelect"
@@ -49,10 +50,25 @@ const PreferencesPage = () => {
             label: "Phishing Protection",
             to: "/settings/preferences/phishing",
         },
+        {
+            icon: hotkeys,
+            label: "Keyboard Shortcuts",
+            to: "/settings/preferences/hotkeys",
+        },
     ]
 
     return (
-        <PopupLayout header={<PopupHeader title="Preferences" close="/" />}>
+        <PopupLayout
+            header={
+                <PopupHeader
+                    title="Preferences"
+                    close="/"
+                    onBack={() => {
+                        history.push("/settings")
+                    }}
+                />
+            }
+        >
             <div className="flex flex-col space-y-6 p-6">
                 <div className="flex flex-col space-y-1">
                     <div className="flex flex-col space-y-4">

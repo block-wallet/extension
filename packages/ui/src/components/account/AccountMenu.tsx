@@ -20,9 +20,12 @@ import classnames from "classnames"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { HARDWARE_TYPES } from "../../util/account"
 import { openHardwareRemove } from "../../context/commActions"
+import { useHotkeys } from "react-hotkeys-hook"
+import { componentsHotkeys } from "../../util/hotkeys"
 
 const AccountMenu = () => {
-    const { availableNetworks, selectedNetwork } = useBlankState()!
+    const { availableNetworks, selectedNetwork, hotkeysEnabled } =
+        useBlankState()!
     const account = useSelectedAccount()
     const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const history = useOnMountHistory()
@@ -62,6 +65,19 @@ const AccountMenu = () => {
             ),
         },
     ]
+
+    const accountMenuHotkeys = componentsHotkeys.AccountMenu
+    useHotkeys(accountMenuHotkeys, () => {
+        if (!hotkeysEnabled) return
+        chrome.tabs.create({
+            url: generateExplorerLink(
+                availableNetworks,
+                selectedNetwork,
+                account.address,
+                "address"
+            ),
+        })
+    })
 
     const disabledOptions: { [k: string]: boolean } = {}
     const tooltipOptions: { [k: string]: string } = {}

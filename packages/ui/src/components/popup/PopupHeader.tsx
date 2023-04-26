@@ -14,8 +14,10 @@ import CloseIcon from "../icons/CloseIcon"
 import ArrowIcon from "../icons/ArrowIcon"
 import Dropdown from "../ui/Dropdown/Dropdown"
 import { DropdownMenuItem } from "../ui/Dropdown/DropdownMenu"
+import useHotKey, { UseHotKeyProps } from "../../util/hooks/useHotKey"
 import { AiFillInfoCircle } from "react-icons/ai"
 import Tooltip from "../label/Tooltip"
+import { useBlankState } from "../../context/background/backgroundHooks"
 
 export interface PopupHeaderProps {
     title: string
@@ -32,6 +34,7 @@ export interface PopupHeaderProps {
     children?: React.ReactNode | undefined
     className?: string
     goBackState?: object
+    permissions?: { [action: string]: boolean } //used to validate hotkeys actions
 }
 
 const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
@@ -49,14 +52,54 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
     actions,
     className,
     goBackState,
+    permissions,
 }) => {
     const history = useOnMountHistory()
     const lastLocation = useOnMountLastLocation()
     const network = useSelectedNetwork()
-
     const [fromAction, setFromAction] = useState(false)
-
     const [mounted, setMounted] = useState(false)
+
+    const onBackAction = (e: any) => {
+        if (onBack) return onBack(e)
+
+        //means there is no stack at all and we don't were to go
+        //as the history hasn't been restored.
+        //Also, we don't have the lastLocation as the extension may have been closed
+        //and restored using the localStorage (useLocationRecovery).
+        //Therefore, we return to home.
+        if (history.length <= 1) {
+            return history.replace("/")
+        }
+
+        if (keepState || goBackState) {
+            let newState = {}
+            if (keepState) {
+                newState = lastLocation?.state
+                    ? (lastLocation?.state as any & {
+                          keepState: true
+                      })
+                    : {}
+            }
+            if (goBackState) {
+                newState = {
+                    ...newState,
+                    ...goBackState,
+                }
+            }
+            return history.replace({
+                pathname: lastLocation?.pathname,
+                state: newState,
+            })
+        }
+        fromAction ? history.go(-3) : history.goBack()
+    }
+
+    const onCloseAction = (e: any) => {
+        if (onClose) return onClose(e as any)
+
+        history.push(typeof close === "string" ? close : "/home")
+    }
 
     useEffect(() => {
         setFromAction(history.location.state?.fromAction)
@@ -65,6 +108,12 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
         return () => setMounted(false)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    useHotKey({
+        onClose: close && onCloseAction,
+        onBack: backButton && onBackAction,
+        permissions: permissions,
+    } as UseHotKeyProps)
 
     return (
         <div
@@ -77,40 +126,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
             {backButton && (
                 <button
                     type="button"
-                    onClick={(e) => {
-                        if (onBack) return onBack(e)
-
-                        //means there is no stack at all and we don't were to go
-                        //as the history hasn't been restored.
-                        //Also, we don't have the lastLocation as the extension may have been closed
-                        //and restored using the localStorage (useLocationRecovery).
-                        //Therefore, we return to home.
-                        if (history.length <= 1) {
-                            return history.replace("/")
-                        }
-
-                        if (keepState || goBackState) {
-                            let newState = {}
-                            if (keepState) {
-                                newState = lastLocation?.state
-                                    ? (lastLocation?.state as any & {
-                                          keepState: true
-                                      })
-                                    : {}
-                            }
-                            if (goBackState) {
-                                newState = {
-                                    ...newState,
-                                    ...goBackState,
-                                }
-                            }
-                            return history.replace({
-                                pathname: lastLocation?.pathname,
-                                state: newState,
-                            })
-                        }
-                        fromAction ? history.go(-3) : history.goBack()
-                    }}
+                    onClick={onBackAction}
                     disabled={disabled || !mounted}
                     className={classnames(
                         "p-2 -ml-2 mr-1 cursor-pointer transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default",
@@ -166,12 +182,7 @@ const PopupHeader: FunctionComponent<PopupHeaderProps> = ({
 
                 {close && (
                     <button
-                        onClick={(e) => {
-                            if (onClose) return onClose(e)
-                            history.push(
-                                typeof close === "string" ? close : "/home"
-                            )
-                        }}
+                        onClick={onCloseAction}
                         disabled={disabled}
                         className={classnames(
                             "p-2 -mr-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default",

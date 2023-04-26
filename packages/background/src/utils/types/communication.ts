@@ -232,6 +232,8 @@ enum WALLET {
     HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT = 'HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT',
     HARDWARE_QR_SUBMIT_SIGNATURE = 'HARDWARE_QR_SUBMIT_SIGNATURE',
     HARDWARE_QR_CANCEL_SIGN_REQUEST = 'HARDWARE_QR_CANCEL_SIGN_REQUEST',
+    //hotkeys
+    SET_HOTKEYS_ENABLED = 'SET_HOTKEYS_ENABLED',
 }
 
 enum TOKEN {
@@ -567,6 +569,7 @@ export interface RequestSignatures {
         CancelQRHardwareSignRequestMessage,
         boolean
     ];
+    [Messages.WALLET.SET_HOTKEYS_ENABLED]: [RequestSetHotkeys, void];
 }
 
 export type MessageTypes = keyof RequestSignatures;
@@ -1185,4 +1188,8 @@ export type Handlers = Record<string, Handler>;
 
 export enum BackgroundActions {
     CLOSE_WINDOW = 'CLOSE_WINDOW',
+}
+
+export interface RequestSetHotkeys {
+    enabled: boolean;
 }

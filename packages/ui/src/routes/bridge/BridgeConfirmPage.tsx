@@ -71,7 +71,7 @@ import {
     GetBridgeQuoteResponse,
     GetBridgeQuoteNotFoundResponse,
 } from "@block-wallet/background/controllers/BridgeController"
-import CollapsableWarning from "../../components/CollapsableWarning"
+import CollapsableMessage from "../../components/CollapsableMessage"
 import { AiOutlineWarning } from "react-icons/ai"
 import BridgeDetails from "../../components/bridge/BridgeDetails"
 import ErrorMessage from "../../components/error/ErrorMessage"
@@ -614,7 +614,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 address={selectedAccount.address}
             />
             {showBridgeWarningMessage && (
-                <CollapsableWarning
+                <CollapsableMessage
                     isCollapsedByDefault={false}
                     collapsedMessage={
                         <div

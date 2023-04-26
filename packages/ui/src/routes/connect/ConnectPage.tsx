@@ -30,7 +30,7 @@ import { PermissionRequest } from "@block-wallet/background/controllers/Permissi
 import useDebouncedState from "../../util/hooks/useDebouncedState"
 import { DAPP_FEEDBACK_WINDOW_TIMEOUT, LINKS } from "../../util/constants"
 import GenericTooltip from "../../components/label/GenericTooltip"
-import CollapsableWarning from "../../components/CollapsableWarning"
+import CollapsableMessage from "../../components/CollapsableMessage"
 import { isOriginSafe } from "../../util/isOriginSafe"
 
 const ConnectPage = () => {
@@ -175,7 +175,7 @@ const ConnectSteps = ({
         >
             {isLoading && <LoadingOverlay />}
             {!isSiteOriginSafe && (
-                <CollapsableWarning
+                <CollapsableMessage
                     dialog={{
                         title: "Warning: Suspicious URL",
                         message: (

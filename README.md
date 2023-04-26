@@ -176,7 +176,7 @@ See the [Acknowledgments](docs/acknowledgments.md) file for details
     </picture>
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://discord.com/invite/EKVZ2xWXEH">
+  <a href="https://discord.gg/aRMqf2bAVJ">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://blockwallet.io/static/images/logo-discord.svg" />
       <source media="(prefers-color-scheme: light)" srcset="https://blockwallet.io/static/images/logo-discord-d.svg" />

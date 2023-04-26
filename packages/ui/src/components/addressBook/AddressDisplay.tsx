@@ -1,6 +1,6 @@
 import { FunctionComponent, useEffect, useState } from "react"
 import { formatHash, formatName } from "../../util/formatAccount"
-import CollapsableWarning from "../CollapsableWarning"
+import CollapsableMessage from "../CollapsableMessage"
 import CheckmarkCircle from "../icons/CheckmarkCircle"
 import ExclamationCircleIconFull from "../icons/ExclamationCircleIconFull"
 import { getAddressType } from "../../context/commActions"
@@ -107,7 +107,7 @@ export const AddressDisplay: FunctionComponent<{
                     )}
                 </div>
             ) : (
-                <CollapsableWarning
+                <CollapsableMessage
                     dialog={{
                         title: "Warning",
                         message: <span>{getModalMessage(addressType)}</span>,

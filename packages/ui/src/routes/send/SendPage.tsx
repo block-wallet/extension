@@ -203,7 +203,7 @@ const SendPage = () => {
                         ref={useMergeRefs(ref, searchInputRef)}
                         error={errors.address?.message}
                         warning={warning}
-                        autoFocus={false}
+                        autoFocus={true}
                         isValid={isAddress}
                         onChange={onChangeHandler}
                         onPaste={() => {

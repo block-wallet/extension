@@ -59,7 +59,13 @@ const PhishingProtectionPreferencesPage = () => {
     }
     return (
         <PopupLayout
-            header={<PopupHeader title="Phishing Protection" close="/" />}
+            header={
+                <PopupHeader
+                    title="Phishing Protection"
+                    close="/"
+                    onBack={() => history.push("/settings/preferences")}
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading

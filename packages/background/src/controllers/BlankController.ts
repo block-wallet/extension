@@ -115,8 +115,9 @@ import {
     SubmitQRHardwareSignatureMessage,
     CancelQRHardwareSignRequestMessage,
     RequestUpdateTransactionStatus,
-    RequestIsEnrolled,
     AddressType,
+    RequestSetHotkeys,
+    RequestIsEnrolled,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -1125,6 +1126,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.BROWSER.GET_WINDOW_ID:
                 return getCurrentWindowId();
+            case Messages.WALLET.SET_HOTKEYS_ENABLED:
+                return this.setHotkeysStatus(request as RequestSetHotkeys);
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -3403,7 +3406,15 @@ export default class BlankController extends EventEmitter {
                 return AddressType.ERC20;
             return AddressType.SMART_CONTRACT;
         }
-        
+
         return AddressType.NORMAL;
+    }
+
+    /** Set hotkeys enabled/disabled
+     *
+     * @param enabled indicates if the extension can use hotkeys
+     */
+    private setHotkeysStatus({ enabled }: RequestSetHotkeys) {
+        this.preferencesController.hotkeysStatus = enabled;
     }
 }

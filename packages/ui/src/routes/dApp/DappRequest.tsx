@@ -14,7 +14,6 @@ import { Redirect } from "react-router"
 import { SiteMetadata } from "@block-wallet/provider/types"
 import useDebouncedState from "../../util/hooks/useDebouncedState"
 import { DAPP_FEEDBACK_WINDOW_TIMEOUT } from "../../util/constants"
-import { QRTransactionParams } from "@block-wallet/background/controllers/transactions/utils/types"
 
 export interface DappRequestProps {
     dappReqData:

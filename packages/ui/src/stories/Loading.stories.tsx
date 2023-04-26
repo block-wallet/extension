@@ -1,7 +1,5 @@
 import { Meta } from "@storybook/react"
 import classnames from "classnames"
-
-import { Classes } from "../styles"
 import Placeholder from "../components/Placeholder"
 
 export const BasePlaceholder = () => (

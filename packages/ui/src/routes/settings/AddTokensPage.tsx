@@ -67,7 +67,7 @@ const AddTokensPage = () => {
         } else {
             setResults([])
         }
-    }, [searchedValue])
+    }, [searchedValue, isManualTokenView])
 
     const handleSubmitEnabled = async (value: boolean) => {
         setSubmitEnabled(value)

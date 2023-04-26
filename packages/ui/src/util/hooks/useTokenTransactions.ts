@@ -5,12 +5,12 @@ import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { BigNumber } from "@ethersproject/bignumber"
 
 const useTokenTransactions = (token: Token | undefined) => {
+    const { transactions } = useTransactions()
     if (!token) {
         return [] as RichedTransactionMeta[]
     }
     try {
         const contractToLower = token.address.toLowerCase()
-        const { transactions } = useTransactions()
         return transactions.filter(
             ({ transactionParams, transactionReceipt, transferType }) => {
                 if (isNativeTokenAddress(token.address)) {
@@ -23,9 +23,9 @@ const useTokenTransactions = (token: Token | undefined) => {
                     )
                 } else {
                     return (
-                        transactionReceipt?.contractAddress?.toLowerCase() ==
+                        transactionReceipt?.contractAddress?.toLowerCase() ===
                             contractToLower ||
-                        transactionParams.to?.toLowerCase() == contractToLower
+                        transactionParams.to?.toLowerCase() === contractToLower
                     )
                 }
             }

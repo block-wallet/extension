@@ -143,7 +143,7 @@ const SendPage = () => {
         }
 
         checkAddress()
-    }, [searchString])
+    }, [addressBookAccounts, currentAccount.address, myAccounts, searchString])
 
     const onAccountSelect = (account: any) => {
         setSelectedAccount(account)

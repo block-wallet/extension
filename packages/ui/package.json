@@ -25,7 +25,7 @@
         "react-hook-form": "^7.33.1",
         "react-icons": "^4.4.0",
         "react-idle-timer": "^5.4.1",
-        "react-json-view": "^1.21.3",
+        "react-json-view-lite": "^0.9.5",
         "react-modal": "^3.12.1",
         "react-password-strength-bar": "^0.4.1",
         "react-qr-reader": "^3.0.0-beta-1",

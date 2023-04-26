@@ -1,4 +1,4 @@
-import { FC, useState } from "react"
+import { FC } from "react"
 import QrContainer from "./QRReader"
 import Divider from "../Divider"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"

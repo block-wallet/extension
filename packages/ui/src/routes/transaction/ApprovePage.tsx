@@ -128,6 +128,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 }))
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inProgressTransaction?.id])
 
     useLayoutEffect(() => {
@@ -174,8 +175,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 }, [inProgressTransaction?.id]),
             }
         )
-
-    const { assetAllowance } = persistedData || INITIAL_VALUE_PERSISTED_DATA
 
     const [isGasUpdating, setIsGasUpdating] = useState<boolean>(false)
     const [hasBalance, setHasBalance] = useState<boolean>(false)
@@ -313,6 +312,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 }
             )
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     // Fees

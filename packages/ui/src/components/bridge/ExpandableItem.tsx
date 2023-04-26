@@ -2,14 +2,14 @@ import { FC, ReactNode, useState } from "react"
 import classnames from "classnames"
 import { ArrowUpDown } from "../icons/ArrowUpDown"
 
-interface ExpandableItem {
+interface ExpandableItemProps {
     children: ReactNode
     expanded: ReactNode
     className?: string
     expandable: boolean
     defaultExpanded?: boolean
 }
-const ExpandableItem: FC<ExpandableItem> = ({
+const ExpandableItem: FC<ExpandableItemProps> = ({
     children,
     expanded,
     className,

@@ -16,7 +16,7 @@ const BridgeErrorDisplay = ({
 }) => {
     let errors = new Map<string, BridgeErrorSummary>()
 
-    bridgeError.map((value) => {
+    bridgeError.forEach((value) => {
         if (errors.has(value.code)) {
             errors
                 .get(value.code)

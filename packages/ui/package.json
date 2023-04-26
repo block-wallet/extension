@@ -142,23 +142,7 @@
         "test:watch": "jest --watch",
         "lint": "prettier --check src/ '!**/*.{js,json,ts}'",
         "lint:fix": "prettier --write src/ '!**/*.{js,json,ts}'",
-        "eslint-report": "eslint src --ext .tsx,.ts -o eslint-report.html -f html"
-    },
-    "eslintConfig": {
-        "extends": [
-            "react-app",
-            "react-app/jest"
-        ],
-        "overrides": [
-            {
-                "files": [
-                    "**/*.stories.*"
-                ],
-                "rules": {
-                    "import/no-anonymous-default-export": "off"
-                }
-            }
-        ]
+        "eslint": "eslint src --ext .tsx,.ts"
     },
     "browserslist": {
         "production": [

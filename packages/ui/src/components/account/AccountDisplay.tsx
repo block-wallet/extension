@@ -27,7 +27,6 @@ import Tag from "../ui/Tag"
 import { isInternalAccount } from "../../util/account"
 import useCopyToClipboard from "../../util/hooks/useCopyToClipboard"
 import Dropdown from "../ui/Dropdown/Dropdown"
-import { toChecksumAddress } from "ethereumjs-util"
 import { useAddressWithChainIdChecksum } from "../../util/hooks/useSelectedAddressWithChainIdChecksum"
 
 interface ConfirmDialogState {

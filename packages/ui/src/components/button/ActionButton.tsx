@@ -1,5 +1,5 @@
 import classnames from "classnames"
-import { FunctionComponent, ReactElement } from "react"
+import { FunctionComponent } from "react"
 import { Link } from "react-router-dom"
 import { Classes } from "../../styles"
 

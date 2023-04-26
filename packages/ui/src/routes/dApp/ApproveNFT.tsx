@@ -31,7 +31,6 @@ import {
     TransactionCategories,
 } from "../../context/commTypes"
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
-import { capitalize } from "../../util/capitalize"
 import { formatHashLastChars, formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
 import { formatUnits } from "@ethersproject/units"
@@ -104,7 +103,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
         availableNetworks,
         selectedNetwork,
     } = useBlankState()!
-    const { chainId, isEIP1559Compatible, desc } = useSelectedNetwork()
+    const { chainId, isEIP1559Compatible } = useSelectedNetwork()
     const { hideAddressWarning } = useUserSettings()
     const selectedAccountBalance = useSelectedAccountBalance()
     const { nativeToken } = useTokensList()
@@ -168,10 +167,6 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     // Set data
     const account = accounts[checksumFromAddress]
     const tokenAddress = params.to!
-    const tokenId = BigNumber.from(
-        transaction.advancedData?.tokenId!
-    ).toString()
-    const networkName = capitalize(desc)
     const spenderAddress = transaction.approveAllowanceParams?.spenderAddress!
     const spenderName =
         transaction.approveAllowanceParams?.spenderInfo?.name ??

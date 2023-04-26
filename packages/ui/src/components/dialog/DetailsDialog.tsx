@@ -59,6 +59,7 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
         if (options.length === previousLengthRef.current) return
 
         setExpends(new Array(options.length).fill(expandedByDefault))
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [options])
 
     return (

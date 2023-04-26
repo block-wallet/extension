@@ -4,7 +4,6 @@ import { Devices } from "../../context/commTypes"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 //Components
 import QrContainer from "../../components/qr/QRReader"
-import LinkButton from "../../components/button/LinkButton"
 //Layout
 import HardwareWalletSetupLayout from "./SetupLayout"
 import ConnectDeviceStepsLayout from "./ConnectDeviceStepsLayout"

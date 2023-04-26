@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect } from "react"
 import { useWaitingDialog } from "../../components/dialog/WaitingDialog"
 import {
     AccountType,
@@ -311,8 +311,8 @@ export const useTransactionWaitingDialog = (
                 })
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
-        !transaction,
         transaction?.id,
         transaction?.status,
         transaction?.error,

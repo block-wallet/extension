@@ -46,13 +46,13 @@ const useAwaitAllowanceTransactionDialog = (
                 })
             }
         }
-    }, [transaction?.status])
+    }, [transaction?.status, dispatch])
     return {
         status,
         isOpen,
         closeDialog: useCallback(() => {
             dispatch({ type: "close" })
-        }, []),
+        }, [dispatch]),
     }
 }
 

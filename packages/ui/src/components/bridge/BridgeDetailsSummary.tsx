@@ -69,6 +69,7 @@ const BridgeDetailsSummary: FC<BridgeDetailsSummaryProps> = ({
                   bridgeTransactionsData
               )
             : undefined
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [transaction])
 
     if (!details) {

@@ -1,5 +1,5 @@
 import classnames from "classnames"
-import { FunctionComponent, useLayoutEffect, useRef, useState } from "react"
+import { FunctionComponent, useLayoutEffect, useRef } from "react"
 
 /**
  * Generic tooltip component.

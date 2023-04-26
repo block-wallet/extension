@@ -114,12 +114,12 @@ const ErrorFallbackPage: FunctionComponent<{
                         <p>
                             Please try restarting the wallet and contacting
                             support. If the issue persists, you can{" "}
-                            <a
+                            <span
                                 className="text-red-600 cursor-pointer"
                                 onClick={() => setConfirmOpen(true)}
                             >
                                 reset this account
-                            </a>{" "}
+                            </span>{" "}
                             state.
                         </p>
                     </div>

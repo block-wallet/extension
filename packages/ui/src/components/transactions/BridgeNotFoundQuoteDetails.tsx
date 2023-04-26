@@ -1,4 +1,4 @@
-import { FunctionComponent, useState } from "react"
+import { FunctionComponent } from "react"
 import Dialog from "../dialog/Dialog"
 import CloseIcon from "../icons/CloseIcon"
 import Divider from "../Divider"
@@ -28,7 +28,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
 > = ({ open, onClose, details }) => {
     let errorsByTool = new Map<string, BridgeError[]>()
 
-    details.errors.map((error) => {
+    details.errors.forEach((error) => {
         const err = {
             code: error.code,
             type: error.tool,

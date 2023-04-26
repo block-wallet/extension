@@ -18,7 +18,7 @@ const executeConnect = async (
         if (!connectionOk) {
             return Promise.resolve(false)
         }
-    } else if (vendor == Devices.KEYSTONE) {
+    } else if (vendor === Devices.KEYSTONE) {
         const submissionOk = await hardwareQrSubmitCryptoHdKeyOrAccount(
             ur || ""
         )

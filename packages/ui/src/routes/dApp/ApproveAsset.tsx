@@ -180,15 +180,6 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const selectedAccountBalance = useSelectedAccountBalance()
     const { nativeToken } = useTokensList()
 
-    // Get data from window.localStorage
-    const [, setPersistedData] = useLocalStorageState<ApproveAssetPageState>(
-        "approveasset.form",
-        {
-            initialValue: { txId: "" },
-            volatile: true,
-        }
-    )
-
     const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
         useCheckAccountDeviceLinked()
 
@@ -277,7 +268,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     useEffect(() => {
         // To reset the default value if there is multiple queued transactions
         setAllowance(formatUnits(defaultAllowance, tokenDecimals))
-    }, [defaultAllowance])
+    }, [defaultAllowance, tokenDecimals])
 
     useEffect(() => {
         setIsManuallyRejected(false)

@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect, useState } from "react"
+import { FunctionComponent, useState } from "react"
 import { CgArrowsExchangeV } from "react-icons/cg"
 
 import { DappRequestParams } from "@block-wallet/background/utils/types/ethereum"

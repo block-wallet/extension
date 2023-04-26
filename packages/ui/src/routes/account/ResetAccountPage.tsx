@@ -14,7 +14,7 @@ import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
 
-const ResetAccountPage = ({}) => {
+const ResetAccountPage = () => {
     const account = useSelectedAccount()
     const { downloadStateLogsHandler } = useStateLogs()
 

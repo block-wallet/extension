@@ -47,7 +47,7 @@ import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import { OneInchSwapRequestParams } from "@block-wallet/background/utils/types/1inch"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { classnames, Classes } from "../../styles"
+import { classnames } from "../../styles"
 import { formatRounded } from "../../util/formatRounded"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
@@ -147,6 +147,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 }))
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inProgressTransaction?.id])
 
     useLayoutEffect(() => {

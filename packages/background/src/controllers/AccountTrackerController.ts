@@ -1417,7 +1417,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      */
     public getAccountName(address: string) {
         const { accounts } = this.store.getState();
-       
+
         const accountName = accounts[checksummedAddress(address)]?.name;
 
         if (!accountName) {

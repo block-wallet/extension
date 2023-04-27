@@ -782,6 +782,36 @@
     "@noble/hashes" "~1.1.1"
     "@scure/base" "~1.1.0"
 
+"@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@msgpackr-extract/msgpackr-extract-darwin-arm64/-/msgpackr-extract-darwin-arm64-3.0.2.tgz#44d752c1a2dc113f15f781b7cc4f53a307e3fa38"
+  integrity sha512-9bfjwDxIDWmmOKusUcqdS4Rw+SETlp9Dy39Xui9BEGEk19dDwH0jhipwFzEff/pFg95NKymc6TOTbRKcWeRqyQ==
+
+"@msgpackr-extract/msgpackr-extract-darwin-x64@3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@msgpackr-extract/msgpackr-extract-darwin-x64/-/msgpackr-extract-darwin-x64-3.0.2.tgz#f954f34355712212a8e06c465bc06c40852c6bb3"
+  integrity sha512-lwriRAHm1Yg4iDf23Oxm9n/t5Zpw1lVnxYU3HnJPTi2lJRkKTrps1KVgvL6m7WvmhYVt/FIsssWay+k45QHeuw==
+
+"@msgpackr-extract/msgpackr-extract-linux-arm64@3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@msgpackr-extract/msgpackr-extract-linux-arm64/-/msgpackr-extract-linux-arm64-3.0.2.tgz#45c63037f045c2b15c44f80f0393fa24f9655367"
+  integrity sha512-FU20Bo66/f7He9Fp9sP2zaJ1Q8L9uLPZQDub/WlUip78JlPeMbVL8546HbZfcW9LNciEXc8d+tThSJjSC+tmsg==
+
+"@msgpackr-extract/msgpackr-extract-linux-arm@3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@msgpackr-extract/msgpackr-extract-linux-arm/-/msgpackr-extract-linux-arm-3.0.2.tgz#35707efeafe6d22b3f373caf9e8775e8920d1399"
+  integrity sha512-MOI9Dlfrpi2Cuc7i5dXdxPbFIgbDBGgKR5F2yWEa6FVEtSWncfVNKW5AKjImAQ6CZlBK9tympdsZJ2xThBiWWA==
+
+"@msgpackr-extract/msgpackr-extract-linux-x64@3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@msgpackr-extract/msgpackr-extract-linux-x64/-/msgpackr-extract-linux-x64-3.0.2.tgz#091b1218b66c341f532611477ef89e83f25fae4f"
+  integrity sha512-gsWNDCklNy7Ajk0vBBf9jEx04RUxuDQfBse918Ww+Qb9HCPoGzS+XJTLe96iN3BVK7grnLiYghP/M4L8VsaHeA==
+
+"@msgpackr-extract/msgpackr-extract-win32-x64@3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@msgpackr-extract/msgpackr-extract-win32-x64/-/msgpackr-extract-win32-x64-3.0.2.tgz#0f164b726869f71da3c594171df5ebc1c4b0a407"
+  integrity sha512-O+6Gs8UeDbyFpbSh2CPEz/UOrrdWPTBYNblZK5CxxLisYt4kGX3Sc+czffFonyjiGSq3jWLwJS/CCJc7tBr4sQ==
+
 "@noble/ed25519@^1.5.1":
   version "1.7.3"
   resolved "https://registry.yarnpkg.com/@noble/ed25519/-/ed25519-1.7.3.tgz#57e1677bf6885354b466c38e2b620c62f45a7123"
@@ -886,15 +916,17 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@rpch/common@0.1.7":
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/@rpch/common/-/common-0.1.7.tgz#06d16eb077a301114643945b81b00a457111db93"
-  integrity sha512-n3KpSANOnViDTQv4xogKylLefAfHQ0zLXI5yLJxJx+zRe2FBdNLdKx6NlOsiEuUKMzboFSoQcNLNYEEI6sPdSw==
+"@rpch/common@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@rpch/common/-/common-0.2.0.tgz#ca4fd27670db23a65db650050f2e65b1e92b03d1"
+  integrity sha512-6nCLSgPIUny/F2+p3p3cGOw+ZWlk4g6/lc2LBImC0dCDOKB/DHWuYNTSfRul2yps09GgQJJPQuXpxYRMUJVnuQ==
   dependencies:
     cross-fetch "3.2.0-alpha.2"
     debug "^4.3.4"
     ethers "^5.7.2"
     isomorphic-ws "^5.0.0"
+    lz-string "^1.5.0"
+    msgpackr "^1.8.5"
     peer-id "^0.16.0"
     ws "^8.11.0"
 
@@ -903,22 +935,22 @@
   resolved "https://registry.yarnpkg.com/@rpch/crypto/-/crypto-0.3.4.tgz#201b8e5f0efc7ffb8d3d06f210f5eebd04d41acd"
   integrity sha512-429mUQce5wbAIEHtg1yd9MyEcj8fqxixoDh0msZnVrynhzgFbkyTEHYjBUsj9XHLsyBnMUgzWZGogim8/cR0jw==
 
-"@rpch/ethers@0.1.7":
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/@rpch/ethers/-/ethers-0.1.7.tgz#449819cc3dd378af30f6c19e573262c92c1e938d"
-  integrity sha512-jrEEiG+1b089avNZmBhuZ2/jA+Ldx4RMcI5n3Pi18oGEs42fTCUvfIjy1iNjYZ5X2FLXCwfD7g1+hjUsuIWI/A==
+"@rpch/ethers@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@rpch/ethers/-/ethers-0.2.0.tgz#a187d82f964ba820e22aaeba11d2b49f9c08f3e8"
+  integrity sha512-n+A2XB08dXNj3VZ9Gs4hDB4etF1qIxkWitP36zG0ZIpK1izoyAArxRzOSSsX6b3Pf4Db1FQE/SJD6y7RShxkbw==
   dependencies:
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/providers" "^5.7.2"
-    "@rpch/common" "0.1.7"
-    "@rpch/sdk" "0.1.7"
+    "@rpch/common" "0.2.0"
+    "@rpch/sdk" "0.2.0"
 
-"@rpch/sdk@0.1.7":
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/@rpch/sdk/-/sdk-0.1.7.tgz#384a8333ef8d27ccebab5ccf057cdbaa3e0e1e14"
-  integrity sha512-qGSOnwvakLP8Bqryy6ByB7FZsPLL5q/+74Fsmbb0e0ziFmoqlekUTseV1xhBKJ8GOSCk37MCXw08kZ6CTePznQ==
+"@rpch/sdk@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@rpch/sdk/-/sdk-0.2.0.tgz#aa49170350976576786544032a408bada33a03f1"
+  integrity sha512-rUblD5AFbFDXKbE8owfq7srada0AqtvDGEOLwOskPLzOpgtH3AyA5PedhAexqvHviFlxPQ7x7SI/Ch6jkC+u6Q==
   dependencies:
-    "@rpch/common" "0.1.7"
+    "@rpch/common" "0.2.0"
     async-retry "^1.3.3"
     cross-fetch "3.2.0-alpha.2"
     ethers "^5.7.2"
@@ -4095,6 +4127,11 @@ lru-cache@^6.0.0:
   dependencies:
     yallist "^4.0.0"
 
+lz-string@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/lz-string/-/lz-string-1.5.0.tgz#c1ab50f77887b712621201ba9fd4e3a6ed099941"
+  integrity sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==
+
 make-dir@^3.0.0, make-dir@^3.0.2:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/make-dir/-/make-dir-3.1.0.tgz#415e967046b3a7f1d185277d84aa58203726a13f"
@@ -4245,6 +4282,27 @@ ms@2.1.3:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"
   integrity sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==
 
+msgpackr-extract@^3.0.1:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/msgpackr-extract/-/msgpackr-extract-3.0.2.tgz#e05ec1bb4453ddf020551bcd5daaf0092a2c279d"
+  integrity sha512-SdzXp4kD/Qf8agZ9+iTu6eql0m3kWm1A2y1hkpTeVNENutaB0BwHlSvAIaMxwntmRUAUjon2V4L8Z/njd0Ct8A==
+  dependencies:
+    node-gyp-build-optional-packages "5.0.7"
+  optionalDependencies:
+    "@msgpackr-extract/msgpackr-extract-darwin-arm64" "3.0.2"
+    "@msgpackr-extract/msgpackr-extract-darwin-x64" "3.0.2"
+    "@msgpackr-extract/msgpackr-extract-linux-arm" "3.0.2"
+    "@msgpackr-extract/msgpackr-extract-linux-arm64" "3.0.2"
+    "@msgpackr-extract/msgpackr-extract-linux-x64" "3.0.2"
+    "@msgpackr-extract/msgpackr-extract-win32-x64" "3.0.2"
+
+msgpackr@^1.8.5:
+  version "1.8.5"
+  resolved "https://registry.yarnpkg.com/msgpackr/-/msgpackr-1.8.5.tgz#8cadfb935357680648f33699d0e833c9179dbfeb"
+  integrity sha512-mpPs3qqTug6ahbblkThoUY2DQdNXcm4IapwOS3Vm/87vmpzLVelvp9h3It1y9l1VPpiFLV11vfOXnmeEwiIXwg==
+  optionalDependencies:
+    msgpackr-extract "^3.0.1"
+
 multiformats@^9.4.2, multiformats@^9.4.5:
   version "9.9.0"
   resolved "https://registry.yarnpkg.com/multiformats/-/multiformats-9.9.0.tgz#c68354e7d21037a8f1f8833c8ccd68618e8f1d37"
@@ -4330,6 +4388,11 @@ node-forge@^1.2.1:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-1.3.1.tgz#be8da2af243b2417d5f646a770663a92b7e9ded3"
   integrity sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==
+
+node-gyp-build-optional-packages@5.0.7:
+  version "5.0.7"
+  resolved "https://registry.yarnpkg.com/node-gyp-build-optional-packages/-/node-gyp-build-optional-packages-5.0.7.tgz#5d2632bbde0ab2f6e22f1bbac2199b07244ae0b3"
+  integrity sha512-YlCCc6Wffkx0kHkmam79GKvDQ6x+QZkMjFGrIMxgFNILFvGSbCp2fCBC55pGTT9gVaz8Na5CLmxt/urtzRv36w==
 
 node-gyp-build@^4.2.0, node-gyp-build@^4.2.2:
   version "4.5.0"

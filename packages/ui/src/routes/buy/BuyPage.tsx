@@ -7,10 +7,13 @@ import PopupLayout from "../../components/popup/PopupLayout"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import CurrencySelection from "../../components/currency/CurrencySelection"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Currency } from "@block-wallet/background/utils/currency"
 import onramper from "../../assets/images/icons/onramper.svg"
-import { ONRAMPER_API_KEY } from "../../util/onRamperUtils"
+import {
+    ONRAMPER_API_KEY,
+    getOnRamperCurrenciesByNetwork,
+} from "../../util/onRamperUtils"
 import { TokenSelection } from "../../components/token/TokenSelection"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
@@ -26,6 +29,20 @@ const BuyPage = () => {
         network.name.toLowerCase() === "mainnet"
             ? "ethereum"
             : network.name.toLowerCase()
+
+    const [currencyList, setCurrencyList] = useState<Currency[]>([])
+    const [tokenList, setTokenList] = useState<Token[]>([])
+
+    useEffect(() => {
+        const getOnramperCurrencies = async () => {
+            const response = await getOnRamperCurrenciesByNetwork(networkName)
+            setTokenList(response.crypto)
+            setCurrencyList(response.fiat)
+        }
+
+        getOnramperCurrencies()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const onContinue = async () => {
         const defaultCrypto = selectedToken
@@ -92,7 +109,7 @@ const BuyPage = () => {
                             bottomMargin={60}
                             dropdownWidth="w-[309px]"
                             selectedCurrency={selectedCurrency}
-                            useOnRamperCurrencies={true}
+                            defaultCurrencyList={currencyList}
                         />
                     </div>
                     <div className="flex flex-col w-1/2 pl-1.5">
@@ -108,7 +125,7 @@ const BuyPage = () => {
                             dropdownWidth="w-[309px]"
                             selectedToken={selectedToken}
                             popUpOpenLeft={true}
-                            network={network}
+                            defaultTokenList={tokenList}
                         />
                     </div>
                 </div>

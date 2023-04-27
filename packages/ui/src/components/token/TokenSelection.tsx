@@ -9,10 +9,10 @@ import {
     useState,
 } from "react"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { getOnRamperTokenByNetwork } from "../../util/onRamperUtils"
 import TokenDropdownDisplay from "./TokenDropdownDisplay"
 import TokenList from "./TokenList"
 import { Network } from "@block-wallet/background/utils/constants/networks"
+import Spinner from "../spinner/Spinner"
 
 interface TokenSelectionProps {
     onTokenChange: (token: Token) => void
@@ -23,7 +23,7 @@ interface TokenSelectionProps {
     popupMargin?: number
     dropdownWidth?: string
     popUpOpenLeft?: boolean
-    network: Network
+    defaultTokenList: Token[]
 }
 
 const SEARCH_LIMIT = 20
@@ -37,11 +37,11 @@ export const TokenSelection: FC<TokenSelectionProps> = ({
     popupMargin,
     dropdownWidth,
     popUpOpenLeft,
-    network,
+    defaultTokenList,
 }) => {
     const [searchResult, setSearchResult] = useState<Token[]>([])
     const [search, setSearch] = useState<string | null>(null)
-    const [tokenList, setTokenList] = useState<Token[]>([])
+    const tokenList = defaultTokenList
 
     const searchTokenInList = (searchedValue: string) => {
         return tokenList.filter((token) => {
@@ -52,18 +52,6 @@ export const TokenSelection: FC<TokenSelectionProps> = ({
             )
         })
     }
-
-    useEffect(() => {
-        // Only set token list if this keeps being empty due to hooks init
-        if (!tokenList.length) {
-            getOnRamperTokenByNetwork(network).then((result) => {
-                console.log(result)
-                setTokenList(result)
-            })
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
 
     useEffect(() => {
         const searchAll = () => {
@@ -132,22 +120,30 @@ export const TokenSelection: FC<TokenSelectionProps> = ({
             customWidth={dropdownWidth}
             popUpOpenLeft={popUpOpenLeft}
         >
-            <div className="w-full p-3">
-                <SearchInput
-                    name="tokenName"
-                    placeholder="Search tokens by name or address"
-                    disabled={false}
-                    autoFocus={true}
-                    onChange={onSearchInputChange}
-                    defaultValue={search ?? ""}
-                />
-            </div>
-            <TokenList
-                tokens={searchResult}
-                onTokenClick={onTokenClick}
-                searchValue={search}
-                selectedSymbol={selectedToken?.symbol}
-            />
+            {searchResult.length > 0 ? (
+                <>
+                    <div className="w-full p-3">
+                        <SearchInput
+                            name="tokenName"
+                            placeholder="Search tokens by name or address"
+                            disabled={false}
+                            autoFocus={true}
+                            onChange={onSearchInputChange}
+                            defaultValue={search ?? ""}
+                        />
+                    </div>
+                    <TokenList
+                        tokens={searchResult}
+                        onTokenClick={onTokenClick}
+                        searchValue={search}
+                        selectedSymbol={selectedToken?.symbol}
+                    />
+                </>
+            ) : (
+                <div className="flex h-10 justify-center items-center">
+                    <Spinner color={"black"} size={"24"} />
+                </div>
+            )}
         </DropDownSelector>
     )
 }

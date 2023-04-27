@@ -72,7 +72,7 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
                 )}
             </div>
             <p className={"text-sm text-gray-400 ml-auto pl-1 pr-6"}>
-                {data.symbol}
+                {data.symbol.toUpperCase()}
             </p>
             <img
                 src={checkmarkMiniIcon}

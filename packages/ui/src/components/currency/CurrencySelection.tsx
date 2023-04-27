@@ -12,7 +12,7 @@ import DropDownSelector from "../input/DropDownSelector"
 import CurrencyDropdownDisplay from "./CurrencyDropdownDisplay"
 import SearchInput from "../input/SearchInput"
 import CurrencyList from "./CurrencyList"
-import { ONRAMPER_FIAT } from "../../util/onRamperUtils"
+import Spinner from "../spinner/Spinner"
 
 interface CurrencySelectionProps {
     onCurrencyChange?: (currency: Currency) => void
@@ -23,7 +23,7 @@ interface CurrencySelectionProps {
     bottomMargin?: number
     popupMargin?: number
     dropdownWidth?: string
-    useOnRamperCurrencies?: boolean
+    defaultCurrencyList?: Currency[]
 }
 
 const CurrencySelection: FC<CurrencySelectionProps> = ({
@@ -35,7 +35,7 @@ const CurrencySelection: FC<CurrencySelectionProps> = ({
     bottomMargin,
     popupMargin,
     dropdownWidth,
-    useOnRamperCurrencies,
+    defaultCurrencyList,
 }) => {
     const [searchResult, setSearchResult] = useState<Currency[]>([])
     const [validCurrencies, setValidCurrencies] = useState<Currency[]>([])
@@ -83,7 +83,12 @@ const CurrencySelection: FC<CurrencySelectionProps> = ({
     }, [search, validCurrencies])
 
     useEffect(() => {
-        if (!useOnRamperCurrencies) {
+        if (defaultCurrencyList && defaultCurrencyList.length > 0) {
+            setValidCurrencies(defaultCurrencyList)
+            return
+        }
+
+        if (validCurrencies.length === 0) {
             getValidCurrencies().then((currencies) => {
                 setValidCurrencies(currencies)
             })
@@ -102,10 +107,8 @@ const CurrencySelection: FC<CurrencySelectionProps> = ({
                     return 0
                 })
             )
-        } else {
-            setValidCurrencies(ONRAMPER_FIAT)
         }
-    }, [])
+    }, [defaultCurrencyList])
 
     return (
         <DropDownSelector
@@ -121,22 +124,30 @@ const CurrencySelection: FC<CurrencySelectionProps> = ({
             popupMargin={popupMargin || 16}
             customWidth={dropdownWidth}
         >
-            <div className="w-full p-3">
-                <SearchInput
-                    name="currencyName"
-                    placeholder="Search currencies by name"
-                    disabled={false}
-                    autoFocus={true}
-                    onChange={onSearchInputChange}
-                    defaultValue={search ?? ""}
-                />
-            </div>
-            <CurrencyList
-                currencies={searchResult}
-                onCurrencyClick={onCurrencyClick}
-                searchValue={search}
-                selectedCurrencyName={selectedCurrency?.name}
-            />
+            {searchResult.length > 0 ? (
+                <>
+                    <div className="w-full p-3">
+                        <SearchInput
+                            name="currencyName"
+                            placeholder="Search currencies by name"
+                            disabled={false}
+                            autoFocus={true}
+                            onChange={onSearchInputChange}
+                            defaultValue={search ?? ""}
+                        />
+                    </div>
+                    <CurrencyList
+                        currencies={searchResult}
+                        onCurrencyClick={onCurrencyClick}
+                        searchValue={search}
+                        selectedCurrencyName={selectedCurrency?.name}
+                    />
+                </>
+            ) : (
+                <div className="flex h-10 justify-center items-center">
+                    <Spinner color={"black"} size={"24"} />
+                </div>
+            )}
         </DropDownSelector>
     )
 }

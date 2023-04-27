@@ -1,5 +1,4 @@
 import { Devices } from "../context/commTypes"
-import menu from "../assets/images/icons/menu.svg"
 
 export interface ConnectionSeptInfo {
     label: string | string[] | React.ReactElement[]

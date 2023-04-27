@@ -163,6 +163,7 @@ const SeedImport: FunctionComponent<{
         } else {
             setIsImportDisabled(true)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [seedPhrase, passwordValues, seedPhraseError, formState.errors.password])
 
     useEffect(() => {
@@ -170,6 +171,7 @@ const SeedImport: FunctionComponent<{
         if (passwordValues.password && passwordValues.passwordConfirmation) {
             trigger("passwordConfirmation")
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [passwordValues.password, trigger])
 
     return (

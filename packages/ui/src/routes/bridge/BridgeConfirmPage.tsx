@@ -149,6 +149,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 }))
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inProgressTransaction?.id])
 
     const { transaction: allowanceTransaction } = useTransactionById(
@@ -177,8 +178,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const { availableNetworks, selectedNetwork, defaultGasOption } =
-        useBlankState()!
+    const { availableNetworks, defaultGasOption } = useBlankState()!
     const { gasPricesLevels } = useGasPriceData()
     const { isEIP1559Compatible } = useSelectedNetwork()
     const selectedAccount = useSelectedAccount()
@@ -273,7 +273,6 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const remainingSuffix = Math.ceil(remainingSeconds!)
         ? `${Math.floor(remainingSeconds!)}s`
         : ""
-    const networkLabel = availableNetworks[selectedNetwork.toUpperCase()]
 
     // Balance check
     const feePerGas = isEIP1559Compatible
@@ -312,6 +311,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         } else {
             setError(undefined)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasBalance, quote])
 
     const { hideBridgeInsufficientNativeTokenWarning } = useUserSettings()
@@ -333,7 +333,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         if (checkNativeTokensInDestinationNetwork) {
             checkSelectedAccountHasEnoughNativeTokensToSend()
         }
-    }, [])
+    }, [
+        checkNativeTokensInDestinationNetwork,
+        checkSelectedAccountHasEnoughNativeTokensToSend,
+    ])
 
     const idleScreen =
         !isInProgressAllowanceTransaction && !inProgressTransaction?.id

@@ -2111,7 +2111,7 @@ export default class BlankController extends EventEmitter {
         });
 
         // As we don't care about the result here, ignore errors in transaction result
-        result.catch(() => { });
+        result.catch(() => {});
 
         // Approve it
         try {
@@ -2161,7 +2161,7 @@ export default class BlankController extends EventEmitter {
                 });
 
             // As we don't care about the result here, ignore errors in transaction result
-            result.catch(() => { });
+            result.catch(() => {});
 
             const { nativeCurrency, iconUrls } = this.networkController.network;
             const logo = iconUrls ? iconUrls[0] : '';
@@ -2232,7 +2232,7 @@ export default class BlankController extends EventEmitter {
             });
 
         // As we don't care about the result here, ignore errors in transaction result
-        result.catch(() => { });
+        result.catch(() => {});
 
         return transactionMeta;
     }
@@ -2551,7 +2551,7 @@ export default class BlankController extends EventEmitter {
         // Force network to be mainnet if it is not provided
         //let network: string = AvailableNetworks.MAINNET;
         // RPCh Experimental version
-        let network = "Gnosis_RPCh";
+        let network = 'Gnosis_RPCh';
 
         if (defaultNetwork) {
             const fullNetwork =
@@ -2935,7 +2935,7 @@ export default class BlankController extends EventEmitter {
      * Remove all entries in the book
      *
      */
-    private async addressBookClear({ }: RequestAddressBookClear): Promise<boolean> {
+    private async addressBookClear({}: RequestAddressBookClear): Promise<boolean> {
         return this.addressBookController.clear();
     }
 
@@ -2971,7 +2971,7 @@ export default class BlankController extends EventEmitter {
      *
      * @returns - A map with the entries
      */
-    private async addressBookGet({ }: RequestAddressBookGet): Promise<NetworkAddressBook> {
+    private async addressBookGet({}: RequestAddressBookGet): Promise<NetworkAddressBook> {
         return this.addressBookController.get();
     }
 

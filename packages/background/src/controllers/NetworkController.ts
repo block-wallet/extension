@@ -751,12 +751,6 @@ export default class NetworkController extends BaseController<NetworkControllerS
             // Instantiate provider and wait until it's ready
             const newNetworkProvider = this.getProviderFromName(network.name);
 
-            // start RPCh provider
-            if (newNetworkProvider instanceof RPChProvider) {
-                await (newNetworkProvider as RPChProvider).sdk.start();
-                console.log('rpch provider started');
-            }
-
             // Update provider listeners
             this._updateListeners(newNetworkProvider);
 
@@ -866,15 +860,6 @@ export default class NetworkController extends BaseController<NetworkControllerS
             async () => {
                 try {
                     // call net_version to easily identify this call on the reporting
-
-                    // start rpch
-                    if (
-                        provider instanceof RPChProvider &&
-                        !provider.sdk.isReady
-                    ) {
-                        await (provider as RPChProvider).sdk.start();
-                        console.log('rpch provider started');
-                    }
 
                     return provider.send('net_version', []);
                 } catch (error) {

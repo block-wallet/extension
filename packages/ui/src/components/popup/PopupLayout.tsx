@@ -1,5 +1,4 @@
 import { FunctionComponent, useLayoutEffect } from "react"
-
 import { rejectUnconfirmedRequests } from "../../context/commActions"
 import useBeforeunload from "../../context/hooks/useBeforeUnload"
 import usePreventWindowResize from "../../context/hooks/usePreventWindowResize"
@@ -7,8 +6,10 @@ import { isAutomaticClose } from "../../context/setup"
 import useSubmitOnEnter, {
     submitOnEnterProps,
 } from "../../util/hooks/useSubmitOnEnter"
+import { checkLocationHotkeys } from "../../util/hotkeys"
 import PageLayout from "../PageLayout"
 import ProviderStatus from "../chain/ProviderStatus"
+import HotkeysCollapsedMessage from "../hotkeys/HotkeysCollapsedMessage"
 
 const PopupLayout: FunctionComponent<{
     header?: React.ReactNode
@@ -16,8 +17,17 @@ const PopupLayout: FunctionComponent<{
     footer?: React.ReactNode
     children: React.ReactNode | undefined
     submitOnEnter?: submitOnEnterProps
-}> = ({ header, showProviderStatus, children, footer, submitOnEnter }) => {
+    hotkeysPermissions?: { [action: string]: boolean }
+}> = ({
+    header,
+    children,
+    footer,
+    submitOnEnter,
+    showProviderStatus,
+    hotkeysPermissions,
+}) => {
     const { preventResize, cancelPreventResize } = usePreventWindowResize()
+
     const fullHeader = (
         <>
             {header}
@@ -38,6 +48,8 @@ const PopupLayout: FunctionComponent<{
 
     useSubmitOnEnter(submitOnEnter ?? {})
 
+    //Lets check if this currentLocation has hotkeys, in case we have something we show it in footer.
+    const hotkeyByPath = checkLocationHotkeys(hotkeysPermissions)
     return (
         <PageLayout screen className="max-h-screen popup-layout">
             <div className="absolute top-0 left-0 w-full popup-layout z-40">
@@ -52,8 +64,19 @@ const PopupLayout: FunctionComponent<{
                 <>
                     <hr className="border-0.5 border-primary-grey-hover w-full" />
                     {footer}
+                    {hotkeyByPath && (
+                        <HotkeysCollapsedMessage
+                            hotkeysPermissions={hotkeysPermissions}
+                        />
+                    )}
                 </>
-            ) : null}
+            ) : (
+                hotkeyByPath && (
+                    <HotkeysCollapsedMessage
+                        hotkeysPermissions={hotkeysPermissions}
+                    />
+                )
+            )}
         </PageLayout>
     )
 }

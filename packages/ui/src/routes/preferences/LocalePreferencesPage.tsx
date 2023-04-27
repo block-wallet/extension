@@ -43,7 +43,13 @@ const LocalePreferencesPage = () => {
                 onSubmit: onSave,
                 isEnabled: newCurrency !== nativeCurrency,
             }}
-            header={<PopupHeader title="Locale Configuration" close="/" />}
+            header={
+                <PopupHeader
+                    title="Locale Configuration"
+                    close="/"
+                    onBack={() => history.push("/settings/preferences")}
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading

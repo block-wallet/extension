@@ -171,6 +171,7 @@ const initialState: BlankAppState = {
             account: [],
         },
         defaultGasOption: 'medium',
+        hotkeysEnabled: true,
     },
     TransactionController: {
         transactions: [],

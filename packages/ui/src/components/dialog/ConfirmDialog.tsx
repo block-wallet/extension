@@ -12,6 +12,7 @@ const ConfirmDialog: FunctionComponent<{
     onConfirm: () => void
     isConfirmDisabled?: boolean // if true, confirm button is disabled
     confirmDisabledUntil?: Date // if set, confirm button is disabled until this time (no need to use isConfirmDisabled in this case)
+    confirmText?: string
 }> = ({
     title,
     message,
@@ -20,6 +21,7 @@ const ConfirmDialog: FunctionComponent<{
     onConfirm,
     isConfirmDisabled = false,
     confirmDisabledUntil,
+    confirmText = "Confirm",
 }) => {
     const [secondsRemaining, setSecondsRemaining] = useState(0)
 
@@ -100,7 +102,7 @@ const ConfirmDialog: FunctionComponent<{
                         >
                             {isButtonDisabled && refreshTimerText
                                 ? refreshTimerText
-                                : "Confirm"}
+                                : confirmText}
                         </button>
                     </div>
                 </div>

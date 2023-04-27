@@ -52,6 +52,7 @@ export interface PreferencesControllerState {
     releaseNotesSettings: ReleaseNotesSettings;
     filters: FilterPreferences;
     defaultGasOption: DefaultGasOptions;
+    hotkeysEnabled: boolean;
 }
 
 export interface PreferencesControllerProps {
@@ -324,5 +325,21 @@ export class PreferencesController extends BaseController<PreferencesControllerS
                 defaultBrowserWallet: enabled,
             },
         });
+    }
+
+    /**
+     * Gets if hotkeys are allowed in the extension
+     */
+    public get hotkeysStatus(): boolean {
+        return this.store.getState().hotkeysEnabled;
+    }
+
+    /**
+     * Set if hotkeys are allowed in the extension
+     *
+     * @param enabled hotkeys status
+     */
+    public set hotkeysStatus(enabled: boolean) {
+        this.store.updateState({ hotkeysEnabled: enabled });
     }
 }

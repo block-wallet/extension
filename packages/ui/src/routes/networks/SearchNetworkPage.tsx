@@ -106,7 +106,15 @@ const SearchNetworkPage = () => {
 
     return (
         <PopupLayout
-            header={<PopupHeader title="Search Networks" close="/" />}
+            header={
+                <PopupHeader
+                    title="Search Networks"
+                    close="/"
+                    onBack={() => {
+                        history.push("/settings/networks")
+                    }}
+                />
+            }
             footer={
                 pickedChain ? (
                     <PopupFooter>

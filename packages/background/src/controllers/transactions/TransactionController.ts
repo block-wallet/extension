@@ -50,7 +50,6 @@ import PermissionsController from '../PermissionsController';
 import { GasPricesController } from '../GasPricesController';
 import { ContractSignatureParser } from './ContractSignatureParser';
 import { BaseController } from '../../infrastructure/BaseController';
-import { showTransactionNotification } from '../../utils/notifications';
 import { reverse } from '../../utils/array';
 import { TokenController } from '../erc-20/TokenController';
 import { ApproveTransaction } from '../erc-20/transactions/ApproveTransaction';
@@ -366,9 +365,6 @@ export class TransactionController extends BaseController<
             KeyringControllerEvents.QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED,
             this.updateTransactionQRSignatureRequest
         );
-
-        // Show browser notification on transaction status update
-        this.subscribeNotifications();
     }
 
     // Sets a qrSignRequest in a transaction meta object
@@ -454,27 +450,6 @@ export class TransactionController extends BaseController<
             return result;
         }, {} as { [key: string]: TransactionMeta });
     };
-
-    private subscribeNotifications() {
-        this.on(
-            TransactionEvents.STATUS_UPDATE,
-            (transactionMeta: TransactionMeta) => {
-                const notificationTxStatuses = [
-                    TransactionStatus.CONFIRMED,
-                    TransactionStatus.FAILED,
-                    TransactionStatus.CANCELLED,
-                ];
-
-                if (
-                    this._preferencesController.settings
-                        .subscribedToNotifications &&
-                    notificationTxStatuses.includes(transactionMeta.status)
-                ) {
-                    showTransactionNotification(transactionMeta);
-                }
-            }
-        );
-    }
 
     /**
      * Queries for transaction statuses

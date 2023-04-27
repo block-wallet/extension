@@ -776,23 +776,12 @@ export class TransactionController extends BaseController<
                         BigNumber.from(feeData.maxPriorityFeePerGas);
                 }
             }
-        } else {
-            // Gas price
-            if (!transactionMeta.transactionParams.gasPrice) {
-                if (feeData.gasPrice) {
-                    transactionMeta.transactionParams.gasPrice = BigNumber.from(
-                        feeData.gasPrice
-                    );
-                }
-            }
-        }
 
-        /**
-         * Checks if the network is compatible with EIP1559 but the
-         * the transaction is legacy and then Transforms the gas configuration
-         * of the legacy transaction to the EIP1559 fee data.
-         */
-        if (chainIsEIP1559Compatible) {
+            /**
+             * Checks if the network is compatible with EIP1559 but the
+             * the transaction is legacy and then Transforms the gas configuration
+             * of the legacy transaction to the EIP1559 fee data.
+             */
             if (
                 getTransactionType(transactionMeta.transactionParams) !=
                 TransactionType.FEE_MARKET_EIP1559
@@ -804,6 +793,19 @@ export class TransactionController extends BaseController<
                     transactionMeta.transactionParams.gasPrice;
                 transactionMeta.transactionParams.gasPrice = undefined;
             }
+        } else {
+            // Gas price
+            if (!transactionMeta.transactionParams.gasPrice) {
+                if (feeData.gasPrice) {
+                    transactionMeta.transactionParams.gasPrice = BigNumber.from(
+                        feeData.gasPrice
+                    );
+                }
+            }
+
+            // If the network is not EIP-1559 compatible, we remove maxPriority and maxFee parameters in case they come with a value, specially from dApps.
+            transactionMeta.transactionParams.maxPriorityFeePerGas = undefined;
+            transactionMeta.transactionParams.maxFeePerGas = undefined;
         }
 
         return transactionMeta;

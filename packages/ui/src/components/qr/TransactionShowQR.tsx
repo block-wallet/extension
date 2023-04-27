@@ -32,6 +32,7 @@ const TransactionShowQR: FC<Props> = ({ onBack, onSuccess, QRValues }) => {
         return () => {
             clearTimeout(timeoutRef)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [QRValue])
 
     return (

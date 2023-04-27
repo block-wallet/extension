@@ -19,7 +19,6 @@ import { AccountInfo } from "@block-wallet/background/controllers/AccountTracker
 import { removeHardwareWallet } from "../../context/commActions"
 import { getAccountTypeFromDevice } from "../../util/hardwareDevice"
 import { capitalize } from "../../util/capitalize"
-import { bool } from "yup"
 
 type DeviceButtonProps = {
     device: Devices

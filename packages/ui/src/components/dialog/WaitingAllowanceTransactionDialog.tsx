@@ -1,6 +1,5 @@
 import { FC, useCallback } from "react"
 import { useHistory } from "react-router-dom"
-import { boolean } from "yup"
 import ClickableText from "../button/ClickableText"
 import Divider from "../Divider"
 import WaitingDialog from "./WaitingDialog"
@@ -48,6 +47,7 @@ const WaitingAllowanceTransactionDialog: FC<Props> = ({
                 if (status === "success") {
                     onSuccess()
                 }
+                // eslint-disable-next-line react-hooks/exhaustive-deps
             }, [status, history])}
         />
     )

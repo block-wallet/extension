@@ -61,6 +61,7 @@ const BridgeDetails: FC<{
         if (tab) {
             setSelectedTab(tabs.find((t) => t.id === tab) || tabs[0])
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tab])
 
     if (!transaction) {

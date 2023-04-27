@@ -1,7 +1,6 @@
 import { CgDanger } from "react-icons/cg"
-import { useLocation } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { Classes, classnames } from "../../styles"
 import NetworkSelect from "../input/NetworkSelect"
 import MessageDialog from "./MessageDialog"
@@ -16,7 +15,6 @@ const allowedPaths = [
 const ProviderDownDialog = () => {
     const { isProviderNetworkOnline, isUserNetworkOnline } = useBlankState()!
     const location = useLocation()
-    const history = useOnMountHistory()
 
     const showDialog =
         !isProviderNetworkOnline &&
@@ -44,19 +42,17 @@ const ProviderDownDialog = () => {
                         </p>
                         <p>
                             If the problem persists, try{" "}
-                            <a
+                            <Link
                                 className="text-primary-300 cursor-pointer"
-                                onClick={() =>
-                                    history.push({
-                                        pathname: "/settings/networks",
-                                        state: {
-                                            isFromHomePage: true,
-                                        },
-                                    })
-                                }
+                                to={{
+                                    pathname: "/settings/networks",
+                                    state: {
+                                        isFromHomePage: true,
+                                    },
+                                }}
                             >
                                 changing the network's RPC URL
-                            </a>
+                            </Link>
                             .
                         </p>
                     </div>

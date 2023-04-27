@@ -15,11 +15,7 @@ import GearIcon from "../icons/GearIcon"
 import { useHistory } from "react-router-dom"
 import AccountsList from "./AccountsList"
 import useAccountSearch from "../../util/hooks/account/useAccountSearch"
-import {
-    isActiveAccount,
-    isHiddenAccount,
-    isInternalAccount,
-} from "../../util/account"
+import { isActiveAccount, isHiddenAccount } from "../../util/account"
 import type { LocationDescriptor } from "history"
 import useConnectedAccounts from "../../util/hooks/account/useConnectedAccounts"
 import { useBlankState } from "../../context/background/backgroundHooks"

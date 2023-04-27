@@ -1,5 +1,5 @@
 import classnames from "classnames"
-import { MouseEventHandler, PropsWithChildren } from "react"
+import { PropsWithChildren } from "react"
 interface AlertProps {
     type: "error" | "warn" | "info"
     className?: string

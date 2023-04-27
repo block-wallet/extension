@@ -51,7 +51,6 @@ import PermissionsController from '../PermissionsController';
 import { GasPricesController } from '../GasPricesController';
 import { ContractSignatureParser } from './ContractSignatureParser';
 import { BaseController } from '../../infrastructure/BaseController';
-import { showTransactionNotification } from '../../utils/notifications';
 import { reverse } from '../../utils/array';
 import { TokenController } from '../erc-20/TokenController';
 import { ApproveTransaction } from '../erc-20/transactions/ApproveTransaction';
@@ -367,9 +366,6 @@ export class TransactionController extends BaseController<
             KeyringControllerEvents.QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED,
             this.updateTransactionQRSignatureRequest
         );
-
-        // Show browser notification on transaction status update
-        this.subscribeNotifications();
     }
 
     // Sets a qrSignRequest in a transaction meta object
@@ -455,27 +451,6 @@ export class TransactionController extends BaseController<
             return result;
         }, {} as { [key: string]: TransactionMeta });
     };
-
-    private subscribeNotifications() {
-        this.on(
-            TransactionEvents.STATUS_UPDATE,
-            (transactionMeta: TransactionMeta) => {
-                const notificationTxStatuses = [
-                    TransactionStatus.CONFIRMED,
-                    TransactionStatus.FAILED,
-                    TransactionStatus.CANCELLED,
-                ];
-
-                if (
-                    this._preferencesController.settings
-                        .subscribedToNotifications &&
-                    notificationTxStatuses.includes(transactionMeta.status)
-                ) {
-                    showTransactionNotification(transactionMeta);
-                }
-            }
-        );
-    }
 
     /**
      * Queries for transaction statuses
@@ -777,23 +752,12 @@ export class TransactionController extends BaseController<
                         BigNumber.from(feeData.maxPriorityFeePerGas);
                 }
             }
-        } else {
-            // Gas price
-            if (!transactionMeta.transactionParams.gasPrice) {
-                if (feeData.gasPrice) {
-                    transactionMeta.transactionParams.gasPrice = BigNumber.from(
-                        feeData.gasPrice
-                    );
-                }
-            }
-        }
 
-        /**
-         * Checks if the network is compatible with EIP1559 but the
-         * the transaction is legacy and then Transforms the gas configuration
-         * of the legacy transaction to the EIP1559 fee data.
-         */
-        if (chainIsEIP1559Compatible) {
+            /**
+             * Checks if the network is compatible with EIP1559 but the
+             * the transaction is legacy and then Transforms the gas configuration
+             * of the legacy transaction to the EIP1559 fee data.
+             */
             if (
                 getTransactionType(transactionMeta.transactionParams) !=
                 TransactionType.FEE_MARKET_EIP1559
@@ -805,6 +769,19 @@ export class TransactionController extends BaseController<
                     transactionMeta.transactionParams.gasPrice;
                 transactionMeta.transactionParams.gasPrice = undefined;
             }
+        } else {
+            // Gas price
+            if (!transactionMeta.transactionParams.gasPrice) {
+                if (feeData.gasPrice) {
+                    transactionMeta.transactionParams.gasPrice = BigNumber.from(
+                        feeData.gasPrice
+                    );
+                }
+            }
+
+            // If the network is not EIP-1559 compatible, we remove maxPriority and maxFee parameters in case they come with a value, specially from dApps.
+            transactionMeta.transactionParams.maxPriorityFeePerGas = undefined;
+            transactionMeta.transactionParams.maxFeePerGas = undefined;
         }
 
         return transactionMeta;

@@ -891,16 +891,12 @@ export default class NetworkController extends BaseController<NetworkControllerS
         chainId: number,
         rpcUrl: string
     ): Promise<boolean> {
-        let isValid = false;
         try {
             const returnedChainId = await getCustomRpcChainId(rpcUrl);
-            if (returnedChainId === chainId) {
-                isValid = true;
-            }
+            return returnedChainId === chainId;
         } catch (error) {
-            // isValid is false
+            return false;
         }
-        return isValid;
     }
 
     /**

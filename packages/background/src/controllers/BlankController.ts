@@ -115,8 +115,9 @@ import {
     SubmitQRHardwareSignatureMessage,
     CancelQRHardwareSignRequestMessage,
     RequestUpdateTransactionStatus,
+    RequestSwitchProvider,
+    RequestIsEnrolled,
     RequestSetHotkeys,
-    RequestIsEnrolled
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -857,6 +858,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.NETWORK.REMOVE_NETWORK:
                 return this.removeNetwork(request as RequestRemoveNetwork);
+            case Messages.NETWORK.SWITCH_PROVIDER:
+                return this.switchProvider(request as RequestSwitchProvider);
             case Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS:
                 return this.getChainData(request as RequestGetChainData);
             case Messages.NETWORK.GET_DEFAULT_RPC:
@@ -2021,6 +2024,26 @@ export default class BlankController extends EventEmitter {
         return Object.values(INITIAL_NETWORKS).find(
             (network) => network.chainId === chainId
         )?.defaultRpcUrl;
+    }
+
+    /**
+     * switchProvider
+     *
+     * @param chainId chain identifier of the network
+     * @param providerType provider type {default, backup, custom}
+     * @param customRpcUrl custom rpc url of the network
+     *
+     */
+    private async switchProvider({
+        chainId,
+        providerType,
+        customRpcUrl,
+    }: RequestSwitchProvider): Promise<void> {
+        return this.networkController.switchProvider(
+            chainId,
+            providerType,
+            customRpcUrl
+        );
     }
 
     /**

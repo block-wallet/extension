@@ -13,6 +13,7 @@ import {
     RequestAddNetwork,
     RequestEditNetwork,
     RequestEditNetworksOrder,
+    RequestSwitchProvider,
 } from "@block-wallet/background/utils/types/communication"
 import { Devices, ExchangeType, Messages, TransactionStatus } from "./commTypes"
 import {
@@ -932,6 +933,20 @@ export const setShowTestNetworks = async (
  */
 export const removeNetwork = async (chainId: number) => {
     return sendMessage(Messages.NETWORK.REMOVE_NETWORK, { chainId })
+}
+
+/**
+ * Switches the provider of the specified chain
+ *
+ * @param chainId The chainId of the network
+ * @param providerType The provider to use (default, backup, custom)
+ * @param customRpcUrl? The rpc url to use if the provider is custom
+ *
+ */
+export const switchProvider = async (
+    switchProviderInput: RequestSwitchProvider
+) => {
+    return sendMessage(Messages.NETWORK.SWITCH_PROVIDER, switchProviderInput)
 }
 
 /**

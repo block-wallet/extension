@@ -702,6 +702,7 @@ const SendConfirmPage = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingDialog
                 open={isOpen}

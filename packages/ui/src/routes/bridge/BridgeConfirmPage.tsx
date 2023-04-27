@@ -542,6 +542,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingAllowanceTransactionDialog
                 status={allowanceTxDialogStatus}

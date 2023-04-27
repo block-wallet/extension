@@ -41,6 +41,7 @@ import PopupHeader from "../components/popup/PopupHeader"
 import Icon, { IconName } from "../components/ui/Icon"
 import useNetWorthBalance from "../context/hooks/useNetWorthBalance"
 import { AiFillInfoCircle } from "react-icons/ai"
+import ProviderStatus from "../components/chain/ProviderStatus"
 import { useHotkeys } from "react-hotkeys-hook"
 import { componentsHotkeys } from "../util/hotkeys"
 import { generateExplorerLink } from "../util/getExplorer"
@@ -109,7 +110,7 @@ const DAppConnection = () => {
                     }
                 }}
                 className={classnames(
-                    "relative flex flex-row items-center p-1 px-2 pr-1  text-primary-grey-dark rounded-md group border-primary-200  text-xs cursor-pointer",
+                    "relative flex flex-row items-center py-1  text-primary-grey-dark rounded-md group border-primary-200  text-xs cursor-pointer",
                     dAppConnected === "connected" &&
                         "bg-green-100 hover:border-green-300",
                     dAppConnected === "connected-warning" &&
@@ -273,6 +274,7 @@ const PopupPage = () => {
             />
             <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-4 space-y-2 overflow-auto hide-scroll">
                 <div className="w-full">
+                    <ProviderStatus onHomepage />
                     <div className="flex flex-row items-start w-full justify-between pt-1 pb-1">
                         <GenericTooltip
                             bottom

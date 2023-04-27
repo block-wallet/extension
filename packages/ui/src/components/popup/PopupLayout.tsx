@@ -8,15 +8,24 @@ import useSubmitOnEnter, {
 } from "../../util/hooks/useSubmitOnEnter"
 import { checkLocationHotkeys } from "../../util/hotkeys"
 import PageLayout from "../PageLayout"
+import ProviderStatus from "../chain/ProviderStatus"
 import HotkeysCollapsedMessage from "../hotkeys/HotkeysCollapsedMessage"
 
 const PopupLayout: FunctionComponent<{
     header?: React.ReactNode
+    showProviderStatus?: boolean
     footer?: React.ReactNode
     children: React.ReactNode | undefined
     submitOnEnter?: submitOnEnterProps
     hotkeysPermissions?: { [action: string]: boolean }
-}> = ({ header, children, footer, submitOnEnter, hotkeysPermissions }) => {
+}> = ({
+    header,
+    children,
+    footer,
+    submitOnEnter,
+    showProviderStatus,
+    hotkeysPermissions,
+}) => {
     const { preventResize, cancelPreventResize } = usePreventWindowResize()
 
     const fullHeader = (
@@ -48,6 +57,7 @@ const PopupLayout: FunctionComponent<{
             </div>
             <div className="invisible w-full">{fullHeader}</div>
             <div className="flex-1 flex flex-col w-full h-0 max-h-screen overflow-auto main-content">
+                {showProviderStatus && <ProviderStatus />}
                 {children}
             </div>
             {footer ? (

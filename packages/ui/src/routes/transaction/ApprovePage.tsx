@@ -650,6 +650,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingDialog
                 open={isOpen}

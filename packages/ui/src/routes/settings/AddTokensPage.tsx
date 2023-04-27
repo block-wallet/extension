@@ -98,6 +98,7 @@ const AddTokensPage = () => {
                     networkIndicator
                 />
             }
+            showProviderStatus
             // submitOnEnter={{ isEnabled: submitEnabled }}
         >
             <div className="flex flex-col flex-1 w-full">

@@ -147,9 +147,12 @@ enum NETWORK {
     EDIT_NETWORK = 'EDIT_NETWORK',
     EDIT_NETWORKS_ORDER = 'EDIT_NETWORKS_ORDER',
     REMOVE_NETWORK = 'REMOVE_NETWORK',
+    SWITCH_PROVIDER = 'SWITCH_PROVIDER',
     GET_SPECIFIC_CHAIN_DETAILS = 'GET_SPECIFIC_CHAIN_DETAILS',
     GET_DEFAULT_RPC = 'GET_DEFAULT_RPC',
+    GET_RPCS = 'GET_RPCS',
     GET_RPC_CHAIN_ID = 'GET_RPC_CHAIN_ID',
+    IS_RPC_VALID = 'IS_RPC_VALID',
     SEARCH_CHAINS = 'SEARCH_CHAINS',
 }
 
@@ -267,6 +270,13 @@ enum FILTERS {
     SET_ACCOUNT_FILTERS = 'SET_ACCOUNT_FILTERS',
 }
 
+export enum ProviderType {
+    DEFAULT = 'DEFAULT',
+    BACKUP = 'BACKUP',
+    CUSTOM = 'CUSTOM',
+    CURRENT = 'CURRENT',
+}
+
 export const Messages = {
     ACCOUNT,
     APP,
@@ -378,6 +388,7 @@ export interface RequestSignatures {
     [Messages.NETWORK.EDIT_NETWORK]: [RequestEditNetwork, void];
     [Messages.NETWORK.EDIT_NETWORKS_ORDER]: [RequestEditNetworksOrder, void];
     [Messages.NETWORK.REMOVE_NETWORK]: [RequestRemoveNetwork, void];
+    [Messages.NETWORK.SWITCH_PROVIDER]: [RequestSwitchProvider, void];
     [Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS]: [
         RequestGetChainData,
         ChainListItem
@@ -766,6 +777,12 @@ export interface RequestEditNetworksOrder {
 
 export interface RequestRemoveNetwork {
     chainId: number;
+}
+
+export interface RequestSwitchProvider {
+    chainId: number;
+    providerType: ProviderType;
+    customRpcUrl?: string;
 }
 
 export interface RequestGetChainData {

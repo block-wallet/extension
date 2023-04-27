@@ -140,7 +140,10 @@ const NetworkFormPage = ({
     const [rpcChainId, setRpcChainId] = useState<number>(0)
     const [isNativelySupported, setIsNativelySupported] =
         useState<boolean>(false)
-    const { availableNetworks, isProviderNetworkOnline } = useBlankState()!
+    const {
+        availableNetworks,
+        providerStatus: { isCurrentProviderOnline },
+    } = useBlankState()!
 
     const [defaultRpcUrl, setDefaultRpcUrl] = useState<string | undefined>(
         undefined
@@ -325,7 +328,7 @@ const NetworkFormPage = ({
     const editingSelectedNetwork =
         isEdit &&
         selectedChainId === Number(watchChainId) &&
-        isProviderNetworkOnline
+        isCurrentProviderOnline
 
     const canSubmitForm =
         Object.keys(errors).length === 0 &&

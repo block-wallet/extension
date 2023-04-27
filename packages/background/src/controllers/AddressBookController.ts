@@ -9,6 +9,7 @@ import {
 } from './transactions/utils/types';
 import { PreferencesController } from './PreferencesController';
 import { isNativeTokenAddress } from '../utils/token';
+import { formatName } from '../utils/account';
 
 /**
  * @type AddressBookControllerProps
@@ -238,6 +239,22 @@ export class AddressBookController extends BaseController<AddressBookControllerM
             return undefined;
         }
         return this.store.getState().addressBook[network][address];
+    }
+
+    /**
+     * Returns the contact name of address if it exists and shortens it if it is too long
+     * @param address - address of the contact
+     * @returns - formatted contact name
+     */
+    public async getFormattedContactName(address?: string) {
+        let contactName: string | undefined;
+        if (address) {
+            const addressBookContact = await this.getByAddress(address);
+            if (addressBookContact?.name) {
+                contactName = formatName(addressBookContact?.name);
+            }
+        }
+        return contactName;
     }
 
     /**

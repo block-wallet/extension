@@ -60,7 +60,7 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
                         "text-sm text-primary-black-default font-semibold"
                     }
                 >
-                    {formatName(data.name, 22)}
+                    {formatName(data.name.toUpperCase(), 22)}
                 </span>
                 {balance && (
                     <span

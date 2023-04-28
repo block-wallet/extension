@@ -1,8 +1,7 @@
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { Network } from "@block-wallet/background/utils/constants/networks"
 import { Currency } from "@block-wallet/background/utils/currency"
-import { searchTokenInAssetsList } from "../context/commActions"
 import httpClient from "./http"
+import { toChecksumAddress } from "ethereumjs-util"
 
 interface OnRamperToken {
     address: string
@@ -15,17 +14,10 @@ interface OnRamperToken {
     decimals: number
 }
 
-interface OnRamperFiat {
-    code: string
-    id: string
-    name: string
-    symbol: string
-}
-
 interface APIResponse {
     message: {
         crypto: OnRamperToken[]
-        fiat: OnRamperFiat[]
+        fiat: Currency[]
     }
 }
 
@@ -843,12 +835,20 @@ export const getOnRamperCurrenciesByNetwork = async (
     const response: OnRamperCurrencies = { crypto: [], fiat: [] }
 
     apiCurrencies.message.crypto.map((token) => {
-        if (token.network.toLowerCase() === currentNetworkName) {
+        if (
+            token.network.toLowerCase() === currentNetworkName.toLowerCase() &&
+            token.address
+        ) {
             response.crypto.push({
                 name: token.name,
                 address: token.address,
                 symbol: token.code,
-                logo: token.icon,
+                logo:
+                    "https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/" +
+                    currentNetworkName.toLowerCase() +
+                    "/assets/" +
+                    toChecksumAddress(token.address) +
+                    "/logo.png",
                 decimals: token.decimals,
                 type: "",
             })

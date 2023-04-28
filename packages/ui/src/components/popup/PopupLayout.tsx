@@ -6,7 +6,7 @@ import { isAutomaticClose } from "../../context/setup"
 import useSubmitOnEnter, {
     submitOnEnterProps,
 } from "../../util/hooks/useSubmitOnEnter"
-import { checkLocationHotkeys } from "../../util/hotkeys"
+import { useCheckLocationHotkeys } from "../../util/hotkeys"
 import PageLayout from "../PageLayout"
 import ProviderStatus from "../chain/ProviderStatus"
 import HotkeysCollapsedMessage from "../hotkeys/HotkeysCollapsedMessage"
@@ -49,7 +49,7 @@ const PopupLayout: FunctionComponent<{
     useSubmitOnEnter(submitOnEnter ?? {})
 
     //Lets check if this currentLocation has hotkeys, in case we have something we show it in footer.
-    const hotkeyByPath = checkLocationHotkeys(hotkeysPermissions)
+    const hotkeyByPath = useCheckLocationHotkeys(hotkeysPermissions)
     return (
         <PageLayout screen className="max-h-screen popup-layout">
             <div className="absolute top-0 left-0 w-full popup-layout z-40">

@@ -162,6 +162,7 @@ const LockTimeout = () => {
                                 href="https://help.blockwallet.io/hc/en-us/articles/14296948056209"
                                 target="_blank"
                                 className="text-primary-blue-default"
+                                rel="noreferrer"
                             >
                                 Click here
                             </a>{" "}

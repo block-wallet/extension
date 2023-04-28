@@ -1,14 +1,10 @@
-import AutoSizer from "react-virtualized-auto-sizer"
-import { FixedSizeList as List } from "react-window"
-
-// Components
+import { useEffect, useState } from "react"
+import AutoSizer from "react-virtualized/dist/commonjs/AutoSizer"
+import List from "react-virtualized/dist/commonjs/List"
 import TokenDisplay from "./TokenDisplay"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
-
-// Assets
 import searchIcon from "../../assets/images/icons/search.svg"
 import { TokenResponse } from "../../routes/settings/AddTokensPage"
-import { useEffect, useState } from "react"
 import useSubmitOnEnter from "../../util/hooks/useSubmitOnEnter"
 
 export interface addTokenListView {
@@ -142,34 +138,54 @@ const AddTokenListView = ({
                                     className="w-full"
                                 >
                                     <AutoSizer>
-                                        {({ width, height }) => (
+                                        {({
+                                            width,
+                                            height,
+                                        }: {
+                                            width: number
+                                            height: number
+                                        }) => (
                                             <List
                                                 height={height}
                                                 width={width}
-                                                itemCount={
+                                                rowCount={
                                                     filteredResults.length
                                                 }
-                                                itemSize={60}
-                                                itemData={filteredResults}
-                                            >
-                                                {({ style, data, index }) => (
+                                                rowHeight={60}
+                                                rowRenderer={({
+                                                    style,
+                                                    key,
+                                                    index,
+                                                }: {
+                                                    style: any
+                                                    key: string
+                                                    index: number
+                                                }) => (
                                                     <div
                                                         style={style}
                                                         className="cursor-pointer"
-                                                        key={`result-${data[index].address}`}
+                                                        key={key}
                                                         onClick={() =>
-                                                            onClick(data[index])
+                                                            onClick(
+                                                                filteredResults[
+                                                                    index
+                                                                ]
+                                                            )
                                                         }
                                                     >
                                                         <TokenDisplay
-                                                            data={data[index]}
+                                                            data={
+                                                                filteredResults[
+                                                                    index
+                                                                ]
+                                                            }
                                                             clickable={false}
                                                             active={false}
                                                             hoverable={true}
                                                         />
                                                     </div>
                                                 )}
-                                            </List>
+                                            />
                                         )}
                                     </AutoSizer>
                                 </div>

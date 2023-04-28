@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react"
-import AutoSizer from "react-virtualized-auto-sizer"
-import { VariableSizeList as List } from "react-window"
+import { useState, useRef, useEffect } from "react"
+import AutoSizer from "react-virtualized/dist/commonjs/AutoSizer"
+import List from "react-virtualized/dist/commonjs/List"
 import { RichedTransactionMeta } from "../../util/transactionUtils"
 import TransactionItem from "./TransactionItem"
 import {
@@ -12,7 +12,6 @@ import BridgeDetails from "../bridge/BridgeDetails"
 import TransactionDetails from "./TransactionDetails"
 import { BRIDGE_PENDING_STATUS } from "../../util/bridgeUtils"
 import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
-import { useBlankState } from "../../context/background/backgroundHooks"
 import TransactionsLoadingSkeleton from "../skeleton/TransactionsLoadingSkeleton"
 
 //Default tx height
@@ -55,14 +54,17 @@ interface watchDetailsType {
 
 const TransactionsList: React.FC<{
     transactions: RichedTransactionMeta[]
-}> = ({ transactions }) => {
+    isNetworkChanging: boolean
+}> = ({ transactions, isNetworkChanging }) => {
     const [watchDetails, setWatchDetails] = useState<
         watchDetailsType | undefined
     >()
-    const { isNetworkChanging } = useBlankState()!
+    const ref = useRef<any>()
 
-    const txsHeight = useMemo(() => {
-        return transactions.map(getItemHeightInPx)
+    useEffect(() => {
+        // react-virtualized does not recompute row height when the underlying transaction data changes.
+        // thats why we force a height recompution here and adjust tx height based on its state.
+        ref.current && ref.current.recomputeRowHeights(0)
     }, [transactions])
 
     const OperationDetails = watchDetails
@@ -97,25 +99,29 @@ const TransactionsList: React.FC<{
             <AutoSizer className="hide-scroll snap-y">
                 {({ width, height }) => (
                     <List
+                        id="transactions-list"
                         height={height}
                         width={width}
                         style={{
                             overflowX: "hidden",
                         }}
-                        // react-window does not invoke itemSize callback even if the item with the itemKey changed.
-                        // thats why we added the txsHeight key. Whenever a change in transactions height is detected, then
-                        // we force a re-render of the whole list.
-                        key={txsHeight.join("-")}
-                        itemKey={(index, d) => d[index].id ?? index}
-                        itemCount={transactions.length}
-                        estimatedItemSize={DEFAULT_TX_HEIGHT_IN_PX}
-                        overscanCount={5}
-                        itemSize={(idx) => txsHeight[idx]} // height in px
-                        itemData={transactions}
+                        ref={ref}
+                        rowCount={transactions.length}
+                        overscanRowCount={5}
+                        rowHeight={({ index }: { index: number }) => {
+                            return getItemHeightInPx(transactions[index])
+                        }} // height in px
                         className="hide-scroll"
-                    >
-                        {({ style, data, index }) => (
-                            <div style={style} key={data[index].id || index}>
+                        rowRenderer={({
+                            style,
+                            key,
+                            index,
+                        }: {
+                            style: any
+                            key: string
+                            index: number
+                        }) => (
+                            <div style={style} key={key}>
                                 {index > 0 ? (
                                     <div className="px-6">
                                         <hr />
@@ -124,16 +130,18 @@ const TransactionsList: React.FC<{
                                 <TransactionItem
                                     onClick={() =>
                                         setWatchDetails({
-                                            transaction: data[index],
+                                            transaction: transactions[index],
                                         })
                                     }
-                                    itemHeight={txsHeight[index]}
-                                    transaction={data[index]}
+                                    itemHeight={getItemHeightInPx(
+                                        transactions[index]
+                                    )}
+                                    transaction={transactions[index]}
                                     index={index}
                                 />
                             </div>
                         )}
-                    </List>
+                    ></List>
                 )}
             </AutoSizer>
         </>

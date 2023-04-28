@@ -81,6 +81,10 @@ enum ACCOUNT {
     GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
 }
 
+enum ADDRESS {
+    GET_TYPE = 'GET_TYPE',
+}
+
 enum APP {
     LOCK = 'LOCK_APP',
     UNLOCK = 'UNLOCK_APP',
@@ -279,6 +283,7 @@ export enum ProviderType {
 
 export const Messages = {
     ACCOUNT,
+    ADDRESS,
     APP,
     BACKGROUND,
     CONTENT,
@@ -303,6 +308,7 @@ export const Messages = {
 // [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
 export interface RequestSignatures {
     [Messages.BROWSER.GET_WINDOW_ID]: [undefined, string];
+    [Messages.ADDRESS.GET_TYPE]: [string, AddressType];
     [Messages.ACCOUNT.CREATE]: [RequestAccountCreate, AccountInfo];
     [Messages.ACCOUNT.EXPORT_JSON]: [RequestAccountExportJson, string];
     [Messages.ACCOUNT.EXPORT_PRIVATE_KEY]: [RequestAccountExportPK, string];
@@ -588,6 +594,13 @@ export type MessageTypes = keyof RequestSignatures;
 export type RequestTypes = {
     [MessageType in keyof RequestSignatures]: RequestSignatures[MessageType][0];
 };
+
+export enum AddressType {
+    NORMAL = 'NORMAL',
+    SMART_CONTRACT = 'SMART_CONTRACT',
+    ERC20 = 'ERC20',
+    NULL = 'NULL',
+}
 
 export interface RequestSetUserOnline {
     networkStatus: boolean;

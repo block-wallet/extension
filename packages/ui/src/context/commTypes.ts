@@ -1,3 +1,7 @@
+enum ADDRESS {
+    GET_TYPE = "GET_TYPE",
+}
+
 enum ACCOUNT {
     CREATE = "CREATE_ACCOUNT",
     EXPORT_JSON = "EXPORT_ACCOUNT_JSON",
@@ -195,6 +199,7 @@ enum FILTERS {
 }
 
 export const Messages = {
+    ADDRESS,
     ACCOUNT,
     APP,
     BACKGROUND,

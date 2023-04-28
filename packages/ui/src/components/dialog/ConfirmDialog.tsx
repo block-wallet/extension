@@ -45,6 +45,7 @@ const ConfirmDialog: FunctionComponent<{
         }, 1000)
         // clear the interval when the component unmounts
         return () => clearInterval(intervalId)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [secondsRemaining])
 
     useEffect(() => {

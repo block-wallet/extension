@@ -190,7 +190,6 @@ import {
 } from './AddressBookController';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 
-import { showSetUpCompleteNotification } from '../utils/notifications';
 import { extensionInstances } from '../infrastructure/connection';
 import {
     focusWindow,
@@ -238,6 +237,7 @@ import RemoteConfigsController, {
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
 import CampaignsController from './CampaignsController';
+import { NotificationController } from './NotificationController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -279,6 +279,7 @@ export default class BlankController extends EventEmitter {
     private readonly tokenAllowanceController: TokenAllowanceController;
     private readonly remoteConfigsController: RemoteConfigsController;
     private readonly campaignsController: CampaignsController;
+    private readonly notificationController: NotificationController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -473,6 +474,14 @@ export default class BlankController extends EventEmitter {
             activityListController: this.activityListController,
             preferencesController: this.preferencesController,
         });
+
+        this.notificationController = new NotificationController(
+            this.preferencesController,
+            this.transactionWatcherController,
+            this.transactionController,
+            this.accountTrackerController,
+            this.addressBookController
+        );
 
         this.store = new ComposedStore<BlankAppState>({
             NetworkController: this.networkController.store,
@@ -2734,7 +2743,7 @@ export default class BlankController extends EventEmitter {
     }: RequestCompleteSetup): Promise<void> {
         if (!this.isSetupComplete) {
             if (sendNotification) {
-                showSetUpCompleteNotification();
+                this.notificationController.showSetUpCompleteNotification();
             }
             this.isSetupComplete = true;
         }

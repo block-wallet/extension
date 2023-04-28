@@ -235,7 +235,7 @@ const AllowanceInput = ({
             formatRoundedUp(formatUnits(defaultValue, tokenDecimals))
         )
         // Needed in dependency array to update the input value when the defaultValue changes if there is multiple allowance approvals in the queue
-    }, [defaultValue])
+    }, [defaultValue, tokenDecimals])
 
     return (
         <div className={classnames("flex flex-col")}>

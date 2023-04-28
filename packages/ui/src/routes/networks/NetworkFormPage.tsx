@@ -154,6 +154,7 @@ const NetworkFormPage = ({
         getDefaultRpc(network?.chainId).then((defaultRpc) => {
             setDefaultRpcUrl(defaultRpc)
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const {
@@ -253,6 +254,7 @@ const NetworkFormPage = ({
         return () => {
             ref && clearTimeout(ref!)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [watchChainId, watchRPCUrl, setIsValidating])
 
     const onSave = handleSubmit(async (data: networkFormData) => {
@@ -285,6 +287,7 @@ const NetworkFormPage = ({
         setIsNativelySupported(
             existingNetwork ? existingNetwork.nativelySupported : false
         )
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [watchChainId])
     const deleteNetwork = () => {
         removeNetworkInvoke.run(removeNetwork(network!.chainId!))

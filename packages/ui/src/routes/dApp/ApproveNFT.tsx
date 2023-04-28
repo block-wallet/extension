@@ -31,8 +31,7 @@ import {
     TransactionCategories,
 } from "../../context/commTypes"
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
-import { capitalize } from "../../util/capitalize"
-import { formatName } from "../../util/formatAccount"
+import { formatHashLastChars, formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
 import { formatUnits } from "@ethersproject/units"
 import { getAddress } from "@ethersproject/address"
@@ -52,6 +51,7 @@ import WaitingDialog from "../../components/dialog/WaitingDialog"
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
+import { generateExplorerLink } from "../../util/getExplorer"
 
 export interface ApproveNFTProps {
     transactionId: string
@@ -95,9 +95,15 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     transactionId,
 }) => {
     // Hooks
-    const { accounts, selectedAddress, settings, defaultGasOption } =
-        useBlankState()!
-    const { chainId, isEIP1559Compatible, desc } = useSelectedNetwork()
+    const {
+        accounts,
+        selectedAddress,
+        settings,
+        defaultGasOption,
+        availableNetworks,
+        selectedNetwork,
+    } = useBlankState()!
+    const { chainId, isEIP1559Compatible } = useSelectedNetwork()
     const { hideAddressWarning } = useUserSettings()
     const selectedAccountBalance = useSelectedAccountBalance()
     const { nativeToken } = useTokensList()
@@ -161,10 +167,12 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     // Set data
     const account = accounts[checksumFromAddress]
     const tokenAddress = params.to!
-    const tokenId = BigNumber.from(
-        transaction.advancedData?.tokenId!
-    ).toString()
-    const networkName = capitalize(desc)
+    const spenderAddress = transaction.approveAllowanceParams?.spenderAddress!
+    const spenderName =
+        transaction.approveAllowanceParams?.spenderInfo?.name ??
+        `Spender ${formatHashLastChars(
+            transaction.approveAllowanceParams?.spenderAddress!
+        )}`
 
     const { status, isOpen, dispatch, texts, titles, closeDialog, gifs } =
         useTransactionWaitingDialog(
@@ -274,14 +282,37 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
         </span>
     )
 
+    const spenderAddressExplorerLink = generateExplorerLink(
+        availableNetworks,
+        selectedNetwork,
+        spenderAddress,
+        "address"
+    )
+
+    const mainSectionText = (
+        <>
+            This will let{" "}
+            <a
+                href={spenderAddressExplorerLink}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary-300 hover:underline"
+            >
+                {spenderName}
+            </a>{" "}
+            withdraw and automate {tokenName} transactions for you.
+        </>
+    )
+
     return (
         <PopupLayout
             header={
                 <PopupHeader
                     close={false}
-                    title="Approval"
+                    title="NFT Approval"
                     backButton={isNFTSection}
                     onBack={() => setIsNFTSection(false)}
+                    networkIndicator
                 >
                     {transactionCount > 1 && (
                         <div className="group relative">
@@ -395,21 +426,14 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                         {` ${nativeToken.token.symbol}`}
                     </span>
                 </div>
-                <div className="flex flex-row items-center ml-auto p-1 px-2 pr-1 text-primary-grey-dark rounded-md border border-primary-200 text-xs bg-green-100">
-                    <span className="inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-green-400 pointer-events-none" />
-                    <span className="mr-1 pointer-events-none text-secondary-green-default">
-                        {networkName}
-                    </span>
-                </div>
             </div>
             <Divider />
             <div className="px-6 py-3">
                 <p className="text-sm font-semibold pb-3 break-word">
-                    Allow {origin} to transfer your {tokenName}
+                    {origin} is requesting to update your {tokenName} allowance
                 </p>
                 <p className="text-sm text-primary-grey-dark break-word">
-                    By granting this permission, you are allowing {origin} to
-                    transfer your {tokenName} #{tokenId} from your account.
+                    {mainSectionText}
                 </p>
             </div>
             <Divider />

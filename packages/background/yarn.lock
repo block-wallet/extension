@@ -916,10 +916,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@rpch/common@0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@rpch/common/-/common-0.2.0.tgz#ca4fd27670db23a65db650050f2e65b1e92b03d1"
-  integrity sha512-6nCLSgPIUny/F2+p3p3cGOw+ZWlk4g6/lc2LBImC0dCDOKB/DHWuYNTSfRul2yps09GgQJJPQuXpxYRMUJVnuQ==
+"@rpch/common@0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@rpch/common/-/common-0.2.1.tgz#911ef750146931e0a2a55d3051e236538027307c"
+  integrity sha512-9WA72XXvws7JzUWcNP50f1miZ0DKCj+RIpSl8Ok/tGhDVJ74lS+zmTQb/XOrJ9T7kRTdJsj3abIKp8f5da/9nA==
   dependencies:
     cross-fetch "3.2.0-alpha.2"
     debug "^4.3.4"
@@ -935,22 +935,22 @@
   resolved "https://registry.yarnpkg.com/@rpch/crypto/-/crypto-0.3.4.tgz#201b8e5f0efc7ffb8d3d06f210f5eebd04d41acd"
   integrity sha512-429mUQce5wbAIEHtg1yd9MyEcj8fqxixoDh0msZnVrynhzgFbkyTEHYjBUsj9XHLsyBnMUgzWZGogim8/cR0jw==
 
-"@rpch/ethers@0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@rpch/ethers/-/ethers-0.2.0.tgz#a187d82f964ba820e22aaeba11d2b49f9c08f3e8"
-  integrity sha512-n+A2XB08dXNj3VZ9Gs4hDB4etF1qIxkWitP36zG0ZIpK1izoyAArxRzOSSsX6b3Pf4Db1FQE/SJD6y7RShxkbw==
+"@rpch/ethers@0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@rpch/ethers/-/ethers-0.2.1.tgz#5ae2546b5a4cdd41f0b2b6e5d71da81a48c2987e"
+  integrity sha512-BOV1oZP4LNUtxhv1+Hma/r2i+/z38v1pdHl+E7Oots07lc026ussXwc5nz9lOpanpL7NtIFUN89WOY6pmT9mrQ==
   dependencies:
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/providers" "^5.7.2"
-    "@rpch/common" "0.2.0"
-    "@rpch/sdk" "0.2.0"
+    "@rpch/common" "0.2.1"
+    "@rpch/sdk" "0.2.1"
 
-"@rpch/sdk@0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@rpch/sdk/-/sdk-0.2.0.tgz#aa49170350976576786544032a408bada33a03f1"
-  integrity sha512-rUblD5AFbFDXKbE8owfq7srada0AqtvDGEOLwOskPLzOpgtH3AyA5PedhAexqvHviFlxPQ7x7SI/Ch6jkC+u6Q==
+"@rpch/sdk@0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@rpch/sdk/-/sdk-0.2.1.tgz#b0df2f7ce3061e64665dec092700c1904fdc3d0e"
+  integrity sha512-T7b3jowgwhyjqXufNazhkcwE+Ae81slGqGfTpvKKBHy5ZHL2EKULt+R1FexsdOte2T9+6av3HU6VIajgT/cTXQ==
   dependencies:
-    "@rpch/common" "0.2.0"
+    "@rpch/common" "0.2.1"
     async-retry "^1.3.3"
     cross-fetch "3.2.0-alpha.2"
     ethers "^5.7.2"

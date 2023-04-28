@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import AutoSizer from "react-virtualized-auto-sizer"
 import { VariableSizeList as List } from "react-window"
 import { RichedTransactionMeta } from "../../util/transactionUtils"
@@ -61,6 +61,10 @@ const TransactionsList: React.FC<{
     >()
     const { isNetworkChanging } = useBlankState()!
 
+    const txsHeight = useMemo(() => {
+        return transactions.map(getItemHeightInPx)
+    }, [transactions])
+
     const OperationDetails = watchDetails
         ? watchDetails.transaction.transactionCategory
             ? [
@@ -98,13 +102,15 @@ const TransactionsList: React.FC<{
                         style={{
                             overflowX: "hidden",
                         }}
+                        // react-window does not invoke itemSize callback even if the item with the itemKey changed.
+                        // thats why we added the txsHeight key. Whenever a change in transactions height is detected, then
+                        // we force a re-render of the whole list.
+                        key={txsHeight.join("-")}
+                        itemKey={(index, d) => d[index].id ?? index}
                         itemCount={transactions.length}
                         estimatedItemSize={DEFAULT_TX_HEIGHT_IN_PX}
                         overscanCount={5}
-                        itemSize={(index) => {
-                            const tx = transactions[index]
-                            return getItemHeightInPx(tx)
-                        }} // height in px
+                        itemSize={(idx) => txsHeight[idx]} // height in px
                         itemData={transactions}
                         className="hide-scroll"
                     >
@@ -121,7 +127,7 @@ const TransactionsList: React.FC<{
                                             transaction: data[index],
                                         })
                                     }
-                                    itemHeight={getItemHeightInPx(data[index])}
+                                    itemHeight={txsHeight[index]}
                                     transaction={data[index]}
                                     index={index}
                                 />

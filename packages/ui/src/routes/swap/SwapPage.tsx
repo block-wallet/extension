@@ -396,6 +396,7 @@ const SwapPage = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             {rate && tokenTo && quote ? (
                 <RateUpdateDialog

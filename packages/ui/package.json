@@ -26,7 +26,7 @@
         "react-hotkeys-hook": "^4.3.8",
         "react-icons": "^4.4.0",
         "react-idle-timer": "^5.4.1",
-        "react-json-view": "^1.21.3",
+        "react-json-view-lite": "^0.9.5",
         "react-modal": "^3.12.1",
         "react-password-strength-bar": "^0.4.1",
         "react-qr-reader": "^3.0.0-beta-1",
@@ -143,23 +143,7 @@
         "test:watch": "jest --watch",
         "lint": "prettier --check src/ '!**/*.{js,json,ts}'",
         "lint:fix": "prettier --write src/ '!**/*.{js,json,ts}'",
-        "eslint-report": "eslint src --ext .tsx,.ts -o eslint-report.html -f html"
-    },
-    "eslintConfig": {
-        "extends": [
-            "react-app",
-            "react-app/jest"
-        ],
-        "overrides": [
-            {
-                "files": [
-                    "**/*.stories.*"
-                ],
-                "rules": {
-                    "import/no-anonymous-default-export": "off"
-                }
-            }
-        ]
+        "eslint": "eslint src --ext .tsx,.ts"
     },
     "browserslist": {
         "production": [

@@ -1,9 +1,6 @@
 import { IToken } from "@block-wallet/background/controllers/erc-20/Token"
 import { formatUnits } from "@ethersproject/units"
-import classnames from "classnames"
-import { useState } from "react"
 import { formatRounded } from "../../util/formatRounded"
-import { ArrowUpDown } from "../icons/ArrowUpDown"
 import { IBridgeFeeCost } from "@block-wallet/background/utils/bridgeApi"
 import ExpandableItem from "./ExpandableItem"
 

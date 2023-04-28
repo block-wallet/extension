@@ -21,7 +21,7 @@ import * as yup from "yup"
 import { InferType } from "yup"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits, parseUnits } from "@ethersproject/units"
-import { Zero, One } from "@ethersproject/constants"
+import { Zero } from "@ethersproject/constants"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { DEFAULT_DECIMALS, SEND_GAS_COST } from "../../util/constants"
 
@@ -208,6 +208,10 @@ const SendConfirmPage = () => {
     const history: any = useOnMountHistory()
     const balance = useSelectedAccountBalance()
     const { address, accountType } = useSelectedAccount()
+    const receivingAddress = history.location.state.address
+    const accountNameByAddress = useAccountNameByAddress(receivingAddress)
+    const selectedAccountName =
+        history.location.state.name ?? accountNameByAddress
 
     // Get data from window.localStorage
     const [persistedData, setPersistedData] =
@@ -235,6 +239,7 @@ const SendConfirmPage = () => {
                 }))
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentTransaction?.id])
 
     useLayoutEffect(() => {
@@ -258,9 +263,6 @@ const SendConfirmPage = () => {
     // Restore persisted data on component mount in case the page
     // is being restored from a popup close
     const isEIP1559Compatible = network.isEIP1559Compatible
-    const receivingAddress = history.location.state.address
-    const selectedAccountName =
-        history.location.state.name ?? useAccountNameByAddress(receivingAddress)
     const preSelectedAsset = persistedData?.asset
         ? persistedData.asset
         : (history.location.state.asset as TokenWithBalance)
@@ -645,6 +647,7 @@ const SendConfirmPage = () => {
         } finally {
             setIsGasLoading(false)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         setIsGasLoading,
         setSelectedGas,
@@ -702,6 +705,7 @@ const SendConfirmPage = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingDialog
                 open={isOpen}

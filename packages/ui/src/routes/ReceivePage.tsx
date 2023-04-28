@@ -24,6 +24,7 @@ const ReceivePage = () => {
             header={
                 <PopupHeader title="Receive Funds" keepState networkIndicator />
             }
+            showProviderStatus
         >
             <div className="flex items-center justify-center my-6">
                 <QRCode value={accountAddress} />

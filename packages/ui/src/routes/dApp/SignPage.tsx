@@ -15,7 +15,7 @@ import {
     DappReq,
     DappRequestSigningStatus,
 } from "../../context/hooks/useDappRequest"
-import ReactJson from "react-json-view"
+import { JsonView, allExpanded, defaultStyles } from "react-json-view-lite"
 import {
     attemptRejectDappRequest,
     confirmDappRequest,
@@ -53,6 +53,8 @@ import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
 import DAppOrigin from "../../components/dApp/DAppOrigin"
 import { getNetworkNameFromChainId } from "../../util/getExplorer"
 import CodeBlock from "../../components/ui/CodeBlock"
+
+import "react-json-view-lite/dist/index.css"
 
 const SignPage = () => {
     return (
@@ -286,15 +288,10 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
             <>
                 {formatTypedDomain(v4Data.domain)}
                 <span className="font-semibold py-1">Message</span>
-                <ReactJson
-                    enableClipboard
-                    src={v4Data.message}
-                    name={null}
-                    indentWidth={1}
-                    iconStyle={"triangle"}
-                    displayObjectSize={false}
-                    displayDataTypes={false}
-                    quotesOnKeys={false}
+                <JsonView
+                    data={v4Data.message}
+                    style={{ ...defaultStyles, container: "" }}
+                    shouldInitiallyExpand={allExpanded}
                 />
             </>
         )

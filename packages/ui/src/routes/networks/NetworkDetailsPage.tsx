@@ -12,7 +12,7 @@ const NetworkDetailsPage = () => {
             canDelete={canDeleteNetwork(network)}
             network={{
                 blockExplorerUrl: getFirstUrl(network?.blockExplorerUrls),
-                rpcUrl: getFirstUrl(network?.rpcUrls),
+                rpcUrl: network?.currentRpcUrl,
                 name: network?.desc!,
                 chainId: network?.chainId!,
                 symbol: network?.nativeCurrency.symbol!,

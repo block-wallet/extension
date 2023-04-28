@@ -380,7 +380,7 @@ export const getHotkeyByPath = (currentLocation: string) => {
 }
 
 //Return boolean indicating if current path has hotkeys (checks by permissions)
-export const checkLocationHotkeys = (
+export const useCheckLocationHotkeys = (
     permissions?: { [action: string]: boolean },
     currentLocation?: string
 ): boolean => {
@@ -422,7 +422,7 @@ export const checkLocationHotkeys = (
     )
 }
 
-export const getHotkeysByPath = (currentLocation?: string) => {
+export const useHotkeysByPath = (currentLocation?: string) => {
     const history = useOnMountHistory()
     currentLocation = currentLocation ?? history.location.pathname
 

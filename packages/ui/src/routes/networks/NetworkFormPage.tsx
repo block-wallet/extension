@@ -140,7 +140,10 @@ const NetworkFormPage = ({
     const [rpcChainId, setRpcChainId] = useState<number>(0)
     const [isNativelySupported, setIsNativelySupported] =
         useState<boolean>(false)
-    const { availableNetworks, isProviderNetworkOnline } = useBlankState()!
+    const {
+        availableNetworks,
+        providerStatus: { isCurrentProviderOnline },
+    } = useBlankState()!
 
     const [defaultRpcUrl, setDefaultRpcUrl] = useState<string | undefined>(
         undefined
@@ -151,6 +154,7 @@ const NetworkFormPage = ({
         getDefaultRpc(network?.chainId).then((defaultRpc) => {
             setDefaultRpcUrl(defaultRpc)
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const {
@@ -250,6 +254,7 @@ const NetworkFormPage = ({
         return () => {
             ref && clearTimeout(ref!)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [watchChainId, watchRPCUrl, setIsValidating])
 
     const onSave = handleSubmit(async (data: networkFormData) => {
@@ -282,6 +287,7 @@ const NetworkFormPage = ({
         setIsNativelySupported(
             existingNetwork ? existingNetwork.nativelySupported : false
         )
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [watchChainId])
     const deleteNetwork = () => {
         removeNetworkInvoke.run(removeNetwork(network!.chainId!))
@@ -325,7 +331,7 @@ const NetworkFormPage = ({
     const editingSelectedNetwork =
         isEdit &&
         selectedChainId === Number(watchChainId) &&
-        isProviderNetworkOnline
+        isCurrentProviderOnline
 
     const canSubmitForm =
         Object.keys(errors).length === 0 &&

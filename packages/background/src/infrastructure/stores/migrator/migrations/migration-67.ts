@@ -4,17 +4,29 @@ import { INITIAL_NETWORKS } from '../../../../utils/constants/networks';
 import { normalizeNetworksOrder } from '../../../../utils/networks';
 
 /**
- * Update Scroll L1 and L2 endpoints
+ * Add Network currentRpcUrl, backupRpcUrls & defaultRpcUrl Properties and remove rpcUrls
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
         const { availableNetworks } = persistedState.NetworkController;
         const updatedNetworks = { ...availableNetworks };
 
-        updatedNetworks.SCROLL_L2_TESTNET = {
-            ...updatedNetworks.SCROLL_L2_TESTNET,
-            rpcUrls: INITIAL_NETWORKS.SCROLL_L2_TESTNET.rpcUrls,
-        };
+        Object.keys(updatedNetworks).forEach((key) => {
+            const { rpcUrls } = updatedNetworks[key];
+            updatedNetworks[key] = {
+                ...updatedNetworks[key],
+                defaultRpcUrl: INITIAL_NETWORKS[key].defaultRpcUrl,
+                backupRpcUrls: INITIAL_NETWORKS[key].backupRpcUrls,
+            };
+            if (rpcUrls && rpcUrls.length > 0) {
+                const currentRpcUrl = rpcUrls[0];
+                updatedNetworks[key] = {
+                    ...updatedNetworks[key],
+                    currentRpcUrl,
+                };
+                delete updatedNetworks[key].rpcUrls;
+            }
+        });
 
         const orderedNetworks = normalizeNetworksOrder(updatedNetworks);
 
@@ -26,5 +38,5 @@ export default {
             },
         };
     },
-    version: '1.0.1',
+    version: '1.1.7',
 } as IMigration;

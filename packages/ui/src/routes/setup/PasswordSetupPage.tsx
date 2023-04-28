@@ -102,6 +102,7 @@ const PasswordSetupPage = () => {
         } else {
             setIsSubmitDisabled(true)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [passwordValues, formState.errors.password])
 
     useEffect(() => {
@@ -109,6 +110,7 @@ const PasswordSetupPage = () => {
         if (passwordValues.password && passwordValues.passwordConfirmation) {
             trigger("passwordConfirmation")
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [passwordValues.password, trigger])
     return (
         <PageLayout header maxWidth="max-w-md">

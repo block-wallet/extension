@@ -2,7 +2,7 @@ import classnames from "classnames"
 import React from "react"
 import { FC } from "react"
 import { getCurrentOS } from "../../context/util/platform"
-import { getHotkeysByPath } from "../../util/hotkeys"
+import { useHotkeysByPath } from "../../util/hotkeys"
 import Divider from "../Divider"
 
 interface DisplayHotkeyProps {
@@ -83,7 +83,7 @@ export const DisplayHotkeysByPath: FC<DisplayHotkeysByPathProp> = ({
     permissions,
     includeDivider,
 }) => {
-    const hotkeys = getHotkeysByPath(pathName)
+    const hotkeys = useHotkeysByPath(pathName)
     const currentOS = getCurrentOS()
 
     let hotkeysElement: JSX.Element[]

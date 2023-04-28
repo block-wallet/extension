@@ -128,10 +128,6 @@ textarea:focus {
     width: 1px;
 }
 
-.react-json-view {
-    word-break: break-all;
-}
-
 .dropdown-menu > li:first-child {
     border-top-right-radius: 6px;
     border-top-left-radius: 6px;

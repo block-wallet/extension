@@ -116,8 +116,9 @@ import {
     CancelQRHardwareSignRequestMessage,
     RequestUpdateTransactionStatus,
     AddressType,
-    RequestSetHotkeys,
+    RequestSwitchProvider,
     RequestIsEnrolled,
+    RequestSetHotkeys,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -190,7 +191,6 @@ import {
 } from './AddressBookController';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 
-import { showSetUpCompleteNotification } from '../utils/notifications';
 import { extensionInstances } from '../infrastructure/connection';
 import {
     focusWindow,
@@ -238,6 +238,7 @@ import RemoteConfigsController, {
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
 import CampaignsController from './CampaignsController';
+import { NotificationController } from './NotificationController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -279,6 +280,7 @@ export default class BlankController extends EventEmitter {
     private readonly tokenAllowanceController: TokenAllowanceController;
     private readonly remoteConfigsController: RemoteConfigsController;
     private readonly campaignsController: CampaignsController;
+    private readonly notificationController: NotificationController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -473,6 +475,14 @@ export default class BlankController extends EventEmitter {
             activityListController: this.activityListController,
             preferencesController: this.preferencesController,
         });
+
+        this.notificationController = new NotificationController(
+            this.preferencesController,
+            this.transactionWatcherController,
+            this.transactionController,
+            this.accountTrackerController,
+            this.addressBookController
+        );
 
         this.store = new ComposedStore<BlankAppState>({
             NetworkController: this.networkController.store,
@@ -860,6 +870,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.NETWORK.REMOVE_NETWORK:
                 return this.removeNetwork(request as RequestRemoveNetwork);
+            case Messages.NETWORK.SWITCH_PROVIDER:
+                return this.switchProvider(request as RequestSwitchProvider);
             case Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS:
                 return this.getChainData(request as RequestGetChainData);
             case Messages.NETWORK.GET_DEFAULT_RPC:
@@ -2027,6 +2039,26 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * switchProvider
+     *
+     * @param chainId chain identifier of the network
+     * @param providerType provider type {default, backup, custom}
+     * @param customRpcUrl custom rpc url of the network
+     *
+     */
+    private async switchProvider({
+        chainId,
+        providerType,
+        customRpcUrl,
+    }: RequestSwitchProvider): Promise<void> {
+        return this.networkController.switchProvider(
+            chainId,
+            providerType,
+            customRpcUrl
+        );
+    }
+
+    /**
      * getRpcChainId
      *
      * @param rpcUrl rpc url of the network
@@ -2714,7 +2746,7 @@ export default class BlankController extends EventEmitter {
     }: RequestCompleteSetup): Promise<void> {
         if (!this.isSetupComplete) {
             if (sendNotification) {
-                showSetUpCompleteNotification();
+                this.notificationController.showSetUpCompleteNotification();
             }
             this.isSetupComplete = true;
         }

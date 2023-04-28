@@ -144,6 +144,7 @@ const AssetDetailsPage = () => {
                     }
                 />
             }
+            showProviderStatus
         >
             <ConfirmDialog
                 title="Remove Token"

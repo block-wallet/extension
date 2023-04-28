@@ -63,7 +63,9 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
         useState<ConfirmDialogState>({ isOpen: false })
     const { isHovering: isHoveringMenu, getIsHoveringProps } = useIsHovering()
     const checksumAddress = useAddressWithChainIdChecksum(account?.address)
-    const netWorthBalance = useNetWorthBalance(account)
+    const netWorthBalance = useNetWorthBalance(
+        !showAddress ? account : undefined
+    )
 
     const { copied, onCopy } = useCopyToClipboard(checksumAddress)
 

@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import { INetworkTokens, IToken } from './Token';
-import { TOKENS_LIST } from '@block-wallet/chains-assets';
+import {
+    TOKENS_LIST,
+    ASSETS_BLOCKCHAINS_CHAIN_ID,
+} from '@block-wallet/chains-assets';
 
 export const GOBLANK_TOKEN_DATA: {
     addresses: { [chainId in number]: string };
@@ -120,37 +123,6 @@ const NETWORK_TOKENS_LIST: INetworkTokens = {
     1337: {}, // localhost
 };
 
-const NETWORKS_NAMES: { [key in number]: string } = {
-    42161: 'arbitrum',
-    43114: 'avalanchec',
-    820: 'callisto',
-    42220: 'celo',
-    61: 'classic',
-    64: 'ellaism',
-    59: 'eos',
-    1313114: 'ether-1',
-    1: 'ethereum',
-    250: 'fantom',
-    60: 'gochain',
-    1666600000: 'harmony',
-    128: 'heco',
-    4689: 'iotex',
-    71393: 'nervos',
-    58: 'ontology',
-    10: 'optimism',
-    77: 'poa',
-    137: 'polygon',
-    10000: 'smartbch',
-    56: 'smartchain',
-    361: 'theta',
-    108: 'thundertoken:',
-    88: 'tomochain',
-    888: 'wanchain',
-    100: 'xdai',
-    50: 'xdc',
-    280: 'zksync',
-};
-
 export const NETWORK_TOKENS_LIST_ARRAY: { [chainId in number]: string[] } = {};
 
 for (const chainId in TOKENS_LIST) {
@@ -165,7 +137,7 @@ for (const chainId in TOKENS_LIST) {
             logo = 'https://' + token['l'];
         } else {
             logo = `https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/${
-                NETWORKS_NAMES[parseInt(chainId)]
+                ASSETS_BLOCKCHAINS_CHAIN_ID[parseInt(chainId)]
             }/assets/${address}/logo.png`;
         }
 
@@ -235,5 +207,4 @@ for (const chainId in NETWORK_TOKENS_LIST) {
         NETWORK_TOKENS_LIST[parseInt(chainId)]
     );
 }
-
 export default NETWORK_TOKENS_LIST;

@@ -42,7 +42,8 @@ testInitState = {
     filters: {
         account: [],
     },
-    defaultGasOption: "medium"
+    defaultGasOption: 'medium',
+    hotkeysEnabled: true,
 };
 
 const mockPreferencesController = new PreferencesController({

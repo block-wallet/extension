@@ -45,7 +45,7 @@ const Price: FunctionComponent<{
             <div className="flex flex-col justify-start w-3/5 pl-4">
                 <div className="w-full flex justify-end">
                     <span
-                        className="text-lg uppercase text-black text-right truncate w-4/5 mr-1"
+                        className="text-lg uppercase text-primary-black-default text-right truncate w-4/5 mr-1"
                         title={txValue.join(" ")}
                     >
                         {txValue[0]}
@@ -61,14 +61,14 @@ const Price: FunctionComponent<{
                             currency: state.nativeCurrency,
                             locale_info: state.localeInfo,
                             returnNonBreakingSpace: true,
-                            showSymbol: true,
+                            showSymbol: false,
                         })}
                     >
                         {formatCurrency(currencyAmount, {
                             currency: state.nativeCurrency,
                             locale_info: state.localeInfo,
                             returnNonBreakingSpace: true,
-                            showSymbol: true,
+                            showSymbol: false,
                             showCurrency: false,
                         })}
                     </span>

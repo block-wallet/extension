@@ -490,6 +490,7 @@ const SwapPageConfirm: FC<{}> = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingAllowanceTransactionDialog
                 status={allowanceTxDialogStatus}
@@ -613,7 +614,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 />
 
                 {/* Rates */}
-                <p className="text-sm py-1 leading-loose text-gray-500 uppercase text-center w-full">
+                <p className="text-sm py-1 leading-loose text-primary-grey-dark uppercase text-center w-full">
                     {`1 ${fromToken.symbol} = ${formatNumberLength(
                         formatRounded(exchangeRate.toFixed(10), 8),
                         10
@@ -621,7 +622,9 @@ const SwapPageConfirm: FC<{}> = () => {
                 </p>
 
                 {/* Gas */}
-                <p className="text-sm text-gray-600 pb-1 pt-0.5">Gas Price</p>
+                <p className="text-[13px] font-medium pb-1 pt-0.5 text-primary-grey-dark">
+                    Gas Price
+                </p>
                 {isEIP1559Compatible ? (
                     <GasPriceComponent
                         defaultGas={{
@@ -696,7 +699,7 @@ const SwapPageConfirm: FC<{}> = () => {
                                 "cursor-not-allowed hover:border-default"
                         )}
                     >
-                        <span className="font-bold text-sm">Details</span>
+                        <span className="font-semibold text-sm">Details</span>
                         <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
                     </OutlinedButton>
                 </div>
@@ -712,7 +715,7 @@ const SwapPageConfirm: FC<{}> = () => {
                                     type="warn"
                                     className={classnames(
                                         "p-2",
-                                        "font-bold",
+                                        "font-semibold",
                                         "cursor-pointer hover:opacity-50",
                                         "text-left"
                                     )}

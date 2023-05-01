@@ -66,7 +66,7 @@ interface GasPriceSelectorProps {
 }
 
 interface GasTabProps {
-    defaultNetworkLogo: string
+    nativeCurrencyLogo: string
     symbol: string
     options: TransactionSpeedOption[]
     selectedGasPrice: TransactionSpeedOption
@@ -190,7 +190,7 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                     <div className="flex flex-col">
                         <label
                             className={classnames(
-                                "leading-loose text-xs font-medium  mb-1",
+                                "leading-loose text-xs font-medium text-primary-grey-dark mb-1",
                                 !isCustom && "text-gray-400"
                             )}
                         >
@@ -308,7 +308,7 @@ const GasSelectorAdvanced = (props: GasTabProps) => {
                     </div>
                 </div>
                 <div>
-                    <hr className="absolute left-0 border-0.5 border-gray-200 w-full" />
+                    <hr className="absolute left-0 border-0.5 border-primary-grey-hover w-full" />
                     <div className="flex flex-row w-full items-center pt-5 justify-between space-x-4 mt-auto px-4">
                         <button
                             type="button"
@@ -329,7 +329,7 @@ const GasSelectorBasic = (props: GasTabProps) => {
         options,
         selectedGasPrice,
         handlePriceSelection,
-        defaultNetworkLogo,
+        nativeCurrencyLogo,
         symbol,
     } = props
     return (
@@ -349,7 +349,7 @@ const GasSelectorBasic = (props: GasTabProps) => {
                                 className={classnames(
                                     "text-base font-semibold mb-2 cursor-pointer capitalize",
                                     selectedGasPrice.label === price.label &&
-                                        "text-primary-300"
+                                        "text-primary-blue-default"
                                 )}
                             >
                                 {price.label}
@@ -361,7 +361,7 @@ const GasSelectorBasic = (props: GasTabProps) => {
                                             "text-sm",
                                             selectedGasPrice.label ===
                                                 price.label &&
-                                                "text-primary-300"
+                                                "text-primary-blue-default"
                                         )}
                                     >
                                         {price.nativeCurrencyAmount}
@@ -370,7 +370,7 @@ const GasSelectorBasic = (props: GasTabProps) => {
                                 <div className="flex flex-row space-x-2 items-center justify-start w-44">
                                     <div className="justify-self-start">
                                         <img
-                                            src={defaultNetworkLogo}
+                                            src={nativeCurrencyLogo}
                                             alt={symbol}
                                             width="20px"
                                             draggable={false}
@@ -382,7 +382,7 @@ const GasSelectorBasic = (props: GasTabProps) => {
                                                 "text-sm",
                                                 selectedGasPrice.label ===
                                                     price.label &&
-                                                    "text-primary-300"
+                                                    "text-primary-blue-default"
                                             )}
                                         >
                                             {price.ethTotalCost}
@@ -396,7 +396,7 @@ const GasSelectorBasic = (props: GasTabProps) => {
                                 className={classnames(
                                     "text-sm",
                                     selectedGasPrice.label === price.label
-                                        ? "text-primary-300"
+                                        ? "text-primary-blue-default"
                                         : "hidden"
                                 )}
                             />
@@ -459,7 +459,10 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
     const {
         showGasLevels,
         defaultNetworkLogo,
-        nativeCurrency: { decimals: nativeCurrencyDecimals },
+        nativeCurrency: {
+            decimals: nativeCurrencyDecimals,
+            logo: nativeCurrencyLogo,
+        },
     } = useSelectedNetwork()
 
     const [transactionSpeeds, setTransactionSpeeds] =
@@ -491,7 +494,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                 {
                     currency: nativeCurrency,
                     locale_info: localeInfo,
-                    showSymbol: true,
+                    showSymbol: false,
                 }
             ),
         }
@@ -588,7 +591,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
         <>
             <div
                 className={classnames(
-                    Classes.blueSection,
+                    Classes.greySection,
                     active && Classes.blueSectionActive,
                     disabled && "pointer-events-none"
                 )}
@@ -606,7 +609,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                             : capitalize(selectedGasPrice!.label)}
                     </div>
                     <div className="flex flex-row w-full items-center justify-start space-x-3 text-xs">
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-primary-grey-dark">
                             {!isParentLoading && isLoaded
                                 ? selectedGasPrice!.nativeCurrencyAmount
                                 : ""}
@@ -616,7 +619,10 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                                 <>
                                     <div className="justify-self-start">
                                         <img
-                                            src={defaultNetworkLogo}
+                                            src={
+                                                nativeCurrencyLogo ??
+                                                defaultNetworkLogo
+                                            }
                                             alt={networkNativeCurrency.symbol}
                                             width="20px"
                                             draggable={false}
@@ -650,7 +656,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                 <span className="absolute top-0 right-0 p-4 z-50">
                     <div
                         onClick={() => setActive(false)}
-                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                     >
                         <CloseIcon size="10" />
                     </div>
@@ -658,7 +664,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                 <div>
                     <div className="flex flex-col w-full space-y-2">
                         <div className="z-10 flex flex-row items-center p-2 bg-white bg-opacity-75">
-                            <h2 className="pl-0.5 pr-0 text-lg font-bold">
+                            <h2 className="pl-0.5 pr-0 text-lg font-semibold">
                                 Gas Price
                             </h2>
                             <div className="group relative">
@@ -669,7 +675,7 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                                 >
                                     <AiFillInfoCircle
                                         size={26}
-                                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                        className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                     />
                                 </a>
                                 <Tooltip
@@ -704,8 +710,8 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                                     `flex-1 flex flex-row items-center justify-center p-3 text-sm
                                             ${
                                                 tab === value
-                                                    ? "border-primary-300 border-b-2 text-primary-300 font-bold"
-                                                    : "border-gray-200 text-gray-500 border-b"
+                                                    ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
+                                                    : "border-primary-grey-hover text-primary-grey-dark border-b"
                                             }`
                                 }
                                 containerClassName="flex flex-row -ml-3"
@@ -716,7 +722,9 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
                         )}
 
                         <TabComponent
-                            defaultNetworkLogo={defaultNetworkLogo}
+                            nativeCurrencyLogo={
+                                nativeCurrencyLogo ?? defaultNetworkLogo
+                            }
                             symbol={networkNativeCurrency.symbol}
                             options={speeds}
                             selectedGasPrice={selectedGasPrice!}

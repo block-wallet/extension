@@ -39,14 +39,14 @@ const AboutPage = () => {
     return (
         <PopupLayout header={<PopupHeader title={"About"} close="/" />}>
             <div className="space-y-4 p-6 py-4">
-                <div className="rounded border border-gray-200 p-4">
+                <div className="rounded-md border border-primary-grey-hover p-4">
                     <div className="flex items-center">
                         <img
                             src={logo}
                             alt="Blockwallet logo"
                             className="w-5 h-5"
                         />
-                        <span className="ml-2 text-lg font-bold">
+                        <span className="ml-2 text-lg font-semibold">
                             BlockWallet
                         </span>
                     </div>
@@ -61,14 +61,14 @@ const AboutPage = () => {
                         <AppVersion />
                     </div>
                 </div>
-                <div className="rounded border border-gray-200 p-4">
-                    <span className="text-lg font-bold">Contacts</span>
+                <div className="rounded-md border border-primary-grey-hover p-4">
+                    <span className="text-lg font-semibold">Contacts</span>
                     <div className="space-y-4 mt-4">
                         {links.map(({ text, link, icon }) => (
                             <a
                                 href={link}
                                 target="_blank"
-                                className="text-sm font-bold hover:underline flex items-center"
+                                className="text-sm font-semibold hover:underline flex items-center"
                                 rel="noopener noreferrer"
                             >
                                 {icon}
@@ -77,7 +77,7 @@ const AboutPage = () => {
                         ))}
                     </div>
                 </div>
-                <div className="w-full border border-gray-200 rounded-md flex justify-between items-center p-4 py-2">
+                <div className="w-full border border-primary-grey-hover rounded-md flex justify-between items-center p-4 py-2">
                     <span className="text-xs mr-2">
                         Download state logs for support
                     </span>

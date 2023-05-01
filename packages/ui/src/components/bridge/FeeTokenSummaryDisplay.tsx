@@ -13,7 +13,7 @@ const FeeTokenSummaryDisplay = ({
 }) => {
     return (
         <div>
-            <span className="text-xs text-gray-500 font-bold">
+            <span className="text-xs text-primary-grey-dark font-semibold">
                 {formatRounded(
                     formatUnits(feeDetail.total, feeDetail.token.decimals),
                     4

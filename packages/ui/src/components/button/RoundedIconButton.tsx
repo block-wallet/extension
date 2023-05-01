@@ -31,13 +31,13 @@ const RoundedIconButton: FC<RoundedIconButtonProps> = ({
             <div
                 className={classnames(
                     "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                    disabled ? "bg-gray-300" : "bg-primary-300"
+                    disabled ? "bg-gray-300" : "bg-primary-blue-default"
                 )}
                 style={{ transform: "scaleY(-1)" }}
             >
                 {isLoading ? <RoundedLoadingButton /> : <Icon />}
             </div>
-            <span className="text-xs font-medium">{children}</span>
+            <span className="text-[13px] font-medium">{children}</span>
         </>
     )
 }

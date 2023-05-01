@@ -39,7 +39,7 @@ const DAppConnection = () => {
                     }
                 }}
                 className={classnames(
-                    "relative flex flex-row items-center p-1 px-2 pr-1  text-gray-600 rounded-md group border border-primary-200  text-xs cursor-pointer",
+                    "relative flex flex-row items-center py-1  text-primary-grey-dark rounded-md group border-primary-200  text-xs cursor-pointer",
                     dAppConnected === "connected" &&
                         "bg-green-100 hover:border-green-300",
                     dAppConnected === "connected-warning" &&
@@ -65,7 +65,8 @@ const DAppConnection = () => {
                 <span
                     className={classnames(
                         "mr-1 pointer-events-none",
-                        dAppConnected === "connected" && "text-green-600",
+                        dAppConnected === "connected" &&
+                            "text-secondary-green-default",
                         dAppConnected === "connected-warning" &&
                             "text-yellow-600"
                     )}

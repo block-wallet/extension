@@ -1,11 +1,8 @@
 import { Fragment, FunctionComponent, useState } from "react"
 import { TokenList } from "../../context/hooks/useTokensList"
-import { useBlankState } from "../../context/background/backgroundHooks"
 import AssetItem from "./AssetItem"
 
 const AssetsList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
-    const state = useBlankState()!
-
     const [deletedTokens, setDeletedTokens] = useState([] as string[])
     const pushDeleteTokens = (deleteToken: string) => {
         setDeletedTokens([...deletedTokens, deleteToken])

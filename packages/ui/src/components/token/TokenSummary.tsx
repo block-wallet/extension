@@ -12,8 +12,8 @@ interface TokenSummaryMembers {
     Balances: FC<{ children: React.ReactNode; className?: string }>
     TokenBalance: FC<TokenSummaryMembersProps>
     ExchangeRateBalance: FC<TokenSummaryMembersProps>
-    Actions: FC<{ children: React.ReactNode; className?: string | undefined }>
     TokenName: FC<{ title?: string; children: React.ReactNode }>
+    Actions: FC<{ children: React.ReactNode; className?: string | undefined }>
 }
 
 const TokenSummary: FC<{
@@ -25,10 +25,9 @@ const TokenSummary: FC<{
     return (
         <div
             className={
-                "flex flex-col items-center w-full justify-between rounded-md bg-primary-100 h-fit " +
+                "flex flex-col items-center w-full space-y-5 justify-between rounded-md h-fit " +
                 className
             }
-            style={{ minHeight: minHeight ?? "10rem" }}
         >
             {children}
         </div>
@@ -71,7 +70,7 @@ const TokenBalance: FC<TokenSummaryMembersProps> = ({
     }
     return (
         <span
-            className={classnames("text-2xl font-bold", className)}
+            className={classnames("text-[32px] font-semibold", className)}
             title={title}
         >
             {children}
@@ -82,6 +81,7 @@ const TokenBalance: FC<TokenSummaryMembersProps> = ({
 const ExchangeRateBalance: FC<TokenSummaryMembersProps> = ({
     children,
     title,
+    className,
     isLoading,
 }) => {
     if (isLoading) {
@@ -94,7 +94,10 @@ const ExchangeRateBalance: FC<TokenSummaryMembersProps> = ({
         )
     }
     return (
-        <span className="text-sm text-gray-600" title={title}>
+        <span
+            className={classnames("text-sm text-primary-grey-dark", className)}
+            title={title}
+        >
             {children}
         </span>
     )
@@ -105,7 +108,7 @@ const TokenName: FC<{
     children: React.ReactNode
 }> = ({ children, title }) => {
     return (
-        <span className="text-xs text-gray-600" title={title}>
+        <span className="text-xs text-primary-grey-dark" title={title}>
             {children}
         </span>
     )

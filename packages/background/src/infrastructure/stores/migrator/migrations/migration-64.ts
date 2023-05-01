@@ -55,6 +55,7 @@ export default {
             ens: false,
             showGasLevels: false,
             rpcUrls: [`https://polygon-zkevm-node.blockwallet.io`],
+            currentRpcUrl: `https://polygon-zkevm-node.blockwallet.io`,
             defaultRpcUrl: `https://polygon-zkevm-node.blockwallet.io`,
             blockExplorerUrls: ['https://zkevm.polygonscan.com/'],
             blockExplorerName: 'Polygon zkEVM Explorer',

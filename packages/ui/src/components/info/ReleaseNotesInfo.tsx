@@ -54,7 +54,7 @@ const ReleaseNotesInfo: FC<ReleaseNotesInfoProps> = ({
                             )
                             return (
                                 <div key={title}>
-                                    <span className="font-bold text-sm">
+                                    <span className="font-semibold text-sm">
                                         {title}
                                     </span>
                                     <Info.List className="pt-3">
@@ -76,7 +76,7 @@ const ReleaseNotesInfo: FC<ReleaseNotesInfoProps> = ({
                                 href={LINKS.ARTICLES.CHANGELOG}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-primary-300 hover:underline"
+                                className="text-primary-blue-default hover:underline"
                             >
                                 Find full release notes here.
                             </a>

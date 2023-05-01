@@ -86,6 +86,10 @@ enum ACCOUNT {
     GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
 }
 
+enum ADDRESS {
+    GET_TYPE = 'GET_TYPE',
+}
+
 enum APP {
     LOCK = 'LOCK_APP',
     UNLOCK = 'UNLOCK_APP',
@@ -152,9 +156,12 @@ enum NETWORK {
     EDIT_NETWORK = 'EDIT_NETWORK',
     EDIT_NETWORKS_ORDER = 'EDIT_NETWORKS_ORDER',
     REMOVE_NETWORK = 'REMOVE_NETWORK',
+    SWITCH_PROVIDER = 'SWITCH_PROVIDER',
     GET_SPECIFIC_CHAIN_DETAILS = 'GET_SPECIFIC_CHAIN_DETAILS',
     GET_DEFAULT_RPC = 'GET_DEFAULT_RPC',
+    GET_RPCS = 'GET_RPCS',
     GET_RPC_CHAIN_ID = 'GET_RPC_CHAIN_ID',
+    IS_RPC_VALID = 'IS_RPC_VALID',
     SEARCH_CHAINS = 'SEARCH_CHAINS',
 }
 
@@ -237,6 +244,8 @@ enum WALLET {
     HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT = 'HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT',
     HARDWARE_QR_SUBMIT_SIGNATURE = 'HARDWARE_QR_SUBMIT_SIGNATURE',
     HARDWARE_QR_CANCEL_SIGN_REQUEST = 'HARDWARE_QR_CANCEL_SIGN_REQUEST',
+    //hotkeys
+    SET_HOTKEYS_ENABLED = 'SET_HOTKEYS_ENABLED',
 }
 
 enum TOKEN {
@@ -270,8 +279,16 @@ enum FILTERS {
     SET_ACCOUNT_FILTERS = 'SET_ACCOUNT_FILTERS',
 }
 
+export enum ProviderType {
+    DEFAULT = 'DEFAULT',
+    BACKUP = 'BACKUP',
+    CUSTOM = 'CUSTOM',
+    CURRENT = 'CURRENT',
+}
+
 export const Messages = {
     ACCOUNT,
+    ADDRESS,
     APP,
     BACKGROUND,
     CONTENT,
@@ -296,6 +313,7 @@ export const Messages = {
 // [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
 export interface RequestSignatures {
     [Messages.BROWSER.GET_WINDOW_ID]: [undefined, string];
+    [Messages.ADDRESS.GET_TYPE]: [string, AddressType];
     [Messages.ACCOUNT.CREATE]: [RequestAccountCreate, AccountInfo];
     [Messages.ACCOUNT.EXPORT_JSON]: [RequestAccountExportJson, string];
     [Messages.ACCOUNT.EXPORT_PRIVATE_KEY]: [RequestAccountExportPK, string];
@@ -381,6 +399,7 @@ export interface RequestSignatures {
     [Messages.NETWORK.EDIT_NETWORK]: [RequestEditNetwork, void];
     [Messages.NETWORK.EDIT_NETWORKS_ORDER]: [RequestEditNetworksOrder, void];
     [Messages.NETWORK.REMOVE_NETWORK]: [RequestRemoveNetwork, void];
+    [Messages.NETWORK.SWITCH_PROVIDER]: [RequestSwitchProvider, void];
     [Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS]: [
         RequestGetChainData,
         ChainListItem
@@ -576,6 +595,7 @@ export interface RequestSignatures {
         CancelQRHardwareSignRequestMessage,
         boolean
     ];
+    [Messages.WALLET.SET_HOTKEYS_ENABLED]: [RequestSetHotkeys, void];
 }
 
 export type MessageTypes = keyof RequestSignatures;
@@ -583,6 +603,13 @@ export type MessageTypes = keyof RequestSignatures;
 export type RequestTypes = {
     [MessageType in keyof RequestSignatures]: RequestSignatures[MessageType][0];
 };
+
+export enum AddressType {
+    NORMAL = 'NORMAL',
+    SMART_CONTRACT = 'SMART_CONTRACT',
+    ERC20 = 'ERC20',
+    NULL = 'NULL',
+}
 
 export interface RequestSetUserOnline {
     networkStatus: boolean;
@@ -772,6 +799,12 @@ export interface RequestEditNetworksOrder {
 
 export interface RequestRemoveNetwork {
     chainId: number;
+}
+
+export interface RequestSwitchProvider {
+    chainId: number;
+    providerType: ProviderType;
+    customRpcUrl?: string;
 }
 
 export interface RequestGetChainData {
@@ -1234,3 +1267,6 @@ export type StateSubscription =
     | ExchangeRatesStateSubscription
     | GasPricesStateSubscription
     | ActivityListStateSubscription;
+export interface RequestSetHotkeys {
+    enabled: boolean;
+}

@@ -1,8 +1,10 @@
 const AppVersion = () =>
     process.env.VERSION ? (
-        <span className="text-gray-500">Version: v{process.env.VERSION}</span>
+        <span className="text-primary-grey-dark">
+            Version: v{process.env.VERSION}
+        </span>
     ) : (
-        <span className="text-gray-500">DEVELOPMENT</span>
+        <span className="text-primary-grey-dark">DEVELOPMENT</span>
     )
 
 export default AppVersion

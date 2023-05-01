@@ -142,7 +142,12 @@ const persistedState: DeepPartial<BlankAppState> = {
         selectedNetwork: 'mainnet',
         isNetworkChanging: false,
         isUserNetworkOnline: true,
-        isProviderNetworkOnline: true,
+        providerStatus: {
+            isCurrentProviderOnline: true,
+            isDefaultProviderOnline: true,
+            isBackupProviderOnline: true,
+            isUsingBackupProvider: false,
+        },
         isEIP1559Compatible: {},
     },
     TransactionController: {
@@ -208,7 +213,12 @@ const initialState: newBlankAppState = {
         availableNetworks: INITIAL_NETWORKS,
         isNetworkChanging: false,
         isUserNetworkOnline: true,
-        isProviderNetworkOnline: true,
+        providerStatus: {
+            isCurrentProviderOnline: true,
+            isDefaultProviderOnline: true,
+            isBackupProviderOnline: true,
+            isUsingBackupProvider: false,
+        },
         isEIP1559Compatible: {},
     },
     OnboardingController: {
@@ -244,6 +254,7 @@ const initialState: newBlankAppState = {
             account: [],
         },
         defaultGasOption: 'medium',
+        hotkeysEnabled: true,
     },
     TransactionController: {
         transactions: [],
@@ -443,7 +454,12 @@ describe('State reconciler', () => {
                 availableNetworks: INITIAL_NETWORKS,
                 isNetworkChanging: false,
                 isUserNetworkOnline: true,
-                isProviderNetworkOnline: true,
+                providerStatus: {
+                    isCurrentProviderOnline: true,
+                    isDefaultProviderOnline: true,
+                    isBackupProviderOnline: true,
+                    isUsingBackupProvider: false,
+                },
                 isEIP1559Compatible: {},
             },
             PreferencesController: {
@@ -474,6 +490,7 @@ describe('State reconciler', () => {
                     account: [],
                 },
                 defaultGasOption: 'medium',
+                hotkeysEnabled: true,
             },
             TransactionController: {
                 transactions: [],

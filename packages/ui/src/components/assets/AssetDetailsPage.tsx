@@ -87,6 +87,7 @@ const AssetDetailsPage = () => {
                     )}`}
                     close={false}
                     disabled={isRemoving}
+                    networkIndicator
                     actions={
                         !isNative
                             ? [
@@ -141,6 +142,7 @@ const AssetDetailsPage = () => {
                     }
                 />
             }
+            showProviderStatus
         >
             <ConfirmDialog
                 title="Remove Token"

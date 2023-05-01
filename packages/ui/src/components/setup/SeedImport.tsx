@@ -176,7 +176,7 @@ const SeedImport: FunctionComponent<{
 
     return (
         <form
-            className="flex flex-col w-full text-gray-600"
+            className="flex flex-col w-full text-primary-grey-dark"
             onSubmit={onSubmit}
         >
             <div className="flex flex-col px-6 space-y-4">
@@ -209,7 +209,7 @@ const SeedImport: FunctionComponent<{
                         />
                     </div>
                     <div className="flex flex-col space-y-1">
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                             {Array.from({ length: numberOfWords }, (v, i) => {
                                 const wordnN = i + 1
                                 return (
@@ -281,7 +281,7 @@ const SeedImport: FunctionComponent<{
                                 href="https://blockwallet.io/terms-of-use-of-block-wallet.html"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-primary-300"
+                                className="text-primary-blue-default"
                             >
                                 Terms of Use
                             </a>
@@ -304,7 +304,7 @@ const SeedImport: FunctionComponent<{
                     type="submit"
                     className={classnames(
                         Classes.button,
-                        "w-1/2 font-bold border-2 border-primary-300",
+                        "w-1/2 font-semibold border-2 border-primary-blue-default",
                         (isLoading || isImportDisabled) &&
                             "opacity-50 pointer-events-none"
                     )}

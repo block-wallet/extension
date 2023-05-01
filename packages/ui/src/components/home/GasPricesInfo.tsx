@@ -26,6 +26,8 @@ import car from "../../assets/images/icons/car.svg"
 import scooter from "../../assets/images/icons/scooter.svg"
 import plane from "../../assets/images/icons/plane.svg"
 import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
+import { useHotkeys } from "react-hotkeys-hook"
+import { componentsHotkeys } from "../../util/hotkeys"
 
 export type DisplayGasPricesData = {
     baseFee?: string
@@ -88,7 +90,7 @@ const GasDataInfo: FC<{ label: string; value: string }> = ({
     return (
         <li className="flex flex-row space-x-2 justify-between space-y-1">
             <span className="font-semibold text-xs">{label}:</span>
-            <span className="text-xs text-gray-500">{value}</span>
+            <span className="text-xs text-primary-grey-dark">{value}</span>
         </li>
     )
 }
@@ -117,8 +119,8 @@ const GasPricesInfo: FC = () => {
     const {
         state: { exchangeRates, networkNativeCurrency },
     } = useExchangeRatesState()
-    const { nativeCurrency, localeInfo, isNetworkChanging } = useBlankState()!
-
+    const { nativeCurrency, localeInfo, isNetworkChanging, hotkeysEnabled } =
+        useBlankState()!
     const {
         showGasLevels,
         isEIP1559Compatible,
@@ -138,13 +140,32 @@ const GasPricesInfo: FC = () => {
 
     const isLoading = isNetworkChanging || !displayGasPrices
 
+    const gasPricesInfoHotkeys = componentsHotkeys.GasPricesInfo
+    useHotkeys(gasPricesInfoHotkeys, (e) => {
+        if (!hotkeysEnabled) return
+
+        const keyPressed = e.code
+            .replace(/key/i, "")
+            .replace(/digit/i, "")
+            .replace(/numpad/i, "")
+            .toLowerCase()
+
+        if (showGasLevels) {
+            if (e.altKey && keyPressed === "g") {
+                setActive(!active)
+            } else if (keyPressed === "enter") {
+                setActive(false)
+            }
+        }
+    })
+
     return (
         <>
             {/* Label */}
             <div
                 className={`flex flex-row items-center space-x-1 ${
                     showGasLevels
-                        ? "transition duration-300 hover:text-primary-300  cursor-pointer"
+                        ? "transition duration-300 hover:text-primary-blue-default  cursor-pointer"
                         : ""
                 }`}
                 onClick={() => {
@@ -158,7 +179,7 @@ const GasPricesInfo: FC = () => {
                         svgClassName="rounded-md"
                     />
                 ) : (
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-semibold">
                         {displayGasPrices.average.totalGwei}
                     </span>
                 )}
@@ -171,14 +192,14 @@ const GasPricesInfo: FC = () => {
                     <span className="absolute top-0 right-0 p-4 z-50">
                         <div
                             onClick={() => setActive(false)}
-                            className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                            className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                         >
                             <CloseIcon size="10" />
                         </div>
                     </span>
                     <div className="flex flex-col w-full space-y-2">
                         <div className="z-10 flex flex-row items-center p-2 bg-white bg-opacity-75">
-                            <h2 className="px-2 pr-0 text-lg font-bold">
+                            <h2 className="px-2 pr-0 text-lg font-semibold">
                                 Gas Prices
                             </h2>
                             <div className="group relative">
@@ -189,7 +210,7 @@ const GasPricesInfo: FC = () => {
                                 >
                                     <AiFillInfoCircle
                                         size={26}
-                                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                        className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                     />
                                 </a>
                                 <Tooltip
@@ -223,14 +244,14 @@ const GasPricesInfo: FC = () => {
                                                 ]
                                             return (
                                                 <div
-                                                    className="flex flex-col border border-gray-200 rounded-lg space-y-1"
+                                                    className="flex flex-col border border-primary-grey-hover rounded-lg space-y-1"
                                                     key={level}
                                                 >
                                                     <div
                                                         className={classnames(
                                                             "flex flex-row  items-center space-x-1 p-3",
                                                             isEIP1559Compatible &&
-                                                                "border-b border-gray-200"
+                                                                "border-b border-primary-grey-hover"
                                                         )}
                                                     >
                                                         <img
@@ -251,7 +272,7 @@ const GasPricesInfo: FC = () => {
                                                             }{" "}
                                                             GWEI
                                                         </span>
-                                                        <span className="text-gray-500 text-xs">
+                                                        <span className="text-primary-grey-dark text-xs">
                                                             ~
                                                             {gasPriceToNativeCurrency(
                                                                 gasPriceData.totalTransactionCost,

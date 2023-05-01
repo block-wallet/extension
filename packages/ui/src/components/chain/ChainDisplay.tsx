@@ -26,8 +26,8 @@ const ChainDisplay: FC<Props> = ({
         <div
             className={classnames(
                 "flex justify-between items-center flex-row relative px-3 rounded-md transition-all duration-300 active:scale-95",
-                onClick && "cursor-pointer hover:bg-primary-100",
-                selected && "bg-primary-200"
+                onClick && "cursor-pointer hover:bg-primary-grey-default",
+                selected && "bg-primary-grey-hover"
             )}
             onClick={onClick}
         >
@@ -43,7 +43,7 @@ const ChainDisplay: FC<Props> = ({
                 className="flex justify-start items-center flex-row py-3"
                 title={name}
             >
-                <div className="flex flex-row items-center justify-center w-9 h-9 p-1.5 bg-white border border-gray-200 rounded-full">
+                <div className="flex flex-row items-center justify-center w-9 h-9 p-1.5 bg-white border border-primary-grey-hover rounded-full">
                     <img
                         src={logoUrl || unkownLogoUrl}
                         onError={(e) => {
@@ -55,7 +55,7 @@ const ChainDisplay: FC<Props> = ({
                     />
                 </div>
                 <div className="flex flex-col space-y-1 justify-start h-full box-border ml-4">
-                    <span className="text-sm text-black font-semibold mr-1 truncate w-48">
+                    <span className="text-sm text-primary-black-default font-semibold mr-1 truncate w-48">
                         {name}
                     </span>
                     <span className="text-gray-400 text-xs font-small text-overflow flex flex-row space-x-2 items-center">

@@ -39,7 +39,7 @@ const Explorer = ({
                 className="flex flex-row items-center space-x-1"
                 title={explorerName}
             >
-                <span className="text-sm font-bold text-primary-300 whitespace-nowrap text-ellipsis overflow-hidden">
+                <span className="text-sm font-semibold text-primary-blue-default whitespace-nowrap text-ellipsis overflow-hidden">
                     {explorerName}
                 </span>
                 <img src={openIcon} alt="Open icon" className="w-3 h-3" />
@@ -159,7 +159,7 @@ const BridgeDetailsSummary: FC<BridgeDetailsSummaryProps> = ({
             {transaction.transactionCategory ===
                 TransactionCategories.INCOMING_BRIDGE_REFUND && (
                 <>
-                    <i className="text-gray-500 text-center py-2">
+                    <i className="text-primary-grey-dark text-center py-2">
                         This is a refund transaction of a failed bridge.
                     </i>
                 </>

@@ -122,7 +122,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         return (
             <div
                 className={classnames(
-                    appearance === "blue-section" && Classes.blueSection,
+                    appearance === "blue-section" && Classes.greySection,
                     appearance === "blue-section" &&
                         hasFocus &&
                         Classes.blueSectionActive
@@ -130,31 +130,33 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             >
                 {/* LABEL */}
                 {label ? (
-                    <label
-                        htmlFor={name}
-                        className={classnames(
-                            Classes.inputLabel,
-                            "flex flex-row items-center space-x-2"
-                        )}
-                    >
-                        <span>{label}</span>
+                    <div className="flex space-x-2 items-center">
+                        <label
+                            htmlFor={name}
+                            className={classnames(
+                                Classes.inputLabel,
+                                "flex flex-row items-center space-x-2 pointer-events-none"
+                            )}
+                        >
+                            <span>{label}</span>
+                        </label>
                         {info && (
                             <div className="group relative">
                                 <AiFillInfoCircle
                                     size={16}
                                     onClick={onClickInfo}
                                     className={classnames(
-                                        "text-primary-200 hover:text-primary-300 cursor-default",
+                                        "text-primary-grey-dark hover:text-primary-blue-default cursor-default",
                                         onClickInfo && "!cursor-pointer"
                                     )}
                                 />
                                 <Tooltip
-                                    className="!w-60 !break-word !whitespace-normal border boder-gray-300 !-translate-y-6 translate-x-1"
+                                    className="!w-60 !break-word !whitespace-normal !-translate-y-6 translate-x-1"
                                     content={info}
                                 />
                             </div>
                         )}
-                    </label>
+                    </div>
                 ) : null}
 
                 {/* INPUT */}

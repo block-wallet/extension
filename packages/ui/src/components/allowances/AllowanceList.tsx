@@ -13,14 +13,14 @@ const AllowanceList = ({ allowances }: { allowances: GroupedAllowances }) => {
                 allowances.map((accountAllowance, accountAllowanceIndex) => (
                     <div key={accountAllowance.groupBy.address}>
                         <span
-                            className="text-gray-600"
+                            className="text-primary-grey-dark"
                             title={accountAllowance.groupBy.address}
                         >
                             {groupedByToken
                                 ? `${accountAllowance.groupBy.symbol} - ${accountAllowance.groupBy.name}`
                                 : accountAllowance.groupBy.name}
                         </span>
-                        <div className="flex flex-col mb-6">
+                        <div className="flex flex-col mb-4">
                             {accountAllowance.allowances.map(
                                 (allowance, allowanceIndex) => {
                                     const [token, spender, showToken] =

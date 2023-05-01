@@ -67,12 +67,12 @@ const SeedWordsInput: FunctionComponent<{
 
     return (
         <div className="flex flex-col space-y-4">
-            <div className="p-2 border border-primary-100 rounded-md grid grid-cols-4 grid-rows-3 gap-2 h-36">
+            <div className="p-2 border border-primary-grey-default rounded-md grid grid-cols-4 grid-rows-3 gap-2 h-36">
                 {value.map((wordObj, index) => (
                     <button
                         type="button"
                         key={`${wordObj.word}_${index}`}
-                        className="bg-gray-900 text-white rounded-md py-2"
+                        className="bg-primary-black-default text-white rounded-md py-2"
                         style={{ height: "fit-content" }}
                         onClick={() => handleWordClick(wordObj, index, true)}
                     >
@@ -88,8 +88,8 @@ const SeedWordsInput: FunctionComponent<{
                         className={classnames(
                             "rounded-md py-3 border",
                             wordObj.isSelected
-                                ? "border-transparent bg-gray-900 text-white"
-                                : "border-primary-100 text-gray-900"
+                                ? "border-transparent bg-primary-black-default text-white"
+                                : "border-primary-grey-default text-primary-black-default"
                         )}
                         onClick={() => {
                             return handleWordClick(wordObj, index, false)
@@ -116,7 +116,7 @@ const SeedPhraseBlock = (props: any) => {
     return (
         <div
             className={classnames(
-                "flex flex-col text-gray-600 text-sm",
+                "flex flex-col text-primary-grey-dark text-sm",
                 isReminder ? "space-y-6 p-4" : "space-y-8 p-8"
             )}
         >
@@ -237,8 +237,8 @@ const BackupConfirmPage = () => {
                     maxWidth={isReminder ? "" : "max-w-md"}
                     className={"text-center"}
                 >
-                    <span className="font-bold my-6 font-title text-lg">
-                        Confirm Seed Phrase
+                    <span className="font-semibold my-6   text-lg">
+                        Confirm Secret Phrase
                     </span>
                     <Divider />
                     <SeedPhraseBlock
@@ -250,7 +250,7 @@ const BackupConfirmPage = () => {
                     />
                     <Divider />
 
-                    <div className="flex flex-row p-6 space-x-4">
+                    <div className="flex flex-row w-full p-6 justify-between">
                         <Link
                             to={{
                                 pathname: backLink,
@@ -258,6 +258,7 @@ const BackupConfirmPage = () => {
                             }}
                             className={Classes.liteButton}
                             draggable={false}
+                            style={{ maxWidth: "170px" }}
                         >
                             Back
                         </Link>
@@ -265,7 +266,7 @@ const BackupConfirmPage = () => {
                             type="button"
                             className={classnames(
                                 Classes.button,
-                                "font-bold border-2 border-primary-300",
+                                "font-semibold border-2 border-primary-blue-default max-w-[170px]",
                                 (!isPhraseValid() ||
                                     isVerificationInProgress) &&
                                     "opacity-50 pointer-events-none"

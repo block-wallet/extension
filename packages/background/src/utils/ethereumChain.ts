@@ -1,5 +1,4 @@
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
-import { memoize } from 'lodash';
 import { getChainListItem } from './chainlist';
 import {
     AddEthereumChainParameter,
@@ -82,20 +81,18 @@ export const validateNetworkChainId = async (
  *
  * @param rpcUrl The RPC endpoint
  */
-export const getCustomRpcChainId = memoize(
-    async (rpcUrl: string): Promise<number> => {
-        // Check that chainId matches with network's
-        const tempProvider = new StaticJsonRpcProvider({
-            url: rpcUrl,
-            headers: isABlockWalletNode(rpcUrl)
-                ? customHeadersForBlockWalletNode
-                : undefined,
-        });
-        const { chainId: rpcChainId } = await tempProvider.getNetwork();
+export const getCustomRpcChainId = async (rpcUrl: string): Promise<number> => {
+    // Check that chainId matches with network's
+    const tempProvider = new StaticJsonRpcProvider({
+        url: rpcUrl,
+        headers: isABlockWalletNode(rpcUrl)
+            ? customHeadersForBlockWalletNode
+            : undefined,
+    });
+    const { chainId: rpcChainId } = await tempProvider.getNetwork();
 
-        return rpcChainId;
-    }
-);
+    return rpcChainId;
+};
 
 /**
  * Validates the parameters passed to add a new chain

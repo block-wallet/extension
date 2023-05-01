@@ -15,15 +15,11 @@ import IdleComponent from "../components/IdleComponent"
 import WalletNews from "../components/news/WalletNews"
 import LocationHolder from "./LocationHolder"
 import { useLocationRecovery } from "../util/hooks/useLocationRecovery"
-import ProviderDownDialog from "../components/dialog/ProviderDownDialog"
 import useClearStickyStorage from "../context/hooks/useClearStickyStorage"
 import {
     getNonSubmittedTransactions,
     TransactionOrigin,
 } from "../util/getNonSubmittedTransactions"
-
-//10 minutes
-const LOCAL_STORAGE_DATA_TTL = 60000 * 10
 
 /**  Purpose of this component is to check in Blank State if there is any pending connect to site or transaction confirm
  *  in order to show that page always, whenever the extension is loaded and unlocked.
@@ -85,7 +81,6 @@ const PopupComponent = () => {
     }
     return (
         <WalletNews>
-            <ProviderDownDialog />
             <Route path="/" component={LocationHolder} />
             <Route exact path="/">
                 {showPage ? <Redirect to={route} /> : <Redirect to="/home" />}

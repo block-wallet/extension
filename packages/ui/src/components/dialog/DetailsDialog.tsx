@@ -73,7 +73,7 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                         <h2
                             className={classnames(
                                 titleSize,
-                                "font-bold pl-2 pb-3"
+                                "font-semibold pl-2 pb-3"
                             )}
                         >
                             {title}
@@ -92,13 +92,13 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                     <span className="absolute top-0 right-0 p-4">
                         <div
                             onClick={() => onClose()}
-                            className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                            className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                         >
                             <CloseIcon size="10" />
                         </div>
                     </span>
                     {!fixedTitle && (
-                        <h2 className={classnames(titleSize, "font-bold")}>
+                        <h2 className={classnames(titleSize, "font-semibold")}>
                             {title}
                         </h2>
                     )}
@@ -123,7 +123,7 @@ const DetailsDialog: FunctionComponent<DetailsDialogProps> = ({
                                                 <h3
                                                     className={classnames(
                                                         itemTitleSize,
-                                                        "font-bold mr-2"
+                                                        "font-semibold mr-2"
                                                     )}
                                                 >
                                                     {option.title}

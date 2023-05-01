@@ -29,7 +29,7 @@ const useCurrencyFromatter = () => {
             currency: state.nativeCurrency,
             locale_info: state.localeInfo,
             returnNonBreakingSpace: true,
-            showSymbol: true,
+            showSymbol: false,
         })
     }
     return { format }

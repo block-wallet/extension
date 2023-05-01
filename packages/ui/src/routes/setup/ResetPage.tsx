@@ -19,14 +19,14 @@ const ResetPage = () => {
 
     return (
         <PageLayout header maxWidth="max-w-lg">
-            <span className="my-6 text-lg font-bold font-title">
+            <span className="my-6 text-lg font-semibold">
                 Reset your Wallet
             </span>
             <Divider />
             <div className="flex flex-col p-6 space-y-6">
                 <div className="flex flex-col space-y-4">
                     <div className="w-full px-4 py-4 text-sm text-center text-red-500 bg-red-100 rounded">
-                        <strong className="font-bold">Warning: </strong>
+                        <strong className="font-semibold">Warning: </strong>
                         <span>
                             If you decide to reset your wallet, your current
                             vault will be lost, i.e. all imported accounts and

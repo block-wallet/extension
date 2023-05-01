@@ -37,7 +37,7 @@ const CheckBoxDialog: FunctionComponent<{
     return (
         <Dialog open={open} onClickOutside={onClose}>
             <div className="px-3">
-                <h2 className="text-lg font-bold">{title}</h2>
+                <h2 className="text-lg font-semibold">{title}</h2>
                 <div className="py-5">
                     <span className="text-sm whitespace-pre-line">
                         {message}
@@ -61,13 +61,13 @@ const CheckBoxDialog: FunctionComponent<{
                 <span className="absolute top-0 right-0 p-4">
                     <div
                         onClick={() => onClose()}
-                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                     >
                         <CloseIcon size="10" />
                     </div>
                 </span>
                 <div className="">
-                    <hr className="absolute left-0 border-0.5 border-gray-200 w-full" />
+                    <hr className="absolute left-0 border-0.5 border-primary-grey-hover w-full" />
                     <div className="flex flex-row w-full items-center pt-5 justify-between space-x-4 mt-auto">
                         {showCloseButton && (
                             <button

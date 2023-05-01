@@ -76,7 +76,7 @@ const BridgeButton: React.FC<PanelButtonProps<RedirectBridgeState>> = ({
                     </>
                 )}
             </div>
-            <span className="text-xs font-medium">Bridge</span>
+            <span className="text-[13px] font-medium">Bridge</span>
         </Link>
     )
 }

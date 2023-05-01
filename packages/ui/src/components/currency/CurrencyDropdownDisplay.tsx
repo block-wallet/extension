@@ -2,14 +2,34 @@ import { FC } from "react"
 import { Currency } from "@block-wallet/background/utils/currency"
 import { formatName } from "../../util/formatAccount"
 import { capitalize } from "../../util/capitalize"
+import Spinner from "../spinner/Spinner"
+import { classnames } from "../../styles"
 
 interface CurrencyDropdownDisplayProps {
     selectedCurrency?: Currency
+    isLoading?: boolean
+    loadingText?: string
 }
 
 const CurrencyDropdownDisplay: FC<CurrencyDropdownDisplayProps> = ({
     selectedCurrency,
+    loadingText = "",
+    isLoading,
 }) => {
+    if (isLoading) {
+        return (
+            <div
+                className={classnames(
+                    "flex items-center w-full text-base font-semibold space-x-2",
+                    !loadingText && "justify-center"
+                )}
+            >
+                <Spinner size="24" />
+                <span>{loadingText}</span>
+            </div>
+        )
+    }
+
     return selectedCurrency ? (
         <div className="flex flex-row flex-grow justify-between items-center">
             <div className="flex flex-grow justify-between space-x-1">

@@ -2,16 +2,36 @@ import { FC } from "react"
 import TokenLogo from "../token/TokenLogo"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { formatName } from "../../util/formatAccount"
+import classnames from "classnames"
+import Spinner from "../spinner/Spinner"
 
 interface TokenDropdownDisplayProps {
     selectedToken?: Token
     displayIcon?: boolean
+    isLoading?: boolean
+    loadingText?: string
 }
 
 const TokenDropdownDisplay: FC<TokenDropdownDisplayProps> = ({
     selectedToken,
     displayIcon,
+    loadingText = "",
+    isLoading,
 }) => {
+    if (isLoading) {
+        return (
+            <div
+                className={classnames(
+                    "flex items-center w-full text-base font-semibold space-x-2",
+                    !loadingText && "justify-center"
+                )}
+            >
+                <Spinner size="24" />
+                <span>{loadingText}</span>
+            </div>
+        )
+    }
+
     return selectedToken ? (
         <div className="flex flex-row flex-grow justify-between items-center">
             {displayIcon && (

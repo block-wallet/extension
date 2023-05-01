@@ -57,7 +57,8 @@ export const getOnRamperCurrenciesByNetwork = async (
                     toChecksumAddress(token.address) +
                     "/logo.png",
                 decimals: token.decimals,
-                type: "",
+                //use type property to save onramper token id
+                type: token.id,
             })
         }
 

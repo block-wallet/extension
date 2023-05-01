@@ -45,9 +45,7 @@ const BuyPage = () => {
     }, [])
 
     const onContinue = async () => {
-        const defaultCrypto = selectedToken
-            ? selectedToken.symbol + "_" + networkName
-            : ""
+        const defaultCrypto = selectedToken ? selectedToken.type : ""
         const walletAddress = defaultCrypto + ":" + currenctAccountInfo.address
 
         const onRamperURL = new URL("https://buy.onramper.com")

@@ -93,7 +93,11 @@ export const CurrencySelection: FC<CurrencySelectionProps> = ({
     return (
         <DropDownSelector
             display={
-                <CurrencyDropdownDisplay selectedCurrency={selectedCurrency} />
+                <CurrencyDropdownDisplay
+                    selectedCurrency={selectedCurrency}
+                    isLoading={!currencyList || currencyList.length === 0}
+                    loadingText="Loading currencies..."
+                />
             }
             error={error}
             topMargin={topMargin || 0}
@@ -101,6 +105,7 @@ export const CurrencySelection: FC<CurrencySelectionProps> = ({
             popupMargin={popupMargin || 16}
             customWidth={dropdownWidth}
             popUpOpenLeft={popUpOpenLeft}
+            disabled={!currencyList || currencyList.length === 0}
         >
             <div className="w-full p-3">
                 <SearchInput

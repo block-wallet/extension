@@ -121,6 +121,8 @@ export const TokenSelection: FC<TokenSelectionProps> = ({
                 <TokenDropdownDisplay
                     selectedToken={selectedToken}
                     displayIcon={displayIcon}
+                    isLoading={!tokenList || tokenList.length === 0}
+                    loadingText="Loading tokens..."
                 />
             }
             error={error}
@@ -129,6 +131,7 @@ export const TokenSelection: FC<TokenSelectionProps> = ({
             popupMargin={popupMargin || 16}
             customWidth={dropdownWidth}
             popUpOpenLeft={popUpOpenLeft}
+            disabled={!tokenList || tokenList.length === 0}
         >
             <div className="w-full p-3">
                 <SearchInput

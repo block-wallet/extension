@@ -20,7 +20,7 @@ const AllowanceList = ({ allowances }: { allowances: GroupedAllowances }) => {
                                 ? `${accountAllowance.groupBy.symbol} - ${accountAllowance.groupBy.name}`
                                 : accountAllowance.groupBy.name}
                         </span>
-                        <div className="flex flex-col mb-6">
+                        <div className="flex flex-col mb-4">
                             {accountAllowance.allowances.map(
                                 (allowance, allowanceIndex) => {
                                     const [token, spender, showToken] =

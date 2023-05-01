@@ -143,7 +143,7 @@ const SendPage = () => {
         }
 
         checkAddress()
-    }, [searchString])
+    }, [addressBookAccounts, currentAccount.address, myAccounts, searchString])
 
     const onAccountSelect = (account: any) => {
         setSelectedAccount(account)
@@ -192,10 +192,11 @@ const SendPage = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             {/* Search or Input */}
-            <div className="flex flex-col space-y-2 fixed w-full bg-white z-[9]">
-                <div className="w-full p-6 pb-0">
+            <div className="flex flex-col space-y-2 w-full bg-white z-[9]">
+                <div className="w-full p-6 pb-0 space-y-2">
                     <SearchInput
                         label="Enter public address, name or select contact"
                         placeholder="Enter public address, name or select contact"
@@ -203,7 +204,7 @@ const SendPage = () => {
                         ref={useMergeRefs(ref, searchInputRef)}
                         error={errors.address?.message}
                         warning={warning}
-                        autoFocus={false}
+                        autoFocus={true}
                         isValid={isAddress}
                         onChange={onChangeHandler}
                         onPaste={() => {
@@ -229,7 +230,7 @@ const SendPage = () => {
             </div>
             <div
                 className={classnames(
-                    "pt-28 pb-6 space-y-4",
+                    "pt-6 pb-6 space-y-4",
                     warning !== "" || canAddContact ? "mt-5" : "mt-1"
                 )}
             >

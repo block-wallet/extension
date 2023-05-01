@@ -63,26 +63,22 @@ const Asset: FunctionComponent<{
         >
             <div className="flex flex-row items-center">
                 <AssetIcon asset={asset.token} />
-                <div className="flex flex-col ml-2">
+                <div className="flex flex-col ml-2 mr-2">
                     <span
                         className="text-sm font-semibold"
-                        title={`
-                                    ${formatUnits(
-                                        asset.balance || "0",
-                                        asset.token.decimals
-                                    )} ${asset.token.symbol}
-                                `}
+                        title={`${formatUnits(
+                            asset.balance || "0",
+                            asset.token.decimals
+                        )} ${asset.token.symbol}`}
                     >
-                        {`
-                                    ${formatRounded(
-                                        formatUnits(
-                                            asset.balance || "0",
-                                            asset.token.decimals
-                                        ),
-                                        4
-                                    )}
-                                    ${asset.token.symbol}
-                                `}
+                        {`${formatRounded(
+                            formatUnits(
+                                asset.balance || "0",
+                                asset.token.decimals
+                            ),
+                            4
+                        )}
+                                    ${asset.token.symbol}`}
                     </span>
                     <span className="text-[11px] text-primary-grey-dark">
                         {formatter.format(

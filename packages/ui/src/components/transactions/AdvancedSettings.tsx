@@ -383,8 +383,8 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                     <p className="text-base font-semibold pb-3">{label}</p>
 
                     {display.slippage && (
-                        <div className="w-full pb-2">
-                            <p className="text-xs font-medium pb-1">
+                        <div className="w-full pb-3">
+                            <p className="text-[13px] font-medium text-primary-grey-dark">
                                 Slippage percentage (%)
                             </p>
                             <input
@@ -397,7 +397,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                     onSlippageChange(e)
                                 }}
                                 className={classnames(
-                                    "w-full",
+                                    "w-full mt-2",
                                     Classes.inputBordered,
                                     errors.slippage
                                         ? "border-red-400 focus:border-red-400"
@@ -416,7 +416,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
 
                     {display.nonce && (
                         <div className="w-full pb-2">
-                            <p className="text-xs font-medium pb-1">
+                            <p className="text-[13px] font-medium text-primary-grey-dark">
                                 Custom Nonce
                             </p>
                             <input
@@ -429,7 +429,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
                                     onNonceChange(e)
                                 }}
                                 className={classnames(
-                                    "w-full",
+                                    "w-full mt-2",
                                     Classes.inputBordered,
                                     errors.nonce &&
                                         "border-red-400 focus:border-red-400"

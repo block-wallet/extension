@@ -60,6 +60,7 @@ import SetupBridgePage from "../routes/bridge/BridgeSetupPage"
 import BridgeConfirmPage from "../routes/bridge/BridgeConfirmPage"
 import BridgeAfterAddTokenPage from "../routes/bridge/BridgeAfterAddTokenPage"
 import BuyPage from "../routes/buy/BuyPage"
+import Hotkeys from "../routes/settings/Hotkeys"
 
 export const ROUTES_DEFINITION = [
     /* Root */
@@ -170,6 +171,12 @@ export const ROUTES_DEFINITION = [
         path: "/settings/preferences/lockTimeout",
         exact: true,
         component: LockTimeout,
+    },
+
+    {
+        path: "/settings/preferences/hotkeys",
+        exact: true,
+        component: Hotkeys,
     },
 
     {

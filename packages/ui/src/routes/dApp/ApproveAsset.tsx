@@ -180,15 +180,6 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const selectedAccountBalance = useSelectedAccountBalance()
     const { nativeToken } = useTokensList()
 
-    // Get data from window.localStorage
-    const [, setPersistedData] = useLocalStorageState<ApproveAssetPageState>(
-        "approveasset.form",
-        {
-            initialValue: { txId: "" },
-            volatile: true,
-        }
-    )
-
     const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
         useCheckAccountDeviceLinked()
 
@@ -516,7 +507,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     currentAllowance={currentAllowanceValue}
                 />
                 <div className="flex flex-col">
-                    <label className="text-sm text-primary-grey-dark mb-2">
+                    <label className="text-[13px] font-medium text-primary-grey-dark mb-2">
                         Gas Price
                     </label>
                     {!isEIP1559Compatible ? (
@@ -623,6 +614,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     </>
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingDialog
                 open={isOpen}

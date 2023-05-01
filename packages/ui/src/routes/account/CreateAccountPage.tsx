@@ -6,6 +6,8 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import Icon, { IconName } from "../../components/ui/Icon"
 import classNames from "classnames"
 import { PropsWithChildren } from "react"
+import { useHotkeys } from "react-hotkeys-hook"
+import { componentsHotkeys } from "../../util/hotkeys"
 
 const CardFrame: React.FC<
     PropsWithChildren<{
@@ -21,7 +23,7 @@ const CardFrame: React.FC<
             onClick={onClick}
             {...ariaProps}
             className={classNames(
-                "rounded-md border border-primary-grey-hover flex flex-row p-4 h-26 justify-between hover:border-black hover:cursor-pointer",
+                "rounded-lg border border-primary-grey-hover flex flex-row p-4 h-26 justify-between hover:border-black hover:cursor-pointer",
                 disabled && "opacity-50 pointer-events-none"
             )}
         >
@@ -60,6 +62,12 @@ const CreateAccountCard: React.FC<{
 
 const CreateAccountPage = () => {
     const history = useOnMountHistory()
+
+    const createAccountPageHotkeys = componentsHotkeys.CreateAccountPage
+    useHotkeys(createAccountPageHotkeys, () => {
+        openHardwareConnect()
+    })
+
     return (
         <PopupLayout
             header={

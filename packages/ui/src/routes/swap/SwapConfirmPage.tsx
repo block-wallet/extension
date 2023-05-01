@@ -47,7 +47,7 @@ import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import { OneInchSwapRequestParams } from "@block-wallet/background/utils/types/1inch"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { classnames, Classes } from "../../styles"
+import { classnames } from "../../styles"
 import { formatRounded } from "../../util/formatRounded"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
@@ -147,6 +147,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 }))
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inProgressTransaction?.id])
 
     useLayoutEffect(() => {
@@ -486,6 +487,7 @@ const SwapPageConfirm: FC<{}> = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingAllowanceTransactionDialog
                 status={allowanceTxDialogStatus}
@@ -617,7 +619,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 </p>
 
                 {/* Gas */}
-                <p className="text-sm text-primary-grey-dark pb-1 pt-0.5">
+                <p className="text-[13px] font-medium pb-1 pt-0.5 text-primary-grey-dark">
                     Gas Price
                 </p>
                 {isEIP1559Compatible ? (

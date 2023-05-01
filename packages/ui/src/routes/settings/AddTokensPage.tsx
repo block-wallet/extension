@@ -67,7 +67,7 @@ const AddTokensPage = () => {
         } else {
             setResults([])
         }
-    }, [searchedValue])
+    }, [searchedValue, isManualTokenView])
 
     const handleSubmitEnabled = async (value: boolean) => {
         setSubmitEnabled(value)
@@ -98,6 +98,7 @@ const AddTokensPage = () => {
                     networkIndicator
                 />
             }
+            showProviderStatus
             // submitOnEnter={{ isEnabled: submitEnabled }}
         >
             <div className="flex flex-col flex-1 w-full">

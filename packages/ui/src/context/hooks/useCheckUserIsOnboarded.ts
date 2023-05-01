@@ -6,11 +6,11 @@ export const useCheckUserIsOnboarded = () => {
     const history = useHistory()
     const state = useBlankState()
     useEffect(() => {
-        if (!state || state.isOnboarded) {
+        if (state?.isOnboarded) {
             history.push({
                 pathname: "/setup/done",
                 state: { sendNotification: false },
             })
         }
-    }, [])
+    }, [history, state?.isOnboarded])
 }

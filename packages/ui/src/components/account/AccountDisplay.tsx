@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { FunctionComponent } from "react"
 
-import { formatUnits } from "@ethersproject/units"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import {
     formatName,
@@ -9,14 +8,12 @@ import {
     formatHashLastChars,
 } from "../../util/formatAccount"
 import { getAccountColor } from "../../util/getAccountColor"
-import { formatNumberLength } from "../../util/formatNumberLength"
 
 import AccountIcon from "../icons/AccountIcon"
 import checkmarkIcon from "../../assets/images/icons/checkmark_mini.svg"
 import { classnames } from "../../styles"
 import ConfirmDialog from "../dialog/ConfirmDialog"
 import CopyTooltip from "../label/СopyToClipboardTooltip"
-import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import useIsHovering from "../../util/hooks/useIsHovering"
 import {
     AccountDisplayMenuOption,
@@ -27,8 +24,8 @@ import Tag from "../ui/Tag"
 import { isInternalAccount } from "../../util/account"
 import useCopyToClipboard from "../../util/hooks/useCopyToClipboard"
 import Dropdown from "../ui/Dropdown/Dropdown"
-import { toChecksumAddress } from "ethereumjs-util"
 import { useAddressWithChainIdChecksum } from "../../util/hooks/useSelectedAddressWithChainIdChecksum"
+import useNetWorthBalance from "../../context/hooks/useNetWorthBalance"
 
 interface ConfirmDialogState {
     isOpen: boolean
@@ -67,8 +64,10 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
     const [confirmationDialog, setConfirmationDialog] =
         useState<ConfirmDialogState>({ isOpen: false })
     const { isHovering: isHoveringMenu, getIsHoveringProps } = useIsHovering()
-    const { chainId, nativeCurrency } = useSelectedNetwork()
     const checksumAddress = useAddressWithChainIdChecksum(account?.address)
+    const netWorthBalance = useNetWorthBalance(
+        !showAddress ? account : undefined
+    )
 
     const { copied, onCopy } = useCopyToClipboard(checksumAddress)
 
@@ -84,20 +83,16 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
         })
     }
 
-    const nativeTokenBalance =
-        (account.balances && account.balances[chainId]?.nativeTokenBalance) ??
-        "0"
-
     const hoverStyle =
         onClickAccount && !selected && !actionButtons && !isHoveringMenu
 
-    const accountName = formatName(account.name, showAddress ? 25 : 18)
+    const accountName = formatName(account.name, showAddress ? 25 : 25)
 
     return (
         <>
             <div
                 className={classnames(
-                    "flex flex-row items-center justify-between w-full rounded-md",
+                    "flex flex-row items-center justify-between w-full rounded-lg",
                     hoverStyle &&
                         "hover:bg-primary-grey-default cursor-pointer",
                     confirmationDialog.isOpen && "!cursor-default",
@@ -128,7 +123,8 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                                 <label
                                     className={classnames(
                                         "font-semibold",
-                                        truncateName && "truncate max-w-[96px]",
+                                        truncateName &&
+                                            "truncate max-w-[140px]",
                                         hoverStyle && "cursor-pointer"
                                     )}
                                     title={account.name}
@@ -148,18 +144,12 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             {!showAddress ? (
                                 <span
                                     className="text-xs text-primary-grey-dark"
-                                    title={`${formatUnits(
-                                        nativeTokenBalance
-                                    )} ${nativeCurrency.symbol}`}
+                                    title={`${netWorthBalance}`}
                                 >
-                                    {formatNumberLength(
-                                        formatUnits(nativeTokenBalance),
-                                        10
-                                    )}{" "}
-                                    {nativeCurrency.symbol}
+                                    {netWorthBalance}
                                 </span>
                             ) : (
-                                <span className="text-primary-grey-dark">
+                                <span className="text-xs text-primary-grey-dark">
                                     {formatHash(checksumAddress)}
                                 </span>
                             )}
@@ -185,7 +175,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                         )}
                     </div>
                 </div>
-                <div className="flex flex-row items-center space-x-3">
+                <div className="flex flex-row items-center space-x-2">
                     {selected && showSelectedCheckmark ? (
                         <img
                             src={checkmarkIcon}
@@ -195,7 +185,6 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                     ) : null}
 
                     {actionButtons}
-
                     {menu && (
                         <div {...getIsHoveringProps()}>
                             <Dropdown>

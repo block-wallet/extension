@@ -115,6 +115,10 @@ import {
     SubmitQRHardwareSignatureMessage,
     CancelQRHardwareSignRequestMessage,
     RequestUpdateTransactionStatus,
+    AddressType,
+    RequestSwitchProvider,
+    RequestIsEnrolled,
+    RequestSetHotkeys,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -187,7 +191,6 @@ import {
 } from './AddressBookController';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 
-import { showSetUpCompleteNotification } from '../utils/notifications';
 import { extensionInstances } from '../infrastructure/connection';
 import {
     focusWindow,
@@ -234,6 +237,8 @@ import RemoteConfigsController, {
 } from './RemoteConfigsController';
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
+import CampaignsController from './CampaignsController';
+import { NotificationController } from './NotificationController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -274,6 +279,8 @@ export default class BlankController extends EventEmitter {
     private readonly transactionWatcherController: TransactionWatcherController;
     private readonly tokenAllowanceController: TokenAllowanceController;
     private readonly remoteConfigsController: RemoteConfigsController;
+    private readonly campaignsController: CampaignsController;
+    private readonly notificationController: NotificationController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -406,6 +413,11 @@ export default class BlankController extends EventEmitter {
             initState.AccountTrackerController
         );
 
+        this.campaignsController = new CampaignsController(
+            this.accountTrackerController,
+            initState.CampaignsController
+        );
+
         this.exchangeRatesController = new ExchangeRatesController(
             initState.ExchangeRatesController,
             this.preferencesController,
@@ -464,6 +476,14 @@ export default class BlankController extends EventEmitter {
             preferencesController: this.preferencesController,
         });
 
+        this.notificationController = new NotificationController(
+            this.preferencesController,
+            this.transactionWatcherController,
+            this.transactionController,
+            this.accountTrackerController,
+            this.addressBookController
+        );
+
         this.store = new ComposedStore<BlankAppState>({
             NetworkController: this.networkController.store,
             AppStateController: this.appStateController.store,
@@ -484,6 +504,7 @@ export default class BlankController extends EventEmitter {
             TransactionWatcherControllerState:
                 this.transactionWatcherController.store,
             BridgeController: this.bridgeController.store,
+            CampaignsController: this.campaignsController.store,
         });
 
         this.UIStore = new ComposedStore<BlankAppUIState>({
@@ -718,6 +739,8 @@ export default class BlankController extends EventEmitter {
         portId: string
     ): Promise<ResponseType<MessageTypes>> {
         switch (type) {
+            case Messages.ADDRESS.GET_TYPE:
+                return this.getAddressType(request as string);
             case Messages.ACCOUNT.CREATE:
                 return this.accountCreate(request as RequestAccountCreate);
             case Messages.ACCOUNT.EXPORT_JSON:
@@ -829,6 +852,8 @@ export default class BlankController extends EventEmitter {
                 return this.setProviderIcon(request as RequestSetIcon, portId);
             case Messages.EXTERNAL.GET_PROVIDER_CONFIG:
                 return this.getProviderRemoteConfig();
+            case Messages.EXTERNAL.IS_ENROLLED:
+                return this.isEnrolledInCampaign(request as RequestIsEnrolled);
             case Messages.NETWORK.CHANGE:
                 return this.networkChange(request as RequestNetworkChange);
             case Messages.NETWORK.SET_SHOW_TEST_NETWORKS:
@@ -845,6 +870,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.NETWORK.REMOVE_NETWORK:
                 return this.removeNetwork(request as RequestRemoveNetwork);
+            case Messages.NETWORK.SWITCH_PROVIDER:
+                return this.switchProvider(request as RequestSwitchProvider);
             case Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS:
                 return this.getChainData(request as RequestGetChainData);
             case Messages.NETWORK.GET_DEFAULT_RPC:
@@ -1111,6 +1138,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.BROWSER.GET_WINDOW_ID:
                 return getCurrentWindowId();
+            case Messages.WALLET.SET_HOTKEYS_ENABLED:
+                return this.setHotkeysStatus(request as RequestSetHotkeys);
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -2010,6 +2039,26 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * switchProvider
+     *
+     * @param chainId chain identifier of the network
+     * @param providerType provider type {default, backup, custom}
+     * @param customRpcUrl custom rpc url of the network
+     *
+     */
+    private async switchProvider({
+        chainId,
+        providerType,
+        customRpcUrl,
+    }: RequestSwitchProvider): Promise<void> {
+        return this.networkController.switchProvider(
+            chainId,
+            providerType,
+            customRpcUrl
+        );
+    }
+
+    /**
      * getRpcChainId
      *
      * @param rpcUrl rpc url of the network
@@ -2089,6 +2138,10 @@ export default class BlankController extends EventEmitter {
 
     private getProviderRemoteConfig(): RemoteConfigsControllerState['provider'] {
         return this.remoteConfigsController.providerConfig;
+    }
+
+    private async isEnrolledInCampaign(r: RequestIsEnrolled): Promise<boolean> {
+        return this.campaignsController.isEnrolled(r.campaignId);
     }
 
     /**
@@ -2693,7 +2746,7 @@ export default class BlankController extends EventEmitter {
     }: RequestCompleteSetup): Promise<void> {
         if (!this.isSetupComplete) {
             if (sendNotification) {
-                showSetUpCompleteNotification();
+                this.notificationController.showSetUpCompleteNotification();
             }
             this.isSetupComplete = true;
         }
@@ -3366,5 +3419,34 @@ export default class BlankController extends EventEmitter {
         version,
     }: RequestGenerateOnDemandReleaseNotes): Promise<ReleaseNote[]> {
         return generateOnDemandReleaseNotes(version);
+    }
+
+    /**
+     * Get Address type (normal, native, smart contract, erc20)
+     * @param address - hex address
+     * @returns AddressType
+     */
+    private async getAddressType(address: string): Promise<AddressType> {
+        if (isNativeTokenAddress(address)) return AddressType.NULL;
+
+        const isContract = await this.networkController.isAddressContract(
+            address
+        );
+        if (isContract) {
+            const tokenSearch = await this.tokenController.search(address);
+            if (tokenSearch.tokens.length > 0 && tokenSearch.tokens[0].symbol)
+                return AddressType.ERC20;
+            return AddressType.SMART_CONTRACT;
+        }
+
+        return AddressType.NORMAL;
+    }
+
+    /** Set hotkeys enabled/disabled
+     *
+     * @param enabled indicates if the extension can use hotkeys
+     */
+    private setHotkeysStatus({ enabled }: RequestSetHotkeys) {
+        this.preferencesController.hotkeysStatus = enabled;
     }
 }

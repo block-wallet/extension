@@ -53,7 +53,13 @@ const LockTimeout = () => {
                 onSubmit: onSave,
                 isEnabled: selectedTimeout !== currentTimeout,
             }}
-            header={<PopupHeader title="Lock Timeout" />}
+            header={
+                <PopupHeader
+                    title="Lock Timeout"
+                    close="/"
+                    onBack={() => history.push("/settings/preferences")}
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading

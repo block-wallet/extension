@@ -4,7 +4,7 @@ import { IChain } from "@block-wallet/background/utils/types/chain"
 import { FC } from "react"
 import classnames from "classnames"
 
-interface NetworkDropdownDisplay {
+interface NetworkDropdownDisplayProps {
     isLoading: boolean
     isEmpty: boolean
     selectedNetwork?: IChain
@@ -12,7 +12,7 @@ interface NetworkDropdownDisplay {
     emptyText?: string
 }
 
-const NetworkDropdownDisplay: FC<NetworkDropdownDisplay> = ({
+const NetworkDropdownDisplay: FC<NetworkDropdownDisplayProps> = ({
     isLoading,
     isEmpty,
     selectedNetwork,

@@ -1410,6 +1410,24 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     }
 
     /**
+     * Get account name
+     *
+     * @param address account address
+     * @return name of the account
+     */
+    public getAccountName(address: string) {
+        const { accounts } = this.store.getState();
+
+        const accountName = accounts[checksummedAddress(address)]?.name;
+
+        if (!accountName) {
+            throw new Error('Account not found');
+        }
+
+        return accountName;
+    }
+
+    /**
      * BalanceChecker is deployed on main eth (test)nets and requires a single call.
      * For all other networks, call this._updateAccount for each account in state.
      * if @param addresses is present this method will only update those accounts.
@@ -2033,5 +2051,12 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         } catch {
             return undefined;
         }
+    }
+
+    public getAllAccountAddresses(): string[] {
+        const { accounts, hiddenAccounts } = this.store.getState();
+        return Object.keys(accounts || {}).concat(
+            Object.keys(hiddenAccounts || {})
+        );
     }
 }

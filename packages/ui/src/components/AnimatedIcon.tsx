@@ -108,7 +108,7 @@ const AnimatedIcon: FunctionComponent<AnimationProps> = ({
         }
 
         return () => lottieInstance.current && lottieInstance.current.destroy()
-    }, [animationData])
+    }, [animationData, svgClassName])
 
     return (
         <div

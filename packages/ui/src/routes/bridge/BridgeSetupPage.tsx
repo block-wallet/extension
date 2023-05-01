@@ -45,7 +45,6 @@ import {
 } from "@block-wallet/background/controllers/BridgeController"
 import { ApproveOperation } from "../transaction/ApprovePage"
 import { BridgeAllowanceCheck, QuoteFeeStatus } from "../../context/commTypes"
-import { defaultAdvancedSettings } from "../../components/transactions/AdvancedSettings"
 import { BridgeNotFoundQuoteDetails } from "../../components/transactions/BridgeNotFoundQuoteDetails"
 import { formatRounded } from "../../util/formatRounded"
 import FeeDetails from "../../components/FeeDetails"
@@ -457,6 +456,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             {quote && (
                 <BridgeDetails
@@ -477,7 +477,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 >
                     {/* Asset */}
                     <div className="flex flex-col w-1/2 pr-1.5">
-                        <p className="text-sm text-primary-grey-dark pb-2">
+                        <p className="text-[13px] font-medium text-primary-grey-dark pb-2">
                             Bridge Asset
                         </p>
                         <AssetSelection
@@ -535,7 +535,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         <div
                             onClick={focusAmountInput}
                             className={classnames(
-                                "flex flex-col items-stretch rounded-md p-4 h-[4.5rem] hover:bg-primary-grey-hover w-full",
+                                "flex flex-col items-stretch rounded-md p-4 h-[4rem] hover:bg-primary-grey-hover w-full",
                                 inputFocus
                                     ? "bg-primary-grey-hover"
                                     : "bg-primary-grey-default",
@@ -563,7 +563,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             />
                             <p
                                 className={classnames(
-                                    "text-xs text-primary-grey-dark mt-1",
+                                    "text-xs text-primary-grey-dark",
                                     !formattedAmount && "hidden"
                                 )}
                             >
@@ -595,7 +595,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Network selector */}
-                <p className="text-sm text-primary-grey-dark pb-2">
+                <p className="text-[13px] font-medium text-primary-grey-dark pb-2">
                     To Network
                 </p>
                 <NetworkSelector

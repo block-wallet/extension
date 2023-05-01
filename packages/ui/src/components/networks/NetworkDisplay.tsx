@@ -145,7 +145,7 @@ const NetworkDisplay = ({
     return (
         <div
             className={classnames(
-                "rounded-md",
+                "rounded-lg",
                 dropAnimation &&
                     "bg-primary-grey-default transition-colors animate-[pulse_0.8s]",
                 cardHoverStyle && "hover:bg-primary-grey-default"
@@ -226,7 +226,7 @@ const NetworkDisplay = ({
                                 />
                             )}
                         </div>
-                        <span className="text-base font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
+                        <span className="text-sm font-semibold text-ellipsis overflow-hidden whitespace-nowrap">
                             {networkInfo.desc}
                         </span>
                     </div>

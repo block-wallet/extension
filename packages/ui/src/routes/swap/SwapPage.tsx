@@ -21,7 +21,7 @@ import { InferType } from "yup"
 import { SwapConfirmPageLocalState } from "./SwapConfirmPage"
 import { SwapQuote } from "@block-wallet/background/controllers/SwapController"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { classnames, Classes } from "../../styles"
+import { classnames } from "../../styles"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { formatUnits, parseUnits } from "@ethersproject/units"
 import { useBlankState } from "../../context/background/backgroundHooks"
@@ -30,8 +30,6 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { yupResolver } from "@hookform/resolvers/yup"
 import useCountdown from "../../util/hooks/useCountdown"
-import GenericTooltip from "../../components/label/GenericTooltip"
-import { AiFillInfoCircle } from "react-icons/ai"
 import { formatNumberLength } from "../../util/formatNumberLength"
 import RefreshLabel from "../../components/swaps/RefreshLabel"
 import { capitalize } from "../../util/capitalize"
@@ -374,16 +372,18 @@ const SwapPage = () => {
                     close="/"
                     networkIndicator
                     keepState
-                    onBack={() =>
-                        fromAssetPage
-                            ? history.push({
-                                  pathname: "/asset/details",
-                                  state: {
-                                      address: fromToken?.address,
-                                  },
-                              })
-                            : history.push("/home")
-                    }
+                    onBack={() => {
+                        history.push(
+                            fromAssetPage
+                                ? {
+                                      pathname: "/asset/details",
+                                      state: {
+                                          address: fromToken?.address,
+                                      },
+                                  }
+                                : { pathname: "/home" }
+                        )
+                    }}
                 />
             }
             footer={
@@ -396,6 +396,7 @@ const SwapPage = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             {rate && tokenTo && quote ? (
                 <RateUpdateDialog
@@ -415,7 +416,7 @@ const SwapPage = () => {
                 >
                     {/* Asset */}
                     <div className="flex flex-col space w-1/2 pr-1.5">
-                        <p className="mb-2 text-sm text-primary-grey-dark">
+                        <p className="mb-2 text-[13px] font-medium text-primary-grey-dark">
                             Swap From
                         </p>
                         <AssetSelection
@@ -479,7 +480,7 @@ const SwapPage = () => {
                         </div>
                         <div
                             className={classnames(
-                                "flex flex-col items-stretch rounded-md p-4 h-[4.5rem] hover:bg-primary-grey-hover w-full",
+                                "flex flex-col items-stretch rounded-md p-4 h-[4rem] hover:bg-primary-grey-hover w-full",
                                 inputFocus
                                     ? "bg-primary-grey-hover"
                                     : "bg-primary-grey-default",
@@ -507,7 +508,7 @@ const SwapPage = () => {
                             />
                             <p
                                 className={classnames(
-                                    "text-xs text-primary-grey-dark mt-1",
+                                    "text-xs text-primary-grey-dark",
                                     !formattedAmount && "hidden"
                                 )}
                             >
@@ -543,7 +544,9 @@ const SwapPage = () => {
                     </button>
                 </div>
 
-                <p className="text-sm text-primary-grey-dark pb-3">Swap To</p>
+                <p className="text-[13px] font-medium text-primary-grey-dark mb-2">
+                    Swap To
+                </p>
                 <AssetSelection
                     displayIcon
                     selectedAssetList={AssetListType.DEFAULT}

@@ -50,6 +50,7 @@ import {
 import { SwapControllerMemState } from '@block-wallet/background/controllers/SwapController';
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import CACHED_INCOMPATIBLE_SITES from '@block-wallet/remote-configs/provider/incompatible_sites.json';
+import { CampaignsControllerState } from '@block-wallet/background/controllers/CampaignsController';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -70,6 +71,7 @@ export type BlankAppState = {
     TransactionWatcherControllerState: TransactionWatcherControllerState;
     BridgeController: BridgeControllerState;
     RemoteConfigsController: RemoteConfigsControllerState;
+    CampaignsController: CampaignsControllerState;
 };
 
 export type BlankAppUIState = {
@@ -129,6 +131,9 @@ const initialState: BlankAppState = {
         lockedByTimeout: false,
     },
     BlockUpdatesController: { blockData: {} },
+    CampaignsController: {
+        enrollments: {},
+    },
     KeyringController: {
         isUnlocked: false,
         keyringTypes: [],
@@ -166,6 +171,7 @@ const initialState: BlankAppState = {
             account: [],
         },
         defaultGasOption: 'medium',
+        hotkeysEnabled: true,
     },
     TransactionController: {
         transactions: [],
@@ -189,7 +195,12 @@ const initialState: BlankAppState = {
         availableNetworks: INITIAL_NETWORKS,
         isNetworkChanging: false,
         isUserNetworkOnline: true,
-        isProviderNetworkOnline: true,
+        providerStatus: {
+            isCurrentProviderOnline: true,
+            isDefaultProviderOnline: true,
+            isBackupProviderOnline: true,
+            isUsingBackupProvider: false,
+        },
         isEIP1559Compatible: {},
     },
     ExchangeRatesController: {

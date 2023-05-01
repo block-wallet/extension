@@ -479,27 +479,22 @@ const CancelAndSpeedUpComponent = ({
         }
     }
 
-    const notEnoughFunds =
-        type === "speed up" &&
-        currentBalance
-            .sub(BigNumber.from(transaction.transactionParams.value ?? "0"))
-            .sub(
-                calcGasPrice(transactionType, {
-                    gasLimit: oldGasLimit,
-                    gasPrice: oldGasPrice,
-                    maxFeePerGas: oldMaxFeePerGas,
-                })
-            )
-            .lt(
-                calcGasPrice(transactionType, {
-                    gasLimit: parseUnits(newFees.gasLimit || "0", "wei"),
-                    gasPrice: parseUnits(newFees.gasPrice || "0", "gwei"),
-                    maxFeePerGas: parseUnits(
-                        newFees.maxFeePerGas || "0",
-                        "gwei"
-                    ),
-                })
-            )
+    const notEnoughFunds = currentBalance
+        .sub(BigNumber.from(transaction.transactionParams.value ?? "0"))
+        .sub(
+            calcGasPrice(transactionType, {
+                gasLimit: oldGasLimit,
+                gasPrice: oldGasPrice,
+                maxFeePerGas: oldMaxFeePerGas,
+            })
+        )
+        .lt(
+            calcGasPrice(transactionType, {
+                gasLimit: parseUnits(newFees.gasLimit || "0", "wei"),
+                gasPrice: parseUnits(newFees.gasPrice || "0", "gwei"),
+                maxFeePerGas: parseUnits(newFees.maxFeePerGas || "0", "gwei"),
+            })
+        )
 
     useEffect(() => {
         if (!notEnoughFunds && error?.type !== "notEnoughFunds") return

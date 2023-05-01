@@ -142,7 +142,12 @@ const persistedState: DeepPartial<BlankAppState> = {
         selectedNetwork: 'mainnet',
         isNetworkChanging: false,
         isUserNetworkOnline: true,
-        isProviderNetworkOnline: true,
+        providerStatus: {
+            isCurrentProviderOnline: true,
+            isDefaultProviderOnline: true,
+            isBackupProviderOnline: true,
+            isUsingBackupProvider: false,
+        },
         isEIP1559Compatible: {},
     },
     TransactionController: {
@@ -156,6 +161,9 @@ const initialState: newBlankAppState = {
     TransactionWatcherControllerState: {
         transactions: {},
         tokenAllowanceEvents: {},
+    },
+    CampaignsController: {
+        enrollments: {},
     },
     BridgeController: {
         bridgeReceivingTransactions: {},
@@ -205,7 +213,12 @@ const initialState: newBlankAppState = {
         availableNetworks: INITIAL_NETWORKS,
         isNetworkChanging: false,
         isUserNetworkOnline: true,
-        isProviderNetworkOnline: true,
+        providerStatus: {
+            isCurrentProviderOnline: true,
+            isDefaultProviderOnline: true,
+            isBackupProviderOnline: true,
+            isUsingBackupProvider: false,
+        },
         isEIP1559Compatible: {},
     },
     OnboardingController: {
@@ -241,6 +254,7 @@ const initialState: newBlankAppState = {
             account: [],
         },
         defaultGasOption: 'medium',
+        hotkeysEnabled: true,
     },
     TransactionController: {
         transactions: [],
@@ -330,6 +344,9 @@ describe('State reconciler', () => {
             },
             BlockUpdatesController: {
                 blockData: { 5: { blockNumber: -1 } },
+            },
+            CampaignsController: {
+                enrollments: {},
             },
             AddressBookController: {
                 addressBook: {} as AddressBook,
@@ -437,7 +454,12 @@ describe('State reconciler', () => {
                 availableNetworks: INITIAL_NETWORKS,
                 isNetworkChanging: false,
                 isUserNetworkOnline: true,
-                isProviderNetworkOnline: true,
+                providerStatus: {
+                    isCurrentProviderOnline: true,
+                    isDefaultProviderOnline: true,
+                    isBackupProviderOnline: true,
+                    isUsingBackupProvider: false,
+                },
                 isEIP1559Compatible: {},
             },
             PreferencesController: {
@@ -468,6 +490,7 @@ describe('State reconciler', () => {
                     account: [],
                 },
                 defaultGasOption: 'medium',
+                hotkeysEnabled: true,
             },
             TransactionController: {
                 transactions: [],

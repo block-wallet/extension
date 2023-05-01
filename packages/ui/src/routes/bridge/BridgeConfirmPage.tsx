@@ -71,7 +71,7 @@ import {
     GetBridgeQuoteResponse,
     GetBridgeQuoteNotFoundResponse,
 } from "@block-wallet/background/controllers/BridgeController"
-import CollapsableWarning from "../../components/CollapsableWarning"
+import CollapsableMessage from "../../components/CollapsableMessage"
 import { AiOutlineWarning } from "react-icons/ai"
 import BridgeDetails from "../../components/bridge/BridgeDetails"
 import ErrorMessage from "../../components/error/ErrorMessage"
@@ -149,6 +149,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 }))
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [inProgressTransaction?.id])
 
     const { transaction: allowanceTransaction } = useTransactionById(
@@ -177,8 +178,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const { availableNetworks, selectedNetwork, defaultGasOption } =
-        useBlankState()!
+    const { availableNetworks, defaultGasOption } = useBlankState()!
     const { gasPricesLevels } = useGasPriceData()
     const { isEIP1559Compatible } = useSelectedNetwork()
     const selectedAccount = useSelectedAccount()
@@ -273,7 +273,6 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
     const remainingSuffix = Math.ceil(remainingSeconds!)
         ? `${Math.floor(remainingSeconds!)}s`
         : ""
-    const networkLabel = availableNetworks[selectedNetwork.toUpperCase()]
 
     // Balance check
     const feePerGas = isEIP1559Compatible
@@ -312,6 +311,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         } else {
             setError(undefined)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasBalance, quote])
 
     const { hideBridgeInsufficientNativeTokenWarning } = useUserSettings()
@@ -333,7 +333,10 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
         if (checkNativeTokensInDestinationNetwork) {
             checkSelectedAccountHasEnoughNativeTokensToSend()
         }
-    }, [])
+    }, [
+        checkNativeTokensInDestinationNetwork,
+        checkSelectedAccountHasEnoughNativeTokensToSend,
+    ])
 
     const idleScreen =
         !isInProgressAllowanceTransaction && !inProgressTransaction?.id
@@ -542,6 +545,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingAllowanceTransactionDialog
                 status={allowanceTxDialogStatus}
@@ -614,7 +618,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 address={selectedAccount.address}
             />
             {showBridgeWarningMessage && (
-                <CollapsableWarning
+                <CollapsableMessage
                     isCollapsedByDefault={false}
                     collapsedMessage={
                         <div
@@ -673,7 +677,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Gas */}
-                <p className="text-sm text-primary-grey-dark pt-1 pb-2">
+                <p className="text-[13px] font-medium pt-1 pb-2 text-primary-grey-dark">
                     Gas Price
                 </p>
                 {isEIP1559Compatible ? (

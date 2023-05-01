@@ -8,8 +8,7 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 // Assets
 import searchIcon from "../../assets/images/icons/search.svg"
 import { TokenResponse } from "../../routes/settings/AddTokensPage"
-import { useEffect, useState } from "react"
-import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
+import { useCallback, useEffect, useState } from "react"
 import log from "loglevel"
 
 export interface tokenSearchView {
@@ -27,13 +26,12 @@ const SearchedTokenView = ({
     setSubmitEnabled = undefined,
     submitForm = false,
 }: tokenSearchView) => {
-    const { run } = useAsyncInvoke()
     const history = useOnMountHistory()
     const [message, setMessage] = useState<string>("")
     const [selected, setSelected] = useState<TokenResponse[]>([])
 
     // Handlers
-    const onSubmit = async () => {
+    const onSubmit = useCallback(() => {
         try {
             // Valid form data
             if (selected.length > 0) {
@@ -53,7 +51,7 @@ const SearchedTokenView = ({
             // Invalid form data
             log.error(error)
         }
-    }
+    }, [history, searchedValue, selected])
 
     // Functions
     const addToken = (token: TokenResponse) => {
@@ -87,15 +85,15 @@ const SearchedTokenView = ({
 
     useEffect(() => {
         if (submitForm) {
-            run(onSubmit())
+            onSubmit()
         }
-    }, [submitForm])
+    }, [submitForm, onSubmit])
 
     useEffect(() => {
         if (setSubmitEnabled) {
             setSubmitEnabled(selected.length > 0)
         }
-    }, [selected])
+    }, [selected, setSubmitEnabled])
 
     return (
         <div className="h-full">

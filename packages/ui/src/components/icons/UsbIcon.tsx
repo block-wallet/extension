@@ -1,5 +1,3 @@
-import classnames from "classnames"
-
 const UsbIcon: React.FC<{ className?: string }> = ({ className }) => {
     return (
         <svg

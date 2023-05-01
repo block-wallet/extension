@@ -412,6 +412,8 @@ export const useCheckLocationHotkeys = (
             } else {
                 return hotkeyAction.description
             }
+
+            return true
         }
     )
 

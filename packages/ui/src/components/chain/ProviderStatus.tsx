@@ -180,6 +180,7 @@ const ProviderStatus = ({ onHomepage }: { onHomepage?: boolean }) => {
                                     <img
                                         src={switchIcon}
                                         className="w-4 h-4 mr-2 text-white"
+                                        alt="Switch"
                                     />
                                     Switch
                                 </>

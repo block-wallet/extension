@@ -134,6 +134,8 @@ export const DisplayHotkeysByPath: FC<DisplayHotkeysByPathProp> = ({
                     />
                 </React.Fragment>
             )
+
+            return true
         })
 
         hotkeys["CTRL"].map((hotkey, index) => {
@@ -151,6 +153,8 @@ export const DisplayHotkeysByPath: FC<DisplayHotkeysByPathProp> = ({
                     />
                 </React.Fragment>
             )
+
+            return true
         })
 
         return <>{hotkeysElement}</>
@@ -159,4 +163,5 @@ export const DisplayHotkeysByPath: FC<DisplayHotkeysByPathProp> = ({
     return <></>
 }
 
+// eslint-disable-next-line import/no-anonymous-default-export
 export default { DisplayHotkey, DisplayHotkeysByPath }

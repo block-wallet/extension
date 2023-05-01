@@ -1,23 +1,17 @@
 import { FC } from "react"
 import { Currency } from "@block-wallet/background/utils/currency"
-import cash from "../../assets/images/icons/cash.svg"
-import { capitalize } from "../../util/capitalize"
 import { formatName } from "../../util/formatAccount"
+import { capitalize } from "../../util/capitalize"
 
 interface CurrencyDropdownDisplayProps {
     selectedCurrency?: Currency
-    displayIcon?: boolean
 }
 
 const CurrencyDropdownDisplay: FC<CurrencyDropdownDisplayProps> = ({
     selectedCurrency,
-    displayIcon,
 }) => {
     return selectedCurrency ? (
         <div className="flex flex-row flex-grow justify-between items-center">
-            {displayIcon && (
-                <span className="mr-2">{selectedCurrency.code}</span>
-            )}
             <div className="flex flex-grow justify-between space-x-1">
                 <div className="flex flex-col justify-center">
                     <div className="text-base font-semibold">

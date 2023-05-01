@@ -6,7 +6,6 @@ import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
-import CurrencySelection from "../../components/currency/CurrencySelection"
 import { useEffect, useState } from "react"
 import { Currency } from "@block-wallet/background/utils/currency"
 import onramper from "../../assets/images/icons/onramper.svg"
@@ -17,6 +16,7 @@ import {
 import { TokenSelection } from "../../components/token/TokenSelection"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
+import { CurrencySelection } from "../../components/currency/CurrencySelection"
 
 const BuyPage = () => {
     const history = useOnMountHistory()

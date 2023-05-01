@@ -5,17 +5,26 @@ import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 const TokenList: FC<{
     setActive?: () => void
     onTokenClick: (token: Token, setActive?: () => void) => void
-    selectedSymbol?: string
+    selectedAddress?: string
     tokens: Token[]
     searchValue: string | null
-}> = ({ onTokenClick, setActive, selectedSymbol, tokens, searchValue }) => {
+    register: any
+}> = ({
+    onTokenClick,
+    setActive,
+    selectedAddress,
+    tokens,
+    searchValue,
+    register,
+}) => {
     return (
         <div className="pb-6">
             <input
                 readOnly
                 name="token"
+                ref={register ? register.ref : null}
                 className="hidden"
-                value={selectedSymbol}
+                value={selectedAddress}
             />
             {tokens.map((token) => {
                 return (
@@ -25,11 +34,9 @@ const TokenList: FC<{
                         onClick={() => onTokenClick(token, setActive)}
                     >
                         <TokenDisplay
-                            data={{
-                                ...token,
-                            }}
+                            data={token}
                             clickable={false}
-                            active={selectedSymbol === token.symbol}
+                            active={selectedAddress === token.address}
                             hoverable={true}
                         />
                     </div>

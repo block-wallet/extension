@@ -3,9 +3,8 @@ import classnames from "classnames"
 import { useState, FunctionComponent } from "react"
 import { formatName } from "../../util/formatAccount"
 import { Currency } from "@block-wallet/background/utils/currency"
-import { capitalize } from "../../util/capitalize"
 
-type CurrencyDisplayType = {
+type CurrencyDisplayProps = {
     data: Currency
     clickable?: boolean
     active?: boolean | false
@@ -18,12 +17,12 @@ type CurrencyDisplayType = {
  * Can or cannot be clicked to show a selected style.
  * Can show a selected style.
  *
- * @param data - Object containing token to display's informations.
+ * @param data - Object containing currency to display's informations.
  * @param clickable - Determines if you can click element to show selected style.
  * @param active - Determines if the element is already showing selected style.
  * @param hoverable - Determines if the element shows a hover style.
  */
-const CurrencyDisplay: FunctionComponent<CurrencyDisplayType> = ({
+const CurrencyDisplay: FunctionComponent<CurrencyDisplayProps> = ({
     data,
     clickable,
     active,

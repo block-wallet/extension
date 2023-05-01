@@ -1,6 +1,7 @@
 import { FC } from "react"
 import TokenLogo from "../token/TokenLogo"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
+import { formatName } from "../../util/formatAccount"
 
 interface TokenDropdownDisplayProps {
     selectedToken?: Token
@@ -22,9 +23,12 @@ const TokenDropdownDisplay: FC<TokenDropdownDisplayProps> = ({
             )}
             <div className="flex flex-grow justify-between space-x-1">
                 <div className="flex flex-col justify-center">
-                    <span className="text-base font-semibold">
-                        {selectedToken.symbol}
-                    </span>
+                    <div className="text-base font-semibold">
+                        <span className="flex">{selectedToken.symbol}</span>
+                        <span className="font-normal text-xs">
+                            {formatName(selectedToken.name.toUpperCase(), 16)}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>

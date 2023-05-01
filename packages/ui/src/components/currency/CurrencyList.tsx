@@ -5,23 +5,26 @@ import CurrencyDisplay from "./CurrencyDisplay"
 const CurrencyList: FC<{
     setActive?: () => void
     onCurrencyClick: (currency: Currency, setActive?: () => void) => void
-    selectedCurrencyName?: string
+    selectedCurrency?: string
     currencies: Currency[]
     searchValue: string | null
+    register: any
 }> = ({
     onCurrencyClick,
     setActive,
-    selectedCurrencyName,
+    selectedCurrency,
     currencies,
     searchValue,
+    register,
 }) => {
     return (
         <div className="pb-6">
             <input
                 readOnly
-                name="asset"
+                name="currency"
+                ref={register ? register.ref : null}
                 className="hidden"
-                value={selectedCurrencyName}
+                value={selectedCurrency}
             />
             {currencies.map((currency) => {
                 return (
@@ -32,8 +35,8 @@ const CurrencyList: FC<{
                     >
                         <CurrencyDisplay
                             data={currency}
-                            active={selectedCurrencyName === currency.name}
                             clickable={false}
+                            active={selectedCurrency === currency.code}
                             hoverable={true}
                         />
                     </div>

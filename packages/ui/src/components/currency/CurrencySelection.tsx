@@ -1,68 +1,56 @@
-import { Currency } from "@block-wallet/background/utils/currency"
-import {
-    useState,
-    useEffect,
-    FC,
-    Dispatch,
-    SetStateAction,
-    ChangeEvent,
-} from "react"
-import { getValidCurrencies } from "../../context/commActions"
 import DropDownSelector from "../input/DropDownSelector"
-import CurrencyDropdownDisplay from "./CurrencyDropdownDisplay"
 import SearchInput from "../input/SearchInput"
+import {
+    ChangeEvent,
+    Dispatch,
+    FC,
+    SetStateAction,
+    useEffect,
+    useState,
+} from "react"
+import { Currency } from "@block-wallet/background/utils/currency"
 import CurrencyList from "./CurrencyList"
-import Spinner from "../spinner/Spinner"
+import CurrencyDropdownDisplay from "./CurrencyDropdownDisplay"
 
 interface CurrencySelectionProps {
-    onCurrencyChange?: (currency: Currency) => void
+    defaultCurrencyList: Currency[]
+    onCurrencyChange: (currency: Currency) => void
     selectedCurrency?: Currency
-    displayIcon?: boolean
     error?: string
+    register?: any
     topMargin?: number
     bottomMargin?: number
     popupMargin?: number
     dropdownWidth?: string
-    defaultCurrencyList?: Currency[]
+    popUpOpenLeft?: boolean
 }
 
-const CurrencySelection: FC<CurrencySelectionProps> = ({
+export const CurrencySelection: FC<CurrencySelectionProps> = ({
+    defaultCurrencyList,
     onCurrencyChange,
     selectedCurrency,
-    displayIcon,
     error,
     topMargin,
     bottomMargin,
     popupMargin,
     dropdownWidth,
-    defaultCurrencyList,
+    register,
+    popUpOpenLeft,
 }) => {
     const [searchResult, setSearchResult] = useState<Currency[]>([])
-    const [validCurrencies, setValidCurrencies] = useState<Currency[]>([])
     const [search, setSearch] = useState<string | null>(null)
-
-    const onCurrencyClick = async (
-        currency: Currency,
-        setActive?: Dispatch<SetStateAction<boolean>>
-    ) => {
-        onCurrencyChange && onCurrencyChange(currency)
-        setActive && setActive(false)
-    }
-
-    const onSearchInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-        let value: string | null = event.target.value
-
-        value = value.replace(/\W/g, "")
-
-        if (!value) {
-            value = null
-        }
-
-        setSearch(value)
-    }
+    const [currencyList, setCurrencyList] = useState<Currency[]>([])
 
     useEffect(() => {
-        const result = validCurrencies.filter(({ name, code }: Currency) => {
+        if (!currencyList.length) {
+            setCurrencyList(defaultCurrencyList)
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [defaultCurrencyList])
+
+    useEffect(() => {
+        const result = currencyList.filter(({ name, code }: Currency) => {
             if (!search) {
                 return true
             }
@@ -80,76 +68,57 @@ const CurrencySelection: FC<CurrencySelectionProps> = ({
         setSearchResult(result)
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [search, validCurrencies])
+    }, [search, currencyList])
 
-    useEffect(() => {
-        if (defaultCurrencyList && defaultCurrencyList.length > 0) {
-            setValidCurrencies(defaultCurrencyList)
-            return
+    const onSearchInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+        let value: string | null = event.target.value
+
+        value = value.replace(/\W/g, "")
+
+        if (!value) {
+            value = null
         }
 
-        if (validCurrencies.length === 0) {
-            getValidCurrencies().then((currencies) => {
-                setValidCurrencies(currencies)
-            })
-            setValidCurrencies(
-                validCurrencies.sort((c1, c2) => {
-                    const c1Name = c1.code.toLowerCase()
-                    const c2Name = c2.code.toLowerCase()
-                    if (c1Name > c2Name) {
-                        return 1
-                    }
+        setSearch(value)
+    }
 
-                    if (c1Name < c2Name) {
-                        return -1
-                    }
-
-                    return 0
-                })
-            )
-        }
-    }, [defaultCurrencyList])
+    const onCurrencyClick = async (
+        currency: Currency,
+        setActive?: Dispatch<SetStateAction<boolean>>
+    ) => {
+        onCurrencyChange(currency)
+        setActive && setActive(false)
+    }
 
     return (
         <DropDownSelector
             display={
-                <CurrencyDropdownDisplay
-                    selectedCurrency={selectedCurrency}
-                    displayIcon={displayIcon}
-                />
+                <CurrencyDropdownDisplay selectedCurrency={selectedCurrency} />
             }
             error={error}
             topMargin={topMargin || 0}
             bottomMargin={bottomMargin || 0}
             popupMargin={popupMargin || 16}
             customWidth={dropdownWidth}
+            popUpOpenLeft={popUpOpenLeft}
         >
-            {searchResult.length > 0 ? (
-                <>
-                    <div className="w-full p-3">
-                        <SearchInput
-                            name="currencyName"
-                            placeholder="Search currencies by name"
-                            disabled={false}
-                            autoFocus={true}
-                            onChange={onSearchInputChange}
-                            defaultValue={search ?? ""}
-                        />
-                    </div>
-                    <CurrencyList
-                        currencies={searchResult}
-                        onCurrencyClick={onCurrencyClick}
-                        searchValue={search}
-                        selectedCurrencyName={selectedCurrency?.name}
-                    />
-                </>
-            ) : (
-                <div className="flex h-10 justify-center items-center">
-                    <Spinner color={"black"} size={"24"} />
-                </div>
-            )}
+            <div className="w-full p-3">
+                <SearchInput
+                    name="currencyName"
+                    placeholder="Search currency by name"
+                    disabled={false}
+                    autoFocus={true}
+                    onChange={onSearchInputChange}
+                    defaultValue={search ?? ""}
+                />
+            </div>
+            <CurrencyList
+                currencies={searchResult}
+                onCurrencyClick={onCurrencyClick}
+                register={register}
+                searchValue={search}
+                selectedCurrency={selectedCurrency?.code}
+            />
         </DropDownSelector>
     )
 }
-
-export default CurrencySelection

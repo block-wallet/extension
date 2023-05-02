@@ -91,7 +91,13 @@ const BuyPage = () => {
                     />
                 </PopupFooter>
             }
-            submitOnEnter={{ onSubmit: onContinue }}
+            submitOnEnter={{
+                onSubmit: onContinue,
+                isEnabled:
+                    acceptedTerms &&
+                    selectedToken !== undefined &&
+                    selectedCurrency !== undefined,
+            }}
         >
             <div className="flex flex-col p-6 h-full w-full">
                 <div className={classnames("flex flex-row")}>

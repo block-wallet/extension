@@ -47,7 +47,8 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
             )
             if (newTab) onTabChange(newTab)
         }
-    }, [popupTab, tab.label])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [popupTab])
 
     //Adding useHotkey to add new token, only on Assets View
     const activityAssetsViewHotkeys = componentsHotkeys.ActivityAssetsView

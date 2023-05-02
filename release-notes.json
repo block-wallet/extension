@@ -704,6 +704,41 @@
                 }
             ],
             "version": "0.7.3"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Enabled swaps on zkSync"
+                        },
+                        {
+                            "type": "success",
+                            "message": "Introduced support for new token logos"
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Improved connectivity with DApps on zkSync."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed NFT approval process."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Improved balance validation when canceling transactions."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.7.4"
         }
     ]
 }

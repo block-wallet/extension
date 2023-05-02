@@ -166,9 +166,10 @@ const BuyPage = () => {
                         BlockWallet does not access or hold your KYC data at any
                         moment. Have questions?{" "}
                         <a
-                            href=""
+                            href="https://help.blockwallet.io/hc/en-us/articles/14999893544337"
                             target="_blank"
                             className="text-primary-blue-default hover:underline"
+                            rel="noreferrer"
                         >
                             Learn More
                         </a>

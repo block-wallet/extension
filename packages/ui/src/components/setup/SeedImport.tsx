@@ -215,7 +215,7 @@ const SeedImport: FunctionComponent<{
                                 return (
                                     <PasswordInput
                                         key={`word_${i}`}
-                                        placeholder={`Enter word #${wordnN}`}
+                                        placeholder={`Word #${wordnN}`}
                                         name={`word_${i}`}
                                         //register={register}
                                         value={seedPhrase[i]}

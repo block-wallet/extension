@@ -112,9 +112,9 @@ const DAppConnection = () => {
                 className={classnames(
                     "relative flex flex-row items-center py-1  text-primary-grey-dark rounded-md group border-primary-200  text-xs cursor-pointer",
                     dAppConnected === "connected" &&
-                        "bg-green-100 hover:border-green-300",
+                        "pl-2 pr-1 bg-green-100 hover:border-green-300",
                     dAppConnected === "connected-warning" &&
-                        "bg-yellow-100 hover:border-yellow-300",
+                        "pl-2 pr-1 bg-yellow-100 hover:border-yellow-300",
                     dAppConnected === "not-connected" && "pointer-events-none"
                 )}
             >

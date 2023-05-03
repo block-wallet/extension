@@ -4,7 +4,6 @@ import Confetti from "react-dom-confetti"
 import { IoLogoTwitter } from "react-icons/io"
 import { FaGithub, FaTelegramPlane } from "react-icons/fa"
 
-import LogoHeader from "../../components/LogoHeader"
 import PageLayout from "../../components/PageLayout"
 import Divider from "../../components/Divider"
 

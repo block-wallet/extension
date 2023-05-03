@@ -1,7 +1,6 @@
 import { FunctionComponent } from "react"
 
 import classnames from "classnames"
-import LogoHeader from "./LogoHeader"
 
 const FullCenterContainer: FunctionComponent<{
     centered?: boolean

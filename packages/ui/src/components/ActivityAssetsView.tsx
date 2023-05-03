@@ -47,7 +47,7 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
             )
             if (newTab) onTabChange(newTab)
         }
-    }, [popupTab])
+    }, [popupTab, tab.label])
 
     //Adding useHotkey to add new token, only on Assets View
     const activityAssetsViewHotkeys = componentsHotkeys.ActivityAssetsView

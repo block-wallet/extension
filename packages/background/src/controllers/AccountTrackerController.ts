@@ -1415,14 +1415,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      * @param address account address
      * @return name of the account
      */
-    public getAccountName(address: string) {
+    public getAccountName(address: string): string | undefined {
         const { accounts } = this.store.getState();
 
         const accountName = accounts[checksummedAddress(address)]?.name;
-
-        if (!accountName) {
-            throw new Error('Account not found');
-        }
 
         return accountName;
     }

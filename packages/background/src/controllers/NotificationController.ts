@@ -9,6 +9,7 @@ import {
 import TransactionController from './transactions/TransactionController';
 import { AccountTrackerController } from './AccountTrackerController';
 import { AddressBookController } from './AddressBookController';
+import { EnsController } from './EnsController';
 
 import { ChainListItem, getChainListItem } from '../utils/chainlist';
 import {
@@ -33,7 +34,8 @@ export class NotificationController {
         private readonly _transactionWatcherController: TransactionWatcherController,
         private readonly _transactionController: TransactionController,
         private readonly _accountTrackerController: AccountTrackerController,
-        private readonly _addressBookController: AddressBookController
+        private readonly _addressBookController: AddressBookController,
+        private readonly _ensController: EnsController
     ) {
         // Subscribe to Incoming transactions
         this._transactionWatcherController.on(
@@ -108,6 +110,8 @@ export class NotificationController {
 
         const accountName =
             this._accountTrackerController.getAccountName(accountAddress);
+
+        if (!accountName) return;
 
         const accountInfo = `${formatName(
             accountName
@@ -283,36 +287,31 @@ export class NotificationController {
                 break;
             }
             case TransactionCategories.SENT_ETHER: {
-                const contactName =
-                    await this._addressBookController.getFormattedContactName(
-                        txParams.to
-                    );
+                const recipientName = await this._getAddressName(txParams.to);
+
                 title = `Transaction`;
                 message = `${txNetworkNativeToken.symbol} transfer${
-                    contactName ? ` to ${contactName}` : ''
+                    recipientName ? ` to ${recipientName}` : ''
                 } on ${txNetworkName}`;
                 break;
             }
             case TransactionCategories.TOKEN_METHOD_TRANSFER: {
-                const contactName =
-                    await this._addressBookController.getFormattedContactName(
-                        transferType?.to
-                    );
+                const recipientName = await this._getAddressName(
+                    transferType?.to
+                );
                 if (!transferType) {
                     showDefaultNotification = true;
                     break;
                 }
                 title = `Transaction`;
                 message = `${transferType.currency} transfer${
-                    contactName ? ` to ${contactName}` : ''
+                    recipientName ? ` to ${recipientName}` : ''
                 } on ${txNetworkName}`;
                 break;
             }
             case TransactionCategories.INCOMING: {
-                const contactName =
-                    await this._addressBookController.getFormattedContactName(
-                        txParams.from
-                    );
+                const senderName = await this._getAddressName(txParams.from);
+
                 if (!txParams || !txParams.value) {
                     showDefaultNotification = true;
                     break;
@@ -323,15 +322,12 @@ export class NotificationController {
                     txNetworkNativeToken.decimals,
                     txNetworkNativeToken.symbol
                 )}${
-                    contactName ? ` from ${contactName}` : ''
+                    senderName ? ` from ${senderName}` : ''
                 } on ${txNetworkName}.`;
                 break;
             }
             case TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER: {
-                const contactName =
-                    await this._addressBookController.getFormattedContactName(
-                        txParams.from
-                    );
+                const senderName = await this._getAddressName(txParams.from);
                 if (!transferType) {
                     showDefaultNotification = true;
                     break;
@@ -343,7 +339,7 @@ export class NotificationController {
                     transferType.decimals,
                     transferType.currency
                 )}${
-                    contactName ? ` from ${contactName}` : ''
+                    senderName ? ` from ${senderName}` : ''
                 } on ${txNetworkName}.`;
                 break;
             }
@@ -414,5 +410,35 @@ export class NotificationController {
             message,
             url,
         };
+    }
+
+    /**
+     * Returns the name of the address if it is an account or in address book or an ENS name
+     * @param address - Hex address of the account
+     * @returns - Name of the address
+     *
+     */
+    private async _getAddressName(address?: string) {
+        if (!address) return undefined;
+
+        let name: string | undefined | null;
+
+        name = this._accountTrackerController.getAccountName(address);
+
+        if (!name) {
+            name = await this._addressBookController.getFormattedContactName(
+                address
+            );
+        }
+
+        if (!name) {
+            name = await this._ensController
+                .lookupAddress(address)
+                .catch(() => {
+                    return undefined;
+                });
+        }
+
+        return name;
     }
 }

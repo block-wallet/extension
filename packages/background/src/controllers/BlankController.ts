@@ -481,7 +481,8 @@ export default class BlankController extends EventEmitter {
             this.transactionWatcherController,
             this.transactionController,
             this.accountTrackerController,
-            this.addressBookController
+            this.addressBookController,
+            this.ensController
         );
 
         this.store = new ComposedStore<BlankAppState>({

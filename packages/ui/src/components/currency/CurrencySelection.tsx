@@ -14,7 +14,7 @@ import CurrencyDropdownDisplay from "./CurrencyDropdownDisplay"
 
 interface CurrencySelectionProps {
     defaultCurrencyList: Currency[]
-    onCurrencyChange: (currency: Currency) => void
+    onCurrencyChange: Dispatch<SetStateAction<Currency | undefined>>
     selectedCurrency?: Currency
     error?: string
     register?: any
@@ -23,6 +23,7 @@ interface CurrencySelectionProps {
     popupMargin?: number
     dropdownWidth?: string
     popUpOpenLeft?: boolean
+    showFullName?: boolean
 }
 
 export const CurrencySelection: FC<CurrencySelectionProps> = ({
@@ -36,6 +37,7 @@ export const CurrencySelection: FC<CurrencySelectionProps> = ({
     dropdownWidth,
     register,
     popUpOpenLeft,
+    showFullName,
 }) => {
     const [searchResult, setSearchResult] = useState<Currency[]>([])
     const [search, setSearch] = useState<string | null>(null)
@@ -97,6 +99,7 @@ export const CurrencySelection: FC<CurrencySelectionProps> = ({
                     selectedCurrency={selectedCurrency}
                     isLoading={!currencyList || currencyList.length === 0}
                     loadingText="Loading currencies..."
+                    showFullName={showFullName}
                 />
             }
             error={error}

@@ -57,7 +57,7 @@ export const TokenSelection: FC<TokenSelectionProps> = ({
             return (
                 token.name.toLowerCase().includes(searchedValue) ||
                 token.symbol.toLowerCase().includes(searchedValue) ||
-                token.address.toLowerCase() === searchedValue
+                token.address?.toLowerCase() === searchedValue
             )
         })
     }

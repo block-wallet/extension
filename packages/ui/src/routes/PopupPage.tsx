@@ -156,8 +156,14 @@ const PopupPage = () => {
     const state = useBlankState()!
     const history = useHistory()
     const netWorth = useNetWorthBalance()
-    const { isSendEnabled, isSwapEnabled, isBridgeEnabled, showGasLevels } =
-        useSelectedNetwork()
+    const {
+        isSendEnabled,
+        isSwapEnabled,
+        isBridgeEnabled,
+        showGasLevels,
+        isOnrampEnabled,
+    } = useSelectedNetwork()
+
     const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
 
@@ -373,42 +379,44 @@ const PopupPage = () => {
                                     Send
                                 </span>
                             </Link>
-                            <Link
-                                to="/buy"
-                                draggable={false}
-                                className={classnames(
-                                    "flex flex-col items-center space-y-2 group",
-                                    disabledActions && "pointer-events-none"
-                                )}
-                            >
-                                <div
+                            {isOnrampEnabled && (
+                                <Link
+                                    to="/buy"
+                                    draggable={false}
                                     className={classnames(
-                                        "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        disabledActions
-                                            ? "bg-gray-300"
-                                            : "bg-primary-blue-default"
+                                        "flex flex-col items-center space-y-2 group",
+                                        disabledActions && "pointer-events-none"
                                     )}
                                 >
-                                    {isLoading ? (
-                                        <div className="flex flex-row items-center justify-center w-full h-full">
+                                    <div
+                                        className={classnames(
+                                            "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
+                                            disabledActions
+                                                ? "bg-gray-300"
+                                                : "bg-primary-blue-default"
+                                        )}
+                                    >
+                                        {isLoading ? (
+                                            <div className="flex flex-row items-center justify-center w-full h-full">
+                                                <AnimatedIcon
+                                                    icon={
+                                                        AnimatedIconName.BlueCircleLoadingSkeleton
+                                                    }
+                                                    className="w-4 h-4 pointer-events-none"
+                                                />
+                                            </div>
+                                        ) : (
                                             <AnimatedIcon
-                                                icon={
-                                                    AnimatedIconName.BlueCircleLoadingSkeleton
-                                                }
-                                                className="w-4 h-4 pointer-events-none"
+                                                icon={AnimatedIconName.Wallet}
+                                                className="cursor-pointer"
                                             />
-                                        </div>
-                                    ) : (
-                                        <AnimatedIcon
-                                            icon={AnimatedIconName.Wallet}
-                                            className="cursor-pointer"
-                                        />
-                                    )}
-                                </div>
-                                <span className="text-[13px] font-medium">
-                                    Buy
-                                </span>
-                            </Link>
+                                        )}
+                                    </div>
+                                    <span className="text-[13px] font-medium">
+                                        Buy
+                                    </span>
+                                </Link>
+                            )}
                             {isSwapEnabled && (
                                 <Link
                                     to="/swap"

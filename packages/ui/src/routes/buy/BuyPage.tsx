@@ -9,40 +9,50 @@ import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { useEffect, useState } from "react"
 import { Currency } from "@block-wallet/background/utils/currency"
 import onramper from "../../assets/images/icons/onramper.svg"
-import {
-    ONRAMPER_API_KEY,
-    getOnRamperCurrenciesByNetwork,
-} from "../../util/onRamperUtils"
 import { TokenSelection } from "../../components/token/TokenSelection"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { CurrencySelection } from "../../components/currency/CurrencySelection"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import { getOnrampCurrencies } from "../../context/commActions"
+import { ONRAMPER_API_KEY } from "../../util/onrampUtils"
 
 const BuyPage = () => {
     const history = useOnMountHistory()
-    const [selectedCurrency, setSelectedCurrency] = useState<Currency>()
     const [selectedToken, setSelectedToken] = useState<Token>()
     const [acceptedTerms, setAcceptedTerms] = useState(false)
-    const network = useSelectedNetwork()
     const currenctAccountInfo = useSelectedAccount()
-    const networkName =
-        network.name.toLowerCase() === "mainnet"
-            ? "ethereum"
-            : network.name.toLowerCase()
-
+    const { nativeCurrency, networkNativeCurrency } = useBlankState()!
+    const [selectedCurrency, setSelectedCurrency] = useState<Currency>()
     const [currencyList, setCurrencyList] = useState<Currency[]>([])
     const [tokenList, setTokenList] = useState<Token[]>([])
 
     useEffect(() => {
-        const getOnramperCurrencies = async () => {
-            const response = await getOnRamperCurrenciesByNetwork(networkName)
+        const setOnrampCurrencies = async () => {
+            const response = await getOnrampCurrencies()
+            console.log(response)
             setTokenList(response.crypto)
             setCurrencyList(response.fiat)
         }
 
-        getOnramperCurrencies()
+        setOnrampCurrencies()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    useEffect(() => {
+        setSelectedCurrency(
+            currencyList.find(
+                (currency) =>
+                    currency.code.toLowerCase() === nativeCurrency.toLowerCase()
+            )
+        )
+        setSelectedToken(
+            tokenList.find(
+                (token) =>
+                    token.symbol.toLowerCase() ===
+                    networkNativeCurrency.symbol.toLowerCase()
+            )
+        )
+    }, [tokenList, currencyList, nativeCurrency, networkNativeCurrency.symbol])
 
     const onContinue = async () => {
         const defaultCrypto = selectedToken ? selectedToken.type : ""
@@ -106,9 +116,7 @@ const BuyPage = () => {
                             Spend
                         </p>
                         <CurrencySelection
-                            onCurrencyChange={(currency) => {
-                                setSelectedCurrency(currency)
-                            }}
+                            onCurrencyChange={setSelectedCurrency}
                             topMargin={100}
                             bottomMargin={60}
                             dropdownWidth="w-[309px]"
@@ -177,11 +185,18 @@ const BuyPage = () => {
                 </div>
                 <div className="flex self-center mt-5">
                     Powered by{" "}
-                    <img
-                        src={onramper}
-                        className="ml-1.5"
-                        alt="Power by Onramper"
-                    />
+                    <a
+                        href="https://www.onramper.com/"
+                        className="text-primary-blue-default hover:underline"
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        <img
+                            src={onramper}
+                            className="ml-1.5 mt-1"
+                            alt="Power by Onramper"
+                        />
+                    </a>
                 </div>
             </div>
         </PopupLayout>

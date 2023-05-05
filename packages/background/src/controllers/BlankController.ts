@@ -239,6 +239,7 @@ import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
 import CampaignsController from './CampaignsController';
 import { NotificationController } from './NotificationController';
+import OnrampController from './OnrampController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -281,6 +282,7 @@ export default class BlankController extends EventEmitter {
     private readonly remoteConfigsController: RemoteConfigsController;
     private readonly campaignsController: CampaignsController;
     private readonly notificationController: NotificationController;
+    private readonly onrampController: OnrampController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -476,6 +478,8 @@ export default class BlankController extends EventEmitter {
             preferencesController: this.preferencesController,
         });
 
+        this.onrampController = new OnrampController(this.networkController);
+
         this.notificationController = new NotificationController(
             this.preferencesController,
             this.transactionWatcherController,
@@ -525,6 +529,7 @@ export default class BlankController extends EventEmitter {
             BlankProviderController: this.blankProviderController.store,
             SwapController: this.swapController.UIStore,
             BridgeController: this.bridgeController.UIStore,
+            OnrampController: this.onrampController.UIStore,
         });
 
         // Check controllers on app lock/unlock
@@ -1140,6 +1145,8 @@ export default class BlankController extends EventEmitter {
                 return getCurrentWindowId();
             case Messages.WALLET.SET_HOTKEYS_ENABLED:
                 return this.setHotkeysStatus(request as RequestSetHotkeys);
+            case Messages.WALLET.GET_ONRAMP_CURRENCIES:
+                return this.getOnrampCurrencies();
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -3448,5 +3455,12 @@ export default class BlankController extends EventEmitter {
      */
     private setHotkeysStatus({ enabled }: RequestSetHotkeys) {
         this.preferencesController.hotkeysStatus = enabled;
+    }
+
+    /** Get onramp currencies
+     *
+     */
+    private getOnrampCurrencies() {
+        return this.onrampController.getCurrencies();
     }
 }

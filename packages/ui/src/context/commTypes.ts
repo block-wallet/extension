@@ -179,6 +179,9 @@ enum WALLET {
 
     // hotkeys
     SET_HOTKEYS_ENABLED = "SET_HOTKEYS_ENABLED",
+
+    //onramp
+    GET_ONRAMP_CURRENCIES = "GET_ONRAMP_CURRENCIES",
 }
 
 enum ADDRESS_BOOK {

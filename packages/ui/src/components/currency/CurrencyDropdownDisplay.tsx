@@ -9,12 +9,14 @@ interface CurrencyDropdownDisplayProps {
     selectedCurrency?: Currency
     isLoading?: boolean
     loadingText?: string
+    showFullName?: boolean
 }
 
 const CurrencyDropdownDisplay: FC<CurrencyDropdownDisplayProps> = ({
     selectedCurrency,
     loadingText = "",
     isLoading,
+    showFullName = false,
 }) => {
     if (isLoading) {
         return (
@@ -40,10 +42,12 @@ const CurrencyDropdownDisplay: FC<CurrencyDropdownDisplayProps> = ({
                         </span>
                         {selectedCurrency.name && (
                             <span className="font-normal text-xs">
-                                {formatName(
-                                    capitalize(selectedCurrency.name),
-                                    16
-                                )}
+                                {showFullName
+                                    ? capitalize(selectedCurrency.name)
+                                    : formatName(
+                                          capitalize(selectedCurrency.name),
+                                          16
+                                      )}
                             </span>
                         )}
                     </div>

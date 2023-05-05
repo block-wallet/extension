@@ -1,4 +1,4 @@
-const UsbIcon: React.FC<{ className?: string }> = ({ className }) => {
+const UsbIcon = () => {
     return (
         <svg
             width="16"

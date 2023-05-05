@@ -120,7 +120,7 @@ export const DisplayHotkeysByPath: FC<DisplayHotkeysByPathProp> = ({
 
         hotkeys["CTRLALT"].map((hotkey, index) => {
             if (index > 0 && !showDivider) showDivider = true
-            hotkeysElement.push(
+            return hotkeysElement.push(
                 <React.Fragment key={index}>
                     {includeDivider && showDivider && (
                         <Divider className="my-4 border-gray-300" />
@@ -140,7 +140,7 @@ export const DisplayHotkeysByPath: FC<DisplayHotkeysByPathProp> = ({
 
         hotkeys["CTRL"].map((hotkey, index) => {
             if (index > 0 && !showDivider) showDivider = true
-            hotkeysElement.push(
+            return hotkeysElement.push(
                 <React.Fragment key={index}>
                     {includeDivider && showDivider && (
                         <Divider className="my-4 border-gray-300" />
@@ -163,5 +163,6 @@ export const DisplayHotkeysByPath: FC<DisplayHotkeysByPathProp> = ({
     return <></>
 }
 
-// eslint-disable-next-line import/no-anonymous-default-export
-export default { DisplayHotkey, DisplayHotkeysByPath }
+const DisplayHotkeys = { DisplayHotkey, DisplayHotkeysByPath }
+
+export default DisplayHotkeys

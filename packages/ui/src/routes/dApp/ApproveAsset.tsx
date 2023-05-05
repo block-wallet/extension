@@ -270,7 +270,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         setAllowance(
             formatRoundedUp(formatUnits(defaultAllowance, tokenDecimals))
         )
-    }, [defaultAllowance])
+    }, [defaultAllowance, tokenDecimals])
 
     useEffect(() => {
         setIsManuallyRejected(false)

@@ -20,8 +20,7 @@ const NetworkDisplayBadge = ({
     return (
         <div
             className={classnames(
-                "flex flex-row items-center py-1.5 px-1.5 text-primary-grey-dark rounded group bg-primary-grey-default hover:bg-primary-grey-hover border-primary-200 text-xs",
-                "w-auto",
+                "flex flex-row items-center h-6 w-6 self-center justify-center text-primary-grey-dark rounded group bg-primary-grey-default hover:bg-primary-grey-hover border-primary-200 text-xs",
                 className
             )}
         >

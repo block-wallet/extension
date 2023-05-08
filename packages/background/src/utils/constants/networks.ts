@@ -655,7 +655,7 @@ export const INITIAL_NETWORKS: Networks = {
         showGasLevels: true,
         currentRpcUrl: `https://matic-mumbai.chainstacklabs.com`,
         blockExplorerUrls: ['https://mumbai.polygonscan.com'],
-        blockExplorerName: 'Etherscan',
+        blockExplorerName: 'Polygonscan',
         etherscanApiUrl: 'https://mumbai.polygonscan.com',
         actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {

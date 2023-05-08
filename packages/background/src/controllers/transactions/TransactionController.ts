@@ -69,7 +69,7 @@ import { NFTContract } from '../erc-721/NFTContract';
 import httpClient from '../../utils/http';
 import { fetchBlockWithRetries } from '../../utils/blockFetch';
 import { unixTimestampToJSTimestamp } from '../../utils/timestamp';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isNil } from 'lodash';
 import { isUnlimitedAllowance } from '../../utils/token';
 import { fetchContractDetails } from '../../utils/contractsInfo';
 import KeyringControllerDerivated, {
@@ -701,19 +701,19 @@ export class TransactionController extends BaseController<
                     _value
                 );
 
-                if (tokenURI) {
-                    //TODO remove advanced data (check where it use and run proper migrations)
-                    advancedData = {
-                        tokenId: _value,
-                    };
-                    approveAllowanceParams.tokenId = _value;
-                    approveAllowanceParams.token = {
-                        ...approveAllowanceParams.token,
-                        type: 'ERC721',
-                    };
-                } else {
-                    throw new Error('Failed fetching token data');
+                if (isNil(tokenURI)) {
+                    throw new Error('Unable to get token URI from contract.');
                 }
+
+                //TODO remove advanced data (check where it use and run proper migrations)
+                advancedData = {
+                    tokenId: _value,
+                };
+                approveAllowanceParams.tokenId = _value;
+                approveAllowanceParams.token = {
+                    ...approveAllowanceParams.token,
+                    type: 'ERC721',
+                };
             } else {
                 advancedData = {
                     decimals: token.decimals,

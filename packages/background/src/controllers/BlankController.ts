@@ -926,6 +926,8 @@ export default class BlankController extends EventEmitter {
                 return this.udResolve(request as RequestUDResolve);
             case Messages.TRANSACTION.GET_LATEST_GAS_PRICE:
                 return this.getLatestGasPrice();
+            case Messages.TRANSACTION.UPDATE_GAS_PRICE:
+                return this.updateGasPrices();
             case Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE:
                 return this.fetchLatestGasPriceForChain(request as number);
             case Messages.TRANSACTION.SEND_ETHER:
@@ -2350,6 +2352,14 @@ export default class BlankController extends EventEmitter {
      */
     private async getLatestGasPrice(): Promise<BigNumber> {
         return BigNumber.from(this.gasPricesController.getFeeData().gasPrice!);
+    }
+
+    /**
+     * Updates the gas price levels
+     */
+    private async updateGasPrices() {
+        const currentBlockNumber = this.blockUpdatesController.getBlockNumber();
+        this.gasPricesController.updateGasPrices(currentBlockNumber);
     }
 
     /**

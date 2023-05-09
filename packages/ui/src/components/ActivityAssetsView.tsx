@@ -47,7 +47,6 @@ const ActivityAssetsView: FunctionComponent<{ initialTab: PopupTabs }> = ({
             )
             if (newTab) onTabChange(newTab)
         }
-        
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [popupTab])
 

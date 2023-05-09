@@ -120,8 +120,10 @@ const BuyPage = () => {
                             topMargin={100}
                             bottomMargin={60}
                             dropdownWidth="w-[309px]"
+                            dropdownHeight="h-12"
                             selectedCurrency={selectedCurrency}
                             defaultCurrencyList={currencyList}
+                            loadingText="Loading"
                         />
                     </div>
                     <div className="flex flex-col w-1/2 pl-1.5">
@@ -135,9 +137,12 @@ const BuyPage = () => {
                             topMargin={100}
                             bottomMargin={60}
                             dropdownWidth="w-[309px]"
+                            dropdownHeight="h-12"
                             selectedToken={selectedToken}
                             popUpOpenLeft={true}
                             defaultTokenList={tokenList}
+                            displayIcon={true}
+                            loadingText="Loading"
                         />
                     </div>
                 </div>
@@ -151,6 +156,7 @@ const BuyPage = () => {
                     <AccountDisplay
                         account={currenctAccountInfo}
                         className="bg-primary-grey-default hover hover:bg-primary-grey-hover h-20 mt-1.5 cursor-default"
+                        showAddress={true}
                     />
                 </div>
                 <div className="mt-6 flex flex-row items-center">
@@ -158,7 +164,7 @@ const BuyPage = () => {
                         type="checkbox"
                         checked={acceptedTerms}
                         className={
-                            "cursor-pointer w-4 h-4 border-1 border-primary-grey-hover rounded-md focus:ring-0"
+                            "cursor-pointer w-4 h-4 border-1 border-primary-grey-hover rounded-md focus:ring-0 self-baseline"
                         }
                         onChange={() => {
                             setAcceptedTerms(!acceptedTerms)
@@ -183,7 +189,7 @@ const BuyPage = () => {
                         </a>
                     </label>
                 </div>
-                <div className="flex self-center mt-5">
+                <div className="flex self-center mt-11">
                     Powered by{" "}
                     <a
                         href="https://www.onramper.com/"

@@ -42,6 +42,7 @@ const CurrencyDisplay: FunctionComponent<CurrencyDisplayProps> = ({
             onClick={() => (clickable ? setSelected(!selected) : null)}
         >
             <div className="flex flex-col ml-4 truncate">
+                {data.symbol ?? <label>{data.symbol}</label>}
                 <span
                     className={
                         "text-sm text-primary-black-default font-semibold"

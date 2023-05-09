@@ -29,6 +29,8 @@ const AssetDropdownDisplay: FC<AssetDropdownDisplayProps> = ({
                     logo={selectedAsset.token.logo}
                     name={selectedAsset.token.name}
                     className="mr-2"
+                    filled={false}
+                    logoSize="small"
                 />
             )}
             <div className="flex flex-grow justify-between space-x-1">

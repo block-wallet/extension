@@ -23,7 +23,9 @@ interface TokenSelectionProps {
     bottomMargin?: number
     popupMargin?: number
     dropdownWidth?: string
+    dropdownHeight?: string
     popUpOpenLeft?: boolean
+    loadingText?: string
 }
 const SEARCH_LIMIT = 20
 
@@ -37,8 +39,10 @@ export const TokenSelection: FC<TokenSelectionProps> = ({
     bottomMargin,
     popupMargin,
     dropdownWidth,
+    dropdownHeight,
     register,
     popUpOpenLeft,
+    loadingText,
 }) => {
     const [searchResult, setSearchResult] = useState<Token[]>([])
     const [search, setSearch] = useState<string | null>(null)
@@ -122,7 +126,7 @@ export const TokenSelection: FC<TokenSelectionProps> = ({
                     selectedToken={selectedToken}
                     displayIcon={displayIcon}
                     isLoading={!tokenList || tokenList.length === 0}
-                    loadingText="Loading tokens..."
+                    loadingText={loadingText}
                 />
             }
             error={error}
@@ -132,6 +136,7 @@ export const TokenSelection: FC<TokenSelectionProps> = ({
             customWidth={dropdownWidth}
             popUpOpenLeft={popUpOpenLeft}
             disabled={!tokenList || tokenList.length === 0}
+            customHeight={dropdownHeight}
         >
             <div className="w-full p-3">
                 <SearchInput

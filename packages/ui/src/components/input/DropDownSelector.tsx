@@ -15,6 +15,7 @@ type DropDownSelectorProps = {
     customWidth?: string
     className?: string
     popUpOpenLeft?: boolean
+    customHeight?: string
 }
 
 /**
@@ -29,6 +30,7 @@ type DropDownSelectorProps = {
  * @param error - If needed, the error to display.
  * @param disabled - Shows popup on click or not.
  * @param customWidth - Custom dropdown width
+ * @param customHeight - Custom dropdown height
  * @param popUpOpenLeft - If true, will open the popUp to left.
  */
 const DropDownSelector: FC<DropDownSelectorProps> = ({
@@ -41,6 +43,7 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
     disabled,
     children,
     customWidth,
+    customHeight,
     popUpOpenLeft,
 }) => {
     // State
@@ -102,7 +105,7 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
             <div
                 className={classNames(
                     Classes.greySection,
-                    "h-[4rem]",
+                    customHeight ?? "h-[4rem]",
                     "space-x-1",
                     active && Classes.blueSectionActive,
                     disabled && Classes.greySelectionDisabled,

@@ -8,7 +8,6 @@ import { ImSpinner } from "react-icons/im"
 import { BigNumber } from "@ethersproject/bignumber"
 import classNames from "classnames"
 import { Classes, classnames } from "../../styles"
-import { AssetIcon } from "./../AssetsList"
 import Tooltip from "../../components/label/Tooltip"
 import eth from "../../assets/images/icons/ETH.svg"
 import blankLogo from "../../assets/images/logo.svg"
@@ -44,6 +43,7 @@ import {
 } from "../../util/bridgeUtils"
 import TransactionDetails from "./TransactionDetails"
 import { formatUnits } from "ethers/lib/utils"
+import TokenLogo from "../token/TokenLogo"
 
 const TRANSACTION_STATIC_MESSAGES = {
     [TransactionCategories.BLANK_DEPOSIT]: "Privacy Pool Deposit",
@@ -212,11 +212,11 @@ const TransactionIcon: React.FC<{
     <div className="align-start">
         {transactionStatus !== TransactionStatus.SUBMITTED ? (
             transactionIcon ? (
-                <AssetIcon
-                    asset={{
-                        logo: transactionIcon,
-                        symbol: "",
-                    }}
+                <TokenLogo
+                    name={""}
+                    logo={transactionIcon}
+                    filled={true}
+                    logoSize="big"
                 />
             ) : category ? (
                 <div className={Classes.roundedIcon}>

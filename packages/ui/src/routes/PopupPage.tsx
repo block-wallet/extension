@@ -175,6 +175,7 @@ const PopupPage = () => {
         "/home/alt/w": isSwapEnabled, //Swap
         "/home/alt/b": isBridgeEnabled !== undefined, //Bridge
         "/home/alt/g": showGasLevels,
+        "/home/alt/u": isOnrampEnabled !== undefined,
     }
 
     const popupPageHotkeys = componentsHotkeys.PopupPage

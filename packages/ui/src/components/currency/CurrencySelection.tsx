@@ -22,8 +22,9 @@ interface CurrencySelectionProps {
     bottomMargin?: number
     popupMargin?: number
     dropdownWidth?: string
+    dropdownHeight?: string
     popUpOpenLeft?: boolean
-    showFullName?: boolean
+    loadingText?: string
 }
 
 export const CurrencySelection: FC<CurrencySelectionProps> = ({
@@ -35,9 +36,10 @@ export const CurrencySelection: FC<CurrencySelectionProps> = ({
     bottomMargin,
     popupMargin,
     dropdownWidth,
+    dropdownHeight,
     register,
     popUpOpenLeft,
-    showFullName,
+    loadingText,
 }) => {
     const [searchResult, setSearchResult] = useState<Currency[]>([])
     const [search, setSearch] = useState<string | null>(null)
@@ -98,8 +100,7 @@ export const CurrencySelection: FC<CurrencySelectionProps> = ({
                 <CurrencyDropdownDisplay
                     selectedCurrency={selectedCurrency}
                     isLoading={!currencyList || currencyList.length === 0}
-                    loadingText="Loading currencies..."
-                    showFullName={showFullName}
+                    loadingText={loadingText}
                 />
             }
             error={error}
@@ -107,6 +108,7 @@ export const CurrencySelection: FC<CurrencySelectionProps> = ({
             bottomMargin={bottomMargin || 0}
             popupMargin={popupMargin || 16}
             customWidth={dropdownWidth}
+            customHeight={dropdownHeight}
             popUpOpenLeft={popUpOpenLeft}
             disabled={!currencyList || currencyList.length === 0}
         >

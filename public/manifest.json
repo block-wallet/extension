@@ -36,6 +36,7 @@
     "permissions": [
         "activeTab",
         "storage",
+        "unlimitedStorage",
         "notifications",
         "https://*.blockwallet.io/*",
         "https://*.etherscan.io/*",

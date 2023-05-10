@@ -96,7 +96,6 @@ const LocalePreferencesPage = () => {
                             dropdownWidth="w-[309px]"
                             selectedCurrency={newCurrency}
                             defaultCurrencyList={validCurrencies}
-                            showFullName={true}
                         />
                     </>
                 ) : null}

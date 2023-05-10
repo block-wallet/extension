@@ -70,7 +70,7 @@ export default class OnrampController extends BaseController<
                 (chain) => chain.id === chainId
             );
 
-            if (currentOnrampChain.length === 0) return response;
+            if (!currentOnrampChain.length) return response;
 
             const currentNetworkCryptos =
                 allCurrenciesResponse.message.crypto.filter(

@@ -30,7 +30,7 @@ const NetworkDisplayBadge = ({
                 <img
                     src={network.iconUrls[0]}
                     alt="network icon"
-                    className={classnames("w-4 h-4", showName && "mr-2")}
+                    className={classnames("w-4 h-4", showName && "ml-2")}
                     onError={() => {
                         setHasImageError(true)
                     }}

@@ -30,7 +30,12 @@ const CurrencyDropdownDisplay: FC<CurrencyDropdownDisplayProps> = ({
     return selectedCurrency ? (
         <div className="flex text-base font-semibold">
             {selectedCurrency.symbol && (
-                <div className={classnames(Classes.roundedSmallIcon, "mr-2")}>
+                <div
+                    className={classnames(
+                        Classes.smallRoundedFilledIcon,
+                        "mr-2"
+                    )}
+                >
                     {selectedCurrency.symbol}
                 </div>
             )}

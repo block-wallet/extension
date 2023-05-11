@@ -41,16 +41,16 @@ const CurrencyDisplay: FunctionComponent<CurrencyDisplayProps> = ({
             )}
             onClick={() => (clickable ? setSelected(!selected) : null)}
         >
-            <div className="flex flex-col ml-4 truncate">
+            <div className="flex flex-col mx-2 truncate">
                 {data.symbol ?? <label>{data.symbol}</label>}
-                <span
-                    className={
-                        "text-sm text-primary-black-default font-semibold"
-                    }
-                >
-                    {formatName(data.name, 22)}
-                </span>
             </div>
+            <span
+                className={
+                    "flex text-sm text-primary-black-default font-semibold"
+                }
+            >
+                {formatName(data.name, 22)}
+            </span>
             <p className={"text-sm text-gray-400 ml-auto pl-1 pr-6"}>
                 {data.code.toUpperCase()}
             </p>

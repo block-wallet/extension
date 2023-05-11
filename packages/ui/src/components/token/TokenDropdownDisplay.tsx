@@ -37,7 +37,7 @@ const TokenDropdownDisplay: FC<TokenDropdownDisplayProps> = ({
                     logo={selectedToken.logo}
                     name={selectedToken.name}
                     logoSize="small"
-                    filled={true}
+                    filled={false}
                     className="mr-2 p-0.5"
                 />
             )}

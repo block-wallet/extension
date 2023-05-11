@@ -45,7 +45,7 @@ const API_CALLS_RETRIES = 5;
 const OnrampBuy: IOnramp = {
     getSupportedCurrencies:
         async function (): Promise<GetOnrampCurrencyResponse> {
-            const apiresponse = await retryHandling(
+            const apiresponse = await retryHandling<GetOnrampCurrencyResponse>(
                 () =>
                     httpClient.request<GetOnrampCurrencyResponse>(
                         `${ONRAMP_ENDPOINT}/supported`,
@@ -61,7 +61,7 @@ const OnrampBuy: IOnramp = {
     getSupportedNetworks: async function (): Promise<
         GetOnrampNetworkResponse[]
     > {
-        const apiresponse = await retryHandling(
+        const apiresponse = await retryHandling<GetOnrampCurrencyResponse>(
             () =>
                 httpClient.request<GetOnrampCurrencyResponse>(
                     `${ONRAMP_ENDPOINT}/supported`,

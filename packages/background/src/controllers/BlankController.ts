@@ -530,7 +530,7 @@ export default class BlankController extends EventEmitter {
             BlankProviderController: this.blankProviderController.store,
             SwapController: this.swapController.UIStore,
             BridgeController: this.bridgeController.UIStore,
-            OnrampController: this.onrampController.UIStore,
+            OnrampController: this.onrampController.store,
         });
 
         // Check controllers on app lock/unlock

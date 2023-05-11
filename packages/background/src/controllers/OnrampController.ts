@@ -29,10 +29,7 @@ export interface GetOnRampCurrencies {
  * If the target network hasn't been added to the user's network yet,
  * this controller stores references to recunstruct the transaction once the network is added.
  */
-export default class OnrampController extends BaseController<
-    undefined,
-    OnrampControllerMemState
-> {
+export default class OnrampController extends BaseController<OnrampControllerMemState> {
     constructor(private readonly _networkController: NetworkController) {
         super(undefined, { availableOnrampChains: [] });
 
@@ -44,7 +41,7 @@ export default class OnrampController extends BaseController<
      *
      */
     public getOnrampAvailableChains(): IChain[] {
-        return this.UIStore.getState().availableOnrampChains;
+        return this.store.getState().availableOnrampChains;
     }
 
     private _getAPIImplementation(
@@ -135,7 +132,7 @@ export default class OnrampController extends BaseController<
                 });
             });
 
-            this.UIStore.updateState({
+            this.store.updateState({
                 availableOnrampChains: availableChains,
             });
             return availableChains;

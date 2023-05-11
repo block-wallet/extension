@@ -116,7 +116,7 @@ export default class OnrampController extends BaseController<OnrampControllerMem
 
     public async getAvailableChains(
         aggregator: OnrampImplementation = OnrampImplementation.ONRAMPER_BUY
-    ): Promise<IChain[]> {
+    ) {
         const implementor = this._getAPIImplementation(aggregator);
         try {
             const onrampSupportedNetworks =
@@ -132,13 +132,11 @@ export default class OnrampController extends BaseController<OnrampControllerMem
                 });
             });
 
-            this.store.updateState({
+            this.store.setState({
                 availableOnrampChains: availableChains,
             });
-            return availableChains;
         } catch (e) {
             log.error('Error fetching onramper chains', e);
-            return [];
         }
     }
 }

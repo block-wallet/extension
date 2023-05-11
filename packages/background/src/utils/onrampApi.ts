@@ -1,5 +1,7 @@
 import { Currency } from './currency';
 import httpClient from './http';
+import { MILISECOND } from '../utils/constants/time';
+import { retryHandling } from './retryHandling';
 
 export enum OnrampImplementation {
     ONRAMPER_BUY = 'Onramper_BUY',
@@ -37,27 +39,38 @@ export interface IOnramp {
 const ONRAMPER_API_KEY = 'pk_prod_01GYCJHNRP0V65F272K4Z02JY0';
 
 const ONRAMP_ENDPOINT = 'https://api.onramper.com/';
+const API_CALLS_DELAY = 100 * MILISECOND;
+const API_CALLS_RETRIES = 5;
 
 const OnrampBuy: IOnramp = {
     getSupportedCurrencies:
         async function (): Promise<GetOnrampCurrencyResponse> {
-            const apiresponse =
-                await httpClient.request<GetOnrampCurrencyResponse>(
-                    `${ONRAMP_ENDPOINT}/supported`,
-                    {
-                        headers: { Authorization: ONRAMPER_API_KEY },
-                    }
-                );
+            const apiresponse = await retryHandling(
+                () =>
+                    httpClient.request<GetOnrampCurrencyResponse>(
+                        `${ONRAMP_ENDPOINT}/supported`,
+                        {
+                            headers: { Authorization: ONRAMPER_API_KEY },
+                        }
+                    ),
+                API_CALLS_DELAY,
+                API_CALLS_RETRIES
+            );
             return apiresponse;
         },
     getSupportedNetworks: async function (): Promise<
         GetOnrampNetworkResponse[]
     > {
-        const apiresponse = await httpClient.request<GetOnrampCurrencyResponse>(
-            `${ONRAMP_ENDPOINT}/supported`,
-            {
-                headers: { Authorization: ONRAMPER_API_KEY },
-            }
+        const apiresponse = await retryHandling(
+            () =>
+                httpClient.request<GetOnrampCurrencyResponse>(
+                    `${ONRAMP_ENDPOINT}/supported`,
+                    {
+                        headers: { Authorization: ONRAMPER_API_KEY },
+                    }
+                ),
+            API_CALLS_DELAY,
+            API_CALLS_RETRIES
         );
 
         const result: GetOnrampNetworkResponse[] = [];

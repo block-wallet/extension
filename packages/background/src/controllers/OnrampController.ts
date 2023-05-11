@@ -18,17 +18,14 @@ export interface GetOnRampCurrencies {
 }
 
 /**
- * Bridge Controller
+ * Onramp Controller
  *
- * This class handles BlockWallet Bridges.
+ * This class handles BlockWallet Onramp.
  *
- * Provides functionality to fetch chains, tokens and routes to potentially execute bridges transactions,
- * fetch quotes for exchanges, and execute the transactions.
+ * Allow to retrieve onramp currencies and availablechains from OnrampApi
  *
- * Also, this controller stores the receiving transactions in the target chain of an executed bridge.
- * If the target network hasn't been added to the user's network yet,
- * this controller stores references to recunstruct the transaction once the network is added.
  */
+
 export default class OnrampController extends BaseController<OnrampControllerMemState> {
     constructor(private readonly _networkController: NetworkController) {
         super(undefined, { availableOnrampChains: [] });

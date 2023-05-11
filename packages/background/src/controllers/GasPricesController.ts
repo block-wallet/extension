@@ -153,6 +153,25 @@ export class GasPricesController extends BaseController<GasPricesControllerState
     }
 
     /**
+     * manageActiveSubscriptions
+     *
+     * It fetches the gas prices if there is at least one active subscription to the background
+     *
+     * @param isUnlocked Whether the extension is unlocked or not
+     * @param activeSubscription If there is any block wallet instance active.
+     */
+    public manageActiveSubscriptions(
+        isUnlocked: boolean,
+        activeSubscription: boolean
+    ): void {
+        if (isUnlocked && activeSubscription) {
+            const currentBlockNumber =
+                this._blockUpdatesController.getBlockNumber();
+            this.updateGasPrices(currentBlockNumber);
+        }
+    }
+
+    /**
      * return the state by chain
      */
     public getState(

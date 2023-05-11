@@ -298,10 +298,10 @@ export class GasPricesController extends BaseController<GasPricesControllerState
                 );
 
                 // Get eth_feeHistory
-                // gets 25%, 50% and 75% percentile fee history of txs included in last 10 blocks
+                // gets 25%, 50% and 90% percentile fee history of txs included in last 10 blocks
                 const feeHistory: FeeHistory = await provider.send(
                     'eth_feeHistory',
-                    ['0xA', 'latest', [25, 50, 75]]
+                    ['0xA', 'latest', [25, 50, 90]]
                 );
 
                 // last element in array is the next block after the latest (estimated)

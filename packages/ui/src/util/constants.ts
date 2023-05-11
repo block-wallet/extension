@@ -59,3 +59,8 @@ export const LINKS = {
         CHANGELOG: "https://bit.ly/bw-release",
     },
 }
+
+/**
+ * Time ellapsed before refreshing the gas prices
+ */
+export const GAS_PRICE_UPDATE_INTERVAL = 10000 // 10s

@@ -41,6 +41,7 @@ export const SWAP_QUOTE_REFRESH_TIMEOUT = 1000 * 15
 export const LINKS = {
     WEBSITE: "https://blockwallet.io/",
     TELEGRAM: "https://t.me/blockwallet",
+    DISCORD: "https://discord.gg/blockwallet",
     GITHUB: "https://github.com/block-wallet/",
     TWITTER: "https://twitter.com/GetBlockWallet",
     WEBSITE_BUG_REPORT: "https://blockwallet.io/bug-report.html",

@@ -4,6 +4,7 @@ import CollapsableMessage from "../CollapsableMessage"
 import CheckmarkCircle from "../icons/CheckmarkCircle"
 import ExclamationCircleIconFull from "../icons/ExclamationCircleIconFull"
 import { getAddressType } from "../../context/commActions"
+import { useUserSettings } from "../../context/hooks/useUserSettings"
 
 export enum AddressType {
     NORMAL = "NORMAL",
@@ -51,6 +52,9 @@ export const AddressDisplay: FunctionComponent<{
     receivingAddress: string
     selectedAccountName: string | undefined
 }> = ({ receivingAddress, selectedAccountName }) => {
+    const { hideSendToContractWarning, hideSendToNullWarning } =
+        useUserSettings()
+
     const [showingTheWholeAddress, setShowingTheWholeAddress] = useState(false)
     const [addressType, setAddressType] = useState<AddressType>()
 
@@ -64,6 +68,14 @@ export const AddressDisplay: FunctionComponent<{
         : addressToDisplay
 
     const displayAddressSpan = accountNameToDisplay !== addressToDisplay
+
+    const showWarningPopup =
+        (addressType &&
+            [AddressType.SMART_CONTRACT, AddressType.ERC20].includes(
+                addressType
+            ) &&
+            !hideSendToContractWarning) ||
+        (addressType === AddressType.NULL && !hideSendToNullWarning)
 
     useEffect(() => {
         getAddressType(receivingAddress).then((type) => {
@@ -112,7 +124,7 @@ export const AddressDisplay: FunctionComponent<{
                         title: "Warning",
                         message: <span>{getModalMessage(addressType)}</span>,
                     }}
-                    isCollapsedByDefault
+                    isCollapsedByDefault={!showWarningPopup}
                     collapsedMessage={
                         <div className="flex flex-row items-center w-full px-6 py-3">
                             <ExclamationCircleIconFull

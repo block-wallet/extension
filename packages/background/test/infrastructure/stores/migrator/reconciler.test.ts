@@ -238,6 +238,8 @@ const initialState: newBlankAppState = {
         antiPhishingImage: '',
         settings: {
             hideAddressWarning: false,
+            hideSendToContractWarning: false,
+            hideSendToNullWarning: false,
             subscribedToReleaseaNotes: true,
             subscribedToNotifications: true,
             useAntiPhishingProtection: true,
@@ -476,6 +478,8 @@ describe('State reconciler', () => {
                     subscribedToNotifications: true,
                     subscribedToReleaseaNotes: true,
                     hideAddressWarning: false,
+                    hideSendToContractWarning: false,
+                    hideSendToNullWarning: false,
                     useAntiPhishingProtection: true,
                     defaultBrowserWallet: true,
                     hideEstimatedGasExceedsThresholdWarning: false,

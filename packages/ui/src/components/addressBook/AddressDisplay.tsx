@@ -1,10 +1,11 @@
 import { FunctionComponent, useEffect, useState } from "react"
 import { formatHash, formatName } from "../../util/formatAccount"
-import CollapsableMessage from "../CollapsableMessage"
 import CheckmarkCircle from "../icons/CheckmarkCircle"
 import ExclamationCircleIconFull from "../icons/ExclamationCircleIconFull"
-import { getAddressType } from "../../context/commActions"
+import { getAddressType, setUserSettings } from "../../context/commActions"
 import { useUserSettings } from "../../context/hooks/useUserSettings"
+import CheckBoxDialog from "../dialog/CheckboxDialog"
+import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
 export enum AddressType {
     NORMAL = "NORMAL",
@@ -13,14 +14,37 @@ export enum AddressType {
     NULL = "NULL",
 }
 
-const NATIVE_ADDRESS_MESSAGE =
-    "This address is not owned by any user, is often associated with token burn & mint/genesis events and used as a generic null address. Please, make sure the information is correct otherwise your assets will be permanently lost."
+const NATIVE_ADDRESS_MESSAGE = (
+    <>
+        This address is not owned by any user, is often associated with token
+        burn & mint/genesis events and used as a generic null address. Please,
+        make sure the information is correct otherwise your assets will be
+        permanently lost.
+        <br />
+        <br />
+        Continue at your own risk.
+    </>
+)
 
-const CONTRACT_ADDRESS_MESSAGE =
-    "You are about to send to a smart contract address which could result in the loss of your funds."
+const CONTRACT_ADDRESS_MESSAGE = (
+    <>
+        You are about to send to a smart contract address which could result in
+        the loss of your funds.
+        <br />
+        <br />
+        Continue at your own risk.
+    </>
+)
 
-const ERC20_CONTRACT_ADDRESS_MESSAGE =
-    "You are about to send to an ERC20 smart contract address which could result in the loss of your funds."
+const ERC20_CONTRACT_ADDRESS_MESSAGE = (
+    <>
+        You are about to send to an ERC20 smart contract address which could
+        result in the loss of your funds.
+        <br />
+        <br />
+        Continue at your own risk.
+    </>
+)
 
 const getWarningTitle = (addressType: AddressType) => {
     switch (addressType) {
@@ -30,6 +54,19 @@ const getWarningTitle = (addressType: AddressType) => {
             return "Smart Contract"
         case AddressType.ERC20:
             return "ERC20 Contract Address"
+        default:
+            return ""
+    }
+}
+
+const getModalTitle = (addressType: AddressType) => {
+    switch (addressType) {
+        case AddressType.NULL:
+            return "Null address detected"
+        case AddressType.SMART_CONTRACT:
+            return "Smart Contract address detected"
+        case AddressType.ERC20:
+            return "ERC-20 address detected"
         default:
             return ""
     }
@@ -52,11 +89,15 @@ export const AddressDisplay: FunctionComponent<{
     receivingAddress: string
     selectedAccountName: string | undefined
 }> = ({ receivingAddress, selectedAccountName }) => {
+    const settings = useUserSettings()
+    const history = useOnMountHistory()
     const { hideSendToContractWarning, hideSendToNullWarning } =
         useUserSettings()
 
     const [showingTheWholeAddress, setShowingTheWholeAddress] = useState(false)
     const [addressType, setAddressType] = useState<AddressType>()
+
+    const [openWarningPopup, setOpenWarningPopup] = useState(false)
 
     const addressToDisplay = formatHash(receivingAddress)
     const fullAddressToDisplay = formatHash(
@@ -69,19 +110,19 @@ export const AddressDisplay: FunctionComponent<{
 
     const displayAddressSpan = accountNameToDisplay !== addressToDisplay
 
-    const showWarningPopup =
-        (addressType &&
-            [AddressType.SMART_CONTRACT, AddressType.ERC20].includes(
-                addressType
-            ) &&
-            !hideSendToContractWarning) ||
-        (addressType === AddressType.NULL && !hideSendToNullWarning)
-
     useEffect(() => {
         getAddressType(receivingAddress).then((type) => {
             setAddressType(type)
+            setOpenWarningPopup(
+                (type &&
+                    [AddressType.SMART_CONTRACT, AddressType.ERC20].includes(
+                        type
+                    ) &&
+                    !hideSendToContractWarning) ||
+                    (type === AddressType.NULL && !hideSendToNullWarning)
+            )
         })
-    }, [receivingAddress])
+    }, [receivingAddress, hideSendToContractWarning, hideSendToNullWarning])
 
     return (
         <>
@@ -119,13 +160,11 @@ export const AddressDisplay: FunctionComponent<{
                     )}
                 </div>
             ) : (
-                <CollapsableMessage
-                    dialog={{
-                        title: "Warning",
-                        message: <span>{getModalMessage(addressType)}</span>,
-                    }}
-                    isCollapsedByDefault={!showWarningPopup}
-                    collapsedMessage={
+                <>
+                    <div
+                        onClick={() => setOpenWarningPopup(true)}
+                        className="cursor-pointer"
+                    >
                         <div className="flex flex-row items-center w-full px-6 py-3">
                             <ExclamationCircleIconFull
                                 className="w-4 h-4"
@@ -141,8 +180,38 @@ export const AddressDisplay: FunctionComponent<{
                                 {addressToDisplay}
                             </span>
                         </div>
-                    }
-                />
+                    </div>
+                    <CheckBoxDialog
+                        open={openWarningPopup}
+                        title={getModalTitle(addressType)}
+                        message={getModalMessage(addressType)}
+                        confirmText="Continue"
+                        showCheckbox
+                        showXButton={false}
+                        checkboxText="Don't show this warning again"
+                        onClose={() => {}}
+                        onCancel={() => {
+                            if (history && history.length > 1) {
+                                return history.goBack()
+                            } else {
+                                return history.push("/")
+                            }
+                        }}
+                        onConfirm={(saveChoice) => {
+                            if (saveChoice) {
+                                const isAddressTypeNull =
+                                    addressType === AddressType.NULL
+                                setUserSettings({
+                                    ...settings,
+                                    hideSendToContractWarning:
+                                        !isAddressTypeNull,
+                                    hideSendToNullWarning: isAddressTypeNull,
+                                })
+                            }
+                            setOpenWarningPopup(false)
+                        }}
+                    />
+                </>
             )}
         </>
     )

@@ -739,6 +739,41 @@
                 }
             ],
             "version": "0.7.4"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Account name is shown on Transaction Completed notification."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Gas estimates are updated every 10 seconds on all transaction screens."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improved Ethereum Mainnet estimations and increased buffer on High gas setting."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Fixed error when approving transfers of certain NFTs."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed an issue with many accounts or lots of data in the wallet."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.7.5"
         }
     ]
 }

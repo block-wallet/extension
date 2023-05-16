@@ -205,7 +205,7 @@ const ProviderStatus = ({ onHomepage }: { onHomepage?: boolean }) => {
                             <ButtonWithLoading
                                 isLoading={true}
                                 label="Switching"
-                                spinnerSize="12"
+                                spinnerSize="24"
                                 buttonClass={classnames(
                                     Classes.darkButton,
                                     "mt-4 -mb-2 mx-2 w-auto"

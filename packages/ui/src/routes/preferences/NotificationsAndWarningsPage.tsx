@@ -15,6 +15,8 @@ import { mergeReducer } from "../../util/reducerUtils"
 interface State {
     subscribedToNotifications: boolean
     hideAddressWarning: boolean
+    hideSendToContractWarning: boolean
+    hideSendToNullWarning: boolean
     hideEstimatedGasExceedsThresholdWarning: boolean
     hideBridgeInsufficientNativeTokenWarning: boolean
 }
@@ -27,6 +29,8 @@ const NotificationsAndWarningsPage = () => {
     const initialState = useRef<State>({
         subscribedToNotifications: settings.subscribedToNotifications,
         hideAddressWarning: settings.hideAddressWarning,
+        hideSendToContractWarning: settings.hideSendToContractWarning,
+        hideSendToNullWarning: settings.hideSendToNullWarning,
         hideEstimatedGasExceedsThresholdWarning:
             settings.hideEstimatedGasExceedsThresholdWarning,
         hideBridgeInsufficientNativeTokenWarning:
@@ -45,6 +49,9 @@ const NotificationsAndWarningsPage = () => {
                 subscribedToNotifications:
                     preferencesConfig.subscribedToNotifications,
                 hideAddressWarning: preferencesConfig.hideAddressWarning,
+                hideSendToContractWarning:
+                    preferencesConfig.hideSendToContractWarning,
+                hideSendToNullWarning: preferencesConfig.hideSendToNullWarning,
                 hideEstimatedGasExceedsThresholdWarning:
                     preferencesConfig.hideEstimatedGasExceedsThresholdWarning,
                 hideBridgeInsufficientNativeTokenWarning:
@@ -60,7 +67,13 @@ const NotificationsAndWarningsPage = () => {
 
     return (
         <PopupLayout
-            header={<PopupHeader title="Notifications & Warnings" close="/" />}
+            header={
+                <PopupHeader
+                    title="Notifications & Warnings"
+                    close="/"
+                    onBack={() => history.push("/settings/preferences")}
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
@@ -76,7 +89,7 @@ const NotificationsAndWarningsPage = () => {
             }
         >
             <div className="flex flex-col p-6 space-y-6 w-full">
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-primary-grey-dark">
                     Receive BlockWallet's browser notifications.
                 </span>
 
@@ -90,9 +103,40 @@ const NotificationsAndWarningsPage = () => {
                         })
                     }
                 />
+                <hr />
+                <span className="text-sm text-primary-grey-dark">
+                    Warn me when I try to send tokens to a smart contract
+                    address
+                </span>
+                <ToggleButton
+                    id="smartContractWarning"
+                    label="Show Smart Contract Warning"
+                    defaultChecked={
+                        !preferencesConfig.hideSendToContractWarning
+                    }
+                    onToggle={(value) =>
+                        setPreferencesConfig({
+                            hideSendToContractWarning: !value,
+                        })
+                    }
+                />
+                <hr />
+                <span className="text-sm text-primary-grey-dark">
+                    Warn me when I try to send tokens to the null address
+                </span>
+                <ToggleButton
+                    id="nullAddressWarning"
+                    label="Show Null Address Warning"
+                    defaultChecked={!preferencesConfig.hideSendToNullWarning}
+                    onToggle={(value) =>
+                        setPreferencesConfig({
+                            hideSendToNullWarning: !value,
+                        })
+                    }
+                />
 
                 <hr />
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-primary-grey-dark">
                     Warn me when my selected account address is different from
                     transaction's address.
                 </span>
@@ -109,7 +153,7 @@ const NotificationsAndWarningsPage = () => {
                 />
 
                 <hr />
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-primary-grey-dark">
                     Warn me when a dApp suggests fees much lower/higher than
                     recommended.
                 </span>
@@ -127,7 +171,7 @@ const NotificationsAndWarningsPage = () => {
                 />
 
                 <hr />
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-primary-grey-dark">
                     Warn me when I haven't enough funds in the destination
                     network of a bridge
                 </span>

@@ -98,6 +98,21 @@ const AddTokensPage = () => {
                     networkIndicator
                 />
             }
+            showProviderStatus
+            footer={
+                <PopupFooter>
+                    <ButtonWithLoading
+                        label="Next"
+                        disabled={!submitEnabled}
+                        type="submit"
+                        formId={
+                            isManualTokenView
+                                ? "manualViewForm"
+                                : "listViewForm"
+                        }
+                    />
+                </PopupFooter>
+            }
             // submitOnEnter={{ isEnabled: submitEnabled }}
         >
             <div className="flex flex-col flex-1 w-full">
@@ -132,20 +147,6 @@ const AddTokensPage = () => {
                         />
                     )}
                 </div>
-                <hr className="border-0.5 border-gray-200 w-full" />
-                {/* FOOTER */}
-                <PopupFooter>
-                    <ButtonWithLoading
-                        label="Next"
-                        disabled={!submitEnabled}
-                        type="submit"
-                        formId={
-                            isManualTokenView
-                                ? "manualViewForm"
-                                : "listViewForm"
-                        }
-                    />
-                </PopupFooter>
             </div>
         </PopupLayout>
     )

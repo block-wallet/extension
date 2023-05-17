@@ -2,8 +2,10 @@ import classnames from "classnames"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import { isHardwareWallet } from "../../util/account"
 import Icon, { IconName } from "../ui/Icon"
+import GearIcon from "../icons/GearIcon"
 
 export enum AccountMenuOptionType {
+    SETTINGS = "SETTINGS",
     REMOVE_ACCOUNT = "REMOVE_ACCOUNT",
     REMOVE_CONTACT = "REMOVE_CONTACT",
     EDIT = "EDIT",
@@ -17,6 +19,20 @@ export interface AccountDisplayMenuOption {
     handler?: (accountAddress: string) => void
     component?: React.ComponentType<any>
     disabled?: boolean
+}
+
+const SettingsOption: React.FC<any> = ({ onClick }) => {
+    return (
+        <div
+            className={classnames(
+                "flex flex-row space-x-2 items-center text-primary-black-default"
+            )}
+            onClick={onClick}
+        >
+            <GearIcon />
+            <span>Settings</span>
+        </div>
+    )
 }
 
 const RemoveOption: React.FC<any> = ({ onClick }) => {
@@ -34,7 +50,7 @@ const RemoveOption: React.FC<any> = ({ onClick }) => {
 const EditOption: React.FC<any> = ({ onClick }) => {
     return (
         <div
-            className="flex flex-row space-x-2 items-center text-black"
+            className="flex flex-row space-x-2 items-center text-primary-black-default"
             onClick={onClick}
         >
             <div className="pr-3">
@@ -49,7 +65,7 @@ const HideAccountOption: React.FC<any> = ({ onClick, disabled }) => {
     return (
         <div
             className={classnames(
-                "flex flex-row space-x-2 items-center text-black",
+                "flex flex-row space-x-2 items-center text-primary-black-default",
                 disabled && "opacity-50 pointer-events-none"
             )}
             onClick={onClick}
@@ -64,7 +80,7 @@ const UnHideAccountOption: React.FC<any> = ({ onClick, disabled }) => {
     return (
         <div
             className={classnames(
-                "flex flex-row space-x-2 items-center text-black",
+                "flex flex-row space-x-2 items-center text-primary-black-default",
                 disabled && "opacity-50 pointer-events-none"
             )}
             onClick={onClick}
@@ -77,6 +93,7 @@ const UnHideAccountOption: React.FC<any> = ({ onClick, disabled }) => {
 
 const MENU_ITEM_BY_OPTION = {
     [AccountMenuOptionType.CUSTOM]: null,
+    [AccountMenuOptionType.SETTINGS]: SettingsOption,
     [AccountMenuOptionType.REMOVE_CONTACT]: RemoveOption,
     [AccountMenuOptionType.REMOVE_ACCOUNT]: RemoveOption,
     [AccountMenuOptionType.EDIT]: EditOption,

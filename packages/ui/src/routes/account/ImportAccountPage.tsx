@@ -185,7 +185,7 @@ const ImportAccountPage = () => {
                     className="flex flex-col justify-between flex-1 h-full"
                     onSubmit={onSubmit}
                 >
-                    <div className="flex flex-col flex-1 p-6 pb-3 space-y-6">
+                    <div className="flex flex-col flex-1 p-6 pb-3 space-y-3">
                         <div className="flex flex-col space-y-1">
                             <TextInput
                                 appearance="outline"
@@ -231,7 +231,7 @@ const ImportAccountPage = () => {
                             </div>
                         )}
                     </div>
-                    <hr className="border-0.5 border-gray-200 w-full" />
+                    <hr className="border-0.5 border-primary-grey-hover w-full" />
                     <PopupFooter>
                         <ButtonWithLoading
                             type="submit"

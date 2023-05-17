@@ -47,7 +47,7 @@ const ChainIcon: FunctionComponent<{ iconUrl: string; hide: boolean }> = ({
 }) => {
     const [loaded, setLoaded] = useState(false)
     return (
-        <div className="flex flex-row items-center justify-center w-6 h-6 rounded-full bg-primary-100 mr-2">
+        <div className="flex flex-row items-center justify-center w-6 h-6 rounded-full bg-primary-grey-default mr-2">
             {!hide && !loaded && <Spinner />}
             <img
                 alt="icon"
@@ -193,7 +193,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     {
                         title: (
                             <div className="flex flex-row w-full">
-                                <h3 className="text-sm font-bold mr-2">
+                                <h3 className="text-sm font-semibold mr-2">
                                     Chain ID
                                 </h3>
                                 <RPCValidationEndLabelInfo
@@ -212,7 +212,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     {
                         title: (
                             <div className="flex flex-row w-full">
-                                <h3 className="text-sm font-bold mr-2">
+                                <h3 className="text-sm font-semibold mr-2">
                                     Network URL
                                 </h3>
                                 {validations.knownChainId && (
@@ -232,7 +232,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                         expandable: true,
                     },
                     {
-                        title: "Currency Icon URL",
+                        title: "Network Icon URL",
                         content: iconUrl,
                         expandable: true,
                     },
@@ -247,7 +247,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     {
                         title: (
                             <div className="flex flex-row w-full">
-                                <h3 className="text-sm font-bold mr-2">
+                                <h3 className="text-sm font-semibold mr-2">
                                     Block Explorer URL
                                 </h3>
                                 {validations.knownChainId && (
@@ -276,22 +276,26 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
             <div className="flex flex-col px-6 pt-3 pb-1 space-y-2 h-full justify-between">
                 {/* Header */}
                 <div className="flex flex-col space-y-1 text-sm">
-                    <span className="font-bold text-black">
+                    <span className="font-semibold text-primary-black-default">
                         Allow this site to add a network?
                     </span>
-                    <span className="text-gray-500">
+                    <span className="text-primary-grey-dark">
                         This will allow this network to be used within
                         BlockWallet
                     </span>
                 </div>
-                <div className="flex flex-col border border-gray-200 rounded-lg space-y-2 px-4 py-3">
+                <div className="flex flex-col border border-primary-grey-hover rounded-lg space-y-2 px-4 py-3">
                     <div>
-                        <p className="font-bold text-black">Network Name</p>
-                        <p className="text-gray-500">{chainName || "-"}</p>
+                        <p className="font-semibold text-primary-black-default">
+                            Network Name
+                        </p>
+                        <p className="text-primary-grey-dark">
+                            {chainName || "-"}
+                        </p>
                     </div>
                     <div>
                         <div className="flex flex-row w-full">
-                            <p className="font-bold text-black mr-2">
+                            <p className="font-semibold text-primary-black-default mr-2">
                                 Chain ID
                             </p>
                             <RPCValidationEndLabelInfo
@@ -305,11 +309,11 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                                 wrapperClassName="z-0"
                             />
                         </div>
-                        <p className="text-gray-500">{chainId}</p>
+                        <p className="text-primary-grey-dark">{chainId}</p>
                     </div>
                     <div>
                         <div className="flex flex-row w-full">
-                            <p className="font-bold text-black mr-2">
+                            <p className="font-semibold text-primary-black-default mr-2">
                                 Network URL
                             </p>
                             {validations.knownChainId && (
@@ -325,7 +329,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                                 />
                             )}
                         </div>
-                        <ExpandableText className="text-gray-500">
+                        <ExpandableText className="text-primary-grey-dark">
                             {rpcUrl}
                         </ExpandableText>
                     </div>
@@ -333,10 +337,10 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     {iconUrl && (
                         <div>
                             <div className="flex flex-row w-full">
-                                <p className="font-bold text-black mr-2">
+                                <p className="font-semibold text-primary-black-default mr-2">
                                     {validations.knownIcon
-                                        ? "Currency Icon"
-                                        : "Currency Icon URL"}
+                                        ? "Network Icon"
+                                        : "Network Icon URL"}
                                 </p>
                                 {!validations.knownIcon && (
                                     <RPCValidationEndLabelInfo
@@ -351,7 +355,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                             </div>
                             {!validations.knownIcon ? (
                                 <>
-                                    <ExpandableText className="text-gray-500">
+                                    <ExpandableText className="text-primary-grey-dark">
                                         {iconUrl}
                                     </ExpandableText>
                                     <div className="pt-1 flex flex-row items-center">
@@ -379,7 +383,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     )}
                     <div>
                         <ClickableText
-                            className="font-bold"
+                            className="font-semibold"
                             onClick={(e) => {
                                 e.preventDefault()
                                 setHasDialog(true)
@@ -394,7 +398,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     BlockWallet does not verify custom networks. Make sure you
                     understand{" "}
                     <a
-                        className="underline text-blue-600 hover:text-blue-800"
+                        className="underline text-primary-blue-default hover:text-primary-blue-hover"
                         href={LINKS.ARTICLES.CUSTOM_NETWORK_RISKS}
                         target="_blank"
                         rel="noreferrer"

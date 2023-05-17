@@ -2,57 +2,62 @@ import { Network } from "@block-wallet/background/utils/constants/networks"
 import { classnames } from "../../styles"
 import { getNetworkColor } from "../../util/getNetworkColor"
 import GenericTooltip from "../label/GenericTooltip"
+import { useState } from "react"
 
 const NetworkDisplayBadge = ({
     network,
     className,
-    fill = false,
-    truncate = false,
+    showName = false,
 }: {
     network: Network
-    fill?: boolean
-    truncate?: boolean
     className?: string
+    showName?: boolean
 }) => {
     const networkDesc = network.desc
     const networkColor = getNetworkColor(network)
+    const [hasImageError, setHasImageError] = useState(false)
 
-    // We limit the string chars here regardless of the truncate flag
-    // and the truncate class to prevent issues with the animated bullet size
-    // and to have a limit on huge network descriptions.
-    const formattedNetworkName = truncate
-        ? networkDesc.length > 42
-            ? `${networkDesc.slice(0, 42)}...`
-            : networkDesc
-        : networkDesc
     return (
         <div
             className={classnames(
-                "flex flex-row items-center py-1.5 px-1.5 text-gray-600 rounded-md group border border-primary-200 text-xs",
-                fill && "bg-green-100",
-                "w-auto",
+                "flex flex-row items-center h-6 w-6 self-center justify-center text-primary-grey-dark rounded group bg-primary-grey-default hover:bg-primary-grey-hover border-primary-200 text-xs",
                 className
             )}
         >
-            <span
-                className={
-                    "justify-end h-2 rounded-xl mr-2 ml-1 animate-pulse pointer-events-none"
-                }
-                style={{ backgroundColor: networkColor, width: "8px" }}
-            />
-            <span
-                className={classnames(
-                    truncate
-                        ? "flex justify-center truncate ..."
-                        : "flex justify-center whitespace-normal break-all flex-1"
-                )}
-                style={truncate ? { maxWidth: 80, display: "block" } : {}}
-            >
-                {formattedNetworkName}
-            </span>
+            {!hasImageError &&
+            network.iconUrls &&
+            network.iconUrls.length > 0 ? (
+                <img
+                    src={network.iconUrls[0]}
+                    alt="network icon"
+                    className={classnames("w-4 h-4", showName && "ml-2")}
+                    onError={() => {
+                        setHasImageError(true)
+                    }}
+                />
+            ) : (
+                <span
+                    className={classnames(
+                        "justify-end h-2 rounded-xl mx-1 animate-pulse pointer-events-none",
+                        showName && "mr-1"
+                    )}
+                    style={{ backgroundColor: networkColor, width: "8px" }}
+                />
+            )}
+
+            {showName && (
+                <span
+                    className={classnames(
+                        "flex justify-center whitespace-normal break-all flex-1"
+                    )}
+                >
+                    {networkDesc}
+                </span>
+            )}
+
             <GenericTooltip
                 left
-                className="translate-y-5 translate-x-3 shadow-md min-w-max"
+                className="!translate-y-5 !translate-x-3 shadow-md min-w-max"
                 content={<p className=" p-1 text-left">{networkDesc}</p>}
             />
         </div>

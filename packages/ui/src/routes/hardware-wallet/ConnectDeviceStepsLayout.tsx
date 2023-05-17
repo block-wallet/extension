@@ -69,7 +69,7 @@ const ConnectDeviceStepsLayout: React.FC<ConnectDeviceProps> = ({
                             <div className="group relative">
                                 <AiFillInfoCircle
                                     size={26}
-                                    className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                    className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                 />
                                 <Tooltip content={step.info} />
                             </div>

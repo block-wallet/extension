@@ -41,7 +41,7 @@ const ChainFiltersButton: React.FC<ChainFiltersProps> = ({
     onChangeFilters,
 }) => {
     return (
-        <div className="relative text-sm text-primary-300">
+        <div className="relative text-sm text-primary-blue-default">
             <Dropdown
                 onClickItem={(selected) => {
                     return onChangeFilters(handleOnChange(selected, filters))
@@ -57,7 +57,7 @@ const ChainFiltersButton: React.FC<ChainFiltersProps> = ({
                                 <Dropdown.MenuItem
                                     value={value}
                                     selected={filters.includes(value)}
-                                    className="p-2 font-normal text-black"
+                                    className="p-2 font-normal text-primary-black-default"
                                 >
                                     {label}
                                 </Dropdown.MenuItem>

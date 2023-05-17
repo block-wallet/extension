@@ -24,8 +24,8 @@ const DropdownNetworkDisplay: FunctionComponent<
         <div
             className={classNames(
                 "flex flex-row items-center w-full p-3 my-0.5 rounded-md cursor-pointer",
-                "transition-all duration-300 active:scale-95 hover:bg-primary-100",
-                active && "bg-primary-200"
+                "transition-all duration-300 active:scale-95 hover:bg-primary-grey-default",
+                active && "bg-primary-grey-hover"
             )}
             onClick={onClick}
         >

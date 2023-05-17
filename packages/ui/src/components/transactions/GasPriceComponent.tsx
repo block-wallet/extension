@@ -113,7 +113,7 @@ const GasSelectorBasic = (props: GasComponentProps) => {
                                 className={classnames(
                                     "text-base font-semibold cursor-pointer capitalize",
                                     selectedOption.label === option.label &&
-                                        "text-primary-300"
+                                        "text-primary-blue-default"
                                 )}
                             >
                                 {option.label}
@@ -125,7 +125,7 @@ const GasSelectorBasic = (props: GasComponentProps) => {
                                             "text-xs",
                                             selectedOption.label ===
                                                 option.label &&
-                                                "text-primary-300"
+                                                "text-primary-blue-default"
                                         )}
                                     >
                                         {option.totalNativeCurrencyCostRange}
@@ -136,7 +136,7 @@ const GasSelectorBasic = (props: GasComponentProps) => {
                                                 "text-sm",
                                                 selectedOption.label ===
                                                     option.label
-                                                    ? "text-primary-300"
+                                                    ? "text-primary-blue-default"
                                                     : "hidden"
                                             )}
                                         />
@@ -145,10 +145,10 @@ const GasSelectorBasic = (props: GasComponentProps) => {
                                 <div>
                                     <span
                                         className={classnames(
-                                            "text-gray-600 text-xs",
+                                            "text-primary-grey-dark text-xs",
                                             selectedOption.label ===
                                                 option.label &&
-                                                "!text-primary-300"
+                                                "!text-primary-blue-default"
                                         )}
                                     >
                                         {option.totalETHCostRange}
@@ -346,7 +346,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
         <div className="flex flex-col w-full">
             <div className="flex flex-col w-full space-y-3 px-3 pb-3">
                 <div className="flex flex-col">
-                    <label className="leading-loose text-xs font-medium mb-1 text-gra">
+                    <label className="text-[13px] font-medium text-primary-grey-dark">
                         Gas limit
                     </label>
                     <input
@@ -356,7 +356,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                         })}
                         className={classnames(
                             Classes.inputBordered,
-                            "w-full",
+                            "w-full mt-2",
                             !isCustom && "text-gray-400",
                             errors.gasLimit
                                 ? "border-red-400 focus:border-red-600"
@@ -406,7 +406,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                     </span>
                 </div>
                 <div className="flex flex-col relative">
-                    <label className="leading-loose text-xs font-medium  mb-1">
+                    <label className="text-[13px] font-medium text-primary-grey-dark">
                         Max tip (per gas unit)
                     </label>
                     <EndLabel label="GWEI">
@@ -465,7 +465,7 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                     </span>
                 </div>
                 <div className="flex flex-col relative">
-                    <label className="leading-loose text-xs font-medium  mb-1">
+                    <label className="text-[13px] font-medium  text-primary-grey-dark">
                         Max fee (per gas unit)
                     </label>
                     <EndLabel label="GWEI">
@@ -520,12 +520,12 @@ const GasSelectorAdvanced = (props: GasComponentProps) => {
                         {errors.maxFeePerGas?.message || maxFeeWarning || ""}
                     </span>
                 </div>
-                <span className="text-gray-500 text-xs">
+                <span className="text-primary-grey-dark text-xs">
                     Last base fee: {formatUnits(baseFeePerGas!, "gwei")} GWEI
                 </span>
             </div>
             <div>
-                <hr className="absolute left-0 border-0.5 border-gray-200 w-full" />
+                <hr className="absolute left-0 border-0.5 border-primary-grey-hover w-full" />
                 <div className="flex flex-row w-full items-center pt-5 justify-between space-x-4 mt-auto px-4">
                     <Button
                         label="Save"
@@ -600,7 +600,10 @@ const GasPriceComponent: FunctionComponent<{
 
     const {
         defaultNetworkLogo,
-        nativeCurrency: { decimals: nativeCurrencyDecimals },
+        nativeCurrency: {
+            decimals: nativeCurrencyDecimals,
+            logo: nativeCurrencyLogo,
+        },
     } = useSelectedNetwork()
 
     const [baseFee, setBaseFee] = useState<BigNumber>(
@@ -770,7 +773,7 @@ const GasPriceComponent: FunctionComponent<{
             {/* Label */}
             <div
                 className={classnames(
-                    Classes.blueSection,
+                    Classes.greySection,
                     active && Classes.blueSectionActive,
                     disabled && "pointer-events-none"
                 )}
@@ -803,12 +806,15 @@ const GasPriceComponent: FunctionComponent<{
                             isLoaded &&
                             (displayOnlyMaxValue ? (
                                 <div className="flex flex-row w-full items-center space-x-4">
-                                    <span className="text-xs text-gray-600">
+                                    <span className="text-xs text-primary-grey-dark">
                                         {selectedGas!.totalNativeCurrencyCost}
                                     </span>
                                     <div className="flex flex-row space-x-1 items-center">
                                         <img
-                                            src={defaultNetworkLogo}
+                                            src={
+                                                nativeCurrencyLogo ??
+                                                defaultNetworkLogo
+                                            }
                                             alt={networkNativeCurrency.symbol}
                                             width="20px"
                                             draggable={false}
@@ -820,13 +826,16 @@ const GasPriceComponent: FunctionComponent<{
                                 </div>
                             ) : (
                                 <>
-                                    <span className="text-xs text-gray-600">
+                                    <span className="text-xs text-primary-grey-dark">
                                         {selectedGas!.totalNativeCurrencyCost}
                                     </span>
                                     <div className="flex flex-row space-x-1 items-center justify-self-end">
                                         <div className="justify-self-start">
                                             <img
-                                                src={defaultNetworkLogo}
+                                                src={
+                                                    nativeCurrencyLogo ??
+                                                    defaultNetworkLogo
+                                                }
                                                 alt={
                                                     networkNativeCurrency.symbol
                                                 }
@@ -864,7 +873,7 @@ const GasPriceComponent: FunctionComponent<{
                 <span className="absolute top-0 right-0 p-4 z-50">
                     <div
                         onClick={() => setActive(false)}
-                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                        className=" cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                     >
                         <CloseIcon size="10" />
                     </div>
@@ -872,7 +881,9 @@ const GasPriceComponent: FunctionComponent<{
                 <div>
                     <div className="flex flex-col w-full space-y-2">
                         <div className="z-10 flex flex-row items-center p-2 bg-white bg-opacity-75">
-                            <h2 className="p-0 text-lg font-bold">Gas Price</h2>
+                            <h2 className="p-0 text-lg font-semibold">
+                                Gas Price
+                            </h2>
                             <div className="group relative">
                                 <a
                                     href="https://ethereum.org/en/developers/docs/gas/"
@@ -881,7 +892,7 @@ const GasPriceComponent: FunctionComponent<{
                                 >
                                     <AiFillInfoCircle
                                         size={26}
-                                        className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                        className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                     />
                                 </a>
                                 <Tooltip
@@ -914,8 +925,8 @@ const GasPriceComponent: FunctionComponent<{
                                 `flex-1 flex flex-row items-center justify-center p-3 text-sm
                                             ${
                                                 tab === value
-                                                    ? "border-primary-300 border-b-2 text-primary-300 font-bold"
-                                                    : "border-gray-200 text-gray-500 border-b"
+                                                    ? "border-primary-blue-default border-b-2 text-primary-blue-default font-semibold"
+                                                    : "border-primary-grey-hover text-primary-grey-dark border-b"
                                             }`
                             }
                             containerClassName="flex flex-row -ml-3"
@@ -925,7 +936,9 @@ const GasPriceComponent: FunctionComponent<{
                         />
                         <TabComponent
                             symbol={networkNativeCurrency.symbol}
-                            nativeCurrencyIcon={defaultNetworkLogo}
+                            nativeCurrencyIcon={
+                                nativeCurrencyLogo ?? defaultNetworkLogo
+                            }
                             options={gasOptions}
                             gasFees={defaultGas.feeData}
                             selectedOption={selectedGas!}

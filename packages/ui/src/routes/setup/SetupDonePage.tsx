@@ -1,13 +1,32 @@
 import { useEffect, useState } from "react"
 
 import Confetti from "react-dom-confetti"
+import { FaGithub, FaTelegramPlane } from "react-icons/fa"
+import { IoLogoTwitter } from "react-icons/io"
 
-import LogoHeader from "../../components/LogoHeader"
 import PageLayout from "../../components/PageLayout"
+import Divider from "../../components/Divider"
 
-import logo from "../../assets/images/logo.svg"
 import { completeSetup } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
+
+import logo from "../../assets/images/logo.svg"
+import { LINKS } from "../../util/constants"
+
+const links = [
+    {
+        icon: <FaGithub className="w-5 h-5" />,
+        link: LINKS.GITHUB,
+    },
+    {
+        icon: <IoLogoTwitter className="w-5 h-5" />,
+        link: LINKS.TWITTER,
+    },
+    {
+        icon: <FaTelegramPlane className="w-5 h-5" />,
+        link: LINKS.TELEGRAM,
+    },
+]
 
 const SetupDonePage = () => {
     const history: any = useOnMountHistory()
@@ -41,22 +60,36 @@ const SetupDonePage = () => {
             <div className="absolute w-full h-full flex flex-row items-center justify-center overflow-hidden z-10">
                 <Confetti active={confettiActive} config={config} />
             </div>
-            <PageLayout centered className="relative overflow-hidden">
+            <PageLayout header centered className="relative overflow-hidden">
                 <div className="flex flex-col items-center relative py-14 z-10">
-                    <LogoHeader />
                     <div className="flex flex-col items-center my-12 space-y-6">
-                        <span className="font-title font-semibold text-5xl text-center">
-                            Set-up completed!
+                        <span className="font-bold text-5xl text-center">
+                            Ready to go!
                         </span>
-                        <div className="flex flex-col md:flex-row items-center space-x-1 w-92 px-4 md:px-0 md:w-full mx-auto text-gray-600 text-sm text-center leading-loose">
+                        <div className="flex flex-col items-center space-x-1 w-92 px-4 mx-auto text-primary-grey-dark text-base text-center leading-loose">
                             <span>
-                                You're ready to start using BlockWallet.
+                                You can start using BlockWallet.
                                 <br />
-                                Your journey to financial privacy starts here.
-                                <br />
-                                Access BlockWallet via the extensions section of
-                                your browser.
+                                Access your wallet by clicking on the extension
+                                icon on your browser.
                             </span>
+                            <Divider className="text-primary-grey-default my-6" />
+                            <span>
+                                Keep track of updates or ask us anything on
+                                Twitter or Telegram.
+                            </span>
+                            <div className="flex space-x-4 text-black mt-4">
+                                {links.map(({ link, icon }) => (
+                                    <a
+                                        href={link}
+                                        target="_blank"
+                                        className="text-sm font-semibold hover:underline flex items-center"
+                                        rel="noopener noreferrer"
+                                    >
+                                        {icon}
+                                    </a>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>

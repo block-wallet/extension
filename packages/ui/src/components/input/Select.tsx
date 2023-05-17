@@ -29,7 +29,7 @@ const getClassnamesForType = ({
     if (type === "select") {
         return classnames(
             !disabled ? Classes.selectStyle : Classes.selectStyleDisabled,
-            showMenu ? "border-primary-300" : ""
+            showMenu ? "border-primary-blue-default" : ""
         )
     }
     return Classes.selectInlineStyle
@@ -112,7 +112,7 @@ const Select: FC<SelectProps> & CompoundProps = ({
         return null
     }, [currentValue, children])
     return (
-        <div className="space-y-1">
+        <div className="space-y-2">
             {label ? (
                 <label
                     htmlFor={id || "selectMenu"}
@@ -211,7 +211,10 @@ const SelectOption: FC<ItemProps> & CompoundMember = ({
             onClick={() => (onClick && !disabled ? onClick(value) : void 0)}
         >
             <span
-                className={classnames("leading-loose", selected && "font-bold")}
+                className={classnames(
+                    "leading-loose",
+                    selected && "font-semibold"
+                )}
             >
                 {children}
             </span>

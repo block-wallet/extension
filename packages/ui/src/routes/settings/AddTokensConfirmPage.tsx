@@ -49,6 +49,7 @@ const AddTokensConfirmPage = (props: any) => {
             header={
                 <PopupHeader
                     title="Add Tokens"
+                    networkIndicator
                     onBack={() => {
                         history.push({
                             pathname: "/settings/tokens/add",
@@ -74,6 +75,7 @@ const AddTokensConfirmPage = (props: any) => {
                     ></ButtonWithLoading>
                 </PopupFooter>
             }
+            showProviderStatus
         >
             {/* MAIN */}
             <div className="flex-1 flex flex-col w-full h-0 max-h-screen pb-0">

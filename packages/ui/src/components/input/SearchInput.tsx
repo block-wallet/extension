@@ -108,7 +108,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
                 <div
                     className={classnames(
                         "flex justify-start items-center relative",
-                        label ? "mt-2" : "",
+                        label ? "" : "",
                         error !== "" || warning !== "" ? "mb-2" : ""
                     )}
                 >
@@ -131,7 +131,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
                         )}
                         className={classnames(
                             Classes.inputBordered,
-                            "w-full relative z-0 outline-none	transition-all delay-100",
+                            "w-full relative z-0 outline-none transition-all delay-100",
                             isFocus ? "pl-2" : "pl-9",
                             inputClassName,
                             isValid

@@ -114,7 +114,7 @@ const PasswordSetupPage = () => {
     }, [passwordValues.password, trigger])
     return (
         <PageLayout header maxWidth="max-w-md">
-            <span className="my-6 text-lg font-bold font-title">
+            <span className="my-6 text-lg font-semibold">
                 Create a Password
             </span>
             <Divider />
@@ -155,7 +155,7 @@ const PasswordSetupPage = () => {
                                     href="https://blockwallet.io/terms-of-use-of-block-wallet.html"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-500"
+                                    className="text-primary-blue-default"
                                 >
                                     Terms of Use
                                 </a>

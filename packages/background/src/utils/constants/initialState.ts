@@ -155,6 +155,8 @@ const initialState: BlankAppState = {
         popupTab: 'activity',
         settings: {
             hideAddressWarning: false, // Shown by default,
+            hideSendToContractWarning: false, // Shown by default
+            hideSendToNullWarning: false, // Shown by default
             subscribedToReleaseaNotes: true,
             subscribedToNotifications: true,
             useAntiPhishingProtection: true,
@@ -171,6 +173,7 @@ const initialState: BlankAppState = {
             account: [],
         },
         defaultGasOption: 'medium',
+        hotkeysEnabled: true,
     },
     TransactionController: {
         transactions: [],
@@ -194,7 +197,12 @@ const initialState: BlankAppState = {
         availableNetworks: INITIAL_NETWORKS,
         isNetworkChanging: false,
         isUserNetworkOnline: true,
-        isProviderNetworkOnline: true,
+        providerStatus: {
+            isCurrentProviderOnline: true,
+            isDefaultProviderOnline: true,
+            isBackupProviderOnline: true,
+            isUsingBackupProvider: false,
+        },
         isEIP1559Compatible: {},
     },
     ExchangeRatesController: {

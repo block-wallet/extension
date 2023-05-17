@@ -66,7 +66,7 @@ const SuccessDialog: FunctionComponent<
                                 )}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex flex-row items-center space-x-2 text-sm font-bold text-primary-300"
+                                className="flex flex-row items-center space-x-2 text-sm font-semibold text-primary-blue-default"
                             >
                                 <span>View on {explorerName}</span>
                                 <img

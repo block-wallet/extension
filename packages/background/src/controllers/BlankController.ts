@@ -115,7 +115,10 @@ import {
     SubmitQRHardwareSignatureMessage,
     CancelQRHardwareSignRequestMessage,
     RequestUpdateTransactionStatus,
+    AddressType,
+    RequestSwitchProvider,
     RequestIsEnrolled,
+    RequestSetHotkeys,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -742,6 +745,8 @@ export default class BlankController extends EventEmitter {
         portId: string
     ): Promise<ResponseType<MessageTypes>> {
         switch (type) {
+            case Messages.ADDRESS.GET_TYPE:
+                return this.getAddressType(request as string);
             case Messages.ACCOUNT.CREATE:
                 return this.accountCreate(request as RequestAccountCreate);
             case Messages.ACCOUNT.EXPORT_JSON:
@@ -871,6 +876,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.NETWORK.REMOVE_NETWORK:
                 return this.removeNetwork(request as RequestRemoveNetwork);
+            case Messages.NETWORK.SWITCH_PROVIDER:
+                return this.switchProvider(request as RequestSwitchProvider);
             case Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS:
                 return this.getChainData(request as RequestGetChainData);
             case Messages.NETWORK.GET_DEFAULT_RPC:
@@ -1139,6 +1146,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.BROWSER.GET_WINDOW_ID:
                 return getCurrentWindowId();
+            case Messages.WALLET.SET_HOTKEYS_ENABLED:
+                return this.setHotkeysStatus(request as RequestSetHotkeys);
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -2035,6 +2044,26 @@ export default class BlankController extends EventEmitter {
         return Object.values(INITIAL_NETWORKS).find(
             (network) => network.chainId === chainId
         )?.defaultRpcUrl;
+    }
+
+    /**
+     * switchProvider
+     *
+     * @param chainId chain identifier of the network
+     * @param providerType provider type {default, backup, custom}
+     * @param customRpcUrl custom rpc url of the network
+     *
+     */
+    private async switchProvider({
+        chainId,
+        providerType,
+        customRpcUrl,
+    }: RequestSwitchProvider): Promise<void> {
+        return this.networkController.switchProvider(
+            chainId,
+            providerType,
+            customRpcUrl
+        );
     }
 
     /**
@@ -3406,5 +3435,34 @@ export default class BlankController extends EventEmitter {
         version,
     }: RequestGenerateOnDemandReleaseNotes): Promise<ReleaseNote[]> {
         return generateOnDemandReleaseNotes(version);
+    }
+
+    /**
+     * Get Address type (normal, native, smart contract, erc20)
+     * @param address - hex address
+     * @returns AddressType
+     */
+    private async getAddressType(address: string): Promise<AddressType> {
+        if (isNativeTokenAddress(address)) return AddressType.NULL;
+
+        const isContract = await this.networkController.isAddressContract(
+            address
+        );
+        if (isContract) {
+            const tokenSearch = await this.tokenController.search(address);
+            if (tokenSearch.tokens.length > 0 && tokenSearch.tokens[0].symbol)
+                return AddressType.ERC20;
+            return AddressType.SMART_CONTRACT;
+        }
+
+        return AddressType.NORMAL;
+    }
+
+    /** Set hotkeys enabled/disabled
+     *
+     * @param enabled indicates if the extension can use hotkeys
+     */
+    private setHotkeysStatus({ enabled }: RequestSetHotkeys) {
+        this.preferencesController.hotkeysStatus = enabled;
     }
 }

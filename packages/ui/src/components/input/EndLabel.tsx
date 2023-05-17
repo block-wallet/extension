@@ -9,15 +9,15 @@ const EndLabel = ({
     children: React.ReactNode
     className?: string
 }) => (
-    <div className="flex flex-row relative w-full">
+    <div className="flex flex-row relative w-full mt-2">
         {children}
         <div
             className={classnames(
-                "absolute inset-y-0 right-2 flex items-center",
+                "absolute inset-y-0 right-3 flex items-center",
                 className
             )}
         >
-            <span className="text-gray-500 text-sm">{label}</span>
+            <span className="text-primary-grey-dark text-sm">{label}</span>
         </div>
     </div>
 )

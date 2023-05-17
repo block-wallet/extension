@@ -143,7 +143,7 @@ const SwapPage = () => {
                       currency: nativeCurrency,
                       locale_info: localeInfo,
                       returnNonBreakingSpace: false,
-                      showSymbol: true,
+                      showSymbol: false,
                   }
               )
             : undefined
@@ -372,16 +372,18 @@ const SwapPage = () => {
                     close="/"
                     networkIndicator
                     keepState
-                    onBack={() =>
-                        fromAssetPage
-                            ? history.push({
-                                  pathname: "/asset/details",
-                                  state: {
-                                      address: fromToken?.address,
-                                  },
-                              })
-                            : history.push("/home")
-                    }
+                    onBack={() => {
+                        history.push(
+                            fromAssetPage
+                                ? {
+                                      pathname: "/asset/details",
+                                      state: {
+                                          address: fromToken?.address,
+                                      },
+                                  }
+                                : { pathname: "/home" }
+                        )
+                    }}
                 />
             }
             footer={
@@ -394,6 +396,7 @@ const SwapPage = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             {rate && tokenTo && quote ? (
                 <RateUpdateDialog
@@ -403,17 +406,19 @@ const SwapPage = () => {
                     rate={rate}
                 />
             ) : null}
-            <div className="flex flex-col px-6 py-4 h-full">
+            <div className="flex flex-col p-6 h-full">
                 <div
                     className={classnames(
                         "flex flex-row",
                         // Error message height
-                        !errors.amount?.message && "mb-[22px]"
+                        !errors.amount?.message && "mb-5"
                     )}
                 >
                     {/* Asset */}
                     <div className="flex flex-col space w-1/2 pr-1.5">
-                        <p className="mb-2 text-sm text-gray-600">Swap From</p>
+                        <p className="mb-2 text-[13px] font-medium text-primary-grey-dark">
+                            Swap From
+                        </p>
                         <AssetSelection
                             selectedAssetList={AssetListType.DEFAULT}
                             selectedAsset={
@@ -457,8 +462,8 @@ const SwapPage = () => {
                                     "ml-auto text-sm",
                                     isUsingNetworkNativeCurrency && "invisible",
                                     isMaxAmountEnabled
-                                        ? "text-blue-500 hover:text-blue-800 cursor-pointer"
-                                        : "text-gray-600 cursor-default"
+                                        ? "text-primary-blue-default hover:text-primary-blue-hover cursor-pointer"
+                                        : "text-primary-grey-dark cursor-default"
                                 )}
                                 onClick={() => {
                                     if (isMaxAmountEnabled) {
@@ -475,10 +480,10 @@ const SwapPage = () => {
                         </div>
                         <div
                             className={classnames(
-                                "flex flex-col items-stretch rounded-md p-4 h-[4.5rem] hover:bg-primary-200 w-full",
+                                "flex flex-col items-stretch rounded-md p-4 h-[4rem] hover:bg-primary-grey-hover w-full",
                                 inputFocus
-                                    ? "bg-primary-200"
-                                    : "bg-primary-100",
+                                    ? "bg-primary-grey-hover"
+                                    : "bg-primary-grey-default",
                                 errors.amount
                                     ? "border-red-400"
                                     : "border-opacity-0 border-transparent"
@@ -503,7 +508,7 @@ const SwapPage = () => {
                             />
                             <p
                                 className={classnames(
-                                    "text-xs text-gray-600 mt-1",
+                                    "text-xs text-primary-grey-dark",
                                     !formattedAmount && "hidden"
                                 )}
                             >
@@ -539,7 +544,9 @@ const SwapPage = () => {
                     </button>
                 </div>
 
-                <p className="text-sm text-gray-600 pb-3">Swap To</p>
+                <p className="text-[13px] font-medium text-primary-grey-dark mb-2">
+                    Swap To
+                </p>
                 <AssetSelection
                     displayIcon
                     selectedAssetList={AssetListType.DEFAULT}
@@ -574,7 +581,7 @@ const SwapPage = () => {
                     }}
                 />
                 {swapFee && (
-                    <div className="flex items-center pt-2 text-xs text-gray-600 pt-0.5 mr-1 mt-2">
+                    <div className="flex items-center pt-2 text-xs text-primary-grey-dark pt-0.5 mr-1 mt-2">
                         <span>{`BlockWallet fee (${BASE_SWAP_FEE}%): ${swapFee}`}</span>
                     </div>
                 )}

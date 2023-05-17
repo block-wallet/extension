@@ -4,9 +4,9 @@ import { Link } from "react-router-dom"
 import Divider from "../../components/Divider"
 import { Classes, classnames } from "../../styles/classes"
 
-import crossIcon from "../../assets/images/icons/cross.svg"
+import importSeedIcon from "../../assets/images/icons/import_seed.svg"
 
-import checkmarkIcon from "../../assets/images/icons/checkmark.svg"
+import newAccountIcon from "../../assets/images/icons/new_account.svg"
 import PageLayout from "../../components/PageLayout"
 import { useCheckUserIsOnboarded } from "../../context/hooks/useCheckUserIsOnboarded"
 
@@ -17,16 +17,16 @@ const SetupOption: FunctionComponent<{
     linkTo: string
     linkLabel: string
 }> = ({ title, description, icon, linkTo, linkLabel }) => (
-    <div className="relative flex flex-col items-start flex-1 p-6 bg-primary-100">
-        <div className="absolute top-0 right-0 w-4 h-4 bg-white" />
-        <div className="absolute top-0 right-0 w-4 h-4 mt-4 mr-4 bg-white" />
+    <div className="relative flex flex-col items-center border rounded flex-1 p-6 ">
         <img
             src={icon}
             alt="icon"
-            className="mb-4 text-4xl text-gray-500 w-14 h-14"
+            className="mb-4 text-4xl text-primary-grey-dark w-8 h-8"
         />
-        <span className="text-sm font-bold font-title">{title}</span>
-        <span className="h-16 mt-4 text-xs text-gray-500">{description}</span>
+        <span className="text-sm font-semibold">{title}</span>
+        <span className="h-16 mt-4 text-xs text-primary-grey-dark text-center">
+            {description}
+        </span>
         <Link
             to={linkTo}
             className={classnames(Classes.button, "w-full")}
@@ -42,25 +42,25 @@ const SetupPage = () => {
     useCheckUserIsOnboarded()
 
     return (
-        <PageLayout className="relative" header>
-            <span className="my-6 text-lg font-bold font-title">
-                New to BlockWallet?
+        <PageLayout header className="relative">
+            <span className="my-6 text-lg font-semibold  ">
+                How do you want to proceed?
             </span>
             <Divider />
             <div className="flex flex-col w-full p-6 space-y-4 md:flex-row md:space-y-0 md:space-x-4">
                 <SetupOption
-                    title="No, I have a seed phrase"
-                    description="Import your existing wallet using a 12 word seed phrase."
-                    icon={crossIcon}
+                    title="Use your seed phrase"
+                    description="Access your existing wallets and accounts using a seed phrase."
+                    icon={importSeedIcon}
                     linkTo="/setup/import"
-                    linkLabel="Import Your Wallet"
+                    linkLabel="Import your wallet"
                 />
                 <SetupOption
-                    title="Yes, set me up"
-                    description="Create a new wallet and seed phrase."
-                    icon={checkmarkIcon}
+                    title="Create a new account"
+                    description="Create a new seed phrase and start with a fresh wallet."
+                    icon={newAccountIcon}
                     linkTo="/setup/create"
-                    linkLabel="Create a Wallet"
+                    linkLabel="Create new wallet"
                 />
             </div>
         </PageLayout>

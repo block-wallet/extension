@@ -31,8 +31,7 @@ const PageLayout: FunctionComponent<{
             ) : null}
             <div
                 className={classnames(
-                    "flex-1 flex flex-row w-full justify-center",
-                    !screen && "my-4"
+                    "flex-1 flex flex-row w-full justify-center"
                 )}
             >
                 <div

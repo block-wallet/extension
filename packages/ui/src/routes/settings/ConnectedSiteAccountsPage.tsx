@@ -65,13 +65,13 @@ const ConnectedSiteAccount: FunctionComponent<{
                         <div className="flex flex-col space-y-1 cursor-default">
                             <div className="flex flex-row space-x-1">
                                 <span
-                                    className="text-sm font-bold text-gray-800 cursor-text"
+                                    className="text-sm font-semibold text-gray-800 cursor-text"
                                     title={account.name}
                                 >
                                     {formatName(account.name, 18)}{" "}
                                 </span>
                                 <span
-                                    className="font-bold text-black cursor-text"
+                                    className="font-semibold text-primary-black-default cursor-text"
                                     title={account.address}
                                 >
                                     {formatHashLastChars(account.address)}
@@ -128,14 +128,14 @@ const ConnectedSiteAccount: FunctionComponent<{
                 {connected ? (
                     <div className="flex flex-row">
                         {active && (
-                            <div className="mt-2 ml-14 px-1.5 py-0.5 font-bold border rounded-sm text-xs border-gray-700 bg-gray-700 text-white pointer-events-none">
+                            <div className="mt-2 ml-14 px-1.5 py-0.5 font-semibold border rounded-sm text-xs border-gray-700 bg-gray-700 text-white pointer-events-none">
                                 Active
                             </div>
                         )}
                         {account.address !== selectedAddress && (
                             <button
                                 className={classnames(
-                                    "mt-2 px-1.5 py-0.5 font-bold border rounded-sm text-xs border-primary-300 text-primary-300 hover:bg-primary-200",
+                                    "mt-2 px-1.5 py-0.5 font-semibold border rounded-sm text-xs border-primary-blue-default text-primary-blue-default hover:bg-primary-grey-hover",
                                     active ? "ml-2" : "ml-14"
                                 )}
                                 onClick={() =>
@@ -241,7 +241,7 @@ const ConnectedSiteAccountsPage = () => {
                 ></PopupHeader>
             }
         >
-            <div className="flex flex-col p-6 space-y-8 text-sm text-gray-500">
+            <div className="flex flex-col p-6 space-y-8 text-sm text-primary-grey-dark">
                 {!isSelectedAccountConnected && (
                     <div>
                         <WarningTip

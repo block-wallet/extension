@@ -318,7 +318,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                         <div className="group relative">
                             <AiFillInfoCircle
                                 size={26}
-                                className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                             />
                             <Tooltip
                                 content={`${transactionCount - 1} more ${
@@ -413,10 +413,10 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                     fill={getAccountColor(account.address)}
                 />
                 <div className="relative flex flex-col group space-y-1 ml-4">
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-semibold">
                         {formatName(account.name, 15)}
                     </span>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-primary-grey-dark">
                         {formatRounded(
                             formatUnits(
                                 balance || "0",
@@ -429,16 +429,18 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
             </div>
             <Divider />
             <div className="px-6 py-3">
-                <p className="text-sm font-bold pb-3 break-word">
+                <p className="text-sm font-semibold pb-3 break-word">
                     {origin} is requesting to update your {tokenName} allowance
                 </p>
-                <p className="text-sm text-gray-500 break-word">
+                <p className="text-sm text-primary-grey-dark break-word">
                     {mainSectionText}
                 </p>
             </div>
             <Divider />
             <div className="flex flex-col space-y-2 px-6 py-3">
-                <label className="text-sm text-gray-600">Gas Price</label>
+                <label className="text-[13px] font-medium text-primary-grey-dark">
+                    Gas Price
+                </label>
                 {!isEIP1559Compatible ? (
                     <GasPriceSelector
                         defaultLevel={defaultGasOption || "medium"}

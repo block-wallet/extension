@@ -13,6 +13,8 @@ import {
     RequestAddNetwork,
     RequestEditNetwork,
     RequestEditNetworksOrder,
+    AddressType,
+    RequestSwitchProvider,
 } from "@block-wallet/background/utils/types/communication"
 import { Devices, ExchangeType, Messages, TransactionStatus } from "./commTypes"
 import {
@@ -80,6 +82,15 @@ const sendMessage = <TMessageType extends MessageTypes>(
 
         port.postMessage({ id, message, request: request || {} })
     })
+}
+
+/**
+ * Gets the address type (normal, native, smart contract,erc20)
+ * @param address address to check
+ * @returns address type
+ */
+export const getAddressType = async (address: string): Promise<AddressType> => {
+    return sendMessage(Messages.ADDRESS.GET_TYPE, address)
 }
 
 /**
@@ -942,6 +953,20 @@ export const removeNetwork = async (chainId: number) => {
 }
 
 /**
+ * Switches the provider of the specified chain
+ *
+ * @param chainId The chainId of the network
+ * @param providerType The provider to use (default, backup, custom)
+ * @param customRpcUrl? The rpc url to use if the provider is custom
+ *
+ */
+export const switchProvider = async (
+    switchProviderInput: RequestSwitchProvider
+) => {
+    return sendMessage(Messages.NETWORK.SWITCH_PROVIDER, switchProviderInput)
+}
+
+/**
  * Obtains the details(name, rpc list, icon, etc) of the specified chain
  *
  * @param chainId The chainId of the network to fetch the details from
@@ -1673,4 +1698,13 @@ export const executeBridge = async (
     return sendMessage(Messages.BRIDGE.EXECUTE_BRIDGE, {
         bridgeTransaction,
     })
+}
+
+/**
+ * Enable/Disable hotkeys
+ *
+ * @param enabled Allow hotkeys on the extension
+ */
+export const setHotkeysEnabled = async (enabled: boolean): Promise<void> => {
+    return sendMessage(Messages.WALLET.SET_HOTKEYS_ENABLED, { enabled })
 }

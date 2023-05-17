@@ -82,7 +82,7 @@ const AccountSearchBar: FunctionComponent<{
                 />
                 <div
                     className={classnames(
-                        "w-1/12 hover:text-primary-300",
+                        "w-1/12 hover:text-primary-blue-default",
                         "transition-opacity",
                         searchBarVisible
                             ? "opacity-100 delay-500 duration-75"

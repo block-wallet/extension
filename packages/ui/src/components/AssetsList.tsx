@@ -56,35 +56,31 @@ const Asset: FunctionComponent<{
                     },
                 })
             }
-            className="flex flex-row items-center justify-between px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 cursor-pointer"
+            className="flex flex-row items-center justify-between px-6 py-4 -ml-6 transition duration-300 hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 cursor-pointer"
             style={{ width: "calc(100% + 2 * 1.5rem)" }}
             role="listitem"
             aria-label={asset.token.symbol}
         >
             <div className="flex flex-row items-center">
                 <AssetIcon asset={asset.token} />
-                <div className="flex flex-col ml-2">
+                <div className="flex flex-col ml-2 mr-2">
                     <span
-                        className="text-sm font-bold"
-                        title={`
-                                    ${formatUnits(
-                                        asset.balance || "0",
-                                        asset.token.decimals
-                                    )} ${asset.token.symbol}
-                                `}
+                        className="text-sm font-semibold"
+                        title={`${formatUnits(
+                            asset.balance || "0",
+                            asset.token.decimals
+                        )} ${asset.token.symbol}`}
                     >
-                        {`
-                                    ${formatRounded(
-                                        formatUnits(
-                                            asset.balance || "0",
-                                            asset.token.decimals
-                                        ),
-                                        4
-                                    )}
-                                    ${asset.token.symbol}
-                                `}
+                        {`${formatRounded(
+                            formatUnits(
+                                asset.balance || "0",
+                                asset.token.decimals
+                            ),
+                            4
+                        )}
+                                    ${asset.token.symbol}`}
                     </span>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-[11px] text-primary-grey-dark">
                         {formatter.format(
                             asset.balance || BigNumber.from(0),
                             asset.token.symbol,
@@ -169,7 +165,6 @@ const AssetsList = () => {
             )}
             <div className="flex flex-col w-full space-y-1">
                 {/* Network label */}
-                {/* <span className="text-xs text-gray-500">ETHEREUM</span> */}
                 <SubAssetList assets={tokens} />
             </div>
             <div className="flex flex-col w-full space-y-1">

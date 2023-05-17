@@ -92,7 +92,7 @@ const ErrorFallbackPage: FunctionComponent<{
                 onConfirm={handleReset}
             />
             <div className="flex flex-col space-y-4 p-6 py-4 justify-center items-center">
-                <div className="flex flex-col space-y-6 p-4 items-center justify-center bg-primary-100 rounded-md">
+                <div className="flex flex-col space-y-6 p-4 items-center justify-center bg-primary-grey-default rounded-md">
                     <div className="text-sm">
                         <p>
                             An error ocurred while using{" "}
@@ -125,13 +125,13 @@ const ErrorFallbackPage: FunctionComponent<{
                     </div>
                 </div>
 
-                <div className="flex flex-col w-full space-y-4 px-4 py-4 bg-primary-100 rounded-md">
+                <div className="flex flex-col w-full space-y-4 px-4 py-4 bg-primary-grey-default rounded-md">
                     <div className="flex flex-col space-y-4 text-xs">
                         <a
                             href={LINKS.GITHUB_BUG_REPORT}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
+                            className="flex flex-row items-center space-x-3 hover:text-primary-blue-default hover:cursor-pointer"
                         >
                             <FaGithub size={22} />
                             <p>Create an Issue in GitHub.</p>
@@ -140,7 +140,7 @@ const ErrorFallbackPage: FunctionComponent<{
                             href={LINKS.WEBSITE_BUG_REPORT}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
+                            className="flex flex-row items-center space-x-3 hover:text-primary-blue-default hover:cursor-pointer"
                         >
                             <FaGlobe size={22} />
                             <p>Report it using our Bug Report Form.</p>
@@ -149,14 +149,14 @@ const ErrorFallbackPage: FunctionComponent<{
                             href={LINKS.TELEGRAM}
                             target="_blank"
                             rel="noreferrer"
-                            className="flex flex-row items-center space-x-3 hover:text-blue-600 hover:cursor-pointer"
+                            className="flex flex-row items-center space-x-3 hover:text-primary-blue-default hover:cursor-pointer"
                         >
                             <FaTelegram size={22} />
                             <p>Contact us on Telegram.</p>
                         </a>
                     </div>
                 </div>
-                <div className="w-full border border-gray-200 rounded-md flex justify-between items-center p-4 py-2">
+                <div className="w-full border border-primary-grey-hover rounded-md flex justify-between items-center p-4 py-2">
                     <span className="text-xs mr-2">
                         Download state logs for support
                     </span>

@@ -32,7 +32,7 @@ import {
     formatHashLastChars,
     formatName,
 } from "../../util/formatAccount"
-import { formatRounded } from "../../util/formatRounded"
+import { formatRounded, formatRoundedUp } from "../../util/formatRounded"
 import { formatUnits, parseUnits } from "@ethersproject/units"
 import { getAccountColor } from "../../util/getAccountColor"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
@@ -193,7 +193,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const [isAllowanceValid, setIsAllowanceValid] = useState(true)
     const [allowanceAmount, setAllowanceAmount] = useState(
         minAllowance
-            ? formatUnits(minAllowance, assetDecimals)
+            ? formatRoundedUp(formatUnits(minAllowance, assetDecimals))
             : formatUnits(UNLIMITED_ALLOWANCE, assetDecimals)
     )
 
@@ -506,7 +506,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         href={spenderAddressExplorerLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-primary-300 hover:underline"
+                        className="text-primary-blue-default hover:underline"
                     >
                         {spenderName}
                     </a>{" "}
@@ -519,7 +519,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         href={spenderAddressExplorerLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-primary-300 hover:underline"
+                        className="text-primary-blue-default hover:underline"
                     >
                         {spenderName}
                     </a>{" "}
@@ -532,11 +532,13 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const mainSection = (
         <>
             <div className="flex flex-col space-y-3 px-6 py-4">
-                <p className="text-sm font-bold">{`You are about to update your ${assetName} allowance`}</p>
-                <p className="text-sm text-gray-500">{mainSectionText}</p>
+                <p className="text-sm font-semibold">{`You are about to update your ${assetName} allowance`}</p>
+                <p className="text-sm text-primary-grey-dark">
+                    {mainSectionText}
+                </p>
                 {currentAllowanceValue && (
                     <p
-                        className="flex items-center space-x-1 text-sm text-gray-500 break-word mt-2"
+                        className="flex items-center space-x-1 text-sm text-primary-grey-dark break-word mt-2"
                         title={`${Number(
                             formatUnits(currentAllowanceValue, assetDecimals)
                         )} ${assetName}`}
@@ -567,7 +569,9 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     currentAllowance={currentAllowanceValue}
                 />
 
-                <label className="text-sm text-gray-600">Gas Price</label>
+                <label className="text-[13px] font-medium text-primary-grey-dark">
+                    Gas Price
+                </label>
                 {!isEIP1559Compatible ? (
                     <GasPriceSelector
                         defaultLevel={defaultGasOption || "medium"}
@@ -646,6 +650,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingDialog
                 open={isOpen}
@@ -676,11 +681,11 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     fill={getAccountColor(selectedAccount.address)}
                 />
                 <div className="relative flex flex-col group space-y-1 ml-4">
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-semibold">
                         {formatName(selectedAccount.name, 15)}
                     </span>
                     <span
-                        className="text-xs text-gray-600 truncate"
+                        className="text-xs text-primary-grey-dark truncate"
                         title={selectedAccount.address}
                     >
                         {formatHash(selectedAccount.address)}
@@ -693,7 +698,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                             formatUnits(assetBalance || "0", assetDecimals)
                         )} ${assetName}`}
                     >
-                        <span className="text-xs text-gray-600 truncate">
+                        <span className="text-xs text-primary-grey-dark truncate">
                             {`${formatRounded(
                                 formatUnits(assetBalance || "0", assetDecimals)
                             )}`}
@@ -722,7 +727,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                             18
                         )} ${nativeToken.token.symbol}`}
                     >
-                        <span className="text-xs text-gray-600 truncate">
+                        <span className="text-xs text-primary-grey-dark truncate">
                             {formatName(
                                 formatRounded(
                                     formatUnits(

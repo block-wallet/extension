@@ -1698,10 +1698,10 @@ export default class BlankProviderController extends BaseController<BlankProvide
      * Updates providers current connection status
      */
     private _handleConnectionStatus = ({
-        isProviderNetworkOnline,
+        providerStatus: { isCurrentProviderOnline },
         isUserNetworkOnline,
     }: NetworkControllerState) => {
-        const isConnected = isProviderNetworkOnline && isUserNetworkOnline;
+        const isConnected = isCurrentProviderOnline && isUserNetworkOnline;
 
         if (isConnected !== this._isConnected) {
             this._isConnected = isConnected;

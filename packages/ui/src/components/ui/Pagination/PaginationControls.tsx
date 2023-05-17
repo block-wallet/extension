@@ -12,8 +12,8 @@ const PageControlButton: React.FC<
     return (
         <button
             className={classnames(
-                "border rounded-md border-primary-200 hover:border-primary-300 p-3 cursor-pointer items-center",
-                "disabled:border-gray-200 disabled:pointer-events-none disabled:cursor-default disabled:bg-gray-100"
+                "border rounded-md border-primary-200 hover:border-primary-blue-default p-3 cursor-pointer items-center",
+                "disabled:border-primary-grey-hover disabled:pointer-events-none disabled:cursor-default disabled:bg-gray-100"
             )}
             onClick={onClick}
             disabled={disabled}

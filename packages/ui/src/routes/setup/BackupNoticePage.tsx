@@ -8,9 +8,10 @@ import PageLayout from "../../components/PageLayout"
 import Divider from "../../components/Divider"
 import { Classes } from "../../styles/classes"
 
-import drawerIcon from "../../assets/images/icons/drawer.svg"
-import penIcon from "../../assets/images/icons/pen.svg"
-import backupIcon from "../../assets/images/icons/backup.svg"
+import keyIcon from "../../assets/images/icons/key.svg"
+import safeIcon from "../../assets/images/icons/safe.svg"
+import yourBackupIcon from "../../assets/images/icons/your_backup.svg"
+
 import LinkButton from "../../components/button/LinkButton"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import ClickToReveal from "../../components/label/ClickToReveal"
@@ -19,27 +20,26 @@ import { closeCurrentTab } from "../../util/window"
 import IdleComponent from "../../components/IdleComponent"
 
 const SideTips = () => (
-    <div className="flex flex-col justify-between h-full w-full space-y-6 text-sm text-left md:w-64 md:ml-6">
-        <div className="flex flex-col w-full p-6 space-y-4 rounded-md bg-primary-200">
-            <img src={drawerIcon} className="w-5 h-5" alt="" />
+    <div className="flex space-x-8 w-full text-sm text-left text-primary-black-default">
+        <div className="flex flex-col w-full p-4 space-y-4 rounded-md border border-primary-grey-default">
+            <img src={keyIcon} className="w-5 h-5" alt="" />
+            <span className="font-semibold">Your keys, your crypto</span>
             <span>
-                Store this phrase in a password manager like{" "}
-                <b className="text-gray-900">1Password</b>.
+                Only you have access to your wallet and the funds in it.
             </span>
         </div>
-        <div className="flex flex-col w-full p-6 space-y-4 rounded-md bg-primary-200">
-            <img src={penIcon} className="w-5 h-5" alt="" />
+        <div className="flex flex-col w-full p-4 space-y-4 rounded-md border border-primary-grey-default">
+            <img src={safeIcon} className="w-5 h-5" alt="" />
+            <span className="font-semibold">Keep your keys safe</span>
             <span>
-                Write this phrase on pieces of paper and store each in{" "}
-                <b className="text-gray-900">2 - 3</b> different locations.
+                Never disclose your keys to anyone and store them offline.
             </span>
         </div>
-        <div className="flex flex-col w-full p-6 space-y-4 rounded-md bg-primary-200">
-            <img src={backupIcon} className="w-5 h-5" alt="" />
+        <div className="flex flex-col w-full p-4 space-y-4 rounded-md border border-primary-grey-default">
+            <img src={yourBackupIcon} className="w-5 h-5" alt="" />
+            <span className="font-semibold">Your keys are your backup</span>
             <span>
-                <b className="text-gray-900">Download</b> this Secret Backup
-                Phrase and keep it stored safely on an external encrypted hard
-                drive or storage medium.
+                Use keys if you forget your password or lose your device.
             </span>
         </div>
     </div>
@@ -62,36 +62,19 @@ const BackupNoticePage = () => {
 
     return (
         <IdleComponent>
-            <PageLayout
-                header
-                maxWidth="max-w-md"
-                className="text-center"
-                sideComponent={
-                    <div className="hidden md:block">
-                        <SideTips />
-                    </div>
-                }
-            >
-                <span className="my-6 text-lg font-bold font-title">
-                    Seed Phrase
+            <PageLayout header maxWidth="max-w-[800px]" className="text-center">
+                <span className="my-6 text-lg font-semibold">
+                    Secret Phrase
                 </span>
                 <Divider />
-                <div className="flex flex-col p-8 space-y-8 text-sm text-gray-600">
+                <div className="flex flex-col p-8 space-y-8 text-sm text-primary-grey-dark">
                     <span>
-                        Your seed phrase is the key to your wallet. It makes it
-                        possible to restore your wallet after losing access.
-                        Import your seed phrase to gain access to the funds held
-                        on your BlockWallet. Backup your seed phrase and store
-                        it in a safe place.
+                        Your seed phrase is the key to your wallet. Use it to
+                        recover your funds or access your wallet on other
+                        devices. Back up your seed phrase and store it in a safe
+                        place.
                     </span>
-                    <div className="md:hidden">
-                        <SideTips />
-                    </div>
-                    <span>
-                        <b className="text-gray-900">Warning:</b> Never disclose
-                        your seed phrase. Anyone asking for your seed phrase is
-                        most likely trying to steal your funds.
-                    </span>
+                    <SideTips />
                     <ClickToReveal
                         hiddenText={seedPhrase}
                         revealMessage={"Click here to reveal secret words"}
@@ -100,11 +83,12 @@ const BackupNoticePage = () => {
                     />
                 </div>
                 <Divider />
-                <div className="flex flex-row w-full p-6 space-x-4">
+                <div className="flex flex-row w-full p-6 justify-between">
                     <LinkButton
                         location="/setup/done"
                         text="Remind me later"
                         lite
+                        classes="max-w-[200px]"
                     />
                     <Link
                         to={{
@@ -113,6 +97,7 @@ const BackupNoticePage = () => {
                         }}
                         className={classnames(
                             Classes.button,
+                            "max-w-[200px]",
                             !revealed && "opacity-50 pointer-events-none"
                         )}
                         draggable={false}

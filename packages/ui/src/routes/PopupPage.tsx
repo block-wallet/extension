@@ -1,12 +1,9 @@
 import { useState } from "react"
 import classnames from "classnames"
 import { Link, useHistory } from "react-router-dom"
-import { formatUnits } from "@ethersproject/units"
-import { BigNumber } from "@ethersproject/bignumber"
 import { BiCircle } from "react-icons/bi"
 
 // Components
-import PageLayout from "../components/PageLayout"
 import CopyTooltip from "../components/label/СopyToClipboardTooltip"
 import GearIcon from "../components/icons/GearIcon"
 import QRIcon from "../components/icons/QRIcon"
@@ -21,9 +18,7 @@ import Tooltip from "../components/label/Tooltip"
 
 // Utils
 import { formatHash, formatName } from "../util/formatAccount"
-import { formatCurrency, toCurrencyAmount } from "../util/formatCurrency"
 import { getAccountColor } from "../util/getAccountColor"
-import { formatRounded } from "../util/formatRounded"
 import { HiOutlineExclamationCircle } from "react-icons/hi"
 
 // Context
@@ -32,7 +27,6 @@ import { useSelectedAccount } from "../context/hooks/useSelectedAccount"
 import { useSelectedNetwork } from "../context/hooks/useSelectedNetwork"
 import { session } from "../context/setup"
 import { useConnectedSite } from "../context/hooks/useConnectedSite"
-import { useTokensList } from "../context/hooks/useTokensList"
 
 // Utils
 import { useSelectedAddressWithChainIdChecksum } from "../util/hooks/useSelectedAddressWithChainIdChecksum"
@@ -42,7 +36,15 @@ import TokenSummary from "../components/token/TokenSummary"
 import GasPricesInfo from "../components/gas/GasPricesInfo"
 import DoubleArrowHoverAnimation from "../components/icons/DoubleArrowHoverAnimation"
 import TransparentOverlay from "../components/loading/TransparentOverlay"
+import PopupLayout from "../components/popup/PopupLayout"
+import PopupHeader from "../components/popup/PopupHeader"
 import Icon, { IconName } from "../components/ui/Icon"
+import useNetWorthBalance from "../context/hooks/useNetWorthBalance"
+import { AiFillInfoCircle } from "react-icons/ai"
+import ProviderStatus from "../components/chain/ProviderStatus"
+import { useHotkeys } from "react-hotkeys-hook"
+import { componentsHotkeys } from "../util/hotkeys"
+import { generateExplorerLink } from "../util/getExplorer"
 
 const AccountDisplay = () => {
     const accountAddress = useSelectedAddressWithChainIdChecksum()
@@ -61,13 +63,13 @@ const AccountDisplay = () => {
             onClick={copy}
         >
             <span
-                className="text-sm font-bold truncate max-w-[96px]"
+                className="text-sm font-semibold truncate max-w-[96px]"
                 data-testid="account-name"
                 title={account.name}
             >
                 {formatName(account.name, 18)}
             </span>
-            <span className="text-xs text-gray-600 truncate">
+            <span className="text-[11px] text-primary-grey-dark truncate">
                 {formatHash(accountAddress)}
             </span>
             <CopyTooltip copied={copied} />
@@ -108,11 +110,11 @@ const DAppConnection = () => {
                     }
                 }}
                 className={classnames(
-                    "relative flex flex-row items-center p-1 px-2 pr-1  text-gray-600 rounded-md group border border-primary-200  text-xs cursor-pointer",
+                    "relative flex flex-row items-center py-1  text-primary-grey-dark rounded-md group border-primary-200  text-xs cursor-pointer",
                     dAppConnected === "connected" &&
-                        "bg-green-100 hover:border-green-300",
+                        "pl-2 pr-1 bg-green-100 hover:border-green-300",
                     dAppConnected === "connected-warning" &&
-                        "bg-yellow-100 hover:border-yellow-300",
+                        "pl-2 pr-1 bg-yellow-100 hover:border-yellow-300",
                     dAppConnected === "not-connected" && "pointer-events-none"
                 )}
             >
@@ -134,7 +136,8 @@ const DAppConnection = () => {
                 <span
                     className={classnames(
                         "mr-1 pointer-events-none",
-                        dAppConnected === "connected" && "text-green-600",
+                        dAppConnected === "connected" &&
+                            "text-secondary-green-default",
                         dAppConnected === "connected-warning" &&
                             "text-yellow-600"
                     )}
@@ -152,8 +155,8 @@ const PopupPage = () => {
     const error = (useHistory().location.state as { error: string })?.error
     const state = useBlankState()!
     const history = useHistory()
-    const { nativeToken } = useTokensList()
-    const { nativeCurrency, isSendEnabled, isSwapEnabled, isBridgeEnabled } =
+    const netWorth = useNetWorthBalance()
+    const { isSendEnabled, isSwapEnabled, isBridgeEnabled, showGasLevels } =
         useSelectedNetwork()
     const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const [hasErrorDialog, setHasErrorDialog] = useState(!!error)
@@ -161,9 +164,105 @@ const PopupPage = () => {
     const isLoading = state.isNetworkChanging
 
     const disabledActions = !isSendEnabled || !state.isUserNetworkOnline
+    const hotkeysPermissions = {
+        "/home/alt/s": isSendEnabled, //Send
+        "/home/alt/w": isSwapEnabled, //Swap
+        "/home/alt/b": isBridgeEnabled !== undefined, //Bridge
+        "/home/alt/g": showGasLevels,
+    }
+
+    const popupPageHotkeys = componentsHotkeys.PopupPage
+    useHotkeys(popupPageHotkeys, () => {
+        if (!state.hotkeysEnabled) return
+
+        chrome.tabs.create({
+            url: generateExplorerLink(
+                state.availableNetworks,
+                state.selectedNetwork,
+                checksumAddress,
+                "address"
+            ),
+        })
+    })
 
     return (
-        <PageLayout screen className="max-h-screen popup-layout">
+        <PopupLayout
+            header={
+                <PopupHeader
+                    title=""
+                    close={false}
+                    backButton={false}
+                    permissions={hotkeysPermissions}
+                >
+                    {state.isNetworkChanging && <TransparentOverlay />}
+                    <div
+                        className="absolute top-0 left-0 z-10 flex flex-col items-start w-full px-6 py-4 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
+                        style={{ backdropFilter: "blur(4px)" }}
+                    >
+                        <div className="flex flex-row items-center justify-between w-full">
+                            <div className="flex flex-row items-center space-x-3">
+                                <div className="relative flex flex-col items-start group">
+                                    <Link
+                                        to="/accounts"
+                                        className="transition duration-300"
+                                        draggable={false}
+                                        data-testid="navigate-account-link"
+                                    >
+                                        <AccountIcon
+                                            className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
+                                            fill={getAccountColor(
+                                                checksumAddress
+                                            )}
+                                        />
+                                    </Link>
+                                    <Tooltip
+                                        className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-medium bg-primary-black-default text-white"
+                                        content={
+                                            <>
+                                                <span>My Accounts</span>
+                                            </>
+                                        }
+                                    />
+                                </div>
+                                <div className="flex flex-row items-center space-x-1">
+                                    <AccountDisplay />
+                                    <Link
+                                        to="/accounts/menu/receive"
+                                        draggable={false}
+                                        onClick={(e) => {
+                                            e.preventDefault()
+
+                                            history.push(
+                                                "/accounts/menu/receive"
+                                            )
+                                        }}
+                                        className="p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                                    >
+                                        <QRIcon />
+                                    </Link>
+                                </div>
+                            </div>
+                            <div className="flex flex-row items-center -mr-1 space-x-2">
+                                <GasPricesInfo />
+                                <Link
+                                    to="/settings"
+                                    draggable={false}
+                                    onClick={(e) => {
+                                        e.preventDefault()
+
+                                        history.push("/settings")
+                                    }}
+                                    className="p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                                >
+                                    <GearIcon />
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </PopupHeader>
+            }
+            hotkeysPermissions={hotkeysPermissions}
+        >
             <ErrorDialog
                 title="Error!"
                 message={error}
@@ -173,71 +272,10 @@ const PopupPage = () => {
                 }}
                 onDone={() => setHasErrorDialog(false)}
             />
-            {state.isNetworkChanging && <TransparentOverlay />}
-            <div
-                className="absolute top-0 left-0 z-10 flex flex-col items-start w-full p-6 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
-                style={{ backdropFilter: "blur(4px)" }}
-            >
-                <div className="flex flex-row items-center justify-between w-full">
-                    <div className="flex flex-row items-center space-x-3">
-                        <div className="relative flex flex-col items-start group">
-                            <Link
-                                to="/accounts"
-                                className="transition duration-300"
-                                draggable={false}
-                                data-testid="navigate-account-link"
-                            >
-                                <AccountIcon
-                                    className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
-                                    fill={getAccountColor(checksumAddress)}
-                                />
-                            </Link>
-                            <Tooltip
-                                className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-bold bg-gray-900 text-white"
-                                content={
-                                    <>
-                                        <div className="border-t-4 border-r-4 border-gray-900 absolute top-0 left-2 w-2 h-2 -mt-2.5 transform -rotate-45 -translate-x-1/2" />
-                                        <span>My Accounts</span>
-                                    </>
-                                }
-                            />
-                        </div>
-                        <div className="flex flex-row items-center space-x-1">
-                            <AccountDisplay />
-                            <Link
-                                to="/accounts/menu/receive"
-                                draggable={false}
-                                onClick={(e) => {
-                                    e.preventDefault()
-
-                                    history.push("/accounts/menu/receive")
-                                }}
-                                className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
-                            >
-                                <QRIcon />
-                            </Link>
-                        </div>
-                    </div>
-                    <div className="flex flex-row items-center -mr-1 space-x-2">
-                        <GasPricesInfo />
-                        <Link
-                            to="/settings"
-                            draggable={false}
-                            onClick={(e) => {
-                                e.preventDefault()
-
-                                history.push("/settings")
-                            }}
-                            className="p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
-                        >
-                            <GearIcon />
-                        </Link>
-                    </div>
-                </div>
-            </div>
-            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-24 space-y-2 overflow-auto hide-scroll">
+            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-4 space-y-2 overflow-auto hide-scroll">
                 <div className="w-full">
-                    <div className="flex flex-row items-start w-full justify-between pt-1 pb-2">
+                    <ProviderStatus onHomepage />
+                    <div className="flex flex-row items-start w-full justify-between pt-1 pb-1">
                         <GenericTooltip
                             bottom
                             disabled={!state.isImportingDeposits}
@@ -254,41 +292,50 @@ const PopupPage = () => {
                         <DAppConnection />
                     </div>
                     <TokenSummary className="p-4">
-                        <TokenSummary.Balances>
-                            <TokenSummary.TokenBalance
-                                title={
-                                    formatUnits(
-                                        nativeToken.balance || "0",
-                                        nativeCurrency.decimals
-                                    ) + ` ${nativeCurrency.symbol}`
-                                }
-                            >
-                                {formatRounded(
-                                    formatUnits(
-                                        nativeToken.balance || "0",
-                                        nativeCurrency.decimals
-                                    ),
-                                    5
-                                )}{" "}
-                                {nativeCurrency.symbol}
+                        <TokenSummary.Balances className="!space-y-0">
+                            <TokenSummary.TokenBalance title={netWorth}>
+                                {netWorth}
                             </TokenSummary.TokenBalance>
-                            <TokenSummary.ExchangeRateBalance>
-                                {formatCurrency(
-                                    toCurrencyAmount(
-                                        nativeToken.balance ||
-                                            BigNumber.from(0),
-                                        state.exchangeRates[
-                                            state.networkNativeCurrency.symbol
-                                        ],
-                                        nativeCurrency.decimals
-                                    ),
-                                    {
-                                        currency: state.nativeCurrency,
-                                        locale_info: state.localeInfo,
-                                        returnNonBreakingSpace: true,
-                                        showSymbol: true,
-                                    }
-                                )}
+
+                            <TokenSummary.ExchangeRateBalance className="flex items-center text-xs">
+                                <div className="group relative">
+                                    <a
+                                        href="https://help.blockwallet.io/hc/en-us/articles/14296951040785"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="contents"
+                                    >
+                                        <AiFillInfoCircle
+                                            size={23}
+                                            className="pr-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
+                                        />
+
+                                        <Tooltip
+                                            content={
+                                                <div className="flex flex-col font-normal items-start text-xs text-white-500">
+                                                    <div className="flex flex-row items-end space-x-7">
+                                                        <span>
+                                                            Your NET worth is
+                                                            the summed{" "}
+                                                            {state.nativeCurrency.toUpperCase()}{" "}
+                                                            value
+                                                            <br /> of all assets
+                                                            in your asset list.
+                                                        </span>{" "}
+                                                    </div>
+                                                    <div className="flex flex-row items-end space-x-4">
+                                                        <span>
+                                                            Click on this icon
+                                                            to learn more.
+                                                        </span>{" "}
+                                                    </div>
+                                                </div>
+                                            }
+                                            className="!-mb-4"
+                                        />
+                                    </a>
+                                </div>
+                                Net Worth
                             </TokenSummary.ExchangeRateBalance>
                         </TokenSummary.Balances>
                         <TokenSummary.Actions>
@@ -305,7 +352,7 @@ const PopupPage = () => {
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
                                         disabledActions
                                             ? "bg-gray-300"
-                                            : "bg-primary-300"
+                                            : "bg-primary-blue-default"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
@@ -322,7 +369,7 @@ const PopupPage = () => {
                                         <ArrowHoverAnimation />
                                     )}
                                 </div>
-                                <span className="text-xs font-medium">
+                                <span className="text-[13px] font-medium">
                                     Send
                                 </span>
                             </Link>
@@ -340,7 +387,7 @@ const PopupPage = () => {
                                             "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
                                             disabledActions
                                                 ? "bg-gray-300"
-                                                : "bg-primary-300"
+                                                : "bg-primary-blue-default"
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
@@ -357,7 +404,7 @@ const PopupPage = () => {
                                             <DoubleArrowHoverAnimation />
                                         )}
                                     </div>
-                                    <span className="text-xs font-medium">
+                                    <span className="text-[13px] font-medium">
                                         Swap
                                     </span>
                                 </Link>
@@ -376,7 +423,7 @@ const PopupPage = () => {
                                             "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
                                             disabledActions
                                                 ? "bg-gray-300"
-                                                : "bg-primary-300"
+                                                : "bg-primary-blue-default"
                                         )}
                                         style={{ transform: "scaleY(-1)" }}
                                     >
@@ -403,13 +450,13 @@ const PopupPage = () => {
                                                         icon={
                                                             AnimatedIconName.Bridge
                                                         }
-                                                        className="cursor-pointer"
+                                                        className="cursor-pointer bg-primary-blue-default"
                                                     />
                                                 )}
                                             </>
                                         )}
                                     </div>
-                                    <span className="text-xs font-medium">
+                                    <span className="text-[13px] font-medium">
                                         Bridge
                                     </span>
                                 </Link>
@@ -419,7 +466,7 @@ const PopupPage = () => {
                     <ActivityAssetsView initialTab={state.popupTab} />
                 </div>
             </div>
-        </PageLayout>
+        </PopupLayout>
     )
 }
 

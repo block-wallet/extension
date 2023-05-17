@@ -118,10 +118,10 @@ const UnlockPage = () => {
                             >
                                 <AiFillInfoCircle
                                     size={26}
-                                    className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                    className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                                 />
                                 <Tooltip
-                                    className="!w-52 !break-word !whitespace-normal  border boder-gray-300 -translate-x-44"
+                                    className="!w-52 !break-word !whitespace-normal !-translate-x-44 !-mb-4"
                                     content="Locked too soon? Click to learn how to increase the lock timeout."
                                 />
                             </a>
@@ -153,7 +153,7 @@ const UnlockPage = () => {
             <div className="p-6 pb-0 flex flex-col space-y-8">
                 <div className="flex flex-col space-y-2">
                     <img src={logo} alt="logo" className="w-12 h-12 mx-auto" />
-                    <span className="text-center text-base font-bold font-title">
+                    <span className="text-center text-base font-semibold  ">
                         Enter your password to continue.
                     </span>
                 </div>

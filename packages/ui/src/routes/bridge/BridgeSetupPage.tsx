@@ -203,7 +203,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                       currency: nativeCurrency,
                       locale_info: localeInfo,
                       returnNonBreakingSpace: false,
-                      showSymbol: true,
+                      showSymbol: false,
                   }
               )
             : undefined
@@ -456,6 +456,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             {quote && (
                 <BridgeDetails
@@ -471,12 +472,12 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     className={classnames(
                         "flex flex-row",
                         // Error message height
-                        !errors.amount?.message && "mb-[22px]"
+                        !errors.amount?.message && "mb-6"
                     )}
                 >
                     {/* Asset */}
                     <div className="flex flex-col w-1/2 pr-1.5">
-                        <p className="text-sm text-gray-600 pb-2">
+                        <p className="text-[13px] font-medium text-primary-grey-dark pb-2">
                             Bridge Asset
                         </p>
                         <AssetSelection
@@ -515,8 +516,8 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                                     "ml-auto text-sm",
                                     isUsingNetworkNativeCurrency && "invisible",
                                     isMaxAmountEnabled
-                                        ? "text-blue-500 hover:text-blue-800 cursor-pointer"
-                                        : "text-gray-600 cursor-default"
+                                        ? "text-primary-blue-default hover:text-primary-blue-hover cursor-pointer"
+                                        : "text-primary-grey-dark cursor-default"
                                 )}
                                 onClick={() => {
                                     if (isMaxAmountEnabled) {
@@ -534,10 +535,10 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         <div
                             onClick={focusAmountInput}
                             className={classnames(
-                                "flex flex-col items-stretch rounded-md p-4 h-[4.5rem] hover:bg-primary-200 w-full",
+                                "flex flex-col items-stretch rounded-md p-4 h-[4rem] hover:bg-primary-grey-hover w-full",
                                 inputFocus
-                                    ? "bg-primary-200"
-                                    : "bg-primary-100",
+                                    ? "bg-primary-grey-hover"
+                                    : "bg-primary-grey-default",
                                 errors.amount
                                     ? "border border-red-400"
                                     : "border-opacity-0 border-transparent"
@@ -562,7 +563,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                             />
                             <p
                                 className={classnames(
-                                    "text-xs text-gray-600 mt-1",
+                                    "text-xs text-primary-grey-dark",
                                     !formattedAmount && "hidden"
                                 )}
                             >
@@ -582,7 +583,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Divider */}
-                <div className="pt-3 h-8">
+                <div className="pt-3 h-8 mb-2">
                     <hr className="-mx-5" />
                     <div className="flex -translate-y-2/4 justify-center items-center mx-auto rounded-full w-8 h-8 border border-grey-200 bg-white z-10">
                         <img
@@ -594,7 +595,9 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Network selector */}
-                <p className="text-sm text-gray-600 pb-2">To Network</p>
+                <p className="text-[13px] font-medium text-primary-grey-dark pb-2">
+                    To Network
+                </p>
                 <NetworkSelector
                     topMargin={60}
                     bottomMargin={200}
@@ -641,10 +644,10 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                         </div>
                         {!bridgeQuoteError ? (
                             <div className="flex flex-col mt-2">
-                                <div className="text-gray-600 flex flex-row space-x-2 items-center">
+                                <div className="text-primary-grey-dark flex flex-row space-x-2 items-center">
                                     <span>
                                         Estimated duration:{" "}
-                                        <span className="font-bold">
+                                        <span className="font-semibold">
                                             {secondsToEstimatedMinutes(
                                                 quote.bridgeParams.params
                                                     .estimatedDurationInSeconds

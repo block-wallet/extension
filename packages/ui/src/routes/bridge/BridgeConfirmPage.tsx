@@ -71,7 +71,7 @@ import {
     GetBridgeQuoteResponse,
     GetBridgeQuoteNotFoundResponse,
 } from "@block-wallet/background/controllers/BridgeController"
-import CollapsableWarning from "../../components/CollapsableWarning"
+import CollapsableMessage from "../../components/CollapsableMessage"
 import { AiOutlineWarning } from "react-icons/ai"
 import BridgeDetails from "../../components/bridge/BridgeDetails"
 import ErrorMessage from "../../components/error/ErrorMessage"
@@ -545,6 +545,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingAllowanceTransactionDialog
                 status={allowanceTxDialogStatus}
@@ -617,16 +618,16 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 address={selectedAccount.address}
             />
             {showBridgeWarningMessage && (
-                <CollapsableWarning
+                <CollapsableMessage
                     isCollapsedByDefault={false}
                     collapsedMessage={
                         <div
                             className={classnames(
-                                "text-center opacity-90 w-full p-2 bg-yellow-200 hover:bg-yellow-100 space-x-2 flex tems-center font-bold justify-center"
+                                "text-center opacity-90 w-full p-2 bg-yellow-200 hover:bg-yellow-100 space-x-2 flex tems-center font-semibold justify-center"
                             )}
                         >
                             <AiOutlineWarning className="w-4 h-4 yellow-300" />
-                            <span className="font-bold">
+                            <span className="font-semibold">
                                 {bridgeWarningMessage.title}
                             </span>
                         </div>
@@ -676,7 +677,9 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 </div>
 
                 {/* Gas */}
-                <p className="text-sm text-gray-600 pt-1 pb-2">Gas Price</p>
+                <p className="text-[13px] font-medium pt-1 pb-2 text-primary-grey-dark">
+                    Gas Price
+                </p>
                 {isEIP1559Compatible ? (
                     <GasPriceComponent
                         defaultGas={{
@@ -757,7 +760,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                             !quote && "cursor-not-allowed hover:border-default"
                         )}
                     >
-                        <span className="font-bold text-sm">Details</span>
+                        <span className="font-semibold text-sm">Details</span>
                         <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
                     </OutlinedButton>
                 </div>

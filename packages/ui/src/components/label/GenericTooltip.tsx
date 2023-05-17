@@ -65,10 +65,10 @@ const GenericTooltip: FunctionComponent<{
                 ref={ref}
                 className={classnames(
                     "absolute transform inline-block z-40",
-                    "invisible opacity-0 group-hover:visible group-hover:opacity-95",
-                    "pointer-events-none rounded-md bg-white shadow-md",
+                    "invisible opacity-0 group-hover:visible group-hover:opacity-100",
+                    "pointer-events-none rounded-md bg-primary-black-default text-white shadow-md",
                     "transition-all duration-300 ease-out",
-                    "p-1 text-xs",
+                    "p-1 text-xs font-medium",
                     top && `bottom-full mb-1.5`,
                     right && "left-full mr-1.5",
                     bottom && "top-full mt-1.5",

@@ -8,7 +8,7 @@ export const ArrowUpDown: FunctionComponent<{
     <img
         onClick={onClick}
         src={arrowDown}
-        className="w-3 h-2 text-black"
+        className="w-3 h-2 text-primary-black-default"
         alt=""
         style={{
             transform: `${active ? "rotate(180deg)" : "none"}`,

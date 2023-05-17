@@ -165,7 +165,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                     />
                 </div>
                 <div className="flex flex-row items-center px-6 py-3">
-                    <div className="flex flex-row items-center justify-center w-10 h-10 rounded-full bg-primary-100">
+                    <div className="flex flex-row items-center justify-center w-10 h-10 rounded-full bg-primary-grey-default">
                         <img
                             alt="icon"
                             src={
@@ -180,16 +180,16 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                         className="relative flex flex-col group space-y-1 ml-4"
                         onClick={() => copyAssetAddress()}
                     >
-                        <span className="text-sm font-bold">
+                        <span className="text-sm font-semibold">
                             {savedToken!.symbol}
                         </span>
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-primary-grey-dark">
                             {formatHash(savedToken!.address)}
                         </span>
                         <CopyTooltip copied={copied} />
                     </button>
                 </div>
-                <span className="font-medium px-6 text-xxs text-gray-500">
+                <span className="font-medium px-6 text-xxs text-primary-grey-dark">
                     WITH ASSET:
                 </span>
             </>
@@ -251,7 +251,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
             <Divider />
             {isUpdate ? UpdateAssetLayout() : null}
             <div className="flex flex-row items-center px-6 pt-6 pb-3">
-                <div className="flex flex-row items-center justify-center w-10 h-10 rounded-full bg-primary-100">
+                <div className="flex flex-row items-center justify-center w-10 h-10 rounded-full bg-primary-grey-default">
                     <img alt="icon" src={assetImageSrc()} />
                 </div>
                 <button
@@ -259,19 +259,21 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                     className="relative ml-4 flex flex-col group space-y-1"
                     onClick={() => copyAssetAddress()}
                 >
-                    <span className="text-sm font-bold">{token.symbol}</span>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-sm font-semibold">
+                        {token.symbol}
+                    </span>
+                    <span className="text-xs text-primary-grey-dark">
                         {formatHash(token.address)}
                     </span>
                     <CopyTooltip copied={copied} />
                 </button>
                 <div className="flex flex-col ml-auto h-full">
-                    <span className="text-sm font-bold mb-auto text-left">
+                    <span className="text-sm font-semibold mb-auto text-left">
                         Balance
                     </span>
                     {balance === UNKNOWN_BALANCE ? (
                         <div className="flex flex-row items-end">
-                            <span className="pr-1 text-xs text-gray-600">
+                            <span className="pr-1 text-xs text-primary-grey-dark">
                                 Unknown
                             </span>
                             <GenericTooltip
@@ -286,18 +288,18 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                             >
                                 <AiFillQuestionCircle
                                     size={18}
-                                    className="cursor-pointer text-primary-200 hover:text-primary-300"
+                                    className="cursor-pointer text-primary-200 hover:text-primary-blue-default"
                                 />
                             </GenericTooltip>
                         </div>
                     ) : (
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-primary-grey-dark">
                             {balance} {token.symbol}
                         </span>
                     )}
                 </div>
             </div>
-            <span className="font-medium px-6 pt-3 text-xxs text-gray-500">
+            <span className="font-medium px-6 pt-3 text-xxs text-primary-grey-dark">
                 {isUpdate ? "IN " : "TO "} ACCOUNT:
             </span>
             <div className="flex flex-col px-6 pb-6 pt-3">
@@ -307,7 +309,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                         fill={getAccountColor(accountData.address)}
                     />
                     <div className="relative flex flex-col group space-y-1">
-                        <span className="text-sm font-bold">
+                        <span className="text-sm font-semibold">
                             {formatName(accountData.name, 15)}
                             {" ("}
                             {formatNumberLength(
@@ -319,7 +321,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                             )}
                             {` ${nativeToken.token.symbol})`}
                         </span>
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-primary-grey-dark">
                             {formatHash(accountData.address)}
                         </span>
                     </div>
@@ -328,19 +330,21 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
             <Divider />
             <div className="flex flex-col px-6 py-3 space-y-2 text-xs text-gray-800 break-words">
                 <div className="flex flex-col space-y-0.5">
-                    <span className="font-bold">Decimals</span>
-                    <span className="text-gray-600">{token.decimals}</span>
+                    <span className="font-semibold">Decimals</span>
+                    <span className="text-primary-grey-dark">
+                        {token.decimals}
+                    </span>
                 </div>
                 {token!.image && !isBase64Image ? (
                     <div className="flex flex-col space-y-0.5">
-                        <span className="font-bold pt-1">Image URL</span>
-                        <span className="text-gray-600 pb-2">
+                        <span className="font-semibold pt-1">Image URL</span>
+                        <span className="text-primary-grey-dark pb-2">
                             {token!.image}
                         </span>
                         <WarningTip
                             text={
                                 <span>
-                                    <span className="font-bold">
+                                    <span className="font-semibold">
                                         Attention!{" "}
                                     </span>
                                     Your IP address will be exposed to this

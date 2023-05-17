@@ -363,7 +363,9 @@ export default class BridgeController extends BaseController<
                 };
             }
 
-            const logoUrl = targetNetwork.iconUrls
+            const logoUrl = targetNetwork.nativeCurrency.logo
+                ? targetNetwork.nativeCurrency.logo
+                : targetNetwork.iconUrls
                 ? targetNetwork.iconUrls[0]
                 : token.logo;
 

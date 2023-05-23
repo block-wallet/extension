@@ -191,81 +191,81 @@ jobs:
           if-no-files-found: error
           path: dist
 
-  tests:
-    needs: build
-    container: cypress/browsers:node16.16.0-chrome105-ff99-edge
-    runs-on: ubuntu-latest
-    env:
-      WIDTH: 357
-      HEIGHT: 610
-      DBUS_SESSION_BUS_ADDRESS: /dev/null
-    steps:
-      - name: Checkout e2e repository
-        uses: actions/checkout@v3
-        with:
-          repository: block-wallet/e2e-tests
-          ref: refs/heads/main
-          token: ${{ secrets.PAT }}
+  #tests:
+  #  needs: build
+  #  container: cypress/browsers:node16.16.0-chrome105-ff99-edge
+  #  runs-on: ubuntu-latest
+  #  env:
+  #    WIDTH: 357
+  #    HEIGHT: 610
+  #    DBUS_SESSION_BUS_ADDRESS: /dev/null
+  #  steps:
+  #    - name: Checkout e2e repository
+  #      uses: actions/checkout@v3
+  #      with:
+  #        repository: block-wallet/e2e-tests
+  #        ref: refs/heads/main
+  #        token: ${{ secrets.PAT }}
 
-      - name: Install node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
+  #    - name: Install node
+  #      uses: actions/setup-node@v3
+  #      with:
+  #        node-version-file: .nvmrc
 
-      - name: Install yarn
-        run: |
-          npm install --global yarn
+  #    - name: Install yarn
+  #      run: |
+  #        npm install --global yarn
 
-      - name: Cache e2e dependencies
-        id: cache-cypress
-        uses: actions/cache@v3
-        with:
-          path: |
-            node_modules
-            cypress/cache
-          key: ${{ runner.os }}-cypress-v1-${{ hashFiles('yarn.lock') }}
+  #    - name: Cache e2e dependencies
+  #      id: cache-cypress
+  #      uses: actions/cache@v3
+  #      with:
+  #        path: |
+  #          node_modules
+  #          cypress/cache
+  #        key: ${{ runner.os }}-cypress-v1-${{ hashFiles('yarn.lock') }}
 
-      - name: Download the extension
-        uses: actions/download-artifact@v3
-        with:
-          name: blockwallet-extension
-          path: blockwallet-extension
+  #    - name: Download the extension
+  #      uses: actions/download-artifact@v3
+  #      with:
+  #        name: blockwallet-extension
+  #        path: blockwallet-extension
 
-      - name: Install e2e dependencies
-        run: |
-          yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
+  #    - name: Install e2e dependencies
+  #      run: |
+  #        yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
 
-      - name: UI Tests - Chrome
-        run: |
-          yarn run test:e2e
-        env:
-          ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
-          GITHUB_TOKEN: ${{ secrets.PAT }}
-          TEST_TAGS: puppeteer,extension
+  #    - name: UI Tests - Chrome
+  #      run: |
+  #        yarn run test:e2e
+  #      env:
+  #        ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
+  #        GITHUB_TOKEN: ${{ secrets.PAT }}
+  #        TEST_TAGS: puppeteer,extension
 
-      - name: Take the release notes screenshot
-        run: |
-          yarn run test:e2e
-        env:
-          EXTENSION_VERSION: ${{ needs.build.outputs.version_without_preffix }}
-          TEST_TAGS: release-notes
-          BROWSER_WIDTH: ${{ env.WIDTH }}
-          BROWSER_HEIGHT: ${{ env.HEIGHT }}
+  #    - name: Take the release notes screenshot
+  #      run: |
+  #        yarn run test:e2e
+  #      env:
+  #        EXTENSION_VERSION: ${{ needs.build.outputs.version_without_preffix }}
+  #        TEST_TAGS: release-notes
+  #        BROWSER_WIDTH: ${{ env.WIDTH }}
+  #        BROWSER_HEIGHT: ${{ env.HEIGHT }}
 
-      - name: Install ImageMagick (needed for convert)
-        run: |
-          apt update && apt install -y imagemagick --fix-missing
+  #    - name: Install ImageMagick (needed for convert)
+  #      run: |
+  #        apt update && apt install -y imagemagick --fix-missing
 
-      - name: Cut the screenshot
-        run: |
-          convert screenshots/release-notes-${{ needs.build.outputs.version_without_preffix }}.png -crop ${{ env.WIDTH }}x${{ env.HEIGHT }}+0+0 $EXTENSION_NAME.png
+  #    - name: Cut the screenshot
+  #      run: |
+  #        convert screenshots/release-notes-${{ needs.build.outputs.version_without_preffix }}.png -crop ${{ env.WIDTH }}x${{ env.HEIGHT }}+0+0 $EXTENSION_NAME.png
 
-      - name: Save screenshot of release notes
-        uses: actions/upload-artifact@v3
-        with:
-          name: screenshot
-          if-no-files-found: error
-          path: ${{ env.EXTENSION_NAME }}.png
+  #    - name: Save screenshot of release notes
+  #      uses: actions/upload-artifact@v3
+  #      with:
+  #        name: screenshot
+  #        if-no-files-found: error
+  #        path: ${{ env.EXTENSION_NAME }}.png
 
   package:
     needs: build

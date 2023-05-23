@@ -1,6 +1,6 @@
 {
     "name": "extension",
-    "version": "0.7.5",
+    "version": "1.0.0",
     "private": true,
     "scripts": {
         "install": "make install/ci",

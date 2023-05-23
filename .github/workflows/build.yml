@@ -379,7 +379,7 @@ jobs:
 
   notify:
     if: success()
-    needs: [validation, build, tests, package, pull_request]
+    needs: [validation, build, package, pull_request]
     runs-on: ubuntu-latest
     steps:
       - name: Slack notification - Ready to release
@@ -405,7 +405,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_BLOCKWALLET_RELEASES }}
   error:
     if: failure()
-    needs: [validation, build, tests, package, pull_request, notify]
+    needs: [validation, build, package, pull_request, notify]
     runs-on: ubuntu-latest
     steps:
       - name: Slack notification - CI status

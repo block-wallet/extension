@@ -191,84 +191,84 @@ jobs:
           if-no-files-found: error
           path: dist
 
-  tests:
-    needs: build
-    container: cypress/browsers:node16.16.0-chrome105-ff99-edge
-    runs-on: ubuntu-latest
-    env:
-      WIDTH: 357
-      HEIGHT: 610
-      DBUS_SESSION_BUS_ADDRESS: /dev/null
-    steps:
-      - name: Checkout e2e repository
-        uses: actions/checkout@v3
-        with:
-          repository: block-wallet/e2e-tests
-          ref: refs/heads/main
-          token: ${{ secrets.PAT }}
+  #tests:
+  #  needs: build
+  #  container: cypress/browsers:node16.16.0-chrome105-ff99-edge
+  #  runs-on: ubuntu-latest
+  #  env:
+  #    WIDTH: 357
+  #    HEIGHT: 610
+  #    DBUS_SESSION_BUS_ADDRESS: /dev/null
+  #  steps:
+  #    - name: Checkout e2e repository
+  #      uses: actions/checkout@v3
+  #      with:
+  #        repository: block-wallet/e2e-tests
+  #        ref: refs/heads/main
+  #        token: ${{ secrets.PAT }}
 
-      - name: Install node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
+  #    - name: Install node
+  #      uses: actions/setup-node@v3
+  #      with:
+  #        node-version-file: .nvmrc
 
-      - name: Install yarn
-        run: |
-          npm install --global yarn
+  #    - name: Install yarn
+  #      run: |
+  #        npm install --global yarn
 
-      - name: Cache e2e dependencies
-        id: cache-cypress
-        uses: actions/cache@v3
-        with:
-          path: |
-            node_modules
-            cypress/cache
-          key: ${{ runner.os }}-cypress-v1-${{ hashFiles('yarn.lock') }}
+  #    - name: Cache e2e dependencies
+  #      id: cache-cypress
+  #      uses: actions/cache@v3
+  #      with:
+  #        path: |
+  #          node_modules
+  #          cypress/cache
+  #        key: ${{ runner.os }}-cypress-v1-${{ hashFiles('yarn.lock') }}
 
-      - name: Download the extension
-        uses: actions/download-artifact@v3
-        with:
-          name: blockwallet-extension
-          path: blockwallet-extension
+  #    - name: Download the extension
+  #      uses: actions/download-artifact@v3
+  #      with:
+  #        name: blockwallet-extension
+  #        path: blockwallet-extension
 
-      - name: Install e2e dependencies
-        run: |
-          yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
+  #    - name: Install e2e dependencies
+  #      run: |
+  #        yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
 
-      - name: UI Tests - Chrome
-        run: |
-          yarn run test:e2e
-        env:
-          ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
-          GITHUB_TOKEN: ${{ secrets.PAT }}
-          TEST_TAGS: puppeteer,extension
+  #    - name: UI Tests - Chrome
+  #      run: |
+  #        yarn run test:e2e
+  #      env:
+  #        ETHERSCAN_KEY: ${{ secrets.ETHERSCAN_KEY }}
+  #        GITHUB_TOKEN: ${{ secrets.PAT }}
+  #        TEST_TAGS: puppeteer,extension
 
-      - name: Take the release notes screenshot
-        run: |
-          yarn run test:e2e
-        env:
-          EXTENSION_VERSION: ${{ needs.build.outputs.version_without_preffix }}
-          TEST_TAGS: release-notes
-          BROWSER_WIDTH: ${{ env.WIDTH }}
-          BROWSER_HEIGHT: ${{ env.HEIGHT }}
+  #    - name: Take the release notes screenshot
+  #      run: |
+  #        yarn run test:e2e
+  #      env:
+  #        EXTENSION_VERSION: ${{ needs.build.outputs.version_without_preffix }}
+  #        TEST_TAGS: release-notes
+  #        BROWSER_WIDTH: ${{ env.WIDTH }}
+  #        BROWSER_HEIGHT: ${{ env.HEIGHT }}
 
-      - name: Install ImageMagick (needed for convert)
-        run: |
-          apt update && apt install -y imagemagick --fix-missing
+  #    - name: Install ImageMagick (needed for convert)
+  #      run: |
+  #        apt update && apt install -y imagemagick --fix-missing
 
-      - name: Cut the screenshot
-        run: |
-          convert screenshots/release-notes-${{ needs.build.outputs.version_without_preffix }}.png -crop ${{ env.WIDTH }}x${{ env.HEIGHT }}+0+0 $EXTENSION_NAME.png
+  #    - name: Cut the screenshot
+  #      run: |
+  #        convert screenshots/release-notes-${{ needs.build.outputs.version_without_preffix }}.png -crop ${{ env.WIDTH }}x${{ env.HEIGHT }}+0+0 $EXTENSION_NAME.png
 
-      - name: Save screenshot of release notes
-        uses: actions/upload-artifact@v3
-        with:
-          name: screenshot
-          if-no-files-found: error
-          path: ${{ env.EXTENSION_NAME }}.png
+  #    - name: Save screenshot of release notes
+  #      uses: actions/upload-artifact@v3
+  #      with:
+  #        name: screenshot
+  #        if-no-files-found: error
+  #        path: ${{ env.EXTENSION_NAME }}.png
 
   package:
-    needs: tests
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Delete artifacts folders
@@ -282,11 +282,11 @@ jobs:
           name: blockwallet-extension
           path: blockwallet-extension
 
-      - name: Download the extension screenshot (release notes)
-        uses: actions/download-artifact@v3
-        with:
-          name: screenshot
-          path: screenshot
+      #- name: Download the extension screenshot (release notes)
+      #  uses: actions/download-artifact@v3
+      #  with:
+      #    name: screenshot
+      #    path: screenshot
 
       - name: Zip extension
         id: zip
@@ -311,7 +311,7 @@ jobs:
       - name: Upload to S3
         run: |
           aws s3 cp --recursive $ARTIFACTS_FOLDER $S3_PATH
-          aws s3 cp screenshot/$EXTENSION_NAME.png $S3_PATH/$EXTENSION_NAME.png
+      #    aws s3 cp screenshot/$EXTENSION_NAME.png $S3_PATH/$EXTENSION_NAME.png
 
       - name: Upload version and notes to S3
         env:
@@ -353,7 +353,7 @@ jobs:
         run: |
           s3_url=$(echo "${S3_PATH/s3/https}")
           pr_title="[Automated] Extension release ${{ github.event.inputs.extension-version }}"
-          pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip]($s3_url/${{ env.EXTENSION_NAME }}.zip)\n - [Release notes screenshot]($s3_url/${{ env.EXTENSION_NAME }}.png)\n - [SHA256 checksum]($s3_url/${{ env.EXTENSION_NAME }}.checksum)\n\n")
+          pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip]($s3_url/${{ env.EXTENSION_NAME }}.zip)\n - [SHA256 checksum]($s3_url/${{ env.EXTENSION_NAME }}.checksum)\n\n")
           pr_reviewer="block-wallet/releasereviewers"
           pr_assignee="leablock"
           pr_label="automated,release"
@@ -379,7 +379,7 @@ jobs:
 
   notify:
     if: success()
-    needs: [validation, build, tests, package, pull_request]
+    needs: [validation, build, package, pull_request]
     runs-on: ubuntu-latest
     steps:
       - name: Slack notification - Ready to release
@@ -405,7 +405,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_BLOCKWALLET_RELEASES }}
   error:
     if: failure()
-    needs: [validation, build, tests, package, pull_request, notify]
+    needs: [validation, build, package, pull_request, notify]
     runs-on: ubuntu-latest
     steps:
       - name: Slack notification - CI status

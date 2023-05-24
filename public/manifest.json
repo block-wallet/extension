@@ -1,12 +1,20 @@
 {
     "author": "BlockWallet",
     "background": {
-        "scripts": ["hot-reload.js", "background.js"]
+        "scripts": [
+            "hot-reload.js",
+            "background.js"
+        ]
     },
     "content_scripts": [
         {
-            "js": ["content.js"],
-            "matches": ["http://*/*", "https://*/*"],
+            "js": [
+                "content.js"
+            ],
+            "matches": [
+                "http://*/*",
+                "https://*/*"
+            ],
             "exclude_matches": [
                 "https://block-wallet.github.io/eth-ledger-bridge-keyring/*",
                 "https://connect.trezor.io/*"
@@ -15,8 +23,12 @@
             "all_frames": true
         },
         {
-            "js": ["vendor/trezor/trezor-content.js"],
-            "matches": ["*://connect.trezor.io/*/popup.html"]
+            "js": [
+                "vendor/trezor/trezor-content.js"
+            ],
+            "matches": [
+                "*://connect.trezor.io/*/popup.html"
+            ]
         }
     ],
     "browser_action": {
@@ -51,6 +63,8 @@
             }
         }
     },
-    "version": "0.7.5",
-    "web_accessible_resources": ["blankProvider.js"]
+    "version": "1.0.0",
+    "web_accessible_resources": [
+        "blankProvider.js"
+    ]
 }

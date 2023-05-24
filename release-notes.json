@@ -774,6 +774,40 @@
                 }
             ],
             "version": "0.7.5"
+        },
+        {
+            "sections": [
+                {
+                    "title": "v1.0.0",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Immerse yourself in a vibrant interface with revamped colors, fonts, styles, and inputs."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Instantly identify networks with integrated logos."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Gain an immediate overview of your net worth right on the home screen."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Navigate swiftly with newly implemented keyboard shortcuts."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Don\u2019t skip a beat during node downtimes thanks to a further improved failover system."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Make safer transactions with new warnings when sending to smart contracts."
+                        }
+                    ]
+                }
+            ],
+            "version": "1.0.0"
         }
     ]
 }

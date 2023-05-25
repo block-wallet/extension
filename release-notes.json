@@ -808,6 +808,20 @@
                 }
             ],
             "version": "1.0.0"
+        },
+        {
+            "sections": [
+                {
+                    "title": "v1.0.1",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Minor fixes"
+                        }
+                    ]
+                }
+            ],
+            "version": "1.0.1"
         }
     ]
 }

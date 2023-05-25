@@ -15,7 +15,7 @@ export default {
             const { rpcUrls } = updatedNetworks[key];
 
             let defaultRpcUrl: string | undefined;
-            let backupRpcUrls: string[] | undefined = [];
+            let backupRpcUrls: string[] | undefined;
             if (key in INITIAL_NETWORKS) {
                 defaultRpcUrl = INITIAL_NETWORKS[key].defaultRpcUrl;
                 backupRpcUrls = INITIAL_NETWORKS[key].backupRpcUrls;
@@ -54,5 +54,5 @@ export default {
             },
         };
     },
-    version: '1.1.7',
+    version: '1.1.8',
 } as IMigration;

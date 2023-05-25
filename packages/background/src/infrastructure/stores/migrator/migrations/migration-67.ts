@@ -13,10 +13,18 @@ export default {
 
         Object.keys(updatedNetworks).forEach((key) => {
             const { rpcUrls } = updatedNetworks[key];
+
+            let defaultRpcUrl: string | undefined;
+            let backupRpcUrls: string[] | undefined;
+            if (key in INITIAL_NETWORKS) {
+                defaultRpcUrl = INITIAL_NETWORKS[key].defaultRpcUrl;
+                backupRpcUrls = INITIAL_NETWORKS[key].backupRpcUrls;
+            }
+
             updatedNetworks[key] = {
                 ...updatedNetworks[key],
-                defaultRpcUrl: INITIAL_NETWORKS[key].defaultRpcUrl,
-                backupRpcUrls: INITIAL_NETWORKS[key].backupRpcUrls,
+                defaultRpcUrl,
+                backupRpcUrls,
             };
             if (rpcUrls && rpcUrls.length > 0) {
                 const currentRpcUrl = rpcUrls[0];

@@ -7,6 +7,7 @@ import { formatName } from "../../util/formatAccount"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatRounded } from "../../util/formatRounded"
 import { formatUnits } from "@ethersproject/units"
+import { capitalize } from "../../util/capitalize"
 
 type TokenDisplayType = {
     data: TokenResponse
@@ -53,7 +54,12 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
             )}
             onClick={() => (clickable ? setSelected(!selected) : null)}
         >
-            <TokenLogo logo={data.logo} name={data.name} />
+            <TokenLogo
+                logo={data.logo}
+                name={data.name}
+                filled={false}
+                logoSize="small"
+            />
             <div className="flex flex-col ml-4 truncate">
                 <span
                     className={
@@ -72,7 +78,7 @@ const TokenDisplay: FunctionComponent<TokenDisplayType> = ({
                 )}
             </div>
             <p className={"text-sm text-gray-400 ml-auto pl-1 pr-6"}>
-                {data.symbol}
+                {data.symbol.toUpperCase()}
             </p>
             <img
                 src={checkmarkMiniIcon}

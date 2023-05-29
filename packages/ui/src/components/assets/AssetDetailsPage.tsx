@@ -11,7 +11,6 @@ import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetAssetByTokenAddress from "../../util/hooks/useGetAssetByTokenAddress"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
-import { AssetIcon } from "../AssetsList"
 import RoundedIconButton from "../button/RoundedIconButton"
 import AnimatedIcon, { AnimatedIconName } from "../../components/AnimatedIcon"
 import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
@@ -28,6 +27,7 @@ import { formatName } from "../../util/formatAccount"
 import Icon, { IconName } from "../ui/Icon"
 import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
 import ActivityAllowancesView from "./ActivityAllowancesView"
+import TokenLogo from "../token/TokenLogo"
 
 const AssetDetailsPage = () => {
     const state = useBlankState()!
@@ -170,7 +170,12 @@ const AssetDetailsPage = () => {
             <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 space-y-6 overflow-auto hide-scroll">
                 <TokenSummary>
                     <TokenSummary.Balances>
-                        <AssetIcon filled asset={token} />
+                        <TokenLogo
+                            logo={token.logo}
+                            name={token.symbol ?? ""}
+                            filled={true}
+                            logoSize="big"
+                        />
                         <TokenSummary.TokenName>
                             {token.name}
                         </TokenSummary.TokenName>

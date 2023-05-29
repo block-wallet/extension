@@ -5,9 +5,7 @@ import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { TokenList, useTokensList } from "../context/hooks/useTokensList"
 import { formatUnits } from "@ethersproject/units"
 
-import { Classes } from "../styles/classes"
 import plus from "../assets/images/icons/plus.svg"
-import unknownTokenIcon from "../assets/images/unknown_token.svg"
 import ChevronRightIcon from "./icons/ChevronRightIcon"
 import { formatRounded } from "../util/formatRounded"
 import { ActionButton } from "./button/ActionButton"
@@ -15,29 +13,11 @@ import AssetsLoadingSkeleton from "./skeleton/AssetsLoadingSkeleton"
 import useCurrencyFromatter from "../util/hooks/useCurrencyFormatter"
 import { isNativeTokenAddress } from "../util/tokenUtils"
 import { useBlankState } from "../context/background/backgroundHooks"
+import TokenLogo from "./token/TokenLogo"
 export type AssetItem = {
     token: Token
     balance: BigNumber
 }
-
-export const AssetIcon: FunctionComponent<{
-    asset: Partial<Token>
-    filled?: boolean
-}> = ({ asset, filled }) => (
-    <div className={filled ? Classes.roundedFilledIcon : Classes.roundedIcon}>
-        {
-            <img
-                src={asset.logo || unknownTokenIcon}
-                onError={(e) => {
-                    ;(e.target as any).onerror = null
-                    ;(e.target as any).src = unknownTokenIcon
-                }}
-                alt={asset.symbol || ""}
-                className="rounded-full"
-            />
-        }
-    </div>
-)
 
 const Asset: FunctionComponent<{
     asset: AssetItem
@@ -62,7 +42,12 @@ const Asset: FunctionComponent<{
             aria-label={asset.token.symbol}
         >
             <div className="flex flex-row items-center">
-                <AssetIcon asset={asset.token} />
+                <TokenLogo
+                    logo={asset.token.logo}
+                    name={asset.token.symbol ?? ""}
+                    logoSize="big"
+                    filled={true}
+                />
                 <div className="flex flex-col ml-2 mr-2">
                     <span
                         className="text-sm font-semibold"

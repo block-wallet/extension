@@ -1,5 +1,4 @@
 import { useState } from "react"
-
 import ErrorDialog from "./dialog/ErrorDialog"
 import HotkeysDialog from "./dialog/HotkeysDialog"
 import MessageDialog from "./dialog/MessageDialog"

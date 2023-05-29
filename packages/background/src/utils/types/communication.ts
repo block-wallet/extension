@@ -63,6 +63,7 @@ import {
 import { GasPriceData } from '@block-wallet/background/controllers/GasPricesController';
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import { TypedTransaction } from '@ethereumjs/tx';
+import { GetOnRampCurrencies } from '@block-wallet/background/controllers/OnrampController';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -242,6 +243,8 @@ enum WALLET {
     HARDWARE_QR_CANCEL_SIGN_REQUEST = 'HARDWARE_QR_CANCEL_SIGN_REQUEST',
     //hotkeys
     SET_HOTKEYS_ENABLED = 'SET_HOTKEYS_ENABLED',
+    //onramp
+    GET_ONRAMP_CURRENCIES = 'GET_ONRAMP_CURRENCIES',
 }
 
 enum TOKEN {
@@ -589,6 +592,7 @@ export interface RequestSignatures {
         boolean
     ];
     [Messages.WALLET.SET_HOTKEYS_ENABLED]: [RequestSetHotkeys, void];
+    [Messages.WALLET.GET_ONRAMP_CURRENCIES]: [void, GetOnRampCurrencies];
 }
 
 export type MessageTypes = keyof RequestSignatures;

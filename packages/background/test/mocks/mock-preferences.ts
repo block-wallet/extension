@@ -27,6 +27,8 @@ testInitState = {
     popupTab: 'activity',
     settings: {
         hideAddressWarning: false, // Shown by default
+        hideSendToContractWarning: false, // Shown by default
+        hideSendToNullWarning: false, // Shown by default
         subscribedToReleaseaNotes: true,
         subscribedToNotifications: true,
         useAntiPhishingProtection: true,

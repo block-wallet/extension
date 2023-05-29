@@ -739,6 +739,89 @@
                 }
             ],
             "version": "0.7.4"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Account name is shown on Transaction Completed notification."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Gas estimates are updated every 10 seconds on all transaction screens."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Improved Ethereum Mainnet estimations and increased buffer on High gas setting."
+                        }
+                    ]
+                },
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Fixed error when approving transfers of certain NFTs."
+                        },
+                        {
+                            "type": "warn",
+                            "message": "Fixed an issue with many accounts or lots of data in the wallet."
+                        }
+                    ]
+                }
+            ],
+            "version": "0.7.5"
+        },
+        {
+            "sections": [
+                {
+                    "title": "v1.0.0",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Immerse yourself in a vibrant interface with revamped colors, fonts, styles, and inputs."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Instantly identify networks with integrated logos."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Gain an immediate overview of your net worth right on the home screen."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Navigate swiftly with newly implemented keyboard shortcuts."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Don\u2019t skip a beat during node downtimes thanks to a further improved failover system."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Make safer transactions with new warnings when sending to smart contracts."
+                        }
+                    ]
+                }
+            ],
+            "version": "1.0.0"
+        },
+        {
+            "sections": [
+                {
+                    "title": "v1.0.1",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Minor fixes"
+                        }
+                    ]
+                }
+            ],
+            "version": "1.0.1"
         }
     ]
 }

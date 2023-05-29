@@ -4,6 +4,10 @@ import { BaseController } from '../infrastructure/BaseController';
 export interface UserSettings {
     // Setting that indicates if a warning is shown when receiving a transaction from an address different from the selected one.
     hideAddressWarning: boolean;
+    // Setting that indicates if a warning is shown when sending a transaction to a contract address.
+    hideSendToContractWarning: boolean;
+    // Setting that indicates if a warning is shown when sending a transaction to null address.
+    hideSendToNullWarning: boolean;
     subscribedToReleaseaNotes: boolean;
     subscribedToNotifications: boolean;
     useAntiPhishingProtection: boolean;

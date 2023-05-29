@@ -42,6 +42,9 @@ import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import WarningDialog from "../dialog/WarningDialog"
 import { calculateGasPricesFromTransactionFees } from "../../util/gasPrice"
+import { updateGasPrices } from "../../context/commActions"
+
+import { GAS_PRICE_UPDATE_INTERVAL } from "../../util/constants"
 
 interface GasComponentProps {
     symbol: string
@@ -584,6 +587,16 @@ const GasPriceComponent: FunctionComponent<{
 
     const { estimatedBaseFee: baseFeePerGas, gasPricesLevels } =
         useGasPriceData()
+
+    // force gas updates
+    useEffect(() => {
+        const interval = setInterval(() => {
+            updateGasPrices()
+        }, GAS_PRICE_UPDATE_INTERVAL)
+        return () => {
+            clearInterval(interval)
+        }
+    }, [])
 
     const {
         defaultNetworkLogo,

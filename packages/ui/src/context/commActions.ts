@@ -571,6 +571,13 @@ export const getLatestGasPrice = async (): Promise<BigNumber> => {
 }
 
 /**
+ * Updates the gas price levels
+ */
+export const updateGasPrices = async () => {
+    return sendMessage(Messages.TRANSACTION.UPDATE_GAS_PRICE)
+}
+
+/**
  * Get all the erc20 tokens method
  *
  */

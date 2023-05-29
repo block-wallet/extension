@@ -201,6 +201,7 @@ enum TRANSACTION {
     REJECT = 'REJECT_TRANSACTION',
     UPDATE_STATUS = 'UPDATE_STATUS',
     GET_LATEST_GAS_PRICE = 'GET_LATEST_GAS_PRICE',
+    UPDATE_GAS_PRICE = 'UPDATE_GAS_PRICE',
     FETCH_LATEST_GAS_PRICE = 'FETCH_LATEST_GAS_PRICE',
     SEND_ETHER = 'SEND_ETHER',
     CANCEL_TRANSACTION = 'CANCEL_TRANSACTION',
@@ -442,6 +443,7 @@ export interface RequestSignatures {
         boolean
     ];
     [Messages.TRANSACTION.GET_LATEST_GAS_PRICE]: [undefined, BigNumber];
+    [Messages.TRANSACTION.UPDATE_GAS_PRICE]: [undefined, undefined];
     [Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE]: [number, GasPriceData];
     [Messages.TRANSACTION.SEND_ETHER]: [RequestSendEther, string];
     [Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION]: [

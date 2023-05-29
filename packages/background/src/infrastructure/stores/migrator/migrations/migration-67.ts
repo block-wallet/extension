@@ -13,10 +13,26 @@ export default {
 
         Object.keys(updatedNetworks).forEach((key) => {
             const { rpcUrls } = updatedNetworks[key];
+
+            let defaultRpcUrl: string | undefined;
+            let backupRpcUrls: string[] | undefined;
+            if (key in INITIAL_NETWORKS) {
+                defaultRpcUrl = INITIAL_NETWORKS[key].defaultRpcUrl;
+                backupRpcUrls = INITIAL_NETWORKS[key].backupRpcUrls;
+            } else {
+                const network = updatedNetworks[key];
+                if (network.rpcUrls && network.rpcUrls?.length) {
+                    defaultRpcUrl = network.rpcUrls[0];
+                } else {
+                    defaultRpcUrl = '';
+                }
+                backupRpcUrls = [];
+            }
+
             updatedNetworks[key] = {
                 ...updatedNetworks[key],
-                defaultRpcUrl: INITIAL_NETWORKS[key].defaultRpcUrl,
-                backupRpcUrls: INITIAL_NETWORKS[key].backupRpcUrls,
+                defaultRpcUrl,
+                backupRpcUrls,
             };
             if (rpcUrls && rpcUrls.length > 0) {
                 const currentRpcUrl = rpcUrls[0];
@@ -38,5 +54,5 @@ export default {
             },
         };
     },
-    version: '1.1.7',
+    version: '1.1.8',
 } as IMigration;

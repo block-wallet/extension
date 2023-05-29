@@ -134,6 +134,8 @@ export const DisplayHotkeysByPath: FC<DisplayHotkeysByPathProp> = ({
                     />
                 </React.Fragment>
             )
+
+            return true
         })
 
         hotkeys["CTRL"].map((hotkey, index) => {
@@ -151,6 +153,8 @@ export const DisplayHotkeysByPath: FC<DisplayHotkeysByPathProp> = ({
                     />
                 </React.Fragment>
             )
+
+            return true
         })
 
         return <>{hotkeysElement}</>

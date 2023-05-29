@@ -74,6 +74,12 @@ export default class NetworkController extends BaseController<NetworkControllerS
         super({
             ...initialState,
             isNetworkChanging: false,
+            providerStatus: {
+                isCurrentProviderOnline: true,
+                isDefaultProviderOnline: true,
+                isBackupProviderOnline: true,
+                isUsingBackupProvider: false,
+            },
             isUserNetworkOnline: true,
         });
 

@@ -63,6 +63,7 @@ import {
     GetBridgeQuoteNotFoundResponse,
 } from "@block-wallet/background/controllers/BridgeController"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
+import { GetOnRampCurrencies } from "@block-wallet/background/controllers/OnrampController"
 
 let requestId = 0
 
@@ -1707,4 +1708,13 @@ export const executeBridge = async (
  */
 export const setHotkeysEnabled = async (enabled: boolean): Promise<void> => {
     return sendMessage(Messages.WALLET.SET_HOTKEYS_ENABLED, { enabled })
+}
+
+/**
+ * Enable/Disable hotkeys
+ *
+ * @param enabled Allow hotkeys on the extension
+ */
+export const getOnrampCurrencies = async (): Promise<GetOnRampCurrencies> => {
+    return sendMessage(Messages.WALLET.GET_ONRAMP_CURRENCIES)
 }

@@ -40,6 +40,12 @@ const locations: HotkeyMap = {
                 description: "Send",
             },
             {
+                hotkey: "U",
+                action: "/buy",
+                hotkeyDescription: "ALT+U",
+                description: "Buy",
+            },
+            {
                 hotkey: "W",
                 action: "/swap",
                 hotkeyDescription: "ALT+W",
@@ -412,6 +418,7 @@ export const useCheckLocationHotkeys = (
             } else {
                 return hotkeyAction.description
             }
+
             return undefined
         }
     )

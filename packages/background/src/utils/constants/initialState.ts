@@ -51,6 +51,7 @@ import { SwapControllerMemState } from '@block-wallet/background/controllers/Swa
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import CACHED_INCOMPATIBLE_SITES from '@block-wallet/remote-configs/provider/incompatible_sites.json';
 import { CampaignsControllerState } from '@block-wallet/background/controllers/CampaignsController';
+import { OnrampControllerMemState } from '@block-wallet/background/controllers/OnrampController';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -92,6 +93,7 @@ export type BlankAppUIState = {
     BridgeController: BridgeControllerMemState;
     SwapController: SwapControllerMemState;
     BlankProviderController: BlankProviderControllerState;
+    OnrampController: OnrampControllerMemState;
 };
 
 export type BlankAppStoreConfig<S> = {

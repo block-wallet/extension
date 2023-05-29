@@ -135,8 +135,26 @@ export class Classes {
         "flex items-center justify-center w-10 h-10 p-1.5 bg-white border border-primary-grey-hover rounded-full"
     )
 
+    static smallRoundedIcon = classnames(
+        "flex items-center justify-center w-6 h-6 p-1.5 bg-white border border-primary-grey-hover rounded-full"
+    )
+
+    static mediumRoundedIcon = classnames(
+        "flex items-center justify-center w-8 h-8 p-1.5 bg-white border border-primary-grey-hover rounded-full"
+    )
+
+    static roundedSmallIcon = classnames(
+        "flex items-center justify-center w-6 h-6 bg-white border border-primary-grey-hover rounded-full"
+    )
+
     static roundedFilledIcon = classnames(
         "flex items-center justify-center w-10 h-10 p-0 rounded-full"
+    )
+    static smallRoundedFilledIcon = classnames(
+        "flex items-center justify-center w-6 h-6 p-0 rounded-full"
+    )
+    static mediumRoundedFilledIcon = classnames(
+        "flex items-center justify-center w-8 h-8 p-0 rounded-full"
     )
 
     static clickableText = classnames(

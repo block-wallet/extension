@@ -5,6 +5,7 @@ import blueLineLoadingSkeleton from "../assets/images/icons/blueline_skeleton.js
 import greyLineLoadingSkeleton from "../assets/images/icons/greyline_skeleton.json"
 import greyCircleLoadingSkeleton from "../assets/images/icons/greycircle_skeleton.json"
 import blueCircleLoadingSkeleton from "../assets/images/icons/bluecircle_skeleton.json"
+import wallet from "../assets/images/icons/wallet.json"
 import lottie, { AnimationItem } from "lottie-web"
 import successAnim from "../assets/images/icons/checkmark_notes.json"
 import { useEffect, useRef, FunctionComponent } from "react"
@@ -19,6 +20,7 @@ export enum AnimatedIconName {
     GreyLineLoadingSkeleton,
     GreyCircleLoadingSkeleton,
     BlueCircleLoadingSkeleton,
+    Wallet,
 }
 
 type AnimationType = {
@@ -59,6 +61,11 @@ const Animations: { [anim: number]: AnimationType } = {
     [AnimatedIconName.BlueCircleLoadingSkeleton]: {
         data: blueCircleLoadingSkeleton,
         loop: true,
+    },
+    [AnimatedIconName.Wallet]: {
+        autoplay: false,
+        data: wallet,
+        hover: true,
     },
 }
 

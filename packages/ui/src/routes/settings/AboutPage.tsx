@@ -63,21 +63,23 @@ const AboutPage = () => {
                             options={links}
                             value={undefined}
                             containerClassName="flex flex-col space-y-4"
+                            onChange={(option) => {
+                                const anchor = document.createElement("a")
+
+                                Object.assign(anchor, {
+                                    target: "_blank",
+                                    href: option.link,
+                                    rel: "noopener noreferrer",
+                                }).click()
+                            }}
                             display={(option) => {
                                 return (
-                                    <a
-                                        href={option.link}
-                                        target="_blank"
-                                        className="text-sm font-semibold flex items-center"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <div className="flex flex-row space-x-3 items-center text-gray-900">
-                                            {option.icon}
-                                            <span className="font-semibold">
-                                                {option.text}
-                                            </span>
-                                        </div>
-                                    </a>
+                                    <div className="flex flex-row space-x-3 items-center text-gray-900">
+                                        {option.icon}
+                                        <span className="font-semibold">
+                                            {option.text}
+                                        </span>
+                                    </div>
                                 )
                             }}
                         />

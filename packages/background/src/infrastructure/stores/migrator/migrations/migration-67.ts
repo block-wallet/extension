@@ -20,7 +20,9 @@ export default {
             if (key in INITIAL_NETWORKS) {
                 defaultRpcUrl = INITIAL_NETWORKS[key].defaultRpcUrl;
                 backupRpcUrls = INITIAL_NETWORKS[key].backupRpcUrls;
-                currentRpcUrl = updatedNetworks[key].currentRpcUrl ?? INITIAL_NETWORKS[key].currentRpcUrl;
+                currentRpcUrl =
+                    updatedNetworks[key].currentRpcUrl ??
+                    INITIAL_NETWORKS[key].currentRpcUrl;
             } else {
                 const network = updatedNetworks[key];
                 if (network.rpcUrls && network.rpcUrls?.length) {
@@ -41,7 +43,7 @@ export default {
                 ...updatedNetworks[key],
                 defaultRpcUrl,
                 currentRpcUrl,
-                backupRpcUrls
+                backupRpcUrls,
             };
         });
 

@@ -15,16 +15,20 @@ export default {
             const { rpcUrls } = updatedNetworks[key];
 
             let defaultRpcUrl: string | undefined;
+            let currentRpcUrl: string;
             let backupRpcUrls: string[] | undefined;
             if (key in INITIAL_NETWORKS) {
                 defaultRpcUrl = INITIAL_NETWORKS[key].defaultRpcUrl;
                 backupRpcUrls = INITIAL_NETWORKS[key].backupRpcUrls;
+                currentRpcUrl = INITIAL_NETWORKS[key].currentRpcUrl;
             } else {
                 const network = updatedNetworks[key];
                 if (network.rpcUrls && network.rpcUrls?.length) {
                     defaultRpcUrl = network.rpcUrls[0];
+                    currentRpcUrl = network.rpcUrls[0];
                 } else {
                     defaultRpcUrl = '';
+                    currentRpcUrl = '';
                 }
                 backupRpcUrls = [];
             }
@@ -32,16 +36,18 @@ export default {
             updatedNetworks[key] = {
                 ...updatedNetworks[key],
                 defaultRpcUrl,
-                backupRpcUrls,
+                backupRpcUrls
             };
+
             if (rpcUrls && rpcUrls.length > 0) {
-                const currentRpcUrl = rpcUrls[0];
-                updatedNetworks[key] = {
-                    ...updatedNetworks[key],
-                    currentRpcUrl,
-                };
+                currentRpcUrl = rpcUrls[0];
                 delete updatedNetworks[key].rpcUrls;
             }
+
+            updatedNetworks[key] = {
+                ...updatedNetworks[key],
+                currentRpcUrl,
+            };
         });
 
         const orderedNetworks = normalizeNetworksOrder(updatedNetworks);
@@ -54,5 +60,5 @@ export default {
             },
         };
     },
-    version: '1.1.8',
+    version: '1.1.9',
 } as IMigration;

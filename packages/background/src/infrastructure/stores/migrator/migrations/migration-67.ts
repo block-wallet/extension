@@ -20,7 +20,7 @@ export default {
             if (key in INITIAL_NETWORKS) {
                 defaultRpcUrl = INITIAL_NETWORKS[key].defaultRpcUrl;
                 backupRpcUrls = INITIAL_NETWORKS[key].backupRpcUrls;
-                currentRpcUrl = INITIAL_NETWORKS[key].currentRpcUrl;
+                currentRpcUrl = updatedNetworks[key].currentRpcUrl ?? INITIAL_NETWORKS[key].currentRpcUrl;
             } else {
                 const network = updatedNetworks[key];
                 if (network.rpcUrls && network.rpcUrls?.length) {
@@ -33,20 +33,15 @@ export default {
                 backupRpcUrls = [];
             }
 
-            updatedNetworks[key] = {
-                ...updatedNetworks[key],
-                defaultRpcUrl,
-                backupRpcUrls
-            };
-
             if (rpcUrls && rpcUrls.length > 0) {
                 currentRpcUrl = rpcUrls[0];
                 delete updatedNetworks[key].rpcUrls;
             }
-
             updatedNetworks[key] = {
                 ...updatedNetworks[key],
+                defaultRpcUrl,
                 currentRpcUrl,
+                backupRpcUrls
             };
         });
 

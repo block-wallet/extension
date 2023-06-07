@@ -30,7 +30,7 @@ export default {
                     currentRpcUrl = network.rpcUrls[0];
                 } else {
                     defaultRpcUrl = '';
-                    currentRpcUrl = '';
+                    currentRpcUrl = network.currentRpcUrl ?? '';
                 }
                 backupRpcUrls = [];
             }

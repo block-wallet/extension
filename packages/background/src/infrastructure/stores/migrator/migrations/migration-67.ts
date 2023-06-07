@@ -36,9 +36,10 @@ export default {
             }
 
             if (rpcUrls && rpcUrls.length > 0) {
-                currentRpcUrl = rpcUrls[0];
+                currentRpcUrl = currentRpcUrl || rpcUrls[0];
                 delete updatedNetworks[key].rpcUrls;
             }
+
             updatedNetworks[key] = {
                 ...updatedNetworks[key],
                 defaultRpcUrl,

@@ -29,7 +29,6 @@ const BuyPage = () => {
     useEffect(() => {
         const setOnrampCurrencies = async () => {
             const response = await getOnrampCurrencies()
-            console.log(response)
             setTokenList(response.crypto)
             setCurrencyList(response.fiat)
         }

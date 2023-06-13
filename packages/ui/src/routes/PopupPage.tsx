@@ -173,9 +173,9 @@ const PopupPage = () => {
     const hotkeysPermissions = {
         "/home/alt/s": isSendEnabled, //Send
         "/home/alt/w": isSwapEnabled, //Swap
-        "/home/alt/b": isBridgeEnabled !== undefined, //Bridge
+        "/home/alt/b": isBridgeEnabled, //Bridge
         "/home/alt/g": showGasLevels,
-        "/home/alt/u": isOnrampEnabled !== undefined,
+        "/home/alt/u": isOnrampEnabled,
     }
 
     const popupPageHotkeys = componentsHotkeys.PopupPage

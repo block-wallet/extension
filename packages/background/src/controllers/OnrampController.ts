@@ -134,6 +134,9 @@ export default class OnrampController extends BaseController<OnrampControllerMem
             });
         } catch (e) {
             log.error('Error fetching onramper chains', e);
+            this.store.setState({
+                availableOnrampChains: [],
+            });
         }
     }
 }

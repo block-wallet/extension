@@ -593,6 +593,8 @@ export class TransactionController extends BaseController<
                     transactionMeta.advancedData = advancedData;
                     transactionMeta.approveAllowanceParams =
                         approveAllowanceParams;
+                    // Ensure that approve transactions do not send anything in the value parameter to prevent potential native asset steal.
+                    transaction.value = undefined;
                 }
 
                 // Push transaction so extension can trigger window without waiting for gas values
@@ -961,6 +963,9 @@ export class TransactionController extends BaseController<
                         transactionMeta.transactionParams.data!
                     );
                 transactionMeta.methodSignature = methodSignature;
+
+                // Ensure that approve transactions do not send anything in the value parameter to prevent potential native asset steal.
+                transactionMeta.transactionParams.value = undefined;
             }
 
             transactionMeta.status = status;

@@ -36,6 +36,7 @@ testInitState = {
         hideEstimatedGasExceedsThresholdWarning: false,
         hideDepositsExternalAccountsWarning: false,
         hideBridgeInsufficientNativeTokenWarning: false,
+        displayNetWorth: true,
     },
     releaseNotesSettings: {
         lastVersionUserSawNews: '0.1.3',

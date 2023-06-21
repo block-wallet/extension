@@ -247,6 +247,7 @@ const initialState: newBlankAppState = {
             hideEstimatedGasExceedsThresholdWarning: false,
             hideDepositsExternalAccountsWarning: false,
             hideBridgeInsufficientNativeTokenWarning: false,
+            displayNetWorth: true
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',
@@ -485,6 +486,7 @@ describe('State reconciler', () => {
                     hideEstimatedGasExceedsThresholdWarning: false,
                     hideDepositsExternalAccountsWarning: false,
                     hideBridgeInsufficientNativeTokenWarning: false,
+                    displayNetWorth: true
                 },
                 releaseNotesSettings: {
                     lastVersionUserSawNews: '0.1.3',

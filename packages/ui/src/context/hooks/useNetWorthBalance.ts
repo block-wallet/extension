@@ -7,7 +7,15 @@ import { formatUnits } from "@ethersproject/units"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatRounded } from "../../util/formatRounded"
 
-const useNetWorthBalance = (account?: AccountInfo) => {
+interface NetWorthBalance {
+    displayNetWorth: boolean;
+    nativeCurrencyAmount?: string;
+    nativeTokenBalance?: string;
+    nativeTokenBalanceRounded?: string;
+    netWorth?: string;
+}
+
+const useNetWorthBalance = (account?: AccountInfo): NetWorthBalance => {
     const { exchangeRates, nativeCurrency, localeInfo, settings } = useBlankState()!
     const displayNetWorth = settings.displayNetWorth;
 

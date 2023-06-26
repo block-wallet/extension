@@ -338,7 +338,7 @@ const PopupPage = () => {
                                                     <div className="flex flex-row items-end space-x-7">
                                                         {displayNetWorth ? (
                                                             <span>
-                                                                Your NET worth
+                                                                Your Net Worth
                                                                 is the summed{" "}
                                                                 {state.nativeCurrency.toUpperCase()}{" "}
                                                                 value

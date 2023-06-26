@@ -65,9 +65,12 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
         useState<ConfirmDialogState>({ isOpen: false })
     const { isHovering: isHoveringMenu, getIsHoveringProps } = useIsHovering()
     const checksumAddress = useAddressWithChainIdChecksum(account?.address)
-    const netWorthBalance = useNetWorthBalance(
-        !showAddress ? account : undefined
-    )
+    const {
+        displayNetWorth,
+        netWorth,
+        nativeTokenBalance,
+        nativeTokenBalanceRounded,
+    } = useNetWorthBalance(!showAddress ? account : undefined)
 
     const { copied, onCopy } = useCopyToClipboard(checksumAddress)
 
@@ -144,9 +147,15 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             {!showAddress ? (
                                 <span
                                     className="text-xs text-primary-grey-dark"
-                                    title={`${netWorthBalance}`}
+                                    title={
+                                        displayNetWorth
+                                            ? netWorth
+                                            : nativeTokenBalance
+                                    }
                                 >
-                                    {netWorthBalance}
+                                    {displayNetWorth
+                                        ? netWorth
+                                        : nativeTokenBalanceRounded}
                                 </span>
                             ) : (
                                 <span className="text-xs text-primary-grey-dark">

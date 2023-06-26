@@ -16,6 +16,9 @@ export interface UserSettings {
     //whether we should display the warning while making a deposit with an external/hardware account or not.
     hideDepositsExternalAccountsWarning: boolean;
     hideBridgeInsufficientNativeTokenWarning: boolean;
+
+    // Indicates if the wallet displays net worth in native currency value or native token balance.
+    displayNetWorth: boolean;
 }
 
 export interface Note {

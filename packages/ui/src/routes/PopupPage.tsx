@@ -45,6 +45,7 @@ import ProviderStatus from "../components/chain/ProviderStatus"
 import { useHotkeys } from "react-hotkeys-hook"
 import { componentsHotkeys } from "../util/hotkeys"
 import { generateExplorerLink } from "../util/getExplorer"
+import { setUserSettings } from "../context/commActions"
 
 const AccountDisplay = () => {
     const accountAddress = useSelectedAddressWithChainIdChecksum()
@@ -155,7 +156,13 @@ const PopupPage = () => {
     const error = (useHistory().location.state as { error: string })?.error
     const state = useBlankState()!
     const history = useHistory()
-    const netWorth = useNetWorthBalance()
+    const {
+        displayNetWorth,
+        netWorth,
+        nativeTokenBalance,
+        nativeTokenBalanceRounded,
+        nativeCurrencyAmount,
+    } = useNetWorthBalance()
     const {
         isSendEnabled,
         isSwapEnabled,
@@ -300,8 +307,16 @@ const PopupPage = () => {
                     </div>
                     <TokenSummary className="p-4">
                         <TokenSummary.Balances className="!space-y-0">
-                            <TokenSummary.TokenBalance title={netWorth}>
-                                {netWorth}
+                            <TokenSummary.TokenBalance
+                                title={
+                                    displayNetWorth
+                                        ? netWorth
+                                        : nativeTokenBalance
+                                }
+                            >
+                                {displayNetWorth
+                                    ? netWorth
+                                    : nativeTokenBalanceRounded}
                             </TokenSummary.TokenBalance>
 
                             <TokenSummary.ExchangeRateBalance className="flex items-center text-xs">
@@ -321,14 +336,24 @@ const PopupPage = () => {
                                             content={
                                                 <div className="flex flex-col font-normal items-start text-xs text-white-500">
                                                     <div className="flex flex-row items-end space-x-7">
-                                                        <span>
-                                                            Your NET worth is
-                                                            the summed{" "}
-                                                            {state.nativeCurrency.toUpperCase()}{" "}
-                                                            value
-                                                            <br /> of all assets
-                                                            in your asset list.
-                                                        </span>{" "}
+                                                        {displayNetWorth ? (
+                                                            <span>
+                                                                Your NET worth
+                                                                is the summed{" "}
+                                                                {state.nativeCurrency.toUpperCase()}{" "}
+                                                                value
+                                                                <br /> of all
+                                                                assets in your
+                                                                asset list.{" "}
+                                                            </span>
+                                                        ) : (
+                                                            <span>
+                                                                Native token
+                                                                balance for{" "}
+                                                                <br /> the
+                                                                current network.
+                                                            </span>
+                                                        )}{" "}
                                                     </div>
                                                     <div className="flex flex-row items-end space-x-4">
                                                         <span>
@@ -342,7 +367,25 @@ const PopupPage = () => {
                                         />
                                     </a>
                                 </div>
-                                Net Worth
+                                {displayNetWorth
+                                    ? "Net Worth"
+                                    : nativeCurrencyAmount}
+                                <div
+                                    title={`Switch to ${
+                                        displayNetWorth
+                                            ? "Native Token"
+                                            : "Net Worth"
+                                    }`}
+                                    className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
+                                    onClick={() => {
+                                        setUserSettings({
+                                            ...state.settings,
+                                            displayNetWorth: !displayNetWorth,
+                                        })
+                                    }}
+                                >
+                                    <Icon name={IconName.SWITCH} size="sm" />
+                                </div>
                             </TokenSummary.ExchangeRateBalance>
                         </TokenSummary.Balances>
                         <TokenSummary.Actions>

@@ -166,6 +166,7 @@ const initialState: BlankAppState = {
             hideEstimatedGasExceedsThresholdWarning: false, // Shown by default,
             hideDepositsExternalAccountsWarning: false,
             hideBridgeInsufficientNativeTokenWarning: false, // Shown by default
+            displayNetWorth: true,
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',

@@ -443,6 +443,7 @@ export const initBackgroundState: BackgroundStateType = {
             hideEstimatedGasExceedsThresholdWarning: false,
             hideDepositsExternalAccountsWarning: false,
             hideBridgeInsufficientNativeTokenWarning: false,
+            displayNetWorth: true,
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: "0.1.1",

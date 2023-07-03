@@ -240,20 +240,30 @@ const PopupPage = () => {
                                 </div>
                                 <div className="flex flex-row items-center space-x-1">
                                     <AccountDisplay />
-                                    <Link
-                                        to="/accounts/menu/receive"
-                                        draggable={false}
-                                        onClick={(e) => {
-                                            e.preventDefault()
+                                    <div className="flex relative group">
+                                        <Link
+                                            to="/accounts/menu/receive"
+                                            draggable={false}
+                                            onClick={(e) => {
+                                                e.preventDefault()
 
-                                            history.push(
-                                                "/accounts/menu/receive"
-                                            )
-                                        }}
-                                        className="p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
-                                    >
-                                        <QRIcon />
-                                    </Link>
+                                                history.push(
+                                                    "/accounts/menu/receive"
+                                                )
+                                            }}
+                                            className="p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                                        >
+                                            <QRIcon />
+                                        </Link>
+                                        <Tooltip
+                                            className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-3 !translate-y-full p-2 rounded-md text-xs font-medium bg-primary-black-default text-white"
+                                            content={
+                                                <>
+                                                    <span>Receive funds</span>
+                                                </>
+                                            }
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex flex-row items-center -mr-1 space-x-2">

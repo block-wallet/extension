@@ -7,7 +7,6 @@ import { formatName } from "../../util/formatAccount"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatRounded } from "../../util/formatRounded"
 import { formatUnits } from "@ethersproject/units"
-import { capitalize } from "../../util/capitalize"
 
 type TokenDisplayType = {
     data: TokenResponse

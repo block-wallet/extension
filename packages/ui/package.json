@@ -114,7 +114,7 @@
         "prettier": "^2.7.1",
         "react-dnd-cjs": "^9.5.1",
         "react-dnd-html5-backend-cjs": "^9.5.1",
-        "react-is": "^17.0.2",
+        "react-is": "^18.2.0",
         "react-scripts": "^4.0.3",
         "sass-loader": "8.0.2",
         "style-loader": "1.3.0",

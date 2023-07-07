@@ -12,7 +12,7 @@
         "color-hash": "^2.0.1",
         "ethereumjs-util": "^7.1.5",
         "ethers": "^5.6.9",
-        "loglevel": "^1.7.1",
+        "loglevel": "^1.8.1",
         "lottie-web": "^5.9.6",
         "qrcode.react": "^3.1.0",
         "react": "^18.2.0",
@@ -38,6 +38,7 @@
         "styled-components": "^5.3.3",
         "use-custom-compare": "^1.2.0",
         "uuid": "^8.3.2",
+        "webextension-polyfill": "^0.10.0",
         "yup": "^0.32.11"
     },
     "devDependencies": {
@@ -66,6 +67,7 @@
         "@types/styled-components": "^5.1.9",
         "@types/uuid": "^8.3.4",
         "@types/w3c-web-hid": "^1.0.3",
+        "@types/webextension-polyfill": "^0.10.1",
         "@typescript-eslint/eslint-plugin": "^5.30.6",
         "@typescript-eslint/parser": "^5.36.2",
         "autoprefixer": "^10.4.2",

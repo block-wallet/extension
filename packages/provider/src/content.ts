@@ -8,6 +8,7 @@ import { Mutex } from 'async-mutex';
 import log from 'loglevel';
 import { SignalMessage, Signals } from './types';
 import { checkScriptLoad } from './utils/site';
+import browser from 'webextension-polyfill';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
@@ -18,7 +19,7 @@ let providerOverridden = false;
 
 function injectProvider() {
     const injectableScript = blankProvider;
-    const injectableScriptSourceMapURL = `//# sourceURL=${chrome.runtime.getURL(
+    const injectableScriptSourceMapURL = `//# sourceURL=${browser.runtime.getURL(
         'blankProvider.js'
     )}\n`;
     const BUNDLE = injectableScript + injectableScriptSourceMapURL;
@@ -50,19 +51,22 @@ let intervalRef: NodeJS.Timer;
 
 if (isManifestV3()) {
     intervalRef = setInterval(() => {
-        chrome.runtime.sendMessage({ message: CONTENT.SW_KEEP_ALIVE }, () => {
-            if (chrome.runtime.lastError) {
-                log.info(
-                    'Error keeping alive:',
-                    chrome.runtime.lastError.message || chrome.runtime.lastError
-                );
-                const err = chrome.runtime.lastError.message || '';
-                SW_ALIVE = !err.includes('Receiving end does not exist');
-                portReinitialized = SW_ALIVE;
-            } else {
-                SW_ALIVE = true;
-            }
-        });
+        browser.runtime
+            .sendMessage({ message: CONTENT.SW_KEEP_ALIVE })
+            .then(() => {
+                if (browser.runtime.lastError) {
+                    log.info(
+                        'Error keeping alive:',
+                        browser.runtime.lastError.message ||
+                            browser.runtime.lastError
+                    );
+                    const err = browser.runtime.lastError.message || '';
+                    SW_ALIVE = !err.includes('Receiving end does not exist');
+                    portReinitialized = SW_ALIVE;
+                } else {
+                    SW_ALIVE = true;
+                }
+            });
     }, SW_KEEP_ALIVE_INTERVAL);
 } else {
     SW_ALIVE = true;
@@ -72,14 +76,14 @@ function sleep(ms: number): Promise<unknown> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-let port: chrome.runtime.Port | undefined = undefined;
+let port: browser.Runtime.Port | undefined = undefined;
 const initMutex: Mutex = new Mutex();
 
 // Check background settings for script load
-chrome.runtime.sendMessage(
-    { message: CONTENT.SHOULD_INJECT },
-    (response: { shouldInject: boolean }): void => {
-        const error = chrome.runtime.lastError;
+browser.runtime
+    .sendMessage({ message: CONTENT.SHOULD_INJECT })
+    .then((response: { shouldInject: boolean }): void => {
+        const error = browser.runtime.lastError;
         const shouldLoad = checkScriptLoad();
         if (
             port &&
@@ -96,8 +100,7 @@ chrome.runtime.sendMessage(
         } else if (providerOverridden) {
             injectProvider();
         }
-    }
-);
+    });
 
 // Setup window listener
 const windowListener = async ({
@@ -141,10 +144,10 @@ window.addEventListener('message', (message) => {
 // Init function
 const init = () => {
     // Setup port connection
-    port = chrome.runtime.connect({ name: Origin.PROVIDER });
+    port = browser.runtime.connect({ name: Origin.PROVIDER });
 
     // Set callback to send any messages from the extension back to the page
-    port.onMessage.addListener((message): void => {
+    port.onMessage.addListener((message: any): void => {
         window.postMessage(
             { ...message, origin: Origin.BACKGROUND },
             window.location.href

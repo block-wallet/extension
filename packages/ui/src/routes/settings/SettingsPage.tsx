@@ -28,6 +28,7 @@ import classNames from "classnames"
 import GenericTooltip from "../../components/label/GenericTooltip"
 import AppVersion from "../../components/AppVersion"
 import { openHardwareConnect } from "../../context/commActions"
+import browser from "webextension-polyfill"
 
 const SettingsPage = () => {
     const { isSeedPhraseBackedUp, isImportingDeposits } = useBlankState()!
@@ -137,7 +138,7 @@ const SettingsPage = () => {
                                     return
                                 }
                                 option.to.includes("https://")
-                                    ? chrome.tabs.create({ url: option.to })
+                                    ? browser.tabs.create({ url: option.to })
                                     : history.push({
                                           pathname: option.to,
                                           state: {

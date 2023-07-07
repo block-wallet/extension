@@ -1,7 +1,8 @@
 import { Origin } from '../../../utils/types/communication';
+import browser from 'webextension-polyfill';
 
 // Setup port connection
-let port: chrome.runtime.Port | null = chrome.runtime.connect({
+let port: browser.Runtime.Port | null = browser.runtime.connect({
     name: Origin.TREZOR_CONNECT,
 });
 

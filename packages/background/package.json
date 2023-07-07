@@ -26,7 +26,8 @@
         "lodash": "^4.17.21",
         "loglevel": "^1.8.1",
         "schema-validator": "git+https://github.com/block-wallet/schema-validator.git",
-        "uuid": "^9.0.0"
+        "uuid": "^9.0.0",
+        "webextension-polyfill": "^0.10.0"
     },
     "devDependencies": {
         "@types/bn.js": "^5.1.1",
@@ -39,6 +40,7 @@
         "@types/semver": "^7.3.13",
         "@types/sinon": "^10.0.13",
         "@types/uuid": "^9.0.0",
+        "@types/webextension-polyfill": "^0.10.1",
         "@typescript-eslint/eslint-plugin": "^5.48.0",
         "@typescript-eslint/parser": "^5.48.0",
         "buffer": "^6.0.3",

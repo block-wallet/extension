@@ -20,6 +20,7 @@ import classnames from "classnames"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { HARDWARE_TYPES } from "../../util/account"
 import { openHardwareRemove } from "../../context/commActions"
+import browser from "webextension-polyfill"
 
 const AccountMenu = () => {
     const { availableNetworks, selectedNetwork } = useBlankState()!
@@ -148,7 +149,9 @@ const AccountMenu = () => {
                             onChange={(option) =>
                                 option.to
                                     ? option.to.includes("https://")
-                                        ? chrome.tabs.create({ url: option.to })
+                                        ? browser.tabs.create({
+                                              url: option.to,
+                                          })
                                         : history.push({
                                               pathname: option.to,
                                               state: {

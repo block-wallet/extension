@@ -43,6 +43,7 @@ import { ExternalEventSubscription } from '@block-wallet/background/utils/types/
 import * as random from '@block-wallet/background/utils/randomBytes';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
 import { PrivacyAsyncController } from '@block-wallet/background/controllers/privacy/PrivacyAsyncController';
+import browser from 'webextension-polyfill';
 
 const UNI_ORIGIN = 'https://app.uniswap.org';
 const TX_HASH =
@@ -66,7 +67,7 @@ describe('Blank Provider Controller', function () {
     };
 
     providerInstances[portId] = {
-        port: chrome.runtime.connect(),
+        port: browser.runtime.connect(),
         tabId: 420,
         windowId: 404,
         origin: UNI_ORIGIN,

@@ -4,6 +4,7 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import { Classes, classnames } from "../../styles"
 import NetworkSelect from "../input/NetworkSelect"
 import MessageDialog from "./MessageDialog"
+import browser from "webextension-polyfill"
 
 // Allowed paths to prevent the dialog from showing up
 const allowedPaths = [
@@ -60,7 +61,7 @@ const ProviderDownDialog = () => {
                 open={showDialog}
                 footer={
                     <button
-                        onClick={() => chrome.runtime.reload()}
+                        onClick={() => browser.runtime.reload()}
                         type="button"
                         className={classnames(Classes.darkButton)}
                     >

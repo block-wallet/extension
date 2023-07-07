@@ -8,5 +8,6 @@
         "build": "make build",
         "build-prod": "make build/prod",
         "test": "make test"
-    }
+    },
+    "dependencies": {}
 }

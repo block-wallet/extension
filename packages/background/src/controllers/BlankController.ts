@@ -236,6 +236,7 @@ import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
 import CampaignsController from './CampaignsController';
 import { NotificationController } from './NotificationController';
+import browser from 'webextension-polyfill';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -285,7 +286,7 @@ export default class BlankController extends EventEmitter {
 
     private readonly _devTools: any;
 
-    private subscriptions: Record<string, chrome.runtime.Port>;
+    private subscriptions: Record<string, browser.Runtime.Port>;
     private isSetupComplete: boolean;
 
     constructor(props: BlankControllerProps) {
@@ -635,7 +636,7 @@ export default class BlankController extends EventEmitter {
      */
     private createSubscription<TMessageType extends MessageTypes>(
         id: string,
-        port: chrome.runtime.Port
+        port: browser.Runtime.Port
     ): (data: SubscriptionMessageTypes[TMessageType]) => void {
         this.subscriptions[id] = port;
 
@@ -673,7 +674,7 @@ export default class BlankController extends EventEmitter {
      */
     public handler<TMessageType extends MessageTypes>(
         { id, message, request }: TransportRequestMessage<TMessageType>,
-        port: chrome.runtime.Port,
+        port: browser.Runtime.Port,
         portId: string
     ): void {
         let isPortConnected = true;
@@ -681,7 +682,7 @@ export default class BlankController extends EventEmitter {
         const source = `${from}: ${id}: ${message}`;
 
         port.onDisconnect.addListener(() => {
-            const error = chrome.runtime.lastError;
+            const error = browser.runtime.lastError;
             isPortConnected = false;
             if (error) {
                 log.error(error);
@@ -733,7 +734,7 @@ export default class BlankController extends EventEmitter {
         id: string,
         type: MessageTypes,
         request: RequestTypes[MessageTypes],
-        port: chrome.runtime.Port,
+        port: browser.Runtime.Port,
         portId: string
     ): Promise<ResponseType<MessageTypes>> {
         switch (type) {
@@ -2728,7 +2729,7 @@ export default class BlankController extends EventEmitter {
      * State subscription method
      *
      */
-    private stateSubscribe(id: string, port: chrome.runtime.Port): boolean {
+    private stateSubscribe(id: string, port: browser.Runtime.Port): boolean {
         const cb = this.createSubscription<typeof Messages.STATE.SUBSCRIBE>(
             id,
             port
@@ -2755,7 +2756,7 @@ export default class BlankController extends EventEmitter {
      */
     private blankProviderEventSubscribe(
         id: string,
-        port: chrome.runtime.Port,
+        port: browser.Runtime.Port,
         portId: string
     ): boolean {
         const cb = this.createSubscription<

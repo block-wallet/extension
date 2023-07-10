@@ -475,7 +475,7 @@ const AdvancedSettings = ({
             <FullScreenDialog open={openModal}>
                 <div className="flex items-center justify-between px-6 pb-6">
                     <div className="flex flex-row items-center">
-                        <span className="p-0 text-xl font-semibold">
+                        <span className="p-0 text-xl font-semibold text-black">
                             Advanced Settings
                         </span>
                         <div className="group relative">

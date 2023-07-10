@@ -460,7 +460,7 @@ const AdvancedSettings = ({
                         : "hover:underline"
                 )}
             >
-                <span className="font-semibold text-base">
+                <span className="font-semibold text-base text-black">
                     Advanced Settings
                 </span>
                 <div>

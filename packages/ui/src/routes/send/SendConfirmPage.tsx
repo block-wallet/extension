@@ -705,6 +705,7 @@ const SendConfirmPage = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingDialog
                 open={isOpen}
@@ -769,7 +770,7 @@ const SendConfirmPage = () => {
                                 !errors.asset?.message && "mb-3"
                             )}
                         >
-                            <p className="ml-1 mb-2 text-sm text-gray-600">
+                            <p className="ml-1 mb-2 text-[13px] font-medium text-primary-grey-dark">
                                 Asset
                             </p>
                             <AssetSelection
@@ -801,7 +802,7 @@ const SendConfirmPage = () => {
                                 <div className="flex items-start w-1/3">
                                     <label
                                         htmlFor="amount"
-                                        className="ml-1 mb-2 text-sm text-gray-600"
+                                        className="ml-1 mb-2 text-[13px] font-medium text-primary-grey-dark"
                                     >
                                         Amount
                                     </label>
@@ -810,8 +811,8 @@ const SendConfirmPage = () => {
 
                             <div
                                 className={classnames(
-                                    Classes.blueSection,
-                                    inputFocus && "bg-primary-200",
+                                    Classes.greySection,
+                                    inputFocus && "bg-primary-grey-hover",
                                     errors.amount && "border-red-400"
                                 )}
                             >
@@ -853,11 +854,11 @@ const SendConfirmPage = () => {
                                             handleChangeAmount(e.target.value)
                                         }
                                     />
-                                    <span className="text-xs text-gray-600">
+                                    <span className="text-xs text-primary-grey-dark">
                                         {formatCurrency(nativeCurrencyAmt, {
                                             currency: blankState.nativeCurrency,
                                             locale_info: blankState.localeInfo,
-                                            showSymbol: true,
+                                            showSymbol: false,
                                         })}
                                     </span>
                                 </div>
@@ -866,10 +867,10 @@ const SendConfirmPage = () => {
                                         className={classnames(
                                             "float-right rounded-md cursor-pointer border p-1",
                                             usingMax
-                                                ? "bg-primary-300 border-primary-300 text-white hover:bg-blue-600 hover:border-blue-600"
-                                                : "bg-blue-200 border-blue-200 hover:bg-blue-300 hover:border-blue-300",
+                                                ? "bg-gray-500 border-gray-500 text-white hover:bg-gray-400 hover:border-gray-400"
+                                                : "bg-gray-300 border-gray-300 hover:bg-gray-400 hover:border-gray-400",
                                             !HasBalance(selectedToken) &&
-                                                "pointer-events-none text-gray-600"
+                                                "pointer-events-none text-primary-grey-dark"
                                         )}
                                         title="Use all the available funds"
                                         onClick={() => {
@@ -901,7 +902,7 @@ const SendConfirmPage = () => {
                         </div>
 
                         {/* Speed */}
-                        <label className="ml-1 mb-2 text-sm text-gray-600">
+                        <label className="ml-1 mb-2 text-[13px] font-medium text-primary-grey-dark">
                             Gas Price
                         </label>
 

@@ -21,7 +21,7 @@ const BridgeCompletedStatus = () => {
     return (
         <Status>
             <span className="relative inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-green-400 pointer-events-none"></span>
-            <span className="text-green-600">Completed</span>
+            <span className="text-secondary-green-default">Completed</span>
         </Status>
     )
 }
@@ -69,7 +69,7 @@ const NotInitializedBridgeStatus = () => {
     return (
         <Status>
             <span className="relative inline-flex rounded-full h-2 w-2 mr-2 animate-pulse bg-gray-400 pointer-events-none" />
-            <span className="text-gray-600">Not initialized</span>
+            <span className="text-primary-grey-dark">Not initialized</span>
         </Status>
     )
 }
@@ -89,7 +89,7 @@ const PendingBridgeStatus: FC<{ transaction: Partial<TransactionMeta> }> = ({
         <GenericTooltip content={pendingMessage?.info ?? ""}>
             <Status>
                 <Spinner color="text-blue-200" size="1rem" />
-                <span className="whitespace-nowrap text-ellipsis overflow-hidden text-blue-600 ml-1 max-w-[200px]">
+                <span className="whitespace-nowrap text-ellipsis overflow-hidden text-primary-blue-default ml-1 max-w-[200px]">
                     {pendingMessage.label}
                 </span>
             </Status>

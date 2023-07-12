@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { FunctionComponent } from "react"
 
-import { formatUnits } from "@ethersproject/units"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import {
     formatName,
@@ -9,14 +8,12 @@ import {
     formatHashLastChars,
 } from "../../util/formatAccount"
 import { getAccountColor } from "../../util/getAccountColor"
-import { formatNumberLength } from "../../util/formatNumberLength"
 
 import AccountIcon from "../icons/AccountIcon"
 import checkmarkIcon from "../../assets/images/icons/checkmark_mini.svg"
 import { classnames } from "../../styles"
 import ConfirmDialog from "../dialog/ConfirmDialog"
 import CopyTooltip from "../label/СopyToClipboardTooltip"
-import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import useIsHovering from "../../util/hooks/useIsHovering"
 import {
     AccountDisplayMenuOption,
@@ -28,6 +25,7 @@ import { isInternalAccount } from "../../util/account"
 import useCopyToClipboard from "../../util/hooks/useCopyToClipboard"
 import Dropdown from "../ui/Dropdown/Dropdown"
 import { useAddressWithChainIdChecksum } from "../../util/hooks/useSelectedAddressWithChainIdChecksum"
+import useNetWorthBalance from "../../context/hooks/useNetWorthBalance"
 
 interface ConfirmDialogState {
     isOpen: boolean
@@ -41,11 +39,13 @@ interface AccountDisplayProps {
     selected?: boolean
     showSelectedCheckmark?: boolean
     showAddress?: boolean
+    truncateName?: boolean
     showConnected?: boolean
     copyAddressToClipboard?: boolean
     menu?: AccountDisplayMenuOption[]
     actionButtons?: JSX.Element[]
     onClickAccount?: (account: AccountInfo) => void
+    className?: string
 }
 
 const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
@@ -53,17 +53,24 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
     selected,
     showSelectedCheckmark = true,
     showAddress = false,
+    truncateName = true,
     showConnected = false,
     copyAddressToClipboard = false,
     actionButtons,
     menu,
     onClickAccount,
+    className,
 }) => {
     const [confirmationDialog, setConfirmationDialog] =
         useState<ConfirmDialogState>({ isOpen: false })
     const { isHovering: isHoveringMenu, getIsHoveringProps } = useIsHovering()
-    const { chainId, nativeCurrency } = useSelectedNetwork()
     const checksumAddress = useAddressWithChainIdChecksum(account?.address)
+    const {
+        displayNetWorth,
+        netWorth,
+        nativeTokenBalance,
+        nativeTokenBalanceRounded,
+    } = useNetWorthBalance(!showAddress ? account : undefined)
 
     const { copied, onCopy } = useCopyToClipboard(checksumAddress)
 
@@ -79,22 +86,20 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
         })
     }
 
-    const nativeTokenBalance =
-        (account.balances && account.balances[chainId]?.nativeTokenBalance) ??
-        "0"
-
     const hoverStyle =
         onClickAccount && !selected && !actionButtons && !isHoveringMenu
 
-    const accountName = formatName(account.name, showAddress ? 25 : 18)
+    const accountName = formatName(account.name, showAddress ? 25 : 25)
 
     return (
         <>
             <div
                 className={classnames(
-                    "flex flex-row items-center justify-between w-full rounded-md",
-                    hoverStyle && "hover:bg-primary-100 cursor-pointer",
-                    confirmationDialog.isOpen && "!cursor-default"
+                    "flex flex-row items-center justify-between w-full rounded-lg",
+                    hoverStyle &&
+                        "hover:bg-primary-grey-default cursor-pointer",
+                    confirmationDialog.isOpen && "!cursor-default",
+                    className
                 )}
                 onClick={() => onClickAccount && onClickAccount(account)}
                 role="button"
@@ -120,7 +125,9 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             <div className="flex flex-row space-x-1">
                                 <label
                                     className={classnames(
-                                        "font-bold truncate max-w-[96px]",
+                                        "font-semibold",
+                                        truncateName &&
+                                            "truncate max-w-[140px]",
                                         hoverStyle && "cursor-pointer"
                                     )}
                                     title={account.name}
@@ -130,7 +137,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                                 </label>
                                 {!showAddress && (
                                     <span
-                                        className="font-bold"
+                                        className="font-semibold"
                                         title={checksumAddress}
                                     >
                                         {formatHashLastChars(checksumAddress)}
@@ -139,19 +146,19 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             </div>
                             {!showAddress ? (
                                 <span
-                                    className="text-gray-500"
-                                    title={`${formatUnits(
-                                        nativeTokenBalance
-                                    )} ${nativeCurrency.symbol}`}
+                                    className="text-xs text-primary-grey-dark"
+                                    title={
+                                        displayNetWorth
+                                            ? netWorth
+                                            : nativeTokenBalance
+                                    }
                                 >
-                                    {formatNumberLength(
-                                        formatUnits(nativeTokenBalance),
-                                        10
-                                    )}{" "}
-                                    {nativeCurrency.symbol}
+                                    {displayNetWorth
+                                        ? netWorth
+                                        : nativeTokenBalanceRounded}
                                 </span>
                             ) : (
-                                <span className="text-gray-500">
+                                <span className="text-xs text-primary-grey-dark">
                                     {formatHash(checksumAddress)}
                                 </span>
                             )}
@@ -164,7 +171,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             <div className="flex flex-row space-x-1 text-xxs text-white pt-1">
                                 {account.accountType && (
                                     <Tag profile="dark">
-                                        <span className="font-bold">
+                                        <span className="font-semibold">
                                             {account.accountType.toString()}
                                         </span>
                                     </Tag>
@@ -177,7 +184,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                         )}
                     </div>
                 </div>
-                <div className="flex flex-row items-center space-x-3">
+                <div className="flex flex-row items-center space-x-2">
                     {selected && showSelectedCheckmark ? (
                         <img
                             src={checkmarkIcon}
@@ -187,7 +194,6 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                     ) : null}
 
                     {actionButtons}
-
                     {menu && (
                         <div {...getIsHoveringProps()}>
                             <Dropdown>

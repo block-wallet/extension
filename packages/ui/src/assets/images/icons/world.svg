@@ -1,1 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><defs><style>.cls-1,.cls-2,.cls-3{fill:none;stroke-linejoin:round;stroke-width:2px;}.cls-1,.cls-2{stroke:#1673ff;}.cls-1{stroke-linecap:round;}.cls-3{stroke:#000;}</style></defs><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><line class="cls-1" x1="1" y1="10" x2="19" y2="10"/><path class="cls-2" d="M10,19c-2.21,0-4-4-4-9s1.79-9,4-9,4,4,4,9a17.12,17.12,0,0,1-.88,5.64"/><circle class="cls-3" cx="10" cy="10" r="9"/></g></g></svg>
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_1_512)">
+<path d="M10 1V19" stroke="#08090A" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M1 10H19" stroke="#08090A" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M10 19C12.4853 19 14.5 14.9706 14.5 10C14.5 5.02944 12.4853 1 10 1C7.51472 1 5.5 5.02944 5.5 10C5.5 14.9706 7.51472 19 10 19Z" stroke="#08090A" stroke-width="2" stroke-miterlimit="10" stroke-linecap="square"/>
+<path d="M10 19C14.9706 19 19 14.9706 19 10C19 5.02944 14.9706 1 10 1C5.02944 1 1 5.02944 1 10C1 14.9706 5.02944 19 10 19Z" stroke="#08090A" stroke-width="2" stroke-miterlimit="10" stroke-linecap="square"/>
+</g>
+<defs>
+<clipPath id="clip0_1_512">
+<rect width="20" height="20" fill="white"/>
+</clipPath>
+</defs>
+</svg>

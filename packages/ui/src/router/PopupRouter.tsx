@@ -17,7 +17,6 @@ import WalletNews from "../components/news/WalletNews"
 import LocationHolder from "./LocationHolder"
 import { useLocationRecovery } from "../util/hooks/useLocationRecovery"
 import { timeExceedsTTL } from "../util/time"
-import ProviderDownDialog from "../components/dialog/ProviderDownDialog"
 import useClearStickyStorage from "../context/hooks/useClearStickyStorage"
 import {
     getNonSubmittedTransactions,
@@ -93,7 +92,6 @@ const PopupComponent = () => {
     }
     return (
         <WalletNews>
-            <ProviderDownDialog />
             <Route path="/" component={LocationHolder} />
             <Route exact path="/">
                 {showPage ? <Redirect to={route} /> : <Redirect to="/home" />}

@@ -65,7 +65,7 @@ export const DropdownMenuItem: React.FC<
             className={classnames(
                 "flex flex-row justify-between items-center w-full cursor-pointer hover:bg-gray-100",
                 className || "",
-                selected && "text-primary-300"
+                selected && "text-primary-blue-default"
             )}
         >
             {children}

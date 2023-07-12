@@ -50,7 +50,7 @@ const gasPriceToNativeCurrency = (
             currency: localeInfo.currency,
             locale_info: localeInfo.language,
             showCurrency: true,
-            showSymbol: true,
+            showSymbol: false,
             precision: 2,
         }
     )

@@ -4,89 +4,86 @@ import AppVersion from "../../components/AppVersion"
 
 import { IoLogoTwitter } from "react-icons/io"
 import { HiGlobeAlt } from "react-icons/hi"
-import { FaGithub, FaTelegramPlane } from "react-icons/fa"
-import classNames from "classnames"
-import logo from "../../assets/images/logo.svg"
+import { FaTelegramPlane } from "react-icons/fa"
+import { RiDiscordFill } from "react-icons/ri"
+
 import { LINKS } from "../../util/constants"
-import { FiDownload } from "react-icons/fi"
-import { Classes } from "../../styles"
-import useStateLogs from "../../util/hooks/useStateLogs"
+import logo from "../../assets/images/logo.svg"
+import VerticalSelect from "../../components/input/VerticalSelect"
 
 const links = [
     {
-        icon: <HiGlobeAlt className="w-5 h-5" />,
+        icon: <HiGlobeAlt className="w-[22px] h-[22px]" />,
         link: LINKS.WEBSITE,
-        text: "blockwallet.io",
+        text: "BlockWallet Website",
     },
     {
-        icon: <FaTelegramPlane className="w-5 h-5" />,
+        icon: <FaTelegramPlane className="w-[22px] h-[22px]" />,
         link: LINKS.TELEGRAM,
-        text: "t.me/blockwallet",
+        text: "Telegram Group Chat",
     },
     {
-        icon: <FaGithub className="w-5 h-5" />,
-        link: LINKS.GITHUB,
-        text: "github.com/block-wallet",
+        icon: <RiDiscordFill className="w-[22px] h-[22px]" />,
+        link: LINKS.DISCORD,
+        text: "Discord Server",
     },
     {
-        icon: <IoLogoTwitter className="w-5 h-5" />,
+        icon: <IoLogoTwitter className="w-[22px] h-[22px]" />,
         link: LINKS.TWITTER,
-        text: "twitter.com/GetBlockWallet",
+        text: "Twitter",
     },
 ]
 const AboutPage = () => {
-    const { downloadStateLogsHandler } = useStateLogs()
     return (
         <PopupLayout header={<PopupHeader title={"About"} close="/" />}>
             <div className="space-y-4 p-6 py-4">
-                <div className="rounded border border-gray-200 p-4">
+                <div>
                     <div className="flex items-center">
                         <img
                             src={logo}
                             alt="Blockwallet logo"
                             className="w-5 h-5"
                         />
-                        <span className="ml-2 text-lg font-bold">
+                        <span className="ml-2 text-lg font-semibold">
                             BlockWallet
                         </span>
                     </div>
-                    <p className="mt-4">
-                        BlockWallet is the most private, non-custodial browser
-                        extension wallet where users can store funds and
-                        interact with their favorite blockchain applications
-                        anonymously.
+                    <p className="mt-4 text-[14px] leading-6 text-primary-black-default opacity-90">
+                        BlockWallet sets you free! Everything you need for a
+                        secure, private and productive Web3 experience in one
+                        lightweight package.
                     </p>
-                    <p>Join us today and reclaim your privacy.</p>
                     <div className="mt-4">
                         <AppVersion />
                     </div>
                 </div>
-                <div className="rounded border border-gray-200 p-4">
-                    <span className="text-lg font-bold">Contacts</span>
+                <div>
                     <div className="space-y-4 mt-4">
-                        {links.map(({ text, link, icon }) => (
-                            <a
-                                href={link}
-                                target="_blank"
-                                className="text-sm font-bold hover:underline flex items-center"
-                                rel="noopener noreferrer"
-                            >
-                                {icon}
-                                <span className="ml-2">{text}</span>
-                            </a>
-                        ))}
+                        <VerticalSelect
+                            options={links}
+                            value={undefined}
+                            containerClassName="flex flex-col space-y-4"
+                            onChange={(option) => {
+                                const anchor = document.createElement("a")
+
+                                Object.assign(anchor, {
+                                    target: "_blank",
+                                    href: option.link,
+                                    rel: "noopener noreferrer",
+                                }).click()
+                            }}
+                            display={(option) => {
+                                return (
+                                    <div className="flex flex-row space-x-3 items-center text-gray-900">
+                                        {option.icon}
+                                        <span className="font-semibold">
+                                            {option.text}
+                                        </span>
+                                    </div>
+                                )
+                            }}
+                        />
                     </div>
-                </div>
-                <div className="w-full border border-gray-200 rounded-md flex justify-between items-center p-4 py-2">
-                    <span className="text-xs mr-2">
-                        Download state logs for support
-                    </span>
-                    <button
-                        className={classNames(Classes.smallButton, "px-4")}
-                        onClick={downloadStateLogsHandler}
-                    >
-                        <FiDownload size={18} />
-                    </button>
                 </div>
             </div>
         </PopupLayout>

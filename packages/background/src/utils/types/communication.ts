@@ -64,6 +64,7 @@ import { GasPriceData } from '@block-wallet/background/controllers/GasPricesCont
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import { TypedTransaction } from '@ethereumjs/tx';
 import browser from 'webextension-polyfill';
+import { GetOnRampCurrencies } from '@block-wallet/background/controllers/OnrampController';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -80,6 +81,10 @@ enum ACCOUNT {
     REFRESH_TOKEN_ALLOWANCES = 'REFRESH_TOKEN_ALLOWANCES',
     UNHIDE = 'UNHIDE_ACCOUNT',
     GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
+}
+
+enum ADDRESS {
+    GET_TYPE = 'GET_TYPE',
 }
 
 enum APP {
@@ -148,9 +153,12 @@ enum NETWORK {
     EDIT_NETWORK = 'EDIT_NETWORK',
     EDIT_NETWORKS_ORDER = 'EDIT_NETWORKS_ORDER',
     REMOVE_NETWORK = 'REMOVE_NETWORK',
+    SWITCH_PROVIDER = 'SWITCH_PROVIDER',
     GET_SPECIFIC_CHAIN_DETAILS = 'GET_SPECIFIC_CHAIN_DETAILS',
     GET_DEFAULT_RPC = 'GET_DEFAULT_RPC',
+    GET_RPCS = 'GET_RPCS',
     GET_RPC_CHAIN_ID = 'GET_RPC_CHAIN_ID',
+    IS_RPC_VALID = 'IS_RPC_VALID',
     SEARCH_CHAINS = 'SEARCH_CHAINS',
 }
 
@@ -194,6 +202,7 @@ enum TRANSACTION {
     REJECT = 'REJECT_TRANSACTION',
     UPDATE_STATUS = 'UPDATE_STATUS',
     GET_LATEST_GAS_PRICE = 'GET_LATEST_GAS_PRICE',
+    UPDATE_GAS_PRICE = 'UPDATE_GAS_PRICE',
     FETCH_LATEST_GAS_PRICE = 'FETCH_LATEST_GAS_PRICE',
     SEND_ETHER = 'SEND_ETHER',
     CANCEL_TRANSACTION = 'CANCEL_TRANSACTION',
@@ -233,6 +242,10 @@ enum WALLET {
     HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT = 'HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT',
     HARDWARE_QR_SUBMIT_SIGNATURE = 'HARDWARE_QR_SUBMIT_SIGNATURE',
     HARDWARE_QR_CANCEL_SIGN_REQUEST = 'HARDWARE_QR_CANCEL_SIGN_REQUEST',
+    //hotkeys
+    SET_HOTKEYS_ENABLED = 'SET_HOTKEYS_ENABLED',
+    //onramp
+    GET_ONRAMP_CURRENCIES = 'GET_ONRAMP_CURRENCIES',
 }
 
 enum TOKEN {
@@ -266,8 +279,16 @@ enum FILTERS {
     SET_ACCOUNT_FILTERS = 'SET_ACCOUNT_FILTERS',
 }
 
+export enum ProviderType {
+    DEFAULT = 'DEFAULT',
+    BACKUP = 'BACKUP',
+    CUSTOM = 'CUSTOM',
+    CURRENT = 'CURRENT',
+}
+
 export const Messages = {
     ACCOUNT,
+    ADDRESS,
     APP,
     BACKGROUND,
     CONTENT,
@@ -292,6 +313,7 @@ export const Messages = {
 // [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
 export interface RequestSignatures {
     [Messages.BROWSER.GET_WINDOW_ID]: [undefined, string];
+    [Messages.ADDRESS.GET_TYPE]: [string, AddressType];
     [Messages.ACCOUNT.CREATE]: [RequestAccountCreate, AccountInfo];
     [Messages.ACCOUNT.EXPORT_JSON]: [RequestAccountExportJson, string];
     [Messages.ACCOUNT.EXPORT_PRIVATE_KEY]: [RequestAccountExportPK, string];
@@ -377,6 +399,7 @@ export interface RequestSignatures {
     [Messages.NETWORK.EDIT_NETWORK]: [RequestEditNetwork, void];
     [Messages.NETWORK.EDIT_NETWORKS_ORDER]: [RequestEditNetworksOrder, void];
     [Messages.NETWORK.REMOVE_NETWORK]: [RequestRemoveNetwork, void];
+    [Messages.NETWORK.SWITCH_PROVIDER]: [RequestSwitchProvider, void];
     [Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS]: [
         RequestGetChainData,
         ChainListItem
@@ -421,6 +444,7 @@ export interface RequestSignatures {
         boolean
     ];
     [Messages.TRANSACTION.GET_LATEST_GAS_PRICE]: [undefined, BigNumber];
+    [Messages.TRANSACTION.UPDATE_GAS_PRICE]: [undefined, undefined];
     [Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE]: [number, GasPriceData];
     [Messages.TRANSACTION.SEND_ETHER]: [RequestSendEther, string];
     [Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION]: [
@@ -568,6 +592,8 @@ export interface RequestSignatures {
         CancelQRHardwareSignRequestMessage,
         boolean
     ];
+    [Messages.WALLET.SET_HOTKEYS_ENABLED]: [RequestSetHotkeys, void];
+    [Messages.WALLET.GET_ONRAMP_CURRENCIES]: [void, GetOnRampCurrencies];
 }
 
 export type MessageTypes = keyof RequestSignatures;
@@ -575,6 +601,13 @@ export type MessageTypes = keyof RequestSignatures;
 export type RequestTypes = {
     [MessageType in keyof RequestSignatures]: RequestSignatures[MessageType][0];
 };
+
+export enum AddressType {
+    NORMAL = 'NORMAL',
+    SMART_CONTRACT = 'SMART_CONTRACT',
+    ERC20 = 'ERC20',
+    NULL = 'NULL',
+}
 
 export interface RequestSetUserOnline {
     networkStatus: boolean;
@@ -707,8 +740,8 @@ export interface RequestApproveAllowance {
     customNonce?: number;
 }
 
-export interface RequestGetBridgeTokens {}
-export interface RequestGetBridgeAvailableChains {}
+export interface RequestGetBridgeTokens { }
+export interface RequestGetBridgeAvailableChains { }
 export interface RequestGetBridgeQuote {
     checkAllowance: boolean;
     quoteRequest: BridgeQuoteRequest;
@@ -764,6 +797,12 @@ export interface RequestEditNetworksOrder {
 
 export interface RequestRemoveNetwork {
     chainId: number;
+}
+
+export interface RequestSwitchProvider {
+    chainId: number;
+    providerType: ProviderType;
+    customRpcUrl?: string;
 }
 
 export interface RequestGetChainData {
@@ -1004,7 +1043,7 @@ export interface RequestSetNativeCurrency {
     currencyCode: string;
 }
 
-export interface RequestGetValidCurrencies {}
+export interface RequestGetValidCurrencies { }
 
 export interface RequestToggleReleaseNotesSubscription {
     releaseNotesSubscriptionEnabled: boolean;
@@ -1027,7 +1066,7 @@ export interface RequestUpdateTransactionStatus {
     status: TransactionStatus;
 }
 
-export interface RequestAddressBookClear {}
+export interface RequestAddressBookClear { }
 
 export interface RequestAddressBookDelete {
     address: string;
@@ -1039,7 +1078,7 @@ export interface RequestAddressBookSet {
     note?: string;
 }
 
-export interface RequestAddressBookGet {}
+export interface RequestAddressBookGet { }
 export interface RequestAddressBookGetByAddress {
     address: string;
 }
@@ -1139,9 +1178,9 @@ export interface SubmitQRHardwareSignatureMessage {
     requestId: string;
     qr: string;
 }
-export interface CancelQRHardwareSignRequestMessage {}
+export interface CancelQRHardwareSignRequestMessage { }
 
-export interface DismissMessage {}
+export interface DismissMessage { }
 
 export interface GetQRHardwareETHSignRequestMessage {
     ethTx: TypedTransaction;
@@ -1186,4 +1225,8 @@ export type Handlers = Record<string, Handler>;
 
 export enum BackgroundActions {
     CLOSE_WINDOW = 'CLOSE_WINDOW',
+}
+
+export interface RequestSetHotkeys {
+    enabled: boolean;
 }

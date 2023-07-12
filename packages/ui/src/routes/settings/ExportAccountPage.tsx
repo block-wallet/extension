@@ -204,7 +204,7 @@ const ExportAccountPage = () => {
                                             account.accountType
                                         ) && (
                                             <Tooltip
-                                                className="!w-60 !break-word !whitespace-normal !-translate-y-8 !translate-x-3 border boder-gray-300"
+                                                className="!w-60 !break-word !whitespace-normal !-translate-y-8 !translate-x-3"
                                                 content={
                                                     <span>
                                                         Seed Phrase can only be

@@ -41,7 +41,7 @@ const AddressBookPage: FunctionComponent<{
                 />
             }
         >
-            <div className="flex flex-col p-6 space-y-5 text-sm text-gray-500">
+            <div className="flex flex-col p-6 space-y-5 text-sm text-primary-grey-dark">
                 <ActionButton
                     icon={accountAdd}
                     label="Create New Contact"
@@ -100,6 +100,7 @@ const AddressBookPage: FunctionComponent<{
                                     } as AccountInfo
                                 }
                                 selected={false}
+                                truncateName={false}
                                 showAddress
                                 copyAddressToClipboard
                                 menu={[
@@ -108,7 +109,7 @@ const AddressBookPage: FunctionComponent<{
                                             AccountMenuOptionType.CUSTOM,
                                         component: () => (
                                             <div
-                                                className="flex flex-row justify-start items-center p-1 cursor-pointer text-black hover:bg-gray-100 hover:rounded-t-md w-36"
+                                                className="flex flex-row justify-start items-center p-1 cursor-pointer text-primary-black-default hover:bg-gray-100 hover:rounded-t-md w-36"
                                                 onClick={() =>
                                                     history.push({
                                                         pathname:
@@ -138,7 +139,7 @@ const AddressBookPage: FunctionComponent<{
                 )}
                 {!Object.keys(addressBook).length &&
                     !Object.keys(recentAddresses).length && (
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-primary-grey-dark">
                             No contacts.
                         </span>
                     )}

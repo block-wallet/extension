@@ -122,7 +122,7 @@ export const NetworkSelector: FunctionComponent<NetworkSelectorProps> = ({
             </div>
             {search && searchResult.length === 0 ? (
                 <div className="p-3">
-                    <p className="text-xs text-black text-center">
+                    <p className="text-xs text-primary-black-default text-center">
                         No available networks match with the search.
                     </p>
                 </div>

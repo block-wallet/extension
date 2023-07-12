@@ -14,6 +14,8 @@ type DropDownSelectorProps = {
     disabled?: boolean
     customWidth?: string
     className?: string
+    popUpOpenLeft?: boolean
+    customHeight?: string
 }
 
 /**
@@ -28,6 +30,8 @@ type DropDownSelectorProps = {
  * @param error - If needed, the error to display.
  * @param disabled - Shows popup on click or not.
  * @param customWidth - Custom dropdown width
+ * @param customHeight - Custom dropdown height
+ * @param popUpOpenLeft - If true, will open the popUp to left.
  */
 const DropDownSelector: FC<DropDownSelectorProps> = ({
     display,
@@ -39,6 +43,8 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
     disabled,
     children,
     customWidth,
+    customHeight,
+    popUpOpenLeft,
 }) => {
     // State
     const [active, setActive] = useState<boolean>(false)
@@ -98,11 +104,11 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
             {/* Display */}
             <div
                 className={classNames(
-                    Classes.blueSection,
-                    "h-[4.5rem]",
+                    Classes.greySection,
+                    customHeight ?? "h-[4rem]",
                     "space-x-1",
                     active && Classes.blueSectionActive,
-                    disabled && Classes.blueSelectionDisabled,
+                    disabled && Classes.greySelectionDisabled,
                     error
                         ? "border-red-400"
                         : "border-opacity-0 border-transparent",
@@ -117,7 +123,7 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
                         alt="active-arrow"
                         src={arrowDown}
                         className={classnames(
-                            "w-3 h-2 text-black",
+                            "w-3 h-2 text-primary-black-default",
                             active && "rotate-180"
                         )}
                     />
@@ -127,10 +133,11 @@ const DropDownSelector: FC<DropDownSelectorProps> = ({
             {/* Popup */}
             <div
                 className={classNames(
-                    "absolute shadow-lg bg-white rounded-md z-30 my-2 overflow-y-auto select-none border-[0.5px] border-gray-200",
+                    "absolute shadow-lg bg-white rounded-md z-30 my-2 overflow-y-auto select-none border-[0.5px] border-primary-grey-hover",
                     customWidth || "w-full",
                     active ? "opacity-1" : "opacity-0 pointer-events-none", // Avoid reading size problem when not display
-                    midToTopDistance < viewHeight ? "top-full" : "bottom-full" // Determine if Popup should appear on top or on bottom of the Display element
+                    midToTopDistance < viewHeight ? "top-full" : "bottom-full", // Determine if Popup should appear on top or on bottom of the Display element
+                    popUpOpenLeft && "right-0"
                 )}
                 style={{
                     maxHeight: `${maxHeightInPx}px`,

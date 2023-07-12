@@ -24,6 +24,9 @@ import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
+import { useHotkeys } from "react-hotkeys-hook"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import { componentsHotkeys } from "../../util/hotkeys"
 
 export type AllowancePageLocalState = {
     fromAssetDetails: boolean
@@ -42,7 +45,7 @@ const timeToDisableRefresh = 5 * 60 * 1000
 
 const AllowancesPage = () => {
     const history = useOnMountHistory()
-
+    const { hotkeysEnabled } = useBlankState()!
     const searchInputRef = useRef<HTMLInputElement>(null)
 
     const [search, setSearch] = useState("")
@@ -151,6 +154,31 @@ const AllowancesPage = () => {
         setShowEmptyState(allowances.length === 0)
     }, [allowances])
 
+    const allowancesPageHotkeys = componentsHotkeys.AllowancesPage
+    useHotkeys(allowancesPageHotkeys, (e) => {
+        if (!hotkeysEnabled) return
+        if (!e.key) {
+            return
+        }
+        const keyPressed = e.code
+            .replace(/key/i, "")
+            .replace(/digit/i, "")
+            .replace(/numpad/i, "")
+            .toLowerCase()
+
+        switch (keyPressed) {
+            case "r":
+                setConfirmRefresh(true)
+                break
+            case "s":
+                onFilterChange(AllowancesFilters.SPENDER)
+                break
+            case "t":
+                onFilterChange(AllowancesFilters.TOKEN)
+                break
+        }
+    })
+
     return (
         <PopupLayout
             header={
@@ -178,6 +206,7 @@ const AllowancesPage = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <ConfirmDialog
                 title="Revoke All Allowances"
@@ -245,7 +274,7 @@ const AllowancesPage = () => {
                 }}
                 timeout={1000}
             />
-            <div className="w-76 w-full p-6 bg-white fixed z-[9] flex flex-col">
+            <div className="w-76 w-full p-6 bg-white z-[9] flex flex-col">
                 <div className="flex flex-row space-x-2">
                     <div className="flex-1">
                         <SearchInput
@@ -276,8 +305,8 @@ const AllowancesPage = () => {
                     </EmptyState>
                 )}
             </div>
-            <div className="flex flex-col h-full w-full p-6">
-                <div className="w-full mt-16 pt-2 h-full space-y-6">
+            <div className="flex flex-col h-full w-full p-6 pt-0">
+                <div className="w-full h-full space-y-6">
                     <AllowanceList allowances={allowances} />
                 </div>
             </div>

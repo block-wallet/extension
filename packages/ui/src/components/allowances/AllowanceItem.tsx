@@ -12,7 +12,6 @@ import useIsHovering from "../../util/hooks/useIsHovering"
 import { generateExplorerLink } from "../../util/getExplorer"
 import { formatRounded } from "../../util/formatRounded"
 
-import { AssetIcon } from "../AssetsList"
 import { AllowancesFilters } from "./AllowancesFilterButton"
 import { TabLabels } from "../assets/ActivityAllowancesView"
 import DetailsDialog from "../dialog/DetailsDialog"
@@ -21,6 +20,7 @@ import ChevronRightIcon from "../icons/ChevronRightIcon"
 import revokeIcon from "../../assets/images/icons/revoke.svg"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
 import { TokenAllowanceStatus } from "../../context/commTypes"
+import TokenLogo from "../token/TokenLogo"
 
 const AllowanceItem = ({
     allowance,
@@ -166,7 +166,7 @@ const AllowanceItem = ({
                 "flex flex-row items-center justify-between py-4 mr-1 transition duration-300 -ml-6 px-6 w-[calc(100%+3rem)]",
                 !isHoveringButton &&
                     !open &&
-                    "hover:cursor-pointer hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50"
+                    "hover:cursor-pointer hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50"
             )}
         >
             <DetailsDialog
@@ -183,16 +183,21 @@ const AllowanceItem = ({
                 expandedByDefault
             />
             <div className="flex flex-row items-center">
-                <AssetIcon asset={{ logo: logo, symbol: name }} />
+                <TokenLogo
+                    logo={logo}
+                    name={(showToken ? token.symbol : spender.symbol) ?? ""}
+                    logoSize="big"
+                    filled={false}
+                />
                 <div className="flex flex-col ml-2">
                     <span
-                        className="text-sm font-bold truncate w-36"
+                        className="text-sm font-semibold truncate w-36"
                         title={name}
                     >
                         {name}
                     </span>
                     <span
-                        className="text-xs text-gray-600 w-32 truncate"
+                        className="text-[11px] text-primary-grey-dark w-32 truncate"
                         title={allowanceValue}
                     >
                         {allowanceValue}
@@ -225,8 +230,8 @@ const AllowanceItem = ({
                         disabled={isPendingUpdate}
                     >
                         <img
-                            width="13"
-                            height="13"
+                            width="12"
+                            height="12"
                             src={revokeIcon}
                             alt="Revoke"
                             className="mr-2"

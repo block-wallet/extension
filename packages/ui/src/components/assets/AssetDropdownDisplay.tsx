@@ -29,6 +29,8 @@ const AssetDropdownDisplay: FC<AssetDropdownDisplayProps> = ({
                     logo={selectedAsset.token.logo}
                     name={selectedAsset.token.name}
                     className="mr-2"
+                    filled={false}
+                    logoSize="small"
                 />
             )}
             <div className="flex flex-grow justify-between space-x-1">
@@ -40,7 +42,7 @@ const AssetDropdownDisplay: FC<AssetDropdownDisplayProps> = ({
                         <span
                             title={assetBalance}
                             className={classnames(
-                                "text-xs text-gray-600 mt-1 truncate",
+                                "text-xs text-primary-grey-dark truncate",
                                 assetBalanceClassName
                             )}
                         >
@@ -70,7 +72,7 @@ const AssetDropdownDisplay: FC<AssetDropdownDisplayProps> = ({
         </div>
     ) : (
         <div className="flex flex-col justify-center w-full">
-            <div className="text-base font-semibold">Select...</div>
+            <div className="text-base font-semibold">Select token</div>
         </div>
     )
 }

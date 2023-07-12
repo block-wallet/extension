@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20.52 21.33"><defs><style>.cls-1,.cls-2,.cls-3{fill:none;stroke-width:2px;}.cls-1,.cls-3{stroke:#000;}.cls-1,.cls-2{stroke-miterlimit:10;}.cls-2{stroke:#1673ff;}.cls-3{stroke-linejoin:round;}</style></defs><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><polygon class="cls-1" points="19.19 13.4 9.75 14.17 7.62 7.3 15.54 1.62 19.19 13.4"/><line class="cls-2" x1="7.46" y1="14.76" x2="8.92" y2="21.11"/><path class="cls-3" d="M7.62,7.3,3.53,8.57a3.6,3.6,0,0,0-2.37,4.5h0a3.6,3.6,0,0,0,4.5,2.37l4.09-1.27"/></g></g></svg>
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_1_532)">
+<path d="M7.88612 11.7148L9.96704 16.777C10.1301 17.1751 10.1253 17.6204 9.95373 18.0151C9.78212 18.4098 9.45771 18.7217 9.05173 18.8821V18.8821C8.6455 19.042 8.19116 19.0373 7.78846 18.8691C7.38576 18.7009 7.06762 18.3829 6.9039 17.985L4.3042 11.7148" stroke="#08090A" stroke-width="2" stroke-miterlimit="10"/>
+<path d="M9.26089 5.23871H4.30435C3.42799 5.23871 2.58751 5.57993 1.96782 6.18731C1.34814 6.79469 1 7.61847 1 8.47743C1 9.33639 1.34814 10.1602 1.96782 10.7675C2.58751 11.3749 3.42799 11.7161 4.30435 11.7161H9.26089L15.8696 14.9549V2L9.26089 5.23871Z" stroke="#08090A" stroke-width="2" stroke-miterlimit="10" stroke-linecap="square"/>
+<path d="M17.522 6.05078V10.9089C18.1792 10.9089 18.8096 10.6529 19.2744 10.1974C19.7391 9.74187 20.0002 9.12404 20.0002 8.47982C20.0002 7.8356 19.7391 7.21776 19.2744 6.76223C18.8096 6.3067 18.1792 6.05078 17.522 6.05078Z" fill="#08090A"/>
+</g>
+<defs>
+<clipPath id="clip0_1_532">
+<rect width="20" height="20" fill="white"/>
+</clipPath>
+</defs>
+</svg>

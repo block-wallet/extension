@@ -2,7 +2,6 @@ import { useErrorHandler } from "react-error-boundary"
 
 // Components
 import PopupHeader from "../../components/popup/PopupHeader"
-import PopupFooter from "../../components/popup/PopupFooter"
 import PopupLayout from "../../components/popup/PopupLayout"
 import VerticalSelect from "../../components/input/VerticalSelect"
 
@@ -26,9 +25,10 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import classNames from "classnames"
 import GenericTooltip from "../../components/label/GenericTooltip"
-import AppVersion from "../../components/AppVersion"
 import { openHardwareConnect } from "../../context/commActions"
 import browser from "webextension-polyfill"
+import { useHotkeys } from "react-hotkeys-hook"
+import { componentsHotkeys } from "../../util/hotkeys"
 
 const SettingsPage = () => {
     const { isSeedPhraseBackedUp, isImportingDeposits } = useBlankState()!
@@ -78,6 +78,11 @@ const SettingsPage = () => {
         }
     }
 
+    const settingsPageHotkeys = componentsHotkeys.SettingsPage
+    useHotkeys(settingsPageHotkeys, () => {
+        openHardwareConnect()
+    })
+
     return (
         <PopupLayout
             header={
@@ -87,46 +92,23 @@ const SettingsPage = () => {
                     onBack={() => history.push("/")}
                 />
             }
-            footer={
-                <PopupFooter>
-                    <GenericTooltip
-                        top
-                        divFull
-                        disabled={!isImportingDeposits}
-                        content={
-                            <p className="w-full text-center">
-                                Please wait until deposits are done loading
-                                before locking the wallet. This can take up to
-                                15 minutes
-                            </p>
-                        }
-                    >
-                        <button
-                            type="button"
-                            onClick={logout}
-                            className={classnames(
-                                !isImportingDeposits
-                                    ? Classes.logoutButton
-                                    : Classes.disabledLogoutButton,
-                                "w-full"
-                            )}
-                            disabled={isImportingDeposits}
-                        >
-                            <img
-                                alt="Logout"
-                                src={logoutIcon}
-                                className={classnames(
-                                    Classes.buttonIcon,
-                                    isImportingDeposits && "opacity-30"
-                                )}
-                            />
-                            Logout
-                        </button>
-                    </GenericTooltip>
-                </PopupFooter>
-            }
         >
             <div className="flex flex-col space-y-6 p-6">
+                {!isSeedPhraseBackedUp && (
+                    <div className="w-full border border-primary-grey-hover rounded-md flex justify-between items-center p-4">
+                        <span className="text-xs mr-2">
+                            Back up your seed phrase to secure your funds.
+                        </span>
+                        <button
+                            className={classNames(Classes.smallButton)}
+                            onClick={() => {
+                                history.push("/reminder")
+                            }}
+                        >
+                            Backup
+                        </button>
+                    </div>
+                )}
                 <div className="flex flex-col space-y-1">
                     <div className="flex flex-col space-y-4">
                         <VerticalSelect
@@ -166,7 +148,7 @@ const SettingsPage = () => {
                                                 }
                                             />
                                         </div>
-                                        <span className="font-bold">
+                                        <span className="font-semibold">
                                             {option.label}
                                         </span>
                                     </>
@@ -178,27 +160,42 @@ const SettingsPage = () => {
                                 )
                             }}
                         />
-                        {!isSeedPhraseBackedUp && (
-                            <div className="w-full border border-gray-200 rounded-md flex justify-between items-center p-4">
-                                <span className="text-xs mr-2">
-                                    Back your seed phrase up and store it in a
-                                    safe place.
-                                </span>
-                                <button
-                                    className={classNames(Classes.smallButton)}
-                                    onClick={() => {
-                                        history.push("/reminder")
-                                    }}
-                                >
-                                    Backup
-                                </button>
-                            </div>
-                        )}
+                        <GenericTooltip
+                            top
+                            divFull
+                            disabled={!isImportingDeposits}
+                            content={
+                                <p className="w-full text-center">
+                                    Please wait until deposits are done loading
+                                    before locking the wallet. This can take up
+                                    to 15 minutes
+                                </p>
+                            }
+                        >
+                            <button
+                                type="button"
+                                onClick={logout}
+                                className={classnames(
+                                    !isImportingDeposits
+                                        ? Classes.logoutButton
+                                        : Classes.disabledLogoutButton,
+                                    "w-full"
+                                )}
+                                disabled={isImportingDeposits}
+                            >
+                                <img
+                                    alt="Logout"
+                                    src={logoutIcon}
+                                    className={classnames(
+                                        Classes.buttonIcon,
+                                        isImportingDeposits && "opacity-30"
+                                    )}
+                                />
+                                Logout
+                            </button>
+                        </GenericTooltip>
                     </div>
                 </div>
-            </div>
-            <div className="mb-1 mx-auto mt-auto text-xxs ">
-                <AppVersion />
             </div>
         </PopupLayout>
     )

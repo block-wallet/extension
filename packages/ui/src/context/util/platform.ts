@@ -23,3 +23,28 @@ export const checkRedraw = () => {
         })
     }
 }
+
+/**
+ * Returns the platform info
+ *
+ */
+export const getPlatformInfo = (): Promise<chrome.runtime.PlatformInfo> => {
+    return new Promise<chrome.runtime.PlatformInfo>((resolve) => {
+        chrome.runtime.getPlatformInfo((info) => {
+            resolve(info)
+        })
+    })
+}
+
+export const getCurrentOS = () => {
+    const os = navigator.userAgent
+    if (os.search("Windows") !== -1) {
+        return "win"
+    } else if (os.search("Mac") !== -1) {
+        return "mac"
+    } else if (os.search("X11") !== -1 && !(os.search("Linux") !== -1)) {
+        return "UNIX"
+    } else if (os.search("Linux") !== -1 && os.search("X11") !== -1) {
+        return "Linux"
+    }
+}

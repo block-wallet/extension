@@ -117,7 +117,13 @@ const AddContactPage = () => {
                 onSubmit,
                 isFormValid: Object.keys(errors).length === 0,
             }}
-            header={<PopupHeader title={pageTitle} close="/" />}
+            header={
+                <PopupHeader
+                    title={pageTitle}
+                    close="/"
+                    onBack={() => history.push("/settings/addressBook")}
+                />
+            }
             footer={
                 <PopupFooter>
                     <ButtonWithLoading
@@ -165,7 +171,7 @@ const AddContactPage = () => {
                         />
                     </div>
                 </div>
-                <hr className="border-0.5 border-gray-200 w-full" />
+                <hr className="border-0.5 border-primary-grey-hover w-full" />
             </div>
             <WaitingDialog
                 open={isOpen}

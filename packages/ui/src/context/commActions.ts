@@ -13,6 +13,8 @@ import {
     RequestAddNetwork,
     RequestEditNetwork,
     RequestEditNetworksOrder,
+    AddressType,
+    RequestSwitchProvider,
 } from "@block-wallet/background/utils/types/communication"
 import { Devices, ExchangeType, Messages, TransactionStatus } from "./commTypes"
 import {
@@ -61,6 +63,7 @@ import {
     GetBridgeQuoteNotFoundResponse,
 } from "@block-wallet/background/controllers/BridgeController"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
+import { GetOnRampCurrencies } from "@block-wallet/background/controllers/OnrampController"
 
 let requestId = 0
 
@@ -80,6 +83,15 @@ const sendMessage = <TMessageType extends MessageTypes>(
 
         port.postMessage({ id, message, request: request || {} })
     })
+}
+
+/**
+ * Gets the address type (normal, native, smart contract,erc20)
+ * @param address address to check
+ * @returns address type
+ */
+export const getAddressType = async (address: string): Promise<AddressType> => {
+    return sendMessage(Messages.ADDRESS.GET_TYPE, address)
 }
 
 /**
@@ -559,6 +571,13 @@ export const getLatestGasPrice = async (): Promise<BigNumber> => {
 }
 
 /**
+ * Updates the gas price levels
+ */
+export const updateGasPrices = async () => {
+    return sendMessage(Messages.TRANSACTION.UPDATE_GAS_PRICE)
+}
+
+/**
  * Get all the erc20 tokens method
  *
  */
@@ -932,6 +951,20 @@ export const setShowTestNetworks = async (
  */
 export const removeNetwork = async (chainId: number) => {
     return sendMessage(Messages.NETWORK.REMOVE_NETWORK, { chainId })
+}
+
+/**
+ * Switches the provider of the specified chain
+ *
+ * @param chainId The chainId of the network
+ * @param providerType The provider to use (default, backup, custom)
+ * @param customRpcUrl? The rpc url to use if the provider is custom
+ *
+ */
+export const switchProvider = async (
+    switchProviderInput: RequestSwitchProvider
+) => {
+    return sendMessage(Messages.NETWORK.SWITCH_PROVIDER, switchProviderInput)
 }
 
 /**
@@ -1666,4 +1699,22 @@ export const executeBridge = async (
     return sendMessage(Messages.BRIDGE.EXECUTE_BRIDGE, {
         bridgeTransaction,
     })
+}
+
+/**
+ * Enable/Disable hotkeys
+ *
+ * @param enabled Allow hotkeys on the extension
+ */
+export const setHotkeysEnabled = async (enabled: boolean): Promise<void> => {
+    return sendMessage(Messages.WALLET.SET_HOTKEYS_ENABLED, { enabled })
+}
+
+/**
+ * Enable/Disable hotkeys
+ *
+ * @param enabled Allow hotkeys on the extension
+ */
+export const getOnrampCurrencies = async (): Promise<GetOnRampCurrencies> => {
+    return sendMessage(Messages.WALLET.GET_ONRAMP_CURRENCIES)
 }

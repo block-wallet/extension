@@ -20,7 +20,7 @@ const NetworkSelectorList: FC<NetworkSelectorListProps> = ({
 }) => {
     return (
         <>
-            <span className="text-xxs text-gray-500 p-3">
+            <span className="text-xxs text-primary-grey-dark p-3">
                 {networks.length} available networks
             </span>
             <input

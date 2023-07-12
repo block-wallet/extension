@@ -30,20 +30,20 @@ const SeedImportPage = () => {
 
     return (
         <PageLayout header maxWidth="max-w-lg">
-            <span className="my-6 text-lg font-bold font-title">
+            <span className="my-6 text-lg font-semibold">
                 Import an Account
             </span>
             <Divider />
             <div className="flex flex-col p-6 space-y-6">
                 <div className="flex flex-col space-y-4">
                     <div className="flex flex-col px-6 my-2 space-y-1">
-                        <span className="text-sm leading-relaxed text-center text-gray-600">
+                        <span className="text-sm leading-relaxed text-center text-primary-grey-dark">
                             Select the length of your seed phrase and enter it
                             to import your account.
                         </span>
                     </div>
-                    <div className="w-full px-4 py-4 text-sm text-center text-red-500 bg-red-100 rounded">
-                        <strong className="font-bold">Warning: </strong>
+                    <div className="w-full px-4 py-4 text-sm text-center text-secondary-red-default bg-red-100 rounded">
+                        <strong className="font-semibold">Warning: </strong>
                         <span>
                             Never disclose your seed phrase. Anyone asking for
                             your seed phrase is most likely trying to steal your

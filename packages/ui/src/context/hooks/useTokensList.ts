@@ -1,8 +1,10 @@
 import { BigNumber } from "@ethersproject/bignumber"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 
-import { useSelectedAccount } from "./useSelectedAccount"
 import { useSelectedNetwork } from "./useSelectedNetwork"
+import { useBlankState } from "../background/backgroundHooks"
+import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
+import { isHiddenAccount } from "../../util/account"
 
 export type TokenWithBalance = { token: Token; balance: BigNumber }
 
@@ -13,8 +15,15 @@ interface TokenListInfo {
     currentNetworkTokens: TokenWithBalance[]
 }
 
-export const useTokensList = (): TokenListInfo => {
-    const { balances } = useSelectedAccount()
+export const useTokensList = (account?: AccountInfo): TokenListInfo => {
+    const { accounts, selectedAddress, hiddenAccounts } = useBlankState()!
+
+    let balances = account
+        ? isHiddenAccount(account)
+            ? hiddenAccounts[account.address].balances
+            : accounts[account.address].balances
+        : accounts[selectedAddress].balances
+
     const { nativeCurrency, defaultNetworkLogo, chainId } = useSelectedNetwork()
 
     const nativeToken = {
@@ -22,7 +31,8 @@ export const useTokensList = (): TokenListInfo => {
         decimals: nativeCurrency.decimals,
         name: nativeCurrency.name,
         symbol: nativeCurrency.symbol,
-        logo: defaultNetworkLogo,
+        // Use Network Logo if nativeCurrency logo is not available
+        logo: nativeCurrency.logo ?? defaultNetworkLogo,
     }
 
     if (chainId in balances) {

@@ -95,7 +95,7 @@ const HardwareWalletVendorsPage = () => {
                 <div className="w-full flex-row items-center block text-center">
                     <a
                         className="text-black hover:text-primary-300 cursor-pointer inline-block mb-4"
-                        href="https://help.blockwallet.io/hc/en-us/articles/6670564432657-How-do-Hardware-Wallets-Work-"
+                        href="https://blockwallet.io/docs/how-do-hardware-wallets-work"
                         target="_blank"
                         rel="noopener noreferrer"
                         title="How do Hardware Wallets work?"

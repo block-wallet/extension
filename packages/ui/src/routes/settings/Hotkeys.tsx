@@ -159,7 +159,7 @@ const LockTimeout = () => {
                         <Divider className="border-gray-300" />
                         <span className="text-sm mt-4">
                             <a
-                                href="https://help.blockwallet.io/hc/en-us/articles/14296948056209"
+                                href="https://blockwallet.io/docs/keyboard-shortcuts"
                                 target="_blank"
                                 className="text-primary-blue-default"
                                 rel="noreferrer"

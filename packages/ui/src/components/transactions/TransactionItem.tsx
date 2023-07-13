@@ -607,7 +607,7 @@ const TransactionItem: React.FC<{
                                 metaType === MetaType.REGULAR && (
                                     <div className="group relative self-start">
                                         <a
-                                            href="https://help.blockwallet.io/hc/en-us/articles/4410031249553"
+                                            href="https://blockwallet.io/docs/what-is-a-dropped-transaction"
                                             target="_blank"
                                             rel="noreferrer"
                                         >

@@ -941,7 +941,8 @@ export class TransactionController extends BaseController<
             const { APPROVED: status } = TransactionStatus;
 
             let txNonce = nonce;
-            if (!txNonce) {
+            // this includes 0 as posible value
+            if (typeof txNonce === 'undefined' || txNonce === undefined) {
                 // Get new nonce
                 nonceLock = await this._nonceTracker.getNonceLock(from!);
                 txNonce = nonceLock.nextNonce;

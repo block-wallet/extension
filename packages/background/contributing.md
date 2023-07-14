@@ -2,7 +2,7 @@
 
 ## I don't want to read this whole thing I just have a question
 
-We have an official zendesk board with a detailed [FAQ](https://help.blockwallet.io/) with helpful advice if you have questions .
+We have an official website board with detailed [articles](https://blockwallet.io/docs) with helpful advices if you have questions .
 
 ## Did you find a bug?
 

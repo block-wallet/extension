@@ -61,7 +61,7 @@
         "nyc": "^15.1.0",
         "prettier": "^2.8.1",
         "semver": "^7.3.8",
-        "sinon": "^15.0.1",
+        "sinon": "^15.2.0",
         "sinon-chrome": "^3.0.1",
         "stream-browserify": "^3.0.0",
         "ts-loader": "^9.4.2",

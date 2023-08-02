@@ -10,6 +10,8 @@ import { searchEns } from "../../util/searchEns"
 import { searchUD } from "../../util/searchUD"
 import AccountDisplay from "./AccountDisplay"
 import AccountsList from "./AccountsList"
+import EmptyState from "../ui/EmptyState"
+import searchNotFoundIcon from "../../assets/images/icons/searchnotfound.svg"
 
 type AccountSearchResultsProps = {
     filter: string
@@ -190,8 +192,24 @@ const AccountSearchResults = ({
             )}
 
             {displayEmptyResultsMessage() && (
-                <div className="text-base font-semibold text-primary-black-default w-full text-center mt-4">
-                    <span>No results found.</span>
+                <div className="flex flex-col">
+                    <div className="flex justify-center items-center mb-6">
+                        <img
+                            src={searchNotFoundIcon}
+                            alt="search"
+                            className="w-7 h-7 absolute z-10"
+                        />
+                        <div className="w-20 h-20 bg-primary-grey-default rounded-full relative z-0"></div>
+                    </div>
+                    <span className="font-bold text-base text-center mb-2 -mt-1">
+                        No results found.
+                    </span>
+                    <div className="flex justify-center items-center w-full text-center">
+                        <span className="text-sm text-primary-grey-dark w-72">
+                            We cannot find anything you are searching for. Try
+                            to adjust your search.
+                        </span>
+                    </div>
                 </div>
             )}
         </>

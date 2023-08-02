@@ -26,6 +26,8 @@ import AccountSearchResults, {
 import Checkbox from "../../components/input/Checkbox"
 import { isValidAddress, toChecksumAddress } from "ethereumjs-util"
 import { formatHashLastChars } from "../../util/formatAccount"
+import searchIcon from "../../assets/images/icons/search.svg"
+import SendPageLoadingSkeleton from "../../components/skeleton/SendPageLoadingSkeleton"
 
 // Schema
 const schema = yup.object().shape({
@@ -62,6 +64,7 @@ const SendPage = () => {
     const [canAddContact, setCanAddContact] = useState(false)
 
     const searchInputRef = useRef<HTMLInputElement>(null)
+    const [showSearchSkeleton, setShowSearchSkeleton] = useState<boolean>(false)
 
     const {
         register,
@@ -101,11 +104,13 @@ const SendPage = () => {
     const { ref } = register("address")
 
     const onChangeHandler = (event: any) => {
+        setShowSearchSkeleton(true)
         // Bind
         const value = event.target.value
         setValue("address", value)
         setSearchString(value)
         setAddContact(false)
+        setShowSearchSkeleton(false)
     }
 
     useEffect(() => {
@@ -230,14 +235,36 @@ const SendPage = () => {
             </div>
             <div
                 className={classnames(
-                    "pt-6 pb-6 space-y-4",
+                    "space-y-4",
+                    !showSearchSkeleton && "pt-6 pb-6",
                     warning !== "" || canAddContact ? "mt-5" : "mt-1"
                 )}
             >
-                <AccountSearchResults
-                    filter={searchString}
-                    onSelect={onAccountSelect}
-                />
+                {!searchString || searchString === "" ? (
+                    <div className="flex flex-col">
+                        <div className="flex justify-center items-center mb-6">
+                            <img
+                                src={searchIcon}
+                                alt="search"
+                                className="w-7 h-7 absolute z-10"
+                            />
+                            <div className="w-20 h-20 bg-primary-grey-default rounded-full relative z-0"></div>
+                        </div>
+                        <div className="flex justify-center items-center w-full text-center">
+                            <span className="text-sm text-primary-grey-dark w-9/12">
+                                Add recipient by searching public address, name,
+                                or select contact
+                            </span>
+                        </div>
+                    </div>
+                ) : showSearchSkeleton && searchString !== "" ? (
+                    <SendPageLoadingSkeleton />
+                ) : (
+                    <AccountSearchResults
+                        filter={searchString}
+                        onSelect={onAccountSelect}
+                    />
+                )}
             </div>
         </PopupLayout>
     )

@@ -10,7 +10,6 @@ import { searchEns } from "../../util/searchEns"
 import { searchUD } from "../../util/searchUD"
 import AccountDisplay from "./AccountDisplay"
 import AccountsList from "./AccountsList"
-import EmptyState from "../ui/EmptyState"
 import searchNotFoundIcon from "../../assets/images/icons/searchnotfound.svg"
 
 type AccountSearchResultsProps = {

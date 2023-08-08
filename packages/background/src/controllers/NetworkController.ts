@@ -37,8 +37,12 @@ import {
     customHeadersForBlockWalletNode,
 } from '../utils/nodes';
 import { toChecksumAddress } from 'ethereumjs-util';
-import { SECOND } from '../utils/constants/time';
+import { MILISECOND, SECOND } from '../utils/constants/time';
 import { ProviderType } from '../utils/types/communication';
+import {
+    GasPricesController,
+    _fetchFeeDataFromService,
+} from './GasPricesController';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -62,6 +66,8 @@ export interface NetworkControllerState {
 
 const CHECK_PROVIDER_SCHEDULED_TIME = 5 * SECOND;
 const CHECK_PROVIDER_REQUEST_TIMEOUT = 10 * SECOND;
+
+export const NO_EIP_1559_NETWORKS = [280, 324, 30, 31, 42220];
 
 export default class NetworkController extends BaseController<NetworkControllerState> {
     public static readonly CURRENT_HARDFORK: string = 'london';
@@ -694,37 +700,66 @@ export default class NetworkController extends BaseController<NetworkControllerS
         }
 
         if (shouldFetchTheCurrentState) {
-            let baseFeePerGas = (await this.getLatestBlock(provider))
-                .baseFeePerGas;
+            // check: https://github.com/block-wallet/chain-fee-data-service/blob/main/domain/eth/service/service_impl.go#L425
+            if (NO_EIP_1559_NETWORKS.includes(chainId)) {
+                this.store.updateState({
+                    isEIP1559Compatible: {
+                        ...this.getState().isEIP1559Compatible,
+                        [chainId]: false,
+                    },
+                });
+            } else {
+                // check the response of the chain fee service
+                const feeDataResponse = await _fetchFeeDataFromService(
+                    chainId,
+                    10 * MILISECOND,
+                    1
+                );
+                if (
+                    feeDataResponse &&
+                    'baseFee' in feeDataResponse &&
+                    feeDataResponse.baseFee
+                ) {
+                    this.store.updateState({
+                        isEIP1559Compatible: {
+                            ...this.getState().isEIP1559Compatible,
+                            [chainId]: true,
+                        },
+                    });
+                } else {
+                    let baseFeePerGas = (await this.getLatestBlock(provider))
+                        .baseFeePerGas;
 
-            // detection for the fantom case,
-            // the network seems to be eip1559 but eth_feeHistory is not available.
-            if (baseFeePerGas) {
-                try {
-                    const feeHistory = await provider.send('eth_feeHistory', [
-                        '0x1',
-                        'latest',
-                        [50],
-                    ]);
-                    if (
-                        !feeHistory ||
-                        (!feeHistory.baseFeePerGas && !feeHistory.reward)
-                    ) {
-                        throw new Error(
-                            `eth_feeHistory is not fully supported by chain ${chainId}`
-                        );
+                    // detection for the fantom case,
+                    // the network seems to be eip1559 but eth_feeHistory is not available.
+                    if (baseFeePerGas) {
+                        try {
+                            const feeHistory = await provider.send(
+                                'eth_feeHistory',
+                                ['0x1', 'latest', [50]]
+                            );
+                            if (
+                                !feeHistory ||
+                                (!feeHistory.baseFeePerGas &&
+                                    !feeHistory.reward)
+                            ) {
+                                throw new Error(
+                                    `eth_feeHistory is not fully supported by chain ${chainId}`
+                                );
+                            }
+                        } catch {
+                            baseFeePerGas = undefined;
+                        }
                     }
-                } catch {
-                    baseFeePerGas = undefined;
+
+                    this.store.updateState({
+                        isEIP1559Compatible: {
+                            ...this.getState().isEIP1559Compatible,
+                            [chainId]: !!baseFeePerGas,
+                        },
+                    });
                 }
             }
-
-            this.store.updateState({
-                isEIP1559Compatible: {
-                    ...this.getState().isEIP1559Compatible,
-                    [chainId]: !!baseFeePerGas,
-                },
-            });
         }
 
         return this.getState().isEIP1559Compatible[chainId];

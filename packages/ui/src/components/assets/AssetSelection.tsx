@@ -10,7 +10,7 @@ import {
 } from "react"
 import {
     TokenWithBalance,
-    useTokensList,
+    useTokenListWithNativeToken,
 } from "../../context/hooks/useTokensList"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatRounded } from "../../util/formatRounded"
@@ -81,10 +81,18 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
     const [search, setSearch] = useState<string | null>(null)
     const [assetList, setAssetList] = useState<TokenWithBalance[]>([])
 
-    const { currentNetworkTokens, nativeToken } = useTokensList()
-    const swappedAssetList = useSwappedTokenList()
+    const [defaultAssetList, setDefaultAssetList] = useState(
+        [] as TokenWithBalance[]
+    )
+    const currentNetworkTokens = useTokenListWithNativeToken()
 
-    const defaultAssetList = [nativeToken].concat(currentNetworkTokens)
+    useEffect(() => {
+        currentNetworkTokens.then((result) => {
+            setDefaultAssetList(result)
+        })
+    }, [currentNetworkTokens])
+
+    const swappedAssetList = useSwappedTokenList()
 
     useEffect(() => {
         // Only set asset list if this keeps being empty due to hooks init

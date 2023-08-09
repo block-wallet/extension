@@ -1,8 +1,12 @@
 import { BigNumber } from "@ethersproject/bignumber"
-import { Fragment, FunctionComponent, useState } from "react"
+import { Fragment, FunctionComponent, useEffect, useState } from "react"
 import { useOnMountHistory } from "../context/hooks/useOnMount"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { TokenList, useTokensList } from "../context/hooks/useTokensList"
+import {
+    TokenList,
+    TokenWithBalance,
+    useTokenListWithNativeToken,
+} from "../context/hooks/useTokensList"
 import { formatUnits } from "@ethersproject/units"
 
 import plus from "../assets/images/icons/plus.svg"
@@ -129,9 +133,14 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
 }
 
 const AssetsList = () => {
-    const { currentNetworkTokens, nativeToken } = useTokensList()
+    const [tokens, setTokens] = useState([] as TokenWithBalance[])
+    const currentNetworkTokens = useTokenListWithNativeToken()
 
-    const tokens = [nativeToken].concat(currentNetworkTokens)
+    useEffect(() => {
+        currentNetworkTokens.then((result) => {
+            setTokens(result)
+        })
+    }, [currentNetworkTokens])
 
     // Top spacing for network labels: "pt-6"
     return (

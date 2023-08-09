@@ -85,7 +85,7 @@ export const useTokenListWithNativeToken = async (
         const index = accountTokensOrder.findIndex(
             (a) => a.tokenAddress === token.token.address
         )
-        token.token.order = accountTokensOrder[index].order
+        token.token.order = accountTokensOrder[index]?.order ?? 0
     })
 
     availableTokens.sort((a, b) => (a.token.order ?? 0) - (b.token.order ?? 0))

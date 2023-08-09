@@ -163,11 +163,18 @@ export interface Accounts {
     [address: string]: AccountInfo;
 }
 
+export type EditAccountTokenOrderType = { tokenAddress: string; order: number };
+
 export interface AccountTrackerState {
     accounts: Accounts;
     hiddenAccounts: Accounts;
     isAccountTrackerLoading: boolean;
     isRefreshingAllowances: boolean;
+    accountTokensOrder: {
+        [accountAddress: string]: {
+            [chainId: number]: EditAccountTokenOrderType[];
+        };
+    };
 }
 
 export enum AccountTrackerEvents {
@@ -199,6 +206,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             hiddenAccounts: {},
             isRefreshingAllowances: false,
             isAccountTrackerLoading: false,
+            accountTokensOrder: {},
         }
     ) {
         super(initialState);
@@ -2054,5 +2062,37 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         return Object.keys(accounts || {}).concat(
             Object.keys(hiddenAccounts || {})
         );
+    }
+
+    /**
+     * Change list of tokens order by account and chainId.
+     */
+    public async editAccountTokensOrder(
+        tokensOrder: EditAccountTokenOrderType[]
+    ): Promise<void> {
+        const chainId = this._networkController.network.chainId;
+        const accountAddress = this._preferencesController.getSelectedAddress();
+
+        this.store.updateState({
+            accountTokensOrder: {
+                ...this.store.getState().accountTokensOrder,
+                [accountAddress]: {
+                    ...this.store.getState().accountTokensOrder[accountAddress],
+                    [chainId]: tokensOrder,
+                },
+            },
+        });
+    }
+
+    /**
+     * Get list of tokens order by account and chainId.
+     */
+    public async getAccountTokensOrder(): Promise<EditAccountTokenOrderType[]> {
+        const chainId = this._networkController.network.chainId;
+        const accountAddress = this._preferencesController.getSelectedAddress();
+
+        return this.store.getState().accountTokensOrder[accountAddress][
+            chainId
+        ];
     }
 }

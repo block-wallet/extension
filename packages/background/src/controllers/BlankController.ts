@@ -119,6 +119,8 @@ import {
     RequestSwitchProvider,
     RequestIsEnrolled,
     RequestSetHotkeys,
+    RequestEditAccountTokensOrder,
+    RequestGetAccountTokensOrder,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -1155,6 +1157,12 @@ export default class BlankController extends EventEmitter {
                 return this.setHotkeysStatus(request as RequestSetHotkeys);
             case Messages.WALLET.GET_ONRAMP_CURRENCIES:
                 return this.getOnrampCurrencies();
+            case Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER:
+                return this.editAccountTokensOrder(
+                    request as RequestEditAccountTokensOrder[]
+                );
+            case Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDER:
+                return this.getAccountTokensOrder();
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -3478,5 +3486,28 @@ export default class BlankController extends EventEmitter {
      */
     private getOnrampCurrencies() {
         return this.onrampController.getCurrencies();
+    }
+
+    /**
+     * editAccountTokensOrder
+     *
+     * @param address The address identifier of the token contract
+     * @param order Order of token
+     */
+    private async editAccountTokensOrder(
+        tokensOrder: RequestEditAccountTokensOrder[]
+    ): Promise<void> {
+        return this.accountTrackerController.editAccountTokensOrder(
+            tokensOrder
+        );
+    }
+
+    /**
+     * GetAccountTokensOrder
+     */
+    private async getAccountTokensOrder(): Promise<
+        RequestGetAccountTokensOrder[]
+    > {
+        return this.accountTrackerController.getAccountTokensOrder();
     }
 }

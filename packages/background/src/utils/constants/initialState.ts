@@ -125,6 +125,7 @@ const initialState: BlankAppState = {
         hiddenAccounts: {},
         isRefreshingAllowances: false,
         isAccountTrackerLoading: false,
+        accountTokensOrder: {},
     },
     AppStateController: {
         idleTimeout: 5,

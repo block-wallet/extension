@@ -61,6 +61,7 @@ import BridgeConfirmPage from "../routes/bridge/BridgeConfirmPage"
 import BridgeAfterAddTokenPage from "../routes/bridge/BridgeAfterAddTokenPage"
 import BuyPage from "../routes/buy/BuyPage"
 import Hotkeys from "../routes/settings/Hotkeys"
+import TokensPage from "../routes/tokens/TokensPage"
 
 export const ROUTES_DEFINITION = [
     /* Root */
@@ -263,6 +264,8 @@ export const ROUTES_DEFINITION = [
         exact: true,
         component: ManuallyAddNetwork,
     },
+    /* Tokens order */
+    { path: "/settings/tokens", exact: true, component: TokensPage },
     /* Reminder to backup seed phrase */
     { path: "/reminder", exact: true, component: ReminderPage },
     { path: "/reminder/backup", exact: true, component: BackupConfirmPage },

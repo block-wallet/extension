@@ -17,6 +17,7 @@ import logoutIcon from "../../assets/images/icons/logout.svg"
 import account from "../../assets/images/icons/account.svg"
 import about from "../../assets/images/icons/about.svg"
 import networkCloud from "../../assets/images/icons/network_cloud.svg"
+import order from "../../assets/images/icons/order.svg"
 import usb from "../../assets/images/icons/usb.svg"
 
 // Context
@@ -44,6 +45,11 @@ const SettingsPage = () => {
             icon: networkCloud,
             label: "Networks",
             to: "/settings/networks",
+        },
+        {
+            icon: order,
+            label: "Assets order",
+            to: "/settings/tokens",
         },
         {
             icon: book,

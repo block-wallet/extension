@@ -13,6 +13,8 @@ import {
     RequestAddNetwork,
     RequestEditNetwork,
     RequestEditNetworksOrder,
+    RequestEditAccountTokensOrder,
+    RequestGetAccountTokensOrder,
     AddressType,
     RequestSwitchProvider,
 } from "@block-wallet/background/utils/types/communication"
@@ -1717,4 +1719,27 @@ export const setHotkeysEnabled = async (enabled: boolean): Promise<void> => {
  */
 export const getOnrampCurrencies = async (): Promise<GetOnRampCurrencies> => {
     return sendMessage(Messages.WALLET.GET_ONRAMP_CURRENCIES)
+}
+
+/**
+ * Edit account tokens order by account and chainId.
+ *
+ */
+export const editAccountTokensOrder = async (
+    editTokensOrder: RequestEditAccountTokensOrder[]
+) => {
+    return sendMessage(
+        Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER,
+        editTokensOrder
+    )
+}
+
+/**
+ * Get account tokens order by account and chainId.
+ *
+ */
+export const getAccountTokensOrder = async (): Promise<
+    RequestGetAccountTokensOrder[]
+> => {
+    return sendMessage(Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDER)
 }

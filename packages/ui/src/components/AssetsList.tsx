@@ -1,5 +1,5 @@
 import { BigNumber } from "@ethersproject/bignumber"
-import { Fragment, FunctionComponent, useEffect, useState } from "react"
+import { Fragment, FunctionComponent, useEffect, useRef, useState } from "react"
 import { useOnMountHistory } from "../context/hooks/useOnMount"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import {
@@ -18,6 +18,11 @@ import useCurrencyFromatter from "../util/hooks/useCurrencyFormatter"
 import { isNativeTokenAddress } from "../util/tokenUtils"
 import { useBlankState } from "../context/background/backgroundHooks"
 import TokenLogo from "./token/TokenLogo"
+import SearchInput from "./input/SearchInput"
+import AssetsOrder from "./assets/AssetsOrder"
+import AssetsSort from "./assets/AssetsSort"
+import useTokenSearch from "../util/hooks/token/useTokenSearch"
+
 export type AssetItem = {
     token: Token
     balance: BigNumber
@@ -133,8 +138,12 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
 }
 
 const AssetsList = () => {
+    const history = useOnMountHistory()
     const [tokens, setTokens] = useState([] as TokenWithBalance[])
     const currentNetworkTokens = useTokenListWithNativeToken()
+    const searchInputRef = useRef<HTMLInputElement>(null)
+    const [sortValue, setSortValue] = useState("")
+    const { search, tokensResult, onChangeSearch } = useTokenSearch(tokens)
 
     useEffect(() => {
         currentNetworkTokens.then((result) => {
@@ -142,13 +151,42 @@ const AssetsList = () => {
         })
     }, [currentNetworkTokens])
 
+    useEffect(() => {}, [sortValue])
+
     // Top spacing for network labels: "pt-6"
     return (
-        <div
-            className="flex flex-col w-full space-y-4"
-            data-testid="assets-list"
-        >
-            {tokens.length > 9 && (
+        <>
+            <div className="pt-5 bg-white z-[9] flex flex-col">
+                <div className="flex flex-row space-x-2">
+                    <div className="flex-1">
+                        <SearchInput
+                            inputClassName="!h-12"
+                            placeholder={`Search`}
+                            onChange={onChangeSearch}
+                            debounced
+                            defaultValue={search}
+                            ref={searchInputRef}
+                        />
+                    </div>
+                    <AssetsOrder
+                        onClick={() => {
+                            history.push({
+                                pathname: "/settings/tokens",
+                                state: { isFromHomePage: true },
+                            })
+                        }}
+                    />
+                    <AssetsSort
+                        onClick={setSortValue}
+                        selectedValue={sortValue}
+                    />
+                </div>
+            </div>
+            <div
+                className="flex flex-col w-full space-y-4"
+                data-testid="assets-list"
+            >
+                {/* {tokens.length > 9 && (
                 <div className="flex flex-col w-full mt-4">
                     <ActionButton
                         icon={plus}
@@ -156,19 +194,21 @@ const AssetsList = () => {
                         to="/settings/tokens/add"
                     />
                 </div>
-            )}
-            <div className="flex flex-col w-full space-y-1">
-                {/* Network label */}
-                <SubAssetList assets={tokens} />
+            )} */}
+
+                <div className="flex flex-col w-full space-y-1">
+                    {/* Network label */}
+                    <SubAssetList assets={tokensResult} />
+                </div>
+                <div className="flex flex-col w-full space-y-1">
+                    <ActionButton
+                        icon={plus}
+                        label="Add Token"
+                        to="/settings/tokens/add"
+                    />
+                </div>
             </div>
-            <div className="flex flex-col w-full space-y-1">
-                <ActionButton
-                    icon={plus}
-                    label="Add Token"
-                    to="/settings/tokens/add"
-                />
-            </div>
-        </div>
+        </>
     )
 }
 

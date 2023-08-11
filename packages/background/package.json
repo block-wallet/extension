@@ -18,7 +18,7 @@
         "bip39": "^3.0.4",
         "browser-passworder": "^2.0.3",
         "compare-versions": "^6.0.0-rc.1",
-        "eslint-webpack-plugin": "^4.0.0",
+        "eslint-webpack-plugin": "^4.0.1",
         "eth-ens-namehash": "^2.0.8",
         "eth-keyring-controller": "^7.0.2",
         "ethereumjs-wallet": "^1.0.2",

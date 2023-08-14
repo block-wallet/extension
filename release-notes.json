@@ -906,6 +906,20 @@
                 }
             ],
             "version": "1.1.5"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Minor improvements and bug fixes"
+                        }
+                    ]
+                }
+            ],
+            "version": "1.1.6"
         }
     ]
 }

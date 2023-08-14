@@ -60,6 +60,7 @@ export interface PreferencesControllerState {
     filters: FilterPreferences;
     defaultGasOption: DefaultGasOptions;
     hotkeysEnabled: boolean;
+    tokensSortValue: string;
 }
 
 export interface PreferencesControllerProps {
@@ -348,5 +349,19 @@ export class PreferencesController extends BaseController<PreferencesControllerS
      */
     public set hotkeysStatus(enabled: boolean) {
         this.store.updateState({ hotkeysEnabled: enabled });
+    }
+
+    /**
+     * Gets tokens sort value
+     */
+    public get tokensSortValue(): string {
+        return this.store.getState().tokensSortValue;
+    }
+
+    /**
+     * Sets tokens sort value
+     */
+    public set tokensSortValue(sortValue: string) {
+        this.store.updateState({ tokensSortValue: sortValue });
     }
 }

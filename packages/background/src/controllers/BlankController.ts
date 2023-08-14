@@ -1161,8 +1161,8 @@ export default class BlankController extends EventEmitter {
                 return this.editAccountTokensOrder(
                     request as RequestEditAccountTokensOrder[]
                 );
-            case Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDER:
-                return this.getAccountTokensOrder();
+            case Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDERED:
+                return this.getAccountTokensOrdered();
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -3505,9 +3505,9 @@ export default class BlankController extends EventEmitter {
     /**
      * GetAccountTokensOrder
      */
-    private async getAccountTokensOrder(): Promise<
+    private async getAccountTokensOrdered(): Promise<
         RequestGetAccountTokensOrder[]
     > {
-        return this.accountTrackerController.getAccountTokensOrder();
+        return this.accountTrackerController.getAccountTokensOrdered();
     }
 }

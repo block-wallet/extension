@@ -2087,12 +2087,21 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     /**
      * Get list of tokens order by account and chainId.
      */
-    public async getAccountTokensOrder(): Promise<EditAccountTokenOrderType[]> {
+    public async getAccountTokensOrdered(): Promise<
+        EditAccountTokenOrderType[]
+    > {
         const chainId = this._networkController.network.chainId;
         const accountAddress = this._preferencesController.getSelectedAddress();
 
-        return this.store.getState().accountTokensOrder[accountAddress][
-            chainId
-        ];
+        if (
+            this.store.getState().accountTokensOrder &&
+            this.store.getState().accountTokensOrder[accountAddress] &&
+            this.store.getState().accountTokensOrder[accountAddress][chainId]
+        )
+            return this.store.getState().accountTokensOrder[accountAddress][
+                chainId
+            ];
+
+        return [];
     }
 }

@@ -81,7 +81,7 @@ enum ACCOUNT {
     UNHIDE = 'UNHIDE_ACCOUNT',
     GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
     EDIT_ACCOUNT_TOKENS_ORDER = 'EDIT_ACCOUNT_TOKENS_ORDER',
-    GET_ACCOUNT_TOKENS_ORDER = 'GET_ACCOUNT_TOKENS_ORDER',
+    GET_ACCOUNT_TOKENS_ORDERED = 'GET_ACCOUNT_TOKENS_ORDERED',
 }
 
 enum ADDRESS {
@@ -339,9 +339,9 @@ export interface RequestSignatures {
         RequestEditAccountTokensOrder[],
         void
     ];
-    [Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDER]: [
+    [Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDERED]: [
         void,
-        RequestEditAccountTokensOrder[]
+        RequestGetAccountTokensOrder[]
     ];
     [Messages.APP.GET_IDLE_TIMEOUT]: [undefined, number];
     [Messages.APP.SET_IDLE_TIMEOUT]: [RequestSetIdleTimeout, void];

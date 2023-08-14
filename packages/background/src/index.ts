@@ -41,12 +41,10 @@ const getPersistedState = new Promise<BlankAppState>((resolve) => {
             if (storedState === undefined) {
                 resolve(initialState);
             } else {
+                let reconciledState = storedState;
                 // Check if version has changed and reconcile the state
                 if (compareVersions(packageVersion, version!)) {
-                    let reconciledState = reconcileState(
-                        storedState,
-                        initialState
-                    );
+                    reconciledState = reconcileState(storedState, initialState);
 
                     // Run migrations
                     reconciledState = await migrator(
@@ -56,9 +54,14 @@ const getPersistedState = new Promise<BlankAppState>((resolve) => {
 
                     // Update persisted store version to newly one
                     await blankStateStore.setVersion(packageVersion!);
+                }
 
-                    const manifestVersion = getVersion();
-
+                const manifestVersion = getVersion();
+                if (
+                    manifestVersion !==
+                    reconciledState.PreferencesController.releaseNotesSettings
+                        .lastVersionUserSawNews
+                ) {
                     //calculate release notes here
                     const { releaseNotesSettings } =
                         await resolvePreferencesAfterWalletUpdate(
@@ -67,14 +70,11 @@ const getPersistedState = new Promise<BlankAppState>((resolve) => {
                         );
                     reconciledState.PreferencesController.releaseNotesSettings =
                         releaseNotesSettings!;
-
-                    // Persist reconciled state
-                    blankStateStore.set('blankState', reconciledState);
-
-                    resolve(reconciledState);
-                } else {
-                    resolve(storedState);
                 }
+
+                // Persist reconciled state
+                blankStateStore.set('blankState', reconciledState);
+                resolve(reconciledState);
             }
         };
 

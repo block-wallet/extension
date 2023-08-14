@@ -1738,8 +1738,8 @@ export const editAccountTokensOrder = async (
  * Get account tokens order by account and chainId.
  *
  */
-export const getAccountTokensOrder = async (): Promise<
+export const getAccountTokensOrdered = async (): Promise<
     RequestGetAccountTokensOrder[]
 > => {
-    return sendMessage(Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDER)
+    return sendMessage(Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDERED)
 }

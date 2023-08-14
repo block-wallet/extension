@@ -149,9 +149,7 @@ const AssetsList = () => {
         currentNetworkTokens.then((result) => {
             setTokens(result)
         })
-    }, [currentNetworkTokens])
-
-    useEffect(() => {}, [sortValue])
+    }, [currentNetworkTokens, setSortValue])
 
     // Top spacing for network labels: "pt-6"
     return (

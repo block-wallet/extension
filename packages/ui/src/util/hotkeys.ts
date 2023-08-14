@@ -121,26 +121,32 @@ const locations: HotkeyMap = {
             },
             {
                 hotkey: "3",
-                action: "/settings/addressBook",
+                action: "/settings/tokens",
                 hotkeyDescription: "ALT+3",
-                description: "Address book",
+                description: "Tokens order",
             },
             {
                 hotkey: "4",
-                action: "/settings/preferences",
+                action: "/settings/addressBook",
                 hotkeyDescription: "ALT+4",
-                description: "Preferences",
+                description: "Address book",
             },
             {
                 hotkey: "5",
+                action: "/settings/preferences",
+                hotkeyDescription: "ALT+5",
+                description: "Preferences",
+            },
+            {
+                hotkey: "6",
                 action: "",
                 hotkeyDescription: "",
                 description: "Connect hardware wallet",
             },
             {
-                hotkey: "6",
+                hotkey: "7",
                 action: "/settings/about",
-                hotkeyDescription: "ALT+6",
+                hotkeyDescription: "ALT+7",
                 description: "About",
             },
         ],
@@ -343,7 +349,7 @@ export const componentsHotkeys = {
     AccountMenu: "ALT+4",
     PopupPage: "ALT+V",
     CreateAccountPage: "ALT+H",
-    SettingsPage: "ALT+5",
+    SettingsPage: "ALT+6",
 }
 
 export const getActionByHotkeyAndPath = (

@@ -5,7 +5,8 @@ import { useSelectedNetwork } from "./useSelectedNetwork"
 import { useBlankState } from "../background/backgroundHooks"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import { isHiddenAccount } from "../../util/account"
-import { getAccountTokensOrder } from "../commActions"
+import { getAccountTokensOrdered } from "../commActions"
+import { SortOptions } from "../../components/assets/AssetsSort"
 
 export type TokenWithBalance = { token: Token; balance: BigNumber }
 
@@ -75,20 +76,24 @@ export const useTokensList = (account?: AccountInfo): TokenListInfo => {
 }
 
 export const useTokenListWithNativeToken = async (
-    account?: AccountInfo
+    account?: AccountInfo,
+    tokensOrder?: SortOptions
 ): Promise<TokenWithBalance[]> => {
     const { currentNetworkTokens, nativeToken } = useTokensList(account)
     const availableTokens = [nativeToken].concat(currentNetworkTokens)
 
-    const accountTokensOrder = await getAccountTokensOrder()
-    availableTokens.forEach((token) => {
-        const index = accountTokensOrder.findIndex(
-            (a) => a.tokenAddress === token.token.address
+    const accountTokensOrder = await getAccountTokensOrdered()
+    if (accountTokensOrder.length > 0) {
+        availableTokens.forEach((token) => {
+            const index = accountTokensOrder.findIndex(
+                (a) => a.tokenAddress === token.token.address
+            )
+            token.token.order = accountTokensOrder[index]?.order ?? 0
+        })
+
+        availableTokens.sort(
+            (a, b) => (a.token.order ?? 0) - (b.token.order ?? 0)
         )
-        token.token.order = accountTokensOrder[index]?.order ?? 0
-    })
-
-    availableTokens.sort((a, b) => (a.token.order ?? 0) - (b.token.order ?? 0))
-
+    }
     return availableTokens
 }

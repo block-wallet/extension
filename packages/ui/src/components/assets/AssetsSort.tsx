@@ -3,12 +3,24 @@ import Dropdown from "../ui/Dropdown/Dropdown"
 import { DropdownOutlinedIconButton } from "../ui/Dropdown/DropdownButton"
 import { IconName } from "../ui/Icon"
 
-export const sortOptions = [
+export interface SortOptions {
+    value: string
+    label: string
+}
+
+export const sortOptions: SortOptions[] = [
     { value: "Balance", label: "Balance" },
     { value: "USDValue", label: "USD Value" },
-    { value: "Stablecoins", label: "Stablecoins" },
     { value: "Name", label: "Name" },
+    { value: "Custom", label: "Custom" },
 ]
+
+export enum sortOptionsEnum {
+    BALANCE = "Balance",
+    USDVALUE = "USD Value",
+    NAME = "Name",
+    CUSTOM = "Custom",
+}
 
 interface AssetsSortProps {
     selectedValue: string

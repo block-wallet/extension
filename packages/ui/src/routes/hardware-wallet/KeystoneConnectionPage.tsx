@@ -45,7 +45,7 @@ const KeystoneConnectionPage = () => {
     ) : (
         <HardwareWalletSetupLayout
             title={"Show Keystone QR code"}
-            subtitle={""}
+            subtitle={"The camera is blurred but it won't affect the scanning."}
             buttons={
                 <>
                     <div className="p-8 w-80 flex space-x-5 ml-auto mr-auto">

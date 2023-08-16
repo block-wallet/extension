@@ -165,7 +165,7 @@ const UnlockPage = () => {
                         error={errors.password?.message}
                         autoFocus={isUserNetworkOnline}
                     />
-                    <div>
+                    <div className="text-xs">
                         or&nbsp;
                         <ClickableText onClick={() => setHasDialog(true)}>
                             reset wallet using seed phrase

@@ -139,7 +139,9 @@ const Select: FC<SelectProps> & CompoundProps = ({
                         disabled,
                     })}
                 >
-                    <span>{selectLabel || placeholder}</span>
+                    <span className="text-xs">
+                        {selectLabel || placeholder}
+                    </span>
                     {showMenu ? (
                         <RiArrowUpSLine size={20} />
                     ) : (

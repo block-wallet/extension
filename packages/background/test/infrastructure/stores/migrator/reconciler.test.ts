@@ -259,6 +259,7 @@ const initialState: newBlankAppState = {
         },
         defaultGasOption: 'medium',
         hotkeysEnabled: true,
+        tokensSortValue: 'Name',
     },
     TransactionController: {
         transactions: [],
@@ -499,6 +500,7 @@ describe('State reconciler', () => {
                 },
                 defaultGasOption: 'medium',
                 hotkeysEnabled: true,
+                tokensSortValue: 'Name',
             },
             TransactionController: {
                 transactions: [],

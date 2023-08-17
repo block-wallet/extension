@@ -21,6 +21,7 @@ import { useSwappedTokenList } from "../../context/hooks/useSwappedTokenList"
 import AssetDropdownDisplay from "./AssetDropdownDisplay"
 import AssetList from "./AssetList"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
+import { useBlankState } from "../../context/background/backgroundHooks"
 
 export enum AssetListType {
     ALL = "ALL",
@@ -77,20 +78,11 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
     addTokenState,
     register,
 }) => {
+    const { tokensSortValue } = useBlankState()!
     const [searchResult, setSearchResult] = useState<TokenWithBalance[]>([])
     const [search, setSearch] = useState<string | null>(null)
     const [assetList, setAssetList] = useState<TokenWithBalance[]>([])
-
-    const [defaultAssetList, setDefaultAssetList] = useState(
-        [] as TokenWithBalance[]
-    )
-    const currentNetworkTokens = useTokenListWithNativeToken()
-
-    useEffect(() => {
-        currentNetworkTokens.then((result) => {
-            setDefaultAssetList(result)
-        })
-    }, [currentNetworkTokens])
+    const defaultAssetList = useTokenListWithNativeToken(tokensSortValue)
 
     const swappedAssetList = useSwappedTokenList()
 

@@ -3,10 +3,12 @@ import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 
 import { useSelectedNetwork } from "./useSelectedNetwork"
 import { useBlankState } from "../background/backgroundHooks"
-import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
+import {
+    AccountBalances,
+    AccountInfo,
+} from "@block-wallet/background/controllers/AccountTrackerController"
 import { isHiddenAccount } from "../../util/account"
-import { getAccountTokensOrdered } from "../commActions"
-import { SortOptions } from "../../components/assets/AssetsSort"
+import { SortTokensByValue } from "../../util/tokenUtils"
 
 export type TokenWithBalance = { token: Token; balance: BigNumber }
 
@@ -17,7 +19,9 @@ interface TokenListInfo {
     currentNetworkTokens: TokenWithBalance[]
 }
 
-export const useTokensList = (account?: AccountInfo): TokenListInfo => {
+const GetAccountNetworkTokensBalances = (
+    account?: AccountInfo
+): { balances: AccountBalances; chainId: number; nativeToken: Token } => {
     const { accounts, selectedAddress, hiddenAccounts } = useBlankState()!
 
     let balances = account
@@ -28,14 +32,22 @@ export const useTokensList = (account?: AccountInfo): TokenListInfo => {
 
     const { nativeCurrency, defaultNetworkLogo, chainId } = useSelectedNetwork()
 
-    const nativeToken = {
+    const nativeToken: Token = {
         address: "0x0",
         decimals: nativeCurrency.decimals,
         name: nativeCurrency.name,
         symbol: nativeCurrency.symbol,
         // Use Network Logo if nativeCurrency logo is not available
         logo: nativeCurrency.logo ?? defaultNetworkLogo,
+        type: "",
     }
+
+    return { nativeToken: nativeToken, balances: balances, chainId: chainId }
+}
+
+export const useTokensList = (account?: AccountInfo): TokenListInfo => {
+    const { chainId, balances, nativeToken } =
+        GetAccountNetworkTokensBalances(account)
 
     if (chainId in balances) {
         const { nativeTokenBalance, tokens } = balances[chainId]
@@ -75,25 +87,28 @@ export const useTokensList = (account?: AccountInfo): TokenListInfo => {
     }
 }
 
-export const useTokenListWithNativeToken = async (
-    account?: AccountInfo,
-    tokensOrder?: SortOptions
-): Promise<TokenWithBalance[]> => {
-    const { currentNetworkTokens, nativeToken } = useTokensList(account)
-    const availableTokens = [nativeToken].concat(currentNetworkTokens)
+export const useTokenListWithNativeToken = (
+    sortValue: string,
+    account?: AccountInfo
+): TokenWithBalance[] => {
+    const { chainId, balances, nativeToken } =
+        GetAccountNetworkTokensBalances(account)
 
-    const accountTokensOrder = await getAccountTokensOrdered()
-    if (accountTokensOrder.length > 0) {
-        availableTokens.forEach((token) => {
-            const index = accountTokensOrder.findIndex(
-                (a) => a.tokenAddress === token.token.address
-            )
-            token.token.order = accountTokensOrder[index]?.order ?? 0
+    let currentNetworkTokens: TokenWithBalance[] = []
+    if (chainId in balances) {
+        const { nativeTokenBalance, tokens } = balances[chainId]
+
+        currentNetworkTokens = Object.values(tokens)
+        currentNetworkTokens.push({
+            token: nativeToken,
+            balance: nativeTokenBalance,
         })
-
-        availableTokens.sort(
-            (a, b) => (a.token.order ?? 0) - (b.token.order ?? 0)
-        )
+    } else {
+        currentNetworkTokens.concat({
+            token: nativeToken,
+            balance: BigNumber.from("0"),
+        } as TokenWithBalance)
     }
-    return availableTokens
+
+    return SortTokensByValue(sortValue, currentNetworkTokens)
 }

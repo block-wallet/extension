@@ -13,8 +13,7 @@ import {
     RequestAddNetwork,
     RequestEditNetwork,
     RequestEditNetworksOrder,
-    RequestEditAccountTokensOrder,
-    RequestGetAccountTokensOrder,
+    RequestTokensOrder,
     AddressType,
     RequestSwitchProvider,
 } from "@block-wallet/background/utils/types/communication"
@@ -1726,7 +1725,7 @@ export const getOnrampCurrencies = async (): Promise<GetOnRampCurrencies> => {
  *
  */
 export const editAccountTokensOrder = async (
-    editTokensOrder: RequestEditAccountTokensOrder[]
+    editTokensOrder: RequestTokensOrder[]
 ) => {
     return sendMessage(
         Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER,
@@ -1739,7 +1738,16 @@ export const editAccountTokensOrder = async (
  *
  */
 export const getAccountTokensOrdered = async (): Promise<
-    RequestGetAccountTokensOrder[]
+    RequestTokensOrder[]
 > => {
     return sendMessage(Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDERED)
+}
+
+/**
+ * Enable/Disable hotkeys
+ *
+ * @param enabled Allow hotkeys on the extension
+ */
+export const setTokensSortValue = async (sortValue: string): Promise<void> => {
+    return sendMessage(Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE, sortValue)
 }

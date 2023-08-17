@@ -3,29 +3,18 @@ import Dropdown from "../ui/Dropdown/Dropdown"
 import { DropdownOutlinedIconButton } from "../ui/Dropdown/DropdownButton"
 import { IconName } from "../ui/Icon"
 
-export interface SortOptions {
-    value: string
-    label: string
-}
-
-export const sortOptions: SortOptions[] = [
-    { value: "Balance", label: "Balance" },
-    { value: "USDValue", label: "USD Value" },
-    { value: "Name", label: "Name" },
-    { value: "Custom", label: "Custom" },
-]
-
-export enum sortOptionsEnum {
-    BALANCE = "Balance",
-    USDVALUE = "USD Value",
-    NAME = "Name",
-    CUSTOM = "Custom",
-}
-
 interface AssetsSortProps {
     selectedValue: string
     onClick: (selectedValue: string) => void
 }
+
+const SortOptions = [
+    { label: "Name", value: "NAME" },
+    { label: "Balance", value: "BALANCE" },
+    { label: "USD Value", value: "USDVALUE" },
+    { label: "Stablecoins", value: "STABLECOINS" },
+    { label: "Custom Order", value: "CUSTOM" },
+]
 
 const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
     return (
@@ -36,13 +25,16 @@ const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
                 }}
             >
                 <Dropdown.Button>
-                    <DropdownOutlinedIconButton iconName={IconName.GROUP} />
+                    <DropdownOutlinedIconButton
+                        iconName={IconName.GROUP}
+                        className="h-10"
+                    />
                 </Dropdown.Button>
                 <Dropdown.Menu id="filter-menu" className="w-36 py-2">
                     <div className="p-2 px-3 text-xs text-primary-grey-dark font-normal">
                         SORT BY
                     </div>
-                    {sortOptions.map(({ value, label }) => {
+                    {SortOptions.map(({ value, label }) => {
                         return (
                             <Fragment key={value}>
                                 <Dropdown.MenuItem

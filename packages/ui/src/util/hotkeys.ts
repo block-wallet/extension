@@ -121,32 +121,26 @@ const locations: HotkeyMap = {
             },
             {
                 hotkey: "3",
-                action: "/settings/tokens",
-                hotkeyDescription: "ALT+3",
-                description: "Tokens order",
-            },
-            {
-                hotkey: "4",
                 action: "/settings/addressBook",
-                hotkeyDescription: "ALT+4",
+                hotkeyDescription: "ALT+3",
                 description: "Address book",
             },
             {
-                hotkey: "5",
+                hotkey: "4",
                 action: "/settings/preferences",
-                hotkeyDescription: "ALT+5",
+                hotkeyDescription: "ALT+4",
                 description: "Preferences",
             },
             {
-                hotkey: "6",
+                hotkey: "5",
                 action: "",
                 hotkeyDescription: "",
                 description: "Connect hardware wallet",
             },
             {
-                hotkey: "7",
+                hotkey: "6",
                 action: "/settings/about",
-                hotkeyDescription: "ALT+7",
+                hotkeyDescription: "ALT+6",
                 description: "About",
             },
         ],
@@ -229,8 +223,14 @@ const locations: HotkeyMap = {
             },
             {
                 hotkey: "7",
-                action: "/accounts/menu/reset",
+                action: "/accounts/menu/tokensOrder",
                 hotkeyDescription: "ALT+7",
+                description: "Assets order",
+            },
+            {
+                hotkey: "8",
+                action: "/accounts/menu/reset",
+                hotkeyDescription: "ALT+8",
                 description: "Reset account",
             },
         ],
@@ -349,7 +349,7 @@ export const componentsHotkeys = {
     AccountMenu: "ALT+4",
     PopupPage: "ALT+V",
     CreateAccountPage: "ALT+H",
-    SettingsPage: "ALT+6",
+    SettingsPage: "ALT+5",
 }
 
 export const getActionByHotkeyAndPath = (

@@ -117,6 +117,8 @@ export const ROUTES_DEFINITION = [
         exact: true,
         component: AllowancesPage,
     },
+    /* Tokens order */
+    { path: "/accounts/menu/tokensOrder", exact: true, component: TokensPage },
     /* Send */
     { path: "/send", exact: true, component: SendPage },
     {
@@ -264,8 +266,6 @@ export const ROUTES_DEFINITION = [
         exact: true,
         component: ManuallyAddNetwork,
     },
-    /* Tokens order */
-    { path: "/settings/tokens", exact: true, component: TokensPage },
     /* Reminder to backup seed phrase */
     { path: "/reminder", exact: true, component: ReminderPage },
     { path: "/reminder/backup", exact: true, component: BackupConfirmPage },

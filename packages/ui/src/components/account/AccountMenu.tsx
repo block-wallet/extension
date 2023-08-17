@@ -22,6 +22,7 @@ import { HARDWARE_TYPES } from "../../util/account"
 import { openHardwareRemove } from "../../context/commActions"
 import { useHotkeys } from "react-hotkeys-hook"
 import { componentsHotkeys } from "../../util/hotkeys"
+import order from "../../assets/images/icons/order.svg"
 
 const AccountMenu = () => {
     const { availableNetworks, selectedNetwork, hotkeysEnabled } =
@@ -109,6 +110,12 @@ const AccountMenu = () => {
     })
 
     options.push({
+        icon: order,
+        label: "Assets order",
+        to: "/accounts/menu/tokensOrder",
+    })
+
+    options.push({
         icon: resetIcon,
         label: "Reset Account",
         to: "/accounts/menu/reset",
@@ -126,6 +133,7 @@ const AccountMenu = () => {
                                 : "/settings",
                         })
                     }}
+                    networkIndicator
                 />
             }
         >

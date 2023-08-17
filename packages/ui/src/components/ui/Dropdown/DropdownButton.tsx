@@ -14,6 +14,7 @@ export interface DropdownButtonBaseProps {
 
 interface DropdownIconButtonProps extends DropdownButtonBaseProps {
     iconName: IconName
+    className?: string
 }
 
 export const DropdownButton: FC<PropsWithChildren<{}>> &
@@ -70,10 +71,14 @@ export const DropdownOutlinedIconButton: React.FC<DropdownIconButtonProps> = ({
     onClick,
     iconName,
     isShowingMenu,
+    className,
 }) => {
     return (
         <OutlinedButton
-            className={isShowingMenu ? "!bg-primary-grey-default" : ""}
+            className={classnames(
+                isShowingMenu ? "!bg-primary-grey-default" : "",
+                className
+            )}
             onClick={onClick}
         >
             <Icon

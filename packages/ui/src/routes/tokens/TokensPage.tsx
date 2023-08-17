@@ -14,8 +14,8 @@ import TokenDisplayDragDrop from "../../components/token/TokenDisplayDragDrop"
 
 const TokensPage = () => {
     const history = useOnMountHistory()
-    const availableTokens = useTokenListWithNativeToken()
-    const [tokens, setTokens] = useState([] as TokenWithBalance[])
+    const availableTokens = useTokenListWithNativeToken("CUSTOM")
+    const [tokens, setTokens] = useState<TokenWithBalance[]>([])
     const isFromHomePage = history.location.state?.isFromHomePage ?? false
 
     const findTokenCard = useCallback(
@@ -57,9 +57,8 @@ const TokensPage = () => {
     }
 
     useEffect(() => {
-        availableTokens.then((result) => {
-            setTokens(result)
-        })
+        console.log(availableTokens)
+        setTokens(availableTokens)
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])

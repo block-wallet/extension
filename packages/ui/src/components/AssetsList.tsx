@@ -15,13 +15,15 @@ import { formatRounded } from "../util/formatRounded"
 import { ActionButton } from "./button/ActionButton"
 import AssetsLoadingSkeleton from "./skeleton/AssetsLoadingSkeleton"
 import useCurrencyFromatter from "../util/hooks/useCurrencyFormatter"
-import { isNativeTokenAddress } from "../util/tokenUtils"
+import { isNativeTokenAddress, SortTokensByValue } from "../util/tokenUtils"
 import { useBlankState } from "../context/background/backgroundHooks"
 import TokenLogo from "./token/TokenLogo"
 import SearchInput from "./input/SearchInput"
-import AssetsOrder from "./assets/AssetsOrder"
 import AssetsSort from "./assets/AssetsSort"
 import useTokenSearch from "../util/hooks/token/useTokenSearch"
+import AssetsButton from "./assets/AssetsButton"
+import order from "../assets/images/icons/order.svg"
+import { setTokensSortValue } from "../context/commActions"
 
 export type AssetItem = {
     token: Token
@@ -92,9 +94,7 @@ const Asset: FunctionComponent<{
 }
 
 const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
-    const state = useBlankState()!
-
-    const isLoading = state.isNetworkChanging
+    const { isNetworkChanging } = useBlankState()!
 
     const [deletedTokens, setDeletedTokens] = useState([] as string[])
     const pushDeleteTokens = (deleteToken: string) => {
@@ -118,7 +118,7 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
             role="list"
             aria-label="assets"
         >
-            {isLoading ? (
+            {isNetworkChanging ? (
                 <AssetsLoadingSkeleton />
             ) : (
                 assets
@@ -138,27 +138,38 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
 }
 
 const AssetsList = () => {
+    const { tokensSortValue } = useBlankState()!
     const history = useOnMountHistory()
-    const [tokens, setTokens] = useState([] as TokenWithBalance[])
-    const currentNetworkTokens = useTokenListWithNativeToken()
     const searchInputRef = useRef<HTMLInputElement>(null)
-    const [sortValue, setSortValue] = useState("")
+    const [sortValue, setSortValue] = useState(tokensSortValue)
+    const currentNetworkTokens = useTokenListWithNativeToken(sortValue)
+    const [tokens, setTokens] = useState<TokenWithBalance[]>([])
     const { search, tokensResult, onChangeSearch } = useTokenSearch(tokens)
 
     useEffect(() => {
-        currentNetworkTokens.then((result) => {
-            setTokens(result)
-        })
-    }, [currentNetworkTokens, setSortValue])
+        const updateSortValue = async () => {
+            await setTokensSortValue(sortValue)
+        }
+
+        if (sortValue !== tokensSortValue) {
+            console.log("Son distintos valores")
+            setTokens(SortTokensByValue(sortValue, tokens))
+            updateSortValue()
+        }
+    }, [sortValue, tokensSortValue, tokens])
+
+    useEffect(() => {
+        setTokens(currentNetworkTokens)
+    }, [currentNetworkTokens])
 
     // Top spacing for network labels: "pt-6"
     return (
         <>
-            <div className="pt-5 bg-white z-[9] flex flex-col">
+            <div className="pt-3 bg-white z-[9] flex flex-col">
                 <div className="flex flex-row space-x-2">
                     <div className="flex-1">
                         <SearchInput
-                            inputClassName="!h-12"
+                            inputClassName="!h-8"
                             placeholder={`Search`}
                             onChange={onChangeSearch}
                             debounced
@@ -166,37 +177,39 @@ const AssetsList = () => {
                             ref={searchInputRef}
                         />
                     </div>
-                    <AssetsOrder
+                    <AssetsButton
                         onClick={() => {
                             history.push({
-                                pathname: "/settings/tokens",
-                                state: { isFromHomePage: true },
+                                pathname: "/settings/tokens/add",
                             })
                         }}
+                        title="Add Token"
+                        icon={plus}
                     />
                     <AssetsSort
                         onClick={setSortValue}
                         selectedValue={sortValue}
                     />
+                    {sortValue === "CUSTOM" && (
+                        <AssetsButton
+                            onClick={() => {
+                                history.push({
+                                    pathname: "/accounts/menu/tokensOrder",
+                                    state: { isFromHomePage: true },
+                                })
+                            }}
+                            title="Edit Assets Order"
+                            icon={order}
+                        />
+                    )}
                 </div>
             </div>
             <div
                 className="flex flex-col w-full space-y-4"
                 data-testid="assets-list"
             >
-                {/* {tokens.length > 9 && (
-                <div className="flex flex-col w-full mt-4">
-                    <ActionButton
-                        icon={plus}
-                        label="Add Token"
-                        to="/settings/tokens/add"
-                    />
-                </div>
-            )} */}
-
                 <div className="flex flex-col w-full space-y-1">
-                    {/* Network label */}
-                    <SubAssetList assets={tokensResult} />
+                    <SubAssetList assets={tokens} />
                 </div>
                 <div className="flex flex-col w-full space-y-1">
                     <ActionButton

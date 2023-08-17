@@ -1163,6 +1163,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDERED:
                 return this.getAccountTokensOrdered();
+            case Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE:
+                return this.setAccountTokensSortValue(request as string);
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -3509,5 +3511,13 @@ export default class BlankController extends EventEmitter {
         RequestGetAccountTokensOrder[]
     > {
         return this.accountTrackerController.getAccountTokensOrdered();
+    }
+
+    /** Set tokens list default sort value
+     *
+     * @param tokensSortValue indicates which sort value we will use
+     */
+    private setAccountTokensSortValue(tokensSortValue: string) {
+        this.preferencesController.tokensSortValue = tokensSortValue;
     }
 }

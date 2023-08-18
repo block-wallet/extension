@@ -9,7 +9,7 @@ import Divider from "../../components/Divider"
 // Assets & icons
 import ledgerImg from "../../assets/images/icons/ledger.svg"
 import trezorImg from "../../assets/images/icons/trezor.svg"
-import keystoneImg from "../../assets/images/icons/keystone.svg"
+import keystoneImg from "../../assets/images/keystone.png"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes } from "../../styles"
 

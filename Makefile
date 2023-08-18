@@ -1,4 +1,5 @@
 ENVIRONMENT				?= dev
+BROWSER					?= chrome
 
 depcheck:
 	@cd packages/background && npx depcheck
@@ -46,26 +47,43 @@ build/provider:
 	@cd packages/provider && $(MAKE) build/provider --no-print-directory
 
 cp/release-notes:
+ifeq ($(BROWSER), firefox)
+	@cp release-notes.json dist-firefox
+else
 	@cp release-notes.json dist
+endif
 
 build:
-	@rm -Rf dist/
+	@rm -Rf dist-firefox
+	@rm -Rf dist
 	@$(MAKE) ENVIRONMENT=$(ENVIRONMENT) build/background --no-print-directory
 	@$(MAKE) ENVIRONMENT=$(ENVIRONMENT) build/provider --no-print-directory
 	@$(MAKE) build/ui --no-print-directory
-	@$(MAKE) cp/release-notes --no-print-directory
+ifeq ($(BROWSER), firefox)
+	@mkdir dist-firefox && cp -r dist/* dist-firefox/
+	@rm -Rf dist
+endif
+	@$(MAKE) BROWSER=$(BROWSER) build/manifest --no-print-directory
+	@$(MAKE) BROWSER=$(BROWSER) cp/release-notes --no-print-directory
 
 build/prod:
 	@rm -Rf dist/
+	@rm -Rf dist-firefox/
 	@$(MAKE) ENVIRONMENT=prod build/background --no-print-directory
 	@$(MAKE) ENVIRONMENT=prod build/provider --no-print-directory
 	@$(MAKE) GENERATE_SOURCEMAP=false build/ui --no-print-directory
-	@$(MAKE) cp/release-notes --no-print-directory
+	@mkdir dist-firefox && cp -r dist/* dist-firefox/
+	@$(MAKE) BROWSER=chrome build/manifest --no-print-directory
+	@$(MAKE) BROWSER=firefox build/manifest --no-print-directory
+	@cp release-notes.json dist
+	@cp release-notes.json dist-firefox
+
+
+build/manifest:
+	@cd packages/ui && BROWSER=$(BROWSER) $(MAKE) build/manifest --no-print-directory
 
 build/prod-zip:
 	@rm -Rf dist/
-	@$(MAKE) ENVIRONMENT=prod build/background --no-print-directory
-	@$(MAKE) ENVIRONMENT=prod build/provider --no-print-directory
-	@$(MAKE) build/ui --no-print-directory
-	@$(MAKE) cp/release-notes --no-print-directory
-	@zip -r -D block-extension.zip dist/
+	@$(MAKE) ENVIRONMENT=prod build/prod
+	@zip -r -D block-extension-chrome.zip dist/
+	@zip -r -D block-extension-firefox.zip dist-firefox/

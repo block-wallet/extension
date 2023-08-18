@@ -48,8 +48,6 @@ const argv = process.argv.slice(2);
 
 
 const writeStatsJson = argv.indexOf('--stats') !== -1;
-// If the script receives the argument 'firefox' then it will copy the corresponding output scripts and manifest. Defaults to 'chrome'
-const destBrowser = argv.indexOf('firefox') === -1 ? 'chrome' : 'firefox';
 
 // Generate configuration
 const config = configFactory('production');
@@ -57,7 +55,7 @@ const config = configFactory('production');
 // We require that you explicitly set browsers and do not fall back to
 // browserslist defaults.
 const { checkBrowsers } = require('react-dev-utils/browsersHelper');
-const { exit } = require('process');
+
 checkBrowsers(paths.appPath, isInteractive)
   .then(() => {
     // First, read the current file sizes in build directory.
@@ -69,29 +67,8 @@ checkBrowsers(paths.appPath, isInteractive)
     // if you're in it, you don't end up in Trash
     fs.emptyDirSync(paths.appBuild);
 
-
-    // browser-polyfill must be always copied to output folder
-    copyScript(paths.appNodeModules + "/webextension-polyfill/dist/browser-polyfill.min.js");
-
-
-    const baseManifest = JSON.parse(fs.readFileSync(paths.appManifest + "/base.json", 'utf8'));
-    const browserManifest = JSON.parse(fs.readFileSync(paths.appManifest + `/${destBrowser}.json`, 'utf8'));
-
-    const manifest = { ...baseManifest, ...browserManifest }
-    fs.writeFileSync(paths.appBuild + '/manifest.json', JSON.stringify(manifest, null, 2));
-
-    if (destBrowser === 'chrome') {
-      copyScript(paths.appScripts + '/hot-reload.js')
-    }
-
     // Merge with the public folder
     copyPublicFolder();
-
-
-    //  if destBrowser is firefox, need:
-    // --  specific manifest
-    //  if chrome
-    // -- copy scripts folder
 
     // Start the webpack build
     return build(previousFileSizes);
@@ -239,6 +216,4 @@ function copyPublicFolder() {
   });
 }
 
-function copyScript(scriptPath) {
-  fs.copySync(scriptPath, paths.appBuild + "/" + path.basename(scriptPath))
-}
+

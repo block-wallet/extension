@@ -2,14 +2,12 @@
     "author": "BlockWallet",
     "background": {
         "scripts": [
-            "browser-polyfill.js",
             "background.js"
         ]
     },
     "content_scripts": [
         {
             "js": [
-                "browser-polyfill.js",
                 "content.js"
             ],
             "matches": [
@@ -25,7 +23,6 @@
         },
         {
             "js": [
-                "browser-polyfill.js",
                 "vendor/trezor/trezor-content.js"
             ],
             "matches": [
@@ -67,7 +64,6 @@
     },
     "version": "1.1.6",
     "web_accessible_resources": [
-        "browser-polyfill.js",
         "blankProvider.js"
     ]
 }

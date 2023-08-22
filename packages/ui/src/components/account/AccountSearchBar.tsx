@@ -13,10 +13,12 @@ const AccountSearchBar: FunctionComponent<{
     createAccountTo?: any
     onChange: (value: string) => void
     setIsSearching: (isSearching: boolean) => void
+    buttonClassName?: string
 }> = ({
     createAccountTo = { pathname: "/accounts/create" },
     onChange,
     setIsSearching,
+    buttonClassName,
 }) => {
     const [searchBarVisible, setSearchBarVisible] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
@@ -47,9 +49,10 @@ const AccountSearchBar: FunctionComponent<{
                 {!searchBarVisible && (
                     <ActionButton
                         icon={accountAdd}
-                        label="Create Account"
+                        label="New Account"
                         to={createAccountTo.pathname}
                         state={createAccountTo.state}
+                        className="!h-10"
                     />
                 )}
             </div>
@@ -58,7 +61,8 @@ const AccountSearchBar: FunctionComponent<{
                     "transition-width",
                     searchBarVisible
                         ? "w-full delay-150 duration-500"
-                        : "w-auto duration-100 cursor-pointer"
+                        : "w-auto duration-100 cursor-pointer",
+                    buttonClassName
                 )}
                 onClick={() => {
                     if (!searchBarVisible) {

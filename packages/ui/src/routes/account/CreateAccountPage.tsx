@@ -79,7 +79,7 @@ const CreateAccountPage = () => {
         >
             <div className="flex flex-col space-y-4 p-6">
                 <CreateAccountCard
-                    title="Create Account"
+                    title="New Account"
                     iconName={IconName.WALLET}
                     description="Create a new account from the seed stored in BlockWallet."
                     onClick={() => history.push("/accounts/create/add")}

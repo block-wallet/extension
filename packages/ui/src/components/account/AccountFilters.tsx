@@ -27,12 +27,14 @@ interface AccountFilterProps {
     filters: string[]
     customFilters?: AccountFilter[]
     onChangeFilters: (newFilters: string[]) => void
+    searchButtonClassName?: string
 }
 
 const AccountFilters: React.FC<AccountFilterProps> = ({
     filters,
     onChangeFilters,
     customFilters,
+    searchButtonClassName,
 }) => {
     const selectedFilters = getAccountFilterValue(filters)
     const badgeCount = selectedFilters.filter(
@@ -51,7 +53,11 @@ const AccountFilters: React.FC<AccountFilterProps> = ({
                 }}
             >
                 <Dropdown.Button>
-                    <DropdownOutlinedIconButton iconName={IconName.GROUP} />
+                    <DropdownOutlinedIconButton
+                        iconName={IconName.FILTER}
+                        buttonClassName={searchButtonClassName}
+                        iconSize="lg"
+                    />
                 </Dropdown.Button>
                 <Dropdown.Menu id="filter-menu" className="w-28">
                     {getFilterOptions(customFilters).map(

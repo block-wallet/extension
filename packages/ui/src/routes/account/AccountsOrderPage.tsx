@@ -3,17 +3,14 @@ import { HTML5Backend } from "react-dnd-html5-backend"
 import { useCallback, useEffect, useState } from "react"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
-import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import AccountDisplayDragDrop from "../../components/account/AccountsDisplayDragDrop"
 import { orderAccounts } from "../../context/commActions"
 
 const AccountsOrderPage = () => {
-    const history = useOnMountHistory()
     const sortedAccounts = useSortedAccounts({ includeHiddenAccounts: true })
     const [accounts, setAccounts] = useState<AccountInfo[]>([])
-    const isFromHomePage = history.location.state?.isFromHomePage ?? false
 
     const findAccountCard = useCallback(
         (address: string) => {
@@ -60,16 +57,7 @@ const AccountsOrderPage = () => {
     }, [])
 
     return (
-        <PopupLayout
-            header={
-                <PopupHeader
-                    title="Assets order"
-                    onBack={() =>
-                        history.push(isFromHomePage ? "/" : "/accounts/menu")
-                    }
-                />
-            }
-        >
+        <PopupLayout header={<PopupHeader title="Accounts order" />}>
             <div className="flex flex-col p-6 space-y-6 w-full">
                 <DndProvider backend={HTML5Backend}>
                     <div className="flex flex-col space-y-2">

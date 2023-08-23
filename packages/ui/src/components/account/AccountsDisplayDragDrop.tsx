@@ -9,6 +9,7 @@ import AccountIcon from "../icons/AccountIcon"
 import { getAccountColor } from "../../util/getAccountColor"
 import { useAddressWithChainIdChecksum } from "../../util/hooks/useSelectedAddressWithChainIdChecksum"
 import useNetWorthBalance from "../../context/hooks/useNetWorthBalance"
+import { AccountStatus } from "../../context/commTypes"
 
 type AccountCardProps = {
     accountInfo: AccountInfo
@@ -180,11 +181,13 @@ const AccountDisplayDragDrop: FunctionComponent<AccountDisplayType> = ({
                                     >
                                         {formatHashLastChars(checksumAddress)}
                                     </span>
-                                    {hiddenAccount && (
-                                        <span className="font-semibold text-xxs text-primary-grey-dark">
-                                            - HIDDEN
-                                        </span>
-                                    )}
+                                    {hiddenAccount &&
+                                        account.status ===
+                                            AccountStatus.HIDDEN && (
+                                            <span className="font-semibold text-xxs text-primary-grey-dark">
+                                                - HIDDEN
+                                            </span>
+                                        )}
                                 </div>
                                 <span
                                     className="text-xs text-primary-grey-dark"

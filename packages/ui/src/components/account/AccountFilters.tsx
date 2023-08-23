@@ -34,7 +34,6 @@ const AccountFilters: React.FC<AccountFilterProps> = ({
     filters,
     onChangeFilters,
     customFilters,
-    searchButtonClassName,
 }) => {
     const selectedFilters = getAccountFilterValue(filters)
     const badgeCount = selectedFilters.filter(
@@ -55,7 +54,6 @@ const AccountFilters: React.FC<AccountFilterProps> = ({
                 <Dropdown.Button>
                     <DropdownOutlinedIconButton
                         iconName={IconName.FILTER}
-                        buttonClassName={searchButtonClassName}
                         iconSize="lg"
                     />
                 </Dropdown.Button>

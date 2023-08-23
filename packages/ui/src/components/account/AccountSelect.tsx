@@ -166,7 +166,6 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                             onChangeSearch("")
                         }
                     }}
-                    buttonClassName="!h-10 !w-3"
                 />
                 <AccountFilters
                     customFilters={customFilters}
@@ -186,10 +185,11 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                 />
                 <OrderButton
                     onClick={() => {
-                        history.push("/accounts/menu/order")
+                        history.push({
+                            pathname: "/accounts/menu/order",
+                        })
                     }}
                     title="Edit accounts order"
-                    buttonClassName="!h-10 !w-3"
                 />
             </div>
             {showEmptyState && (

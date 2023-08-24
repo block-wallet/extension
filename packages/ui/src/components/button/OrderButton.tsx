@@ -1,4 +1,3 @@
-import classnames from "classnames"
 import OutlinedButton from "../ui/OutlinedButton"
 import { FC } from "react"
 import Icon, { IconName } from "../ui/Icon"

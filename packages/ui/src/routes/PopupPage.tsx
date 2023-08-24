@@ -64,7 +64,7 @@ const AccountDisplay = () => {
             onClick={copy}
         >
             <span
-                className="text-sm font-semibold truncate max-w-[96px]"
+                className="text-sm font-semibold truncate max-w-[96px] text-left"
                 data-testid="account-name"
                 title={account.name}
             >

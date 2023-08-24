@@ -1,4 +1,4 @@
-import { forwardRef, useState, useRef } from "react"
+import React, { forwardRef, useState, useRef } from "react"
 
 // Style
 import classnames from "classnames"
@@ -31,6 +31,7 @@ type SearchInputProps = {
     minSearchChar?: number
     defaultValue?: string
     inputClassName?: string
+    searchShowSkeleton?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 /**
@@ -75,6 +76,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             register,
             defaultValue,
             inputClassName,
+            searchShowSkeleton,
         }: SearchInputProps,
         ref
     ) => {
@@ -149,6 +151,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
                             if (value === "") return onValueChanged(e)
 
                             if (value.length < minSearchChar) return
+                            if (searchShowSkeleton) searchShowSkeleton(true)
 
                             if (debounced) {
                                 if (timeoutIdRef.current)

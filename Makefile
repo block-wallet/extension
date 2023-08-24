@@ -38,13 +38,13 @@ install/ci:
 	@cd packages/provider && yarn install --prefer-offline --frozen-lockfile --network-concurrency 1
 
 build/ui:
-	@cd packages/ui && $(MAKE) build/ui --no-print-directory
+	@cd packages/ui && BROWSER=$(BROWSER) $(MAKE) build/ui --no-print-directory
 
 build/background:
-	@cd packages/background && $(MAKE) build/background --no-print-directory
+	@cd packages/background && BROWSER=$(BROWSER) $(MAKE) build/background --no-print-directory
 
 build/provider:
-	@cd packages/provider && $(MAKE) build/provider --no-print-directory
+	@cd packages/provider && BROWSER=$(BROWSER) $(MAKE) build/provider --no-print-directory
 
 cp/release-notes:
 ifeq ($(BROWSER), firefox)

@@ -50,6 +50,7 @@ const AccountSearchBar: FunctionComponent<{
                         label="New Account"
                         to={createAccountTo.pathname}
                         state={createAccountTo.state}
+                        className="h-10"
                     />
                 )}
             </div>
@@ -57,8 +58,8 @@ const AccountSearchBar: FunctionComponent<{
                 className={classnames(
                     "transition-width",
                     searchBarVisible
-                        ? "w-full delay-150 duration-500"
-                        : "w-auto duration-100 cursor-pointer"
+                        ? "!w-full delay-150 duration-500"
+                        : "duration-100 cursor-pointer"
                 )}
                 onClick={() => {
                     if (!searchBarVisible) {
@@ -67,7 +68,7 @@ const AccountSearchBar: FunctionComponent<{
                     }
                 }}
             >
-                <Icon name={IconName.SEARCH} profile="default" />
+                <Icon name={IconName.SEARCH} profile="default" size="lg" />
                 <input
                     ref={inputRef}
                     className={classnames(

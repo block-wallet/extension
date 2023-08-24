@@ -1,3 +1,5 @@
+import { classnames } from "../../styles"
+
 const OrderIcon: React.FC<{ className?: string }> = (
     { className } = { className: "w-8 h-8" }
 ) => {
@@ -6,7 +8,7 @@ const OrderIcon: React.FC<{ className?: string }> = (
             width="20"
             height="20"
             viewBox="0 0 20 20"
-            fill="none"
+            className={classnames("fill-none", className)}
             xmlns="http://www.w3.org/2000/svg"
         >
             <path

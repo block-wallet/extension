@@ -13,7 +13,7 @@ const OrderButton: FC<{
             className="relative text-sm text-primary-blue-default"
             title={title}
         >
-            <OutlinedButton className={classnames("w-auto")} onClick={onClick}>
+            <OutlinedButton onClick={onClick}>
                 <Icon name={IconName.ORDER} profile="default" size="lg" />
             </OutlinedButton>
         </div>

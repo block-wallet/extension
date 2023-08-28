@@ -11,9 +11,9 @@ build/ui:
 	@yarn build:tailwind
 	@node webpack/scripts/build.js
 ifeq ($(BROWSER), firefox)
-	$(MAKE) copy/firefox
+	$(MAKE) copy/firefox --no-print-directory
 else
-	$(MAKE) copy/chrome
+	$(MAKE) copy/chrome --no-print-directory
 endif
 	@rm -rf build
 

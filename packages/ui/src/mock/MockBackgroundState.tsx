@@ -20,7 +20,7 @@ export const initBackgroundState: BackgroundStateType = {
         cachedPopulatedTokens: {},
         isAccountTrackerLoading: false,
         hotkeysEnabled: true,
-        tokensSortValue: "Name",
+        tokensSortValue: "CUSTOM",
         accountTokensOrder: {},
         filters: {
             account: [],

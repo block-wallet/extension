@@ -47,7 +47,7 @@ testInitState = {
     },
     defaultGasOption: 'medium',
     hotkeysEnabled: true,
-    tokensSortValue: 'Name',
+    tokensSortValue: 'CUSTOM',
 };
 
 const mockPreferencesController = new PreferencesController({

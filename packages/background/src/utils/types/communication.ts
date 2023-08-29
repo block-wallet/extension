@@ -81,7 +81,6 @@ enum ACCOUNT {
     UNHIDE = 'UNHIDE_ACCOUNT',
     GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
     EDIT_ACCOUNT_TOKENS_ORDER = 'EDIT_ACCOUNT_TOKENS_ORDER',
-    GET_ACCOUNT_TOKENS_ORDERED = 'GET_ACCOUNT_TOKENS_ORDERED',
     SET_ACCOUNT_SORT_VALUE = 'SET_ACCOUNT_SORT_VALUE',
 }
 
@@ -337,7 +336,6 @@ export interface RequestSignatures {
         BigNumber | undefined
     ];
     [Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER]: [RequestTokensOrder[], void];
-    [Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDERED]: [void, RequestTokensOrder[]];
     [Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE]: [string, void];
     [Messages.APP.GET_IDLE_TIMEOUT]: [undefined, number];
     [Messages.APP.SET_IDLE_TIMEOUT]: [RequestSetIdleTimeout, void];

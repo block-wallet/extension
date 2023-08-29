@@ -6,9 +6,12 @@ import { useBlankState } from "../background/backgroundHooks"
 import {
     AccountBalances,
     AccountInfo,
+    AccountTokenOrder,
 } from "@block-wallet/background/controllers/AccountTrackerController"
 import { isHiddenAccount } from "../../util/account"
-import { SortTokensByValue } from "../../util/tokenUtils"
+import { sortTokensByValue } from "../../util/tokenUtils"
+import { useMemo } from "react"
+import { Rates } from "@block-wallet/background/controllers/ExchangeRatesController"
 
 export type TokenWithBalance = { token: Token; balance: BigNumber }
 
@@ -19,10 +22,22 @@ interface TokenListInfo {
     currentNetworkTokens: TokenWithBalance[]
 }
 
-const GetAccountNetworkTokensBalances = (
+const useGetAccountNetworkTokensBalances = (
     account?: AccountInfo
-): { balances: AccountBalances; chainId: number; nativeToken: Token } => {
-    const { accounts, selectedAddress, hiddenAccounts } = useBlankState()!
+): {
+    balances: AccountBalances
+    chainId: number
+    nativeToken: Token
+    accountTokensOrder: AccountTokenOrder[]
+    exchangeRates: Rates
+} => {
+    const {
+        accounts,
+        selectedAddress,
+        hiddenAccounts,
+        accountTokensOrder,
+        exchangeRates,
+    } = useBlankState()!
 
     let balances = account
         ? isHiddenAccount(account)
@@ -42,12 +57,18 @@ const GetAccountNetworkTokensBalances = (
         type: "",
     }
 
-    return { nativeToken: nativeToken, balances: balances, chainId: chainId }
+    return {
+        nativeToken: nativeToken,
+        balances: balances,
+        chainId: chainId,
+        accountTokensOrder: accountTokensOrder[selectedAddress][chainId],
+        exchangeRates: exchangeRates,
+    }
 }
 
 export const useTokensList = (account?: AccountInfo): TokenListInfo => {
     const { chainId, balances, nativeToken } =
-        GetAccountNetworkTokensBalances(account)
+        useGetAccountNetworkTokensBalances(account)
 
     if (chainId in balances) {
         const { nativeTokenBalance, tokens } = balances[chainId]
@@ -91,24 +112,43 @@ export const useTokenListWithNativeToken = (
     sortValue: string,
     account?: AccountInfo
 ): TokenWithBalance[] => {
-    const { chainId, balances, nativeToken } =
-        GetAccountNetworkTokensBalances(account)
+    const {
+        chainId,
+        balances,
+        nativeToken,
+        accountTokensOrder,
+        exchangeRates,
+    } = useGetAccountNetworkTokensBalances(account)
 
-    let currentNetworkTokens: TokenWithBalance[] = []
-    if (chainId in balances) {
-        const { nativeTokenBalance, tokens } = balances[chainId]
+    return useMemo(() => {
+        let currentNetworkTokens: TokenWithBalance[] = []
+        if (chainId in balances) {
+            const { nativeTokenBalance, tokens } = balances[chainId]
 
-        currentNetworkTokens = Object.values(tokens)
-        currentNetworkTokens.push({
-            token: nativeToken,
-            balance: nativeTokenBalance,
-        })
-    } else {
-        currentNetworkTokens.concat({
-            token: nativeToken,
-            balance: BigNumber.from("0"),
-        } as TokenWithBalance)
-    }
+            currentNetworkTokens = Object.values(tokens)
+            currentNetworkTokens.push({
+                token: nativeToken,
+                balance: nativeTokenBalance,
+            })
+        } else {
+            currentNetworkTokens.concat({
+                token: nativeToken,
+                balance: BigNumber.from("0"),
+            } as TokenWithBalance)
+        }
 
-    return SortTokensByValue(sortValue, currentNetworkTokens)
+        return sortTokensByValue(
+            sortValue,
+            currentNetworkTokens,
+            accountTokensOrder,
+            exchangeRates
+        )
+    }, [
+        chainId,
+        balances,
+        sortValue,
+        accountTokensOrder,
+        nativeToken,
+        exchangeRates,
+    ])
 }

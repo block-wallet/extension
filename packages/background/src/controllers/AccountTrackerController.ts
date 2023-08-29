@@ -163,7 +163,10 @@ export interface Accounts {
     [address: string]: AccountInfo;
 }
 
-export type EditAccountTokenOrderType = { tokenAddress: string; order: number };
+export interface AccountTokenOrder {
+    tokenAddress: string;
+    order: number;
+}
 
 export interface AccountTrackerState {
     accounts: Accounts;
@@ -172,7 +175,7 @@ export interface AccountTrackerState {
     isRefreshingAllowances: boolean;
     accountTokensOrder: {
         [accountAddress: string]: {
-            [chainId: number]: EditAccountTokenOrderType[];
+            [chainId: number]: AccountTokenOrder[];
         };
     };
 }
@@ -2068,7 +2071,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      * Change list of tokens order by account and chainId.
      */
     public async editAccountTokensOrder(
-        tokensOrder: EditAccountTokenOrderType[]
+        tokensOrder: AccountTokenOrder[]
     ): Promise<void> {
         const chainId = this._networkController.network.chainId;
         const accountAddress = this._preferencesController.getSelectedAddress();
@@ -2082,26 +2085,5 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 },
             },
         });
-    }
-
-    /**
-     * Get list of tokens order by account and chainId.
-     */
-    public async getAccountTokensOrdered(): Promise<
-        EditAccountTokenOrderType[]
-    > {
-        const chainId = this._networkController.network.chainId;
-        const accountAddress = this._preferencesController.getSelectedAddress();
-
-        if (
-            this.store.getState().accountTokensOrder &&
-            this.store.getState().accountTokensOrder[accountAddress] &&
-            this.store.getState().accountTokensOrder[accountAddress][chainId]
-        )
-            return this.store.getState().accountTokensOrder[accountAddress][
-                chainId
-            ];
-
-        return [];
     }
 }

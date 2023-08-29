@@ -1,8 +1,8 @@
+import { AccountTokenOrder } from "@block-wallet/background/controllers/AccountTrackerController"
 import { TokenWithBalance } from "../context/hooks/useTokensList"
-import { getAccountTokensOrdered } from "../context/commActions"
 import { BigNumber } from "ethers"
-import { useMemo } from "react"
-import { RequestGetAccountTokensOrder } from "@block-wallet/background/utils/types/communication"
+import { toCurrencyAmount } from "./formatCurrency"
+import { Rates } from "@block-wallet/background/controllers/ExchangeRatesController"
 
 const native_token_address_reduced = "0x0"
 const native_token_address = "0x0000000000000000000000000000000000000000"
@@ -85,93 +85,92 @@ export const Stablecoins: string[] = [
     "XCHF",
 ]
 
-export const SortTokensByValue = (
+export const sortTokensByValue = (
     sortValue: string,
-    tokensList: TokenWithBalance[]
+    tokensList: TokenWithBalance[],
+    accountTokensOrder: AccountTokenOrder[],
+    exchangeRates: Rates
 ): TokenWithBalance[] => {
-    return useMemo(() => {
-        let accountTokensOrdered: RequestGetAccountTokensOrder[] = []
-        if (sortValue === "CUSTOM") {
-            getAccountTokensOrdered().then((result) => {
-                accountTokensOrdered = result
-            })
-        }
+    if (tokensList.length > 1) {
+        let accountTokens = [...tokensList]
 
-        if (tokensList.length > 1) {
-            let accountTokens = [...tokensList]
+        switch (sortValue) {
+            case "BALANCE":
+                accountTokens.sort((tokenA, tokenB) =>
+                    BigNumber.from(tokenA.balance) >
+                    BigNumber.from(tokenB.balance)
+                        ? -1
+                        : BigNumber.from(tokenB.balance) >
+                          BigNumber.from(tokenA.balance)
+                        ? 1
+                        : 0
+                )
+                break
+            case "USDVALUE":
+                accountTokens.sort((tokenA, tokenB) => {
+                    const currencyAmountA = toCurrencyAmount(
+                        BigNumber.from(tokenA.balance ?? 0),
+                        exchangeRates[tokenA.token.symbol.toUpperCase()],
+                        tokenA.token.decimals
+                    )
+                    const currencyAmountB = toCurrencyAmount(
+                        BigNumber.from(tokenB.balance ?? 0),
+                        exchangeRates[tokenB.token.symbol.toUpperCase()],
+                        tokenB.token.decimals
+                    )
 
-            switch (sortValue) {
-                case "BALANCE":
-                    accountTokens.sort((tokenA, tokenB) =>
-                        BigNumber.from(tokenA.balance) >
-                        BigNumber.from(tokenB.balance)
-                            ? 1
-                            : BigNumber.from(tokenB.balance) >
-                              BigNumber.from(tokenA.balance)
-                            ? -1
-                            : 0
+                    return currencyAmountA > currencyAmountB
+                        ? -1
+                        : currencyAmountB > currencyAmountA
+                        ? 1
+                        : 0
+                })
+                break
+            case "NAME":
+                accountTokens.sort((tokenA, tokenB) =>
+                    tokenA.token.symbol > tokenB.token.symbol
+                        ? 1
+                        : tokenB.token.symbol > tokenA.token.symbol
+                        ? -1
+                        : 0
+                )
+                break
+            case "STABLECOINS":
+                const tokens: TokenWithBalance[] = []
+                Stablecoins.forEach((stablecoin) => {
+                    const stableTokenIndex = accountTokens.findIndex(
+                        (token) => token.token.symbol === stablecoin
                     )
-                    break
-                case "USDVALUE":
-                    accountTokens.sort((tokenA, tokenB) =>
-                        tokenA.token.decimals > tokenB.token.decimals
-                            ? 1
-                            : tokenB.token.decimals > tokenA.token.decimals
-                            ? -1
-                            : 0
-                    )
-                    break
-                case "NAME":
-                    accountTokens.sort((tokenA, tokenB) =>
-                        tokenA.token.name > tokenB.token.name
-                            ? -1
-                            : tokenB.token.name > tokenA.token.name
-                            ? 1
-                            : 0
-                    )
-                    break
-                case "STABLECOINS":
-                    const tokens: TokenWithBalance[] = []
-                    Stablecoins.forEach((stablecoin) => {
-                        const stableTokenIndex = accountTokens.findIndex(
-                            (token) => token.token.symbol === stablecoin
+
+                    if (stableTokenIndex !== -1) {
+                        tokens.push(accountTokens[stableTokenIndex])
+                        accountTokens.splice(stableTokenIndex, 1)
+                    }
+                })
+
+                if (tokens.length > 0) {
+                    accountTokens.unshift(...tokens)
+                }
+                break
+            case "CUSTOM":
+                if (accountTokensOrder && accountTokensOrder.length > 0) {
+                    accountTokens.forEach((token) => {
+                        const index = accountTokensOrder.findIndex(
+                            (a) => a.tokenAddress === token.token.address
                         )
-
-                        if (stableTokenIndex !== -1) {
-                            tokens.push(accountTokens[stableTokenIndex])
-                            accountTokens.splice(stableTokenIndex, 1)
-                        }
+                        token.token.order =
+                            accountTokensOrder[index]?.order ?? 0
                     })
 
-                    if (tokens.length > 0) {
-                        tokens.concat(accountTokens)
-                        accountTokens = tokens
-                    }
-                    break
-                case "CUSTOM":
-                    if (
-                        accountTokensOrdered &&
-                        accountTokensOrdered.length > 0
-                    ) {
-                        accountTokens.forEach((token) => {
-                            const index = accountTokensOrdered.findIndex(
-                                (a) => a.tokenAddress === token.token.address
-                            )
-                            token.token.order =
-                                accountTokensOrdered[index]?.order ?? 0
-                        })
+                    accountTokens.sort(
+                        (a, b) => (a.token.order ?? 0) - (b.token.order ?? 0)
+                    )
+                }
 
-                        accountTokens.sort(
-                            (a, b) =>
-                                (a.token.order ?? 0) - (b.token.order ?? 0)
-                        )
-                    }
-
-                    break
-            }
-            return accountTokens
+                break
         }
+        return accountTokens
+    }
 
-        return tokensList
-    }, [sortValue, tokensList, accountTokensOrdered])
+    return tokensList
 }

@@ -8,7 +8,7 @@ interface AssetsSortProps {
     onClick: (selectedValue: string) => void
 }
 
-const SortOptions = [
+export const sortOptions = [
     { label: "Name", value: "NAME" },
     { label: "Balance", value: "BALANCE" },
     { label: "USD Value", value: "USDVALUE" },
@@ -34,7 +34,7 @@ const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
                     <div className="p-2 px-3 text-xs text-primary-grey-dark font-normal">
                         SORT BY
                     </div>
-                    {SortOptions.map(({ value, label }) => {
+                    {sortOptions.map(({ value, label }) => {
                         return (
                             <Fragment key={value}>
                                 <Dropdown.MenuItem

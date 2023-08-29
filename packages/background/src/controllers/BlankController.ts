@@ -119,8 +119,7 @@ import {
     RequestSwitchProvider,
     RequestIsEnrolled,
     RequestSetHotkeys,
-    RequestEditAccountTokensOrder,
-    RequestGetAccountTokensOrder,
+    RequestTokensOrder,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -1159,10 +1158,8 @@ export default class BlankController extends EventEmitter {
                 return this.getOnrampCurrencies();
             case Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER:
                 return this.editAccountTokensOrder(
-                    request as RequestEditAccountTokensOrder[]
+                    request as RequestTokensOrder[]
                 );
-            case Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDERED:
-                return this.getAccountTokensOrdered();
             case Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE:
                 return this.setAccountTokensSortValue(request as string);
             default:
@@ -3497,20 +3494,11 @@ export default class BlankController extends EventEmitter {
      * @param order Order of token
      */
     private async editAccountTokensOrder(
-        tokensOrder: RequestEditAccountTokensOrder[]
+        tokensOrder: RequestTokensOrder[]
     ): Promise<void> {
         return this.accountTrackerController.editAccountTokensOrder(
             tokensOrder
         );
-    }
-
-    /**
-     * GetAccountTokensOrder
-     */
-    private async getAccountTokensOrdered(): Promise<
-        RequestGetAccountTokensOrder[]
-    > {
-        return this.accountTrackerController.getAccountTokensOrdered();
     }
 
     /** Set tokens list default sort value

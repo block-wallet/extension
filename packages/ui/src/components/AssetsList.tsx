@@ -4,7 +4,6 @@ import { useOnMountHistory } from "../context/hooks/useOnMount"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import {
     TokenList,
-    TokenWithBalance,
     useTokenListWithNativeToken,
 } from "../context/hooks/useTokensList"
 import { formatUnits } from "@ethersproject/units"
@@ -15,7 +14,7 @@ import { formatRounded } from "../util/formatRounded"
 import { ActionButton } from "./button/ActionButton"
 import AssetsLoadingSkeleton from "./skeleton/AssetsLoadingSkeleton"
 import useCurrencyFromatter from "../util/hooks/useCurrencyFormatter"
-import { isNativeTokenAddress, SortTokensByValue } from "../util/tokenUtils"
+import { isNativeTokenAddress } from "../util/tokenUtils"
 import { useBlankState } from "../context/background/backgroundHooks"
 import TokenLogo from "./token/TokenLogo"
 import SearchInput from "./input/SearchInput"
@@ -139,12 +138,13 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
 
 const AssetsList = () => {
     const { tokensSortValue } = useBlankState()!
+    // const { chainId } = useSelectedNetwork()
     const history = useOnMountHistory()
-    const searchInputRef = useRef<HTMLInputElement>(null)
     const [sortValue, setSortValue] = useState(tokensSortValue)
     const currentNetworkTokens = useTokenListWithNativeToken(sortValue)
-    const [tokens, setTokens] = useState<TokenWithBalance[]>([])
-    const { search, tokensResult, onChangeSearch } = useTokenSearch(tokens)
+    const searchInputRef = useRef<HTMLInputElement>(null)
+    const { search, tokensResult, onChangeSearch } =
+        useTokenSearch(currentNetworkTokens)
 
     useEffect(() => {
         const updateSortValue = async () => {
@@ -152,17 +152,10 @@ const AssetsList = () => {
         }
 
         if (sortValue !== tokensSortValue) {
-            console.log("Son distintos valores")
-            setTokens(SortTokensByValue(sortValue, tokens))
             updateSortValue()
         }
-    }, [sortValue, tokensSortValue, tokens])
+    }, [sortValue, tokensSortValue])
 
-    useEffect(() => {
-        setTokens(currentNetworkTokens)
-    }, [currentNetworkTokens])
-
-    // Top spacing for network labels: "pt-6"
     return (
         <>
             <div className="pt-3 bg-white z-[9] flex flex-col">
@@ -171,7 +164,9 @@ const AssetsList = () => {
                         <SearchInput
                             inputClassName="!h-8"
                             placeholder={`Search`}
-                            onChange={onChangeSearch}
+                            onChange={(e) => {
+                                onChangeSearch(e.target.value)
+                            }}
                             debounced
                             defaultValue={search}
                             ref={searchInputRef}
@@ -209,7 +204,7 @@ const AssetsList = () => {
                 data-testid="assets-list"
             >
                 <div className="flex flex-col w-full space-y-1">
-                    <SubAssetList assets={tokens} />
+                    <SubAssetList assets={tokensResult} />
                 </div>
                 <div className="flex flex-col w-full space-y-1">
                     <ActionButton

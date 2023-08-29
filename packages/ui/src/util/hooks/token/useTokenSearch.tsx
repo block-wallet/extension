@@ -5,6 +5,7 @@ const matchByTerm =
     (term?: string) =>
     (token: TokenWithBalance): boolean => {
         if (!term) return true
+
         return (
             token.token.address.includes(term) ||
             token.token.symbol.toLowerCase().includes(term) ||
@@ -12,19 +13,17 @@ const matchByTerm =
         )
     }
 
-const filterTokens = (
-    accounts: TokenWithBalance[],
-    { term }: { term?: string }
-) => {
-    return accounts.filter(matchByTerm(term))
+const filterTokens = (tokens: TokenWithBalance[], term?: string) => {
+    return tokens.filter(matchByTerm(term))
 }
 
 const useTokenSearch = (tokens: TokenWithBalance[]) => {
     const [search, setSearch] = useState("")
-    const result = useMemo(
-        () => filterTokens(tokens, { term: (search || "").toLowerCase() }),
-        [search, tokens]
-    )
+    const result = useMemo(() => {
+        const result = filterTokens(tokens, search.toLowerCase())
+        console.log(result)
+        return result
+    }, [search, tokens])
     return {
         tokensResult: result,
         search,

@@ -5,7 +5,7 @@ import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import { editAccountTokensOrder } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import { RequestEditAccountTokensOrder } from "@block-wallet/background/utils/types/communication"
+import { RequestTokensOrder } from "@block-wallet/background/utils/types/communication"
 import {
     TokenWithBalance,
     useTokenListWithNativeToken,
@@ -44,7 +44,7 @@ const TokensPage = () => {
     )
 
     function onSuccessfulDrop() {
-        let tokensOrder: RequestEditAccountTokensOrder[] = []
+        let tokensOrder: RequestTokensOrder[] = []
 
         tokens.forEach((token, index) => {
             tokensOrder.push({
@@ -57,7 +57,6 @@ const TokensPage = () => {
     }
 
     useEffect(() => {
-        console.log(availableTokens)
         setTokens(availableTokens)
 
         // eslint-disable-next-line react-hooks/exhaustive-deps

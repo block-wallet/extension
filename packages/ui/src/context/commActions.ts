@@ -1734,16 +1734,6 @@ export const editAccountTokensOrder = async (
 }
 
 /**
- * Get account tokens order by account and chainId.
- *
- */
-export const getAccountTokensOrdered = async (): Promise<
-    RequestTokensOrder[]
-> => {
-    return sendMessage(Messages.ACCOUNT.GET_ACCOUNT_TOKENS_ORDERED)
-}
-
-/**
  * Enable/Disable hotkeys
  *
  * @param enabled Allow hotkeys on the extension

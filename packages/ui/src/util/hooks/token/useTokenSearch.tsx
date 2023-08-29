@@ -20,9 +20,7 @@ const filterTokens = (tokens: TokenWithBalance[], term?: string) => {
 const useTokenSearch = (tokens: TokenWithBalance[]) => {
     const [search, setSearch] = useState("")
     const result = useMemo(() => {
-        const result = filterTokens(tokens, search.toLowerCase())
-        console.log(result)
-        return result
+        return filterTokens(tokens, search.toLowerCase())
     }, [search, tokens])
     return {
         tokensResult: result,

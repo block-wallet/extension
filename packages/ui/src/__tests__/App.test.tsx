@@ -33,5 +33,6 @@ test("PopUp renders", () => {
     )
 
     const privacy = screen.queryAllByText(/send/i).length !== 0
+    console.log(privacy)
     expect(privacy).toBeTruthy()
 })

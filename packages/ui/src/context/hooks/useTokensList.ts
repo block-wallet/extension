@@ -57,11 +57,15 @@ const useGetAccountNetworkTokensBalances = (
         type: "",
     }
 
+    let arrAccountTokensOrder: AccountTokenOrder[] = []
+    if (accountTokensOrder[selectedAddress])
+        arrAccountTokensOrder = accountTokensOrder[selectedAddress][chainId]
+
     return {
         nativeToken: nativeToken,
         balances: balances,
         chainId: chainId,
-        accountTokensOrder: accountTokensOrder[selectedAddress][chainId],
+        accountTokensOrder: arrAccountTokensOrder,
         exchangeRates: exchangeRates,
     }
 }

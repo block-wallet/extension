@@ -11,7 +11,7 @@ const Spinner: FunctionComponent<{
     iconTextSeparation?: string
     color?: string
 }> = ({
-    size = "1rem",
+    size = "16px",
     text = "",
     iconTextSeparation = "4px",
     color = "text-primary-100",

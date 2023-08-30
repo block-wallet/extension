@@ -5,7 +5,7 @@ import {
     switchToTab,
     getPlatformInfo,
     updateWindow,
-    isOnboardingTabUrl,
+    isOnboardingTabUrl
 } from './window';
 import { extensionInstances } from '../infrastructure/connection';
 import { Mutex } from 'async-mutex';
@@ -20,7 +20,7 @@ import { POPUP_TAB_NAME } from './constants/tab';
 
 // Define window size for each os
 const windowSize: { [os in PlatformOS]: { height: number; width: number } } = {
-    win: { height: 639, width: 373 },
+    win: { height: 640, width: 373 },
     mac: { height: 630, width: 358 },
     linux: { height: 600, width: 357 },
     android: { height: 600, width: 357 },

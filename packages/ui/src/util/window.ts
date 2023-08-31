@@ -34,3 +34,37 @@ export const closeCurrentTab = (): Promise<void> => {
             })
     })
 }
+
+
+export enum Browsers {
+    CHROME = "chrome",
+    OPERA = "opera",
+    FIREFOX = "firefox"
+}
+
+/**
+ * Detects chromium based browsers.
+ * @returns true if the browser is chromium based
+ */
+
+export function getBrowserInfo(): Browsers {
+
+    console.log("browser info")
+
+    const userAgent = window.navigator.userAgent.toLowerCase();
+
+
+    if (userAgent.indexOf("opera") !== -1 || userAgent.indexOf("opr") !== -1)
+        return Browsers.OPERA
+
+    if (userAgent.indexOf("firefox") !== -1)
+        return Browsers.FIREFOX
+
+    if (userAgent.indexOf("chrome") !== -1)
+        return Browsers.CHROME
+
+
+    return Browsers.CHROME
+
+
+}

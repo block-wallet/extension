@@ -15,6 +15,9 @@ import { Classes } from "../../styles"
 
 import HardwareWalletSetupLayout from "./SetupLayout"
 import OpenExplorerIcon from "../../components/icons/OpenExplorerIcon"
+import { Browsers, getBrowserInfo } from "../../util/window"
+
+const browser = getBrowserInfo()
 
 const HardwareWalletVendorsPage = () => {
     const history = useOnMountHistory()
@@ -28,6 +31,8 @@ const HardwareWalletVendorsPage = () => {
             state: { vendor: selectedVendor },
         })
     }
+
+    console.log("is: ", browser)
     return (
         <HardwareWalletSetupLayout
             title="Connect Hardware Wallet"
@@ -37,12 +42,17 @@ const HardwareWalletVendorsPage = () => {
                 <div className="flex flex-row space-x-4 items-center justify-evenly p-8">
                     <button
                         type="button"
-                        onClick={() => setSelectedVendor(Devices.LEDGER)}
+                        onClick={() =>
+                            browser !== Browsers.FIREFOX &&
+                            setSelectedVendor(Devices.LEDGER)
+                        }
                         className={classnames(
                             "bg-white rounded-md p-4 w-1/2 flex flex-col items-center justify-center space-y-3 cursor-pointer border hover:border-primary-blue-default",
                             selectedVendor === Devices.LEDGER
                                 ? "border-primary-blue-default"
-                                : "border-primary-100"
+                                : "border-primary-100",
+                            browser === Browsers.FIREFOX &&
+                                "disabled border-gray-400 cursor-not-allowed hover:border-gray-400 "
                         )}
                         style={{ height: "120px" }}
                     >

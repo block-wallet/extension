@@ -452,7 +452,7 @@ const NetworkFormPage = ({
                     if (addNetworkInvoke.isError) {
                         return addNetworkInvoke.reset()
                     }
-                    history.replace("/settings/networks")
+                    history.push("/settings/networks")
                 }}
             />
             <WaitingDialog

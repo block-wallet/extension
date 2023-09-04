@@ -67,12 +67,13 @@ const AccountSearchBar: FunctionComponent<{
                         setIsSearching(true)
                     }
                 }}
+                title="Search account"
             >
                 <Icon name={IconName.SEARCH} profile="default" size="lg" />
                 <input
                     ref={inputRef}
                     className={classnames(
-                        "bg-transparent p-0 border-none w-10/12 font-normal",
+                        "bg-transparent p-0 pl-1 border-none w-10/12 font-normal",
                         "transition-opacity",
                         searchBarVisible
                             ? "opacity-100 duration-100 delay-500 flex-1"

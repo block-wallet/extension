@@ -7,10 +7,14 @@ import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import AccountDisplayDragDrop from "../../components/account/AccountsDisplayDragDrop"
 import { orderAccounts } from "../../context/commActions"
+import PopupFooter from "../../components/popup/PopupFooter"
+import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
+import { useHistory } from "react-router-dom"
 
 const AccountsOrderPage = () => {
     const sortedAccounts = useSortedAccounts({ includeHiddenAccounts: true })
     const [accounts, setAccounts] = useState<AccountInfo[]>([])
+    const history = useHistory()!
 
     const findAccountCard = useCallback(
         (address: string) => {
@@ -57,8 +61,18 @@ const AccountsOrderPage = () => {
     }, [])
 
     return (
-        <PopupLayout header={<PopupHeader title="Accounts order" />}>
-            <div className="flex flex-col p-6 space-y-6 w-full">
+        <PopupLayout
+            header={<PopupHeader title="Accounts order" />}
+            footer={
+                <PopupFooter>
+                    <ButtonWithLoading
+                        label="Save"
+                        onClick={() => history.push("/accounts")}
+                    />
+                </PopupFooter>
+            }
+        >
+            <div className="flex flex-col p-4 space-y-6 w-full">
                 <DndProvider backend={HTML5Backend}>
                     <div className="flex flex-col space-y-2">
                         <div className="flex flex-col space-y-2">

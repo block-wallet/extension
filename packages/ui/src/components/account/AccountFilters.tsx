@@ -43,7 +43,7 @@ const AccountFilters: React.FC<AccountFilterProps> = ({
             )
     )
     return (
-        <div className="relative">
+        <div className="relative" title="Filter accounts">
             <Dropdown
                 onClickItem={(selected) => {
                     return onChangeFilters(

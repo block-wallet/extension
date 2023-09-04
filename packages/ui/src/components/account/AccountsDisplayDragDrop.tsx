@@ -142,17 +142,15 @@ const AccountDisplayDragDrop: FunctionComponent<AccountDisplayType> = ({
             ref={dropRef}
             style={{ opacity }}
         >
-            <div className="flex flex-row justify-between items-center pr-2 pl-0 h-full">
-                <div
-                    className="flex flex-row group items-center py-2 cursor-move"
-                    ref={dragRef}
-                >
-                    <div
-                        className="flex flex-row items-center"
-                        title="Drag to sort"
-                    >
+            <div
+                className="flex flex-row justify-between items-center pr-2 pl-0 h-full cursor-move"
+                ref={dragRef}
+                title="Drag to sort"
+            >
+                <div className="flex flex-row group items-center py-2">
+                    <div className="flex flex-row items-center space-x-2 pl-1">
                         <HiDotsVertical
-                            className="text-primary-grey-dark mr-2"
+                            className="text-primary-grey-dark"
                             size={20}
                         />
                         <AccountIcon

@@ -4,12 +4,14 @@ interface OutlinedButtonProps {
     onClick?: (e: any) => void
     className?: string
     disabled?: boolean
+    title?: string
 }
 const OutlinedButton: FC<PropsWithChildren<OutlinedButtonProps>> = ({
     onClick,
     className = "",
     children,
     disabled = false,
+    title = "",
 }) => {
     return (
         <button
@@ -21,6 +23,7 @@ const OutlinedButton: FC<PropsWithChildren<OutlinedButtonProps>> = ({
             )}
             onClick={onClick}
             disabled={disabled}
+            title={title}
         >
             {children}
         </button>

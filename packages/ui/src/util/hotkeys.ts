@@ -153,7 +153,7 @@ const locations: HotkeyMap = {
                 hotkey: "C",
                 action: "/accounts/create",
                 hotkeyDescription: "ALT+C",
-                description: "Create account",
+                description: "New account",
             },
         ],
         CTRL: [],
@@ -165,7 +165,7 @@ const locations: HotkeyMap = {
                 hotkey: "C",
                 action: "/accounts/create/add",
                 hotkeyDescription: "ALT+C",
-                description: "Create account",
+                description: "New account",
             },
             {
                 hotkey: "I",

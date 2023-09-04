@@ -109,7 +109,7 @@ const AddAccountPage = () => {
     }, [isLoading, isSuccess, isError, dispatch])
 
     return (
-        <PopupLayout header={<PopupHeader title="Create Account" />}>
+        <PopupLayout header={<PopupHeader title="New Account" />}>
             <WaitingDialog
                 status={status}
                 open={isOpen}
@@ -138,7 +138,7 @@ const AddAccountPage = () => {
                     className="flex flex-col justify-between flex-1 h-full"
                     onSubmit={onSubmit}
                     id="create-account-form"
-                    aria-label="Create account"
+                    aria-label="New Account"
                 >
                     <div className="flex flex-col flex-1 p-6 space-y-1">
                         <TextInput

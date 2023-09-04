@@ -8,10 +8,11 @@ export const ActionButton: FunctionComponent<{
     label: string
     to: string
     state?: any
-}> = ({ icon, label, to, state }) => {
+    className?: string
+}> = ({ icon, label, to, state, className }) => {
     return (
         <Link
-            className={classnames(Classes.actionButton)}
+            className={classnames(Classes.actionButton, className)}
             to={{ pathname: to, state: state }}
             draggable={false}
         >

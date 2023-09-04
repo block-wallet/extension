@@ -349,7 +349,7 @@ export const AdvancedSettings: FunctionComponent<AdvancedSettingsProps> = ({
             {buttonDisplay ? (
                 <OutlinedButton
                     onClick={() => setIsOpen(true)}
-                    className="w-full py-3"
+                    className="!w-full py-3 h-12 space-x-2 p-4"
                 >
                     <span className="font-semibold text-sm">{label}</span>
                     <Icon name={IconName.RIGHT_CHEVRON} size="sm" />

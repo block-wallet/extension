@@ -1,15 +1,20 @@
-import classnames from "classnames"
-
 const SearchIcon: React.FC<{ className: string }> = ({ className }) => {
     return (
         <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            className={classnames("fill-black", className)}
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            className={className}
         >
-            <path d="M12.7 11.3C13.6 10.1 14.1 8.7 14.1 7.1C14.1 3.2 11 0 7.1 0C3.2 0 0 3.2 0 7.1C0 11 3.2 14.2 7.1 14.2C8.7 14.2 10.2 13.7 11.3 12.8L14.3 15.8C14.5 16 14.8 16.1 15 16.1C15.2 16.1 15.5 16 15.7 15.8C16.1 15.4 16.1 14.8 15.7 14.4L12.7 11.3ZM7.1 12.1C4.3 12.1 2 9.9 2 7.1C2 4.3 4.3 2 7.1 2C9.9 2 12.2 4.3 12.2 7.1C12.2 9.9 9.9 12.1 7.1 12.1Z" />
+            <path
+                d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z"
+                stroke="#08090A"
+                stroke-width="1.66667"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
         </svg>
     )
 }

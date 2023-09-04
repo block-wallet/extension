@@ -22,6 +22,7 @@ import useAccountsFilter from "../../util/hooks/account/useAccountsFilter"
 import AccountFilters from "./AccountFilters"
 import { AccountFilter } from "../../util/filterAccounts"
 import EmptyState from "../ui/EmptyState"
+import OrderButton from "../button/OrderButton"
 
 interface AccountSelectProps {
     accounts: AccountInfo[]
@@ -180,6 +181,15 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                             setFilterValue(prevValue)
                         }
                     }}
+                    searchButtonClassName="!h-10 !w-3"
+                />
+                <OrderButton
+                    onClick={() => {
+                        history.push({
+                            pathname: "/accounts/menu/order",
+                        })
+                    }}
+                    title="Edit accounts order"
                 />
             </div>
             {showEmptyState && (

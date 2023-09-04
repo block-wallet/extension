@@ -175,6 +175,7 @@ export enum AccountTrackerEvents {
     ACCOUNT_REMOVED = 'ACCOUNT_REMOVED',
     CLEARED_ACCOUNTS = 'CLEARED_ACCOUNTS',
     BALANCE_UPDATED = 'BALANCE_UPDATED',
+    ACCOUNTS_ORDER_UPDATED = 'ACCOUNTS_ORDER_UPDATED',
 }
 
 export interface UpdateAccountsOptions {
@@ -2054,5 +2055,37 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         return Object.keys(accounts || {}).concat(
             Object.keys(hiddenAccounts || {})
         );
+    }
+
+    /**
+     * orderAccounts
+     *
+     * @param accounts array with all the accounts ordered by the user
+     */
+    public orderAccounts(accountsInfo: AccountInfo[]): void {
+        const accounts = this.store.getState().accounts;
+        const hiddenAccounts = this.store.getState().hiddenAccounts;
+
+        accountsInfo.forEach((account) => {
+            const address = account.address;
+            if (accounts[address]) {
+                accounts[address] = {
+                    ...accounts[address],
+                    index: account.index,
+                };
+            }
+            if (hiddenAccounts[address]) {
+                hiddenAccounts[address] = {
+                    ...hiddenAccounts[address],
+                    index: account.index,
+                };
+            }
+        });
+
+        // save accounts state
+        this.store.updateState({
+            accounts: accounts,
+            hiddenAccounts: hiddenAccounts,
+        });
     }
 }

@@ -1727,6 +1727,5 @@ export const getOnrampCurrencies = async (): Promise<GetOnRampCurrencies> => {
 export const orderAccounts = async (
     accountsInfo: AccountInfo[]
 ): Promise<void> => {
-    console.log(accountsInfo)
     return sendMessage(Messages.ACCOUNT.ORDER_ACCOUNTS, { accountsInfo })
 }

@@ -11,7 +11,7 @@ const OutlinedButton: FC<PropsWithChildren<OutlinedButtonProps>> = ({
     className = "",
     children,
     disabled = false,
-    title = "",
+    title,
 }) => {
     return (
         <button
@@ -23,7 +23,7 @@ const OutlinedButton: FC<PropsWithChildren<OutlinedButtonProps>> = ({
             )}
             onClick={onClick}
             disabled={disabled}
-            title={title}
+            {...(title ? { title: title } : {})}
         >
             {children}
         </button>

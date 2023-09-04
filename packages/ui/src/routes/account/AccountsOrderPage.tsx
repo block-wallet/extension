@@ -10,10 +10,13 @@ import { orderAccounts } from "../../context/commActions"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { useHistory } from "react-router-dom"
+import SuccessDialog from "../../components/dialog/SuccessDialog"
 
 const AccountsOrderPage = () => {
     const sortedAccounts = useSortedAccounts({ includeHiddenAccounts: true })
     const [accounts, setAccounts] = useState<AccountInfo[]>([])
+    const [successOpen, setSuccessOpen] = useState(false)
+
     const history = useHistory()!
 
     const findAccountCard = useCallback(
@@ -43,7 +46,6 @@ const AccountsOrderPage = () => {
 
     function onSuccessfulDrop() {
         let accountsOrder: AccountInfo[] = []
-        console.log(accounts)
         accounts.forEach((account, order) => {
             accountsOrder.push({
                 ...account,
@@ -67,11 +69,21 @@ const AccountsOrderPage = () => {
                 <PopupFooter>
                     <ButtonWithLoading
                         label="Save"
-                        onClick={() => history.push("/accounts")}
+                        onClick={() => setSuccessOpen(true)}
                     />
                 </PopupFooter>
             }
         >
+            <SuccessDialog
+                open={successOpen}
+                title={"Accounts order"}
+                message={`Order of accounts was successfully saved.`}
+                onDone={() => {
+                    setSuccessOpen(false)
+                    history.push("/accounts")
+                }}
+                timeout={1000}
+            />
             <div className="flex flex-col p-4 space-y-6 w-full">
                 <DndProvider backend={HTML5Backend}>
                     <div className="flex flex-col space-y-2">

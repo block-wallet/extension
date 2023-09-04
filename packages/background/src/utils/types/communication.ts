@@ -80,6 +80,7 @@ enum ACCOUNT {
     REFRESH_TOKEN_ALLOWANCES = 'REFRESH_TOKEN_ALLOWANCES',
     UNHIDE = 'UNHIDE_ACCOUNT',
     GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
+    ORDER_ACCOUNTS = 'ORDER_ACCOUNTS',
 }
 
 enum ADDRESS {
@@ -333,6 +334,7 @@ export interface RequestSignatures {
         number,
         BigNumber | undefined
     ];
+    [Messages.ACCOUNT.ORDER_ACCOUNTS]: [RequestOrderAccounts, void];
     [Messages.APP.GET_IDLE_TIMEOUT]: [undefined, number];
     [Messages.APP.SET_IDLE_TIMEOUT]: [RequestSetIdleTimeout, void];
     [Messages.APP.SET_LAST_USER_ACTIVE_TIME]: [undefined, void];
@@ -1228,4 +1230,8 @@ export enum BackgroundActions {
 
 export interface RequestSetHotkeys {
     enabled: boolean;
+}
+
+export interface RequestOrderAccounts {
+    accountsInfo: AccountInfo[];
 }

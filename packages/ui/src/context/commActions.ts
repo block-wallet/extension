@@ -1718,3 +1718,14 @@ export const setHotkeysEnabled = async (enabled: boolean): Promise<void> => {
 export const getOnrampCurrencies = async (): Promise<GetOnRampCurrencies> => {
     return sendMessage(Messages.WALLET.GET_ONRAMP_CURRENCIES)
 }
+
+/**
+ * orderAccounts
+ *
+ * @param accounts array with all the accounts ordered by the user
+ */
+export const orderAccounts = async (
+    accountsInfo: AccountInfo[]
+): Promise<void> => {
+    return sendMessage(Messages.ACCOUNT.ORDER_ACCOUNTS, { accountsInfo })
+}

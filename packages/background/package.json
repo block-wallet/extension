@@ -31,7 +31,7 @@
     "devDependencies": {
         "@types/bn.js": "^5.1.1",
         "@types/chai": "^4.3.4",
-        "@types/chrome": "^0.0.206",
+        "@types/chrome": "^0.0.244",
         "@types/create-hash": "^1.2.2",
         "@types/lodash": "^4.14.191",
         "@types/mocha": "^10.0.1",

@@ -1064,8 +1064,8 @@ export default class NetworkController extends BaseController<NetworkControllerS
                         providerType === ProviderType.BACKUP
                             ? providerStatus.isBackupProviderOnline
                             : providerType === ProviderType.DEFAULT
-                                ? providerStatus.isDefaultProviderOnline
-                                : providerStatus.isCurrentProviderOnline;
+                            ? providerStatus.isDefaultProviderOnline
+                            : providerStatus.isCurrentProviderOnline;
 
                     if (
                         currentProviderStatus === newStatus ||
@@ -1079,8 +1079,8 @@ export default class NetworkController extends BaseController<NetworkControllerS
                         providerType === ProviderType.BACKUP
                             ? { isBackupProviderOnline: newStatus }
                             : providerType === ProviderType.DEFAULT
-                                ? { isDefaultProviderOnline: newStatus }
-                                : { isCurrentProviderOnline: newStatus };
+                            ? { isDefaultProviderOnline: newStatus }
+                            : { isCurrentProviderOnline: newStatus };
 
                     this.store.updateState({
                         providerStatus: {

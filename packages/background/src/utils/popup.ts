@@ -5,7 +5,7 @@ import {
     switchToTab,
     getPlatformInfo,
     updateWindow,
-    isOnboardingTabUrl
+    isOnboardingTabUrl,
 } from './window';
 import { extensionInstances } from '../infrastructure/connection';
 import { Mutex } from 'async-mutex';

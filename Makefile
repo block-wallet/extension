@@ -60,7 +60,7 @@ build:
 	@$(MAKE) ENVIRONMENT=$(ENVIRONMENT) build/provider --no-print-directory
 	@$(MAKE) build/ui --no-print-directory
 ifeq ($(BROWSER), firefox)
-	@mkdir dist-firefox && cp -r dist/* dist-firefox/
+	@mkdir -p dist-firefox && cp -r dist/* dist-firefox/
 	@rm -Rf dist
 endif
 	@$(MAKE) BROWSER=$(BROWSER) build/manifest --no-print-directory

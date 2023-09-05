@@ -218,6 +218,7 @@ const SendPage = () => {
                             }, 300)
                         }}
                         debounced
+                        debounceTime={1000}
                         searchShowSkeleton={setShowSearchSkeleton}
                     />
                     {canAddContact && !showSearchSkeleton && (

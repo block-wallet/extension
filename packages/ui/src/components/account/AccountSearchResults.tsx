@@ -117,9 +117,8 @@ const AccountSearchResults = ({
             }
 
             // If Ens enabled, search for it
-            if (ensEnabled && ensEnabled.current) {
+            if (ensEnabled && ensEnabled.current)
                 newResults.ens = filter ? await searchEns(filter) : undefined
-            }
 
             // Unstoppable Domains
             newResults.ud = filter ? await searchUD(filter) : undefined
@@ -133,7 +132,7 @@ const AccountSearchResults = ({
     }, [filter])
 
     const disableSkeleton = async () => {
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        // await new Promise((resolve) => setTimeout(resolve, 1000))
         setShowSearchSkeleton(false)
     }
 

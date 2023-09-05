@@ -159,11 +159,15 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
                                 timeoutIdRef.current = setTimeout(() => {
                                     onValueChanged(e)
 
-                                    if (searchShowSkeleton)
+                                    if (
+                                        searchShowSkeleton &&
+                                        e.target.value !== ""
+                                    )
                                         searchShowSkeleton(true)
                                 }, debounceTime)
                             } else {
-                                if (searchShowSkeleton) searchShowSkeleton(true)
+                                if (searchShowSkeleton && e.target.value !== "")
+                                    searchShowSkeleton(true)
                                 onValueChanged(e)
                             }
                         }}

@@ -1741,3 +1741,14 @@ export const editAccountTokensOrder = async (
 export const setTokensSortValue = async (sortValue: string): Promise<void> => {
     return sendMessage(Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE, sortValue)
 }
+  
+/** 
+ * orderAccounts
+ *
+ * @param accounts array with all the accounts ordered by the user
+ */
+export const orderAccounts = async (
+    accountsInfo: AccountInfo[]
+): Promise<void> => {
+    return sendMessage(Messages.ACCOUNT.ORDER_ACCOUNTS, { accountsInfo })
+}

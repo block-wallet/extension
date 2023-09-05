@@ -756,7 +756,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                                 })
                         }}
                         className={classnames(
-                            "w-full ml-2",
+                            "!w-full ml-2 h-12 space-x-2 p-4",
                             !quote && "cursor-not-allowed hover:border-default"
                         )}
                     >

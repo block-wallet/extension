@@ -120,6 +120,7 @@ import {
     RequestIsEnrolled,
     RequestSetHotkeys,
     RequestTokensOrder,
+    RequestOrderAccounts,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -791,6 +792,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES:
                 return this.refreshAccountTokenAllowances();
+            case Messages.ACCOUNT.ORDER_ACCOUNTS:
+                return this.orderAccounts(request as RequestOrderAccounts);
             case Messages.APP.GET_IDLE_TIMEOUT:
                 return this.getIdleTimeout();
             case Messages.APP.SET_IDLE_TIMEOUT:
@@ -3507,5 +3510,16 @@ export default class BlankController extends EventEmitter {
      */
     private setAccountTokensSortValue(tokensSortValue: string) {
         this.preferencesController.tokensSortValue = tokensSortValue;
+    }
+    
+    /**
+     * orderAccounts
+     *
+     * @param accounts array with all the accounts ordered by the user
+     */
+    private async orderAccounts({
+        accountsInfo,
+    }: RequestOrderAccounts): Promise<void> {
+        this.accountTrackerController.orderAccounts(accountsInfo);
     }
 }

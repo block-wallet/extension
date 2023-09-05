@@ -82,6 +82,7 @@ enum ACCOUNT {
     GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
     EDIT_ACCOUNT_TOKENS_ORDER = 'EDIT_ACCOUNT_TOKENS_ORDER',
     SET_ACCOUNT_SORT_VALUE = 'SET_ACCOUNT_SORT_VALUE',
+    ORDER_ACCOUNTS = 'ORDER_ACCOUNTS',
 }
 
 enum ADDRESS {
@@ -337,6 +338,7 @@ export interface RequestSignatures {
     ];
     [Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER]: [RequestTokensOrder[], void];
     [Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE]: [string, void];
+    [Messages.ACCOUNT.ORDER_ACCOUNTS]: [RequestOrderAccounts, void];
     [Messages.APP.GET_IDLE_TIMEOUT]: [undefined, number];
     [Messages.APP.SET_IDLE_TIMEOUT]: [RequestSetIdleTimeout, void];
     [Messages.APP.SET_LAST_USER_ACTIVE_TIME]: [undefined, void];
@@ -1237,4 +1239,8 @@ export interface RequestSetHotkeys {
 export interface RequestTokensOrder {
     tokenAddress: string;
     order: number;
+}
+
+export interface RequestOrderAccounts {
+    accountsInfo: AccountInfo[];
 }

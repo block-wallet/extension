@@ -278,7 +278,7 @@ const AllowancesPage = () => {
                 <div className="flex flex-row space-x-2">
                     <div className="flex-1">
                         <SearchInput
-                            inputClassName="!h-12"
+                            inputClassName="!h-10"
                             placeholder={`Search`}
                             onChange={(event) => setSearch(event.target.value)}
                             debounced

@@ -110,15 +110,6 @@ const SendPage = () => {
     }
 
     useEffect(() => {
-        const disableSkeleton = async () => {
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-            setShowSearchSkeleton(false)
-        }
-
-        if (disableSkeleton) disableSkeleton()
-    }, [showSearchSkeleton])
-
-    useEffect(() => {
         const checkAddress = () => {
             const validAddress = isValidAddress(searchString)
 
@@ -240,8 +231,7 @@ const SendPage = () => {
             </div>
             <div
                 className={classnames(
-                    "space-y-4",
-                    !showSearchSkeleton && "pt-6 pb-6",
+                    "space-y-4 pt-6 pb-6",
                     warning !== "" || (canAddContact && !showSearchSkeleton)
                         ? "mt-5"
                         : "mt-1"
@@ -251,6 +241,7 @@ const SendPage = () => {
                     filter={searchString}
                     onSelect={onAccountSelect}
                     showSearchSkeleton={showSearchSkeleton}
+                    setShowSearchSkeleton={setShowSearchSkeleton}
                 />
             </div>
         </PopupLayout>

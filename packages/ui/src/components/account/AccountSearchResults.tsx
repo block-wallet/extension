@@ -23,7 +23,8 @@ type AccountSearchResultsProps = {
         ud?: boolean
     }
     onSelect: (account: any) => void
-    showSearchSkeleton?: boolean
+    showSearchSkeleton: boolean
+    setShowSearchSkeleton: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export type AccountResult = {
@@ -43,6 +44,7 @@ const AccountSearchResults = ({
     onSelect,
     resultsToDisplay = { wallet: true, addressBook: true, ens: true, ud: true },
     showSearchSkeleton,
+    setShowSearchSkeleton,
 }: AccountSearchResultsProps) => {
     // Hooks
     const { ens } = useSelectedNetwork()
@@ -123,11 +125,17 @@ const AccountSearchResults = ({
             newResults.ud = filter ? await searchUD(filter) : undefined
 
             setResults(newResults)
+            disableSkeleton()
         }
 
         search()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filter])
+
+    const disableSkeleton = async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        setShowSearchSkeleton(false)
+    }
 
     return (
         <>

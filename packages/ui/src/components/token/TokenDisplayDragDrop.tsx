@@ -2,7 +2,6 @@ import TokenLogo from "./TokenLogo"
 import classnames from "classnames"
 import { TokenResponse } from "../../routes/settings/AddTokensPage"
 import { useState, FunctionComponent, useRef, useEffect } from "react"
-import { formatName } from "../../util/formatAccount"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatRounded } from "../../util/formatRounded"
 import { formatUnits } from "@ethersproject/units"
@@ -10,6 +9,8 @@ import { DragSourceMonitor, useDrag, useDrop } from "react-dnd"
 import useIsHovering from "../../util/hooks/useIsHovering"
 import { TokenWithBalance } from "../../context/hooks/useTokensList"
 import { HiDotsVertical } from "react-icons/hi"
+import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
+import { isNativeTokenAddress } from "../../util/tokenUtils"
 
 type TokenCardProps = {
     tokenInfo: TokenResponse
@@ -53,6 +54,7 @@ const TokenDisplayDragDrop: FunctionComponent<TokenDisplayType> = ({
     const [dropAnimation, setDropAnimation] = useState(false)
     const dropRef = useRef<HTMLDivElement>(null)
     const dragRef = useRef<HTMLDivElement>(null)
+    const formatter = useCurrencyFromatter()
 
     const originalIndex = findTokenCard(data.address).index
 
@@ -131,52 +133,46 @@ const TokenDisplayDragDrop: FunctionComponent<TokenDisplayType> = ({
             ref={dropRef}
             style={{ opacity }}
         >
-            <div className="flex flex-row justify-between items-center pr-2 pl-0 h-full">
-                <div
-                    className="flex flex-row group items-center py-2 cursor-move"
-                    ref={dragRef}
-                >
-                    <div
-                        className="flex flex-row items-center"
-                        title="Drag to sort"
-                    >
+            <div
+                className="flex flex-row justify-between items-center pr-2 pl-0 h-full cursor-move"
+                ref={dragRef}
+                title="Drag to sort"
+            >
+                <div className="flex flex-row group items-center py-2">
+                    <div className="flex flex-row items-center space-x-2 pl-1">
                         <HiDotsVertical
-                            className="text-primary-grey-dark mr-2"
+                            className="text-primary-grey-dark"
                             size={20}
                         />
                         <TokenLogo
                             logo={data.logo}
-                            name={data.name}
-                            filled={false}
-                            logoSize="small"
+                            name={data.symbol ?? ""}
+                            logoSize="big"
+                            filled={true}
                         />
-                        <div className="flex flex-col ml-4 truncate">
+                        <div className="flex flex-col ml-2 mr-2">
                             <span
-                                className={
-                                    "text-sm text-primary-black-default font-semibold"
-                                }
+                                className="text-sm font-semibold"
+                                title={`${formatUnits(
+                                    balance || "0",
+                                    data.decimals
+                                )} ${data.symbol}`}
                             >
-                                {formatName(data.name, 22)}
+                                {`${formatRounded(
+                                    formatUnits(balance || "0", data.decimals),
+                                    4
+                                )}
+                                    ${data.symbol}`}
                             </span>
-                            {balance && (
-                                <span
-                                    className={"text-xs text-primary-grey-dark"}
-                                    title={formatUnits(balance, data.decimals)}
-                                >
-                                    {formatRounded(
-                                        formatUnits(balance, data.decimals),
-                                        6
-                                    )}
-                                </span>
-                            )}
+                            <span className="text-[11px] text-primary-grey-dark">
+                                {formatter.format(
+                                    balance || BigNumber.from(0),
+                                    data.symbol,
+                                    data.decimals ?? 18,
+                                    isNativeTokenAddress(data.address)
+                                )}
+                            </span>
                         </div>
-                        <p
-                            className={
-                                "text-sm text-gray-400 ml-auto pl-1 pr-6"
-                            }
-                        >
-                            {data.symbol.toUpperCase()}
-                        </p>
                     </div>
                 </div>
             </div>

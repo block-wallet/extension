@@ -11,12 +11,16 @@ import {
     useTokenListWithNativeToken,
 } from "../../context/hooks/useTokensList"
 import TokenDisplayDragDrop from "../../components/token/TokenDisplayDragDrop"
+import PopupFooter from "../../components/popup/PopupFooter"
+import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
+import SuccessDialog from "../../components/dialog/SuccessDialog"
 
 const TokensPage = () => {
     const history = useOnMountHistory()
     const availableTokens = useTokenListWithNativeToken("CUSTOM")
     const [tokens, setTokens] = useState<TokenWithBalance[]>([])
     const isFromHomePage = history.location.state?.isFromHomePage ?? false
+    const [successOpen, setSuccessOpen] = useState(false)
 
     const findTokenCard = useCallback(
         (address: string) => {
@@ -68,11 +72,29 @@ const TokensPage = () => {
                 <PopupHeader
                     title="Assets order"
                     onBack={() =>
-                        history.push(isFromHomePage ? "/" : "/settings")
+                        history.push(isFromHomePage ? "/" : "/accounts/menu")
                     }
                 />
             }
+            footer={
+                <PopupFooter>
+                    <ButtonWithLoading
+                        label="Save"
+                        onClick={() => setSuccessOpen(true)}
+                    />
+                </PopupFooter>
+            }
         >
+            <SuccessDialog
+                open={successOpen}
+                title={"Assets order"}
+                message={`Order of assets was successfully saved.`}
+                onDone={() => {
+                    setSuccessOpen(false)
+                    history.push(isFromHomePage ? "/" : "/accounts/menu")
+                }}
+                timeout={1000}
+            />
             <div className="flex flex-col p-6 space-y-6 w-full">
                 <DndProvider backend={HTML5Backend}>
                     <div className="flex flex-col space-y-2">
@@ -85,6 +107,7 @@ const TokensPage = () => {
                                     moveTokenCard={moveTokenCard}
                                     onSuccessfulDrop={onSuccessfulDrop}
                                     key={tokenWithBalance.token.address}
+                                    balance={tokenWithBalance.balance}
                                 />
                             ))}
                         </div>

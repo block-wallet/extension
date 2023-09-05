@@ -2085,9 +2085,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     [chainId]: tokensOrder,
                 },
             },
-     });
+        });
+    }
 
-     /**     
+    /**
      * orderAccounts
      *
      * @param accounts array with all the accounts ordered by the user

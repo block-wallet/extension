@@ -27,7 +27,7 @@ const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
                 <Dropdown.Button>
                     <DropdownOutlinedIconButton
                         iconName={IconName.GROUP}
-                        className="h-10"
+                        buttonClassName="h-10"
                     />
                 </Dropdown.Button>
                 <Dropdown.Menu id="filter-menu" className="w-36 py-2">

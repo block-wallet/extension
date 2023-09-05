@@ -509,9 +509,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
             const nativeCurrencyIcon =
                 network.nativeCurrency?.logo ||
                 chainDataFromList?.nativeCurrencyIcon ||
-                nativeCurrencySymbol === 'ETH'
+                (nativeCurrencySymbol === 'ETH'
                     ? 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png'
-                    : undefined;
+                    : undefined);
 
             const networkIcon =
                 network.iconUrls?.[0] || chainDataFromList?.logo;

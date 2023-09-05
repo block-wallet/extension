@@ -27,6 +27,7 @@ interface AccountFilterProps {
     filters: string[]
     customFilters?: AccountFilter[]
     onChangeFilters: (newFilters: string[]) => void
+    searchButtonClassName?: string
 }
 
 const AccountFilters: React.FC<AccountFilterProps> = ({
@@ -42,7 +43,7 @@ const AccountFilters: React.FC<AccountFilterProps> = ({
             )
     )
     return (
-        <div className="relative">
+        <div className="relative" title="Filter accounts">
             <Dropdown
                 onClickItem={(selected) => {
                     return onChangeFilters(
@@ -51,7 +52,10 @@ const AccountFilters: React.FC<AccountFilterProps> = ({
                 }}
             >
                 <Dropdown.Button>
-                    <DropdownOutlinedIconButton iconName={IconName.GROUP} />
+                    <DropdownOutlinedIconButton
+                        iconName={IconName.FILTER}
+                        iconSize="lg"
+                    />
                 </Dropdown.Button>
                 <Dropdown.Menu id="filter-menu" className="w-28">
                     {getFilterOptions(customFilters).map(

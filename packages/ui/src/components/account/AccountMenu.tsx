@@ -22,6 +22,7 @@ import { HARDWARE_TYPES } from "../../util/account"
 import { openHardwareRemove } from "../../context/commActions"
 import { useHotkeys } from "react-hotkeys-hook"
 import { componentsHotkeys } from "../../util/hotkeys"
+import order from "../../assets/images/icons/order.svg"
 
 const AccountMenu = () => {
     const { availableNetworks, selectedNetwork, hotkeysEnabled } =
@@ -106,6 +107,12 @@ const AccountMenu = () => {
         icon: accountsIcon,
         label: "My Accounts",
         to: "/accounts",
+    })
+
+    options.push({
+        icon: order,
+        label: "Acounts Order",
+        to: "/accounts/menu/order",
     })
 
     options.push({

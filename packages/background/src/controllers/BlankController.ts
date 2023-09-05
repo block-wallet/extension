@@ -3511,7 +3511,7 @@ export default class BlankController extends EventEmitter {
     private setAccountTokensSortValue(tokensSortValue: string) {
         this.preferencesController.tokensSortValue = tokensSortValue;
     }
-    
+
     /**
      * orderAccounts
      *

@@ -113,8 +113,8 @@ const AccountMenu = () => {
         icon: order,
         label: "Assets order",
         to: "/accounts/menu/tokensOrder",
-    })    
-      
+    })
+
     options.push({
         icon: order,
         label: "Acounts Order",

@@ -17,6 +17,8 @@ import ClockIcon from "../icons/ClockIcon"
 import SwitchIcon from "../icons/SwitchIcon"
 import RefetchIcon from "../icons/RefetchIcon"
 import DisabledBridgeIcon from "../icons/DisabledBridgeIcon"
+import FilterIcon from "../icons/FilterIcon"
+import OrderIcon from "../icons/OrderIcon"
 
 export enum IconName {
     PENCIL = "PENCIL",
@@ -37,6 +39,8 @@ export enum IconName {
     SWITCH = "SWITCH",
     REFETCH = "REFETCH",
     DISABLED_BRIDGE = "DISABLED_BRIDGE",
+    FILTER = "FILTER",
+    ORDER = "ORDER",
 }
 
 type ProfileType = "default" | "selected" | "danger" | "disabled"
@@ -67,6 +71,8 @@ const ICONS = {
     [IconName.SWITCH]: SwitchIcon,
     [IconName.REFETCH]: RefetchIcon,
     [IconName.DISABLED_BRIDGE]: DisabledBridgeIcon,
+    [IconName.FILTER]: FilterIcon,
+    [IconName.ORDER]: OrderIcon,
 }
 
 const STROKED_ICONS = [IconName.RIGHT_CHEVRON]

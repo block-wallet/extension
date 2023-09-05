@@ -132,7 +132,7 @@ describe('Network controller', function () {
             });
 
             const shouldBeCompatibleWithEIP155 =
-                await networkController.getEIP1559Compatibility(56, false);
+                await networkController.getEIP1559Compatibility(1101, false);
             expect(shouldBeCompatibleWithEIP155).equal(false);
         });
         it('There is not a value for the chain', async () => {

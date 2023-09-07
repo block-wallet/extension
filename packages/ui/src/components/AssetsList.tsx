@@ -14,7 +14,7 @@ import { formatRounded } from "../util/formatRounded"
 import { ActionButton } from "./button/ActionButton"
 import AssetsLoadingSkeleton from "./skeleton/AssetsLoadingSkeleton"
 import useCurrencyFromatter from "../util/hooks/useCurrencyFormatter"
-import { isNativeTokenAddress } from "../util/tokenUtils"
+import { AssetsSortOptions, isNativeTokenAddress } from "../util/tokenUtils"
 import { useBlankState } from "../context/background/backgroundHooks"
 import TokenLogo from "./token/TokenLogo"
 import SearchInput from "./input/SearchInput"
@@ -140,7 +140,9 @@ const AssetsList = () => {
     const { tokensSortValue } = useBlankState()!
     // const { chainId } = useSelectedNetwork()
     const history = useOnMountHistory()
-    const [sortValue, setSortValue] = useState(tokensSortValue)
+    const [sortValue, setSortValue] = useState<AssetsSortOptions>(
+        tokensSortValue as AssetsSortOptions
+    )
     const currentNetworkTokens = useTokenListWithNativeToken(sortValue)
     const searchInputRef = useRef<HTMLInputElement>(null)
     const { search, tokensResult, onChangeSearch } =
@@ -185,7 +187,7 @@ const AssetsList = () => {
                         onClick={setSortValue}
                         selectedValue={sortValue}
                     />
-                    {sortValue === "CUSTOM" && (
+                    {sortValue === AssetsSortOptions.CUSTOM && (
                         <AssetsButton
                             onClick={() => {
                                 history.push({

@@ -37,6 +37,14 @@ export const isNativeTokenAddress = (address: string) => {
     )
 }
 
+export enum AssetsSortOptions {
+    NAME = "NAME",
+    BALANCE = "BALANCE",
+    USD_VALUE = "USD_VALUE",
+    STABLECOINS = "STABLECOINS",
+    CUSTOM = "CUSTOM",
+}
+
 export const Stablecoins: string[] = [
     "USDT",
     "USDC",
@@ -86,7 +94,7 @@ export const Stablecoins: string[] = [
 ]
 
 export const sortTokensByValue = (
-    sortValue: string,
+    sortValue: AssetsSortOptions,
     tokensList: TokenWithBalance[],
     accountTokensOrder: AccountTokenOrder[],
     exchangeRates: Rates
@@ -95,18 +103,18 @@ export const sortTokensByValue = (
         let accountTokens = [...tokensList]
 
         switch (sortValue) {
-            case "BALANCE":
+            case AssetsSortOptions.BALANCE:
                 accountTokens.sort((tokenA, tokenB) =>
                     BigNumber.from(tokenA.balance) >
-                    BigNumber.from(tokenB.balance)
+                        BigNumber.from(tokenB.balance)
                         ? -1
                         : BigNumber.from(tokenB.balance) >
-                          BigNumber.from(tokenA.balance)
-                        ? 1
-                        : 0
+                            BigNumber.from(tokenA.balance)
+                            ? 1
+                            : 0
                 )
                 break
-            case "USDVALUE":
+            case AssetsSortOptions.USD_VALUE:
                 accountTokens.sort((tokenA, tokenB) => {
                     const currencyAmountA = toCurrencyAmount(
                         BigNumber.from(tokenA.balance ?? 0),
@@ -122,20 +130,20 @@ export const sortTokensByValue = (
                     return currencyAmountA > currencyAmountB
                         ? -1
                         : currencyAmountB > currencyAmountA
-                        ? 1
-                        : 0
+                            ? 1
+                            : 0
                 })
                 break
-            case "NAME":
+            case AssetsSortOptions.NAME:
                 accountTokens.sort((tokenA, tokenB) =>
                     tokenA.token.symbol > tokenB.token.symbol
                         ? 1
                         : tokenB.token.symbol > tokenA.token.symbol
-                        ? -1
-                        : 0
+                            ? -1
+                            : 0
                 )
                 break
-            case "STABLECOINS":
+            case AssetsSortOptions.STABLECOINS:
                 const tokens: TokenWithBalance[] = []
                 Stablecoins.forEach((stablecoin) => {
                     const stableTokenIndex = accountTokens.findIndex(
@@ -152,7 +160,7 @@ export const sortTokensByValue = (
                     accountTokens.unshift(...tokens)
                 }
                 break
-            case "CUSTOM":
+            case AssetsSortOptions.CUSTOM:
                 if (accountTokensOrder && accountTokensOrder.length > 0) {
                     accountTokens.forEach((token) => {
                         const index = accountTokensOrder.findIndex(

@@ -22,6 +22,7 @@ import AssetDropdownDisplay from "./AssetDropdownDisplay"
 import AssetList from "./AssetList"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { useBlankState } from "../../context/background/backgroundHooks"
+import { AssetsSortOptions } from "../../util/tokenUtils"
 
 export enum AssetListType {
     ALL = "ALL",
@@ -82,7 +83,9 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
     const [searchResult, setSearchResult] = useState<TokenWithBalance[]>([])
     const [search, setSearch] = useState<string | null>(null)
     const [assetList, setAssetList] = useState<TokenWithBalance[]>([])
-    const defaultAssetList = useTokenListWithNativeToken(tokensSortValue)
+    const defaultAssetList = useTokenListWithNativeToken(
+        tokensSortValue as AssetsSortOptions
+    )
 
     const swappedAssetList = useSwappedTokenList()
 

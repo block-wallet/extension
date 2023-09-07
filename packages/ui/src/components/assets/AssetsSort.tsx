@@ -2,18 +2,19 @@ import { FC, Fragment } from "react"
 import Dropdown from "../ui/Dropdown/Dropdown"
 import { DropdownOutlinedIconButton } from "../ui/Dropdown/DropdownButton"
 import { IconName } from "../ui/Icon"
+import { AssetsSortOptions } from "../../util/tokenUtils"
 
 interface AssetsSortProps {
     selectedValue: string
-    onClick: (selectedValue: string) => void
+    onClick: (selectedValue: AssetsSortOptions) => void
 }
 
-export const sortOptions = [
-    { label: "Name", value: "NAME" },
-    { label: "Balance", value: "BALANCE" },
-    { label: "USD Value", value: "USDVALUE" },
-    { label: "Stablecoins", value: "STABLECOINS" },
-    { label: "Custom Order", value: "CUSTOM" },
+const sortOptions = [
+    { label: "Name", value: AssetsSortOptions.NAME },
+    { label: "Balance", value: AssetsSortOptions.BALANCE },
+    { label: "USD Value", value: AssetsSortOptions.USD_VALUE },
+    { label: "Stablecoins", value: AssetsSortOptions.STABLECOINS },
+    { label: "Custom Order", value: AssetsSortOptions.CUSTOM },
 ]
 
 const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {

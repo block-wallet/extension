@@ -14,10 +14,13 @@ import TokenDisplayDragDrop from "../../components/token/TokenDisplayDragDrop"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import SuccessDialog from "../../components/dialog/SuccessDialog"
+import { AssetsSortOptions } from "../../util/tokenUtils"
 
 const TokensPage = () => {
     const history = useOnMountHistory()
-    const availableTokens = useTokenListWithNativeToken("CUSTOM")
+    const availableTokens = useTokenListWithNativeToken(
+        AssetsSortOptions.CUSTOM
+    )
     const [tokens, setTokens] = useState<TokenWithBalance[]>([])
     const isFromHomePage = history.location.state?.isFromHomePage ?? false
     const [successOpen, setSuccessOpen] = useState(false)

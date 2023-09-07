@@ -9,7 +9,7 @@ import {
     AccountTokenOrder,
 } from "@block-wallet/background/controllers/AccountTrackerController"
 import { isHiddenAccount } from "../../util/account"
-import { sortTokensByValue } from "../../util/tokenUtils"
+import { AssetsSortOptions, sortTokensByValue } from "../../util/tokenUtils"
 import { useMemo } from "react"
 import { Rates } from "@block-wallet/background/controllers/ExchangeRatesController"
 
@@ -90,8 +90,8 @@ export const useTokensList = (account?: AccountInfo): TokenListInfo => {
                 return firstNumber.gt(a.balance)
                     ? 1
                     : firstNumber.eq(a.balance)
-                    ? 0
-                    : -1
+                        ? 0
+                        : -1
             })
 
         return {
@@ -113,7 +113,7 @@ export const useTokensList = (account?: AccountInfo): TokenListInfo => {
 }
 
 export const useTokenListWithNativeToken = (
-    sortValue: string,
+    sortValue: AssetsSortOptions,
     account?: AccountInfo
 ): TokenWithBalance[] => {
     const {

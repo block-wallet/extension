@@ -40,7 +40,7 @@ const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
                                 <Dropdown.MenuItem
                                     value={value}
                                     selected={selectedValue === value}
-                                    className="p-2 px-3 font-semibold text-primary-black-default"
+                                    className="p-1 px-3 font-semibold text-primary-black-default"
                                 >
                                     {label}
                                 </Dropdown.MenuItem>

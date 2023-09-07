@@ -26,8 +26,6 @@ import AccountSearchResults, {
 import Checkbox from "../../components/input/Checkbox"
 import { isValidAddress, toChecksumAddress } from "ethereumjs-util"
 import { formatHashLastChars } from "../../util/formatAccount"
-import searchIcon from "../../assets/images/icons/search.svg"
-import SendPageLoadingSkeleton from "../../components/skeleton/SendPageLoadingSkeleton"
 
 // Schema
 const schema = yup.object().shape({
@@ -109,7 +107,6 @@ const SendPage = () => {
         setValue("address", value)
         setSearchString(value)
         setAddContact(false)
-        setShowSearchSkeleton(false)
     }
 
     useEffect(() => {

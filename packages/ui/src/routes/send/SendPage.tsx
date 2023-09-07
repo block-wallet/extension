@@ -103,8 +103,7 @@ const SendPage = () => {
     })
     const { ref } = register("address")
 
-    const onChangeHandler = (event: any) => {
-        setShowSearchSkeleton(true)
+    const onChangeHandler = async (event: any) => {
         // Bind
         const value = event.target.value
         setValue("address", value)
@@ -203,7 +202,6 @@ const SendPage = () => {
             <div className="flex flex-col space-y-2 w-full bg-white z-[9]">
                 <div className="w-full p-6 pb-0 space-y-2">
                     <SearchInput
-                        label="Enter public address, name or select contact"
                         placeholder="Enter public address, name or select contact"
                         name="address"
                         ref={useMergeRefs(ref, searchInputRef)}
@@ -223,8 +221,10 @@ const SendPage = () => {
                             }, 300)
                         }}
                         debounced
+                        debounceTime={1000}
+                        searchShowSkeleton={setShowSearchSkeleton}
                     />
-                    {canAddContact && (
+                    {canAddContact && !showSearchSkeleton && (
                         <Checkbox
                             label="Add to contacts"
                             checked={addContact}
@@ -235,36 +235,18 @@ const SendPage = () => {
             </div>
             <div
                 className={classnames(
-                    "space-y-4",
-                    !showSearchSkeleton && "pt-6 pb-6",
-                    warning !== "" || canAddContact ? "mt-5" : "mt-1"
+                    "space-y-4 pt-6 pb-6",
+                    warning !== "" || (canAddContact && !showSearchSkeleton)
+                        ? "mt-5"
+                        : "mt-1"
                 )}
             >
-                {!searchString || searchString === "" ? (
-                    <div className="flex flex-col">
-                        <div className="flex justify-center items-center mb-6">
-                            <img
-                                src={searchIcon}
-                                alt="search"
-                                className="w-7 h-7 absolute z-10"
-                            />
-                            <div className="w-20 h-20 bg-primary-grey-default rounded-full relative z-0"></div>
-                        </div>
-                        <div className="flex justify-center items-center w-full text-center">
-                            <span className="text-sm text-primary-grey-dark w-9/12">
-                                Add recipient by searching public address, name,
-                                or select contact
-                            </span>
-                        </div>
-                    </div>
-                ) : showSearchSkeleton && searchString !== "" ? (
-                    <SendPageLoadingSkeleton />
-                ) : (
-                    <AccountSearchResults
-                        filter={searchString}
-                        onSelect={onAccountSelect}
-                    />
-                )}
+                <AccountSearchResults
+                    filter={searchString}
+                    onSelect={onAccountSelect}
+                    showSearchSkeleton={showSearchSkeleton}
+                    setShowSearchSkeleton={setShowSearchSkeleton}
+                />
             </div>
         </PopupLayout>
     )

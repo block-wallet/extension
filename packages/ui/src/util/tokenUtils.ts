@@ -96,7 +96,7 @@ export const Stablecoins: string[] = [
 export const sortTokensByValue = (
     sortValue: AssetsSortOptions,
     tokensList: TokenWithBalance[],
-    accountTokensOrder: AccountTokenOrder[],
+    accountTokensOrder: AccountTokenOrder,
     exchangeRates: Rates
 ): TokenWithBalance[] => {
     if (tokensList.length > 1) {
@@ -106,12 +106,12 @@ export const sortTokensByValue = (
             case AssetsSortOptions.BALANCE:
                 accountTokens.sort((tokenA, tokenB) =>
                     BigNumber.from(tokenA.balance) >
-                        BigNumber.from(tokenB.balance)
+                    BigNumber.from(tokenB.balance)
                         ? -1
                         : BigNumber.from(tokenB.balance) >
-                            BigNumber.from(tokenA.balance)
-                            ? 1
-                            : 0
+                          BigNumber.from(tokenA.balance)
+                        ? 1
+                        : 0
                 )
                 break
             case AssetsSortOptions.USD_VALUE:
@@ -130,8 +130,8 @@ export const sortTokensByValue = (
                     return currencyAmountA > currencyAmountB
                         ? -1
                         : currencyAmountB > currencyAmountA
-                            ? 1
-                            : 0
+                        ? 1
+                        : 0
                 })
                 break
             case AssetsSortOptions.NAME:
@@ -139,8 +139,8 @@ export const sortTokensByValue = (
                     tokenA.token.symbol > tokenB.token.symbol
                         ? 1
                         : tokenB.token.symbol > tokenA.token.symbol
-                            ? -1
-                            : 0
+                        ? -1
+                        : 0
                 )
                 break
             case AssetsSortOptions.STABLECOINS:
@@ -161,13 +161,10 @@ export const sortTokensByValue = (
                 }
                 break
             case AssetsSortOptions.CUSTOM:
-                if (accountTokensOrder && accountTokensOrder.length > 0) {
+                if (accountTokensOrder) {
                     accountTokens.forEach((token) => {
-                        const index = accountTokensOrder.findIndex(
-                            (a) => a.tokenAddress === token.token.address
-                        )
                         token.token.order =
-                            accountTokensOrder[index]?.order ?? 0
+                            accountTokensOrder[token.token.address] ?? 0
                     })
 
                     accountTokens.sort(

@@ -5,7 +5,6 @@ import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import { editAccountTokensOrder } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import { RequestTokensOrder } from "@block-wallet/background/utils/types/communication"
 import {
     TokenWithBalance,
     useTokenListWithNativeToken,
@@ -15,6 +14,7 @@ import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import SuccessDialog from "../../components/dialog/SuccessDialog"
 import { AssetsSortOptions } from "../../util/tokenUtils"
+import { AccountTokenOrder } from "@block-wallet/background/controllers/AccountTrackerController"
 
 const TokensPage = () => {
     const history = useOnMountHistory()
@@ -51,13 +51,10 @@ const TokensPage = () => {
     )
 
     function onSuccessfulDrop() {
-        let tokensOrder: RequestTokensOrder[] = []
+        let tokensOrder: AccountTokenOrder = {}
 
         tokens.forEach((token, index) => {
-            tokensOrder.push({
-                tokenAddress: token.token.address,
-                order: index + 1,
-            })
+            tokensOrder = { ...tokensOrder, [token.token.address]: index + 1 }
         })
 
         editAccountTokensOrder(tokensOrder)

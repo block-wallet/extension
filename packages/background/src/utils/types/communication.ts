@@ -336,7 +336,7 @@ export interface RequestSignatures {
         number,
         BigNumber | undefined
     ];
-    [Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER]: [RequestTokensOrder[], void];
+    [Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER]: [RequestTokensOrder, void];
     [Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE]: [string, void];
     [Messages.ACCOUNT.ORDER_ACCOUNTS]: [RequestOrderAccounts, void];
     [Messages.APP.GET_IDLE_TIMEOUT]: [undefined, number];
@@ -1237,8 +1237,7 @@ export interface RequestSetHotkeys {
 }
 
 export interface RequestTokensOrder {
-    tokenAddress: string;
-    order: number;
+    [tokenAddress: string]: number;
 }
 
 export interface RequestOrderAccounts {

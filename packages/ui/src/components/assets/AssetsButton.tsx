@@ -7,15 +7,26 @@ const AssetsButton: FC<{
     imgClassName?: string
     title?: string
     icon?: string
-}> = ({ onClick, title = "", imgClassName = "", icon = "" }) => {
+    disabled?: boolean
+}> = ({
+    onClick,
+    title = "",
+    imgClassName = "",
+    icon = "",
+    disabled = false,
+}) => {
     return (
         <div
             className="relative text-sm text-primary-blue-default h-8"
             title={title}
         >
             <OutlinedButton
-                className={classnames("w-auto h-10")}
+                className={classnames(
+                    "w-auto h-10",
+                    disabled && "opacity-50 pointer-events-none"
+                )}
                 onClick={onClick}
+                disabled={disabled}
             >
                 <img
                     src={icon}

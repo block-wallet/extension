@@ -1161,7 +1161,7 @@ export default class BlankController extends EventEmitter {
                 return this.getOnrampCurrencies();
             case Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER:
                 return this.editAccountTokensOrder(
-                    request as RequestTokensOrder[]
+                    request as RequestTokensOrder
                 );
             case Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE:
                 return this.setAccountTokensSortValue(request as string);
@@ -3497,7 +3497,7 @@ export default class BlankController extends EventEmitter {
      * @param order Order of token
      */
     private async editAccountTokensOrder(
-        tokensOrder: RequestTokensOrder[]
+        tokensOrder: RequestTokensOrder
     ): Promise<void> {
         return this.accountTrackerController.editAccountTokensOrder(
             tokensOrder

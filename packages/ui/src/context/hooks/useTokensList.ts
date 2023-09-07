@@ -28,7 +28,7 @@ const useGetAccountNetworkTokensBalances = (
     balances: AccountBalances
     chainId: number
     nativeToken: Token
-    accountTokensOrder: AccountTokenOrder[]
+    accountTokensOrder: AccountTokenOrder
     exchangeRates: Rates
 } => {
     const {
@@ -57,7 +57,7 @@ const useGetAccountNetworkTokensBalances = (
         type: "",
     }
 
-    let arrAccountTokensOrder: AccountTokenOrder[] = []
+    let arrAccountTokensOrder: AccountTokenOrder = {}
     if (accountTokensOrder[selectedAddress])
         arrAccountTokensOrder = accountTokensOrder[selectedAddress][chainId]
 
@@ -90,8 +90,8 @@ export const useTokensList = (account?: AccountInfo): TokenListInfo => {
                 return firstNumber.gt(a.balance)
                     ? 1
                     : firstNumber.eq(a.balance)
-                        ? 0
-                        : -1
+                    ? 0
+                    : -1
             })
 
         return {

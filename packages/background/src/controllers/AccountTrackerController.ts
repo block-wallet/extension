@@ -164,8 +164,7 @@ export interface Accounts {
 }
 
 export interface AccountTokenOrder {
-    tokenAddress: string;
-    order: number;
+    [tokenAddress: string]: number;
 }
 
 export interface AccountTrackerState {
@@ -175,7 +174,7 @@ export interface AccountTrackerState {
     isRefreshingAllowances: boolean;
     accountTokensOrder: {
         [accountAddress: string]: {
-            [chainId: number]: AccountTokenOrder[];
+            [chainId: number]: AccountTokenOrder;
         };
     };
 }
@@ -2072,7 +2071,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
      * Change list of tokens order by account and chainId.
      */
     public async editAccountTokensOrder(
-        tokensOrder: AccountTokenOrder[]
+        tokensOrder: AccountTokenOrder
     ): Promise<void> {
         const chainId = this._networkController.network.chainId;
         const accountAddress = this._preferencesController.getSelectedAddress();

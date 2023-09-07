@@ -187,18 +187,17 @@ const AssetsList = () => {
                         onClick={setSortValue}
                         selectedValue={sortValue}
                     />
-                    {sortValue === AssetsSortOptions.CUSTOM && (
-                        <AssetsButton
-                            onClick={() => {
-                                history.push({
-                                    pathname: "/accounts/menu/tokensOrder",
-                                    state: { isFromHomePage: true },
-                                })
-                            }}
-                            title="Edit Assets Order"
-                            icon={order}
-                        />
-                    )}
+                    <AssetsButton
+                        onClick={() => {
+                            history.push({
+                                pathname: "/accounts/menu/tokensOrder",
+                                state: { isFromHomePage: true },
+                            })
+                        }}
+                        title="Edit Assets Order"
+                        icon={order}
+                        disabled={sortValue !== AssetsSortOptions.CUSTOM}
+                    />
                 </div>
             </div>
             <div

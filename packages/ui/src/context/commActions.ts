@@ -1725,7 +1725,7 @@ export const getOnrampCurrencies = async (): Promise<GetOnRampCurrencies> => {
  *
  */
 export const editAccountTokensOrder = async (
-    editTokensOrder: RequestTokensOrder[]
+    editTokensOrder: RequestTokensOrder
 ) => {
     return sendMessage(
         Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER,
@@ -1741,8 +1741,8 @@ export const editAccountTokensOrder = async (
 export const setTokensSortValue = async (sortValue: string): Promise<void> => {
     return sendMessage(Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE, sortValue)
 }
-  
-/** 
+
+/**
  * orderAccounts
  *
  * @param accounts array with all the accounts ordered by the user

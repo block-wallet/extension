@@ -6,18 +6,16 @@ import { IMigration } from '../IMigration';
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
-
-
         return {
             ...persistedState,
             PreferencesController: {
                 ...persistedState.PreferencesController,
-                tokensSortValue: "CUSTOM"
+                tokensSortValue: 'CUSTOM',
             },
             AccountTrackerController: {
                 ...persistedState.AccountTrackerController,
-                accountTokensOrder: {}
-            }
+                accountTokensOrder: {},
+            },
         };
     },
     version: '1.1.12',

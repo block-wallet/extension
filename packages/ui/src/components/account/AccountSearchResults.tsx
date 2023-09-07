@@ -10,6 +10,9 @@ import { searchEns } from "../../util/searchEns"
 import { searchUD } from "../../util/searchUD"
 import AccountDisplay from "./AccountDisplay"
 import AccountsList from "./AccountsList"
+import searchNotFoundIcon from "../../assets/images/icons/searchnotfound.svg"
+import searchIcon from "../../assets/images/icons/search.svg"
+import SendPageLoadingSkeleton from "../skeleton/SendPageLoadingSkeleton"
 
 type AccountSearchResultsProps = {
     filter: string
@@ -20,6 +23,8 @@ type AccountSearchResultsProps = {
         ud?: boolean
     }
     onSelect: (account: any) => void
+    showSearchSkeleton: boolean
+    setShowSearchSkeleton: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export type AccountResult = {
@@ -38,6 +43,8 @@ const AccountSearchResults = ({
     filter,
     onSelect,
     resultsToDisplay = { wallet: true, addressBook: true, ens: true, ud: true },
+    showSearchSkeleton,
+    setShowSearchSkeleton,
 }: AccountSearchResultsProps) => {
     // Hooks
     const { ens } = useSelectedNetwork()
@@ -78,6 +85,17 @@ const AccountSearchResults = ({
         )
     }
 
+    const displaySearchMessage = (): boolean => {
+        return (
+            noWalletResults &&
+            noAddressBookResults &&
+            noEnsResults &&
+            noUDResults &&
+            !isValidAddress(filter) &&
+            filter === ""
+        )
+    }
+
     useEffect(() => {
         const search = async () => {
             // Filter Wallet Accounts
@@ -99,23 +117,28 @@ const AccountSearchResults = ({
             }
 
             // If Ens enabled, search for it
-            if (ensEnabled && ensEnabled.current) {
+            if (ensEnabled && ensEnabled.current)
                 newResults.ens = filter ? await searchEns(filter) : undefined
-            }
 
             // Unstoppable Domains
             newResults.ud = filter ? await searchUD(filter) : undefined
 
             setResults(newResults)
+            disableSkeleton()
         }
 
         search()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filter])
 
+    const disableSkeleton = async () => {
+        // await new Promise((resolve) => setTimeout(resolve, 1000))
+        setShowSearchSkeleton(false)
+    }
+
     return (
         <>
-            {!noWalletResults && (
+            {!noWalletResults && !showSearchSkeleton && (
                 <div className="flex flex-col px-6">
                     <AccountsList title="OTHER ACCOUNTS">
                         {results.wallet.map((account) => (
@@ -131,7 +154,7 @@ const AccountSearchResults = ({
                 </div>
             )}
 
-            {!noAddressBookResults && (
+            {!noAddressBookResults && !showSearchSkeleton && (
                 <div className="flex flex-col px-6">
                     <AccountsList title="ADDRESS BOOK CONTACTS">
                         {results.addressBook.map((account) => (
@@ -151,7 +174,7 @@ const AccountSearchResults = ({
                 </div>
             )}
 
-            {!noEnsResults && results.ens && (
+            {!noEnsResults && results.ens && !showSearchSkeleton && (
                 <div className="flex flex-col px-6  ">
                     <AccountsList title="ENS RESULT">
                         <AccountDisplay
@@ -170,7 +193,7 @@ const AccountSearchResults = ({
                 </div>
             )}
 
-            {!noUDResults && results.ud && (
+            {!noUDResults && results.ud && !showSearchSkeleton && (
                 <div className="flex flex-col px-6  ">
                     <AccountsList title="UD RESULT">
                         <AccountDisplay
@@ -189,11 +212,48 @@ const AccountSearchResults = ({
                 </div>
             )}
 
-            {displayEmptyResultsMessage() && (
-                <div className="text-base font-semibold text-primary-black-default w-full text-center mt-4">
-                    <span>No results found.</span>
+            {displayEmptyResultsMessage() && !showSearchSkeleton && (
+                <div className="flex flex-col">
+                    <div className="flex justify-center items-center mb-6">
+                        <img
+                            src={searchNotFoundIcon}
+                            alt="search"
+                            className="w-7 h-7 absolute z-10"
+                        />
+                        <div className="w-20 h-20 bg-primary-grey-default rounded-full relative z-0"></div>
+                    </div>
+                    <span className="font-bold text-base text-center mb-2 -mt-1">
+                        No results found.
+                    </span>
+                    <div className="flex justify-center items-center w-full text-center">
+                        <span className="text-sm text-primary-grey-dark w-72">
+                            We cannot find anything you are searching for. Try
+                            to adjust your search.
+                        </span>
+                    </div>
                 </div>
             )}
+
+            {displaySearchMessage() && !showSearchSkeleton && (
+                <div className="flex flex-col">
+                    <div className="flex justify-center items-center mb-6">
+                        <img
+                            src={searchIcon}
+                            alt="search"
+                            className="w-7 h-7 absolute z-10"
+                        />
+                        <div className="w-20 h-20 bg-primary-grey-default rounded-full relative z-0"></div>
+                    </div>
+                    <div className="flex justify-center items-center w-full text-center">
+                        <span className="text-sm text-primary-grey-dark w-9/12">
+                            Add recipient by searching public address, name, or
+                            select contact
+                        </span>
+                    </div>
+                </div>
+            )}
+
+            {showSearchSkeleton && <SendPageLoadingSkeleton />}
         </>
     )
 }

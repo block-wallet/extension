@@ -31,6 +31,7 @@ type SearchInputProps = {
     minSearchChar?: number
     defaultValue?: string
     inputClassName?: string
+    searchShowSkeleton?: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 /**
@@ -75,6 +76,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             register,
             defaultValue,
             inputClassName,
+            searchShowSkeleton,
         }: SearchInputProps,
         ref
     ) => {
@@ -154,11 +156,18 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
                                 if (timeoutIdRef.current)
                                     clearTimeout(timeoutIdRef.current)
 
-                                timeoutIdRef.current = setTimeout(
-                                    () => onValueChanged(e),
-                                    debounceTime
-                                )
+                                timeoutIdRef.current = setTimeout(() => {
+                                    onValueChanged(e)
+
+                                    if (
+                                        searchShowSkeleton &&
+                                        e.target.value !== ""
+                                    )
+                                        searchShowSkeleton(true)
+                                }, debounceTime)
                             } else {
+                                if (searchShowSkeleton && e.target.value !== "")
+                                    searchShowSkeleton(true)
                                 onValueChanged(e)
                             }
                         }}

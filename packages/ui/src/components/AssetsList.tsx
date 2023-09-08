@@ -172,6 +172,7 @@ const AssetsList = () => {
                             debounced
                             defaultValue={search}
                             ref={searchInputRef}
+                            showClearIcon={true}
                         />
                     </div>
                     <AssetsButton

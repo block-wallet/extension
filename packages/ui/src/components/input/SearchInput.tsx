@@ -32,6 +32,7 @@ type SearchInputProps = {
     defaultValue?: string
     inputClassName?: string
     searchShowSkeleton?: React.Dispatch<React.SetStateAction<boolean>>
+    showClearIcon?: boolean
 }
 
 /**
@@ -55,6 +56,7 @@ type SearchInputProps = {
  * @param debounceTime - Set the debouncing time.
  * @param minSearchChar - Set a minimum char before triggering `onChange`. Note that this has the priority over `onChange` and `debounce`.
  * @param defaultValue - In AssetSelection we already have a value which was previously looked for. So we paste it as default in case of "add new token"
+ * @param showClearIcon -
  */
 const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     (
@@ -77,6 +79,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             defaultValue,
             inputClassName,
             searchShowSkeleton,
+            showClearIcon = false,
         }: SearchInputProps,
         ref
     ) => {
@@ -125,7 +128,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
 
                     <input
                         name={name ? name : "Search"}
-                        type="text"
+                        type={showClearIcon ? "search" : "text"}
                         ref={useMergeRefs(
                             inputRef,
                             ref,
@@ -175,7 +178,6 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
                         onFocus={() => setIsFocus(true)}
                         defaultValue={defaultValue ?? ""}
                     />
-
                     <CheckmarkCircle
                         classes={`
               h-4 transition-all delay-100

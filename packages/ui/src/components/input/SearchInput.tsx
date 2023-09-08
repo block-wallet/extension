@@ -56,7 +56,7 @@ type SearchInputProps = {
  * @param debounceTime - Set the debouncing time.
  * @param minSearchChar - Set a minimum char before triggering `onChange`. Note that this has the priority over `onChange` and `debounce`.
  * @param defaultValue - In AssetSelection we already have a value which was previously looked for. So we paste it as default in case of "add new token"
- * @param showClearIcon -
+ * @param showClearIcon - It makes input as "search" intut instead of "text" input
  */
 const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     (

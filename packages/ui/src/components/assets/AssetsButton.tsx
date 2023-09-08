@@ -23,7 +23,7 @@ const AssetsButton: FC<{
             <OutlinedButton
                 className={classnames(
                     "w-auto h-10",
-                    disabled && "opacity-50 pointer-events-none"
+                    disabled && "opacity-50 pointer-events-none bg-gray-400"
                 )}
                 onClick={onClick}
                 disabled={disabled}

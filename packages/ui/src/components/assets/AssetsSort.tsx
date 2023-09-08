@@ -3,21 +3,27 @@ import Dropdown from "../ui/Dropdown/Dropdown"
 import { DropdownOutlinedIconButton } from "../ui/Dropdown/DropdownButton"
 import { IconName } from "../ui/Icon"
 import { AssetsSortOptions } from "../../util/tokenUtils"
+import { useBlankState } from "../../context/background/backgroundHooks"
 
 interface AssetsSortProps {
     selectedValue: string
     onClick: (selectedValue: AssetsSortOptions) => void
 }
 
-const sortOptions = [
-    { label: "Name", value: AssetsSortOptions.NAME },
-    { label: "Balance", value: AssetsSortOptions.BALANCE },
-    { label: "USD Value", value: AssetsSortOptions.USD_VALUE },
-    { label: "Stablecoins", value: AssetsSortOptions.STABLECOINS },
-    { label: "Custom Order", value: AssetsSortOptions.CUSTOM },
-]
-
 const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
+    const { nativeCurrency } = useBlankState()!
+
+    const sortOptions = [
+        { label: "Name", value: AssetsSortOptions.NAME },
+        { label: "Balance", value: AssetsSortOptions.BALANCE },
+        {
+            label: nativeCurrency.toUpperCase() + " Value",
+            value: AssetsSortOptions.USD_VALUE,
+        },
+        { label: "Stablecoins", value: AssetsSortOptions.STABLECOINS },
+        { label: "Custom Order", value: AssetsSortOptions.CUSTOM },
+    ]
+
     return (
         <div className="relative text-sm text-primary-blue-default">
             <Dropdown

@@ -1,8 +1,11 @@
 import { AccountTokenOrder } from "@block-wallet/background/controllers/AccountTrackerController"
 import { TokenWithBalance } from "../context/hooks/useTokensList"
 import { BigNumber } from "ethers"
-import { toCurrencyAmount } from "./formatCurrency"
 import { Rates } from "@block-wallet/background/controllers/ExchangeRatesController"
+import { formatRounded } from "./formatRounded"
+import { formatUnits } from "ethers/lib/utils"
+import { toCurrencyAmount } from "./formatCurrency"
+import { getValueByKey } from "./objectUtils"
 
 const native_token_address_reduced = "0x0"
 const native_token_address = "0x0000000000000000000000000000000000000000"
@@ -104,26 +107,61 @@ export const sortTokensByValue = (
 
         switch (sortValue) {
             case AssetsSortOptions.BALANCE:
-                accountTokens.sort((tokenA, tokenB) =>
-                    BigNumber.from(tokenA.balance) >
-                    BigNumber.from(tokenB.balance)
+                accountTokens.sort((tokenA, tokenB) => {
+                    const tokenABalance = Number(
+                        formatRounded(
+                            formatUnits(
+                                tokenA.balance || "0",
+                                tokenA.token.decimals
+                            ),
+                            4
+                        )
+                    )
+                    const tokenBBalance = Number(
+                        formatRounded(
+                            formatUnits(
+                                tokenB.balance || "0",
+                                tokenB.token.decimals
+                            ),
+                            4
+                        )
+                    )
+
+                    return tokenABalance > tokenBBalance
                         ? -1
-                        : BigNumber.from(tokenB.balance) >
-                          BigNumber.from(tokenA.balance)
+                        : tokenBBalance > tokenABalance
                         ? 1
                         : 0
-                )
+                })
                 break
             case AssetsSortOptions.USD_VALUE:
                 accountTokens.sort((tokenA, tokenB) => {
+                    const isNativeCurrencyA = isNativeTokenAddress(
+                        tokenA.token.address
+                    )
+                    const isNativeCurrencyB = isNativeTokenAddress(
+                        tokenB.token.address
+                    )
                     const currencyAmountA = toCurrencyAmount(
-                        BigNumber.from(tokenA.balance ?? 0),
-                        exchangeRates[tokenA.token.symbol.toUpperCase()],
+                        BigNumber.from(tokenA.balance),
+                        getValueByKey(
+                            exchangeRates,
+                            isNativeCurrencyA
+                                ? tokenA.token.symbol.toUpperCase()
+                                : tokenA.token.symbol,
+                            0
+                        ),
                         tokenA.token.decimals
                     )
                     const currencyAmountB = toCurrencyAmount(
-                        BigNumber.from(tokenB.balance ?? 0),
-                        exchangeRates[tokenB.token.symbol.toUpperCase()],
+                        BigNumber.from(tokenB.balance),
+                        getValueByKey(
+                            exchangeRates,
+                            isNativeCurrencyB
+                                ? tokenB.token.symbol.toUpperCase()
+                                : tokenB.token.symbol,
+                            0
+                        ),
                         tokenB.token.decimals
                     )
 

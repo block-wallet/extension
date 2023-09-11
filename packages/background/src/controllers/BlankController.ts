@@ -119,6 +119,7 @@ import {
     RequestSwitchProvider,
     RequestIsEnrolled,
     RequestSetHotkeys,
+    RequestTokensOrder,
     RequestOrderAccounts,
 } from '../utils/types/communication';
 
@@ -1158,6 +1159,12 @@ export default class BlankController extends EventEmitter {
                 return this.setHotkeysStatus(request as RequestSetHotkeys);
             case Messages.WALLET.GET_ONRAMP_CURRENCIES:
                 return this.getOnrampCurrencies();
+            case Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER:
+                return this.editAccountTokensOrder(
+                    request as RequestTokensOrder
+                );
+            case Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE:
+                return this.setAccountTokensSortValue(request as string);
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -3481,6 +3488,28 @@ export default class BlankController extends EventEmitter {
      */
     private getOnrampCurrencies() {
         return this.onrampController.getCurrencies();
+    }
+
+    /**
+     * editAccountTokensOrder
+     *
+     * @param address The address identifier of the token contract
+     * @param order Order of token
+     */
+    private async editAccountTokensOrder(
+        tokensOrder: RequestTokensOrder
+    ): Promise<void> {
+        return this.accountTrackerController.editAccountTokensOrder(
+            tokensOrder
+        );
+    }
+
+    /** Set tokens list default sort value
+     *
+     * @param tokensSortValue indicates which sort value we will use
+     */
+    private setAccountTokensSortValue(tokensSortValue: string) {
+        this.preferencesController.tokensSortValue = tokensSortValue;
     }
 
     /**

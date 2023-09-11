@@ -156,3 +156,9 @@ textarea:focus {
 .fullscreen-x-scrollbar::-webkit-scrollbar {
     height: 1.5px;
 }
+
+input[type="search"]::-webkit-search-cancel-button {
+    filter: grayscale(100%);
+    cursor: pointer;
+    margin-top: 1px;
+}

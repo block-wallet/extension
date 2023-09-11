@@ -81,6 +81,8 @@ enum ACCOUNT {
     REFRESH_TOKEN_ALLOWANCES = 'REFRESH_TOKEN_ALLOWANCES',
     UNHIDE = 'UNHIDE_ACCOUNT',
     GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
+    EDIT_ACCOUNT_TOKENS_ORDER = 'EDIT_ACCOUNT_TOKENS_ORDER',
+    SET_ACCOUNT_SORT_VALUE = 'SET_ACCOUNT_SORT_VALUE',
     ORDER_ACCOUNTS = 'ORDER_ACCOUNTS',
 }
 
@@ -335,6 +337,8 @@ export interface RequestSignatures {
         number,
         BigNumber | undefined
     ];
+    [Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER]: [RequestTokensOrder, void];
+    [Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE]: [string, void];
     [Messages.ACCOUNT.ORDER_ACCOUNTS]: [RequestOrderAccounts, void];
     [Messages.APP.GET_IDLE_TIMEOUT]: [undefined, number];
     [Messages.APP.SET_IDLE_TIMEOUT]: [RequestSetIdleTimeout, void];
@@ -1231,6 +1235,10 @@ export enum BackgroundActions {
 
 export interface RequestSetHotkeys {
     enabled: boolean;
+}
+
+export interface RequestTokensOrder {
+    [tokenAddress: string]: number;
 }
 
 export interface RequestOrderAccounts {

@@ -1,8 +1,11 @@
 import { BigNumber } from "@ethersproject/bignumber"
-import { Fragment, FunctionComponent, useState } from "react"
+import { Fragment, FunctionComponent, useEffect, useRef, useState } from "react"
 import { useOnMountHistory } from "../context/hooks/useOnMount"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { TokenList, useTokensList } from "../context/hooks/useTokensList"
+import {
+    TokenList,
+    useTokenListWithNativeToken,
+} from "../context/hooks/useTokensList"
 import { formatUnits } from "@ethersproject/units"
 
 import plus from "../assets/images/icons/plus.svg"
@@ -11,9 +14,16 @@ import { formatRounded } from "../util/formatRounded"
 import { ActionButton } from "./button/ActionButton"
 import AssetsLoadingSkeleton from "./skeleton/AssetsLoadingSkeleton"
 import useCurrencyFromatter from "../util/hooks/useCurrencyFormatter"
-import { isNativeTokenAddress } from "../util/tokenUtils"
+import { AssetsSortOptions, isNativeTokenAddress } from "../util/tokenUtils"
 import { useBlankState } from "../context/background/backgroundHooks"
 import TokenLogo from "./token/TokenLogo"
+import SearchInput from "./input/SearchInput"
+import AssetsSort from "./assets/AssetsSort"
+import useTokenSearch from "../util/hooks/token/useTokenSearch"
+import AssetsButton from "./assets/AssetsButton"
+import order from "../assets/images/icons/order.svg"
+import { setTokensSortValue } from "../context/commActions"
+
 export type AssetItem = {
     token: Token
     balance: BigNumber
@@ -83,9 +93,7 @@ const Asset: FunctionComponent<{
 }
 
 const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
-    const state = useBlankState()!
-
-    const isLoading = state.isNetworkChanging
+    const { isNetworkChanging } = useBlankState()!
 
     const [deletedTokens, setDeletedTokens] = useState([] as string[])
     const pushDeleteTokens = (deleteToken: string) => {
@@ -109,7 +117,7 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
             role="list"
             aria-label="assets"
         >
-            {isLoading ? (
+            {isNetworkChanging ? (
                 <AssetsLoadingSkeleton />
             ) : (
                 assets
@@ -129,37 +137,86 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
 }
 
 const AssetsList = () => {
-    const { currentNetworkTokens, nativeToken } = useTokensList()
+    const { tokensSortValue } = useBlankState()!
+    // const { chainId } = useSelectedNetwork()
+    const history = useOnMountHistory()
+    const [sortValue, setSortValue] = useState<AssetsSortOptions>(
+        tokensSortValue as AssetsSortOptions
+    )
+    const currentNetworkTokens = useTokenListWithNativeToken(sortValue)
+    const searchInputRef = useRef<HTMLInputElement>(null)
+    const { search, tokensResult, onChangeSearch } =
+        useTokenSearch(currentNetworkTokens)
 
-    const tokens = [nativeToken].concat(currentNetworkTokens)
+    useEffect(() => {
+        const updateSortValue = async () => {
+            await setTokensSortValue(sortValue)
+        }
 
-    // Top spacing for network labels: "pt-6"
+        if (sortValue !== tokensSortValue) {
+            updateSortValue()
+        }
+    }, [sortValue, tokensSortValue])
+
     return (
-        <div
-            className="flex flex-col w-full space-y-4"
-            data-testid="assets-list"
-        >
-            {tokens.length > 9 && (
-                <div className="flex flex-col w-full mt-4">
+        <>
+            <div className="pt-3 bg-white z-[9] flex flex-col">
+                <div className="flex flex-row space-x-2">
+                    <div className="flex-1">
+                        <SearchInput
+                            inputClassName="!h-8"
+                            placeholder={`Search`}
+                            onChange={(e) => {
+                                onChangeSearch(e.target.value)
+                            }}
+                            debounced
+                            defaultValue={search}
+                            ref={searchInputRef}
+                            showClearIcon={true}
+                        />
+                    </div>
+                    <AssetsButton
+                        onClick={() => {
+                            history.push({
+                                pathname: "/settings/tokens/add",
+                            })
+                        }}
+                        title="Add Token"
+                        icon={plus}
+                    />
+                    <AssetsSort
+                        onClick={setSortValue}
+                        selectedValue={sortValue}
+                    />
+                    <AssetsButton
+                        onClick={() => {
+                            history.push({
+                                pathname: "/accounts/menu/tokensOrder",
+                                state: { isFromHomePage: true },
+                            })
+                        }}
+                        title="Edit Assets Order"
+                        icon={order}
+                        disabled={sortValue !== AssetsSortOptions.CUSTOM}
+                    />
+                </div>
+            </div>
+            <div
+                className="flex flex-col w-full space-y-4"
+                data-testid="assets-list"
+            >
+                <div className="flex flex-col w-full space-y-1">
+                    <SubAssetList assets={tokensResult} />
+                </div>
+                <div className="flex flex-col w-full space-y-1">
                     <ActionButton
                         icon={plus}
                         label="Add Token"
                         to="/settings/tokens/add"
                     />
                 </div>
-            )}
-            <div className="flex flex-col w-full space-y-1">
-                {/* Network label */}
-                <SubAssetList assets={tokens} />
             </div>
-            <div className="flex flex-col w-full space-y-1">
-                <ActionButton
-                    icon={plus}
-                    label="Add Token"
-                    to="/settings/tokens/add"
-                />
-            </div>
-        </div>
+        </>
     )
 }
 

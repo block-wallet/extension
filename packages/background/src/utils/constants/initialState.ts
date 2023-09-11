@@ -125,6 +125,7 @@ const initialState: BlankAppState = {
         hiddenAccounts: {},
         isRefreshingAllowances: false,
         isAccountTrackerLoading: false,
+        accountTokensOrder: {},
     },
     AppStateController: {
         idleTimeout: 5,
@@ -177,6 +178,7 @@ const initialState: BlankAppState = {
         },
         defaultGasOption: 'medium',
         hotkeysEnabled: true,
+        tokensSortValue: 'CUSTOM',
     },
     TransactionController: {
         transactions: [],

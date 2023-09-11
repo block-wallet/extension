@@ -39,10 +39,7 @@ import {
 import { toChecksumAddress } from 'ethereumjs-util';
 import { MILISECOND, SECOND } from '../utils/constants/time';
 import { ProviderType } from '../utils/types/communication';
-import {
-    GasPricesController,
-    _fetchFeeDataFromService,
-} from './GasPricesController';
+import { _fetchFeeDataFromService } from './GasPricesController';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',

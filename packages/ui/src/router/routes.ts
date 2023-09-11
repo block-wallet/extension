@@ -61,6 +61,7 @@ import BridgeConfirmPage from "../routes/bridge/BridgeConfirmPage"
 import BridgeAfterAddTokenPage from "../routes/bridge/BridgeAfterAddTokenPage"
 import BuyPage from "../routes/buy/BuyPage"
 import Hotkeys from "../routes/settings/Hotkeys"
+import TokensPage from "../routes/tokens/TokensPage"
 import AccountsOrderPage from "../routes/account/AccountsOrderPage"
 
 export const ROUTES_DEFINITION = [
@@ -117,6 +118,8 @@ export const ROUTES_DEFINITION = [
         exact: true,
         component: AllowancesPage,
     },
+    /* Tokens order */
+    { path: "/accounts/menu/tokensOrder", exact: true, component: TokensPage },
     {
         path: "/accounts/menu/order",
         exact: true,

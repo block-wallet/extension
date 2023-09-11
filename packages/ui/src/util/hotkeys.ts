@@ -223,8 +223,20 @@ const locations: HotkeyMap = {
             },
             {
                 hotkey: "7",
-                action: "/accounts/menu/reset",
+                action: "/accounts/menu/tokensOrder",
                 hotkeyDescription: "ALT+7",
+                description: "Assets order",
+            },
+            {
+                hotkey: "8",
+                action: "/accounts/menu/order",
+                hotkeyDescription: "ALT+8",
+                description: "Accounts order",
+            },
+            {
+                hotkey: "9",
+                action: "/accounts/menu/reset",
+                hotkeyDescription: "ALT+9",
                 description: "Reset account",
             },
         ],

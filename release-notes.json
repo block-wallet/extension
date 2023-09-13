@@ -920,6 +920,36 @@
                 }
             ],
             "version": "1.1.6"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "New Feature - Accounts Ordering: Customize the order of your accounts."
+                        },
+                        {
+                            "type": "success",
+                            "message": "New Feature - Assets Ordering: Sort assets by various criteria:  Name, Balance, Fiat value, and Stablecoins or just Drag & drop."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Sends flow: loading skeleton added for smooth transitions. Other UX Improvements."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Updated external chain list, added new logos."
+                        },
+                        {
+                            "type": "success",
+                            "message": "New Keystone logo updated."
+                        }
+                    ]
+                }
+            ],
+            "version": "1.1.7"
         }
     ]
 }

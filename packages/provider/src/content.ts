@@ -107,6 +107,7 @@ const windowListener = async ({
     // Only allow messages from our window, by the inject
     if (
         source !== window ||
+        source.origin === null ||
         data.origin !== Origin.PROVIDER ||
         !Object.values(EXTERNAL).includes(data.message)
     ) {

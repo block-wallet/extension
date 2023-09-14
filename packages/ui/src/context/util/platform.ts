@@ -13,7 +13,7 @@ export const checkRedraw = () => {
         window.screenLeft > window.screen.width ||
         window.screenTop > window.screen.height
     ) {
-        browser.runtime.getPlatformInfo().then((platformInfo) => {
+        getPlatformInfo().then((platformInfo) => {
             if (platformInfo.os === "mac") {
                 const style = document.createElement("style")
                 style.innerHTML =
@@ -28,12 +28,8 @@ export const checkRedraw = () => {
  * Returns the platform info
  *
  */
-export const getPlatformInfo = (): Promise<chrome.runtime.PlatformInfo> => {
-    return new Promise<chrome.runtime.PlatformInfo>((resolve) => {
-        chrome.runtime.getPlatformInfo((info) => {
-            resolve(info)
-        })
-    })
+export const getPlatformInfo = (): Promise<browser.Runtime.PlatformInfo> => {
+    return browser.runtime.getPlatformInfo()
 }
 
 export const getCurrentOS = () => {

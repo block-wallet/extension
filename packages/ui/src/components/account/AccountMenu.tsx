@@ -72,7 +72,7 @@ const AccountMenu = () => {
     const accountMenuHotkeys = componentsHotkeys.AccountMenu
     useHotkeys(accountMenuHotkeys, () => {
         if (!hotkeysEnabled) return
-        chrome.tabs.create({
+        browser.tabs.create({
             url: generateExplorerLink(
                 availableNetworks,
                 selectedNetwork,

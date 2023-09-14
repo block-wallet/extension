@@ -47,6 +47,8 @@ import { componentsHotkeys } from "../util/hotkeys"
 import { generateExplorerLink } from "../util/getExplorer"
 import { setUserSettings } from "../context/commActions"
 
+import browser from "webextension-polyfill"
+
 const AccountDisplay = () => {
     const accountAddress = useSelectedAddressWithChainIdChecksum()
     const account = useSelectedAccount()
@@ -189,7 +191,7 @@ const PopupPage = () => {
     useHotkeys(popupPageHotkeys, () => {
         if (!state.hotkeysEnabled) return
 
-        chrome.tabs.create({
+        browser.tabs.create({
             url: generateExplorerLink(
                 state.availableNetworks,
                 state.selectedNetwork,

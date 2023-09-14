@@ -696,6 +696,7 @@ export default class BlankController extends EventEmitter {
         const source = `${from}: ${id}: ${message}`;
 
         port.onDisconnect.addListener(() => {
+            this.unsubscribe(id);
             const error = chrome.runtime.lastError;
             isPortConnected = false;
             if (error) {

@@ -660,7 +660,21 @@ export default class BlankController extends EventEmitter {
 
         return (subscription: unknown): void => {
             if (this.subscriptions[id]) {
-                port.postMessage({ id, subscription });
+                // fixing 'DataCloneError' error
+                // https://stackoverflow.com/questions/68467946/datacloneerror-the-object-could-not-be-cloned-firefox-browser
+                const message = {
+                    id,
+                    subscription:
+                        subscription && typeof subscription !== undefined
+                            ? JSON.parse(JSON.stringify(subscription))
+                            : subscription,
+                };
+                try {
+                    port.postMessage(message);
+                } catch (error: any) {
+                    log.warn(message, error);
+                    throw error;
+                }
             }
         };
     }
@@ -716,7 +730,21 @@ export default class BlankController extends EventEmitter {
                     throw new Error('Port has been disconnected');
                 }
 
-                port.postMessage({ id, response });
+                // fixing 'DataCloneError' error
+                // https://stackoverflow.com/questions/68467946/datacloneerror-the-object-could-not-be-cloned-firefox-browser
+                const message = {
+                    id,
+                    response:
+                        response && typeof response !== undefined
+                            ? JSON.parse(JSON.stringify(response))
+                            : response,
+                };
+                try {
+                    port.postMessage(message);
+                } catch (error: any) {
+                    log.warn(message, error);
+                    throw error;
+                }
             })
             .catch((error: unknown): void => {
                 // Always pass an error object to the client

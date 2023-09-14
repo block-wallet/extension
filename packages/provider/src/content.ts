@@ -120,17 +120,22 @@ const windowListener = async ({
     const postMessage = async (
         data: WindowTransportRequestMessage
     ): Promise<void> => {
+        const message =
+            data && typeof data !== undefined
+                ? JSON.parse(JSON.stringify(data))
+                : data;
         try {
             if (!SW_ALIVE || !port) {
                 // Port was reinitialized, force retry
                 throw new Error();
             }
-            port.postMessage(data);
+            port.postMessage(message);
         } catch (error) {
+            log.warn(message, error);
             // If this fails due to SW being inactive, retry
             await sleep(30);
             log.debug('waiting for SW to startup...');
-            return postMessage(data);
+            return postMessage(message);
         }
     };
 
@@ -148,10 +153,18 @@ const init = () => {
 
     // Set callback to send any messages from the extension back to the page
     port.onMessage.addListener((message: any): void => {
-        window.postMessage(
-            { ...message, origin: Origin.BACKGROUND },
-            window.location.href
-        );
+        const nmessage = {
+            ...(message && typeof message !== undefined
+                ? JSON.parse(JSON.stringify(message))
+                : message),
+            origin: Origin.BACKGROUND,
+        };
+        try {
+            window.postMessage(nmessage, window.location.href);
+        } catch (error: any) {
+            log.warn(nmessage, error);
+            throw error;
+        }
     });
 
     if (isManifestV3()) {

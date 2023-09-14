@@ -7,7 +7,7 @@ let port: browser.Runtime.Port | null = browser.runtime.connect({
 });
 
 // Process any messages from the extension to the trezor page
-port.onMessage.addListener((message) => {
+port.onMessage.addListener((message: any) => {
     window.postMessage(message, window.location.origin);
 });
 

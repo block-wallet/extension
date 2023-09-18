@@ -128,7 +128,7 @@ jobs:
         run: |
           wget https://raw.githubusercontent.com/block-wallet/release-helpers/main/update_file.py -O update_file.py
           FILE=package.json python3 update_file.py
-          FILE=public/manifest.json python3 update_file.py
+          FILE=manifest/base.json python3 update_file.py
 
       - name: Update release notes
         env:
@@ -141,7 +141,7 @@ jobs:
       - name: Commit package.json, manifest.json and release-notes.json
         id: version_commit
         run: |
-          git add package.json release-notes.json public/manifest.json
+          git add package.json release-notes.json manifest/base.json
           git commit --message "chore: update files with the new version ${{ github.event.inputs.extension-version }} and also add the new release notes"
           git push origin $RELEASE_BRANCH
 

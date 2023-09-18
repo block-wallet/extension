@@ -19,6 +19,7 @@ env:
   RELEASE_BRANCH: release/${{ github.event.inputs.extension-version }}
   GH_ACCESS_TOKEN: ${{ secrets.USER_PAT }}:${{ secrets.PAT }}
   EXTENSION_NAME: block-wallet-${{ github.event.inputs.extension-version }}
+  EXTENSION_NAME_FF: block-wallet-firefox-${{ github.event.inputs.extension-version }}
   ARTIFACTS_FOLDER: artifacts
   S3_PATH: s3://releases.blockwallet.io/extension
   TARGET_BRANCH: master
@@ -191,6 +192,12 @@ jobs:
           if-no-files-found: error
           path: dist
 
+      - name: Save extension folder
+        uses: actions/upload-artifact@v3
+        with:
+          name: blockwallet-extension-firefox
+          if-no-files-found: error
+          path: dist-firefox
   #tests:
   #  needs: build
   #  container: cypress/browsers:node16.16.0-chrome105-ff99-edge
@@ -282,6 +289,12 @@ jobs:
           name: blockwallet-extension
           path: blockwallet-extension
 
+      - name: Download the extension built folder
+        uses: actions/download-artifact@v3
+        with:
+          name: blockwallet-extension-firefox
+          path: blockwallet-extension-firefox
+
       #- name: Download the extension screenshot (release notes)
       #  uses: actions/download-artifact@v3
       #  with:
@@ -293,13 +306,16 @@ jobs:
         run: |
           mkdir -p $ARTIFACTS_FOLDER
           mv blockwallet-extension dist
+          mv blockwallet-extension-firefox dist-firefox
           zip -r -D $ARTIFACTS_FOLDER/$EXTENSION_NAME.zip dist/
+          zip -r -D $ARTIFACTS_FOLDER/$EXTENSION_NAME_FF.zip dist-firefox/
 
       - name: Calculate SHA of the extension
         id: sha
         run: |
           cd $ARTIFACTS_FOLDER
           sha256sum $EXTENSION_NAME.zip > $EXTENSION_NAME.checksum
+          sha256sum $EXTENSION_NAME_FF.zip > $EXTENSION_NAME_FF.checksum
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -312,7 +328,6 @@ jobs:
         run: |
           aws s3 cp --recursive $ARTIFACTS_FOLDER $S3_PATH
       #    aws s3 cp screenshot/$EXTENSION_NAME.png $S3_PATH/$EXTENSION_NAME.png
-
       - name: Upload version and notes to S3
         env:
           DATA: '${{ github.event.inputs.release-notes }}'
@@ -353,7 +368,7 @@ jobs:
         run: |
           s3_url=$(echo "${S3_PATH/s3/https}")
           pr_title="[Automated] Extension release ${{ github.event.inputs.extension-version }}"
-          pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip]($s3_url/${{ env.EXTENSION_NAME }}.zip)\n - [SHA256 checksum]($s3_url/${{ env.EXTENSION_NAME }}.checksum)\n\n")
+          pr_body=$(echo -e "# PR for release ${{ github.event.inputs.extension-version }}\n\n## Type of change :writing_hand:\n\nClick the correct/s option/s\n\n- [ ] Bug fix (non-breaking change which fixes an issue)\n- [ ] New feature (non-breaking change which adds functionality)\n- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)\n- [ ] This change requires a documentation update\n\n## Manual tests :test_tube:\n\n- [ ] I run the tests and they were succesful\n\n## Artifacts :space_invader:\n\n - [Extension zip]($s3_url/${{ env.EXTENSION_NAME }}.zip)\n - [SHA256 checksum]($s3_url/${{ env.EXTENSION_NAME }}.checksum)\n - [Firefox Extension zip]($s3_url/${{ env.EXTENSION_NAME_FF }}.zip)\n - [SHA256 checksum]($s3_url/${{ env.EXTENSION_NAME_FF }}.checksum)\n\n")
           pr_reviewer="block-wallet/releasereviewers"
           pr_assignee="leablock"
           pr_label="automated,release"

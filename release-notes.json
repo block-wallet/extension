@@ -950,6 +950,20 @@
                 }
             ],
             "version": "1.1.7"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Firefox extension ready."
+                        }
+                    ]
+                }
+            ],
+            "version": "1.2.0"
         }
     ]
 }

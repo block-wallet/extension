@@ -22,7 +22,7 @@ env:
   EXTENSION_NAME_FF: block-wallet-firefox-${{ github.event.inputs.extension-version }}
   ARTIFACTS_FOLDER: artifacts
   S3_PATH: s3://releases.blockwallet.io/extension
-  TARGET_BRANCH: master
+  TARGET_BRANCH: feat/firefox
   CYPRESS_CACHE_FOLDER: cypress/cache
 
 jobs:
@@ -192,7 +192,7 @@ jobs:
           if-no-files-found: error
           path: dist
 
-      - name: Save extension folder
+      - name: Save Firefox extension folder
         uses: actions/upload-artifact@v3
         with:
           name: blockwallet-extension-firefox

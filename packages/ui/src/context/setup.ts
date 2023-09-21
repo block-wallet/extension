@@ -15,6 +15,59 @@ export let isPortConnected: boolean = false
 export let session: { origin: string; data: SiteMetadata } | null = null
 export let isAutomaticClose: boolean = false
 
+const portConnection = () => {
+    port.onMessage.removeListener(messageListener)
+    port.onDisconnect.removeListener(disconectListener)
+    port.disconnect()
+    initPort()
+    port.onMessage.addListener(messageListener)
+    port.onDisconnect.addListener(disconectListener)
+}
+
+const disconectListener = () => {
+    const error = chrome.runtime.lastError
+    if (error) {
+        log.error("Port disconnected", error.message)
+    } else {
+        log.debug("Port disconnected")
+    }
+}
+
+const messageListener = (data: TransportResponseMessage<MessageTypes>) => {
+    const handler = handlers[data.id]
+
+    if (!handler) {
+        // Check for background actions
+        if (data.id === BackgroundActions.CLOSE_WINDOW) {
+            isAutomaticClose = true
+            window.close()
+        } else {
+            log.error("Unknown response", data)
+        }
+        return
+    }
+
+    if (!handler.subscriber) {
+        delete handlers[data.id]
+    }
+
+    if (data.subscription) {
+        ;(handler.subscriber as Function)(data.subscription)
+    } else if ("error" in data) {
+        // Deserialze error object
+        const parsedError = JSON.parse(data.error!)
+        const err = new Error(parsedError.message)
+        err.stack = parsedError.stack
+        err.name = parsedError.name
+
+        portConnection()
+        // Reject promise
+        // handler.reject(err)
+    } else {
+        handler.resolve(data.response)
+    }
+}
+
 /**
  * Connect ports
  */
@@ -26,51 +79,10 @@ const initPort = () => {
     // port.postMessage = postMessageWithRetry(port.postMessage)
 
     // Check for error
-    port.onDisconnect.addListener(() => {
-        const error = chrome.runtime.lastError
-        if (error) {
-            log.error("Port disconnected", error.message)
-        } else {
-            log.debug("Port disconnected")
-        }
-    })
+    port.onDisconnect.addListener(disconectListener)
 
     // Add port message listener
-    port.onMessage.addListener(
-        (data: TransportResponseMessage<MessageTypes>): void => {
-            const handler = handlers[data.id]
-
-            if (!handler) {
-                // Check for background actions
-                if (data.id === BackgroundActions.CLOSE_WINDOW) {
-                    isAutomaticClose = true
-                    window.close()
-                } else {
-                    log.error("Unknown response", data)
-                }
-                return
-            }
-
-            if (!handler.subscriber) {
-                delete handlers[data.id]
-            }
-
-            if (data.subscription) {
-                ;(handler.subscriber as Function)(data.subscription)
-            } else if ("error" in data) {
-                // Deserialze error object
-                const parsedError = JSON.parse(data.error!)
-                const err = new Error(parsedError.message)
-                err.stack = parsedError.stack
-                err.name = parsedError.name
-
-                // Reject promise
-                handler.reject(err)
-            } else {
-                handler.resolve(data.response)
-            }
-        }
-    )
+    port.onMessage.addListener(messageListener)
 
     isPortConnected = true
 }

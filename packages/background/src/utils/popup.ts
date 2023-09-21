@@ -17,6 +17,7 @@ import {
 } from './types/communication';
 import log from 'loglevel';
 import { POPUP_TAB_NAME } from './constants/tab';
+import { toError } from './toError';
 
 // Define window size for each os
 const windowSize: { [os in PlatformOS]: { height: number; width: number } } = {
@@ -142,6 +143,13 @@ export const closeExtensionInstance = (instanceId: string): void => {
             id: BackgroundActions.CLOSE_WINDOW,
         } as TransportResponseMessage<typeof Messages.BACKGROUND.ACTION>);
     } catch (error) {
+        const safeError = toError(error);
+        if (
+            safeError.message
+                .toLowerCase()
+                .includes('attempting to use a disconnected port object')
+        )
+            delete extensionInstances[instanceId];
         log.error(`Couldn't close instance ${instanceId}`);
     }
 };

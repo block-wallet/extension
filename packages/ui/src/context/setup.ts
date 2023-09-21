@@ -60,9 +60,14 @@ const messageListener = (data: TransportResponseMessage<MessageTypes>) => {
         err.stack = parsedError.stack
         err.name = parsedError.name
 
-        portConnection()
+        if (
+            err.message
+                .toLowerCase()
+                .includes("attempting to use a disconnected port object")
+        )
+            portConnection()
         // Reject promise
-        // handler.reject(err)
+        else handler.reject(err)
     } else {
         handler.resolve(data.response)
     }

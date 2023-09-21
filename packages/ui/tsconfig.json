@@ -20,7 +20,7 @@
         "module": "esnext",
         "moduleResolution": "node",
         "resolveJsonModule": true,
-        "isolatedModules": false,
+        "isolatedModules": true,
         "noEmit": true,
         "jsx": "react-jsx",
         "typeRoots": ["./node_modules/@types", "./../background/src/typings"],

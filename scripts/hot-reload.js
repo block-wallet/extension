@@ -1,5 +1,3 @@
-import browser from 'webextension-polyfill';
-
 const filesInDirectory = (dir) =>
     new Promise((resolve) =>
         dir.createReader().readEntries((entries) =>
@@ -27,20 +25,20 @@ const watchChanges = (dir, lastTimestamp) => {
         if (!lastTimestamp || lastTimestamp === timestamp) {
             setTimeout(() => watchChanges(dir, timestamp), 1000); // retry after 1s
         } else {
-            browser.runtime.reload();
+            chrome.runtime.reload();
         }
     });
 };
 
-browser.management.getSelf((self) => {
+chrome.management.getSelf((self) => {
     if (self.installType === 'development') {
-        browser.runtime.getPackageDirectoryEntry((dir) => watchChanges(dir));
-        browser.tabs.query(
+        chrome.runtime.getPackageDirectoryEntry((dir) => watchChanges(dir));
+        chrome.tabs.query(
             { active: true, lastFocusedWindow: true },
             (tabs) => {
                 // NB: see https://github.com/xpl/crx-hotreload/issues/5
                 if (tabs[0]) {
-                    browser.tabs.reload(tabs[0].id);
+                    chrome.tabs.reload(tabs[0].id);
                 }
             }
         );

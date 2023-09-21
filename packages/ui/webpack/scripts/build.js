@@ -14,7 +14,6 @@ process.on('unhandledRejection', err => {
 // Ensure environment variables are read.
 require('../config/env');
 
-
 const path = require('path');
 const chalk = require('react-dev-utils/chalk');
 const fs = require('fs-extra');
@@ -45,8 +44,6 @@ if (!checkRequiredFiles([paths.appHtml, paths.appIndexJs])) {
 }
 
 const argv = process.argv.slice(2);
-
-
 const writeStatsJson = argv.indexOf('--stats') !== -1;
 
 // Generate configuration
@@ -55,7 +52,6 @@ const config = configFactory('production');
 // We require that you explicitly set browsers and do not fall back to
 // browserslist defaults.
 const { checkBrowsers } = require('react-dev-utils/browsersHelper');
-
 checkBrowsers(paths.appPath, isInteractive)
   .then(() => {
     // First, read the current file sizes in build directory.
@@ -66,10 +62,8 @@ checkBrowsers(paths.appPath, isInteractive)
     // Remove all content but keep the directory so that
     // if you're in it, you don't end up in Trash
     fs.emptyDirSync(paths.appBuild);
-
     // Merge with the public folder
     copyPublicFolder();
-
     // Start the webpack build
     return build(previousFileSizes);
   })
@@ -182,13 +176,19 @@ function build(previousFileSizes) {
           process.env.CI.toLowerCase() !== 'false') &&
         messages.warnings.length
       ) {
-        console.log(
-          chalk.yellow(
-            '\nTreating warnings as errors because process.env.CI = true.\n' +
-            'Most CI servers set it automatically.\n'
-          )
+        // Ignore sourcemap warnings in CI builds. See #8227 for more info.
+        const filteredWarnings = messages.warnings.filter(
+          w => !/Failed to parse source map/.test(w)
         );
-        return reject(new Error(messages.warnings.join('\n\n')));
+        if (filteredWarnings.length) {
+          console.log(
+            chalk.yellow(
+              '\nTreating warnings as errors because process.env.CI = true.\n' +
+              'Most CI servers set it automatically.\n'
+            )
+          );
+          return reject(new Error(filteredWarnings.join('\n\n')));
+        }
       }
 
       const resolveArgs = {
@@ -215,5 +215,3 @@ function copyPublicFolder() {
     filter: file => file !== paths.appHtml,
   });
 }
-
-

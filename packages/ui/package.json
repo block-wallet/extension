@@ -1,6 +1,6 @@
 {
     "name": "@block-wallet/ui",
-    "version": "0.6.0",
+    "version": "0.8.0",
     "private": true,
     "dependencies": {
         "@block-wallet/explorer-link": "https://github.com/Block-Wallet/explorer-link",

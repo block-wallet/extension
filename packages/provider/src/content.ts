@@ -107,7 +107,7 @@ const windowListener = async ({
     // Only allow messages from our window, by the inject
     if (
         source !== window ||
-        source.origin === null ||
+        source.origin === 'null' ||
         data.origin !== Origin.PROVIDER ||
         !Object.values(EXTERNAL).includes(data.message) ||
         // data.id should match the format indicated on BlankProvider.js because it could be set maliciously by a web page

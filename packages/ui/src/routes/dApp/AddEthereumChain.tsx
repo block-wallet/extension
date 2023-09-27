@@ -29,6 +29,9 @@ import Spinner from "../../components/spinner/Spinner"
 import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
 import DAppOrigin from "../../components/dApp/DAppOrigin"
 import Divider from "../../components/Divider"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import { CgDanger } from "react-icons/cg"
+import Tooltip from "../../components/label/Tooltip"
 
 const AddEthereumChainPage = () => {
     return (
@@ -77,6 +80,14 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
         rpcUrl,
         validations,
     } = dappReqData as NormalizedAddEthereumChainParameter
+
+    const { availableNetworks } = useBlankState()!
+
+    const networkNameExists = Object.values(availableNetworks).some(
+        (network) => {
+            return network.desc.toLowerCase() === chainName.toLowerCase()
+        }
+    )
 
     const [hasDialog, setHasDialog] = useState(false)
     const [isImageSaved, setIsImageSaved] = useState(false)
@@ -149,6 +160,7 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     <ButtonWithLoading
                         onClick={approve}
                         label="Add Network"
+                        disabled={networkNameExists}
                     ></ButtonWithLoading>
                 </PopupFooter>
             }
@@ -286,9 +298,22 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                 </div>
                 <div className="flex flex-col border border-primary-grey-hover rounded-lg space-y-2 px-4 py-3">
                     <div>
-                        <p className="font-semibold text-primary-black-default">
-                            Network Name
-                        </p>
+                        <div className="flex flex-row w-full">
+                            <p className="font-semibold text-primary-black-default mr-2">
+                                Network Name
+                            </p>
+
+                            {networkNameExists && (
+                                <span className="flex flex-row items-center text-xxs group relative z-0">
+                                    <CgDanger className="w-4 h-4 text-red-700 z-20" />
+                                    <Tooltip
+                                        className="!translate-x-6 !w-40 !break-word !whitespace-normal"
+                                        content="Network name already in use."
+                                    />
+                                </span>
+                            )}
+                        </div>
+
                         <p className="text-primary-grey-dark">
                             {chainName || "-"}
                         </p>

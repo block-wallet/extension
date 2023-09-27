@@ -107,8 +107,13 @@ const windowListener = async ({
     // Only allow messages from our window, by the inject
     if (
         source !== window ||
+        source.origin === 'null' ||
         data.origin !== Origin.PROVIDER ||
-        !Object.values(EXTERNAL).includes(data.message)
+        !Object.values(EXTERNAL).includes(data.message) ||
+        // data.id should match the format indicated on BlankProvider.js because it could be set maliciously by a web page
+        // Regex validates the following format
+        // `${Date.now()}.${++this._requestId}` --> 1694708163916.8
+        !/^(\d+)\.\d+$/.test(data.id)
     ) {
         return;
     }

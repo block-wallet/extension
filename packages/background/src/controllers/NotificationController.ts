@@ -23,6 +23,7 @@ import {
 import { formatTokenAmount } from '../utils/token';
 import { fetchContractDetails } from '../utils/contractsInfo';
 import { formatName } from '../utils/account';
+import { isHttpsURL } from '../utils/http';
 
 interface ChainListItemWithExplorerUrl extends ChainListItem {
     explorerUrl: string;
@@ -165,7 +166,7 @@ export class NotificationController {
     }
 
     private linkToExplorer(url: string) {
-        if (url.startsWith('https://')) {
+        if (isHttpsURL(url)) {
             chrome.tabs.create({ url: url });
         }
     }

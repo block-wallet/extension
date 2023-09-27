@@ -658,8 +658,23 @@ export default class BlankController extends EventEmitter {
         this.manageControllers();
 
         return (subscription: unknown): void => {
-            if (this.subscriptions[id]) {
-                port.postMessage({ id, subscription });
+            try {
+                if (this.subscriptions[id]) {
+                    port.postMessage({ id, subscription });
+                }
+            } catch (err) {
+                const safeError = toError(err);
+                log.error('[err]', safeError.message);
+                if (
+                    safeError.message
+                        .toLowerCase()
+                        .includes(
+                            'attempting to use a disconnected port object'
+                        )
+                ) {
+                    port.disconnect();
+                    this.unsubscribe(id);
+                }
             }
         };
     }
@@ -696,6 +711,7 @@ export default class BlankController extends EventEmitter {
         const source = `${from}: ${id}: ${message}`;
 
         port.onDisconnect.addListener(() => {
+            this.unsubscribe(id);
             const error = chrome.runtime.lastError;
             isPortConnected = false;
             if (error) {
@@ -722,7 +738,7 @@ export default class BlankController extends EventEmitter {
                 const safeError = toError(error);
 
                 log.error('[err]', source, safeError.message);
-
+                this.blankProviderController.cancelPendingDAppRequests();
                 // only send message back to port if it's still connected
                 if (isPortConnected) {
                     port.postMessage({

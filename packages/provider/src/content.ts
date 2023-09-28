@@ -58,7 +58,7 @@ if (isManifestV3()) {
                     log.info(
                         'Error keeping alive:',
                         browser.runtime.lastError.message ||
-                        browser.runtime.lastError
+                            browser.runtime.lastError
                     );
                     const err = browser.runtime.lastError.message || '';
                     SW_ALIVE = !err.includes('Receiving end does not exist');

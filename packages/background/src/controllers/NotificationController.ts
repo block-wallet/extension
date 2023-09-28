@@ -24,6 +24,7 @@ import { formatTokenAmount } from '../utils/token';
 import { fetchContractDetails } from '../utils/contractsInfo';
 import { formatName } from '../utils/account';
 import browser from 'webextension-polyfill';
+import { isHttpsURL } from '../utils/http';
 
 interface ChainListItemWithExplorerUrl extends ChainListItem {
     explorerUrl: string;
@@ -166,7 +167,7 @@ export class NotificationController {
     }
 
     private linkToExplorer(url: string) {
-        if (url.startsWith('https://')) {
+        if (isHttpsURL(url)) {
             browser.tabs.create({ url: url });
         }
     }
@@ -245,11 +246,9 @@ export class NotificationController {
                     break;
                 }
                 title = `Bridge`;
-                message = `${
-                    this.getNetworkData(bridgeParams.fromChainId)?.name
-                } to ${
-                    this.getNetworkData(bridgeParams.toChainId)?.name
-                } bridge`;
+                message = `${this.getNetworkData(bridgeParams.fromChainId)?.name
+                    } to ${this.getNetworkData(bridgeParams.toChainId)?.name
+                    } bridge`;
                 break;
             case TransactionCategories.TOKEN_METHOD_APPROVE: {
                 if (!approveAllowanceParams) {
@@ -272,15 +271,14 @@ export class NotificationController {
                     )}...${spenderAddress?.slice(spenderAddress.length - 4)})`;
                 if (!isRevoke) {
                     title = `Token Approval`;
-                    message = `Approval of ${
-                        isUnlimited
+                    message = `Approval of ${isUnlimited
                             ? `unlimited ${token.symbol}`
                             : formatTokenAmount(
-                                  allowanceValue,
-                                  token.decimals,
-                                  token.symbol
-                              )
-                    } for use with ${spenderName} on ${txNetworkName}`;
+                                allowanceValue,
+                                token.decimals,
+                                token.symbol
+                            )
+                        } for use with ${spenderName} on ${txNetworkName}`;
                 } else {
                     title = `Approval Revoke`;
                     message = `${token.symbol} approval revoke for ${spenderName} on ${txNetworkName}`;
@@ -291,9 +289,8 @@ export class NotificationController {
                 const recipientName = await this._getAddressName(txParams.to);
 
                 title = `Transaction`;
-                message = `${txNetworkNativeToken.symbol} transfer${
-                    recipientName ? ` to ${recipientName}` : ''
-                } on ${txNetworkName}`;
+                message = `${txNetworkNativeToken.symbol} transfer${recipientName ? ` to ${recipientName}` : ''
+                    } on ${txNetworkName}`;
                 break;
             }
             case TransactionCategories.TOKEN_METHOD_TRANSFER: {
@@ -305,9 +302,8 @@ export class NotificationController {
                     break;
                 }
                 title = `Transaction`;
-                message = `${transferType.currency} transfer${
-                    recipientName ? ` to ${recipientName}` : ''
-                } on ${txNetworkName}`;
+                message = `${transferType.currency} transfer${recipientName ? ` to ${recipientName}` : ''
+                    } on ${txNetworkName}`;
                 break;
             }
             case TransactionCategories.INCOMING: {
@@ -322,9 +318,8 @@ export class NotificationController {
                     txParams.value,
                     txNetworkNativeToken.decimals,
                     txNetworkNativeToken.symbol
-                )}${
-                    senderName ? ` from ${senderName}` : ''
-                } on ${txNetworkName}.`;
+                )}${senderName ? ` from ${senderName}` : ''
+                    } on ${txNetworkName}.`;
                 break;
             }
             case TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER: {
@@ -339,9 +334,8 @@ export class NotificationController {
                     transferType.amount,
                     transferType.decimals,
                     transferType.currency
-                )}${
-                    senderName ? ` from ${senderName}` : ''
-                } on ${txNetworkName}.`;
+                )}${senderName ? ` from ${senderName}` : ''
+                    } on ${txNetworkName}.`;
                 break;
             }
             case TransactionCategories.CONTRACT_INTERACTION: {
@@ -395,15 +389,15 @@ export class NotificationController {
                 (!isTxFailed && !isTxCancelled
                     ? ' Completed'
                     : isTxCancelled
-                    ? ' Cancelled'
-                    : ' Failed');
+                        ? ' Cancelled'
+                        : ' Failed');
             message =
                 message +
                 (!isTxFailed && !isTxCancelled
                     ? ' completed.'
                     : isTxCancelled
-                    ? ' cancelled.'
-                    : ' failed.');
+                        ? ' cancelled.'
+                        : ' failed.');
         }
 
         return {

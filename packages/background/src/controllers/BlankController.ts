@@ -659,21 +659,32 @@ export default class BlankController extends EventEmitter {
         this.manageControllers();
 
         return (subscription: unknown): void => {
-            if (this.subscriptions[id]) {
-                // fixing 'DataCloneError' error
-                // https://stackoverflow.com/questions/68467946/datacloneerror-the-object-could-not-be-cloned-firefox-browser
-                const message = {
-                    id,
-                    subscription:
-                        subscription && typeof subscription !== undefined
-                            ? JSON.parse(JSON.stringify(subscription))
-                            : subscription,
-                };
-                try {
+            try {
+                if (this.subscriptions[id]) {
+                    // fixing 'DataCloneError' error
+                    // https://stackoverflow.com/questions/68467946/datacloneerror-the-object-could-not-be-cloned-firefox-browser
+                    const message = {
+                        id,
+                        subscription:
+                            subscription && typeof subscription !== undefined
+                                ? JSON.parse(JSON.stringify(subscription))
+                                : subscription,
+                    };
+
                     port.postMessage(message);
-                } catch (error: any) {
-                    log.warn(message, error);
-                    throw error;
+                }
+            } catch (err) {
+                const safeError = toError(err);
+                log.error('[err]', safeError.message);
+                if (
+                    safeError.message
+                        .toLowerCase()
+                        .includes(
+                            'attempting to use a disconnected port object'
+                        )
+                ) {
+                    port.disconnect();
+                    this.unsubscribe(id);
                 }
             }
         };
@@ -711,6 +722,7 @@ export default class BlankController extends EventEmitter {
         const source = `${from}: ${id}: ${message}`;
 
         port.onDisconnect.addListener(() => {
+            this.unsubscribe(id);
             const error = browser.runtime.lastError;
             isPortConnected = false;
             if (error) {
@@ -751,7 +763,7 @@ export default class BlankController extends EventEmitter {
                 const safeError = toError(error);
 
                 log.error('[err]', source, safeError.message);
-
+                this.blankProviderController.cancelPendingDAppRequests();
                 // only send message back to port if it's still connected
                 if (isPortConnected) {
                     port.postMessage({
@@ -2260,7 +2272,7 @@ export default class BlankController extends EventEmitter {
         });
 
         // As we don't care about the result here, ignore errors in transaction result
-        result.catch(() => {});
+        result.catch(() => { });
 
         // Approve it
         try {
@@ -2310,7 +2322,7 @@ export default class BlankController extends EventEmitter {
                 });
 
             // As we don't care about the result here, ignore errors in transaction result
-            result.catch(() => {});
+            result.catch(() => { });
 
             const { nativeCurrency, iconUrls } = this.networkController.network;
             const logo = iconUrls ? iconUrls[0] : '';
@@ -2381,7 +2393,7 @@ export default class BlankController extends EventEmitter {
             });
 
         // As we don't care about the result here, ignore errors in transaction result
-        result.catch(() => {});
+        result.catch(() => { });
 
         return transactionMeta;
     }
@@ -3094,7 +3106,7 @@ export default class BlankController extends EventEmitter {
      * Remove all entries in the book
      *
      */
-    private async addressBookClear({}: RequestAddressBookClear): Promise<boolean> {
+    private async addressBookClear({ }: RequestAddressBookClear): Promise<boolean> {
         return this.addressBookController.clear();
     }
 
@@ -3130,7 +3142,7 @@ export default class BlankController extends EventEmitter {
      *
      * @returns - A map with the entries
      */
-    private async addressBookGet({}: RequestAddressBookGet): Promise<NetworkAddressBook> {
+    private async addressBookGet({ }: RequestAddressBookGet): Promise<NetworkAddressBook> {
         return this.addressBookController.get();
     }
 
@@ -3467,7 +3479,7 @@ export default class BlankController extends EventEmitter {
         }
     }
 
-    private async hardwareQrCancelSignRequest({}: CancelQRHardwareSignRequestMessage): Promise<boolean> {
+    private async hardwareQrCancelSignRequest({ }: CancelQRHardwareSignRequestMessage): Promise<boolean> {
         this.keyringController.cancelQRHardwareSignRequest();
         return true;
     }

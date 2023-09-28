@@ -1,18 +1,5 @@
 import NetworkController from './NetworkController';
-import {
-    ONEINCH_NATIVE_ADDRESS,
-    ONEINCH_SWAPS_ENDPOINT,
-    OneInchSpenderRes,
-    OneInchSwapQuoteParams,
-    OneInchSwapQuoteResponse,
-    OneInchSwapRequestParams,
-    OneInchSwapRequestResponse,
-    BASE_SWAP_FEE,
-    REFERRER_ADDRESS,
-    BasicToken,
-    GAS_LIMIT_INCREASE,
-    ONEINCH_SWAPS_NETWORKS,
-} from '../utils/types/1inch';
+
 import {
     ContractMethodSignature,
     ContractSignatureParser,
@@ -23,18 +10,19 @@ import { TransactionController } from './transactions/TransactionController';
 import { TransactionFeeData } from './erc-20/transactions/SignedTransaction';
 import { retryHandling } from '../utils/retryHandling';
 import { TokenController } from './erc-20/TokenController';
-import {
-    get1InchErrorMessageFromResponse,
-    map1InchErrorMessage,
-} from '../utils/1inchError';
+
 import httpClient from '../utils/http';
 import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
 import { BaseController } from '../infrastructure/BaseController';
+import { OneInchSwapQuoteResponse, OneInchSwapRequestResponse, BasicToken, ONEINCH_SWAPS_NETWORKS, OneInchSwapQuoteParams, OneInchSwapRequestParams, OneInchSpenderRes, ONEINCH_SWAPS_ENDPOINT, ONEINCH_NATIVE_ADDRESS, BASE_SWAP_FEE, GAS_LIMIT_INCREASE, REFERRER_ADDRESS, OneInchService } from '../utils/swaps/1inch';
+import { map1InchErrorMessage, get1InchErrorMessageFromResponse } from '../utils/swaps/1inchError';
+import { OpenOceanService } from '../utils/swaps/openOcean';
 
 export enum ExchangeType {
     SWAP_1INCH = 'SWAP_1INCH',
     SWAP_COWSWAP = 'SWAP_COWSWAP',
     LIMIT_1INCH = 'LIMIT_1INCH',
+    SWAP_OPENOCEAN = 'SWAP_OPENOCEAN'
 }
 
 export interface SwapControllerMemState {
@@ -67,6 +55,11 @@ export interface ExchangeParams {
     fromTokenAmount: string;
     toTokenAmount: string;
     blockWalletFee: BigNumber;
+}
+
+
+export interface SwapAggregatorService {
+    getSpender(chainId: number): Promise<string> | string;
 }
 
 /**
@@ -209,17 +202,14 @@ export default class SwapController extends BaseController<
         const { chainId } = this._networkController.network;
 
         try {
-            if (exchangeType === ExchangeType.SWAP_1INCH) {
-                // 1Inch router contract address
-                const res = await retryHandling<OneInchSpenderRes>(() =>
-                    httpClient.request<OneInchSpenderRes>(
-                        `${ONEINCH_SWAPS_ENDPOINT}${chainId}/approve/spender`
-                    )
-                );
+            switch (exchangeType) {
+                case ExchangeType.SWAP_1INCH:
+                    return OneInchService.getSpender(chainId)
+                case ExchangeType.SWAP_OPENOCEAN:
+                    return OpenOceanService.getSpender(chainId)
+                default:
+                    throw new Error('Exchange type not supported');
 
-                return res.address;
-            } else {
-                throw new Error('Exchange type not supported');
             }
         } catch (error) {
             throw new Error('Unable to fetch exchange spender');

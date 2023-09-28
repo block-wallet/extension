@@ -5,7 +5,10 @@
  *
  *  https://docs.1inch.io/docs/aggregation-protocol/introduction
  */
+import { SwapAggregatorService, SwapQuote } from '@block-wallet/background/controllers/SwapController';
 import { INITIAL_NETWORKS } from '../constants/networks';
+import { retryHandling } from '../retryHandling';
+import httpClient from './../http';
 
 const KLAYTN_MAINNET_CHAIN_ID = 8217;
 const AURORA_MAINNET_CHAIN_ID = 1313161554;
@@ -115,4 +118,26 @@ export interface OneInchSwapRequestResponse {
         gas: number; // Estimated amount of the gas limit, increase this value by 25%
         gasPrice: string; // Gas price in wei
     };
+}
+
+
+export const OneInchService = {
+    async getSpender(chainId: number): Promise<string> {
+        try {
+            // 1Inch router contract address
+            const res = await retryHandling<OneInchSpenderRes>(() =>
+                httpClient.request<OneInchSpenderRes>(
+                    `${ONEINCH_SWAPS_ENDPOINT}${chainId}/approve/spender`
+                )
+            );
+
+            return res.address;
+
+        } catch (error) {
+            throw new Error('Unable to fetch exchange spender');
+        }
+    },
+    async getSwapQuote(quoteParams: OneInchSwapQuoteParams): Promise<SwapQuote> {
+        return await {}
+    }
 }

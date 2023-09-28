@@ -28,8 +28,11 @@ install:
 	@cd packages/background && rm -rf node_modules
 	@cd packages/ui && rm -rf node_modules
 	@cd packages/provider && rm -rf node_modules
+	@echo "Installing Background package..."
 	@cd packages/background && yarn install
+	@echo "Installing UI package"
 	@cd packages/ui && yarn install
+	@echo "Installing Provider package"
 	@cd packages/provider && yarn install
 
 install/ci:

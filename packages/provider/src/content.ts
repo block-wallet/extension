@@ -47,7 +47,7 @@ injectProvider();
 const SW_KEEP_ALIVE_INTERVAL = 10;
 let SW_ALIVE = false;
 let portReinitialized = false;
-let intervalRef: NodeJS.Timer;
+let intervalRef: NodeJS.Timeout;
 
 if (isManifestV3()) {
     intervalRef = setInterval(() => {
@@ -58,7 +58,7 @@ if (isManifestV3()) {
                     log.info(
                         'Error keeping alive:',
                         browser.runtime.lastError.message ||
-                            browser.runtime.lastError
+                        browser.runtime.lastError
                     );
                     const err = browser.runtime.lastError.message || '';
                     SW_ALIVE = !err.includes('Receiving end does not exist');

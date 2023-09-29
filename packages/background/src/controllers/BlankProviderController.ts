@@ -301,13 +301,20 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 !ignoreSwitchNetwork ||
                 handler.type !== DappReq.SWITCH_NETWORK
             ) {
-                this._requestHandlers[id].reject(
-                    new Error(ProviderError.USER_REJECTED_REQUEST)
-                );
+                if (id !== undefined) {
+                    if (id in this._requestHandlers) {
+                        this._requestHandlers[id].reject(
+                            new Error(ProviderError.USER_REJECTED_REQUEST)
+                        );
+                        // delete handler
+                        delete this._requestHandlers[id];
+                    }
 
-                // Delete each request and its handler
-                delete this._requestHandlers[id];
-                delete requests[id];
+                    if (id in requests) {
+                        // Delete request
+                        delete requests[id];
+                    }
+                }
             }
         }
 

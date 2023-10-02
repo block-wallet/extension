@@ -14,6 +14,7 @@ import {
     lifiFeeCostsToIBridgeFeeCosts,
     lifiTokenToIToken,
     LIFI_BRIDGE_ENDPOINT,
+    LIFI_KEY_HEADER,
 } from './types/lifi';
 
 const getMessageFromLiFiError = (errCode: string) => {
@@ -175,14 +176,16 @@ const LiFiBridge: IBridge = {
         chainId: number
     ): Promise<IToken[]> {
         const response = await httpClient.request<GetLifiTokensResponse>(
-            `${LIFI_BRIDGE_ENDPOINT}/tokens`
+            `${LIFI_BRIDGE_ENDPOINT}/tokens`,
+            { headers: LIFI_KEY_HEADER }
         );
         const chainTokens = response.tokens[chainId] || [];
         return chainTokens.map(lifiTokenToIToken);
     },
     getSupportedChains: async function (): Promise<IChain[]> {
         const response = await httpClient.request<GetLifiChainsResponse>(
-            `${LIFI_BRIDGE_ENDPOINT}/chains`
+            `${LIFI_BRIDGE_ENDPOINT}/chains`,
+            { headers: LIFI_KEY_HEADER }
         );
         const chains = response.chains || [];
         return chains.map((chain) => ({
@@ -205,6 +208,7 @@ const LiFiBridge: IBridge = {
                     fromToken: request.fromTokenAddress,
                     toToken: request.toTokenAddress,
                 },
+                headers: LIFI_KEY_HEADER
             }
         );
         const result = response.connections;
@@ -232,6 +236,7 @@ const LiFiBridge: IBridge = {
                     slippage: r.slippage,
                     fee: BASE_BRIDGE_FEE,
                 },
+                headers: LIFI_KEY_HEADER
             });
             const responseData = response as GetLiFiQuoteResponse;
             return {
@@ -276,6 +281,7 @@ const LiFiBridge: IBridge = {
                 toChain: r.toChainId,
                 txHash: r.sendTxHash,
             },
+            headers: LIFI_KEY_HEADER,
             cache: 'no-cache',
         });
         const responseData = response as GetLiFiStatusResponse;
@@ -296,12 +302,12 @@ const LiFiBridge: IBridge = {
             },
             receiveTransaction: responseData.receiving?.txHash
                 ? {
-                      amount: responseData.receiving.amount,
-                      chainId: responseData.receiving.chainId,
-                      token: lifiTokenToIToken(responseData.receiving.token),
-                      txHash: responseData.receiving.txHash,
-                      txLink: responseData.receiving.txLink,
-                  }
+                    amount: responseData.receiving.amount,
+                    chainId: responseData.receiving.chainId,
+                    token: lifiTokenToIToken(responseData.receiving.token),
+                    txHash: responseData.receiving.txHash,
+                    txLink: responseData.receiving.txLink,
+                }
                 : undefined,
             tool: responseData.tool,
         };

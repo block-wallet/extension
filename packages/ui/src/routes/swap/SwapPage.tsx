@@ -53,6 +53,8 @@ interface SwapState {
     bigNumberAmount?: BigNumber
 }
 
+const exchangeType = ExchangeType.SWAP_1INCH
+
 const SwapPage = () => {
     const history = useOnMountHistory()
     const {
@@ -267,7 +269,7 @@ const SwapPage = () => {
                     const allowanceCheck = await checkExchangeAllowance(
                         selectedAddress,
                         bigNumberAmount!,
-                        ExchangeType.SWAP_1INCH,
+                        exchangeType,
                         tokenFrom!.address
                     )
 
@@ -278,7 +280,7 @@ const SwapPage = () => {
             }
 
             try {
-                const quote = await getExchangeQuote(ExchangeType.SWAP_1INCH, {
+                const quote = await getExchangeQuote(exchangeType, {
                     fromTokenAddress: tokenFrom!.address,
                     toTokenAddress: tokenTo!.address,
                     amount: bigNumberAmount!.toString(),

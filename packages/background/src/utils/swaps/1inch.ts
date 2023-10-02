@@ -5,10 +5,12 @@
  *
  *  https://docs.1inch.io/docs/aggregation-protocol/introduction
  */
-import { SwapAggregatorService, SwapQuote } from '@block-wallet/background/controllers/SwapController';
+import { SwapQuote } from '@block-wallet/background/controllers/SwapController';
 import { INITIAL_NETWORKS } from '../constants/networks';
 import { retryHandling } from '../retryHandling';
 import httpClient from './../http';
+import { get1InchErrorMessageFromResponse, map1InchErrorMessage } from './1inchError';
+import { BigNumber } from 'ethers';
 
 const KLAYTN_MAINNET_CHAIN_ID = 8217;
 const AURORA_MAINNET_CHAIN_ID = 1313161554;
@@ -137,7 +139,44 @@ export const OneInchService = {
             throw new Error('Unable to fetch exchange spender');
         }
     },
-    async getSwapQuote(quoteParams: OneInchSwapQuoteParams): Promise<SwapQuote> {
-        return await {}
+    async getSwapQuote(chainId: number, {
+        fromTokenAddress,
+        toTokenAddress,
+        amount,
+    }: OneInchSwapQuoteParams): Promise<SwapQuote> {
+        try {
+            const res = await retryHandling<OneInchSwapQuoteResponse>(() =>
+                httpClient.request<OneInchSwapQuoteResponse>(
+                    `${ONEINCH_SWAPS_ENDPOINT}${chainId}/quote`,
+                    {
+                        params: {
+                            fromTokenAddress:
+                                fromTokenAddress === '0x0'
+                                    ? ONEINCH_NATIVE_ADDRESS
+                                    : fromTokenAddress,
+                            toTokenAddress:
+                                toTokenAddress === '0x0'
+                                    ? ONEINCH_NATIVE_ADDRESS
+                                    : toTokenAddress,
+                            amount,
+                            fee: BASE_SWAP_FEE,
+                        },
+                    }
+                )
+            );
+
+            return {
+                ...res,
+                blockWalletFee: BigNumber.from(res.fromTokenAmount)
+                    .mul(BASE_SWAP_FEE * 10)
+                    .div(1000),
+                estimatedGas: Math.round(res.estimatedGas * GAS_LIMIT_INCREASE),
+            };
+        } catch (error) {
+            const errMessage = map1InchErrorMessage(
+                get1InchErrorMessageFromResponse(error) // Error should be of type RequestError
+            );
+            throw new Error(errMessage || 'Error getting 1Inch swap quote');
+        }
     }
 }

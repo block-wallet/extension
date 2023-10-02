@@ -1,5 +1,9 @@
-import { SwapAggregatorService } from '@block-wallet/background/controllers/SwapController';
 import { INITIAL_NETWORKS } from '../constants/networks';
+import { BasicToken } from './1inch';
+import { retryHandling } from '../retryHandling';
+import httpClient from './../http';
+import { SwapQuote } from '@block-wallet/background/controllers/SwapController';
+
 
 type OpenOceanNetworks = {
     // ChainId: Smart Contract (for allowance spender param)
@@ -45,16 +49,59 @@ export interface OpenOceanSwapQuoteParams {
     chain: string;
     inTokenAddress: string;
     outTokenAddress: string;
-    amount: string;
+    amount: number; // Please set token amount without decimals.
+    gasPrice: number; // set the gas price in GWEI without decimals. TODO: Set default High from network.
+    slippage?: number; // Define the acceptable slippage level by inputting a percentage value within the range of 0.05 to 50.
+    enabledDexIds?: string; // https://docs.openocean.finance/dev/aggregator-api-and-sdk/aggregator-api#get-dexes-list
+    disabledDexIds?: string; // enableDexIds has higher priority compare with disabledDexIds
+
+}
+
+export interface OpenOceanSwapQuoteResponse {
+    inToken: BasicToken;
+    outToken: BasicToken;
+    inAmount: string;
+    outAmount: string;
+    estimatedGas: number;
+    path: object
 }
 
 
-export const OpenOceanService: SwapAggregatorService = {
-    getSpender(chainId): string {
+export const OpenOceanService = {
+    getSpender(chainId: number): string {
         if (chainId in OPENOCEAN_AGGREGATOR_NETWORKS)
             return OPENOCEAN_AGGREGATOR_NETWORKS[chainId]
 
         throw new Error('Unable to fetch exchange spender');
     },
+    async getSwapQuote(chainId: number, { inTokenAddress, outTokenAddress, amount, slippage = 1 }: OpenOceanSwapQuoteParams): Promise<SwapQuote> {
+        try {
+            const res = await retryHandling<OpenOceanSwapQuoteResponse>(() =>
+                httpClient.request<OpenOceanSwapQuoteResponse>(
+                    `${OPENOCEAN_AGGREGATOR_ENDPOINT}/${chainId}/quote`,
+                    {
+                        params: {
+                            inTokenAddress,
+                            outTokenAddress,
+                            amount,
+                            slippage,
+                            gasPrice: 69034743641
+
+                        }
+                    }
+                ));
+
+            return {
+                fromToken: res.inToken,
+                fromTokenAmount: res.inAmount,
+                toToken: res.outToken,
+                toTokenAmount: res.outAmount,
+                estimatedGas: res.estimatedGas,
+
+            };
+        } catch (error) {
+            throw new Error("Error getting OpenOcean swap quote")
+        }
+    }
 }
 

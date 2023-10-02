@@ -29,9 +29,14 @@ export interface SwapControllerMemState {
     availableSwapChainIds: number[];
 }
 
-export interface SwapQuote extends OneInchSwapQuoteResponse {
+export interface SwapQuote {
+    fromToken: BasicToken;
+    toToken: BasicToken;
+    fromTokenAmount: string; //	Input amount of fromToken in minimal divisible units
+    toTokenAmount: string; // Result amount of toToken in minimal divisible units
+    estimatedGas: number;
     // BlockWallet fee in spender token units
-    blockWalletFee: BigNumber;
+    blockWalletFee?: BigNumber;
 }
 
 export interface SwapParameters extends OneInchSwapRequestResponse {
@@ -147,8 +152,30 @@ export default class SwapController extends BaseController<
         exchangeType: ExchangeType,
         quoteParams: OneInchSwapQuoteParams
     ): Promise<SwapQuote> => {
+        const { chainId } = this._networkController.network;
+
+        // Receive generic params
+        // Switch exchange type
+        //  -- Parse parameters
+        //  -- Call get quote
+        //  -- Return generic answer
+
+        try {
+            switch (exchangeType) {
+                case ExchangeType.SWAP_1INCH:
+                    return OneInchService.getSwapQuote(chainId, quoteParams)
+                case ExchangeType.SWAP_OPENOCEAN:
+                    return OpenOceanService.getSwapQuote(chainId, { inTokenAddress: quoteParams.fromTokenAddress, outTokenAddress: quoteParams.toTokenAddress, amount: quoteParams.amount, })
+                default:
+                    throw new Error('Exchange type not supported');
+
+            }
+        } catch (error) {
+            throw new Error('Unable to fetch exchange spender');
+        }
+
         if (exchangeType === ExchangeType.SWAP_1INCH) {
-            return this._get1InchSwapQuote(quoteParams);
+            return OneInchService.getSwapQuote(chainId, quoteParams)
         } else {
             throw new Error('Exchange type not supported');
         }

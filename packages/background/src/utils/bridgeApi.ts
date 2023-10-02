@@ -208,7 +208,7 @@ const LiFiBridge: IBridge = {
                     fromToken: request.fromTokenAddress,
                     toToken: request.toTokenAddress,
                 },
-                headers: LIFI_KEY_HEADER
+                headers: LIFI_KEY_HEADER,
             }
         );
         const result = response.connections;
@@ -236,7 +236,7 @@ const LiFiBridge: IBridge = {
                     slippage: r.slippage,
                     fee: BASE_BRIDGE_FEE,
                 },
-                headers: LIFI_KEY_HEADER
+                headers: LIFI_KEY_HEADER,
             });
             const responseData = response as GetLiFiQuoteResponse;
             return {
@@ -302,12 +302,12 @@ const LiFiBridge: IBridge = {
             },
             receiveTransaction: responseData.receiving?.txHash
                 ? {
-                    amount: responseData.receiving.amount,
-                    chainId: responseData.receiving.chainId,
-                    token: lifiTokenToIToken(responseData.receiving.token),
-                    txHash: responseData.receiving.txHash,
-                    txLink: responseData.receiving.txLink,
-                }
+                      amount: responseData.receiving.amount,
+                      chainId: responseData.receiving.chainId,
+                      token: lifiTokenToIToken(responseData.receiving.token),
+                      txHash: responseData.receiving.txHash,
+                      txLink: responseData.receiving.txLink,
+                  }
                 : undefined,
             tool: responseData.tool,
         };

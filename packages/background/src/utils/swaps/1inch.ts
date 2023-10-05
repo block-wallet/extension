@@ -5,12 +5,21 @@
  *
  *  https://docs.1inch.io/docs/aggregation-protocol/introduction
  */
-import { SwapQuote } from '@block-wallet/background/controllers/SwapController';
+import {
+    SwapParameters,
+    SwapQuoteParams,
+    SwapQuoteResponse,
+    SwapRequestParams,
+} from '@block-wallet/background/controllers/SwapController';
 import { INITIAL_NETWORKS } from '../constants/networks';
 import { retryHandling } from '../retryHandling';
 import httpClient from './../http';
-import { get1InchErrorMessageFromResponse, map1InchErrorMessage } from './1inchError';
-import { BigNumber } from 'ethers';
+import {
+    get1InchErrorMessageFromResponse,
+    map1InchErrorMessage,
+} from './1inchError';
+import { BigNumber } from 'ethers/lib/ethers';
+import { ContractSignatureParser } from '@block-wallet/background/controllers/transactions/ContractSignatureParser';
 
 const KLAYTN_MAINNET_CHAIN_ID = 8217;
 const AURORA_MAINNET_CHAIN_ID = 1313161554;
@@ -43,8 +52,7 @@ export const GAS_LIMIT_INCREASE = 1.25;
 export const ONEINCH_SWAPS_ENDPOINT = 'https://api-blockwallet.1inch.io/v5.0/';
 
 // This address makes reference to the native asset
-export const ONEINCH_NATIVE_ADDRESS =
-    '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+export const SWAP_NATIVE_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
 
 // Spender API response
 export interface OneInchSpenderRes {
@@ -57,8 +65,8 @@ export interface BasicToken {
     name: string;
     decimals: number;
     address: string;
-    logoURI: string;
-    tags: string[];
+    logoURI?: string;
+    tags?: string[];
 }
 
 export interface OneInchSwapQuoteParams {
@@ -111,7 +119,7 @@ export interface OneInchSwapRequestResponse {
     toToken: BasicToken;
     fromTokenAmount: string; // Input amount of fromToken in minimal divisible units
     toTokenAmount: string; // Result amount of toToken in minimal divisible units
-    protocols: unknown[]; // Route of the trade
+    protocols?: unknown[]; // Route of the trade
     tx: {
         from: string; // Transactions will be sent from this address
         to: string; // Transactions will be sent to our contract address
@@ -122,8 +130,24 @@ export interface OneInchSwapRequestResponse {
     };
 }
 
-
 export const OneInchService = {
+    parseQuoteParams({
+        fromToken,
+        toToken,
+        amount,
+    }: SwapQuoteParams): OneInchSwapQuoteParams {
+        return {
+            fromTokenAddress:
+                fromToken.address === '0x0'
+                    ? SWAP_NATIVE_ADDRESS
+                    : fromToken.address,
+            toTokenAddress:
+                toToken.address === '0x0'
+                    ? SWAP_NATIVE_ADDRESS
+                    : toToken.address,
+            amount,
+        };
+    },
     async getSpender(chainId: number): Promise<string> {
         try {
             // 1Inch router contract address
@@ -134,30 +158,24 @@ export const OneInchService = {
             );
 
             return res.address;
-
         } catch (error) {
             throw new Error('Unable to fetch exchange spender');
         }
     },
-    async getSwapQuote(chainId: number, {
-        fromTokenAddress,
-        toTokenAddress,
-        amount,
-    }: OneInchSwapQuoteParams): Promise<SwapQuote> {
+    async getSwapQuote(
+        chainId: number,
+        params: SwapQuoteParams
+    ): Promise<SwapQuoteResponse> {
         try {
+            const { fromTokenAddress, toTokenAddress, amount } =
+                this.parseQuoteParams(params);
             const res = await retryHandling<OneInchSwapQuoteResponse>(() =>
                 httpClient.request<OneInchSwapQuoteResponse>(
                     `${ONEINCH_SWAPS_ENDPOINT}${chainId}/quote`,
                     {
                         params: {
-                            fromTokenAddress:
-                                fromTokenAddress === '0x0'
-                                    ? ONEINCH_NATIVE_ADDRESS
-                                    : fromTokenAddress,
-                            toTokenAddress:
-                                toTokenAddress === '0x0'
-                                    ? ONEINCH_NATIVE_ADDRESS
-                                    : toTokenAddress,
+                            fromTokenAddress,
+                            toTokenAddress,
                             amount,
                             fee: BASE_SWAP_FEE,
                         },
@@ -178,5 +196,50 @@ export const OneInchService = {
             );
             throw new Error(errMessage || 'Error getting 1Inch swap quote');
         }
-    }
-}
+    },
+    async getSwapParameters(
+        chainId: number,
+        signatureParser: ContractSignatureParser,
+        swapParams: SwapRequestParams
+    ): Promise<SwapParameters> {
+        try {
+            const res = await retryHandling<OneInchSwapRequestResponse>(() =>
+                httpClient.request<OneInchSwapRequestResponse>(
+                    `${ONEINCH_SWAPS_ENDPOINT}${chainId}/swap`,
+                    {
+                        params: {
+                            ...swapParams,
+                            fee: BASE_SWAP_FEE,
+                            referrerAddress: REFERRER_ADDRESS,
+                            allowPartialFill: false,
+                        },
+                    }
+                )
+            );
+
+            const methodSignature = await signatureParser.getMethodSignature(
+                res.tx.data,
+                res.tx.to
+            );
+
+            return {
+                ...res,
+                methodSignature,
+                blockWalletFee: BigNumber.from(res.fromTokenAmount)
+                    .mul(BASE_SWAP_FEE * 10)
+                    .div(1000),
+                tx: {
+                    ...res.tx,
+                    gas: Math.round(res.tx.gas * GAS_LIMIT_INCREASE),
+                },
+            };
+        } catch (error) {
+            const errMessage = map1InchErrorMessage(
+                get1InchErrorMessageFromResponse(error) // Error should be of type RequestError
+            );
+            throw new Error(
+                errMessage || 'Error getting 1Inch swap parameters'
+            );
+        }
+    },
+};

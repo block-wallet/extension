@@ -62,6 +62,7 @@ import { useSelectedAccountBalance } from "../../context/hooks/useSelectedAccoun
 
 import unknownTokenIcon from "../../assets/images/unknown_token.svg"
 import { generateExplorerLink } from "../../util/getExplorer"
+import { DEFAULT_EXCHANGE_TYPE } from "../../util/exchangeUtils"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
@@ -276,41 +277,39 @@ const ApprovePage: FunctionComponent<{}> = () => {
             )
         } else {
             const nextState = nextLocationState as SwapConfirmPageLocalState
-            getExchangeSpender(ExchangeType.SWAP_1INCH).then(
-                (spenderAddress) => {
-                    const currentSpenderAllowances = currentAllowances.find(
+            getExchangeSpender(DEFAULT_EXCHANGE_TYPE).then((spenderAddress) => {
+                const currentSpenderAllowances = currentAllowances.find(
+                    (allowance) =>
+                        allowance.groupBy.address.toLowerCase() ===
+                        spenderAddress.toLowerCase()
+                )
+
+                const currentAllowance =
+                    currentSpenderAllowances?.allowances?.find(
                         (allowance) =>
-                            allowance.groupBy.address.toLowerCase() ===
-                            spenderAddress.toLowerCase()
+                            allowance.displayData.address.toLowerCase() ===
+                            nextState.swapQuote.fromToken.address.toLowerCase()
                     )
 
-                    const currentAllowance =
-                        currentSpenderAllowances?.allowances?.find(
-                            (allowance) =>
-                                allowance.displayData.address.toLowerCase() ===
-                                nextState.swapQuote.fromToken.address.toLowerCase()
-                        )
-
-                    setCurrentAllowanceValue(
-                        currentAllowance?.allowance?.value ?? BigNumber.from(0)
+                setCurrentAllowanceValue(
+                    currentAllowance?.allowance?.value ?? BigNumber.from(0)
+                )
+                setIsCurrentAllowanceUnlimited(
+                    currentAllowance?.allowance?.isUnlimited
+                )
+                setSpenderName(
+                    currentSpenderAllowances?.groupBy.name ??
+                        `Spender ${formatHashLastChars(spenderAddress)}`
+                )
+                setSpenderAddressExplorerLink(
+                    generateExplorerLink(
+                        availableNetworks,
+                        selectedNetwork,
+                        spenderAddress,
+                        "address"
                     )
-                    setIsCurrentAllowanceUnlimited(
-                        currentAllowance?.allowance?.isUnlimited
-                    )
-                    setSpenderName(
-                        currentSpenderAllowances?.groupBy.name ??
-                            `Spender ${formatHashLastChars(spenderAddress)}`
-                    )
-                    setSpenderAddressExplorerLink(
-                        generateExplorerLink(
-                            availableNetworks,
-                            selectedNetwork,
-                            spenderAddress,
-                            "address"
-                        )
-                    )
-                }
-            )
+                )
+            })
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
@@ -385,7 +384,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 allowanceResponse = await approveExchange(
                     parseUnits(allowanceAmount, assetDecimals),
                     BigNumber.from(nextState.swapQuote.fromTokenAmount),
-                    ExchangeType.SWAP_1INCH,
+                    DEFAULT_EXCHANGE_TYPE,
                     {
                         gasPrice: !isEIP1559Compatible
                             ? selectedGasPrice

@@ -19,7 +19,7 @@ import { BASE_SWAP_FEE, SWAP_QUOTE_REFRESH_TIMEOUT } from "../../util/constants"
 import { ExchangeType } from "../../context/commTypes"
 import { InferType } from "yup"
 import { SwapConfirmPageLocalState } from "./SwapConfirmPage"
-import { SwapQuote } from "@block-wallet/background/controllers/SwapController"
+import { SwapQuoteResponse } from "@block-wallet/background/controllers/SwapController"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { classnames } from "../../styles"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
@@ -38,10 +38,11 @@ import { useCallback } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
 import { GetAmountYupSchema } from "../../util/yup/GetAmountSchema"
 import { ApproveOperation } from "../transaction/ApprovePage"
+import { DEFAULT_EXCHANGE_TYPE } from "../../util/exchangeUtils"
 
 interface SwapPageLocalState {
     fromToken?: Token
-    swapQuote?: SwapQuote
+    swapQuote?: SwapQuoteResponse
     toToken?: Token
     fromAssetPage?: boolean
     amount?: string
@@ -52,8 +53,6 @@ interface SwapState {
     tokenTo?: Token
     bigNumberAmount?: BigNumber
 }
-
-const exchangeType = ExchangeType.SWAP_1INCH
 
 const SwapPage = () => {
     const history = useOnMountHistory()
@@ -82,7 +81,7 @@ const SwapPage = () => {
     const [inputFocus, setInputFocus] = useState(false)
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [hasAllowance, setHasAllowance] = useState<boolean>(true)
-    const [quote, setQuote] = useState<SwapQuote | undefined>(swapQuote)
+    const [quote, setQuote] = useState<SwapQuoteResponse | undefined>(swapQuote)
     const [canSwitchInputs, setCanSwitchInputs] = useState<boolean>(true)
 
     const [swapDataState, setSwapDataState] = useLocalStorageState<SwapState>(
@@ -269,7 +268,7 @@ const SwapPage = () => {
                     const allowanceCheck = await checkExchangeAllowance(
                         selectedAddress,
                         bigNumberAmount!,
-                        exchangeType,
+                        DEFAULT_EXCHANGE_TYPE,
                         tokenFrom!.address
                     )
 
@@ -280,9 +279,9 @@ const SwapPage = () => {
             }
 
             try {
-                const quote = await getExchangeQuote(exchangeType, {
-                    fromTokenAddress: tokenFrom!.address,
-                    toTokenAddress: tokenTo!.address,
+                const quote = await getExchangeQuote(DEFAULT_EXCHANGE_TYPE, {
+                    fromToken: tokenFrom!,
+                    toToken: tokenTo!,
                     amount: bigNumberAmount!.toString(),
                 })
                 if (isValidFetch) {

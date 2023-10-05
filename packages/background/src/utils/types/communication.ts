@@ -25,8 +25,10 @@ import { ImportStrategy, ImportArguments } from '../account';
 import {
     SwapParameters,
     ExchangeType,
-    SwapQuote,
+    SwapQuoteResponse,
     SwapTransaction,
+    SwapQuoteParams,
+    SwapRequestParams,
 } from '../../controllers/SwapController';
 import {
     ProviderEvents,
@@ -50,7 +52,6 @@ import {
 import { TransactionFeeData } from '@block-wallet/background/controllers/erc-20/transactions/SignedTransaction';
 import { Currency } from '../currency';
 import { Devices } from './hardware';
-import { OneInchSwapQuoteParams, OneInchSwapRequestParams } from './1inch';
 import { ChainListItem } from '@block-wallet/chains-assets';
 import { IChain } from './chain';
 import {
@@ -64,6 +65,10 @@ import { GasPriceData } from '@block-wallet/background/controllers/GasPricesCont
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import { TypedTransaction } from '@ethereumjs/tx';
 import { GetOnRampCurrencies } from '@block-wallet/background/controllers/OnrampController';
+import {
+    OneInchSwapQuoteParams,
+    OneInchSwapRequestParams,
+} from '../swaps/1inch';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -362,7 +367,7 @@ export interface RequestSignatures {
         boolean
     ];
     [Messages.EXCHANGE.APPROVE]: [RequestApproveExchange, boolean];
-    [Messages.EXCHANGE.GET_QUOTE]: [RequestGetExchangeQuote, SwapQuote];
+    [Messages.EXCHANGE.GET_QUOTE]: [RequestGetExchangeQuote, SwapQuoteResponse];
     [Messages.EXCHANGE.GET_EXCHANGE]: [RequestGetExchange, SwapParameters];
     [Messages.EXCHANGE.GET_SPENDER]: [RequestGetExchangeSpender, string];
     [Messages.EXCHANGE.EXECUTE]: [RequestExecuteExchange, string];
@@ -711,12 +716,12 @@ export interface RequestApproveExchange {
 
 export interface RequestGetExchangeQuote {
     exchangeType: ExchangeType;
-    quoteParams: OneInchSwapQuoteParams;
+    quoteParams: SwapQuoteParams;
 }
 
 export interface RequestGetExchange {
     exchangeType: ExchangeType;
-    exchangeParams: OneInchSwapRequestParams;
+    exchangeParams: SwapRequestParams;
 }
 
 export interface RequestGetExchangeSpender {

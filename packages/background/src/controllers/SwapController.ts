@@ -14,22 +14,46 @@ import { TokenController } from './erc-20/TokenController';
 import httpClient from '../utils/http';
 import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
 import { BaseController } from '../infrastructure/BaseController';
-import { OneInchSwapQuoteResponse, OneInchSwapRequestResponse, BasicToken, ONEINCH_SWAPS_NETWORKS, OneInchSwapQuoteParams, OneInchSwapRequestParams, OneInchSpenderRes, ONEINCH_SWAPS_ENDPOINT, ONEINCH_NATIVE_ADDRESS, BASE_SWAP_FEE, GAS_LIMIT_INCREASE, REFERRER_ADDRESS, OneInchService } from '../utils/swaps/1inch';
-import { map1InchErrorMessage, get1InchErrorMessageFromResponse } from '../utils/swaps/1inchError';
+import {
+    OneInchSwapQuoteResponse,
+    OneInchSwapRequestResponse,
+    BasicToken,
+    ONEINCH_SWAPS_NETWORKS,
+    OneInchSwapQuoteParams,
+    OneInchSwapRequestParams,
+    OneInchSpenderRes,
+    ONEINCH_SWAPS_ENDPOINT,
+    BASE_SWAP_FEE,
+    GAS_LIMIT_INCREASE,
+    REFERRER_ADDRESS,
+    OneInchService,
+} from '../utils/swaps/1inch';
+import {
+    map1InchErrorMessage,
+    get1InchErrorMessageFromResponse,
+} from '../utils/swaps/1inchError';
 import { OpenOceanService } from '../utils/swaps/openOcean';
+import { GasPricesController } from './GasPricesController';
 
 export enum ExchangeType {
     SWAP_1INCH = 'SWAP_1INCH',
     SWAP_COWSWAP = 'SWAP_COWSWAP',
     LIMIT_1INCH = 'LIMIT_1INCH',
-    SWAP_OPENOCEAN = 'SWAP_OPENOCEAN'
+    SWAP_OPENOCEAN = 'SWAP_OPENOCEAN',
 }
 
 export interface SwapControllerMemState {
     availableSwapChainIds: number[];
 }
 
-export interface SwapQuote {
+export interface SwapQuoteParams {
+    fromToken: BasicToken;
+    toToken: BasicToken;
+    amount: string;
+    gasPrice?: string;
+}
+
+export interface SwapQuoteResponse {
     fromToken: BasicToken;
     toToken: BasicToken;
     fromTokenAmount: string; //	Input amount of fromToken in minimal divisible units
@@ -37,6 +61,15 @@ export interface SwapQuote {
     estimatedGas: number;
     // BlockWallet fee in spender token units
     blockWalletFee?: BigNumber;
+}
+
+export interface SwapRequestParams {
+    fromAddress: string;
+    fromToken: BasicToken;
+    toToken: BasicToken;
+    amount: string;
+    slippage: number;
+    gasPrice?: string;
 }
 
 export interface SwapParameters extends OneInchSwapRequestResponse {
@@ -62,11 +95,6 @@ export interface ExchangeParams {
     blockWalletFee: BigNumber;
 }
 
-
-export interface SwapAggregatorService {
-    getSpender(chainId: number): Promise<string> | string;
-}
-
 /**
  * Exchange Controller
  *
@@ -83,9 +111,11 @@ export default class SwapController extends BaseController<
         private readonly _networkController: NetworkController,
         private readonly _transactionController: TransactionController,
         private readonly _tokenController: TokenController,
-        private readonly _tokenAllowanceController: TokenAllowanceController
+        private readonly _tokenAllowanceController: TokenAllowanceController,
+        private readonly _gasPricesController: GasPricesController
     ) {
         super(undefined, {
+            //TODO
             availableSwapChainIds: ONEINCH_SWAPS_NETWORKS,
         });
     }
@@ -150,34 +180,31 @@ export default class SwapController extends BaseController<
      */
     public getExchangeQuote = async (
         exchangeType: ExchangeType,
-        quoteParams: OneInchSwapQuoteParams
-    ): Promise<SwapQuote> => {
+        quoteParams: SwapQuoteParams
+    ): Promise<SwapQuoteResponse> => {
         const { chainId } = this._networkController.network;
-
-        // Receive generic params
-        // Switch exchange type
-        //  -- Parse parameters
-        //  -- Call get quote
-        //  -- Return generic answer
 
         try {
             switch (exchangeType) {
                 case ExchangeType.SWAP_1INCH:
-                    return OneInchService.getSwapQuote(chainId, quoteParams)
-                case ExchangeType.SWAP_OPENOCEAN:
-                    return OpenOceanService.getSwapQuote(chainId, { inTokenAddress: quoteParams.fromTokenAddress, outTokenAddress: quoteParams.toTokenAddress, amount: quoteParams.amount, })
+                    return await OneInchService.getSwapQuote(
+                        chainId,
+                        quoteParams
+                    );
+                case ExchangeType.SWAP_OPENOCEAN: {
+                    const gasPrice =
+                        this._gasPricesController.getHighGasPriceInGwei();
+
+                    return await OpenOceanService.getSwapQuote(chainId, {
+                        ...quoteParams,
+                        gasPrice,
+                    });
+                }
                 default:
                     throw new Error('Exchange type not supported');
-
             }
         } catch (error) {
             throw new Error('Unable to fetch exchange spender');
-        }
-
-        if (exchangeType === ExchangeType.SWAP_1INCH) {
-            return OneInchService.getSwapQuote(chainId, quoteParams)
-        } else {
-            throw new Error('Exchange type not supported');
         }
     };
 
@@ -189,12 +216,35 @@ export default class SwapController extends BaseController<
      */
     public getExchangeParameters = async (
         exchangeType: ExchangeType,
-        exchangeParams: OneInchSwapRequestParams
+        exchangeParams: SwapRequestParams
     ): Promise<SwapParameters> => {
-        if (exchangeType === ExchangeType.SWAP_1INCH) {
-            return this._get1InchSwapParameters(exchangeParams);
-        } else {
-            throw new Error('Exchange type not supported');
+        const { chainId } = this._networkController.network;
+        const contractSignatureParser = new ContractSignatureParser(
+            this._networkController
+        );
+
+        try {
+            switch (exchangeType) {
+                case ExchangeType.SWAP_1INCH:
+                    return await OneInchService.getSwapParameters(
+                        chainId,
+                        contractSignatureParser,
+                        exchangeParams
+                    );
+                case ExchangeType.SWAP_OPENOCEAN: {
+                    const gasPrice =
+                        this._gasPricesController.getHighGasPriceInGwei();
+                    return await OpenOceanService.getSwapParameters(
+                        chainId,
+                        contractSignatureParser,
+                        { ...exchangeParams, gasPrice }
+                    );
+                }
+                default:
+                    throw new Error('Exchange type not supported');
+            }
+        } catch (error) {
+            throw new Error('Unable to fetch swap');
         }
     };
 
@@ -208,14 +258,22 @@ export default class SwapController extends BaseController<
         exchangeType: ExchangeType,
         exchangeParams: SwapTransaction
     ): Promise<string> => {
-        if (exchangeType === ExchangeType.SWAP_1INCH) {
-            const swapPromise = this._execute1InchSwap(exchangeParams);
+        try {
+            if (
+                !(
+                    exchangeType in
+                    [ExchangeType.SWAP_1INCH, ExchangeType.SWAP_OPENOCEAN]
+                )
+            )
+                throw new Error('Exchange type not supported');
+
+            const swapPromise = this._executeSwap(exchangeParams);
             this._tokenController.attemptAddToken(
                 exchangeParams.toToken.address
             );
             return swapPromise;
-        } else {
-            throw new Error('Exchange type not supported');
+        } catch (error) {
+            throw new Error('Unable to fetch swap');
         }
     };
 
@@ -231,12 +289,11 @@ export default class SwapController extends BaseController<
         try {
             switch (exchangeType) {
                 case ExchangeType.SWAP_1INCH:
-                    return OneInchService.getSpender(chainId)
+                    return OneInchService.getSpender(chainId);
                 case ExchangeType.SWAP_OPENOCEAN:
-                    return OpenOceanService.getSpender(chainId)
+                    return OpenOceanService.getSpender(chainId);
                 default:
                     throw new Error('Exchange type not supported');
-
             }
         } catch (error) {
             throw new Error('Unable to fetch exchange spender');
@@ -248,108 +305,64 @@ export default class SwapController extends BaseController<
      *
      * @param OneInchSwapQuoteParams 1Inch quote parameters
      */
-    private _get1InchSwapQuote = async ({
-        fromTokenAddress,
-        toTokenAddress,
-        amount,
-    }: OneInchSwapQuoteParams): Promise<SwapQuote> => {
-        try {
-            const res = await retryHandling<OneInchSwapQuoteResponse>(() =>
-                httpClient.request<OneInchSwapQuoteResponse>(
-                    `${ONEINCH_SWAPS_ENDPOINT}${this._networkController.network.chainId}/quote`,
-                    {
-                        params: {
-                            fromTokenAddress:
-                                fromTokenAddress === '0x0'
-                                    ? ONEINCH_NATIVE_ADDRESS
-                                    : fromTokenAddress,
-                            toTokenAddress:
-                                toTokenAddress === '0x0'
-                                    ? ONEINCH_NATIVE_ADDRESS
-                                    : toTokenAddress,
-                            amount,
-                            fee: BASE_SWAP_FEE,
-                        },
-                    }
-                )
-            );
+    //private _get1InchSwapQuote = async ({
+    //    fromTokenAddress,
+    //    toTokenAddress,
+    //    amount,
+    //}: OneInchSwapQuoteParams): Promise<SwapQuote> => {
+    //    try {
+    //        const res = await retryHandling<OneInchSwapQuoteResponse>(() =>
+    //            httpClient.request<OneInchSwapQuoteResponse>(
+    //                `${ONEINCH_SWAPS_ENDPOINT}${this._networkController.network.chainId}/quote`,
+    //                {
+    //                    params: {
+    //                        fromTokenAddress:
+    //                            fromTokenAddress === '0x0'
+    //                                ? ONEINCH_NATIVE_ADDRESS
+    //                                : fromTokenAddress,
+    //                        toTokenAddress:
+    //                            toTokenAddress === '0x0'
+    //                                ? ONEINCH_NATIVE_ADDRESS
+    //                                : toTokenAddress,
+    //                        amount,
+    //                        fee: BASE_SWAP_FEE,
+    //                    },
+    //                }
+    //            )
+    //        );
 
-            return {
-                ...res,
-                blockWalletFee: BigNumber.from(res.fromTokenAmount)
-                    .mul(BASE_SWAP_FEE * 10)
-                    .div(1000),
-                estimatedGas: Math.round(res.estimatedGas * GAS_LIMIT_INCREASE),
-            };
-        } catch (error) {
-            const errMessage = map1InchErrorMessage(
-                get1InchErrorMessageFromResponse(error) // Error should be of type RequestError
-            );
-            throw new Error(errMessage || 'Error getting 1Inch swap quote');
-        }
-    };
+    //        return {
+    //            ...res,
+    //            blockWalletFee: BigNumber.from(res.fromTokenAmount)
+    //                .mul(BASE_SWAP_FEE * 10)
+    //                .div(1000),
+    //            estimatedGas: Math.round(res.estimatedGas * GAS_LIMIT_INCREASE),
+    //        };
+    //    } catch (error) {
+    //        const errMessage = map1InchErrorMessage(
+    //            get1InchErrorMessageFromResponse(error) // Error should be of type RequestError
+    //        );
+    //        throw new Error(errMessage || 'Error getting 1Inch swap quote');
+    //    }
+    //};
 
     /**
      * Fetch transaction parameters for a 1Inch Swap
      *
      * @param swapParams 1Inch swap parameters
      */
-    private _get1InchSwapParameters = async (
-        swapParams: OneInchSwapRequestParams
-    ): Promise<SwapParameters> => {
-        const { chainId } = this._networkController.network;
-        const contractSignatureParser = new ContractSignatureParser(
-            this._networkController
-        );
+    //private _get1InchSwapParameters = async (
+    //    swapParams: OneInchSwapRequestParams
+    //): Promise<SwapParameters> => {
 
-        try {
-            const res = await retryHandling<OneInchSwapRequestResponse>(() =>
-                httpClient.request<OneInchSwapRequestResponse>(
-                    `${ONEINCH_SWAPS_ENDPOINT}${chainId}/swap`,
-                    {
-                        params: {
-                            ...swapParams,
-                            fee: BASE_SWAP_FEE,
-                            referrerAddress: REFERRER_ADDRESS,
-                            allowPartialFill: false,
-                        },
-                    }
-                )
-            );
-
-            const methodSignature =
-                await contractSignatureParser.getMethodSignature(
-                    res.tx.data,
-                    res.tx.to
-                );
-
-            return {
-                ...res,
-                methodSignature,
-                blockWalletFee: BigNumber.from(res.fromTokenAmount)
-                    .mul(BASE_SWAP_FEE * 10)
-                    .div(1000),
-                tx: {
-                    ...res.tx,
-                    gas: Math.round(res.tx.gas * GAS_LIMIT_INCREASE),
-                },
-            };
-        } catch (error) {
-            const errMessage = map1InchErrorMessage(
-                get1InchErrorMessageFromResponse(error) // Error should be of type RequestError
-            );
-            throw new Error(
-                errMessage || 'Error getting 1Inch swap parameters'
-            );
-        }
-    };
+    //};
 
     /**
-     * Submits a 1Inch Swap transaction
+     * Submits a Swap transaction
      *
-     * @param SwapTransaction 1Inch swap transaction
+     * @param SwapTransaction swap transaction
      */
-    private _execute1InchSwap = async ({
+    private _executeSwap = async ({
         tx,
         flashbots,
         customNonce,
@@ -389,7 +402,7 @@ export default class SwapController extends BaseController<
             transactionMeta.flashbots = flashbots;
 
             transactionMeta.exchangeParams = {
-                exchangeType: ExchangeType.SWAP_1INCH,
+                exchangeType: ExchangeType.SWAP_OPENOCEAN,
                 fromToken,
                 toToken,
                 fromTokenAmount,
@@ -403,7 +416,7 @@ export default class SwapController extends BaseController<
 
             return result;
         } catch (error) {
-            throw new Error('Error executing 1Inch Swap');
+            throw new Error('Error executing Swap');
         }
     };
 }

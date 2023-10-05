@@ -167,7 +167,10 @@ import {
     TokenControllerProps,
     NATIVE_TOKEN_ADDRESS,
 } from './erc-20/TokenController';
-import SwapController, { SwapParameters, SwapQuote } from './SwapController';
+import SwapController, {
+    SwapParameters,
+    SwapQuoteResponse,
+} from './SwapController';
 import {
     FetchTokenResponse,
     IToken,
@@ -452,7 +455,8 @@ export default class BlankController extends EventEmitter {
             this.networkController,
             this.transactionController,
             this.tokenController,
-            this.tokenAllowanceController
+            this.tokenAllowanceController,
+            this.gasPricesController
         );
 
         this.bridgeController = new BridgeController(
@@ -1774,7 +1778,7 @@ export default class BlankController extends EventEmitter {
     private async getExchangeQuote({
         exchangeType,
         quoteParams,
-    }: RequestGetExchangeQuote): Promise<SwapQuote> {
+    }: RequestGetExchangeQuote): Promise<SwapQuoteResponse> {
         return this.swapController.getExchangeQuote(exchangeType, quoteParams);
     }
 

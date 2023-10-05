@@ -47,13 +47,12 @@ import { handlers, port } from "./setup"
 import { Currency } from "@block-wallet/background/utils/currency"
 import {
     SwapParameters,
-    SwapQuote,
+    SwapQuoteParams,
+    SwapQuoteResponse,
+    SwapRequestParams,
     SwapTransaction,
 } from "@block-wallet/background/controllers/SwapController"
-import {
-    OneInchSwapQuoteParams,
-    OneInchSwapRequestParams,
-} from "@block-wallet/background/utils/types/1inch"
+
 import { generatePhishingPreventionBase64 } from "../util/phishingPrevention"
 import {
     BridgeQuoteRequest,
@@ -1548,8 +1547,8 @@ export const approveExchange = async (
  */
 export const getExchangeQuote = async (
     exchangeType: ExchangeType,
-    quoteParams: OneInchSwapQuoteParams
-): Promise<SwapQuote> => {
+    quoteParams: SwapQuoteParams
+): Promise<SwapQuoteResponse> => {
     return sendMessage(Messages.EXCHANGE.GET_QUOTE, {
         exchangeType,
         quoteParams,
@@ -1564,7 +1563,7 @@ export const getExchangeQuote = async (
  */
 export const getExchangeParameters = async (
     exchangeType: ExchangeType,
-    exchangeParams: OneInchSwapRequestParams
+    exchangeParams: SwapRequestParams
 ): Promise<SwapParameters> => {
     return sendMessage(Messages.EXCHANGE.GET_EXCHANGE, {
         exchangeType,

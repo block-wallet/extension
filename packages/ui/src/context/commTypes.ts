@@ -320,6 +320,7 @@ export enum ExchangeType {
     SWAP_1INCH = "SWAP_1INCH",
     SWAP_COWSWAP = "SWAP_COWSWAP",
     LIMIT_1INCH = "LIMIT_1INCH",
+    SWAP_OPENOCEAN = 'SWAP_OPENOCEAN'
 }
 
 /**

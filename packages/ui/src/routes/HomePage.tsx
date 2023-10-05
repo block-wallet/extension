@@ -143,10 +143,10 @@ const HomePage = () => {
                     }}
                     onDone={() => setHasErrorDialog(false)}
                 />
-                <div className="flex flex-col items-start flex-1 w-full mt-1 space-y-2 overflow-auto hide-scroll">
-                    <div className="w-full h-full">
+                <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-4 space-y-2 overflow-auto hide-scroll">
+                    <div className="w-full">
                         <ProviderStatus onHomepage />
-                        <div className="flex flex-row items-start w-full justify-between pt-1 pb-2 p-6">
+                        <div className="flex flex-row items-start w-full justify-between pt-1 pb-1">
                             <NetworkSelect />
                             <DAppConnection />
                         </div>

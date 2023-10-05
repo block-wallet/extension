@@ -4,7 +4,7 @@ import { INITIAL_NETWORKS } from '../../../../utils/constants/networks';
 import { normalizeNetworksOrder } from '../../../../utils/networks';
 
 /**
- * Update Network and native currency logos
+ * Update Network and native currency logos + fix polygon mumbai block explorer name
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
@@ -72,6 +72,12 @@ export default {
         updatedNetworks.GOERLI = {
             ...updatedNetworks.GOERLI,
             iconUrls: INITIAL_NETWORKS.GOERLI.iconUrls,
+        };
+
+        updatedNetworks.POLYGON_TESTNET_MUMBAI = {
+            ...updatedNetworks.POLYGON_TESTNET_MUMBAI,
+            blockExplorerName:
+                INITIAL_NETWORKS.POLYGON_TESTNET_MUMBAI.blockExplorerName,
         };
 
         updatedNetworks.ZKSYNC_ALPHA_TESTNET = {

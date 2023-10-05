@@ -59,7 +59,10 @@ import ManuallyAddNetwork from "../routes/networks/ManuallyAddNetwork"
 import SetupBridgePage from "../routes/bridge/BridgeSetupPage"
 import BridgeConfirmPage from "../routes/bridge/BridgeConfirmPage"
 import BridgeAfterAddTokenPage from "../routes/bridge/BridgeAfterAddTokenPage"
+import BuyPage from "../routes/buy/BuyPage"
 import Hotkeys from "../routes/settings/Hotkeys"
+import TokensPage from "../routes/tokens/TokensPage"
+import AccountsOrderPage from "../routes/account/AccountsOrderPage"
 
 export const ROUTES_DEFINITION = [
     /* Root */
@@ -114,6 +117,13 @@ export const ROUTES_DEFINITION = [
         path: "/accounts/menu/allowances",
         exact: true,
         component: AllowancesPage,
+    },
+    /* Tokens order */
+    { path: "/accounts/menu/tokensOrder", exact: true, component: TokensPage },
+    {
+        path: "/accounts/menu/order",
+        exact: true,
+        component: AccountsOrderPage,
     },
     /* Send */
     { path: "/send", exact: true, component: SendPage },
@@ -269,6 +279,8 @@ export const ROUTES_DEFINITION = [
     { path: "/error", exact: true, component: ErrorFallbackPage },
     /* Welcome Message */
     { path: "/welcome", exact: true, component: WelcomeInfo },
+    /* Buy */
+    { path: "/buy", exact: true, component: BuyPage },
 ] as TransitionRouteProps[]
 
 export const appRoutes = makeRoutes(ROUTES_DEFINITION)

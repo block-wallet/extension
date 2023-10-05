@@ -54,6 +54,7 @@ import { SwapControllerMemState } from '@block-wallet/background/controllers/Swa
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import CACHED_INCOMPATIBLE_SITES from '@block-wallet/remote-configs/provider/incompatible_sites.json';
 import { CampaignsControllerState } from '@block-wallet/background/controllers/CampaignsController';
+import { OnrampControllerMemState } from '@block-wallet/background/controllers/OnrampController';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -92,6 +93,7 @@ export type BlankAppUIState = {
     BridgeController: BridgeControllerMemState;
     SwapController: SwapControllerMemState;
     BlankProviderController: BlankProviderControllerState;
+    OnrampController: OnrampControllerMemState;
 };
 
 export type ExchangeRatesUIState = {
@@ -137,6 +139,7 @@ const initialState: BlankAppState = {
         hiddenAccounts: {},
         isRefreshingAllowances: false,
         isAccountTrackerLoading: false,
+        accountTokensOrder: {},
     },
     AppStateController: {
         idleTimeout: 5,
@@ -169,6 +172,8 @@ const initialState: BlankAppState = {
         popupTab: 'activity',
         settings: {
             hideAddressWarning: false, // Shown by default,
+            hideSendToContractWarning: false, // Shown by default
+            hideSendToNullWarning: false, // Shown by default
             subscribedToReleaseaNotes: true,
             subscribedToNotifications: true,
             useAntiPhishingProtection: true,
@@ -176,6 +181,7 @@ const initialState: BlankAppState = {
             hideEstimatedGasExceedsThresholdWarning: false, // Shown by default,
             hideDepositsExternalAccountsWarning: false,
             hideBridgeInsufficientNativeTokenWarning: false, // Shown by default
+            displayNetWorth: true,
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',
@@ -186,6 +192,7 @@ const initialState: BlankAppState = {
         },
         defaultGasOption: 'medium',
         hotkeysEnabled: true,
+        tokensSortValue: 'CUSTOM',
     },
     TransactionController: {
         transactions: [],

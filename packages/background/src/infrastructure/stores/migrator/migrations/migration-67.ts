@@ -13,19 +13,39 @@ export default {
 
         Object.keys(updatedNetworks).forEach((key) => {
             const { rpcUrls } = updatedNetworks[key];
-            updatedNetworks[key] = {
-                ...updatedNetworks[key],
-                defaultRpcUrl: INITIAL_NETWORKS[key].defaultRpcUrl,
-                backupRpcUrls: INITIAL_NETWORKS[key].backupRpcUrls,
-            };
+
+            let defaultRpcUrl: string | undefined;
+            let currentRpcUrl: string;
+            let backupRpcUrls: string[] | undefined;
+            if (key in INITIAL_NETWORKS) {
+                defaultRpcUrl = INITIAL_NETWORKS[key].defaultRpcUrl;
+                backupRpcUrls = INITIAL_NETWORKS[key].backupRpcUrls;
+                currentRpcUrl =
+                    updatedNetworks[key].currentRpcUrl ??
+                    INITIAL_NETWORKS[key].currentRpcUrl;
+            } else {
+                const network = updatedNetworks[key];
+                if (network.rpcUrls && network.rpcUrls?.length) {
+                    defaultRpcUrl = network.rpcUrls[0];
+                    currentRpcUrl = network.rpcUrls[0];
+                } else {
+                    defaultRpcUrl = '';
+                    currentRpcUrl = network.currentRpcUrl ?? '';
+                }
+                backupRpcUrls = [];
+            }
+
             if (rpcUrls && rpcUrls.length > 0) {
-                const currentRpcUrl = rpcUrls[0];
-                updatedNetworks[key] = {
-                    ...updatedNetworks[key],
-                    currentRpcUrl,
-                };
+                currentRpcUrl = currentRpcUrl || rpcUrls[0];
                 delete updatedNetworks[key].rpcUrls;
             }
+
+            updatedNetworks[key] = {
+                ...updatedNetworks[key],
+                defaultRpcUrl,
+                currentRpcUrl,
+                backupRpcUrls,
+            };
         });
 
         const orderedNetworks = normalizeNetworksOrder(updatedNetworks);
@@ -38,5 +58,5 @@ export default {
             },
         };
     },
-    version: '1.1.7',
+    version: '1.1.9',
 } as IMigration;

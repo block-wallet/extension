@@ -42,6 +42,9 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
+import { updateGasPrices } from "../../context/commActions"
+
+import { GAS_PRICE_UPDATE_INTERVAL } from "../../util/constants"
 
 export type TransactionSpeed = {
     [key: string]: BigNumber
@@ -455,6 +458,16 @@ export const GasPriceSelector = (props: GasPriceSelectorProps) => {
     } = useExchangeRatesState()
 
     const { gasPricesLevels } = useGasPriceData()
+
+    // force gas updates
+    useEffect(() => {
+        const interval = setInterval(() => {
+            updateGasPrices()
+        }, GAS_PRICE_UPDATE_INTERVAL)
+        return () => {
+            clearInterval(interval)
+        }
+    }, [])
 
     const {
         showGasLevels,

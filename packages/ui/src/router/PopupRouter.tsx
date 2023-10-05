@@ -15,6 +15,7 @@ import IdleComponent from "../components/IdleComponent"
 import WalletNews from "../components/news/WalletNews"
 import LocationHolder from "./LocationHolder"
 import { useLocationRecovery } from "../util/hooks/useLocationRecovery"
+import { timeExceedsTTL } from "../util/time"
 import useClearStickyStorage from "../context/hooks/useClearStickyStorage"
 import {
     getNonSubmittedTransactions,

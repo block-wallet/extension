@@ -40,6 +40,12 @@ const locations: HotkeyMap = {
                 description: "Send",
             },
             {
+                hotkey: "U",
+                action: "/buy",
+                hotkeyDescription: "ALT+U",
+                description: "Buy",
+            },
+            {
                 hotkey: "W",
                 action: "/swap",
                 hotkeyDescription: "ALT+W",
@@ -147,7 +153,7 @@ const locations: HotkeyMap = {
                 hotkey: "C",
                 action: "/accounts/create",
                 hotkeyDescription: "ALT+C",
-                description: "Create account",
+                description: "New account",
             },
         ],
         CTRL: [],
@@ -159,7 +165,7 @@ const locations: HotkeyMap = {
                 hotkey: "C",
                 action: "/accounts/create/add",
                 hotkeyDescription: "ALT+C",
-                description: "Create account",
+                description: "New account",
             },
             {
                 hotkey: "I",
@@ -217,8 +223,20 @@ const locations: HotkeyMap = {
             },
             {
                 hotkey: "7",
-                action: "/accounts/menu/reset",
+                action: "/accounts/menu/tokensOrder",
                 hotkeyDescription: "ALT+7",
+                description: "Assets order",
+            },
+            {
+                hotkey: "8",
+                action: "/accounts/menu/order",
+                hotkeyDescription: "ALT+8",
+                description: "Accounts order",
+            },
+            {
+                hotkey: "9",
+                action: "/accounts/menu/reset",
+                hotkeyDescription: "ALT+9",
                 description: "Reset account",
             },
         ],
@@ -412,6 +430,8 @@ export const useCheckLocationHotkeys = (
             } else {
                 return hotkeyAction.description
             }
+
+            return undefined
         }
     )
 

@@ -45,6 +45,7 @@ interface AccountDisplayProps {
     menu?: AccountDisplayMenuOption[]
     actionButtons?: JSX.Element[]
     onClickAccount?: (account: AccountInfo) => void
+    className?: string
 }
 
 const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
@@ -58,14 +59,18 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
     actionButtons,
     menu,
     onClickAccount,
+    className,
 }) => {
     const [confirmationDialog, setConfirmationDialog] =
         useState<ConfirmDialogState>({ isOpen: false })
     const { isHovering: isHoveringMenu, getIsHoveringProps } = useIsHovering()
     const checksumAddress = useAddressWithChainIdChecksum(account?.address)
-    const netWorthBalance = useNetWorthBalance(
-        !showAddress ? account : undefined
-    )
+    const {
+        displayNetWorth,
+        netWorth,
+        nativeTokenBalance,
+        nativeTokenBalanceRounded,
+    } = useNetWorthBalance(!showAddress ? account : undefined)
 
     const { copied, onCopy } = useCopyToClipboard(checksumAddress)
 
@@ -93,7 +98,8 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                     "flex flex-row items-center justify-between w-full rounded-lg",
                     hoverStyle &&
                         "hover:bg-primary-grey-default cursor-pointer",
-                    confirmationDialog.isOpen && "!cursor-default"
+                    confirmationDialog.isOpen && "!cursor-default",
+                    className
                 )}
                 onClick={() => onClickAccount && onClickAccount(account)}
                 role="button"
@@ -141,9 +147,15 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                             {!showAddress ? (
                                 <span
                                     className="text-xs text-primary-grey-dark"
-                                    title={`${netWorthBalance}`}
+                                    title={
+                                        displayNetWorth
+                                            ? netWorth
+                                            : nativeTokenBalance
+                                    }
                                 >
-                                    {netWorthBalance}
+                                    {displayNetWorth
+                                        ? netWorth
+                                        : nativeTokenBalanceRounded}
                                 </span>
                             ) : (
                                 <span className="text-xs text-primary-grey-dark">

@@ -20,8 +20,9 @@ import {
     ResponseGetAppState,
     ResponseGetActivityListState,
     ActivityListStateSubscription,
-    AddressType,
     RequestSwitchProvider,
+    RequestTokensOrder,
+    AddressType,
 } from "@block-wallet/background/utils/types/communication"
 import {
     Devices,
@@ -76,6 +77,7 @@ import {
     GetBridgeQuoteNotFoundResponse,
 } from "@block-wallet/background/controllers/BridgeController"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
+import { GetOnRampCurrencies } from "@block-wallet/background/controllers/OnrampController"
 
 let requestId = 0
 
@@ -617,6 +619,13 @@ export const getSendTransactionGasLimit = async (
  */
 export const getLatestGasPrice = async (): Promise<BigNumber> => {
     return sendMessage(Messages.TRANSACTION.GET_LATEST_GAS_PRICE)
+}
+
+/**
+ * Updates the gas price levels
+ */
+export const updateGasPrices = async () => {
+    return sendMessage(Messages.TRANSACTION.UPDATE_GAS_PRICE)
 }
 
 /**
@@ -1807,4 +1816,46 @@ export const executeBridge = async (
  */
 export const setHotkeysEnabled = async (enabled: boolean): Promise<void> => {
     return sendMessage(Messages.WALLET.SET_HOTKEYS_ENABLED, { enabled })
+}
+
+/**
+ * Enable/Disable hotkeys
+ *
+ * @param enabled Allow hotkeys on the extension
+ */
+export const getOnrampCurrencies = async (): Promise<GetOnRampCurrencies> => {
+    return sendMessage(Messages.WALLET.GET_ONRAMP_CURRENCIES)
+}
+
+/**
+ * Edit account tokens order by account and chainId.
+ *
+ */
+export const editAccountTokensOrder = async (
+    editTokensOrder: RequestTokensOrder
+) => {
+    return sendMessage(
+        Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER,
+        editTokensOrder
+    )
+}
+
+/**
+ * Enable/Disable hotkeys
+ *
+ * @param enabled Allow hotkeys on the extension
+ */
+export const setTokensSortValue = async (sortValue: string): Promise<void> => {
+    return sendMessage(Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE, sortValue)
+}
+
+/**
+ * orderAccounts
+ *
+ * @param accounts array with all the accounts ordered by the user
+ */
+export const orderAccounts = async (
+    accountsInfo: AccountInfo[]
+): Promise<void> => {
+    return sendMessage(Messages.ACCOUNT.ORDER_ACCOUNTS, { accountsInfo })
 }

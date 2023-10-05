@@ -15,6 +15,8 @@ import { mergeReducer } from "../../util/reducerUtils"
 interface State {
     subscribedToNotifications: boolean
     hideAddressWarning: boolean
+    hideSendToContractWarning: boolean
+    hideSendToNullWarning: boolean
     hideEstimatedGasExceedsThresholdWarning: boolean
     hideBridgeInsufficientNativeTokenWarning: boolean
 }
@@ -27,6 +29,8 @@ const NotificationsAndWarningsPage = () => {
     const initialState = useRef<State>({
         subscribedToNotifications: settings.subscribedToNotifications,
         hideAddressWarning: settings.hideAddressWarning,
+        hideSendToContractWarning: settings.hideSendToContractWarning,
+        hideSendToNullWarning: settings.hideSendToNullWarning,
         hideEstimatedGasExceedsThresholdWarning:
             settings.hideEstimatedGasExceedsThresholdWarning,
         hideBridgeInsufficientNativeTokenWarning:
@@ -45,6 +49,9 @@ const NotificationsAndWarningsPage = () => {
                 subscribedToNotifications:
                     preferencesConfig.subscribedToNotifications,
                 hideAddressWarning: preferencesConfig.hideAddressWarning,
+                hideSendToContractWarning:
+                    preferencesConfig.hideSendToContractWarning,
+                hideSendToNullWarning: preferencesConfig.hideSendToNullWarning,
                 hideEstimatedGasExceedsThresholdWarning:
                     preferencesConfig.hideEstimatedGasExceedsThresholdWarning,
                 hideBridgeInsufficientNativeTokenWarning:
@@ -93,6 +100,37 @@ const NotificationsAndWarningsPage = () => {
                     onToggle={(value) =>
                         setPreferencesConfig({
                             subscribedToNotifications: value,
+                        })
+                    }
+                />
+                <hr />
+                <span className="text-sm text-primary-grey-dark">
+                    Warn me when I try to send tokens to a smart contract
+                    address
+                </span>
+                <ToggleButton
+                    id="smartContractWarning"
+                    label="Show Smart Contract Warning"
+                    defaultChecked={
+                        !preferencesConfig.hideSendToContractWarning
+                    }
+                    onToggle={(value) =>
+                        setPreferencesConfig({
+                            hideSendToContractWarning: !value,
+                        })
+                    }
+                />
+                <hr />
+                <span className="text-sm text-primary-grey-dark">
+                    Warn me when I try to send tokens to the null address
+                </span>
+                <ToggleButton
+                    id="nullAddressWarning"
+                    label="Show Null Address Warning"
+                    defaultChecked={!preferencesConfig.hideSendToNullWarning}
+                    onToggle={(value) =>
+                        setPreferencesConfig({
+                            hideSendToNullWarning: !value,
                         })
                     }
                 />

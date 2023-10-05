@@ -46,7 +46,7 @@ const AssetsOverview = () => {
             data-testid="assets-list"
         >
             <AddTokenButton fixed={displayFixedButton} />
-            <AssetsList assets={tokens} />
+            <AssetsList />
         </div>
     )
 }

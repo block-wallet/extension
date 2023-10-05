@@ -59,4 +59,4 @@ To commit your change(s) just add your file/s and then commit your changes with 
 
 ### ⤴ Open a Pull Request
 
-Once your changes are ready please open a Pull Request and complete the template. The reviewer team will check your PR and when it's approved you'll be able to merge it. In case you won't to do an external contribution please create an Issue with your proposal. 
+Once your changes are ready please open a Pull Request and complete the template. The reviewer team will check your PR and when it's approved you'll be able to merge it. In case you want to do an external contribution please create an Issue with your proposal. 

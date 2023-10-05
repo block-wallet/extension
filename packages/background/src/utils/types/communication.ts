@@ -68,6 +68,7 @@ import {
 import { GasPriceData } from '@block-wallet/background/controllers/GasPricesController';
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import { TypedTransaction } from '@ethereumjs/tx';
+import { GetOnRampCurrencies } from '@block-wallet/background/controllers/OnrampController';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -84,6 +85,9 @@ enum ACCOUNT {
     REFRESH_TOKEN_ALLOWANCES = 'REFRESH_TOKEN_ALLOWANCES',
     UNHIDE = 'UNHIDE_ACCOUNT',
     GET_NATIVE_TOKEN_BALANCE = 'GET_NATIVE_TOKEN_BALANCE',
+    EDIT_ACCOUNT_TOKENS_ORDER = 'EDIT_ACCOUNT_TOKENS_ORDER',
+    SET_ACCOUNT_SORT_VALUE = 'SET_ACCOUNT_SORT_VALUE',
+    ORDER_ACCOUNTS = 'ORDER_ACCOUNTS',
 }
 
 enum ADDRESS {
@@ -205,6 +209,7 @@ enum TRANSACTION {
     REJECT = 'REJECT_TRANSACTION',
     UPDATE_STATUS = 'UPDATE_STATUS',
     GET_LATEST_GAS_PRICE = 'GET_LATEST_GAS_PRICE',
+    UPDATE_GAS_PRICE = 'UPDATE_GAS_PRICE',
     FETCH_LATEST_GAS_PRICE = 'FETCH_LATEST_GAS_PRICE',
     SEND_ETHER = 'SEND_ETHER',
     CANCEL_TRANSACTION = 'CANCEL_TRANSACTION',
@@ -246,6 +251,8 @@ enum WALLET {
     HARDWARE_QR_CANCEL_SIGN_REQUEST = 'HARDWARE_QR_CANCEL_SIGN_REQUEST',
     //hotkeys
     SET_HOTKEYS_ENABLED = 'SET_HOTKEYS_ENABLED',
+    //onramp
+    GET_ONRAMP_CURRENCIES = 'GET_ONRAMP_CURRENCIES',
 }
 
 enum TOKEN {
@@ -334,6 +341,9 @@ export interface RequestSignatures {
         number,
         BigNumber | undefined
     ];
+    [Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER]: [RequestTokensOrder, void];
+    [Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE]: [string, void];
+    [Messages.ACCOUNT.ORDER_ACCOUNTS]: [RequestOrderAccounts, void];
     [Messages.APP.GET_IDLE_TIMEOUT]: [undefined, number];
     [Messages.APP.SET_IDLE_TIMEOUT]: [RequestSetIdleTimeout, void];
     [Messages.APP.SET_LAST_USER_ACTIVE_TIME]: [undefined, void];
@@ -453,6 +463,7 @@ export interface RequestSignatures {
         boolean
     ];
     [Messages.TRANSACTION.GET_LATEST_GAS_PRICE]: [undefined, BigNumber];
+    [Messages.TRANSACTION.UPDATE_GAS_PRICE]: [undefined, undefined];
     [Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE]: [number, GasPriceData];
     [Messages.TRANSACTION.SEND_ETHER]: [RequestSendEther, string];
     [Messages.TRANSACTION.ADD_NEW_SEND_TRANSACTION]: [
@@ -596,6 +607,7 @@ export interface RequestSignatures {
         boolean
     ];
     [Messages.WALLET.SET_HOTKEYS_ENABLED]: [RequestSetHotkeys, void];
+    [Messages.WALLET.GET_ONRAMP_CURRENCIES]: [void, GetOnRampCurrencies];
 }
 
 export type MessageTypes = keyof RequestSignatures;
@@ -1269,4 +1281,16 @@ export type StateSubscription =
     | ActivityListStateSubscription;
 export interface RequestSetHotkeys {
     enabled: boolean;
+}
+
+export interface RequestSetHotkeys {
+    enabled: boolean;
+}
+
+export interface RequestTokensOrder {
+    [tokenAddress: string]: number;
+}
+
+export interface RequestOrderAccounts {
+    accountsInfo: AccountInfo[];
 }

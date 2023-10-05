@@ -123,6 +123,8 @@ import {
     RequestSwitchProvider,
     RequestIsEnrolled,
     RequestSetHotkeys,
+    RequestTokensOrder,
+    RequestOrderAccounts,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -245,6 +247,7 @@ import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
 import CampaignsController from './CampaignsController';
 import { NotificationController } from './NotificationController';
+import OnrampController from './OnrampController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -287,6 +290,7 @@ export default class BlankController extends EventEmitter {
     private readonly remoteConfigsController: RemoteConfigsController;
     private readonly campaignsController: CampaignsController;
     private readonly notificationController: NotificationController;
+    private readonly onrampController: OnrampController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -486,12 +490,15 @@ export default class BlankController extends EventEmitter {
             preferencesController: this.preferencesController,
         });
 
+        this.onrampController = new OnrampController(this.networkController);
+
         this.notificationController = new NotificationController(
             this.preferencesController,
             this.transactionWatcherController,
             this.transactionController,
             this.accountTrackerController,
-            this.addressBookController
+            this.addressBookController,
+            this.ensController
         );
 
         this.store = new ComposedStore<BlankAppState>({
@@ -544,6 +551,7 @@ export default class BlankController extends EventEmitter {
             BlankProviderController: this.blankProviderController.store,
             SwapController: this.swapController.UIStore,
             BridgeController: this.bridgeController.UIStore,
+            OnrampController: this.onrampController.store,
         });
 
         this.STORES = {
@@ -615,6 +623,11 @@ export default class BlankController extends EventEmitter {
         );
 
         this.networkController.setActiveSubscriptions(
+            isAppUnlocked,
+            activeSubscription
+        );
+
+        this.gasPricesController.manageActiveSubscriptions(
             isAppUnlocked,
             activeSubscription
         );
@@ -805,6 +818,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES:
                 return this.refreshAccountTokenAllowances();
+            case Messages.ACCOUNT.ORDER_ACCOUNTS:
+                return this.orderAccounts(request as RequestOrderAccounts);
             case Messages.APP.GET_IDLE_TIMEOUT:
                 return this.getIdleTimeout();
             case Messages.APP.SET_IDLE_TIMEOUT:
@@ -964,6 +979,8 @@ export default class BlankController extends EventEmitter {
                 return this.udResolve(request as RequestUDResolve);
             case Messages.TRANSACTION.GET_LATEST_GAS_PRICE:
                 return this.getLatestGasPrice();
+            case Messages.TRANSACTION.UPDATE_GAS_PRICE:
+                return this.updateGasPrices();
             case Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE:
                 return this.fetchLatestGasPriceForChain(request as number);
             case Messages.TRANSACTION.SEND_ETHER:
@@ -1170,6 +1187,14 @@ export default class BlankController extends EventEmitter {
                 return getCurrentWindowId();
             case Messages.WALLET.SET_HOTKEYS_ENABLED:
                 return this.setHotkeysStatus(request as RequestSetHotkeys);
+            case Messages.WALLET.GET_ONRAMP_CURRENCIES:
+                return this.getOnrampCurrencies();
+            case Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER:
+                return this.editAccountTokensOrder(
+                    request as RequestTokensOrder
+                );
+            case Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE:
+                return this.setAccountTokensSortValue(request as string);
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -2411,6 +2436,14 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * Updates the gas price levels
+     */
+    private async updateGasPrices() {
+        const currentBlockNumber = this.blockUpdatesController.getBlockNumber();
+        this.gasPricesController.updateGasPrices(currentBlockNumber);
+    }
+
+    /**
      * It returns the current network latest gas price by fetching it from the Fee service or network
      */
     private async fetchLatestGasPriceForChain(
@@ -3484,5 +3517,45 @@ export default class BlankController extends EventEmitter {
      */
     private setHotkeysStatus({ enabled }: RequestSetHotkeys) {
         this.preferencesController.hotkeysStatus = enabled;
+    }
+
+    /** Get onramp currencies
+     *
+     */
+    private getOnrampCurrencies() {
+        return this.onrampController.getCurrencies();
+    }
+
+    /**
+     * editAccountTokensOrder
+     *
+     * @param address The address identifier of the token contract
+     * @param order Order of token
+     */
+    private async editAccountTokensOrder(
+        tokensOrder: RequestTokensOrder
+    ): Promise<void> {
+        return this.accountTrackerController.editAccountTokensOrder(
+            tokensOrder
+        );
+    }
+
+    /** Set tokens list default sort value
+     *
+     * @param tokensSortValue indicates which sort value we will use
+     */
+    private setAccountTokensSortValue(tokensSortValue: string) {
+        this.preferencesController.tokensSortValue = tokensSortValue;
+    }
+
+    /**
+     * orderAccounts
+     *
+     * @param accounts array with all the accounts ordered by the user
+     */
+    private async orderAccounts({
+        accountsInfo,
+    }: RequestOrderAccounts): Promise<void> {
+        this.accountTrackerController.orderAccounts(accountsInfo);
     }
 }

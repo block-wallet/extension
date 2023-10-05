@@ -270,7 +270,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         setAllowance(
             formatRoundedUp(formatUnits(defaultAllowance, tokenDecimals))
         )
-    }, [defaultAllowance])
+    }, [defaultAllowance, tokenDecimals])
 
     useEffect(() => {
         setIsManuallyRejected(false)
@@ -381,7 +381,6 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const approve = async () => {
         try {
             dispatch({ type: "open", payload: { status: "loading" } })
-
             const isLinked = await checkDeviceIsLinked()
             if (!isLinked) {
                 closeDialog()
@@ -391,7 +390,10 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 customAllowance: parseAllowance(allowance, tokenDecimals),
                 customNonce: transactionAdvancedData.customNonce,
             })
-        } catch (error) {}
+        } catch (error) {
+            console.log(error)
+            dispatch({ type: "open", payload: { status: "error" } })
+        }
     }
 
     const reject = async () => {

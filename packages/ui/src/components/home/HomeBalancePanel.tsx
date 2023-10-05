@@ -5,28 +5,38 @@ import PanelButtons from "./PanelButtons"
 import useNetWorthBalance from "../../context/hooks/useNetWorthBalance"
 import { AiFillInfoCircle } from "react-icons/ai"
 import Tooltip from "../label/Tooltip"
+import { setUserSettings } from "../../context/commActions"
+import Icon, { IconName } from "../ui/Icon"
 
 const HomeBalancePanel = () => {
-    const { isNetworkChanging, isUserNetworkOnline, nativeCurrency } =
+    const { isNetworkChanging, isUserNetworkOnline, nativeCurrency, settings } =
         useBlankState()!
-    const { isSendEnabled, isSwapEnabled, isBridgeEnabled } =
+    const { isSendEnabled, isSwapEnabled, isBridgeEnabled, isOnrampEnabled } =
         useSelectedNetwork()
-    const netWorth = useNetWorthBalance()
+    const {
+        netWorth,
+        displayNetWorth,
+        nativeTokenBalance,
+        nativeTokenBalanceRounded,
+        nativeCurrencyAmount,
+    } = useNetWorthBalance()
 
     const disabledActions = !isSendEnabled || !isUserNetworkOnline
 
     return (
-        <div className="px-12">
+        <>
             <TokenSummary className="p-4">
                 <TokenSummary.Balances className="!space-y-0">
-                    <TokenSummary.TokenBalance title={netWorth}>
-                        {netWorth}
+                    <TokenSummary.TokenBalance
+                        title={displayNetWorth ? netWorth : nativeTokenBalance}
+                    >
+                        {displayNetWorth ? netWorth : nativeTokenBalanceRounded}
                     </TokenSummary.TokenBalance>
 
                     <TokenSummary.ExchangeRateBalance className="flex items-center text-xs">
                         <div className="group relative">
                             <a
-                                href="https://help.blockwallet.io/hc/en-us/articles/14296951040785"
+                                href="https://blockwallet.io/docs/net-worth"
                                 target="_blank"
                                 rel="noreferrer"
                                 className="contents"
@@ -40,13 +50,22 @@ const HomeBalancePanel = () => {
                                     content={
                                         <div className="flex flex-col font-normal items-start text-xs text-white-500">
                                             <div className="flex flex-row items-end space-x-7">
-                                                <span>
-                                                    Your NET worth is the summed{" "}
-                                                    {nativeCurrency.toUpperCase()}{" "}
-                                                    value
-                                                    <br /> of all assets in your
-                                                    asset list.
-                                                </span>{" "}
+                                                {displayNetWorth ? (
+                                                    <span>
+                                                        Your Net Worth is the
+                                                        summed{" "}
+                                                        {nativeCurrency.toUpperCase()}{" "}
+                                                        value
+                                                        <br /> of all assets in
+                                                        your asset list.{" "}
+                                                    </span>
+                                                ) : (
+                                                    <span>
+                                                        Native token balance for{" "}
+                                                        <br /> the current
+                                                        network.
+                                                    </span>
+                                                )}{" "}
                                             </div>
                                             <div className="flex flex-row items-end space-x-4">
                                                 <span>
@@ -60,7 +79,21 @@ const HomeBalancePanel = () => {
                                 />
                             </a>
                         </div>
-                        Net Worth
+                        {displayNetWorth ? "Net Worth" : nativeCurrencyAmount}
+                        <div
+                            title={`Switch to ${
+                                displayNetWorth ? "Native Token" : "Net Worth"
+                            }`}
+                            className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
+                            onClick={() => {
+                                setUserSettings({
+                                    ...settings,
+                                    displayNetWorth: !displayNetWorth,
+                                })
+                            }}
+                        >
+                            <Icon name={IconName.SWITCH} size="sm" />
+                        </div>
                     </TokenSummary.ExchangeRateBalance>
                 </TokenSummary.Balances>
                 <TokenSummary.Actions>
@@ -68,6 +101,12 @@ const HomeBalancePanel = () => {
                         disabled={disabledActions}
                         isLoading={isNetworkChanging}
                     />
+                    {isOnrampEnabled && (
+                        <PanelButtons.Buy
+                            disabled={disabledActions}
+                            isLoading={isNetworkChanging}
+                        />
+                    )}
                     {isSwapEnabled && (
                         <PanelButtons.Swap
                             disabled={disabledActions}
@@ -82,7 +121,7 @@ const HomeBalancePanel = () => {
                     )}
                 </TokenSummary.Actions>
             </TokenSummary>
-        </div>
+        </>
     )
 }
 

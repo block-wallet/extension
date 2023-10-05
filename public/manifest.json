@@ -1,12 +1,20 @@
 {
     "author": "BlockWallet",
     "background": {
-        "scripts": ["hot-reload.js", "background.js"]
+        "scripts": [
+            "hot-reload.js",
+            "background.js"
+        ]
     },
     "content_scripts": [
         {
-            "js": ["content.js"],
-            "matches": ["http://*/*", "https://*/*"],
+            "js": [
+                "content.js"
+            ],
+            "matches": [
+                "http://*/*",
+                "https://*/*"
+            ],
             "exclude_matches": [
                 "https://block-wallet.github.io/eth-ledger-bridge-keyring/*",
                 "https://connect.trezor.io/*"
@@ -15,15 +23,19 @@
             "all_frames": true
         },
         {
-            "js": ["vendor/trezor/trezor-content.js"],
-            "matches": ["*://connect.trezor.io/*/popup.html"]
+            "js": [
+                "vendor/trezor/trezor-content.js"
+            ],
+            "matches": [
+                "*://connect.trezor.io/*/popup.html"
+            ]
         }
     ],
     "browser_action": {
         "default_popup": "popup.html",
         "default_title": "BlockWallet"
     },
-    "description": "The first crypto wallet protecting you on Web3 without any compromises.",
+    "description": "All eyes on your dreams with BlockWallet - your self-custodial Web3 wallet that handles the rest.",
     "homepage_url": "https://www.blockwallet.io/",
     "icons": {
         "16": "icons/icon-16.png",
@@ -36,6 +48,7 @@
     "permissions": [
         "activeTab",
         "storage",
+        "unlimitedStorage",
         "notifications",
         "https://*.blockwallet.io/*",
         "https://*.etherscan.io/*",
@@ -50,6 +63,8 @@
             }
         }
     },
-    "version": "0.7.3",
-    "web_accessible_resources": ["blankProvider.js"]
+    "version": "1.1.7",
+    "web_accessible_resources": [
+        "blankProvider.js"
+    ]
 }

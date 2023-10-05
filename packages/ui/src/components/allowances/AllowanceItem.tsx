@@ -188,8 +188,9 @@ const AllowanceItem = ({
             <div className="flex flex-row items-center">
                 <TokenLogo
                     logo={logo}
-                    name={name}
-                    className={Classes.roundedIcon}
+                    name={(showToken ? token.symbol : spender.symbol) ?? ""}
+                    logoSize="big"
+                    filled={false}
                 />
                 <div className="flex flex-col ml-2">
                     <span

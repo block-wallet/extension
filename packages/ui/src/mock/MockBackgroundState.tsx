@@ -20,6 +20,8 @@ export const initBackgroundState: BackgroundStateType = {
         cachedPopulatedTokens: {},
         isAccountTrackerLoading: false,
         hotkeysEnabled: true,
+        tokensSortValue: "CUSTOM",
+        accountTokensOrder: {},
         filters: {
             account: [],
         },
@@ -395,6 +397,8 @@ export const initBackgroundState: BackgroundStateType = {
         popupTab: "activity",
         settings: {
             hideAddressWarning: false,
+            hideSendToContractWarning: false,
+            hideSendToNullWarning: false,
             subscribedToNotifications: true,
             subscribedToReleaseaNotes: false,
             useAntiPhishingProtection: false,
@@ -402,6 +406,7 @@ export const initBackgroundState: BackgroundStateType = {
             hideEstimatedGasExceedsThresholdWarning: false,
             hideDepositsExternalAccountsWarning: false,
             hideBridgeInsufficientNativeTokenWarning: false,
+            displayNetWorth: true,
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: "0.1.1",
@@ -644,6 +649,7 @@ export const initBackgroundState: BackgroundStateType = {
             //},
         },
         availableBridgeChains: [],
+        availableOnrampChains: [],
     },
 }
 

@@ -10,6 +10,9 @@ import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetAssetByTokenAddress from "../../util/hooks/useGetAssetByTokenAddress"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
+import RoundedIconButton from "../button/RoundedIconButton"
+import AnimatedIcon, { AnimatedIconName } from "../../components/AnimatedIcon"
+import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
 import openExternal from "../../assets/images/icons/open_external.svg"
 import PopupHeader from "../popup/PopupHeader"
 import PopupLayout from "../popup/PopupLayout"
@@ -20,9 +23,9 @@ import { isNativeTokenAddress } from "../../util/tokenUtils"
 import SuccessDialog from "../dialog/SuccessDialog"
 import { formatName } from "../../util/formatAccount"
 import Icon, { IconName } from "../ui/Icon"
-import TokenLogo from "../token/TokenLogo"
 import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 import ActivityAllowancesView from "./ActivityAllowancesView"
+import TokenLogo from "../token/TokenLogo"
 import PanelButtons from "../home/PanelButtons"
 
 const AssetDetailsPage = () => {
@@ -164,73 +167,73 @@ const AssetDetailsPage = () => {
                 }}
                 timeout={1000}
             />
-            <div className="flex flex-col items-start flex-1 w-full h-full max-h-screen pt-3 space-y-6 overflow-auto hide-scroll">
-                <div className="px-6 w-full">
-                    <TokenSummary className="mt-2">
-                        <TokenSummary.Balances className="mt-2">
-                            <TokenLogo
-                                name={token.symbol}
-                                logo={token.logo}
-                                className={Classes.roundedFilledIcon}
-                            />
-                            <TokenSummary.TokenName>
-                                {token.name}
-                            </TokenSummary.TokenName>
-                            <TokenSummary.TokenBalance
-                                className="flex flex-row space-x-1"
-                                title={`${formattedTokenBalance} ${token.symbol}`}
-                                isLoading={state.isNetworkChanging}
+
+            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 space-y-6 overflow-auto hide-scroll">
+                <TokenSummary>
+                    <TokenSummary.Balances>
+                        <TokenLogo
+                            logo={token.logo}
+                            name={token.symbol ?? ""}
+                            filled={true}
+                            logoSize="big"
+                        />
+                        <TokenSummary.TokenName>
+                            {token.name}
+                        </TokenSummary.TokenName>
+                        <TokenSummary.TokenBalance
+                            className="flex flex-row space-x-1"
+                            title={`${formattedTokenBalance} ${token.symbol}`}
+                            isLoading={state.isNetworkChanging}
+                        >
+                            <span
+                                className="truncate w-full max-w-xs"
+                                style={{ maxWidth: "18rem" }}
                             >
-                                <span
-                                    className="truncate w-full max-w-xs"
-                                    style={{ maxWidth: "18rem" }}
-                                >
-                                    {`${roundedTokenBalance} ${token.symbol}`}
-                                </span>
-                            </TokenSummary.TokenBalance>
-                            <TokenSummary.ExchangeRateBalance
-                                isLoading={isRatesChangingAfterNetworkChange}
-                            >
-                                {currencyFormatter.format(
-                                    balance,
-                                    token.symbol,
-                                    token.decimals,
-                                    isNative
-                                )}
-                            </TokenSummary.ExchangeRateBalance>
-                        </TokenSummary.Balances>
-                        <TokenSummary.Actions className="mb-4">
-                            <PanelButtons.Send
+                                {`${roundedTokenBalance} ${token.symbol}`}
+                            </span>
+                        </TokenSummary.TokenBalance>
+                        <TokenSummary.ExchangeRateBalance
+                            isLoading={isRatesChangingAfterNetworkChange}
+                        >
+                            {currencyFormatter.format(
+                                balance,
+                                token.symbol,
+                                token.decimals,
+                                isNative
+                            )}
+                        </TokenSummary.ExchangeRateBalance>
+                    </TokenSummary.Balances>
+                    <TokenSummary.Actions className="mb-4">
+                        <PanelButtons.Send
+                            disabled={disabledActions}
+                            redirectState={{
+                                asset,
+                                transitionDirection: "left",
+                            }}
+                        />
+                        {isSwapEnabled && (
+                            <PanelButtons.Swap
                                 disabled={disabledActions}
                                 redirectState={{
-                                    asset,
+                                    fromToken: asset.token,
+                                    fromTokenBalance: asset.balance,
+                                    fromAssetPage: true,
                                     transitionDirection: "left",
                                 }}
                             />
-                            {isSwapEnabled && (
-                                <PanelButtons.Swap
-                                    disabled={disabledActions}
-                                    redirectState={{
-                                        fromToken: asset.token,
-                                        fromTokenBalance: asset.balance,
-                                        fromAssetPage: true,
-                                        transitionDirection: "left",
-                                    }}
-                                />
-                            )}
-                            {isBridgeEnabled && (
-                                <PanelButtons.Bridge
-                                    disabled={disabledActions}
-                                    redirectState={{
-                                        token: asset.token,
-                                        fromAssetPage: true,
-                                        transitionDirection: "left",
-                                    }}
-                                />
-                            )}
-                        </TokenSummary.Actions>
-                    </TokenSummary>
-                </div>
+                        )}
+                        {isBridgeEnabled && (
+                            <PanelButtons.Bridge
+                                disabled={disabledActions}
+                                redirectState={{
+                                    token: asset.token,
+                                    fromAssetPage: true,
+                                    transitionDirection: "left",
+                                }}
+                            />
+                        )}
+                    </TokenSummary.Actions>
+                </TokenSummary>
                 <ActivityAllowancesView tokenAddress={asset.token.address} />
             </div>
         </PopupLayout>

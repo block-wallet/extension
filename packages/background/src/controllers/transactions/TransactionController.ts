@@ -70,7 +70,7 @@ import { NFTContract } from '../erc-721/NFTContract';
 import httpClient from '../../utils/http';
 import { fetchBlockWithRetries } from '../../utils/blockFetch';
 import { unixTimestampToJSTimestamp } from '../../utils/timestamp';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isNil } from 'lodash';
 import { isUnlimitedAllowance } from '../../utils/token';
 import { fetchContractDetails } from '../../utils/contractsInfo';
 import KeyringControllerDerivated, {
@@ -594,6 +594,8 @@ export class TransactionController extends BaseController<
                     transactionMeta.advancedData = advancedData;
                     transactionMeta.approveAllowanceParams =
                         approveAllowanceParams;
+                    // Ensure that approve transactions do not send anything in the value parameter to prevent potential native asset steal.
+                    transaction.value = undefined;
                 }
 
                 // Push transaction so extension can trigger window without waiting for gas values
@@ -702,19 +704,19 @@ export class TransactionController extends BaseController<
                     _value
                 );
 
-                if (tokenURI) {
-                    //TODO remove advanced data (check where it use and run proper migrations)
-                    advancedData = {
-                        tokenId: _value,
-                    };
-                    approveAllowanceParams.tokenId = _value;
-                    approveAllowanceParams.token = {
-                        ...approveAllowanceParams.token,
-                        type: 'ERC721',
-                    };
-                } else {
-                    throw new Error('Failed fetching token data');
+                if (isNil(tokenURI)) {
+                    throw new Error('Unable to get token URI from contract.');
                 }
+
+                //TODO remove advanced data (check where it use and run proper migrations)
+                advancedData = {
+                    tokenId: _value,
+                };
+                approveAllowanceParams.tokenId = _value;
+                approveAllowanceParams.token = {
+                    ...approveAllowanceParams.token,
+                    type: 'ERC721',
+                };
             } else {
                 advancedData = {
                     decimals: token.decimals,
@@ -940,7 +942,8 @@ export class TransactionController extends BaseController<
             const { APPROVED: status } = TransactionStatus;
 
             let txNonce = nonce;
-            if (!txNonce) {
+            // this includes 0 as posible value
+            if (typeof txNonce === 'undefined' || txNonce === undefined) {
                 // Get new nonce
                 nonceLock = await this._nonceTracker.getNonceLock(from!);
                 txNonce = nonceLock.nextNonce;
@@ -962,6 +965,9 @@ export class TransactionController extends BaseController<
                         transactionMeta.transactionParams.data!
                     );
                 transactionMeta.methodSignature = methodSignature;
+
+                // Ensure that approve transactions do not send anything in the value parameter to prevent potential native asset steal.
+                transactionMeta.transactionParams.value = undefined;
             }
 
             transactionMeta.status = status;

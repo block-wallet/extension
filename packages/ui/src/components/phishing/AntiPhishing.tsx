@@ -27,7 +27,7 @@ const AntiPhishing: FunctionComponent<{
                     <a
                         target="_blank"
                         rel="noreferrer"
-                        href="https://help.blockwallet.io/hc/en-us/articles/4756464544657"
+                        href="https://blockwallet.io/docs/what-is-phishing-protection"
                     >
                         <img
                             src={image}

@@ -213,9 +213,10 @@ const TransactionIcon: React.FC<{
         {transactionStatus !== TransactionStatus.SUBMITTED ? (
             transactionIcon ? (
                 <TokenLogo
-                    name=""
+                    name={""}
                     logo={transactionIcon}
-                    className={Classes.roundedIcon}
+                    filled={true}
+                    logoSize="big"
                 />
             ) : category ? (
                 <div className={Classes.roundedIcon}>
@@ -544,7 +545,7 @@ const TransactionItem: React.FC<{
     return (
         <>
             <div
-                className={`flex flex-col px-12 py-4 -ml-6 transition duration-300 hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 ${
+                className={`flex flex-col px-6 py-4 -ml-6 transition duration-300 hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 ${
                     !(txHash && transaction.transactionParams.from) &&
                     "cursor-default"
                 }`}
@@ -591,7 +592,7 @@ const TransactionItem: React.FC<{
                                 metaType === MetaType.REGULAR && (
                                     <div className="group relative self-start">
                                         <a
-                                            href="https://help.blockwallet.io/hc/en-us/articles/4410031249553"
+                                            href="https://blockwallet.io/docs/what-is-a-dropped-transaction"
                                             target="_blank"
                                             rel="noreferrer"
                                         >

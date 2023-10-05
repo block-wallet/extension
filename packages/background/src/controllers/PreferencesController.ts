@@ -4,6 +4,10 @@ import { BaseController } from '../infrastructure/BaseController';
 export interface UserSettings {
     // Setting that indicates if a warning is shown when receiving a transaction from an address different from the selected one.
     hideAddressWarning: boolean;
+    // Setting that indicates if a warning is shown when sending a transaction to a contract address.
+    hideSendToContractWarning: boolean;
+    // Setting that indicates if a warning is shown when sending a transaction to null address.
+    hideSendToNullWarning: boolean;
     subscribedToReleaseaNotes: boolean;
     subscribedToNotifications: boolean;
     useAntiPhishingProtection: boolean;
@@ -12,6 +16,9 @@ export interface UserSettings {
     //whether we should display the warning while making a deposit with an external/hardware account or not.
     hideDepositsExternalAccountsWarning: boolean;
     hideBridgeInsufficientNativeTokenWarning: boolean;
+
+    // Indicates if the wallet displays net worth in native currency value or native token balance.
+    displayNetWorth: boolean;
 }
 
 export interface Note {
@@ -53,6 +60,7 @@ export interface PreferencesControllerState {
     filters: FilterPreferences;
     defaultGasOption: DefaultGasOptions;
     hotkeysEnabled: boolean;
+    tokensSortValue: string;
 }
 
 export interface PreferencesControllerProps {
@@ -341,5 +349,19 @@ export class PreferencesController extends BaseController<PreferencesControllerS
      */
     public set hotkeysStatus(enabled: boolean) {
         this.store.updateState({ hotkeysEnabled: enabled });
+    }
+
+    /**
+     * Gets tokens sort value
+     */
+    public get tokensSortValue(): string {
+        return this.store.getState().tokensSortValue;
+    }
+
+    /**
+     * Sets tokens sort value
+     */
+    public set tokensSortValue(sortValue: string) {
+        this.store.updateState({ tokensSortValue: sortValue });
     }
 }

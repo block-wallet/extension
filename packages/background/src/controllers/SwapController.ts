@@ -8,31 +8,20 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { TransactionCategories } from './transactions/utils/types';
 import { TransactionController } from './transactions/TransactionController';
 import { TransactionFeeData } from './erc-20/transactions/SignedTransaction';
-import { retryHandling } from '../utils/retryHandling';
 import { TokenController } from './erc-20/TokenController';
 
-import httpClient from '../utils/http';
 import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
 import { BaseController } from '../infrastructure/BaseController';
 import {
-    OneInchSwapQuoteResponse,
     OneInchSwapRequestResponse,
     BasicToken,
-    ONEINCH_SWAPS_NETWORKS,
-    OneInchSwapQuoteParams,
-    OneInchSwapRequestParams,
-    OneInchSpenderRes,
-    ONEINCH_SWAPS_ENDPOINT,
-    BASE_SWAP_FEE,
-    GAS_LIMIT_INCREASE,
-    REFERRER_ADDRESS,
     OneInchService,
 } from '../utils/swaps/1inch';
+
 import {
-    map1InchErrorMessage,
-    get1InchErrorMessageFromResponse,
-} from '../utils/swaps/1inchError';
-import { OpenOceanService } from '../utils/swaps/openOcean';
+    OPENOCEAN_AGGREGATOR_NETWORKS,
+    OpenOceanService,
+} from '../utils/swaps/openOcean';
 import { GasPricesController } from './GasPricesController';
 
 export enum ExchangeType {
@@ -41,6 +30,9 @@ export enum ExchangeType {
     LIMIT_1INCH = 'LIMIT_1INCH',
     SWAP_OPENOCEAN = 'SWAP_OPENOCEAN',
 }
+
+// For now, we allow only one integration at the same time.
+export const DEFAULT_EXCHANGE_TYPE = ExchangeType.SWAP_OPENOCEAN;
 
 export interface SwapControllerMemState {
     availableSwapChainIds: number[];
@@ -115,8 +107,9 @@ export default class SwapController extends BaseController<
         private readonly _gasPricesController: GasPricesController
     ) {
         super(undefined, {
-            //TODO
-            availableSwapChainIds: ONEINCH_SWAPS_NETWORKS,
+            availableSwapChainIds: Object.keys(
+                OPENOCEAN_AGGREGATOR_NETWORKS
+            ).map(Number),
         });
     }
 

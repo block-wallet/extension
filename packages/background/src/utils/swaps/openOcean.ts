@@ -73,7 +73,7 @@ export interface OpenOceanSwapQuoteParams {
     inTokenAddress: string;
     outTokenAddress: string;
     amount: string; // Please set token amount without decimals.e.g.   -1.00 ETH set as 1  -1.23 USDC set as 1.23
-    gasPrice?: number; // set the gas price in GWEI without decimals. TODO: Set default High from network.
+    gasPrice?: number; // set the gas price in GWEI without decimals.
     slippage?: number; // Define the acceptable slippage level by inputting a percentage value within the range of 0.05 to 50.
     enabledDexIds?: string; // https://docs.openocean.finance/dev/aggregator-api-and-sdk/aggregator-api#get-dexes-list
     disabledDexIds?: string; // enableDexIds has higher priority compare with disabledDexIds
@@ -96,7 +96,7 @@ export interface OpenOceanSwapRequestParams {
     inTokenAddress: string;
     outTokenAddress: string;
     amount: string; // Please set token amount without decimals.e.g.   -1.00 ETH set as 1  -1.23 USDC set as 1.23
-    gasPrice: number; // set the gas price in GWEI without decimals. TODO: Set default High from network.
+    gasPrice: number; // set the gas price in GWEI without decimals.
     slippage: number; // Define the acceptable slippage level by inputting a percentage value within the range of 0.05 to 50.
     account: string; // seller's address, please ensure that it has been approved to spend the necessary amount of inTokenAddress
     referrer: string; // the wallet address used to be mark as partners and receive an extra referrerFee from user.

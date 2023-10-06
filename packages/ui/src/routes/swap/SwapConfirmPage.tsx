@@ -32,7 +32,6 @@ import {
     SwapTransaction,
 } from "@block-wallet/background/controllers/SwapController"
 import {
-    ExchangeType,
     HardwareWalletOpTypes,
     TransactionCategories,
     TransactionStatus,

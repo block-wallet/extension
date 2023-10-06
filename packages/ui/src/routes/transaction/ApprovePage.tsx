@@ -50,7 +50,6 @@ import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionW
 import { HardwareWalletOpTypes } from "../../context/commTypes"
 import { rejectTransaction } from "../../context/commActions"
 import { SwapConfirmPageLocalState } from "../swap/SwapConfirmPage"
-import { ExchangeType } from "../../context/commTypes"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
 import { useBlankState } from "../../context/background/backgroundHooks"

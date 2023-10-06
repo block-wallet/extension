@@ -65,10 +65,6 @@ import { GasPriceData } from '@block-wallet/background/controllers/GasPricesCont
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import { TypedTransaction } from '@ethereumjs/tx';
 import { GetOnRampCurrencies } from '@block-wallet/background/controllers/OnrampController';
-import {
-    OneInchSwapQuoteParams,
-    OneInchSwapRequestParams,
-} from '../swaps/1inch';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',

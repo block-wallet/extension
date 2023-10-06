@@ -16,7 +16,6 @@ import {
 import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { BASE_SWAP_FEE, SWAP_QUOTE_REFRESH_TIMEOUT } from "../../util/constants"
-import { ExchangeType } from "../../context/commTypes"
 import { InferType } from "yup"
 import { SwapConfirmPageLocalState } from "./SwapConfirmPage"
 import { SwapQuoteResponse } from "@block-wallet/background/controllers/SwapController"
@@ -582,7 +581,7 @@ const SwapPage = () => {
                     }}
                 />
                 {swapFee && (
-                    <div className="flex items-center pt-2 text-xs text-primary-grey-dark pt-0.5 mr-1 mt-2">
+                    <div className="flex items-center text-xs text-primary-grey-dark pt-0.5 mr-1 mt-2">
                         <span>{`BlockWallet fee (${BASE_SWAP_FEE}%): ${swapFee}`}</span>
                     </div>
                 )}

@@ -253,10 +253,10 @@ export default class SwapController extends BaseController<
     ): Promise<string> => {
         try {
             if (
-                !(
-                    exchangeType in
-                    [ExchangeType.SWAP_1INCH, ExchangeType.SWAP_OPENOCEAN]
-                )
+                ![
+                    ExchangeType.SWAP_1INCH,
+                    ExchangeType.SWAP_OPENOCEAN,
+                ].includes(exchangeType)
             )
                 throw new Error('Exchange type not supported');
 

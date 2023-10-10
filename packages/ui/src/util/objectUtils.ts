@@ -39,7 +39,7 @@ function existsKeyInObject(key: any, object: Object) {
  * @param defaultValue
  * @returns
  */
-function getValueByKey<T>(object: T, key: keyof T, defaultValue: typeof object[keyof T]) {
+function getValueByKey<T extends object>(object: T, key: keyof T, defaultValue: typeof object[keyof T]) {
 
     return existsKeyInObject(key, object)
         ? object[key]

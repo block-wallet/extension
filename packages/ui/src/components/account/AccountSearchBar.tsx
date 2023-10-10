@@ -50,7 +50,7 @@ const AccountSearchBar: FunctionComponent<{
                         label="New Account"
                         to={createAccountTo.pathname}
                         state={createAccountTo.state}
-                        className="h-10"
+                        className="!h-10"
                     />
                 )}
             </div>
@@ -73,7 +73,7 @@ const AccountSearchBar: FunctionComponent<{
                 <input
                     ref={inputRef}
                     className={classnames(
-                        "bg-transparent p-0 pl-1 border-none w-10/12 font-normal",
+                        "bg-transparent p-0 pl-1 border-none w-10/12 font-normal text-sm",
                         "transition-opacity",
                         searchBarVisible
                             ? "opacity-100 duration-100 delay-500 flex-1"

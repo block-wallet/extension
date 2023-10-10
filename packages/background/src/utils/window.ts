@@ -1,11 +1,12 @@
 import { ONBOARDING_TAB_NAME } from './constants/tab';
+import browser from 'webextension-polyfill';
 
 /**
  * Checks for runtime error
  *
  */
 const checkForError = () => {
-    const error = chrome.runtime.lastError;
+    const error = browser.runtime.lastError;
     if (!error) {
         return undefined;
     }
@@ -19,10 +20,10 @@ export const getCurrentWindowId = (): Promise<number | undefined> => {
     return new Promise((resolve) => {
         const error = checkForError();
         //do  not fail on errors
-        if (!chrome.windows || error) {
+        if (!browser.windows || error) {
             return resolve(undefined);
         }
-        chrome.windows.getCurrent((window) => {
+        browser.windows.getCurrent().then((window) => {
             return resolve(window.id);
         });
     });
@@ -39,7 +40,7 @@ export const closeCurrentWindow = async (): Promise<void> => {
         return Promise.reject(error);
     }
     if (windowId) {
-        return chrome.windows.remove(windowId);
+        return browser.windows.remove(windowId);
     }
 };
 
@@ -49,7 +50,7 @@ export const closeCurrentWindow = async (): Promise<void> => {
  */
 export const closeTab = (tabId: number): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-        chrome.tabs.remove(tabId, () => {
+        browser.tabs.remove(tabId).then(() => {
             const error = checkForError();
             if (error) {
                 reject(error);
@@ -65,7 +66,7 @@ export const closeTab = (tabId: number): Promise<void> => {
  */
 export const focusWindow = (windowId: number): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-        chrome.windows.update(windowId, { focused: true }, () => {
+        browser.windows.update(windowId, { focused: true }).then(() => {
             const error = checkForError();
             if (error) {
                 reject(error);
@@ -79,9 +80,9 @@ export const focusWindow = (windowId: number): Promise<void> => {
  * Returns active windows
  *
  */
-export const getActiveTabs = (): Promise<chrome.tabs.Tab[]> => {
-    return new Promise<chrome.tabs.Tab[]>((resolve, reject) => {
-        chrome.tabs.query({ active: true }, (tabs) => {
+export const getActiveTabs = (): Promise<browser.Tabs.Tab[]> => {
+    return new Promise<browser.Tabs.Tab[]>((resolve, reject) => {
+        browser.tabs.query({ active: true }).then((tabs) => {
             const error = checkForError();
             if (error) {
                 reject(error);
@@ -95,9 +96,9 @@ export const getActiveTabs = (): Promise<chrome.tabs.Tab[]> => {
  * Returns all open windows
  *
  */
-export const getAllWindows = (): Promise<chrome.windows.Window[]> => {
-    return new Promise<chrome.windows.Window[]>((resolve, reject) => {
-        chrome.windows.getAll((windows) => {
+export const getAllWindows = (): Promise<browser.Windows.Window[]> => {
+    return new Promise<browser.Windows.Window[]>((resolve, reject) => {
+        browser.windows.getAll().then((windows) => {
             const error = checkForError();
             if (error) {
                 reject(error);
@@ -111,10 +112,10 @@ export const getAllWindows = (): Promise<chrome.windows.Window[]> => {
  * Returns the current selected tab
  *
  */
-export const getCurrentTab = (): Promise<chrome.tabs.Tab | undefined> => {
-    return new Promise<chrome.tabs.Tab | undefined>((resolve, reject) => {
-        chrome.tabs &&
-            chrome.tabs.getCurrent((tab) => {
+export const getCurrentTab = (): Promise<browser.Tabs.Tab | undefined> => {
+    return new Promise<browser.Tabs.Tab | undefined>((resolve, reject) => {
+        browser.tabs &&
+            browser.tabs.getCurrent().then((tab) => {
                 const error = checkForError();
                 if (error) {
                     reject(error);
@@ -128,9 +129,9 @@ export const getCurrentTab = (): Promise<chrome.tabs.Tab | undefined> => {
  * Returns the last focused window
  *
  */
-export const getLastFocusedWindow = (): Promise<chrome.windows.Window> => {
-    return new Promise<chrome.windows.Window>((resolve, reject) => {
-        chrome.windows.getLastFocused((windowObject) => {
+export const getLastFocusedWindow = (): Promise<browser.Windows.Window> => {
+    return new Promise<browser.Windows.Window>((resolve, reject) => {
+        browser.windows.getLastFocused().then((windowObject) => {
             const error = checkForError();
             if (error) {
                 reject(error);
@@ -145,7 +146,7 @@ export const getLastFocusedWindow = (): Promise<chrome.windows.Window> => {
  *
  */
 export const getVersion = (): string => {
-    return chrome.runtime.getManifest().version;
+    return browser.runtime.getManifest().version;
 };
 
 /**
@@ -156,7 +157,7 @@ export const openExtensionInBrowser = (
     route: string | null = null,
     queryString = null
 ): void => {
-    let extensionURL = chrome.runtime.getURL(ONBOARDING_TAB_NAME);
+    let extensionURL = browser.runtime.getURL(ONBOARDING_TAB_NAME);
 
     if (queryString) {
         extensionURL += `?${queryString}`;
@@ -175,10 +176,10 @@ export const openExtensionInBrowser = (
  * @param options settings for the new tab
  */
 export const openTab = (
-    options: chrome.tabs.CreateProperties
-): Promise<chrome.tabs.Tab> => {
-    return new Promise<chrome.tabs.Tab>((resolve, reject) => {
-        chrome.tabs.create(options, (newTab) => {
+    options: browser.Tabs.CreateCreatePropertiesType
+): Promise<browser.Tabs.Tab> => {
+    return new Promise<browser.Tabs.Tab>((resolve, reject) => {
+        browser.tabs.create(options).then((newTab) => {
             const error = checkForError();
             if (error) {
                 reject(error);
@@ -193,17 +194,19 @@ export const openTab = (
  *
  */
 export const openWindow = (
-    options: chrome.windows.CreateData
-): Promise<chrome.windows.Window | undefined> => {
-    return new Promise<chrome.windows.Window | undefined>((resolve, reject) => {
-        chrome.windows.create(options, (newWindow) => {
-            const error = checkForError();
-            if (error) {
-                return reject(error);
-            }
-            return resolve(newWindow);
-        });
-    });
+    options: browser.Windows.CreateCreateDataType
+): Promise<browser.Windows.Window | undefined> => {
+    return new Promise<browser.Windows.Window | undefined>(
+        (resolve, reject) => {
+            browser.windows.create(options).then((newWindow) => {
+                const error = checkForError();
+                if (error) {
+                    return reject(error);
+                }
+                return resolve(newWindow);
+            });
+        }
+    );
 };
 
 /**
@@ -212,17 +215,19 @@ export const openWindow = (
  */
 export const updateWindow = (
     windowId: number,
-    updateInfo: chrome.windows.UpdateInfo
-): Promise<chrome.windows.Window | undefined> => {
-    return new Promise<chrome.windows.Window | undefined>((resolve, reject) => {
-        chrome.windows.update(windowId, updateInfo, (newWindow) => {
-            const error = checkForError();
-            if (error) {
-                return reject(error);
-            }
-            return resolve(newWindow);
-        });
-    });
+    updateInfo: browser.Windows.UpdateUpdateInfoType
+): Promise<browser.Windows.Window | undefined> => {
+    return new Promise<browser.Windows.Window | undefined>(
+        (resolve, reject) => {
+            browser.windows.update(windowId, updateInfo).then((newWindow) => {
+                const error = checkForError();
+                if (error) {
+                    return reject(error);
+                }
+                return resolve(newWindow);
+            });
+        }
+    );
 };
 
 /**
@@ -231,9 +236,9 @@ export const updateWindow = (
  */
 export const switchToTab = (
     tabId: number
-): Promise<chrome.tabs.Tab | undefined> => {
-    return new Promise<chrome.tabs.Tab | undefined>((resolve, reject) => {
-        chrome.tabs.update(tabId, { highlighted: true }, (tab) => {
+): Promise<browser.Tabs.Tab | undefined> => {
+    return new Promise<browser.Tabs.Tab | undefined>((resolve, reject) => {
+        browser.tabs.update(tabId, { highlighted: true }).then((tab) => {
             const error = checkForError();
             if (error) {
                 reject(error);
@@ -247,9 +252,9 @@ export const switchToTab = (
  * Returns the platform info
  *
  */
-export const getPlatformInfo = (): Promise<chrome.runtime.PlatformInfo> => {
-    return new Promise<chrome.runtime.PlatformInfo>((resolve, reject) => {
-        chrome.runtime.getPlatformInfo((info) => {
+export const getPlatformInfo = (): Promise<browser.Runtime.PlatformInfo> => {
+    return new Promise<browser.Runtime.PlatformInfo>((resolve, reject) => {
+        browser.runtime.getPlatformInfo().then((info) => {
             const error = checkForError();
             if (error) {
                 reject(error);

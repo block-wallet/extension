@@ -1,6 +1,8 @@
 TS_NODE_PROJECT			:= tsconfig.json
 BRANCH					:= $(shell git symbolic-ref --short -q HEAD | sed 's/[\.\/]/-/g')
 ENVIRONMENT				?= dev
+BROWSER					?= chrome
+
 
 build/provider:
 ifeq ($(ENVIRONMENT), dev)
@@ -11,6 +13,11 @@ else
 	@echo "Building in production mode"
 	npx webpack --config ./webpack/webpack.provider.js
 	npx webpack --config ./webpack/webpack.content.js
+endif
+ifeq ($(BROWSER), firefox)
+	@mkdir -p ../../dist-firefox
+	@cp  ../../dist/content.js ../../dist-firefox/content.js
+	@cp  ../../dist/blankProvider.js ../../dist-firefox/blankProvider.js
 endif
 
 test/provider:

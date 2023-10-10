@@ -289,7 +289,7 @@ export default class BlockFetchController extends BaseController<BlockFetchContr
  * This class controlates the pull of the current block number from the off chain service.
  */
 export class OffChainBlockFetchService {
-    private _recurrentFetch: NodeJS.Timer | null;
+    private _recurrentFetch: NodeJS.Timeout | null;
 
     constructor() {
         this._recurrentFetch = null;

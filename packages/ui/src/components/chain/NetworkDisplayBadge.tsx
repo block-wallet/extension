@@ -41,7 +41,7 @@ const NetworkDisplayBadge = ({
                         "justify-end h-2 rounded-xl mx-1 animate-pulse pointer-events-none",
                         showName && "mr-1"
                     )}
-                    style={{ backgroundColor: networkColor, width: "8px" }}
+                    style={{ backgroundColor: networkColor, width: "9px" }}
                 />
             )}
 

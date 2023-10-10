@@ -8,8 +8,8 @@ const SIZES = {
 }
 
 const TRANSLATE = {
-    sm: "-translate-y-20 translate-x-1/4",
-    normal: "-translate-y-40 translate-x-3/4",
+    sm: "!-translate-y-20 !translate-x-1/4",
+    normal: "!-translate-y-40 !translate-x-3/4",
 }
 
 const AntiPhishing: FunctionComponent<{
@@ -40,7 +40,7 @@ const AntiPhishing: FunctionComponent<{
                     <Tooltip
                         className={translateTooltip}
                         content={
-                            <div className="flex flex-col font-normal items-start text-xs text-white-500 font-semibold p-1">
+                            <div className="flex flex-col items-start text-xs text-white-500 font-semibold p-1">
                                 <div className="flex flex-row items-end space-x-7">
                                     <span>Phishing Protection</span>{" "}
                                 </div>

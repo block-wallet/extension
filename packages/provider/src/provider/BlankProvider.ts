@@ -488,15 +488,21 @@ export default class BlankProvider
                 id
             );
 
-            window.postMessage(
-                {
+            const nmessage = JSON.parse(
+                JSON.stringify({
                     id,
                     message,
                     origin: Origin.PROVIDER,
                     request: updatedReq ?? (request || {}),
-                } as WindowTransportRequestMessage,
-                window.location.href
-            );
+                })
+            ) as WindowTransportRequestMessage;
+
+            try {
+                window.postMessage(nmessage, window.location.href);
+            } catch (error: any) {
+                log.warn(nmessage, error);
+                throw error;
+            }
         });
     };
 

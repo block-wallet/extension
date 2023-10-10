@@ -108,9 +108,10 @@ const UnlockPage = () => {
                     title="Unlock App"
                     close={false}
                     backButton={false}
+                    className="w-full justify-between"
                 >
                     {lockedByTimeout && (
-                        <div className="group relative">
+                        <div className="group relative items-end">
                             <a
                                 href={LINKS.ARTICLES.LOCK_TIMEOUT}
                                 target="_blank"
@@ -165,7 +166,7 @@ const UnlockPage = () => {
                         error={errors.password?.message}
                         autoFocus={isUserNetworkOnline}
                     />
-                    <div>
+                    <div className="text-xs">
                         or&nbsp;
                         <ClickableText onClick={() => setHasDialog(true)}>
                             reset wallet using seed phrase

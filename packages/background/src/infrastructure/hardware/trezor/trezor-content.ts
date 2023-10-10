@@ -1,12 +1,13 @@
 import { Origin } from '../../../utils/types/communication';
+import browser from 'webextension-polyfill';
 
 // Setup port connection
-let port: chrome.runtime.Port | null = chrome.runtime.connect({
+let port: browser.Runtime.Port | null = browser.runtime.connect({
     name: Origin.TREZOR_CONNECT,
 });
 
 // Process any messages from the extension to the trezor page
-port.onMessage.addListener((message) => {
+port.onMessage.addListener((message: any) => {
     window.postMessage(message, window.location.origin);
 });
 

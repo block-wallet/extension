@@ -4,6 +4,7 @@ import { BaseController } from '../infrastructure/BaseController';
 import { isManifestV3 } from '../utils/manifest';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 import TransactionController from './transactions/TransactionController';
+import browser from 'webextension-polyfill';
 
 export interface AppStateControllerState {
     idleTimeout: number; // Minutes until auto-lock - Zero if disabled
@@ -96,7 +97,7 @@ export default class AppStateController extends BaseController<AppStateControlle
             // Removing login token from storage
             if (isManifestV3()) {
                 // @ts-ignore
-                chrome.storage.session && chrome.storage.session.clear();
+                browser.storage.session && browser.storage.session.clear();
             }
 
             // Update controller state
@@ -123,9 +124,9 @@ export default class AppStateController extends BaseController<AppStateControlle
 
             if (isManifestV3()) {
                 // @ts-ignore
-                chrome.storage.session &&
+                browser.storage.session &&
                     // @ts-ignore
-                    chrome.storage.session
+                    browser.storage.session
                         .set({ loginToken })
                         .catch((err: any) => {
                             log.error('error setting loginToken', err);
@@ -143,19 +144,24 @@ export default class AppStateController extends BaseController<AppStateControlle
             const { isAppUnlocked } = this.store.getState();
             if (!isAppUnlocked) {
                 // @ts-ignore
-                chrome.storage.session &&
+                browser.storage.session &&
                     // @ts-ignore
-                    chrome.storage.session.get(
-                        ['loginToken'],
-                        async ({ loginToken }: { [key: string]: string }) => {
-                            if (loginToken) {
-                                await (this._keyringController as any)[
-                                    'submitEncryptionKey'
-                                ](loginToken);
-                                await this._postLoginAction();
+                    browser.storage.session
+                        .get(['loginToken'])
+                        .then(
+                            async ({
+                                loginToken,
+                            }: {
+                                [key: string]: string;
+                            }) => {
+                                if (loginToken) {
+                                    await (this._keyringController as any)[
+                                        'submitEncryptionKey'
+                                    ](loginToken);
+                                    await this._postLoginAction();
+                                }
                             }
-                        }
-                    );
+                        );
             }
         }
     };

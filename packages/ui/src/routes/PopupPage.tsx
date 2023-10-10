@@ -47,6 +47,8 @@ import { componentsHotkeys } from "../util/hotkeys"
 import { generateExplorerLink } from "../util/getExplorer"
 import { setUserSettings } from "../context/commActions"
 
+import browser from "webextension-polyfill"
+
 const AccountDisplay = () => {
     const accountAddress = useSelectedAddressWithChainIdChecksum()
     const account = useSelectedAccount()
@@ -64,7 +66,7 @@ const AccountDisplay = () => {
             onClick={copy}
         >
             <span
-                className="text-sm font-semibold truncate max-w-[96px]"
+                className="text-sm font-semibold truncate max-w-[96px] text-left"
                 data-testid="account-name"
                 title={account.name}
             >
@@ -189,7 +191,7 @@ const PopupPage = () => {
     useHotkeys(popupPageHotkeys, () => {
         if (!state.hotkeysEnabled) return
 
-        chrome.tabs.create({
+        browser.tabs.create({
             url: generateExplorerLink(
                 state.availableNetworks,
                 state.selectedNetwork,
@@ -207,81 +209,71 @@ const PopupPage = () => {
                     close={false}
                     backButton={false}
                     permissions={hotkeysPermissions}
+                    className="justify-between w-full"
                 >
                     {state.isNetworkChanging && <TransparentOverlay />}
-                    <div
-                        className="absolute top-0 left-0 z-10 flex flex-col items-start w-full px-6 py-4 bg-white bg-opacity-75 border-b border-b-gray-200 popup-layout"
-                        style={{ backdropFilter: "blur(4px)" }}
-                    >
-                        <div className="flex flex-row items-center justify-between w-full">
-                            <div className="flex flex-row items-center space-x-3">
-                                <div className="relative flex flex-col items-start group">
-                                    <Link
-                                        to="/accounts"
-                                        className="transition duration-300"
-                                        draggable={false}
-                                        data-testid="navigate-account-link"
-                                    >
-                                        <AccountIcon
-                                            className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
-                                            fill={getAccountColor(
-                                                checksumAddress
-                                            )}
-                                        />
-                                    </Link>
-                                    <Tooltip
-                                        className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-medium bg-primary-black-default text-white"
-                                        content={
-                                            <>
-                                                <span>My Accounts</span>
-                                            </>
-                                        }
-                                    />
-                                </div>
-                                <div className="flex flex-row items-center space-x-1">
-                                    <AccountDisplay />
-                                    <div className="flex relative group">
-                                        <Link
-                                            to="/accounts/menu/receive"
-                                            draggable={false}
-                                            onClick={(e) => {
-                                                e.preventDefault()
-
-                                                history.push(
-                                                    "/accounts/menu/receive"
-                                                )
-                                            }}
-                                            className="p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
-                                        >
-                                            <QRIcon />
-                                        </Link>
-                                        <Tooltip
-                                            className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-3 !translate-y-full p-2 rounded-md text-xs font-medium bg-primary-black-default text-white"
-                                            content={
-                                                <>
-                                                    <span>Receive funds</span>
-                                                </>
-                                            }
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex flex-row items-center -mr-1 space-x-2">
-                                <GasPricesInfo />
+                    <div className="flex flex-row items-center space-x-3">
+                        <div className="relative flex flex-col items-start group">
+                            <Link
+                                to="/accounts"
+                                className="transition duration-300"
+                                draggable={false}
+                                data-testid="navigate-account-link"
+                            >
+                                <AccountIcon
+                                    className="w-8 h-8 transition-transform duration-200 ease-in transform hover:rotate-180"
+                                    fill={getAccountColor(checksumAddress)}
+                                />
+                            </Link>
+                            <Tooltip
+                                className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-0 !translate-y-full p-2 rounded-md text-xs font-medium bg-primary-black-default text-white"
+                                content={
+                                    <>
+                                        <span>My Accounts</span>
+                                    </>
+                                }
+                            />
+                        </div>
+                        <div className="flex flex-row items-center space-x-1">
+                            <AccountDisplay />
+                            <div className="flex relative group">
                                 <Link
-                                    to="/settings"
+                                    to="/accounts/menu/receive"
                                     draggable={false}
                                     onClick={(e) => {
                                         e.preventDefault()
 
-                                        history.push("/settings")
+                                        history.push("/accounts/menu/receive")
                                     }}
                                     className="p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                                 >
-                                    <GearIcon />
+                                    <QRIcon />
                                 </Link>
+                                <Tooltip
+                                    className="pointer-events-none absolute bottom-0 -mb-2 transform !translate-x-3 !translate-y-full p-2 rounded-md text-xs font-medium bg-primary-black-default text-white"
+                                    content={
+                                        <>
+                                            <span>Receive funds</span>
+                                        </>
+                                    }
+                                />
                             </div>
                         </div>
+                    </div>
+                    <div className="flex flex-row items-center -mr-1 space-x-2">
+                        <GasPricesInfo />
+                        <Link
+                            to="/settings"
+                            draggable={false}
+                            onClick={(e) => {
+                                e.preventDefault()
+
+                                history.push("/settings")
+                            }}
+                            className="p-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                        >
+                            <GearIcon />
+                        </Link>
                     </div>
                 </PopupHeader>
             }
@@ -296,7 +288,7 @@ const PopupPage = () => {
                 }}
                 onDone={() => setHasErrorDialog(false)}
             />
-            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-4 space-y-2 overflow-auto hide-scroll">
+            <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 pt-4 space-y-2  hide-scroll">
                 <div className="w-full">
                     <ProviderStatus onHomepage />
                     <div className="flex flex-row items-start w-full justify-between pt-1 pb-1">

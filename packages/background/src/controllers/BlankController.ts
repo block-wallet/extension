@@ -241,6 +241,7 @@ import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
 import CampaignsController from './CampaignsController';
 import { NotificationController } from './NotificationController';
+import browser from 'webextension-polyfill';
 import OnrampController from './OnrampController';
 
 export interface BlankControllerProps {
@@ -292,7 +293,7 @@ export default class BlankController extends EventEmitter {
 
     private readonly _devTools: any;
 
-    private subscriptions: Record<string, chrome.runtime.Port>;
+    private subscriptions: Record<string, browser.Runtime.Port>;
     private isSetupComplete: boolean;
 
     constructor(props: BlankControllerProps) {
@@ -650,7 +651,7 @@ export default class BlankController extends EventEmitter {
      */
     private createSubscription<TMessageType extends MessageTypes>(
         id: string,
-        port: chrome.runtime.Port
+        port: browser.Runtime.Port
     ): (data: SubscriptionMessageTypes[TMessageType]) => void {
         this.subscriptions[id] = port;
 
@@ -660,7 +661,17 @@ export default class BlankController extends EventEmitter {
         return (subscription: unknown): void => {
             try {
                 if (this.subscriptions[id]) {
-                    port.postMessage({ id, subscription });
+                    // fixing 'DataCloneError' error
+                    // https://stackoverflow.com/questions/68467946/datacloneerror-the-object-could-not-be-cloned-firefox-browser
+                    const message = {
+                        id,
+                        subscription:
+                            subscription && typeof subscription !== undefined
+                                ? JSON.parse(JSON.stringify(subscription))
+                                : subscription,
+                    };
+
+                    port.postMessage(message);
                 }
             } catch (err) {
                 const safeError = toError(err);
@@ -703,7 +714,7 @@ export default class BlankController extends EventEmitter {
      */
     public handler<TMessageType extends MessageTypes>(
         { id, message, request }: TransportRequestMessage<TMessageType>,
-        port: chrome.runtime.Port,
+        port: browser.Runtime.Port,
         portId: string
     ): void {
         let isPortConnected = true;
@@ -712,7 +723,7 @@ export default class BlankController extends EventEmitter {
 
         port.onDisconnect.addListener(() => {
             this.unsubscribe(id);
-            const error = chrome.runtime.lastError;
+            const error = browser.runtime.lastError;
             isPortConnected = false;
             if (error) {
                 log.error(error);
@@ -731,7 +742,21 @@ export default class BlankController extends EventEmitter {
                     throw new Error('Port has been disconnected');
                 }
 
-                port.postMessage({ id, response });
+                // fixing 'DataCloneError' error
+                // https://stackoverflow.com/questions/68467946/datacloneerror-the-object-could-not-be-cloned-firefox-browser
+                const message = {
+                    id,
+                    response:
+                        response && typeof response !== undefined
+                            ? JSON.parse(JSON.stringify(response))
+                            : response,
+                };
+                try {
+                    port.postMessage(message);
+                } catch (error: any) {
+                    log.warn(message, error);
+                    throw error;
+                }
             })
             .catch((error: unknown): void => {
                 // Always pass an error object to the client
@@ -764,7 +789,7 @@ export default class BlankController extends EventEmitter {
         id: string,
         type: MessageTypes,
         request: RequestTypes[MessageTypes],
-        port: chrome.runtime.Port,
+        port: browser.Runtime.Port,
         portId: string
     ): Promise<ResponseType<MessageTypes>> {
         switch (type) {
@@ -2805,7 +2830,7 @@ export default class BlankController extends EventEmitter {
      * State subscription method
      *
      */
-    private stateSubscribe(id: string, port: chrome.runtime.Port): boolean {
+    private stateSubscribe(id: string, port: browser.Runtime.Port): boolean {
         const cb = this.createSubscription<typeof Messages.STATE.SUBSCRIBE>(
             id,
             port
@@ -2832,7 +2857,7 @@ export default class BlankController extends EventEmitter {
      */
     private blankProviderEventSubscribe(
         id: string,
-        port: chrome.runtime.Port,
+        port: browser.Runtime.Port,
         portId: string
     ): boolean {
         const cb = this.createSubscription<

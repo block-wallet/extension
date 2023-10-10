@@ -44,6 +44,14 @@ body {
     height: 100%;
 }
 
+body {
+    font-size: 75%;
+}
+
+html {
+    scrollbar-width: none; /* Firefox */
+}
+
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
 /* Class to implement in those views where we want to be able to scroll but without showing the scrollbar */

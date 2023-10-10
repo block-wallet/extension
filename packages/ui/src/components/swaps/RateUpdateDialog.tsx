@@ -1,6 +1,6 @@
 import Dialog from "../dialog/Dialog"
 import Divider from "../Divider"
-import React, { FC, useEffect, useState } from "react"
+import { FC, memo, useEffect, useRef, useState } from "react"
 import { Classes } from "../../styles"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits } from "@ethersproject/units"
@@ -23,7 +23,7 @@ const RateUpdateDialog: FC<RateUpdateDialogProps> = ({
     threshold,
 }) => {
     const history = useOnMountHistory()
-    const lastRateRef = React.useRef<BigNumber | undefined>()
+    const lastRateRef = useRef<BigNumber | undefined>()
     const [isOpen, setIsOpen] = useState<boolean>(false)
 
     useEffect(() => {
@@ -107,4 +107,4 @@ const RateUpdateDialog: FC<RateUpdateDialogProps> = ({
     )
 }
 
-export default React.memo(RateUpdateDialog)
+export default memo(RateUpdateDialog)

@@ -48,6 +48,8 @@ const PopupLayout: FunctionComponent<{
 
     useSubmitOnEnter(submitOnEnter ?? {})
 
+    const padding = { paddingTop: header ? "69px" : "0" }
+
     //Lets check if this currentLocation has hotkeys, in case we have something we show it in footer.
     const hotkeyByPath = useCheckLocationHotkeys(hotkeysPermissions)
     return (
@@ -55,8 +57,10 @@ const PopupLayout: FunctionComponent<{
             <div className="absolute top-0 left-0 w-full popup-layout z-40">
                 {fullHeader}
             </div>
-            <div className="invisible w-full">{fullHeader}</div>
-            <div className="flex-1 flex flex-col w-full h-0 max-h-screen overflow-auto main-content">
+            <div
+                className="flex-1 flex flex-col w-full h-0 max-h-screen overflow-auto main-content"
+                style={padding}
+            >
                 {showProviderStatus && <ProviderStatus />}
                 {children}
             </div>

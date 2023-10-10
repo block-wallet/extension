@@ -8,9 +8,10 @@ import { SiteMetadata } from "@block-wallet/provider/types"
 import { checkRedraw } from "./util/platform"
 import { isWindow } from "./util/isWindow"
 import log from "loglevel"
+import browser from "webextension-polyfill"
 
 export const handlers: Handlers = {}
-export let port: chrome.runtime.Port
+export let port: browser.Runtime.Port
 export let isPortConnected: boolean = false
 export let session: { origin: string; data: SiteMetadata } | null = null
 export let isAutomaticClose: boolean = false
@@ -25,7 +26,7 @@ const portConnection = () => {
 }
 
 const disconectListener = () => {
-    const error = chrome.runtime.lastError
+    const error = browser.runtime.lastError
     if (error) {
         log.error("Port disconnected", error.message)
     } else {
@@ -52,7 +53,7 @@ const messageListener = (data: TransportResponseMessage<MessageTypes>) => {
     }
 
     if (data.subscription) {
-        ;(handler.subscriber as Function)(data.subscription)
+        ; (handler.subscriber as Function)(data.subscription)
     } else if ("error" in data) {
         // Deserialze error object
         const parsedError = JSON.parse(data.error!)
@@ -78,7 +79,7 @@ const messageListener = (data: TransportResponseMessage<MessageTypes>) => {
  */
 const initPort = () => {
     // Open port
-    port = chrome.runtime.connect({ name: Origin.EXTENSION })
+    port = browser.runtime.connect({ name: Origin.EXTENSION })
 
     // Override postMessage function
     // port.postMessage = postMessageWithRetry(port.postMessage)
@@ -97,11 +98,11 @@ const initPort = () => {
  * Checks if the background is running before connecting the port
  */
 export const initialize = () => {
-    chrome.runtime &&
-        chrome.runtime.sendMessage(
-            { message: "isBlankInitialized" },
-            (response: any) => {
-                const error = chrome.runtime.lastError
+    browser.runtime &&
+        browser.runtime
+            .sendMessage({ message: "isBlankInitialized" })
+            .then((response: any) => {
+                const error = browser.runtime.lastError
                 if (!response || error) {
                     setTimeout(initialize, 100)
                 } else {
@@ -111,14 +112,13 @@ export const initialize = () => {
                         }
                     }
                 }
-            }
-        )
+            })
 }
 
 // Setup session
-chrome.tabs.query(
-    { active: true, currentWindow: true },
-    async (tabs: chrome.tabs.Tab[]) => {
+browser.tabs
+    .query({ active: true, currentWindow: true })
+    .then(async (tabs: browser.Tabs.Tab[]) => {
         const isWindowPopup = await isWindow()
 
         if (!isWindowPopup || !tabs[0]) {
@@ -140,8 +140,7 @@ chrome.tabs.query(
                 },
             }
         }
-    }
-)
+    })
 
 // Run init function
 initialize()

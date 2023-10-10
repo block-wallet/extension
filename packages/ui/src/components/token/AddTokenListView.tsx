@@ -10,6 +10,7 @@ import searchIcon from "../../assets/images/icons/search.svg"
 import { TokenResponse } from "../../routes/settings/AddTokensPage"
 import { useEffect, useState } from "react"
 import useSubmitOnEnter from "../../util/hooks/useSubmitOnEnter"
+import { Size } from "react-virtualized-auto-sizer"
 
 export interface addTokenListView {
     results?: TokenResponse[]
@@ -142,7 +143,7 @@ const AddTokenListView = ({
                                     className="w-full"
                                 >
                                     <AutoSizer>
-                                        {({ width, height }) => (
+                                        {({ width, height }: Size) => (
                                             <List
                                                 height={height}
                                                 width={width}

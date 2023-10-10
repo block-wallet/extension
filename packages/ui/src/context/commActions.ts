@@ -64,6 +64,7 @@ import {
 } from "@block-wallet/background/controllers/BridgeController"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 import { GetOnRampCurrencies } from "@block-wallet/background/controllers/OnrampController"
+import log from "loglevel"
 
 let requestId = 0
 
@@ -81,7 +82,15 @@ const sendMessage = <TMessageType extends MessageTypes>(
 
         handlers[id] = { reject, resolve, subscriber }
 
-        port.postMessage({ id, message, request: request || {} })
+        const nmessage = JSON.parse(
+            JSON.stringify({ id, message, request: request || {} })
+        )
+        try {
+            port.postMessage(nmessage)
+        } catch (error: any) {
+            log.warn(nmessage, error)
+            throw error
+        }
     })
 }
 

@@ -1,4 +1,4 @@
-import AutoSizer from "react-virtualized-auto-sizer"
+import AutoSizer, { Size } from "react-virtualized-auto-sizer"
 import { FixedSizeList as List } from "react-window"
 
 // Components
@@ -170,7 +170,7 @@ const SearchedTokenView = ({
                                 className="w-full"
                             >
                                 <AutoSizer>
-                                    {({ width, height }) => (
+                                    {({ width, height }: Size) => (
                                         <List
                                             height={height}
                                             width={width}

@@ -39,6 +39,7 @@ export interface SwapControllerMemState {
 }
 
 export interface SwapQuoteParams {
+    fromAddress?: string;
     fromToken: BasicToken;
     toToken: BasicToken;
     amount: string;
@@ -194,10 +195,10 @@ export default class SwapController extends BaseController<
                     });
                 }
                 default:
-                    throw new Error('Exchange type not supported');
+                    throw new Error('Exchange type not supported.');
             }
         } catch (error) {
-            throw new Error('Unable to fetch exchange spender');
+            throw new Error('Unable to fetch quote.');
         }
     };
 

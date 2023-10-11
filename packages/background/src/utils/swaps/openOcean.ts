@@ -134,7 +134,7 @@ export const OpenOceanService = {
                     ? SWAP_NATIVE_ADDRESS
                     : toToken.address,
             amount: formatUnits(amount, fromToken.decimals),
-            gasPrice: parseInt(gasPrice ?? '0'),
+            gasPrice: parseFloat(gasPrice ?? '0'),
             slippage: 1,
         };
     },
@@ -155,7 +155,7 @@ export const OpenOceanService = {
             inTokenAddress: fromToken.address,
             outTokenAddress: toToken.address,
             amount: formatUnits(amount, fromToken.decimals),
-            gasPrice: parseInt(gasPrice ?? '0'),
+            gasPrice: parseFloat(gasPrice ?? '0'),
             slippage,
             referrer: REFERRER_ADDRESS,
             referrerFee: BASE_SWAP_FEE,
@@ -182,10 +182,13 @@ export const OpenOceanService = {
             } = this.parseQuoteParams(chainId, params);
             const res = await retryHandling<OpenOceanSwapQuoteResponse>(() =>
                 httpClient.request<OpenOceanSwapQuoteResponse>(
-                    `${OPENOCEAN_AGGREGATOR_ENDPOINT}${chainId}/quote`,
+                    `${OPENOCEAN_AGGREGATOR_ENDPOINT}${chainId}/swap_quote`,
                     {
                         params: {
                             chain,
+                            account: params.fromAddress,
+                            referrer: REFERRER_ADDRESS,
+                            referrerFee: BASE_SWAP_FEE,
                             inTokenAddress,
                             outTokenAddress,
                             amount,

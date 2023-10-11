@@ -282,6 +282,7 @@ const SwapPage = () => {
                     fromToken: tokenFrom!,
                     toToken: tokenTo!,
                     amount: bigNumberAmount!.toString(),
+                    fromAddress: selectedAddress,
                 })
                 if (isValidFetch) {
                     setQuote(quote)

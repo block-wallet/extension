@@ -1,8 +1,8 @@
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
-import { normalizeNetworksOrder } from '@block-wallet/background/utils/networks';
-import { FEATURES } from '@block-wallet/background/utils/constants/features';
-import { SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES } from '@block-wallet/background/utils/constants/networks';
+import { normalizeNetworksOrder } from '../../../../utils/networks';
+import { FEATURES } from '../../../../utils/constants/features';
+import { SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES } from '../../../../utils/constants/networks';
 
 /**
  * This migration forces the calculation of the EIP1559 compatibility to some networks
@@ -56,5 +56,5 @@ export default {
             },
         };
     },
-    version: '1.1.13',
+    version: '1.1.19',
 } as IMigration;

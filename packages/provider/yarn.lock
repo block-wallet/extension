@@ -934,10 +934,10 @@ camelcase@^6.0.0:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-6.3.0.tgz#5685b95eb209ac9c0c177467778c9c84df58ba9a"
   integrity sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==
 
-caniuse-lite@^1.0.30001539:
-  version "1.0.30001541"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001541.tgz#b1aef0fadd87fb72db4dcb55d220eae17b81cdb1"
-  integrity sha512-bLOsqxDgTqUBkzxbNlSBt8annkDpQB9NdzdTbO2ooJ+eC/IQcvDspDc058g84ejCelF7vHUx57KIOjEecOHXaw==
+caniuse-lite@^1.0.30001400:
+  version "1.0.30001546"
+  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001546.tgz"
+  integrity sha512-zvtSJwuQFpewSyRrI3AsftF6rM0X80mZkChIt1spBGEvRglCrjTniXvinc8JKRoqTwXAgvqTImaN9igfSMtUBw==
 
 chai@^4.3.7:
   version "4.3.10"

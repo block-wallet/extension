@@ -6,7 +6,7 @@ const Spinner: FunctionComponent<{
     text?: string
     iconTextSeparation?: string
     color?: string
-}> = ({ size = "1rem", text = "", iconTextSeparation = "4px", color = "" }) => (
+}> = ({ size = "16px", text = "", iconTextSeparation = "4px", color = "" }) => (
     <div
         style={{ display: "inline" }}
         role="alert"

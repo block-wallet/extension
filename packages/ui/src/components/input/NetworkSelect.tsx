@@ -139,7 +139,7 @@ const NetworkSelect: FunctionComponent<{
                         className={"justify-start h-2 rounded-xl ml-2 mr-2"}
                         style={{
                             backgroundColor: networkColor,
-                            width: "8px",
+                            width: "9px",
                         }}
                     />
                 )}

@@ -159,27 +159,25 @@ const transactionIcons: Record<TransactionCategories, any> = {
     [TransactionCategories.CONTRACT_DEPLOYMENT]: <FiUpload />,
     [TransactionCategories.CONTRACT_INTERACTION]: <FaExchangeAlt />,
     [TransactionCategories.TOKEN_METHOD_APPROVE]: (
-        <RiCopperCoinFill size="1.5rem" />
+        <RiCopperCoinFill size="24px" />
     ),
     [TransactionCategories.TOKEN_METHOD_TRANSFER]: (
-        <RiCopperCoinFill size="1.5rem" />
+        <RiCopperCoinFill size="24px" />
     ),
     [TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER]: (
-        <RiCopperCoinFill size="1.5rem" />
+        <RiCopperCoinFill size="24px" />
     ),
     [TransactionCategories.TOKEN_METHOD_TRANSFER_FROM]: (
-        <RiCopperCoinFill size="1.5rem" />
+        <RiCopperCoinFill size="24px" />
     ),
-    [TransactionCategories.EXCHANGE]: <RiCopperCoinFill size="1.5rem" />,
-    [TransactionCategories.BRIDGE]: <GiSuspensionBridge size="1.5rem" />,
-    [TransactionCategories.INCOMING_BRIDGE]: (
-        <GiSuspensionBridge size="1.5rem" />
-    ),
+    [TransactionCategories.EXCHANGE]: <RiCopperCoinFill size="24px" />,
+    [TransactionCategories.BRIDGE]: <GiSuspensionBridge size="24px" />,
+    [TransactionCategories.INCOMING_BRIDGE]: <GiSuspensionBridge size="24px" />,
     [TransactionCategories.INCOMING_BRIDGE_REFUND]: (
-        <GiSuspensionBridge size="1.5rem" />
+        <GiSuspensionBridge size="24px" />
     ),
     [TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER]: (
-        <GiSuspensionBridge size="1.5rem" />
+        <GiSuspensionBridge size="24px" />
     ),
 }
 
@@ -192,7 +190,7 @@ const failedStatuses = [
 
 const PendingSpinner: React.FC<{
     size?: string
-}> = ({ size = "1rem" }) => (
+}> = ({ size = "16px" }) => (
     <ImSpinner
         size={size}
         className="animate-spin text-primary-black-default opacity-50"
@@ -568,7 +566,7 @@ const TransactionItem: React.FC<{
                     />
                     <div
                         className="flex flex-col ml-2"
-                        style={{ width: "calc(100% - 1rem)" }}
+                        style={{ width: "calc(100% - 16px)" }}
                     >
                         <div
                             className="flex flex-row w-full items-center space-x-1"

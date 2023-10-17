@@ -23,6 +23,8 @@ import {
 import { formatTokenAmount } from '../utils/token';
 import { fetchContractDetails } from '../utils/contractsInfo';
 import { formatName } from '../utils/account';
+import browser from 'webextension-polyfill';
+import { isHttpsURL } from '../utils/http';
 
 interface ChainListItemWithExplorerUrl extends ChainListItem {
     explorerUrl: string;
@@ -146,10 +148,10 @@ export class NotificationController {
             urlObject.searchParams.set('timestamp', Date.now().toString());
             notificationUrl = urlObject.toString();
         }
-        chrome.notifications.create(notificationUrl, {
+        browser.notifications.create(notificationUrl, {
             title: title,
             message: message,
-            iconUrl: chrome.runtime.getURL('icons/icon-48.png'),
+            iconUrl: browser.runtime.getURL('icons/icon-48.png'),
             type: 'basic',
             isClickable: url ? true : false,
             contextMessage: contextMessage,
@@ -157,7 +159,7 @@ export class NotificationController {
     }
 
     private addOnClickListener() {
-        const onClickListener = chrome.notifications.onClicked;
+        const onClickListener = browser.notifications.onClicked;
 
         if (!onClickListener.hasListener(this.linkToExplorer)) {
             onClickListener.addListener(this.linkToExplorer);
@@ -165,8 +167,8 @@ export class NotificationController {
     }
 
     private linkToExplorer(url: string) {
-        if (url.startsWith('https://')) {
-            chrome.tabs.create({ url: url });
+        if (isHttpsURL(url)) {
+            browser.tabs.create({ url: url });
         }
     }
 

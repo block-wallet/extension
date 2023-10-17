@@ -13,6 +13,10 @@ export class RequestError extends Error {
 
 const GET = 'GET';
 
+export function isHttpsURL(url: string): boolean {
+    return url.startsWith('https://');
+}
+
 function isJsonResponse(r: Response) {
     return r.headers.get('content-type')?.includes('application/json');
 }

@@ -40,6 +40,7 @@ import { toChecksumAddress } from 'ethereumjs-util';
 import { MILISECOND, SECOND } from '../utils/constants/time';
 import { ProviderType } from '../utils/types/communication';
 import { _fetchFeeDataFromService } from './GasPricesController';
+import { isHttpsURL } from '../utils/http';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -383,7 +384,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
         const explorerUrl =
             getUrlWithoutTrailingSlash(updates.blockExplorerUrls) || '';
 
-        if (explorerUrl && explorerUrl.indexOf('https://') === -1) {
+        if (explorerUrl && !isHttpsURL(explorerUrl)) {
             throw new Error('Block explorer endpoint must be https');
         }
 
@@ -460,7 +461,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 )
             ) ||
             '';
-        if (explorerUrl && explorerUrl.indexOf('https://') === -1) {
+        if (explorerUrl && !isHttpsURL(explorerUrl)) {
             throw new Error('Block explorer endpoint must be https');
         }
 

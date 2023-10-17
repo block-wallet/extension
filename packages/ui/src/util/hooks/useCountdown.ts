@@ -1,18 +1,18 @@
-import React from "react"
+import { useRef, useEffect, useState } from "react"
 import { calculateRemainingSeconds } from "../time"
 
 const useCountdown = (
     startTime: number | undefined,
     timeout: number | undefined
 ) => {
-    const [remainingSeconds, setRemainingSeconds] = React.useState<
+    const [remainingSeconds, setRemainingSeconds] = useState<
         number | undefined
     >(() => {
         return calculateRemainingSeconds(startTime, timeout)
     })
-    const intervalRef = React.useRef<NodeJS.Timeout | undefined>()
+    const intervalRef = useRef<NodeJS.Timeout | undefined>()
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (startTime !== undefined && timeout !== undefined) {
             //don't wait 1 second to execute first calculation.
             setRemainingSeconds(calculateRemainingSeconds(startTime, timeout))

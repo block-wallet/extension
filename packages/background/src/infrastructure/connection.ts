@@ -8,6 +8,7 @@ import { isOnboardingTabUrl } from '../utils/window';
 import { v4 as uuid } from 'uuid';
 import BlankController from '../controllers/BlankController';
 import log from 'loglevel';
+import browser from 'webextension-polyfill';
 
 export const extensionInstances: ExtensionInstances = {};
 export const providerInstances: ProviderInstances = {};
@@ -19,7 +20,7 @@ export const providerInstances: ProviderInstances = {};
  * @param blankController blank controller running instance
  */
 export const setupConnection = (
-    port: chrome.runtime.Port,
+    port: browser.Runtime.Port,
     blankController: BlankController
 ): void => {
     // Ignore Trezor content script messages
@@ -77,15 +78,15 @@ export const setupConnection = (
     }
 
     // Setup listeners
-    const messageListener = (message: any, port: chrome.runtime.Port) => {
+    const messageListener = (message: any, port: browser.Runtime.Port) => {
         blankController.handler(message, port, id);
     };
 
     port.onMessage.addListener(messageListener);
 
-    port.onDisconnect.addListener((port: chrome.runtime.Port) => {
+    port.onDisconnect.addListener((port: browser.Runtime.Port) => {
         // Check for error
-        const error = chrome.runtime.lastError;
+        const error = browser.runtime.lastError;
 
         if (error) {
             log.error('Error on port disconnection', error.message || error);

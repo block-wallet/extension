@@ -21,6 +21,7 @@ import {
     getNonSubmittedTransactions,
     TransactionOrigin,
 } from "../util/getNonSubmittedTransactions"
+import browser from "webextension-polyfill"
 
 /**  Purpose of this component is to check in Blank State if there is any pending connect to site or transaction confirm
  *  in order to show that page always, whenever the extension is loaded and unlocked.
@@ -101,7 +102,7 @@ const PopupRouter = ({
     const state = useBlankState()!
     const isOnboarded = state?.isOnboarded
     const resetHandler = async () => {
-        chrome.runtime.reload()
+        browser.runtime.reload()
     }
 
     const [shouldShowDialog, setShouldShowDialog] = useState(false)

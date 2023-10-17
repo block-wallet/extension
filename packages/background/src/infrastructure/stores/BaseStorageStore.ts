@@ -1,9 +1,10 @@
 import log from 'loglevel';
+import browser from 'webextension-polyfill';
 
 type StoreValue = Record<string, unknown>;
 
 const lastError = (type: string): void => {
-    const error = chrome.runtime.lastError;
+    const error = browser.runtime.lastError;
 
     if (error) {
         log.error('Store', type, 'runtime.lastError', error.message || error);
@@ -23,12 +24,14 @@ export default abstract class BaseStorageStore<T> {
     public getVersion(): Promise<string | undefined> {
         const key = `${this.prefix}version`;
         return new Promise<string | undefined>((resolve) => {
-            chrome.storage.local.get([key], (result: StoreValue): void => {
-                lastError('getVersion');
-                key in result
-                    ? resolve(result[key] as string)
-                    : resolve(undefined);
-            });
+            browser.storage.local
+                .get([key])
+                .then((result: StoreValue): void => {
+                    lastError('getVersion');
+                    key in result
+                        ? resolve(result[key] as string)
+                        : resolve(undefined);
+                });
         });
     }
 
@@ -39,7 +42,7 @@ export default abstract class BaseStorageStore<T> {
         const key = `${this.prefix}version`;
 
         return new Promise((resolve) => {
-            chrome.storage.local.set({ [key]: value }, (): void => {
+            browser.storage.local.set({ [key]: value }).then((): void => {
                 lastError('setVersion');
                 resolve();
             });
@@ -47,7 +50,7 @@ export default abstract class BaseStorageStore<T> {
     }
 
     public all(update: (key: string, value: T) => void): void {
-        chrome.storage.local.get(null, (result: StoreValue): void => {
+        browser.storage.local.get(null).then((result: StoreValue): void => {
             lastError('all');
 
             Object.entries(result)
@@ -61,7 +64,7 @@ export default abstract class BaseStorageStore<T> {
     public get(_key: string, update: (value: T) => void): void {
         const key = `${this.prefix}${_key}`;
 
-        chrome.storage.local.get([key], (result: StoreValue): void => {
+        browser.storage.local.get([key]).then((result: StoreValue): void => {
             lastError('get');
 
             update(result[key] as T);
@@ -71,7 +74,7 @@ export default abstract class BaseStorageStore<T> {
     public remove(_key: string, update?: () => void): void {
         const key = `${this.prefix}${_key}`;
 
-        chrome.storage.local.remove(key, (): void => {
+        browser.storage.local.remove(key).then((): void => {
             lastError('remove');
 
             update && update();
@@ -81,7 +84,7 @@ export default abstract class BaseStorageStore<T> {
     public set(_key: string, value: T, update?: () => void): void {
         const key = `${this.prefix}${_key}`;
 
-        chrome.storage.local.set({ [key]: value }, (): void => {
+        browser.storage.local.set({ [key]: value }).then((): void => {
             lastError('set');
 
             update && update();

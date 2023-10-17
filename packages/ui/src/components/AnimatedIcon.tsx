@@ -112,7 +112,7 @@ const AnimatedIcon: FunctionComponent<AnimationProps> = ({
 
     return (
         <div
-            className={classNames(className, "w-full h-full")}
+            className={classNames(className)}
             onMouseEnter={() => {
                 if (animationData.hover) {
                     lottieInstance.current?.play()

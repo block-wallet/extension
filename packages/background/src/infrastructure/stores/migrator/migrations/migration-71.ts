@@ -1,104 +1,60 @@
-import { BridgeControllerState } from '@block-wallet/background/controllers/BridgeController';
-import { pruneTransaction } from '../../../../controllers/transactions/utils/utils';
-import { TransactionWatcherControllerState } from '../../../../controllers/TransactionWatcherController';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
 import { IMigration } from '../IMigration';
-import { WatchedTransactionType } from '../../../../controllers/transactions/utils/types';
-
-const pruneBridgeTxs = (
-    txs: BridgeControllerState['bridgeReceivingTransactions']
-): BridgeControllerState['bridgeReceivingTransactions'] => {
-    const newTxs = { ...txs };
-    for (const chainId in newTxs) {
-        const chainTxs = newTxs[chainId];
-        if (chainTxs) {
-            for (const addr in chainTxs) {
-                const addrTxs = chainTxs[addr];
-                if (addrTxs) {
-                    newTxs[chainId][addr] = Object.entries(addrTxs).reduce(
-                        (acc, [txHash, tx]) => {
-                            return {
-                                ...acc,
-                                [txHash]: pruneTransaction(tx),
-                            };
-                        },
-                        addrTxs
-                    );
-                }
-            }
-        }
-    }
-    return newTxs;
-};
-
-const pruneWatchedTxs = (
-    txs: TransactionWatcherControllerState['transactions']
-): TransactionWatcherControllerState['transactions'] => {
-    const newTxs = { ...txs };
-    for (const chainId in newTxs) {
-        const chainTxs = newTxs[chainId];
-        if (chainTxs) {
-            for (const addr in chainTxs) {
-                const addrTxs = chainTxs[addr];
-                if (addrTxs) {
-                    for (const type in addrTxs) {
-                        const typeTxs = addrTxs[type as WatchedTransactionType];
-                        if (typeTxs && typeTxs.transactions) {
-                            newTxs[chainId][addr][
-                                type as WatchedTransactionType
-                            ].transactions = Object.entries(
-                                typeTxs.transactions
-                            ).reduce((acc, [txHash, tx]) => {
-                                return {
-                                    ...acc,
-                                    [txHash]: pruneTransaction(tx),
-                                };
-                            }, typeTxs.transactions);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return newTxs;
-};
+import { normalizeNetworksOrder } from '../../../../utils/networks';
+import { FEATURES } from '../../../../utils/constants/features';
+import { SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES } from '../../../../utils/constants/networks';
 
 /**
- * This migration fixes zksync block explorer
+ * This migration forces the calculation of the EIP1559 compatibility to some networks
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {
-        const { transactions } = persistedState.TransactionController;
-        const { bridgeReceivingTransactions } = persistedState.BridgeController;
-        const { transactions: watchedTx } =
-            persistedState.TransactionWatcherControllerState;
+        const { availableNetworks } = persistedState.NetworkController;
+        const updatedNetworks = { ...availableNetworks };
 
-        const newTxsState = transactions
-            ? transactions.map(pruneTransaction)
-            : transactions;
+        updatedNetworks.ZETACHAIN_TESTNET = {
+            name: 'zetachain_testnet',
+            desc: 'ZetaChain Testnet',
+            chainId: 7001,
+            networkVersion: '7001',
+            nativeCurrency: {
+                name: 'Testnet ZETA',
+                symbol: 'aZETA',
+                decimals: 18,
+                logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zetachaintestnet/info/logo.png',
+            },
+            hasFixedGasCost: false,
+            enable: true,
+            test: true,
+            order: 11,
+            features: [FEATURES.SENDS],
+            ens: false,
+            showGasLevels: true,
+            iconUrls: [
+                'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zetachaintestnet/info/logo.png',
+            ],
+            currentRpcUrl: 'https://rpc.ankr.com/zetachain_evm_athens_testnet',
+            blockExplorerName: 'ZetaChain Testnet Explorer',
+            blockExplorerUrls: ['https://zetachain-athens-3.blockscout.com/'],
+            actionsTimeIntervals: {
+                ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES,
+            },
+            tornadoIntervals: {
+                depositConfirmations: 0,
+                derivationsForward: 0,
+            },
+            nativelySupported: true,
+        };
 
-        const newBridgeReceivingTxState = bridgeReceivingTransactions
-            ? pruneBridgeTxs(bridgeReceivingTransactions)
-            : bridgeReceivingTransactions;
-
-        const newWatchedTxsState = watchedTx
-            ? pruneWatchedTxs(watchedTx)
-            : watchedTx;
+        const orderedNetworks = normalizeNetworksOrder(updatedNetworks);
 
         return {
             ...persistedState,
-            TransactionController: {
-                ...persistedState.TransactionController,
-                transactions: newTxsState,
-            },
-            BridgeController: {
-                ...persistedState.BridgeController,
-                bridgeReceivingTransactions: newBridgeReceivingTxState,
-            },
-            TransactionWatcherControllerState: {
-                transactions: newWatchedTxsState,
+            NetworkController: {
+                ...persistedState.NetworkController,
+                availableNetworks: { ...orderedNetworks },
             },
         };
     },
-    version: '2.0.0',
+    version: '1.1.19',
 } as IMigration;

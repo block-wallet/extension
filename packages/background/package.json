@@ -1,9 +1,13 @@
 {
     "name": "@block-wallet/background",
+<<<<<<< HEAD
     "version": "2.0.0",
+=======
+    "version": "1.1.19",
+>>>>>>> master
     "private": true,
     "dependencies": {
-        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.41",
+        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.42",
         "@block-wallet/eth-ledger-bridge-keyring": "https://github.com/block-wallet/eth-ledger-bridge-keyring#v0.14.1",
         "@block-wallet/eth-trezor-keyring": "https://github.com/block-wallet/eth-trezor-keyring#v0.11.0",
         "@block-wallet/explorer-link": "https://github.com/block-wallet/explorer-link#v2.2.2",

@@ -295,63 +295,6 @@ export default class SwapController extends BaseController<
     };
 
     /**
-     * Fetch quote details for a 1Inch Swap
-     *
-     * @param OneInchSwapQuoteParams 1Inch quote parameters
-     */
-    //private _get1InchSwapQuote = async ({
-    //    fromTokenAddress,
-    //    toTokenAddress,
-    //    amount,
-    //}: OneInchSwapQuoteParams): Promise<SwapQuote> => {
-    //    try {
-    //        const res = await retryHandling<OneInchSwapQuoteResponse>(() =>
-    //            httpClient.request<OneInchSwapQuoteResponse>(
-    //                `${ONEINCH_SWAPS_ENDPOINT}${this._networkController.network.chainId}/quote`,
-    //                {
-    //                    params: {
-    //                        fromTokenAddress:
-    //                            fromTokenAddress === '0x0'
-    //                                ? ONEINCH_NATIVE_ADDRESS
-    //                                : fromTokenAddress,
-    //                        toTokenAddress:
-    //                            toTokenAddress === '0x0'
-    //                                ? ONEINCH_NATIVE_ADDRESS
-    //                                : toTokenAddress,
-    //                        amount,
-    //                        fee: BASE_SWAP_FEE,
-    //                    },
-    //                }
-    //            )
-    //        );
-
-    //        return {
-    //            ...res,
-    //            blockWalletFee: BigNumber.from(res.fromTokenAmount)
-    //                .mul(BASE_SWAP_FEE * 10)
-    //                .div(1000),
-    //            estimatedGas: Math.round(res.estimatedGas * GAS_LIMIT_INCREASE),
-    //        };
-    //    } catch (error) {
-    //        const errMessage = map1InchErrorMessage(
-    //            get1InchErrorMessageFromResponse(error) // Error should be of type RequestError
-    //        );
-    //        throw new Error(errMessage || 'Error getting 1Inch swap quote');
-    //    }
-    //};
-
-    /**
-     * Fetch transaction parameters for a 1Inch Swap
-     *
-     * @param swapParams 1Inch swap parameters
-     */
-    //private _get1InchSwapParameters = async (
-    //    swapParams: OneInchSwapRequestParams
-    //): Promise<SwapParameters> => {
-
-    //};
-
-    /**
      * Submits a Swap transaction
      *
      * @param SwapTransaction swap transaction

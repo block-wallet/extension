@@ -18,7 +18,7 @@ const Price: FunctionComponent<{
 }> = ({ title, amount, symbol, decimals }) => {
     const state = useBlankState()!
     const {
-        state: { exchangeRates, networkNativeCurrency },
+        state: { exchangeRates },
     } = useExchangeRatesState()
 
     const txValue = formatTransactionValue(

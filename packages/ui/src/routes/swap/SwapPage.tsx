@@ -73,7 +73,7 @@ const SwapPage = () => {
 
     const { selectedAddress, nativeCurrency, localeInfo } = useBlankState()!
     const {
-        state: { exchangeRates, networkNativeCurrency },
+        state: { exchangeRates },
     } = useExchangeRatesState()
 
     const { nativeToken } = useTokensList()
@@ -584,7 +584,7 @@ const SwapPage = () => {
                     }}
                 />
                 {swapFee && (
-                    <div className="flex items-center pt-2 text-xs text-primary-grey-dark pt-0.5 mr-1 mt-2">
+                    <div className="flex items-center text-xs text-primary-grey-dark pt-0.5 mr-1 mt-2">
                         <span>{`BlockWallet fee (${BASE_SWAP_FEE}%): ${swapFee}`}</span>
                     </div>
                 )}

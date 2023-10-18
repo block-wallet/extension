@@ -51,7 +51,7 @@ const ConnectedSiteAccount: FunctionComponent<{
 
     const { selectedAddress } = useBlankState()!
     const {
-        state: { exchangeRates, networkNativeCurrency },
+        state: { networkNativeCurrency },
     } = useExchangeRatesState()
     const { chainId } = useSelectedNetwork()
 

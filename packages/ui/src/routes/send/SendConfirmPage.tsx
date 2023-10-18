@@ -206,7 +206,7 @@ const SendConfirmPage = () => {
     const [allowAmountZero, setAllowAmountZero] = useState<boolean>(true)
     const blankState = useBlankState()!
     const {
-        state: { exchangeRates, networkNativeCurrency },
+        state: { exchangeRates },
     } = useExchangeRatesState()
     const network = useSelectedNetwork()
     const history: any = useOnMountHistory()

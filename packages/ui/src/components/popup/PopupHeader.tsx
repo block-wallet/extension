@@ -17,7 +17,6 @@ import { DropdownMenuItem } from "../ui/Dropdown/DropdownMenu"
 import useHotKey, { UseHotKeyProps } from "../../util/hooks/useHotKey"
 import { AiFillInfoCircle } from "react-icons/ai"
 import Tooltip from "../label/Tooltip"
-import { useBlankState } from "../../context/background/backgroundHooks"
 
 export interface PopupHeaderProps {
     title: string

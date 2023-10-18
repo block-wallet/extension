@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import AutoSizer from "react-virtualized/dist/commonjs/AutoSizer"
+import AutoSizer from "react-virtualized-auto-sizer"
 import List from "react-virtualized/dist/commonjs/List"
 import TokenDisplay from "./TokenDisplay"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"

@@ -90,7 +90,7 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         availableBridgeChains,
     } = useBlankState()!
     const {
-        state: { exchangeRates, networkNativeCurrency },
+        state: { exchangeRates },
     } = useExchangeRatesState()
     const { nativeToken } = useTokensList()
 

@@ -180,7 +180,7 @@ describe('Swap Controller', function () {
             });
 
             expect(error).not.to.be.undefined;
-            expect(error).to.be.equal('Exchange type not supported');
+            expect(error).to.be.equal('Exchange type not supported.');
         });
 
         it('Should fail for bad exchange type on swap params', async function () {
@@ -216,7 +216,7 @@ describe('Swap Controller', function () {
             });
 
             expect(error).not.to.be.undefined;
-            expect(error).to.be.equal('Exchange type not supported');
+            expect(error).to.be.equal('Exchange type not supported.');
         });
 
         it('Should fail for bad exchange type on execute exchange', async function () {
@@ -274,7 +274,7 @@ describe('Swap Controller', function () {
             });
 
             expect(error).not.to.be.undefined;
-            expect(error).to.be.equal('Exchange type not supported');
+            expect(error).to.be.equal('Exchange type not supported.');
         });
     });
 

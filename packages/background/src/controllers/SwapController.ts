@@ -178,27 +178,20 @@ export default class SwapController extends BaseController<
     ): Promise<SwapQuoteResponse> => {
         const { chainId } = this._networkController.network;
 
-        try {
-            switch (exchangeType) {
-                case ExchangeType.SWAP_1INCH:
-                    return await OneInchService.getSwapQuote(
-                        chainId,
-                        quoteParams
-                    );
-                case ExchangeType.SWAP_OPENOCEAN: {
-                    const gasPrice =
-                        this._gasPricesController.getHighGasPriceInGwei();
+        switch (exchangeType) {
+            case ExchangeType.SWAP_1INCH:
+                return await OneInchService.getSwapQuote(chainId, quoteParams);
+            case ExchangeType.SWAP_OPENOCEAN: {
+                const gasPrice =
+                    this._gasPricesController.getHighGasPriceInGwei();
 
-                    return await OpenOceanService.getSwapQuote(chainId, {
-                        ...quoteParams,
-                        gasPrice,
-                    });
-                }
-                default:
-                    throw new Error('Exchange type not supported.');
+                return await OpenOceanService.getSwapQuote(chainId, {
+                    ...quoteParams,
+                    gasPrice,
+                });
             }
-        } catch (error) {
-            throw new Error('Unable to fetch quote.');
+            default:
+                throw new Error('Exchange type not supported.');
         }
     };
 
@@ -217,28 +210,24 @@ export default class SwapController extends BaseController<
             this._networkController
         );
 
-        try {
-            switch (exchangeType) {
-                case ExchangeType.SWAP_1INCH:
-                    return await OneInchService.getSwapParameters(
-                        chainId,
-                        contractSignatureParser,
-                        exchangeParams
-                    );
-                case ExchangeType.SWAP_OPENOCEAN: {
-                    const gasPrice =
-                        this._gasPricesController.getHighGasPriceInGwei();
-                    return await OpenOceanService.getSwapParameters(
-                        chainId,
-                        contractSignatureParser,
-                        { ...exchangeParams, gasPrice }
-                    );
-                }
-                default:
-                    throw new Error('Exchange type not supported');
+        switch (exchangeType) {
+            case ExchangeType.SWAP_1INCH:
+                return await OneInchService.getSwapParameters(
+                    chainId,
+                    contractSignatureParser,
+                    exchangeParams
+                );
+            case ExchangeType.SWAP_OPENOCEAN: {
+                const gasPrice =
+                    this._gasPricesController.getHighGasPriceInGwei();
+                return await OpenOceanService.getSwapParameters(
+                    chainId,
+                    contractSignatureParser,
+                    { ...exchangeParams, gasPrice }
+                );
             }
-        } catch (error) {
-            throw new Error('Unable to fetch swap');
+            default:
+                throw new Error('Exchange type not supported.');
         }
     };
 
@@ -259,7 +248,7 @@ export default class SwapController extends BaseController<
                     ExchangeType.SWAP_OPENOCEAN,
                 ].includes(exchangeType)
             )
-                throw new Error('Exchange type not supported');
+                throw new Error('Exchange type not supported.');
 
             const swapPromise = this._executeSwap(exchangeParams);
             this._tokenController.attemptAddToken(
@@ -287,7 +276,7 @@ export default class SwapController extends BaseController<
                 case ExchangeType.SWAP_OPENOCEAN:
                     return OpenOceanService.getSpender(chainId);
                 default:
-                    throw new Error('Exchange type not supported');
+                    throw new Error('Exchange type not supported.');
             }
         } catch (error) {
             throw new Error('Unable to fetch exchange spender');

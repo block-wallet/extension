@@ -922,7 +922,7 @@ describe('Swap Controller', function () {
             });
 
             expect(error).not.to.be.undefined;
-            expect(error).to.be.equal('Error executing 1Inch Swap');
+            expect(error).to.be.equal('Error executing Swap');
         });
 
         it('Should submit a swap transaction', async function () {

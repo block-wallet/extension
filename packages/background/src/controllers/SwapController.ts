@@ -241,21 +241,16 @@ export default class SwapController extends BaseController<
         exchangeType: ExchangeType,
         exchangeParams: SwapTransaction
     ): Promise<string> => {
-
         if (
-            ![
-                ExchangeType.SWAP_1INCH,
-                ExchangeType.SWAP_OPENOCEAN,
-            ].includes(exchangeType)
+            ![ExchangeType.SWAP_1INCH, ExchangeType.SWAP_OPENOCEAN].includes(
+                exchangeType
+            )
         )
             throw new Error('Exchange type not supported.');
 
         const swapPromise = this._executeSwap(exchangeParams);
-        this._tokenController.attemptAddToken(
-            exchangeParams.toToken.address
-        );
+        this._tokenController.attemptAddToken(exchangeParams.toToken.address);
         return swapPromise;
-
     };
 
     /**

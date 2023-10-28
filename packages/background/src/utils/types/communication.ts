@@ -1177,12 +1177,17 @@ export interface WindowTransportResponseMessage
     origin: Origin;
 }
 
-export interface SubmitQRHardwareCryptoHDKeyOrAccountMessage {
-    qr: string;
+export interface URParameter {
+    type: string;
+    cbor: string;
 }
+export interface SubmitQRHardwareCryptoHDKeyOrAccountMessage {
+    ur: URParameter;
+}
+
 export interface SubmitQRHardwareSignatureMessage {
     requestId: string;
-    qr: string;
+    ur: URParameter;
 }
 export interface CancelQRHardwareSignRequestMessage {}
 

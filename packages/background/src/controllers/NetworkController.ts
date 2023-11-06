@@ -65,7 +65,7 @@ export interface NetworkControllerState {
 const CHECK_PROVIDER_SCHEDULED_TIME = 5 * SECOND;
 const CHECK_PROVIDER_REQUEST_TIMEOUT = 10 * SECOND;
 
-export const NO_EIP_1559_NETWORKS = [280, 324, 30, 31, 42220];
+export const NO_EIP_1559_NETWORKS = [280, 324, 30, 31, 42220, 534351, 534352];
 
 export default class NetworkController extends BaseController<NetworkControllerState> {
     public static readonly CURRENT_HARDFORK: string = 'london';
@@ -1062,8 +1062,8 @@ export default class NetworkController extends BaseController<NetworkControllerS
                         providerType === ProviderType.BACKUP
                             ? providerStatus.isBackupProviderOnline
                             : providerType === ProviderType.DEFAULT
-                            ? providerStatus.isDefaultProviderOnline
-                            : providerStatus.isCurrentProviderOnline;
+                                ? providerStatus.isDefaultProviderOnline
+                                : providerStatus.isCurrentProviderOnline;
 
                     if (
                         currentProviderStatus === newStatus ||
@@ -1077,8 +1077,8 @@ export default class NetworkController extends BaseController<NetworkControllerS
                         providerType === ProviderType.BACKUP
                             ? { isBackupProviderOnline: newStatus }
                             : providerType === ProviderType.DEFAULT
-                            ? { isDefaultProviderOnline: newStatus }
-                            : { isCurrentProviderOnline: newStatus };
+                                ? { isDefaultProviderOnline: newStatus }
+                                : { isCurrentProviderOnline: newStatus };
 
                     this.store.updateState({
                         providerStatus: {

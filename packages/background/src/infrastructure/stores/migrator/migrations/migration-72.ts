@@ -2,7 +2,10 @@ import { BlankAppState } from '@block-wallet/background/utils/constants/initialS
 import { IMigration } from '../IMigration';
 import { normalizeNetworksOrder } from '../../../../utils/networks';
 import { FEATURES } from '../../../../utils/constants/features';
-import { ACTIONS_TIME_INTERVALS_DEFAULT_VALUES, SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES } from '../../../../utils/constants/networks';
+import {
+    ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+    SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES,
+} from '../../../../utils/constants/networks';
 
 /**
  * This migration adds Scroll Mainnet network and updates Scrol Sepolia Tesnet
@@ -20,11 +23,10 @@ export default {
             nativeCurrency: {
                 name: 'Ether',
                 symbol: 'ETH',
-                decimals: 18
+                decimals: 18,
             },
             iconUrls: [
                 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/scroll/info/logo.png',
-
             ],
             hasFixedGasCost: false,
             enable: true,
@@ -37,7 +39,7 @@ export default {
             defaultRpcUrl: 'https://scroll-node.blockwallet.io',
             backupRpcUrls: [
                 'https://scroll.blockwallet.io',
-                'https://rpc.scroll.io/'
+                'https://rpc.scroll.io/',
             ],
             blockExplorerName: 'Scroll Blockchain Explorer',
             blockExplorerUrls: ['https://scrollscan.com/'],
@@ -46,7 +48,7 @@ export default {
                 depositConfirmations: 0,
                 derivationsForward: 0,
             },
-            nativelySupported: true
+            nativelySupported: true,
         };
 
         updatedNetworks.SCROLL_L2_TESTNET = {
@@ -71,12 +73,12 @@ export default {
             showGasLevels: false,
             currentRpcUrl: `https://sepolia-rpc.scroll.io/`,
             defaultRpcUrl: `https://sepolia-rpc.scroll.io/`,
-            backupRpcUrls: [
-                'https://rpc.ankr.com/scroll_sepolia_testnet/',
-            ],
+            backupRpcUrls: ['https://rpc.ankr.com/scroll_sepolia_testnet/'],
             blockExplorerUrls: ['https://sepolia.scrollscan.com/'],
             blockExplorerName: 'Scroll Sepolia Explorer',
-            actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
+            actionsTimeIntervals: {
+                ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES,
+            },
             tornadoIntervals: {
                 depositConfirmations: 0,
                 derivationsForward: 0,
@@ -94,5 +96,5 @@ export default {
             },
         };
     },
-    version: '1.1.20',
+    version: '1.1.21',
 } as IMigration;

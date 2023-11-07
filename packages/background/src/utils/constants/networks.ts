@@ -575,11 +575,10 @@ export const INITIAL_NETWORKS: Networks = {
         nativeCurrency: {
             name: 'Ether',
             symbol: 'ETH',
-            decimals: 18
+            decimals: 18,
         },
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/scroll/info/logo.png',
-
         ],
         hasFixedGasCost: false,
         enable: true,
@@ -592,7 +591,7 @@ export const INITIAL_NETWORKS: Networks = {
         defaultRpcUrl: 'https://scroll-node.blockwallet.io',
         backupRpcUrls: [
             'https://scroll.blockwallet.io',
-            'https://rpc.scroll.io/'
+            'https://rpc.scroll.io/',
         ],
         blockExplorerName: 'Scroll Blockchain Explorer',
         blockExplorerUrls: ['https://scrollscan.com/'],
@@ -601,9 +600,7 @@ export const INITIAL_NETWORKS: Networks = {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
             derivationsForward: DERIVATIONS_FORWARD,
         },
-        nativelySupported: true
-
-
+        nativelySupported: true,
     },
     GOERLI: {
         name: 'goerli',
@@ -760,9 +757,7 @@ export const INITIAL_NETWORKS: Networks = {
         showGasLevels: false,
         currentRpcUrl: `https://sepolia-rpc.scroll.io/`,
         defaultRpcUrl: `https://sepolia-rpc.scroll.io/`,
-        backupRpcUrls: [
-            'https://rpc.ankr.com/scroll_sepolia_testnet/',
-        ],
+        backupRpcUrls: ['https://rpc.ankr.com/scroll_sepolia_testnet/'],
         blockExplorerUrls: ['https://sepolia.scrollscan.com/'],
         blockExplorerName: 'Scroll Sepolia Explorer',
         actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },

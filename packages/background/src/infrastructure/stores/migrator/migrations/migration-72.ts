@@ -96,5 +96,5 @@ export default {
             },
         };
     },
-    version: '1.1.21',
+    version: '1.1.20',
 } as IMigration;

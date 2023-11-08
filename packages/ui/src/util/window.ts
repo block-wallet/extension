@@ -35,11 +35,10 @@ export const closeCurrentTab = (): Promise<void> => {
     })
 }
 
-
 export enum Browsers {
     CHROME = "chrome",
     OPERA = "opera",
-    FIREFOX = "firefox"
+    FIREFOX = "firefox",
 }
 
 /**
@@ -48,23 +47,14 @@ export enum Browsers {
  */
 
 export function getBrowserInfo(): Browsers {
-
-    console.log("browser info")
-
-    const userAgent = window.navigator.userAgent.toLowerCase();
-
+    const userAgent = window.navigator.userAgent.toLowerCase()
 
     if (userAgent.indexOf("opera") !== -1 || userAgent.indexOf("opr") !== -1)
         return Browsers.OPERA
 
-    if (userAgent.indexOf("firefox") !== -1)
-        return Browsers.FIREFOX
+    if (userAgent.indexOf("firefox") !== -1) return Browsers.FIREFOX
 
-    if (userAgent.indexOf("chrome") !== -1)
-        return Browsers.CHROME
-
+    if (userAgent.indexOf("chrome") !== -1) return Browsers.CHROME
 
     return Browsers.CHROME
-
-
 }

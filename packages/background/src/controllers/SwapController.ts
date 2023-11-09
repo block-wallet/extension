@@ -5,8 +5,16 @@ import {
     ContractSignatureParser,
 } from './transactions/ContractSignatureParser';
 import { BigNumber } from '@ethersproject/bignumber';
-import { TransactionCategories } from './transactions/utils/types';
-import { TransactionController } from './transactions/TransactionController';
+import {
+    MetaType,
+    TransactionCategories,
+    TransactionMeta,
+    TransactionStatus,
+} from './transactions/utils/types';
+import {
+    TransactionController,
+    TransactionGasEstimation,
+} from './transactions/TransactionController';
 import { TransactionFeeData } from './erc-20/transactions/SignedTransaction';
 import { TokenController } from './erc-20/TokenController';
 
@@ -16,6 +24,7 @@ import {
     OneInchSwapRequestResponse,
     BasicToken,
     OneInchService,
+    SwapTxMeta,
 } from '../utils/swaps/1inch';
 
 import {
@@ -23,6 +32,8 @@ import {
     OpenOceanService,
 } from '../utils/swaps/openOcean';
 import { GasPricesController } from './GasPricesController';
+import { normalizeTransaction } from './transactions/utils/utils';
+import { v4 as uuid } from 'uuid';
 
 export enum ExchangeType {
     SWAP_1INCH = 'SWAP_1INCH',
@@ -273,6 +284,38 @@ export default class SwapController extends BaseController<
             }
         } catch (error) {
             throw new Error('Unable to fetch exchange spender');
+        }
+    };
+
+    public estimateSwapGas = async (
+        tx: SwapTxMeta
+    ): Promise<TransactionGasEstimation> => {
+        try {
+            const transactionMeta: TransactionMeta = {
+                id: uuid(),
+                chainId: this._networkController.network.chainId,
+                origin: 'blank',
+                status: TransactionStatus.UNAPPROVED,
+                time: Date.now(),
+                verifiedOnBlockchain: false,
+                loadingGasValues: true,
+                blocksDropCount: 0,
+                transactionParams: normalizeTransaction({
+                    from: tx.from,
+                    to: tx.to,
+                    data: tx.data,
+                    value: BigNumber.from(tx.value),
+                }),
+                metaType: MetaType.REGULAR,
+            };
+
+            transactionMeta.origin = 'blank';
+            return await this._transactionController.estimateGas(
+                transactionMeta,
+                BigNumber.from(tx.gas)
+            );
+        } catch (error) {
+            throw new Error('Unable to estimate gas');
         }
     };
 

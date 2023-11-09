@@ -66,6 +66,7 @@ import { RemoteConfigsControllerState } from '@block-wallet/background/controlle
 import { TypedTransaction } from '@ethereumjs/tx';
 import browser from 'webextension-polyfill';
 import { GetOnRampCurrencies } from '@block-wallet/background/controllers/OnrampController';
+import { SwapTxMeta } from '../swaps/1inch';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -202,6 +203,7 @@ enum TRANSACTION {
     GET_SEND_TRANSACTION_RESULT = 'GET_SEND_TRANSACTION_RESULT',
     CALCULATE_SEND_TRANSACTION_GAS_LIMIT = 'CALCULATE_SEND_TRANSACTION_GAS_LIMIT',
     CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT = 'CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT',
+    CALCULATE_SWAP_TRANSACTION_GAS_LIMIT = 'CALCULATE_SWAP_TRANSACTION_GAS_LIMIT',
     CONFIRM = 'CONFIRM_TRANSACTION',
     REJECT = 'REJECT_TRANSACTION',
     UPDATE_STATUS = 'UPDATE_STATUS',
@@ -480,6 +482,10 @@ export interface RequestSignatures {
     ];
     [Messages.TRANSACTION.CALCULATE_SEND_TRANSACTION_GAS_LIMIT]: [
         RequestCalculateSendTransactionGasLimit,
+        TransactionGasEstimation
+    ];
+    [Messages.TRANSACTION.CALCULATE_SWAP_TRANSACTION_GAS_LIMIT]: [
+        RequestCalculateSwapTransactionGasLimit,
         TransactionGasEstimation
     ];
     [Messages.TRANSACTION.CANCEL_TRANSACTION]: [RequestCancelTransaction, void];
@@ -998,6 +1004,10 @@ export interface RequestCalculateApproveTransactionGasLimit {
     tokenAddress: string;
     spender: string;
     amount: BigNumber | 'UNLIMITED';
+}
+
+export interface RequestCalculateSwapTransactionGasLimit {
+    tx: SwapTxMeta;
 }
 
 export interface RequestCalculateSendTransactionGasLimit {

@@ -107,6 +107,7 @@ import {
     RequestAccountReset,
     RequestSetDefaultGas,
     RequestCalculateApproveTransactionGasLimit,
+    RequestCalculateSwapTransactionGasLimit,
     RequestApproveAllowance,
     RequestAddAsNewApproveTransaction,
     RequestGetExchangeSpender,
@@ -1025,6 +1026,10 @@ export default class BlankController extends EventEmitter {
             case Messages.TRANSACTION.CALCULATE_SEND_TRANSACTION_GAS_LIMIT:
                 return this.calculateSendTransactionGasLimit(
                     request as RequestCalculateSendTransactionGasLimit
+                );
+            case Messages.TRANSACTION.CALCULATE_SWAP_TRANSACTION_GAS_LIMIT:
+                return this.calculateSwapTransactionGasLimit(
+                    request as RequestCalculateSwapTransactionGasLimit
                 );
             case Messages.TRANSACTION.CANCEL_TRANSACTION:
                 return this.cancelTransaction(
@@ -2484,6 +2489,15 @@ export default class BlankController extends EventEmitter {
             spender,
             amount,
         });
+    }
+
+    /**
+     * Calculate the gas limit for a Swap transaction
+     */
+    private async calculateSwapTransactionGasLimit({
+        tx,
+    }: RequestCalculateSwapTransactionGasLimit): Promise<TransactionGasEstimation> {
+        return this.swapController.estimateSwapGas(tx);
     }
 
     private cancelTransaction({

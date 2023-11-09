@@ -436,6 +436,7 @@ const SwapPage = () => {
                                     switchInputs()
                                 } else {
                                     setQuote(undefined)
+                                    setError(undefined)
                                     setSwapDataState((prev: SwapState) => ({
                                         ...prev,
                                         tokenFrom: asset.token,
@@ -565,6 +566,7 @@ const SwapPage = () => {
                             switchInputs()
                         } else {
                             setQuote(undefined)
+                            setError(undefined)
                             setSwapDataState((prev: SwapState) => ({
                                 ...prev,
                                 tokenTo: asset.token,

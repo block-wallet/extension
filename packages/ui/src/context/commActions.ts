@@ -65,6 +65,7 @@ import {
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 import { GetOnRampCurrencies } from "@block-wallet/background/controllers/OnrampController"
 import log from "loglevel"
+import { SwapTxMeta } from "@block-wallet/background/utils/swaps/1inch"
 
 let requestId = 0
 
@@ -918,6 +919,22 @@ export const getApproveTransactionGasLimit = async (
             tokenAddress,
             spender,
             amount,
+        }
+    )
+}
+
+/**
+ * It calculates a swap transaction gas limit
+ *
+ * @returns Tswap tx estimated gas limit
+ */
+export const getSwapTransactionGasLimit = async (
+    tx: SwapTxMeta
+): Promise<TransactionGasEstimation> => {
+    return sendMessage(
+        Messages.TRANSACTION.CALCULATE_SWAP_TRANSACTION_GAS_LIMIT,
+        {
+            tx,
         }
     )
 }

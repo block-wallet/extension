@@ -70,6 +70,8 @@ export const OPENOCEAN_AGGREGATOR_NETWORKS: OpenOceanNetworks = {
 export const OPENOCEAN_AGGREGATOR_ENDPOINT =
     'https://open-api.openocean.finance/v3/';
 
+export const OPENOCEAN_GAS_LIMIT_INCREASE = 1.4;
+
 // https://docs.openocean.finance/dev/aggregator-api-and-sdk/aggregator-api#api-reference
 
 export interface OpenOceanSwapQuoteParams {
@@ -175,100 +177,98 @@ export const OpenOceanService = {
         chainId: number,
         params: SwapQuoteParams
     ): Promise<SwapQuoteResponse> {
-        try {
-            const {
-                chain,
-                inTokenAddress,
-                outTokenAddress,
-                amount,
-                slippage,
-                gasPrice,
-            } = this.parseQuoteParams(chainId, params);
-            const res = await retryHandling<OpenOceanSwapQuoteResponse>(() =>
-                httpClient.request<OpenOceanSwapQuoteResponse>(
-                    `${OPENOCEAN_AGGREGATOR_ENDPOINT}${chainId}/swap_quote`,
-                    {
-                        params: {
-                            chain,
-                            account: params.fromAddress,
-                            referrer: REFERRER_ADDRESS,
-                            referrerFee: BASE_SWAP_FEE,
-                            inTokenAddress,
-                            outTokenAddress,
-                            amount,
-                            slippage,
-                            gasPrice,
-                        },
-                    }
-                )
+        const {
+            chain,
+            inTokenAddress,
+            outTokenAddress,
+            amount,
+            slippage,
+            gasPrice,
+        } = this.parseQuoteParams(chainId, params);
+        const res = await retryHandling<OpenOceanSwapQuoteResponse>(() =>
+            httpClient.request<OpenOceanSwapQuoteResponse>(
+                `${OPENOCEAN_AGGREGATOR_ENDPOINT}${chainId}/swap_quote`,
+                {
+                    params: {
+                        chain,
+                        account: params.fromAddress,
+                        referrer: REFERRER_ADDRESS,
+                        referrerFee: BASE_SWAP_FEE,
+                        inTokenAddress,
+                        outTokenAddress,
+                        amount,
+                        slippage,
+                        gasPrice,
+                    },
+                }
+            )
+        );
+
+        if (res.code !== 200)
+            throw new Error(
+                'Could not find a quote for the swap. Try a different amount or token and check you have enough funds for the gas.'
             );
 
-            if (res.code !== 200)
-                throw new Error('Error getting OpenOcean swap quote');
-
-            return {
-                fromToken: res.data.inToken,
-                fromTokenAmount: res.data.inAmount,
-                toToken: res.data.outToken,
-                toTokenAmount: res.data.outAmount,
-                blockWalletFee: BigNumber.from(res.data.inAmount)
-                    .mul(BASE_SWAP_FEE * 10)
-                    .div(1000),
-                estimatedGas: Math.round(
-                    res.data.estimatedGas * GAS_LIMIT_INCREASE
-                ),
-            };
-        } catch (error) {
-            throw new Error('Error getting OpenOcean swap quote');
-        }
+        return {
+            fromToken: res.data.inToken,
+            fromTokenAmount: res.data.inAmount,
+            toToken: res.data.outToken,
+            toTokenAmount: res.data.outAmount,
+            blockWalletFee: BigNumber.from(res.data.inAmount)
+                .mul(BASE_SWAP_FEE * 10)
+                .div(1000),
+            estimatedGas: Math.round(
+                res.data.estimatedGas * OPENOCEAN_GAS_LIMIT_INCREASE
+            ),
+        };
     },
     async getSwapParameters(
         chainId: number,
         signatureParser: ContractSignatureParser,
         swapParams: SwapRequestParams
     ): Promise<SwapParameters> {
-        try {
-            const params = this.parseSwapParams(chainId, swapParams);
-            const { code, data } =
-                await retryHandling<OpenOceanSwapRequestResponse>(() =>
-                    httpClient.request<OpenOceanSwapRequestResponse>(
-                        `${OPENOCEAN_AGGREGATOR_ENDPOINT}${chainId}/swap_quote`,
-                        {
-                            params: {
-                                ...params,
-                            },
-                        }
-                    )
-                );
-
-            if (code !== 200)
-                throw new Error('Error getting OpenOcean swap request');
-
-            const methodSignature = await signatureParser.getMethodSignature(
-                data.data,
-                data.to
+        const params = this.parseSwapParams(chainId, swapParams);
+        const { code, data } =
+            await retryHandling<OpenOceanSwapRequestResponse>(() =>
+                httpClient.request<OpenOceanSwapRequestResponse>(
+                    `${OPENOCEAN_AGGREGATOR_ENDPOINT}${chainId}/swap_quote`,
+                    {
+                        params: {
+                            ...params,
+                        },
+                    }
+                )
             );
 
-            return {
-                fromToken: data.inToken,
-                toToken: data.outToken,
-                fromTokenAmount: data.inAmount,
-                toTokenAmount: data.outAmount,
-                methodSignature,
-                tx: {
-                    data: data.data,
-                    from: data.from,
-                    to: data.to,
-                    gas: data.estimatedGas,
-                    value: data.value,
-                    gasPrice: params.gasPrice.toString(),
-                },
-                blockWalletFee: BigNumber.from(data.inAmount)
-                    .mul(BASE_SWAP_FEE * 10)
-                    .div(1000),
-            };
-        } catch (error) {
-            throw new Error('Error getting OpenOcean swap quote');
-        }
+        if (code !== 200)
+            throw new Error(
+                'There was a problem fetching the quote. Please try again.'
+            );
+
+        const methodSignature = await signatureParser.getMethodSignature(
+            data.data,
+            data.to
+        );
+
+        return {
+            fromToken: data.inToken,
+            toToken: data.outToken,
+            fromTokenAmount: data.inAmount,
+            toTokenAmount: data.outAmount,
+            methodSignature,
+            tx: {
+                data: data.data,
+                from: data.from,
+                to: data.to,
+                gas: Math.round(
+                    data.estimatedGas * OPENOCEAN_GAS_LIMIT_INCREASE
+                ),
+                value: data.value,
+                gasPrice: params.gasPrice.toString(),
+            },
+            blockWalletFee: BigNumber.from(data.inAmount)
+                .mul(BASE_SWAP_FEE * 10)
+                .div(1000),
+        };
     },
 };

@@ -120,14 +120,16 @@ export interface OneInchSwapRequestResponse {
     fromTokenAmount: string; // Input amount of fromToken in minimal divisible units
     toTokenAmount: string; // Result amount of toToken in minimal divisible units
     protocols?: unknown[]; // Route of the trade
-    tx: {
-        from: string; // Transactions will be sent from this address
-        to: string; // Transactions will be sent to our contract address
-        data: string; // Bytes of call data
-        value: string; // Amount of ETH (in wei) will be sent to the contract address
-        gas: number; // Estimated amount of the gas limit, increase this value by 25%
-        gasPrice: string; // Gas price in wei
-    };
+    tx: SwapTxMeta;
+}
+
+export interface SwapTxMeta {
+    from: string; // Transactions will be sent from this address
+    to: string; // Transactions will be sent to our contract address
+    data: string; // Bytes of call data
+    value: string; // Amount of ETH (in wei) will be sent to the contract address
+    gas: number; // Estimated amount of the gas limit, increase this value by 25%
+    gasPrice: string; // Gas price in wei
 }
 
 export const OneInchService = {

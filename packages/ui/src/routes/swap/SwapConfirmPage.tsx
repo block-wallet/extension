@@ -24,6 +24,7 @@ import {
     executeExchange,
     getLatestGasPrice,
     rejectTransaction,
+    getSwapTransactionGasLimit,
 } from "../../context/commActions"
 import {
     SwapParameters,
@@ -386,9 +387,13 @@ const SwapPageConfirm: FC<{}> = () => {
                         gasPrice = await getLatestGasPrice()
                     }
 
+                    let gasLimitEstimation = await getSwapTransactionGasLimit(
+                        swapParameters.tx
+                    )
+
                     setDefaultGas({
                         gasPrice: BigNumber.from(gasPrice),
-                        gasLimit: BigNumber.from(swapParameters.tx.gas),
+                        gasLimit: BigNumber.from(gasLimitEstimation.gasLimit),
                     })
 
                     isGasInitialized.current = true

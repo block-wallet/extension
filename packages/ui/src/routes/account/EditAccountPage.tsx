@@ -137,7 +137,7 @@ const EditAccountPage = () => {
                     success: "Congratulations",
                     error: "Error",
                 }}
-                timeout={2900}
+                timeout={1000}
                 texts={{
                     loading: "Account is being renamed...",
                     success: "Your changes have been succesfully saved!",

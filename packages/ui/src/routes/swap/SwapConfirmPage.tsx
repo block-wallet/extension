@@ -519,7 +519,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 }}
                 clickOutsideToClose={false}
                 txHash={inProgressTransaction?.transactionParams.hash}
-                timeout={2900}
+                timeout={1500}
                 gifs={gifs}
                 onDone={React.useCallback(() => {
                     if (status === "error") {

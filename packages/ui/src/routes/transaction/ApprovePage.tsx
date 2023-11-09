@@ -670,7 +670,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         "There was an error while approving the asset.",
                 }}
                 txHash={inProgressTransaction?.transactionParams.hash}
-                timeout={2900}
+                timeout={1500}
                 onDone={onDone}
                 clickOutsideToClose={false}
                 gifs={gifs}

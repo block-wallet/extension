@@ -1,9 +1,9 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import classnames from "classnames"
 
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
-import { Devices } from "../../context/commTypes"
+import { AccountType, Devices } from "../../context/commTypes"
 import Divider from "../../components/Divider"
 
 // Assets & icons
@@ -17,23 +17,42 @@ import HardwareWalletSetupLayout from "./SetupLayout"
 import OpenExplorerIcon from "../../components/icons/OpenExplorerIcon"
 import { Browsers, getBrowserInfo } from "../../util/window"
 import Tooltip from "../../components/label/Tooltip"
+import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
 
 const browser = getBrowserInfo()
 
 const HardwareWalletVendorsPage = () => {
     const history = useOnMountHistory()
+    const accounts = useSortedAccounts({ includeHiddenAccounts: true })
+    const [keystoneDeviceConnected, setKeystoneDeviceConnected] =
+        useState(false)
     const [selectedVendor, setSelectedVendor] = useState<Devices>()
     const next = () => {
-        history.push({
-            pathname:
-                selectedVendor !== Devices.KEYSTONE
-                    ? "/hardware-wallet/connect"
-                    : "/hardware-wallet/keystone-connect",
-            state: { vendor: selectedVendor },
-        })
+        if (!keystoneDeviceConnected) {
+            history.push({
+                pathname:
+                    selectedVendor !== Devices.KEYSTONE
+                        ? "/hardware-wallet/connect"
+                        : "/hardware-wallet/keystone-connect",
+                state: { vendor: selectedVendor },
+            })
+        } else {
+            history.push({
+                pathname: "/hardware-wallet/accounts",
+                state: { vendor: selectedVendor, isKeystoneConnected: true },
+            })
+        }
     }
 
-    console.log("is: ", browser)
+    useEffect(() => {
+        if (selectedVendor === Devices.KEYSTONE) {
+            setKeystoneDeviceConnected(
+                accounts.filter((q) => q.accountType === AccountType.KEYSTONE)
+                    .length > 0
+            )
+        }
+    }, [selectedVendor, accounts])
+
     return (
         <HardwareWalletSetupLayout
             title="Connect Hardware Wallet"

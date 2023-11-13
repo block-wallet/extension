@@ -78,6 +78,7 @@ const initialState: State = {
 const HardwareWalletAccountsPage = () => {
     const history = useOnMountHistory()!
     const vendor = history.location.state.vendor as Devices
+    const isKeystoneConnected = history.location.state.isKeystoneConnected
     const {
         run,
         data: hdPath,
@@ -215,7 +216,9 @@ const HardwareWalletAccountsPage = () => {
                             history.push({
                                 pathname:
                                     vendor === Devices.KEYSTONE
-                                        ? "/hardware-wallet/keystone-connect"
+                                        ? isKeystoneConnected
+                                            ? "/hardware-wallet"
+                                            : "/hardware-wallet/keystone-connect"
                                         : "/hardware-wallet/connect",
                                 state: { vendor },
                             })

@@ -2,7 +2,6 @@ import { INITIAL_NETWORKS } from '../constants/networks';
 import {
     BASE_SWAP_FEE,
     BasicToken,
-    GAS_LIMIT_INCREASE,
     REFERRER_ADDRESS,
     SWAP_NATIVE_ADDRESS,
 } from './1inch';

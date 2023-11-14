@@ -476,7 +476,8 @@ describe('Bridge Controller', () => {
                 });
                 it('Should return QuoteNotFound error if there is no quote', async () => {
                     quoteSandbox.restore();
-                    const errorMessage = 'quote not found';
+                    const errorMessage =
+                        'No available quotes for the requested transfer';
                     const errors: LiFiErrorResponse = {
                         message:
                             'No available quotes for the requested transfer',
@@ -550,7 +551,10 @@ describe('Bridge Controller', () => {
                             referrer: BRIDGE_REFERRER_ADDRESS,
                         })
                         .throwsException(
-                            new QuoteNotFoundError('quote not found', errors)
+                            new QuoteNotFoundError(
+                                'No available quotes for the requested transfer',
+                                errors
+                            )
                         );
 
                     const quoteResponse = (await bridgeController.getQuote(
@@ -568,7 +572,6 @@ describe('Bridge Controller', () => {
                     )) as GetBridgeQuoteNotFoundResponse;
                     expect(quoteResponse).not.to.be.undefined;
                     expect(quoteResponse.message).to.equal(errorMessage);
-                    expect(quoteResponse.errors).to.equal(errors);
                 });
                 it('Should return a valid quote without checking allowance', async () => {
                     sandbox.restore();

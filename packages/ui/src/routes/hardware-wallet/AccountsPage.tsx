@@ -7,7 +7,6 @@ import {
     getHardwareWalletHDPath,
     setHardwareWalletHDPath,
     selectAccount,
-    openHardwareRemove,
 } from "../../context/commActions"
 import {
     AccountInfo,
@@ -56,6 +55,7 @@ const initialState: State = {
 
 const HardwareWalletAccountsPage = () => {
     const history = useOnMountHistory()!
+    const [enabledPagination, setEnabledPagination] = useState(true)
     const vendor = history.location.state.vendor as Devices
     const isKeystoneConnected = history.location.state.isKeystoneConnected
     const {
@@ -96,6 +96,16 @@ const HardwareWalletAccountsPage = () => {
         setAccountBalances(accountsBalances)
     }
 
+    //Will check if this Keystone can Only synchronize 10 accounts (Ledger Live)
+    const checkKeystoneAccounts = useCallback(async () => {
+        setState({ gettingAccounts: true })
+        try {
+            await getHardwareWalletAccounts(vendor, 2, 10)
+        } catch (e) {
+            setEnabledPagination(false)
+        }
+    }, [vendor])
+
     const getAccounts = useCallback(async () => {
         setState({ gettingAccounts: true })
         try {
@@ -116,9 +126,10 @@ const HardwareWalletAccountsPage = () => {
 
     useEffect(() => {
         if (hdPath) {
+            if (vendor === Devices.KEYSTONE) checkKeystoneAccounts()
             getAccounts()
         }
-    }, [getAccounts, hdPath])
+    }, [checkKeystoneAccounts, getAccounts, hdPath, vendor])
 
     const toggleAccount = (account: DeviceAccountInfo) => {
         const selected = state.selectedAccounts.some(
@@ -254,29 +265,49 @@ const HardwareWalletAccountsPage = () => {
                     )}
                 </div>
 
-                <div className="flex w-full justify-between pt-6 items-center pl-2 space-x-2">
-                    <div className="space-x-4 flex items-center max-h-10">
-                        <span className="text-primary-grey-dark">Show:</span>
-                        <Select
-                            onChange={onUpdatePageSize}
-                            currentValue={state.pageSize}
-                            id="pageSize"
+                {enabledPagination ? (
+                    <div className="flex w-full justify-between pt-6 items-center pl-2 space-x-2">
+                        <div className="space-x-4 flex items-center max-h-10">
+                            <span className="text-primary-grey-dark">
+                                Show:
+                            </span>
+                            <Select
+                                onChange={onUpdatePageSize}
+                                currentValue={state.pageSize}
+                                id="pageSize"
+                                disabled={state.gettingAccounts}
+                            >
+                                <Select.Option value={5}>5</Select.Option>
+                                <Select.Option value={8}>8</Select.Option>
+                                <Select.Option value={10}>10</Select.Option>
+                            </Select>
+                        </div>
+                        <PaginationControls
                             disabled={state.gettingAccounts}
-                        >
-                            <Select.Option value={5}>5</Select.Option>
-                            <Select.Option value={8}>8</Select.Option>
-                            <Select.Option value={10}>10</Select.Option>
-                        </Select>
+                            stickyFirstPage
+                            currentPage={state.currentPage}
+                            onChangePage={(page) =>
+                                setState({ currentPage: page })
+                            }
+                            pages={6}
+                        />
                     </div>
-                    <PaginationControls
-                        disabled={state.gettingAccounts}
-                        stickyFirstPage
-                        currentPage={state.currentPage}
-                        onChangePage={(page) => setState({ currentPage: page })}
-                        pages={6}
-                    />
-                </div>
-                {vendor !== Devices.KEYSTONE ? (
+                ) : (
+                    <div className="flex w-full justify-between pt-6 items-center pl-2 space-x-2">
+                        <PaginationControls
+                            disabled={state.gettingAccounts}
+                            stickyFirstPage
+                            currentPage={state.currentPage}
+                            onChangePage={(page) =>
+                                setState({ currentPage: page })
+                            }
+                            pages={2}
+                            className="!w-full"
+                            showArrows={false}
+                        />
+                    </div>
+                )}
+                {vendor !== Devices.KEYSTONE && (
                     <AccountsPageAdvancedSettings
                         currentHDPath={
                             hdPath ||
@@ -287,12 +318,19 @@ const HardwareWalletAccountsPage = () => {
                         vendor={vendor}
                         setHDPath={updateHDPath}
                     />
-                ) : (
+                )}
+                {vendor === Devices.KEYSTONE && isKeystoneConnected && (
                     <>
                         <div
-                            onClick={() => openHardwareRemove()}
+                            onClick={() =>
+                                history.push({
+                                    pathname: "/hardware-wallet/remove-device",
+                                    state: { isFromAccountsPage: true },
+                                })
+                            }
                             className={classnames(
-                                "w-full bg-white rounded-md cursor-pointer underline-offset-1 flex items-center justify-between hover:underline"
+                                "w-full px-40 !mt-6 !-mb-5 bg-white rounded-md cursor-pointer underline-offset-1",
+                                "flex hover:underline"
                             )}
                         >
                             <span className="font-normal text-xs text-blue-700 text-center">

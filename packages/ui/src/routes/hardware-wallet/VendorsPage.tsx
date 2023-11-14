@@ -28,7 +28,7 @@ const HardwareWalletVendorsPage = () => {
         useState(false)
     const [selectedVendor, setSelectedVendor] = useState<Devices>()
     const next = () => {
-        if (!keystoneDeviceConnected) {
+        if (!keystoneDeviceConnected || selectedVendor !== Devices.KEYSTONE) {
             history.push({
                 pathname:
                     selectedVendor !== Devices.KEYSTONE

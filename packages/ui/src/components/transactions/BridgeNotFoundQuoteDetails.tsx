@@ -28,19 +28,23 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
 > = ({ open, onClose, details }) => {
     let errorsByTool = new Map<string, BridgeError[]>()
 
-    details.errors.forEach((error) => {
-        const err = {
-            code: error.code,
-            type: error.tool,
-            message: error.message,
-            fromToken: error.action.fromToken.symbol,
-            toToken: error.action.toToken.symbol,
-        }
-        if (errorsByTool.has(error.tool)) {
-            errorsByTool.get(error.tool)?.push(err)
-        } else {
-            errorsByTool.set(error.tool, [err])
-        }
+    details.errors.failed.forEach((error) => {
+        Object.values(error.subpaths).forEach((subpaths) => {
+            subpaths.forEach((subpath) => {
+                const err = {
+                    code: subpath.code,
+                    type: subpath.tool,
+                    message: subpath.message,
+                    fromToken: subpath.action.fromToken.symbol,
+                    toToken: subpath.action.toToken.symbol,
+                }
+                if (errorsByTool.has(subpath.tool)) {
+                    errorsByTool.get(subpath.tool)?.push(err)
+                } else {
+                    errorsByTool.set(subpath.tool, [err])
+                }
+            })
+        })
     })
     return (
         <Dialog open={open} onClickOutside={onClose}>

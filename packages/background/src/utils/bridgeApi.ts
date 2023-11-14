@@ -17,15 +17,6 @@ import {
     LIFI_KEY_HEADER,
 } from './types/lifi';
 
-const getMessageFromLiFiError = (errCode: string) => {
-    if (errCode === 'AMOUNT_TOO_LOW') {
-        return 'The amount is too low for executing this bridge.';
-    }
-    if (errCode === 'QUOTE_NOT_FOUND') {
-        return "There isn't a quote for the requested parameters.";
-    }
-};
-
 export class QuoteNotFoundError extends Error {
     details: LiFiErrorResponse;
     constructor(message: string | undefined, details: LiFiErrorResponse) {
@@ -262,10 +253,7 @@ const LiFiBridge: IBridge = {
                 throw new Error('Request parameters are invalid.');
             } else if (e.status === 404) {
                 const quoteError = e.response as LiFiErrorResponse;
-                const errorCode = quoteError.errors?.length
-                    ? quoteError.errors[0].code
-                    : 'QUOTE_NOT_FOUND';
-                const message = getMessageFromLiFiError(errorCode);
+                const message = quoteError.message;
                 throw new QuoteNotFoundError(message, quoteError);
             }
             throw e;

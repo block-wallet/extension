@@ -25,8 +25,10 @@ import { ImportStrategy, ImportArguments } from '../account';
 import {
     SwapParameters,
     ExchangeType,
-    SwapQuote,
+    SwapQuoteResponse,
     SwapTransaction,
+    SwapQuoteParams,
+    SwapRequestParams,
 } from '../../controllers/SwapController';
 import {
     ProviderEvents,
@@ -50,7 +52,6 @@ import {
 import { TransactionFeeData } from '@block-wallet/background/controllers/erc-20/transactions/SignedTransaction';
 import { Currency } from '../currency';
 import { Devices } from './hardware';
-import { OneInchSwapQuoteParams, OneInchSwapRequestParams } from './1inch';
 import { ChainListItem } from '@block-wallet/chains-assets';
 import { IChain } from './chain';
 import {
@@ -65,6 +66,7 @@ import { RemoteConfigsControllerState } from '@block-wallet/background/controlle
 import { TypedTransaction } from '@ethereumjs/tx';
 import browser from 'webextension-polyfill';
 import { GetOnRampCurrencies } from '@block-wallet/background/controllers/OnrampController';
+import { SwapTxMeta } from '../swaps/1inch';
 
 enum ACCOUNT {
     CREATE = 'CREATE_ACCOUNT',
@@ -201,6 +203,7 @@ enum TRANSACTION {
     GET_SEND_TRANSACTION_RESULT = 'GET_SEND_TRANSACTION_RESULT',
     CALCULATE_SEND_TRANSACTION_GAS_LIMIT = 'CALCULATE_SEND_TRANSACTION_GAS_LIMIT',
     CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT = 'CALCULATE_APPROVE_TRANSACTION_GAS_LIMIT',
+    CALCULATE_SWAP_TRANSACTION_GAS_LIMIT = 'CALCULATE_SWAP_TRANSACTION_GAS_LIMIT',
     CONFIRM = 'CONFIRM_TRANSACTION',
     REJECT = 'REJECT_TRANSACTION',
     UPDATE_STATUS = 'UPDATE_STATUS',
@@ -363,7 +366,7 @@ export interface RequestSignatures {
         boolean
     ];
     [Messages.EXCHANGE.APPROVE]: [RequestApproveExchange, boolean];
-    [Messages.EXCHANGE.GET_QUOTE]: [RequestGetExchangeQuote, SwapQuote];
+    [Messages.EXCHANGE.GET_QUOTE]: [RequestGetExchangeQuote, SwapQuoteResponse];
     [Messages.EXCHANGE.GET_EXCHANGE]: [RequestGetExchange, SwapParameters];
     [Messages.EXCHANGE.GET_SPENDER]: [RequestGetExchangeSpender, string];
     [Messages.EXCHANGE.EXECUTE]: [RequestExecuteExchange, string];
@@ -479,6 +482,10 @@ export interface RequestSignatures {
     ];
     [Messages.TRANSACTION.CALCULATE_SEND_TRANSACTION_GAS_LIMIT]: [
         RequestCalculateSendTransactionGasLimit,
+        TransactionGasEstimation
+    ];
+    [Messages.TRANSACTION.CALCULATE_SWAP_TRANSACTION_GAS_LIMIT]: [
+        RequestCalculateSwapTransactionGasLimit,
         TransactionGasEstimation
     ];
     [Messages.TRANSACTION.CANCEL_TRANSACTION]: [RequestCancelTransaction, void];
@@ -712,12 +719,12 @@ export interface RequestApproveExchange {
 
 export interface RequestGetExchangeQuote {
     exchangeType: ExchangeType;
-    quoteParams: OneInchSwapQuoteParams;
+    quoteParams: SwapQuoteParams;
 }
 
 export interface RequestGetExchange {
     exchangeType: ExchangeType;
-    exchangeParams: OneInchSwapRequestParams;
+    exchangeParams: SwapRequestParams;
 }
 
 export interface RequestGetExchangeSpender {
@@ -997,6 +1004,10 @@ export interface RequestCalculateApproveTransactionGasLimit {
     tokenAddress: string;
     spender: string;
     amount: BigNumber | 'UNLIMITED';
+}
+
+export interface RequestCalculateSwapTransactionGasLimit {
+    tx: SwapTxMeta;
 }
 
 export interface RequestCalculateSendTransactionGasLimit {

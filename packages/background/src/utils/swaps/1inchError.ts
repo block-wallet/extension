@@ -1,4 +1,4 @@
-import { RequestError } from './http';
+import { RequestError } from '../http';
 
 const EXACT_MATCH_ERRORS = ['Insufficient liquidity', 'Cannot estimate'];
 const NOT_ENOUGH_BALANCE = `Balance too low to cover swap and gas cost.`;

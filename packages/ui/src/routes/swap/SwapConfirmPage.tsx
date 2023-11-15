@@ -24,19 +24,21 @@ import {
     executeExchange,
     getLatestGasPrice,
     rejectTransaction,
+    getSwapTransactionGasLimit,
 } from "../../context/commActions"
 import {
-    SwapQuote,
     SwapParameters,
+    SwapQuoteResponse,
+    SwapRequestParams,
     SwapTransaction,
 } from "@block-wallet/background/controllers/SwapController"
 import {
-    ExchangeType,
     HardwareWalletOpTypes,
     TransactionCategories,
     TransactionStatus,
 } from "../../context/commTypes"
 import {
+    DEFAULT_EXCHANGE_TYPE,
     calcExchangeRate,
     calculatePricePercentageImpact,
     isSwapNativeTokenAddress,
@@ -45,7 +47,6 @@ import {
 import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
-import { OneInchSwapRequestParams } from "@block-wallet/background/utils/types/1inch"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { classnames } from "../../styles"
 import { formatRounded } from "../../util/formatRounded"
@@ -82,7 +83,7 @@ import PriceImpactDialog from "../../components/swaps/PriceImpactDialog"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token
-    swapQuote: SwapQuote
+    swapQuote: SwapQuoteResponse
     toToken: Token
     amount?: string
     allowanceTransactionId?: string
@@ -333,10 +334,7 @@ const SwapPageConfirm: FC<{}> = () => {
                     gas: selectedGasLimit.toNumber() || swapParameters.tx.gas,
                 },
             }
-            await executeExchange(
-                ExchangeType.SWAP_1INCH,
-                swapTransactionParams
-            )
+            await executeExchange(DEFAULT_EXCHANGE_TYPE, swapTransactionParams)
         } else {
             closeDialog()
         }
@@ -345,16 +343,16 @@ const SwapPageConfirm: FC<{}> = () => {
     const updateSwapParameters = useCallback(async () => {
         setError(undefined)
         setIsFetchingSwaps(true)
-        const params: OneInchSwapRequestParams = {
+        const params: SwapRequestParams = {
             fromAddress: selectedAccount.address,
-            fromTokenAddress: swapQuote.fromToken.address,
-            toTokenAddress: swapQuote.toToken.address,
+            fromToken: swapQuote.fromToken,
+            toToken: swapQuote.toToken,
             amount: swapQuote.fromTokenAmount,
             slippage: advancedSettings.slippage,
         }
         try {
             const swapParams = await getExchangeParameters(
-                ExchangeType.SWAP_1INCH,
+                DEFAULT_EXCHANGE_TYPE,
                 params
             )
             setSwapParameters(swapParams)
@@ -364,6 +362,7 @@ const SwapPageConfirm: FC<{}> = () => {
             setTimeoutStart(new Date().getTime())
             setIsFetchingSwaps(false)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         selectedAccount.address,
         advancedSettings.slippage,
@@ -388,9 +387,13 @@ const SwapPageConfirm: FC<{}> = () => {
                         gasPrice = await getLatestGasPrice()
                     }
 
+                    let gasLimitEstimation = await getSwapTransactionGasLimit(
+                        swapParameters.tx
+                    )
+
                     setDefaultGas({
                         gasPrice: BigNumber.from(gasPrice),
-                        gasLimit: BigNumber.from(swapParameters.tx.gas),
+                        gasLimit: BigNumber.from(gasLimitEstimation.gasLimit),
                     })
 
                     isGasInitialized.current = true

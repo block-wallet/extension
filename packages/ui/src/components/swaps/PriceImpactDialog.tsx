@@ -1,10 +1,10 @@
-import { BasicToken } from "@block-wallet/background/utils/types/1inch"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits } from "ethers/lib/utils"
 import { FC } from "react"
 import { formatRounded } from "../../util/formatRounded"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import WarningDialog from "../dialog/WarningDialog"
+import { BasicToken } from "@block-wallet/background/utils/swaps/1inch"
 
 interface HighPriceImpactDialogProps {
     onClose: () => void

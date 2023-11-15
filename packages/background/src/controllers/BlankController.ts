@@ -107,6 +107,7 @@ import {
     RequestAccountReset,
     RequestSetDefaultGas,
     RequestCalculateApproveTransactionGasLimit,
+    RequestCalculateSwapTransactionGasLimit,
     RequestApproveAllowance,
     RequestAddAsNewApproveTransaction,
     RequestGetExchangeSpender,
@@ -167,7 +168,10 @@ import {
     TokenControllerProps,
     NATIVE_TOKEN_ADDRESS,
 } from './erc-20/TokenController';
-import SwapController, { SwapParameters, SwapQuote } from './SwapController';
+import SwapController, {
+    SwapParameters,
+    SwapQuoteResponse,
+} from './SwapController';
 import {
     FetchTokenResponse,
     IToken,
@@ -452,7 +456,8 @@ export default class BlankController extends EventEmitter {
             this.networkController,
             this.transactionController,
             this.tokenController,
-            this.tokenAllowanceController
+            this.tokenAllowanceController,
+            this.gasPricesController
         );
 
         this.bridgeController = new BridgeController(
@@ -1020,6 +1025,10 @@ export default class BlankController extends EventEmitter {
             case Messages.TRANSACTION.CALCULATE_SEND_TRANSACTION_GAS_LIMIT:
                 return this.calculateSendTransactionGasLimit(
                     request as RequestCalculateSendTransactionGasLimit
+                );
+            case Messages.TRANSACTION.CALCULATE_SWAP_TRANSACTION_GAS_LIMIT:
+                return this.calculateSwapTransactionGasLimit(
+                    request as RequestCalculateSwapTransactionGasLimit
                 );
             case Messages.TRANSACTION.CANCEL_TRANSACTION:
                 return this.cancelTransaction(
@@ -1798,7 +1807,7 @@ export default class BlankController extends EventEmitter {
     private async getExchangeQuote({
         exchangeType,
         quoteParams,
-    }: RequestGetExchangeQuote): Promise<SwapQuote> {
+    }: RequestGetExchangeQuote): Promise<SwapQuoteResponse> {
         return this.swapController.getExchangeQuote(exchangeType, quoteParams);
     }
 
@@ -2479,6 +2488,15 @@ export default class BlankController extends EventEmitter {
             spender,
             amount,
         });
+    }
+
+    /**
+     * Calculate the gas limit for a Swap transaction
+     */
+    private async calculateSwapTransactionGasLimit({
+        tx,
+    }: RequestCalculateSwapTransactionGasLimit): Promise<TransactionGasEstimation> {
+        return this.swapController.estimateSwapGas(tx);
     }
 
     private cancelTransaction({

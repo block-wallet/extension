@@ -24,6 +24,7 @@ export default {
                 name: 'Ether',
                 symbol: 'ETH',
                 decimals: 18,
+                logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
             },
             iconUrls: [
                 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/scroll/info/logo.png',
@@ -60,6 +61,7 @@ export default {
                 name: 'Ether',
                 symbol: 'ETH',
                 decimals: 18,
+                logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
             },
             iconUrls: [
                 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/scroll/info/logo.png',

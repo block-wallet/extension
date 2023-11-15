@@ -17,6 +17,7 @@ import BlockUpdatesController, {
 import httpClient from '../utils/http';
 import { MILISECOND } from '../utils/constants/time';
 import { retryHandling } from '../utils/retryHandling';
+import { formatUnits } from 'ethers/lib/utils';
 
 const CHAIN_FEE_DATA_SERVICE_URL = 'https://chain-fee.blockwallet.io/v1';
 const BLOCKS_TO_WAIT_BEFORE_CHECKING_FOR_CHAIN_SUPPORT = 100;
@@ -201,6 +202,26 @@ export class GasPricesController extends BaseController<GasPricesControllerState
      */
     public getGasPricesLevels(chainId?: number): GasPriceLevels {
         return this.getState(chainId).gasPricesLevels;
+    }
+
+    /**
+     * Get suggested high price in GWEI
+     */
+    public getHighGasPriceInGwei(chainId?: number): string {
+        const { estimatedBaseFee, gasPricesLevels } = this.getState(chainId);
+        const fast = gasPricesLevels.fast;
+        // If we have gasPrice, it means it's a non EIP-1559 compatible network so we return it as it is.
+        if (fast.gasPrice) {
+            return formatUnits(fast.gasPrice, 'gwei');
+        } else {
+            // For EIP-1559 networks, we return baseFee + high wTip
+            let totalGwei = BigNumber.from(0);
+            if (estimatedBaseFee && fast.maxPriorityFeePerGas) {
+                totalGwei = estimatedBaseFee.add(fast.maxPriorityFeePerGas);
+            }
+
+            return formatUnits(totalGwei, 'gwei');
+        }
     }
 
     /**

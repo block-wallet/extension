@@ -980,6 +980,32 @@
                 }
             ],
             "version": "1.2.0"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "OpenOcean integrated as a new aggregator."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Scroll is now live on Mainnet."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Fixed Keystone connectivity issues."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Minor improvements & bug fixes"
+                        }
+                    ]
+                }
+            ],
+            "version": "1.2.1"
         }
     ]
 }

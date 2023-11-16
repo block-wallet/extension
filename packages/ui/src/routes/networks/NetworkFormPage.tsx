@@ -485,6 +485,7 @@ const NetworkFormPage = ({
                     }
                     history.push("/settings/networks")
                 }}
+                showCloseButton={true}
             />
             <ConfirmDialog
                 title="Delete Network"

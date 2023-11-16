@@ -621,6 +621,7 @@ const CancelAndSpeedUpComponent = ({
                         })
                     }
                 }}
+                showCloseButton={true}
             />
             <div className="w-full h-full">
                 <PopupLayout

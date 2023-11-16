@@ -601,6 +601,7 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                     setPersistedData,
                     clearTransaction,
                 ])}
+                showCloseButton={true}
             />
             {quote && (
                 <BridgeDetails

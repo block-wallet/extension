@@ -672,6 +672,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 onDone={onDone}
                 clickOutsideToClose={false}
                 gifs={gifs}
+                showCloseButton={true}
             />
             <div className="px-6 py-2 flex flex-row items-center">
                 <AccountIcon

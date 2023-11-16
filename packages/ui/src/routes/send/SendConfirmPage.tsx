@@ -737,6 +737,7 @@ const SendConfirmPage = () => {
                     }
                     history.push("/")
                 }}
+                showCloseButton={true}
             />
             <WarningDialog
                 open={showSendingToTokenAddressWarning}

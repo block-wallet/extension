@@ -90,7 +90,7 @@ const RateUpdateDialog: FC<RateUpdateDialogProps> = ({
                 <div className="flex w-full space-x-2">
                     <ButtonWithLoading
                         label="Cancel"
-                        buttonClass={Classes.darkButton}
+                        buttonClass={Classes.redButton}
                         onClick={() => history.push("/home")}
                     />
                     <ButtonWithLoading

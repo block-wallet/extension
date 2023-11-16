@@ -83,6 +83,9 @@ const HardwareWalletRemoveDevicePage = () => {
     const history = useOnMountHistory()
     const [selectedVendor, setSelectedVendor] = useState<Devices>()
     const [isLoading, setIsLoading] = useState<boolean>(false)
+    const isFromAccountsPage =
+        history.location.state.isFromAccountsPage ?? false
+    console.log(isFromAccountsPage)
 
     const next = async () => {
         if (!selectedVendor) {
@@ -94,10 +97,16 @@ const HardwareWalletRemoveDevicePage = () => {
             const result = await removeHardwareWallet(selectedVendor)
 
             if (result) {
-                history.push({
-                    pathname: "/hardware-wallet/remove-device/success",
-                    state: { vendor: selectedVendor },
-                })
+                if (!isFromAccountsPage) {
+                    history.push({
+                        pathname: "/hardware-wallet/remove-device/success",
+                        state: { vendor: selectedVendor },
+                    })
+                } else {
+                    history.push({
+                        pathname: "/hardware-wallet",
+                    })
+                }
             }
         } catch (e: any) {
         } finally {

@@ -107,6 +107,7 @@ import {
     RequestAccountReset,
     RequestSetDefaultGas,
     RequestCalculateApproveTransactionGasLimit,
+    RequestCalculateSwapTransactionGasLimit,
     RequestApproveAllowance,
     RequestAddAsNewApproveTransaction,
     RequestGetExchangeSpender,
@@ -167,7 +168,10 @@ import {
     TokenControllerProps,
     NATIVE_TOKEN_ADDRESS,
 } from './erc-20/TokenController';
-import SwapController, { SwapParameters, SwapQuote } from './SwapController';
+import SwapController, {
+    SwapParameters,
+    SwapQuoteResponse,
+} from './SwapController';
 import {
     FetchTokenResponse,
     IToken,
@@ -238,7 +242,6 @@ import RemoteConfigsController, {
     RemoteConfigsControllerState,
 } from './RemoteConfigsController';
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
-import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
 import CampaignsController from './CampaignsController';
 import { NotificationController } from './NotificationController';
 import browser from 'webextension-polyfill';
@@ -453,7 +456,8 @@ export default class BlankController extends EventEmitter {
             this.networkController,
             this.transactionController,
             this.tokenController,
-            this.tokenAllowanceController
+            this.tokenAllowanceController,
+            this.gasPricesController
         );
 
         this.bridgeController = new BridgeController(
@@ -1021,6 +1025,10 @@ export default class BlankController extends EventEmitter {
             case Messages.TRANSACTION.CALCULATE_SEND_TRANSACTION_GAS_LIMIT:
                 return this.calculateSendTransactionGasLimit(
                     request as RequestCalculateSendTransactionGasLimit
+                );
+            case Messages.TRANSACTION.CALCULATE_SWAP_TRANSACTION_GAS_LIMIT:
+                return this.calculateSwapTransactionGasLimit(
+                    request as RequestCalculateSwapTransactionGasLimit
                 );
             case Messages.TRANSACTION.CANCEL_TRANSACTION:
                 return this.cancelTransaction(
@@ -1799,7 +1807,7 @@ export default class BlankController extends EventEmitter {
     private async getExchangeQuote({
         exchangeType,
         quoteParams,
-    }: RequestGetExchangeQuote): Promise<SwapQuote> {
+    }: RequestGetExchangeQuote): Promise<SwapQuoteResponse> {
         return this.swapController.getExchangeQuote(exchangeType, quoteParams);
     }
 
@@ -2480,6 +2488,15 @@ export default class BlankController extends EventEmitter {
             spender,
             amount,
         });
+    }
+
+    /**
+     * Calculate the gas limit for a Swap transaction
+     */
+    private async calculateSwapTransactionGasLimit({
+        tx,
+    }: RequestCalculateSwapTransactionGasLimit): Promise<TransactionGasEstimation> {
+        return this.swapController.estimateSwapGas(tx);
     }
 
     private cancelTransaction({
@@ -3422,27 +3439,16 @@ export default class BlankController extends EventEmitter {
     }
 
     private async hardwareQrSubmitCryptoHdKeyOrAccount({
-        qr,
+        ur,
     }: SubmitQRHardwareCryptoHDKeyOrAccountMessage): Promise<boolean> {
         try {
-            const decoder = new URRegistryDecoder();
-            if (!decoder.receivePart(qr)) {
-                return false;
-            }
-
-            if (!decoder.isSuccess() || decoder.isError()) {
-                throw new Error(decoder.resultError());
-            }
-
-            const result = decoder.resultRegistryType();
-            const ur = result.toUR();
             if (ur.type === 'crypto-hdkey') {
                 await this.keyringController.submitQRHardwareCryptoHDKey(
-                    ur.cbor.toString('hex')
+                    ur.cbor
                 );
             } else {
                 await this.keyringController.submitQRHardwareCryptoAccount(
-                    ur.cbor.toString('hex')
+                    ur.cbor
                 );
             }
             return true;
@@ -3454,23 +3460,12 @@ export default class BlankController extends EventEmitter {
 
     private async hardwareQrSubmitSignature({
         requestId,
-        qr,
+        ur,
     }: SubmitQRHardwareSignatureMessage): Promise<boolean> {
         try {
-            const decoder = new URRegistryDecoder();
-            if (!decoder.receivePart(qr)) {
-                return false;
-            }
-
-            if (!decoder.isSuccess() || decoder.isError()) {
-                throw new Error(decoder.resultError());
-            }
-
-            const ur = decoder.resultUR();
-
             this.keyringController.submitQRHardwareSignature(
                 requestId,
-                ur.cbor
+                Buffer.from(ur.cbor, 'hex')
             );
             return true;
         } catch (err) {

@@ -9,13 +9,14 @@ import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits } from "@ethersproject/units"
 import { RichedTransactionMeta } from "./transactionUtils"
 import { Rates } from "@block-wallet/background/controllers/ExchangeRatesController"
-import { BasicToken } from "@block-wallet/background/utils/types/1inch"
 import { getValueByKey } from "./objectUtils"
 import { toCurrencyAmount } from "./formatCurrency"
+import { BasicToken } from "@block-wallet/background/utils/swaps/1inch"
 
-const ONEINCH_NATIVE_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+const SWAP_NATIVE_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+export const DEFAULT_EXCHANGE_TYPE = ExchangeType.SWAP_OPENOCEAN
 export const isSwapNativeTokenAddress = (address: string): boolean => {
-    return address.toLowerCase() === ONEINCH_NATIVE_ADDRESS.toLowerCase()
+    return address.toLowerCase() === SWAP_NATIVE_ADDRESS.toLowerCase()
 }
 
 /**
@@ -53,7 +54,7 @@ export const populateExchangeTransaction = (
         transactionCategory: TransactionCategories.EXCHANGE,
         methodSignature: swapParameters.methodSignature,
         exchangeParams: {
-            exchangeType: ExchangeType.SWAP_1INCH,
+            exchangeType: DEFAULT_EXCHANGE_TYPE,
             fromToken: swapParameters.fromToken,
             toToken: swapParameters.toToken,
             fromTokenAmount: swapParameters.fromTokenAmount,

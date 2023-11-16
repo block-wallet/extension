@@ -35,7 +35,10 @@ import { ContractSignatureParser } from '@block-wallet/background/controllers/tr
 import { expectThrowsAsync } from 'test/utils/expectThrowsAsync.test';
 import { BigNumber } from '@ethersproject/bignumber';
 import { getChainListItem } from '@block-wallet/background/utils/chainlist';
-import { BRIDGE_REFERRER_ADDRESS } from '@block-wallet/background/utils/types/lifi';
+import {
+    BRIDGE_REFERRER_ADDRESS,
+    LiFiErrorResponse,
+} from '@block-wallet/background/utils/types/lifi';
 import MOCKS from '../mocks/mock-bridge-operations';
 import TokenAllowanceController from '@block-wallet/background/controllers/erc-20/transactions/TokenAllowanceController';
 import { sleep } from '@block-wallet/background/utils/sleep';
@@ -473,49 +476,67 @@ describe('Bridge Controller', () => {
                 });
                 it('Should return QuoteNotFound error if there is no quote', async () => {
                     quoteSandbox.restore();
-                    const errorMessage = 'quote not found';
-                    const errors = [
-                        {
-                            errorType: 'NOT_FOUND',
-                            code: '123',
-                            action: {
-                                fromChainId: 123,
-                                toChainId: 123,
-                                fromToken: {
-                                    address:
-                                        '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
-                                    decimals: 18,
-                                    logo: 'logo1',
-                                    chainId: 1,
-                                    name: 'eth',
-                                    symbol: 'GETH',
-                                    type: '',
-                                    coinKey: 'coin',
-                                    priceUSD: 1,
-                                    logoURI: 'logo.png',
+                    const errorMessage =
+                        'No available quotes for the requested transfer';
+                    const errors: LiFiErrorResponse = {
+                        message:
+                            'No available quotes for the requested transfer',
+                        code: 1002,
+                        errors: {
+                            filteredOut: [
+                                {
+                                    overallPath: '324:ETH-cbridge-42161:ETH',
+                                    reason: 'Transferred amount (1000000000000000) out of acceptable range (min: 5000000000000001, max: 90000000000000000000)',
                                 },
-                                toToken: {
-                                    address:
-                                        '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
-                                    decimals: 18,
-                                    logo: 'logo1',
-                                    chainId: 1,
-                                    name: 'eth',
-                                    symbol: 'GETH',
-                                    type: '',
-                                    coinKey: 'coin',
-                                    priceUSD: 2,
-                                    logoURI: 'logo.png',
+                            ],
+                            failed: [
+                                {
+                                    overallPath:
+                                        '324:ETH~324:ETH-324:ETH-across-42161:ETH',
+                                    subpaths: {
+                                        '324:ETH~324:ETH': [
+                                            {
+                                                errorType: 'NOT_FOUND',
+                                                code: '123',
+                                                action: {
+                                                    fromChainId: 123,
+                                                    toChainId: 123,
+                                                    fromToken: {
+                                                        address:
+                                                            '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                                                        decimals: 18,
+                                                        chainId: 1,
+                                                        name: 'eth',
+                                                        symbol: 'GETH',
+                                                        coinKey: 'coin',
+                                                        priceUSD: 1,
+                                                        logoURI: 'logo.png',
+                                                    },
+                                                    toToken: {
+                                                        address:
+                                                            '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                                                        decimals: 18,
+                                                        chainId: 1,
+                                                        name: 'eth',
+                                                        symbol: 'GETH',
+                                                        coinKey: 'coin',
+                                                        priceUSD: 2,
+                                                        logoURI: 'logo.png',
+                                                    },
+                                                    fromAmount: 'asd',
+                                                    slippage: 123,
+                                                    toAddress:
+                                                        '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
+                                                },
+                                                tool: 'tool',
+                                                message: 'message',
+                                            },
+                                        ],
+                                    },
                                 },
-                                fromAmount: 'asd',
-                                slippage: 123,
-                                toAddress:
-                                    '0x41A3Dba3D677E573636BA691a70ff2D606c29666',
-                            },
-                            tool: 'tool',
-                            message: 'message',
+                            ],
                         },
-                    ];
+                    };
                     quoteSandbox
                         .stub(BridgeAPI.LIFI_BRIDGE, 'getQuote')
                         .withArgs({
@@ -530,10 +551,10 @@ describe('Bridge Controller', () => {
                             referrer: BRIDGE_REFERRER_ADDRESS,
                         })
                         .throwsException(
-                            new QuoteNotFoundError('quote not found', {
-                                errors: errors,
-                                message: errorMessage,
-                            })
+                            new QuoteNotFoundError(
+                                'No available quotes for the requested transfer',
+                                errors
+                            )
                         );
 
                     const quoteResponse = (await bridgeController.getQuote(
@@ -551,7 +572,6 @@ describe('Bridge Controller', () => {
                     )) as GetBridgeQuoteNotFoundResponse;
                     expect(quoteResponse).not.to.be.undefined;
                     expect(quoteResponse.message).to.equal(errorMessage);
-                    expect(quoteResponse.errors).to.equal(errors);
                 });
                 it('Should return a valid quote without checking allowance', async () => {
                     sandbox.restore();

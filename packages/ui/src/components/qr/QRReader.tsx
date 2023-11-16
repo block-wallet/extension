@@ -3,6 +3,7 @@ import { requestMediaAccess } from "../../context/util/requestMediaAccess"
 import classnames from "classnames"
 import no_camera from "../../assets/images/icons/no_camera.svg"
 import { AnimatedQRScanner, URType } from "@keystonehq/animated-qr"
+import log from "loglevel"
 
 export interface URParameter {
     type: string
@@ -52,8 +53,7 @@ const QrContainer: FC<Props> = ({
         }
     }
     const handleError = (error: string) => {
-        console.log("Error")
-        console.log(error)
+        log.error(error)
     }
 
     return (

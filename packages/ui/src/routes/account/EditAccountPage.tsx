@@ -102,6 +102,7 @@ const EditAccountPage = () => {
         <PopupLayout
             submitOnEnter={{
                 onSubmit,
+                isFormValid: Object.keys(errors).length === 0,
             }}
             header={
                 <PopupHeader

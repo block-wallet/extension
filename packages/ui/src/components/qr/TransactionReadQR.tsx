@@ -1,18 +1,19 @@
 import { FC } from "react"
-import QrContainer from "./QRReader"
+import QrContainer, { URParameter } from "./QRReader"
 import Divider from "../Divider"
 import { ButtonWithLoading } from "../button/ButtonWithLoading"
 import { Classes } from "../../styles"
+import { URType } from "@keystonehq/animated-qr"
 
 interface Props {
     onBack: () => void
     onCancel: () => void
-    onSuccess: (qrSignature: string) => Promise<boolean>
+    onSuccess: (ur: URParameter) => Promise<boolean>
 }
 
 const SendSignReadQR: FC<Props> = ({ onBack, onCancel, onSuccess }) => {
-    const onQRRead = async (qr: string): Promise<boolean> => {
-        return onSuccess(qr)
+    const onQRRead = async (ur: URParameter): Promise<boolean> => {
+        return onSuccess(ur)
     }
 
     return (
@@ -27,7 +28,11 @@ const SendSignReadQR: FC<Props> = ({ onBack, onCancel, onSuccess }) => {
                         <div className="items-center">
                             <QrContainer
                                 onRead={onQRRead}
-                                className="w-64 h-64"
+                                urTypes={[
+                                    URType.ETH_SIGNATURE,
+                                    URType.EVM_SIGNATURE,
+                                    URType.SOL_SIGNATURE,
+                                ]}
                             />
                             <Divider />
                             <div className="flex w-full space-x-2 mt-3">

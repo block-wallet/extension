@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Devices } from "../../context/commTypes"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 //Components
-import QrContainer from "../../components/qr/QRReader"
+import QrContainer, { URParameter } from "../../components/qr/QRReader"
 //Layout
 import HardwareWalletSetupLayout from "./SetupLayout"
 import ConnectDeviceStepsLayout from "./ConnectDeviceStepsLayout"
@@ -12,6 +12,7 @@ import useHardwareWalletConnect from "../../util/hooks/useHardwareWalletConnect"
 import { DEVICE_CONNECTION_STEPS } from "../../util/connectionStepUtils"
 import classNames from "classnames"
 import { Classes } from "../../styles"
+import { URType } from "@keystonehq/animated-qr"
 
 const KeystoneConnectionPage = () => {
     const vendor = Devices.KEYSTONE
@@ -21,8 +22,8 @@ const KeystoneConnectionPage = () => {
     const deviceSteps = DEVICE_CONNECTION_STEPS[vendor]
     const [showConnectSteps, setShowConnectSteps] = useState(true)
 
-    const onQRRead = async (qr: string) => {
-        const resultOk = await connect(vendor, qr)
+    const onQRRead = async (ur: URParameter) => {
+        const resultOk = await connect(vendor, ur)
         if (resultOk) {
             setDeviceNotReady(resultOk)
             history.push({
@@ -59,10 +60,18 @@ const KeystoneConnectionPage = () => {
                     </div>
                 </>
             }
-            childrenClass={"items-center w-3/5"}
+            childrenClass={"items-center w-3/5 my-4"}
             buttonClass={"w-full flex space-x-5"}
         >
-            <QrContainer onRead={onQRRead} deviceNotReady={deviceNotReady} />
+            <QrContainer
+                onRead={onQRRead}
+                deviceNotReady={deviceNotReady}
+                urTypes={[
+                    URType.CRYPTO_HDKEY,
+                    URType.CRYPTO_MULTI_ACCOUNTS,
+                    URType.CRYPTO_ACCOUNT,
+                ]}
+            />
         </HardwareWalletSetupLayout>
     )
 }

@@ -63,14 +63,31 @@ const PaginationControls: React.FC<{
     pages: number
     currentPage: number
     onChangePage: (nextPage: number) => void
-}> = ({ pages, stickyFirstPage, currentPage, onChangePage, disabled }) => {
+    className?: string
+    showArrows?: boolean
+}> = ({
+    pages,
+    stickyFirstPage,
+    currentPage,
+    onChangePage,
+    disabled,
+    className,
+    showArrows = true,
+}) => {
     return (
-        <div className="flex justify-evenly items-center">
-            <Previous
-                disabled={disabled}
-                currentPage={currentPage}
-                onChangePage={onChangePage}
-            />
+        <div
+            className={classnames(
+                "flex justify-evenly items-center",
+                className
+            )}
+        >
+            {showArrows && (
+                <Previous
+                    disabled={disabled}
+                    currentPage={currentPage}
+                    onChangePage={onChangePage}
+                />
+            )}
             <div className="fullscreen-x-scrollbar" style={{ maxWidth: 230 }}>
                 <PagesList
                     disabled={disabled}
@@ -80,11 +97,13 @@ const PaginationControls: React.FC<{
                     onChangePage={onChangePage}
                 />
             </div>
-            <Next
-                disabled={disabled}
-                currentPage={currentPage}
-                onChangePage={onChangePage}
-            />
+            {showArrows && (
+                <Next
+                    disabled={disabled}
+                    currentPage={currentPage}
+                    onChangePage={onChangePage}
+                />
+            )}
         </div>
     )
 }

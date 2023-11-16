@@ -242,7 +242,6 @@ import RemoteConfigsController, {
     RemoteConfigsControllerState,
 } from './RemoteConfigsController';
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
-import { URRegistryDecoder } from '@keystonehq/bc-ur-registry-eth';
 import CampaignsController from './CampaignsController';
 import { NotificationController } from './NotificationController';
 import browser from 'webextension-polyfill';
@@ -3440,27 +3439,16 @@ export default class BlankController extends EventEmitter {
     }
 
     private async hardwareQrSubmitCryptoHdKeyOrAccount({
-        qr,
+        ur,
     }: SubmitQRHardwareCryptoHDKeyOrAccountMessage): Promise<boolean> {
         try {
-            const decoder = new URRegistryDecoder();
-            if (!decoder.receivePart(qr)) {
-                return false;
-            }
-
-            if (!decoder.isSuccess() || decoder.isError()) {
-                throw new Error(decoder.resultError());
-            }
-
-            const result = decoder.resultRegistryType();
-            const ur = result.toUR();
             if (ur.type === 'crypto-hdkey') {
                 await this.keyringController.submitQRHardwareCryptoHDKey(
-                    ur.cbor.toString('hex')
+                    ur.cbor
                 );
             } else {
                 await this.keyringController.submitQRHardwareCryptoAccount(
-                    ur.cbor.toString('hex')
+                    ur.cbor
                 );
             }
             return true;
@@ -3472,23 +3460,12 @@ export default class BlankController extends EventEmitter {
 
     private async hardwareQrSubmitSignature({
         requestId,
-        qr,
+        ur,
     }: SubmitQRHardwareSignatureMessage): Promise<boolean> {
         try {
-            const decoder = new URRegistryDecoder();
-            if (!decoder.receivePart(qr)) {
-                return false;
-            }
-
-            if (!decoder.isSuccess() || decoder.isError()) {
-                throw new Error(decoder.resultError());
-            }
-
-            const ur = decoder.resultUR();
-
             this.keyringController.submitQRHardwareSignature(
                 requestId,
-                ur.cbor
+                Buffer.from(ur.cbor, 'hex')
             );
             return true;
         } catch (err) {

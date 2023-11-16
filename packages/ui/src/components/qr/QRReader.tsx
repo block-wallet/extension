@@ -1,20 +1,30 @@
 import { FC, useRef, useState } from "react"
-import { QrReader } from "react-qr-reader"
-import { Result } from "@zxing/library"
 import { requestMediaAccess } from "../../context/util/requestMediaAccess"
 import classnames from "classnames"
 import no_camera from "../../assets/images/icons/no_camera.svg"
+import { AnimatedQRScanner, URType } from "@keystonehq/animated-qr"
+
+export interface URParameter {
+    type: string
+    cbor: string
+}
 
 interface Props {
     deviceNotReady?: boolean
-    className?: string
-    onRead: (qr: string) => Promise<boolean>
+    onRead: (ur: URParameter) => Promise<boolean>
+    options?: {
+        width?: number | string
+        height?: number | string
+        blur?: boolean
+    }
+    urTypes: URType[]
 }
 
 const QrContainer: FC<Props> = ({
     deviceNotReady = false,
-    className,
+    options,
     onRead,
+    urTypes,
 }) => {
     const lastResult = useRef<string>()
     const done = useRef(false)
@@ -24,9 +34,9 @@ const QrContainer: FC<Props> = ({
         setIsCameraReady(result)
     })
 
-    const onReadResult = async (result: Result | undefined | null) => {
-        const resultText = result?.getText()
-        if (!result || !resultText) return
+    const handleResult = async (ur: URParameter) => {
+        const resultText = ur?.cbor
+        if (!ur || !resultText) return
         if (done && done.current) return
 
         // This callback will keep existing even after
@@ -37,9 +47,13 @@ const QrContainer: FC<Props> = ({
         }
 
         lastResult.current = resultText
-        if (await onRead(resultText)) {
+        if (await onRead(ur)) {
             done.current = true
         }
+    }
+    const handleError = (error: string) => {
+        console.log("Error")
+        console.log(error)
     }
 
     return (
@@ -47,11 +61,11 @@ const QrContainer: FC<Props> = ({
             {!deviceNotReady && isCameraReady ? (
                 <>
                     <div style={{ filter: "blur(5px)" }}>
-                        <QrReader
-                            constraints={{ facingMode: "environment" }}
-                            scanDelay={250}
-                            onResult={onReadResult}
-                            className={className}
+                        <AnimatedQRScanner
+                            handleScan={handleResult}
+                            handleError={handleError}
+                            urTypes={urTypes}
+                            options={options}
                         />
                     </div>
                 </>

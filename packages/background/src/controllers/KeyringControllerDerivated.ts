@@ -367,7 +367,9 @@ export default class KeyringControllerDerivated extends KeyringController {
      */
     public async getHDPathForDevice(device: Devices): Promise<string> {
         const keyring = await this.getKeyringFromDevice(device);
-        return keyring ? keyring.hdPath : this._HDPathForDevice(device);
+        return keyring && keyring.hdPath !== ''
+            ? keyring.hdPath
+            : this._HDPathForDevice(device);
     }
 
     /**

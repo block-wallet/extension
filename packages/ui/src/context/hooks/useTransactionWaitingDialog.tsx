@@ -26,6 +26,7 @@ import {
     hardwareQrCancelSignRequest,
     hardwareQrSubmitSignature,
 } from "../commActions"
+import { URParameter } from "@block-wallet/background/utils/types/communication"
 
 const messages: {
     [key in HardwareWalletOpTypes]: {
@@ -237,13 +238,13 @@ export const useTransactionWaitingDialog = (
                                             hardwareQrCancelSignRequest()
                                         }}
                                         onQRSignatureProvided={(
-                                            qrSignature: string
+                                            ur: URParameter
                                         ) => {
                                             if (transaction.qrParams) {
                                                 return hardwareQrSubmitSignature(
                                                     transaction.qrParams
                                                         .requestId,
-                                                    qrSignature
+                                                    ur
                                                 )
                                             } else {
                                                 callbacks.reject()

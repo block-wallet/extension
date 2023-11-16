@@ -65,6 +65,7 @@ import {
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 import { GetOnRampCurrencies } from "@block-wallet/background/controllers/OnrampController"
 import log from "loglevel"
+import { URParameter } from "../components/qr/QRReader"
 import { SwapTxMeta } from "@block-wallet/background/utils/swaps/1inch"
 
 let requestId = 0
@@ -1491,23 +1492,23 @@ export const refreshTokenAllowances = (): Promise<void> => {
 }
 
 export const hardwareQrSubmitCryptoHdKeyOrAccount = async (
-    qr: string
+    ur: URParameter
 ): Promise<boolean> => {
     return sendMessage(
         Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT,
         {
-            qr,
+            ur,
         }
     )
 }
 
 export const hardwareQrSubmitSignature = async (
     requestId: string,
-    qr: string
+    ur: URParameter
 ): Promise<boolean> => {
     return sendMessage(Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE, {
         requestId,
-        qr,
+        ur,
     })
 }
 

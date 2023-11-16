@@ -102,7 +102,6 @@ const EditAccountPage = () => {
         <PopupLayout
             submitOnEnter={{
                 onSubmit,
-                isFormValid: Object.keys(errors).length === 0,
             }}
             header={
                 <PopupHeader
@@ -137,7 +136,7 @@ const EditAccountPage = () => {
                     success: "Congratulations",
                     error: "Error",
                 }}
-                timeout={1000}
+                timeout={100000000}
                 texts={{
                     loading: "Account is being renamed...",
                     success: "Your changes have been succesfully saved!",

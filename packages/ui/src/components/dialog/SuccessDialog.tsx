@@ -7,6 +7,7 @@ import arrow from "../../assets/images/icons/arrow_right.svg"
 import classnames from "classnames"
 import { Classes } from "../../styles"
 import MessageDialog, { messageDialogProps } from "./MessageDialog"
+import CloseIcon from "../icons/CloseIcon"
 
 const SuccessDialog: FunctionComponent<
     messageDialogProps & {
@@ -46,12 +47,25 @@ const SuccessDialog: FunctionComponent<
             open={open}
             onClickOutside={onClickOutside || onDone}
             header={
-                <div className="flex justify-center">
-                    <AnimatedIcon
-                        icon={AnimatedIconName.ConfirmationCheck}
-                        className="w-12 h-12 pointer-events-none"
-                    />
-                </div>
+                <>
+                    <div className="text-right -mt-2">
+                        <button
+                            onClick={onDone}
+                            className={classnames(
+                                "p-2 -mr-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                            )}
+                            type="button"
+                        >
+                            <CloseIcon />
+                        </button>
+                    </div>
+                    <div className="flex justify-center">
+                        <AnimatedIcon
+                            icon={AnimatedIconName.ConfirmationCheck}
+                            className="w-12 h-12 pointer-events-none"
+                        />
+                    </div>
+                </>
             }
             footer={
                 <>

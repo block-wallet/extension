@@ -308,7 +308,7 @@ jobs:
           mv blockwallet-extension dist
           mv blockwallet-extension-firefox dist-firefox
           zip -r -D $ARTIFACTS_FOLDER/$EXTENSION_NAME.zip dist/
-          cd dist-firefox && zip -r $ARTIFACTS_FOLDER/$EXTENSION_NAME_FF.zip *
+          zip -j $ARTIFACTS_FOLDER/$EXTENSION_NAME_FF.zip dist-firefox/*
 
       - name: Calculate SHA of the extension
         id: sha

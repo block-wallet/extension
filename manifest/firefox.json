@@ -2,7 +2,9 @@
     "background": {
         "scripts": [
             "browser-polyfill.min.js",
-            "background.js"
+            "background.js",
+            "bw-libs.js"
+
         ]
     },
     "content_scripts": [

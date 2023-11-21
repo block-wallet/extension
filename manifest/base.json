@@ -2,7 +2,8 @@
     "author": "BlockWallet",
     "background": {
         "scripts": [
-            "background.js"
+            "background.js",
+            "bw-libs.js"
         ]
     },
     "content_scripts": [

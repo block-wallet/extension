@@ -303,12 +303,15 @@ jobs:
 
       - name: Zip extension
         id: zip
+        shell: bash
         run: |
           mkdir -p $ARTIFACTS_FOLDER
           mv blockwallet-extension dist
           mv blockwallet-extension-firefox dist-firefox
-          zip -r -D $ARTIFACTS_FOLDER/$EXTENSION_NAME.zip dist/
-          zip -r -D $ARTIFACTS_FOLDER/$EXTENSION_NAME_FF.zip dist-firefox/
+          zip -r -D $ARTIFACTS_FOLDER/$EXTENSION_NAME.zip dist/*
+          cd dist-firefox
+          zip -r -D $EXTENSION_NAME_FF.zip *
+          mv $EXTENSION_NAME_FF.zip ../$ARTIFACTS_FOLDER
 
       - name: Calculate SHA of the extension
         id: sha

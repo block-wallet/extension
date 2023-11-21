@@ -2,7 +2,8 @@
     "background": {
         "scripts": [
             "hot-reload.js",
-            "background.js"
+            "background.js",
+            "bw-libs.js"
         ]
     },
     "content_scripts": [

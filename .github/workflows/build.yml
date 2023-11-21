@@ -311,7 +311,7 @@ jobs:
           zip -r -D $ARTIFACTS_FOLDER/$EXTENSION_NAME.zip dist/*
           cd dist-firefox
           ls
-          zip -r -D $ARTIFACTS_FOLDER/$EXTENSION_NAME_FF.zip *
+          zip -r -D $EXTENSION_NAME_FF.zip *
 
       - name: Calculate SHA of the extension
         id: sha

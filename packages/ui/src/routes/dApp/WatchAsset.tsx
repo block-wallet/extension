@@ -243,6 +243,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                 timeout={DAPP_FEEDBACK_WINDOW_TIMEOUT}
                 clickOutsideToClose={false}
                 hideButton
+                showCloseButton
             />
             <DAppOrigin
                 name={siteMetadata.name}

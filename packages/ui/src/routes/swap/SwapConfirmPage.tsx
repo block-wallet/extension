@@ -546,7 +546,7 @@ const SwapPageConfirm: FC<{}> = () => {
                     setPersistedData,
                     clearTransaction,
                 ])}
-                showCloseButton={true}
+                showCloseButton
             />
             {swapParameters && (
                 <TransactionDetails

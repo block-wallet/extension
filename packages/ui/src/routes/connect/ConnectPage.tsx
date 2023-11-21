@@ -231,6 +231,7 @@ const ConnectSteps = ({
                 }}
                 timeout={DAPP_FEEDBACK_WINDOW_TIMEOUT}
                 hideButton
+                showCloseButton
             />
             <div className="overflow-auto hide-scroll">
                 <div className="flex flex-col items-center w-full p-6 space-y-3">

@@ -154,7 +154,7 @@ const EditAccountPage = () => {
                         state: { fromAccountList },
                     })
                 }}
-                showCloseButton={true}
+                showCloseButton
             />
             <div className="flex flex-col justify-between flex-1 h-full">
                 <div className="flex flex-col flex-1 p-6 space-y-1">

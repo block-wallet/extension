@@ -1,5 +1,4 @@
-import { forwardRef, useState } from "react"
-import PasswordStrengthBar from "react-password-strength-bar"
+import { Suspense, forwardRef, lazy, useState } from "react"
 
 import { BsCapslockFill } from "react-icons/bs"
 import CapsLockDetector from "./CapsLockDetector"
@@ -46,6 +45,7 @@ type PasswordInputProps = {
  * @param setPasswordScore - Function to execute on password score change (if it has strengthBar).
  * @param onKeyDown - Function to execute on key down.
  */
+const PasswordStrengthBar = lazy(() => import("react-password-strength-bar"))
 const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
     (props: PasswordInputProps, ref) => {
         const {
@@ -145,18 +145,20 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 
                         {/* STRENGTH */}
                         {strengthBar ? (
-                            <PasswordStrengthBar
-                                password={passwordValue}
-                                className={classNames(
-                                    "m-0",
-                                    showStrengthBar ? "" : "hidden"
-                                )}
-                                onChangeScore={(s) => {
-                                    if (setPasswordScore) {
-                                        setPasswordScore(s)
-                                    }
-                                }}
-                            />
+                            <Suspense fallback={<div className="h-7"></div>}>
+                                <PasswordStrengthBar
+                                    password={passwordValue}
+                                    className={classNames(
+                                        "m-0",
+                                        showStrengthBar ? "" : "hidden"
+                                    )}
+                                    onChangeScore={(s) => {
+                                        if (setPasswordScore) {
+                                            setPasswordScore(s)
+                                        }
+                                    }}
+                                />
+                            </Suspense>
                         ) : null}
 
                         {/* ERROR */}

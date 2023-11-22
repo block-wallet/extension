@@ -496,6 +496,7 @@ const TransactionConfirm: React.FC<{
                 onDone={closeDialog}
                 gifs={gifs}
                 hideButton
+                showCloseButton
             />
             <TransactionDetails
                 transaction={transaction}

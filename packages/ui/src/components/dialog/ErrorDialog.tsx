@@ -6,11 +6,13 @@ import MessageDialog, { messageDialogProps } from "./MessageDialog"
 import Divider from "../Divider"
 
 import { Classes } from "../../styles"
+import CloseIcon from "../icons/CloseIcon"
 
 type ErrorDialogProps = messageDialogProps & {
     onDone: React.MouseEventHandler<HTMLButtonElement> | (() => void)
     timeout?: number // If setted, it will trigger onClickButton() after timeout value
     hideButton?: boolean
+    showCloseButton?: boolean
 }
 
 const ErrorDialog: FunctionComponent<ErrorDialogProps> = ({
@@ -21,6 +23,7 @@ const ErrorDialog: FunctionComponent<ErrorDialogProps> = ({
     onClickOutside,
     onDone,
     timeout,
+    showCloseButton = false,
 }) => {
     useEffect(() => {
         if (timeout && open) {
@@ -36,7 +39,22 @@ const ErrorDialog: FunctionComponent<ErrorDialogProps> = ({
             open={open}
             onClickOutside={onClickOutside}
             header={
-                <CgDanger className="text-red-500 w-20 h-20 block m-auto" />
+                <>
+                    {showCloseButton && (
+                        <div className="text-right -mt-2">
+                            <button
+                                onClick={onDone}
+                                className={classnames(
+                                    "p-2 -mr-2 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
+                                )}
+                                type="button"
+                            >
+                                <CloseIcon />
+                            </button>
+                        </div>
+                    )}
+                    <CgDanger className="text-red-500 w-20 h-20 block m-auto" />
+                </>
             }
             footer={
                 !timeout &&

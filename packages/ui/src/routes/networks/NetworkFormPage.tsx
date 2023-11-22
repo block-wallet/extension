@@ -413,7 +413,7 @@ const NetworkFormPage = ({
                     }}
                     isCollapsedByDefault
                     collapsedMessage={
-                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-semibold justify-center">
+                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-semibold justify-center mt-1">
                             <AiOutlineWarning className="w-4 h-4 yellow-300" />
                             <span className="text-xs text-yellow-900">
                                 <span className="font-semibold">
@@ -485,6 +485,7 @@ const NetworkFormPage = ({
                     }
                     history.push("/settings/networks")
                 }}
+                showCloseButton
             />
             <ConfirmDialog
                 title="Delete Network"
@@ -496,7 +497,7 @@ const NetworkFormPage = ({
                     setConfirmDeletion(false)
                 }}
             />
-            <div className="flex flex-col w-full justify-between flex-1 h-full">
+            <div className="flex flex-col w-full justify-between flex-1 h-full !-mt-3">
                 <div className="flex flex-col flex-1 p-6 space-y-3">
                     <div className="flex flex-col space-y-1">
                         <TextInput

@@ -141,6 +141,7 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
                 }}
                 timeout={DAPP_FEEDBACK_WINDOW_TIMEOUT}
                 hideButton
+                showCloseButton
             />
             <DAppOrigin
                 iconURL={currentSiteMetadata.iconURL}

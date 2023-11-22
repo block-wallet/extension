@@ -345,6 +345,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                 onDone={closeDialog}
                 gifs={gifs}
                 hideButton
+                showCloseButton
             />
             <CheckBoxDialog
                 message={`Approval request was sent with an account that's different from the selected one in your wallet. \n\n Please select if you want to continue or reject the transaction.`}

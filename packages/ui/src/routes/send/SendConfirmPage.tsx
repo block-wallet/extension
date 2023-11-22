@@ -722,7 +722,7 @@ const SendConfirmPage = () => {
                 }}
                 txHash={currentTransaction?.transactionParams.hash}
                 clickOutsideToClose={false}
-                timeout={2900}
+                timeout={1500}
                 gifs={gifs}
                 onDone={() => {
                     if (status === "error") {
@@ -737,6 +737,7 @@ const SendConfirmPage = () => {
                     }
                     history.push("/")
                 }}
+                showCloseButton
             />
             <WarningDialog
                 open={showSendingToTokenAddressWarning}

@@ -84,8 +84,9 @@ const HardwareWalletRemoveDevicePage = () => {
     const [selectedVendor, setSelectedVendor] = useState<Devices>()
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const isFromAccountsPage =
-        history.location.state.isFromAccountsPage ?? false
-    console.log(isFromAccountsPage)
+        history.location.state && history.location.state.isFromAccountsPage
+            ? history.location.state.isFromAccountsPage
+            : false
 
     const next = async () => {
         if (!selectedVendor) {

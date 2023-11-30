@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
 
-const VERSION = '8.2.8-beta.4';
+const VERSION = '9.0.6';
 const versionN = VERSION.split('.').map((s) => parseInt(s, 10));
 // const DIRECTORY = `${ versionN[0] }${ (versionN[1] > 0 ? `.${versionN[1]}` : '') }/`;
 const DIRECTORY = `${versionN[0]}/`;

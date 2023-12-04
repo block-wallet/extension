@@ -3,7 +3,7 @@
     "version": "1.1.23",
     "private": true,
     "dependencies": {
-        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.51",
+        "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.53",
         "@block-wallet/eth-ledger-bridge-keyring": "https://github.com/block-wallet/eth-ledger-bridge-keyring#v0.14.1",
         "@block-wallet/eth-trezor-keyring": "https://github.com/block-wallet/eth-trezor-keyring#v1.0.1",
         "@block-wallet/explorer-link": "https://github.com/block-wallet/explorer-link#v2.2.2",

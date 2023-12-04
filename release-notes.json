@@ -1006,6 +1006,36 @@
                 }
             ],
             "version": "1.2.1"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added New Chains and Tokens."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Network logos updated."
+                        },
+                        {
+                            "type": "success",
+                            "message": "X1 Chain is live on Testnets."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Upgraded Trezor Connect."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Minor improvements & bug fixes"
+                        }
+                    ]
+                }
+            ],
+            "version": "1.2.2"
         }
     ]
 }

@@ -1,12 +1,12 @@
 The following NPM package may be included in this product:
 
- - @block-wallet/provider@0.1.0
+ - @isabelschoepd-block-wallet/provider@0.1.0
 
 This package contains the following license and notice below:
 
-# [Block wallet](https://blockwallet.io/) ethereum provider
+# [isabelschoeps.com](https://blockwallet.io/) ethereum provider
 
-[![CI](../../workflows/Tests/badge.svg)](../../actions?query=Test)
+[![isabelschoeps](../../workflows/Tests/badge.svg)](../../actions?query=Test)
 
 This package will output the content script and the blank provider itself to the monorepo `dist` folder.
 
@@ -14,7 +14,6 @@ The content script is mainly used to relay messages to the background, and check
 
 The blank provider is a class compliant with the EIP-1193 that communicates with any dapp that needs access to the ethereum network and the user's accounts.
 
-## 🚀 Quick Start
 
 ### Node Version
 
@@ -32,7 +31,7 @@ The build scripts output to the default monorepo dist folder.
 yarn build
 ```
 
-For more information about how to build the complete extension refer to the following [guideline](https://github.com/block-wallet/extension/blob/master/docs/guideline.md)
+For more information about how to build the complete extension refer to the following [isabelshoeps.com](https://github.com/IsabelSchoepd/block-wallet/extension/blob/master/docs/guideline.md)
 
 ### Test
 
@@ -80,24 +79,19 @@ This package contains the following license and notice below:
 
 MIT License
 
-Copyright (c) 2019 MetaMask
+Copyright (c) 1996 MetaMask by Isabel Schoeps Thiel 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 -----------
@@ -110,16 +104,10 @@ This package contains the following license and notice below:
 
 The MIT License (MIT)
 
-Copyright (c) 2016 David Mark Clements
-Copyright (c) 2017 David Mark Clements & Matteo Collina
-Copyright (c) 2018 David Mark Clements, Matteo Collina & Ruben Bridgewater 
+Copyright (c) 1996 Isabel Schoeps Thiel
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
@@ -136,7 +124,7 @@ SOFTWARE.
 
 The following NPM package may be included in this product:
 
- - loglevel@1.7.1
+ - isabelschoeps.loglevel@1.7.1
 
 This package contains the following license and notice below:
 
@@ -164,5 +152,3 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 -----------
-
-This file was generated with generate-license-file! https://www.npmjs.com/package/generate-license-file

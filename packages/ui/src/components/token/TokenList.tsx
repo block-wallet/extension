@@ -30,7 +30,7 @@ const TokenList: FC<{
                 return (
                     <div
                         className="cursor-pointer"
-                        key={token.address}
+                        key={token.symbol}
                         onClick={() => onTokenClick(token, setActive)}
                     >
                         <TokenDisplay

@@ -14,7 +14,7 @@ import {
     SwapRequestParams,
 } from '@block-wallet/background/controllers/SwapController';
 import { formatUnits } from 'ethers/lib/utils';
-import { BigNumber } from 'ethers/lib/ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { ContractSignatureParser } from '@block-wallet/background/controllers/transactions/ContractSignatureParser';
 
 type OpenOceanNetworks = {

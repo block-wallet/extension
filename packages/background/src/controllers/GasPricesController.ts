@@ -234,8 +234,13 @@ export class GasPricesController extends BaseController<GasPricesControllerState
     ): Promise<void> => {
         try {
             const oldGasPriceLevels = this.getGasPricesLevels(chainId);
+
             const isEIP1559Compatible =
-                await this._networkController.getEIP1559Compatibility(chainId);
+                await this._networkController.getEIP1559Compatibility(
+                    chainId,
+                    false,
+                    this.getState().baseFee
+                );
 
             const newGasPriceLevels = await this._fetchFeeData(
                 isEIP1559Compatible,
@@ -962,6 +967,7 @@ export class GasPricesController extends BaseController<GasPricesControllerState
             await this._networkController.getEIP1559Compatibility(
                 chainId,
                 false,
+                this.getState().baseFee,
                 provider
             );
         let gasPriceData: GasPriceData | undefined = undefined;
@@ -1001,7 +1007,8 @@ export class GasPricesController extends BaseController<GasPricesControllerState
  * Fetches the fee's service to get the current gas prices.
  *
  * @param chainId
- * @param isEIP1559Compatible
+ * @param apiCallsDelay
+ * @param apiCallsRetries
  * @returns GasPriceData or undefined
  */
 export const _fetchFeeDataFromService = async (

@@ -1,6 +1,6 @@
 import { AccountTokenOrder } from "@block-wallet/background/controllers/AccountTrackerController"
 import { TokenWithBalance } from "../context/hooks/useTokensList"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { Rates } from "@block-wallet/background/controllers/ExchangeRatesController"
 import { formatRounded } from "./formatRounded"
 import { formatUnits } from "ethers/lib/utils"

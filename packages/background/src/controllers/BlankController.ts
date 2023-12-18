@@ -122,6 +122,7 @@ import {
     RequestSetHotkeys,
     RequestTokensOrder,
     RequestOrderAccounts,
+    RequestSetHideSmallBalances,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -1214,6 +1215,10 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE:
                 return this.setAccountTokensSortValue(request as string);
+            case Messages.WALLET.SET_HIDSMALLBALANCES_ENABLED:
+                return this.setHideSmallBalances(
+                    request as RequestSetHideSmallBalances
+                );
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -3557,5 +3562,13 @@ export default class BlankController extends EventEmitter {
         accountsInfo,
     }: RequestOrderAccounts): Promise<void> {
         this.accountTrackerController.orderAccounts(accountsInfo);
+    }
+
+    /** Set hideSmallBalances enabled/disabled
+     *
+     * @param enabled indicates if the extension show token with balance < 0.01 USD
+     */
+    private setHideSmallBalances({ enabled }: RequestSetHideSmallBalances) {
+        this.preferencesController.hideSmallBalances = enabled;
     }
 }

@@ -30,6 +30,8 @@ const useGetAccountNetworkTokensBalances = (
     nativeToken: Token
     accountTokensOrder: AccountTokenOrder
     exchangeRates: Rates
+    hideSmallBalances: boolean
+    networkNativeCurrencySymbol: string
 } => {
     const {
         accounts,
@@ -37,6 +39,7 @@ const useGetAccountNetworkTokensBalances = (
         hiddenAccounts,
         accountTokensOrder,
         exchangeRates,
+        hideSmallBalances,
     } = useBlankState()!
 
     let balances = account
@@ -67,6 +70,8 @@ const useGetAccountNetworkTokensBalances = (
         chainId: chainId,
         accountTokensOrder: arrAccountTokensOrder,
         exchangeRates: exchangeRates,
+        hideSmallBalances: hideSmallBalances,
+        networkNativeCurrencySymbol: nativeCurrency.symbol,
     }
 }
 
@@ -114,6 +119,7 @@ export const useTokensList = (account?: AccountInfo): TokenListInfo => {
 
 export const useTokenListWithNativeToken = (
     sortValue: AssetsSortOptions,
+    hideSmallBalances: boolean,
     account?: AccountInfo
 ): TokenWithBalance[] => {
     const {
@@ -122,6 +128,7 @@ export const useTokenListWithNativeToken = (
         nativeToken,
         accountTokensOrder,
         exchangeRates,
+        networkNativeCurrencySymbol,
     } = useGetAccountNetworkTokensBalances(account)
 
     return useMemo(() => {
@@ -145,7 +152,9 @@ export const useTokenListWithNativeToken = (
             sortValue,
             currentNetworkTokens,
             accountTokensOrder,
-            exchangeRates
+            exchangeRates,
+            hideSmallBalances,
+            networkNativeCurrencySymbol
         )
     }, [
         chainId,
@@ -154,5 +163,7 @@ export const useTokenListWithNativeToken = (
         accountTokensOrder,
         nativeToken,
         exchangeRates,
+        hideSmallBalances,
+        networkNativeCurrencySymbol,
     ])
 }

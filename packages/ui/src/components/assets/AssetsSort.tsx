@@ -1,12 +1,11 @@
 import { FC, Fragment, useEffect, useState } from "react"
 import Dropdown from "../ui/Dropdown/Dropdown"
 import { DropdownOutlinedIconButton } from "../ui/Dropdown/DropdownButton"
-import { IconName } from "../ui/Icon"
+import Icon, { IconName } from "../ui/Icon"
 import { AssetsSortOptions } from "../../util/tokenUtils"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import ExpandableItem from "../bridge/ExpandableItem"
 import { setHideSmallBalances } from "../../context/commActions"
-
 interface AssetsSortProps {
     selectedValue: string
     onClick: (selectedValue: AssetsSortOptions) => void
@@ -76,24 +75,28 @@ const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
                             SORT BY
                         </div>
                     </ExpandableItem>
-                </Dropdown.Menu>
-                <hr className="border-0.5 border-primary-grey-hover w-full" />
-                <Dropdown.Menu
-                    id="hidebalances-dropdown"
-                    className="w-36 py-2 !mt-1 border-2"
-                >
-                    <div className="p-2 text-xs text-black font-normal">
-                        HID
+                    <hr className="border-0.5 border-primary-grey-hover w-full" />
+                    <div className="p-2 text-xs text-black font-normal ml-7">
+                        HIDE
                     </div>
-                    <Dropdown.MenuItem
-                        onClick={() => {
-                            setHideSmallBalancesChk(!hideSmallBalancesChk)
-                        }}
-                        selected={hideSmallBalancesChk}
-                        className="p-1 px-3 font-semibold text-primary-black-default"
-                    >
-                        Small balances
-                    </Dropdown.MenuItem>
+                    <div className="flex flex-row items-center">
+                        <label
+                            onClick={() =>
+                                setHideSmallBalancesChk(!hideSmallBalancesChk)
+                            }
+                            className=" cursor-pointer font-semibold pl-2 w-4/5 ml-1 text-primary-black-default"
+                        >
+                            Small balances
+                        </label>
+                        {hideSmallBalancesChk && (
+                            <Icon
+                                size="sm"
+                                name={IconName.CHECKMARK}
+                                profile="selected"
+                                className="ml-1"
+                            />
+                        )}
+                    </div>
                 </Dropdown.Menu>
             </Dropdown>
         </div>

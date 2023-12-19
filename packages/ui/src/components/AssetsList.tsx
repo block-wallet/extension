@@ -137,13 +137,17 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
 }
 
 const AssetsList = () => {
-    const { tokensSortValue } = useBlankState()!
+    const { tokensSortValue, hideSmallBalances } = useBlankState()!
     // const { chainId } = useSelectedNetwork()
     const history = useOnMountHistory()
     const [sortValue, setSortValue] = useState<AssetsSortOptions>(
         tokensSortValue as AssetsSortOptions
     )
-    const currentNetworkTokens = useTokenListWithNativeToken(sortValue)
+
+    const currentNetworkTokens = useTokenListWithNativeToken(
+        sortValue,
+        hideSmallBalances
+    )
     const searchInputRef = useRef<HTMLInputElement>(null)
     const { search, tokensResult, onChangeSearch } =
         useTokenSearch(currentNetworkTokens)

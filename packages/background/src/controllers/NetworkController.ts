@@ -41,6 +41,7 @@ import { MILISECOND, SECOND } from '../utils/constants/time';
 import { ProviderType } from '../utils/types/communication';
 import { _fetchFeeDataFromService } from './GasPricesController';
 import { isHttpsURL } from '../utils/http';
+import { BigNumber } from '@ethersproject/bignumber';
 
 export enum NetworkEvents {
     NETWORK_CHANGE = 'NETWORK_CHANGE',
@@ -679,23 +680,25 @@ export default class NetworkController extends BaseController<NetworkControllerS
     public async getEIP1559Compatibility(
         chainId: number = this.network.chainId,
         forceUpdate = false,
+        baseFee: BigNumber | undefined = undefined,
         //required by parameter to avoid returning undefined if the user hasn't added the chain
         //previous check should be done before invoking this method.
         provider: JsonRpcProvider = this.getProvider()
     ): Promise<boolean> {
         let shouldFetchTheCurrentState = false;
 
-        if (!(chainId in this.getState().isEIP1559Compatible)) {
-            shouldFetchTheCurrentState = true;
-        } else {
-            if (this.getState().isEIP1559Compatible[chainId] === undefined) {
-                shouldFetchTheCurrentState = true;
-            } else {
-                if (forceUpdate) {
-                    shouldFetchTheCurrentState = true;
-                }
-            }
+        const isEIP1559Compatible: boolean | null =
+            this.getState().isEIP1559Compatible[chainId];
+
+        // Integrity check. We had cases where old states had a false value but the network was upgraded to EIP-1559.
+        // So, if we detect that the baseFee is inconsistent with the value we had, we force the update of the flag.
+        if (isEIP1559Compatible != null && !forceUpdate) {
+            forceUpdate =
+                (isEIP1559Compatible && baseFee === undefined) ||
+                (!isEIP1559Compatible && baseFee !== undefined);
         }
+
+        shouldFetchTheCurrentState = isEIP1559Compatible == null || forceUpdate;
 
         if (shouldFetchTheCurrentState) {
             // check: https://github.com/block-wallet/chain-fee-data-service/blob/main/domain/eth/service/service_impl.go#L425

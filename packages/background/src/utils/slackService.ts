@@ -2,6 +2,7 @@ import httpClient from '../utils/http';
 import log from 'loglevel';
 import { customHeadersForBlockWalletNode } from './nodes';
 import { MINUTE } from './constants/time';
+import { getFormattedSlackMessage } from './constants/slackMessage';
 
 export const BLOCK_WALLET_SLACK_ENDPOINT =
     'https://message.blockwallet.io/simple';
@@ -16,14 +17,20 @@ export const slackService: (
 ) => SlackService = (baseEndpoint: string) => ({
     async postMessage(message, error, extraParams) {
         try {
+            const postMessageBody = getFormattedSlackMessage(
+                message,
+                error,
+                extraParams
+            );
             const query = `${baseEndpoint}/message`;
 
             await httpClient.request<Record<string, Record<string, number>>>(
                 query,
                 {
-                    params: { message: message },
                     headers: customHeadersForBlockWalletNode,
                     timeout: 1.5 * MINUTE,
+                    method: 'POST',
+                    body: postMessageBody,
                 }
             );
 

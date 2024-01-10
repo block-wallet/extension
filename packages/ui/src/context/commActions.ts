@@ -1778,3 +1778,20 @@ export const orderAccounts = async (
 ): Promise<void> => {
     return sendMessage(Messages.ACCOUNT.ORDER_ACCOUNTS, { accountsInfo })
 }
+
+/**
+ * Post slack message
+ *
+ * @param enabled Allow hotkeys on the extension
+ */
+export const postSlackMessage = async (
+    message: string,
+    error: any,
+    extraParams?: any
+): Promise<void> => {
+    return sendMessage(Messages.WALLET.POST_SLACK_MESSAGE, {
+        message,
+        error,
+        extraParams,
+    })
+}

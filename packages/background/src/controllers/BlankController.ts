@@ -122,6 +122,7 @@ import {
     RequestSetHotkeys,
     RequestTokensOrder,
     RequestOrderAccounts,
+    RequestPostSlackMessage,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -246,6 +247,7 @@ import CampaignsController from './CampaignsController';
 import { NotificationController } from './NotificationController';
 import browser from 'webextension-polyfill';
 import OnrampController from './OnrampController';
+import { getSlackService } from '../utils/slackService';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -1214,6 +1216,10 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE:
                 return this.setAccountTokensSortValue(request as string);
+            case Messages.WALLET.POST_SLACK_MESSAGE:
+                return this.postSlackMessage(
+                    request as RequestPostSlackMessage
+                );
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -3557,5 +3563,17 @@ export default class BlankController extends EventEmitter {
         accountsInfo,
     }: RequestOrderAccounts): Promise<void> {
         this.accountTrackerController.orderAccounts(accountsInfo);
+    }
+
+    /**
+     * It post a message to slack using slackService
+     */
+    private async postSlackMessage({
+        message,
+        error,
+        extraParams,
+    }: RequestPostSlackMessage): Promise<void> {
+        const slackService = getSlackService();
+        slackService.postMessage(message, error, extraParams);
     }
 }

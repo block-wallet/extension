@@ -252,7 +252,7 @@ enum WALLET {
     SET_HOTKEYS_ENABLED = 'SET_HOTKEYS_ENABLED',
     //onramp
     GET_ONRAMP_CURRENCIES = 'GET_ONRAMP_CURRENCIES',
-    SET_HIDSMALLBALANCES_ENABLED = 'SET_HIDSMALLBALANCES_ENABLED',
+    SET_HIDESMALLBALANCES = 'SET_HIDESMALLBALANCES',
 }
 
 enum TOKEN {
@@ -608,7 +608,7 @@ export interface RequestSignatures {
     ];
     [Messages.WALLET.SET_HOTKEYS_ENABLED]: [RequestSetHotkeys, void];
     [Messages.WALLET.GET_ONRAMP_CURRENCIES]: [void, GetOnRampCurrencies];
-    [Messages.WALLET.SET_HIDSMALLBALANCES_ENABLED]: [
+    [Messages.WALLET.SET_HIDESMALLBALANCES]: [
         RequestSetHideSmallBalances,
         void
     ];

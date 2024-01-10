@@ -1785,7 +1785,7 @@ export const orderAccounts = async (
  * @param enabled Allow to hide small balances on the extension
  */
 export const setHideSmallBalances = async (enabled: boolean): Promise<void> => {
-    return sendMessage(Messages.WALLET.SET_HIDSMALLBALANCES_ENABLED, {
+    return sendMessage(Messages.WALLET.SET_HIDESMALLBALANCES, {
         enabled,
     })
 }

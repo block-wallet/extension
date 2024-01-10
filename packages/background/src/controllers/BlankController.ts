@@ -1215,7 +1215,7 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE:
                 return this.setAccountTokensSortValue(request as string);
-            case Messages.WALLET.SET_HIDSMALLBALANCES_ENABLED:
+            case Messages.WALLET.SET_HIDESMALLBALANCES:
                 return this.setHideSmallBalances(
                     request as RequestSetHideSmallBalances
                 );

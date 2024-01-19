@@ -1,6 +1,6 @@
 import { DeviceAccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import classnames from "classnames"
-import { BigNumber } from "ethers"
+import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits } from "ethers/lib/utils"
 import { useState } from "react"
 import { getAccountBalance } from "../../context/commActions"

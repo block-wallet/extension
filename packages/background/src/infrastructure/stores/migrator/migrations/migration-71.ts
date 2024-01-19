@@ -5,7 +5,7 @@ import { FEATURES } from '../../../../utils/constants/features';
 import { SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES } from '../../../../utils/constants/networks';
 
 /**
- * This migration forces the calculation of the EIP1559 compatibility to some networks
+ * This migration adds ZetaChain Testnet
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {

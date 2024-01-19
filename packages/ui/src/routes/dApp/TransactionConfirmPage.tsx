@@ -464,7 +464,8 @@ const TransactionConfirm: React.FC<{
                     <ButtonWithLoading
                         onClick={reject}
                         buttonClass={Classes.liteButton}
-                        disabled={!canUserSubmitTransaction(transaction.status)}
+                        // Removed to prevent stuck txs.
+                        //disabled={!canUserSubmitTransaction(transaction.status)}
                         label="Reject"
                     ></ButtonWithLoading>
                     <ButtonWithLoading
@@ -498,6 +499,7 @@ const TransactionConfirm: React.FC<{
                 onDone={closeDialog}
                 gifs={gifs}
                 hideButton
+                showCloseButton
             />
             <TransactionDetails
                 transaction={transaction}

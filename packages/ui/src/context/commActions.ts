@@ -60,13 +60,12 @@ import { handlers, port } from "./setup"
 import { Currency } from "@block-wallet/background/utils/currency"
 import {
     SwapParameters,
-    SwapQuote,
+    SwapQuoteParams,
+    SwapQuoteResponse,
+    SwapRequestParams,
     SwapTransaction,
 } from "@block-wallet/background/controllers/SwapController"
-import {
-    OneInchSwapQuoteParams,
-    OneInchSwapRequestParams,
-} from "@block-wallet/background/utils/types/1inch"
+
 import { generatePhishingPreventionBase64 } from "../util/phishingPrevention"
 import {
     BridgeQuoteRequest,
@@ -79,6 +78,8 @@ import {
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
 import { GetOnRampCurrencies } from "@block-wallet/background/controllers/OnrampController"
 import log from "loglevel"
+import { URParameter } from "../components/qr/QRReader"
+import { SwapTxMeta } from "@block-wallet/background/utils/swaps/1inch"
 
 let requestId = 0
 
@@ -974,6 +975,22 @@ export const getApproveTransactionGasLimit = async (
 }
 
 /**
+ * It calculates a swap transaction gas limit
+ *
+ * @returns Tswap tx estimated gas limit
+ */
+export const getSwapTransactionGasLimit = async (
+    tx: SwapTxMeta
+): Promise<TransactionGasEstimation> => {
+    return sendMessage(
+        Messages.TRANSACTION.CALCULATE_SWAP_TRANSACTION_GAS_LIMIT,
+        {
+            tx,
+        }
+    )
+}
+
+/**
  * Subscribes to state updates
  *
  * @param cb state update handler
@@ -1582,23 +1599,23 @@ export const refreshTokenAllowances = (): Promise<void> => {
 }
 
 export const hardwareQrSubmitCryptoHdKeyOrAccount = async (
-    qr: string
+    ur: URParameter
 ): Promise<boolean> => {
     return sendMessage(
         Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT,
         {
-            qr,
+            ur,
         }
     )
 }
 
 export const hardwareQrSubmitSignature = async (
     requestId: string,
-    qr: string
+    ur: URParameter
 ): Promise<boolean> => {
     return sendMessage(Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE, {
         requestId,
-        qr,
+        ur,
     })
 }
 
@@ -1664,8 +1681,8 @@ export const approveExchange = async (
  */
 export const getExchangeQuote = async (
     exchangeType: ExchangeType,
-    quoteParams: OneInchSwapQuoteParams
-): Promise<SwapQuote> => {
+    quoteParams: SwapQuoteParams
+): Promise<SwapQuoteResponse> => {
     return sendMessage(Messages.EXCHANGE.GET_QUOTE, {
         exchangeType,
         quoteParams,
@@ -1680,7 +1697,7 @@ export const getExchangeQuote = async (
  */
 export const getExchangeParameters = async (
     exchangeType: ExchangeType,
-    exchangeParams: OneInchSwapRequestParams
+    exchangeParams: SwapRequestParams
 ): Promise<SwapParameters> => {
     return sendMessage(Messages.EXCHANGE.GET_EXCHANGE, {
         exchangeType,

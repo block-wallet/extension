@@ -1,4 +1,5 @@
 import log from "loglevel"
+import { postSlackMessage } from "../commActions"
 
 const LEDGER_USB_VENDOR_ID = 0x2c97
 
@@ -25,5 +26,10 @@ export const requestConnectDevice = async () => {
         return true
     } catch (error) {
         log.error("error ", error)
+        postSlackMessage(
+            "Error connectiong device",
+            error,
+            "File: requestConnectDevice."
+        )
     }
 }

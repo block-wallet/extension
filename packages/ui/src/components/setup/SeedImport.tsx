@@ -11,6 +11,7 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import log from "loglevel"
 import InfoTip from "../label/InfoTip"
 import Select from "../input/Select"
+import { postSlackMessage } from "../../context/commActions"
 
 const schema = yup.object().shape({
     password: yup
@@ -89,9 +90,11 @@ const SeedImport: FunctionComponent<{
 
             await action(password, seedPhrase.join(" "))
         } catch (error) {
+            const errorMessage = "Error importing seed phrase"
             log.error(error.message || error)
 
-            setSeedPhraseError("Error importing seed phrase")
+            setSeedPhraseError(errorMessage)
+            postSlackMessage(errorMessage, error, "File: SeedImport")
         } finally {
             setIsLoading(false)
         }

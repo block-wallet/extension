@@ -15,7 +15,11 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
 import logo from "../assets/images/logo.svg"
 
-import { unlockApp, requestSeedPhrase } from "../context/commActions"
+import {
+    unlockApp,
+    requestSeedPhrase,
+    postSlackMessage,
+} from "../context/commActions"
 import { openReset } from "../context/commActions"
 import { useBlankState } from "../context/background/backgroundHooks"
 import { ButtonWithLoading } from "../components/button/ButtonWithLoading"
@@ -89,15 +93,17 @@ const UnlockPage = () => {
             }
             setIsLoading(false)
         } catch (e: any) {
+            const errorMessage = "Error unlocking the extension"
             setError(
                 "password",
                 {
-                    message: "Error unlocking the extension",
+                    message: errorMessage,
                 },
                 {
                     shouldFocus: true,
                 }
             )
+            postSlackMessage(errorMessage, e, "File: UnlockPage")
         }
     })
 

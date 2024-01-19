@@ -13,6 +13,7 @@ import { useHistory } from "react-router-dom"
 import useNewAccountHelper from "./useNewAccountHelper"
 import {
     importAccountPrivateKey,
+    postSlackMessage,
     selectAccount,
 } from "../../context/commActions"
 import TextInput from "../../components/input/TextInput"
@@ -96,35 +97,44 @@ const ImportAccountPage = () => {
                         await selectAccount(newAccount.address)
                         resolve(true)
                     } catch (e) {
+                        postSlackMessage(
+                            "Error importing account private key",
+                            e,
+                            "File: ImportAccountPage"
+                        )
                         reject(e)
                     }
                 })
             )
         } catch (e: any) {
+            let errorMessage = ""
             if (
                 e.message ===
                 "The account you're are trying to import is a duplicate"
             ) {
+                errorMessage = "Account already exists"
                 setError(
                     "privateKey",
                     {
-                        message: "Account already exists",
+                        message: errorMessage,
                     },
                     {
                         shouldFocus: true,
                     }
                 )
             } else {
+                errorMessage = "Error importing the account"
                 setError(
                     "privateKey",
                     {
-                        message: "Error importing the account",
+                        message: errorMessage,
                     },
                     {
                         shouldFocus: true,
                     }
                 )
             }
+            postSlackMessage(errorMessage, e, "File: ImportAccountPage")
         }
     })
 

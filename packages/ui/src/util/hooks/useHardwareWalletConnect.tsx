@@ -1,6 +1,7 @@
 import {
     connectHardwareWallet,
     hardwareQrSubmitCryptoHdKeyOrAccount,
+    postSlackMessage,
 } from "../../context/commActions"
 import { Devices } from "../../context/commTypes"
 import { requestConnectDevice } from "../../context/util/requestConnectDevice"
@@ -31,6 +32,11 @@ const executeConnect = async (
         return await connectHardwareWallet(vendor)
     } catch (e) {
         log.error(e)
+        postSlackMessage(
+            "Error connecting hardware wallet.",
+            e,
+            "File: useHardwareWalletConnect"
+        )
     }
     return Promise.resolve(false)
 }

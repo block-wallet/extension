@@ -12,6 +12,7 @@ import GenericTooltip from "../label/GenericTooltip"
 import { formatName } from "../../util/formatAccount"
 import { isValidAddress } from "ethereumjs-util"
 import log from "loglevel"
+import { postSlackMessage } from "../../context/commActions"
 
 export interface TransactionDetailsProps {
     transactionArgs: TransactionArgument[]
@@ -50,7 +51,13 @@ const ArgumentValue = ({
         try {
             parsedValue = BigNumber.from(unformattedValue).toString()
         } catch (error) {
-            log.error("Can't parse transaction detail parameter", parsedValue)
+            const errorMessage = "Can't parse transaction detail parameter"
+            log.error(errorMessage, parsedValue)
+            postSlackMessage(
+                errorMessage,
+                error,
+                "File: TransacationDetailsAdvanced."
+            )
         }
     }
 

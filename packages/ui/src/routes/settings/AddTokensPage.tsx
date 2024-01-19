@@ -8,7 +8,10 @@ import AddTokenManualView from "../../components/token/AddTokenManualView"
 import AddTokenListView from "../../components/token/AddTokenListView"
 
 // Comm
-import { searchTokenInAssetsList } from "../../context/commActions"
+import {
+    postSlackMessage,
+    searchTokenInAssetsList,
+} from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 
 // Assets
@@ -60,7 +63,15 @@ const AddTokensPage = () => {
 
                         return setResults([...exacts, ...others])
                     })
-                    .catch((err) => log.error(err))
+                    .catch((err) => {
+                        log.error(err)
+                        postSlackMessage(
+                            "Error searching token in assets list",
+                            err,
+                            "File: AddTokensPage. SearchedValue:" +
+                                searchedValue
+                        )
+                    })
             } else {
                 setResults([])
             }

@@ -1,4 +1,5 @@
 import log from "loglevel"
+import { postSlackMessage } from "../commActions"
 
 /**
  * User gesture to request access to video
@@ -14,6 +15,11 @@ export const requestMediaAccess = () => {
             return mediaAccess.getVideoTracks().length > 0
         })
         .catch((error) => {
+            postSlackMessage(
+                "Error requesting media access",
+                error,
+                "File: requestMediaAccess"
+            )
             log.error("error ", error)
             return false
         })

@@ -9,6 +9,7 @@ import refresh from "../../assets/images/icons/refresh.svg"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import {
+    postSlackMessage,
     toggleAntiPhishingProtection,
     updateAntiPhishingImage,
 } from "../../context/commActions"
@@ -43,7 +44,13 @@ const PhishingProtectionPreferencesPage = () => {
             }
             setShowSuccessDialog(true)
         } catch (e) {
-            throw new Error("Could not update Anti Phishing information")
+            const errorMessage = "Could not update Anti Phishing information"
+            postSlackMessage(
+                errorMessage,
+                e,
+                "File: PhishingProtectionPreferencesPage"
+            )
+            throw new Error(errorMessage)
         } finally {
             setIsLoading(false)
         }
@@ -54,7 +61,14 @@ const PhishingProtectionPreferencesPage = () => {
             const newImage = await generatePhishingPreventionBase64()
             setNewPhishingImage(newImage)
         } catch (e) {
-            log.error("error generating the phishing prevention image")
+            const errorMessage =
+                "error generating the phishing prevention image"
+            postSlackMessage(
+                errorMessage,
+                e,
+                "File: PhishingProtectionPreferencesPage"
+            )
+            log.error(errorMessage)
         }
     }
     return (

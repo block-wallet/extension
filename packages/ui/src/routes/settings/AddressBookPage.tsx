@@ -3,7 +3,7 @@ import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import AccountDisplay from "../../components/account/AccountDisplay"
 import { AccountInfo } from "../../../../background/src/controllers/AccountTrackerController"
-import { addressBookDelete } from "../../context/commActions"
+import { addressBookDelete, postSlackMessage } from "../../context/commActions"
 import {
     useAddressBook,
     useAddressBookRecentAddresses,
@@ -26,9 +26,14 @@ const AddressBookPage: FunctionComponent<{
     const removeContact = async (address: string) => {
         try {
             await addressBookDelete(address)
-        } catch {
+        } catch (error) {
             // TODO: show error
             //  setError(error.message)
+            postSlackMessage(
+                "Error removing contact",
+                error,
+                "File: AddressBookPage"
+            )
         }
     }
 

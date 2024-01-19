@@ -6,7 +6,7 @@ import Divider from "../../components/Divider"
 import Spinner from "../../components/spinner/Spinner"
 import classnames from "classnames"
 import { Classes } from "../../styles/classes"
-import { verifySeedPhrase } from "../../context/commActions"
+import { postSlackMessage, verifySeedPhrase } from "../../context/commActions"
 import { findPositionOfSelectedWord, shuffleArray } from "../../util"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
@@ -196,8 +196,10 @@ const BackupConfirmPage = () => {
             } else {
                 setVerificationError("Verification failed")
             }
-        } catch {
-            setVerificationError("Error verificating the seed phrase")
+        } catch (error) {
+            const errorMessage = "Error verificating the seed phrase"
+            setVerificationError(errorMessage)
+            postSlackMessage(errorMessage, error, "File: BackupConfirmPage")
         }
         setIsVerificationInProgress(false)
     }

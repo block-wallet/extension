@@ -20,7 +20,7 @@ import networkCloud from "../../assets/images/icons/network_cloud.svg"
 import usb from "../../assets/images/icons/usb.svg"
 
 // Context
-import { lockApp } from "../../context/commActions"
+import { lockApp, postSlackMessage } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import classNames from "classnames"
@@ -73,8 +73,9 @@ const SettingsPage = () => {
             if (!isImportingDeposits) {
                 lockApp()
             }
-        } catch {
+        } catch (error) {
             handleError("Error logging out")
+            postSlackMessage("Error logging out.", error, "File: SettingsPage")
         }
     }
 

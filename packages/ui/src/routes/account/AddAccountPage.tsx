@@ -7,6 +7,7 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
 import {
     createAccount as createAccountAction,
+    postSlackMessage,
     selectAccount,
 } from "../../context/commActions"
 import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
@@ -70,15 +71,17 @@ const AddAccountPage = () => {
                 })
             )
         } catch (error: any) {
+            const errorMessage = error.message ?? "Error creating the account"
             setError(
                 "accountName",
                 {
-                    message: error.message ?? "Error creating the account",
+                    message: errorMessage,
                 },
                 {
                     shouldFocus: true,
                 }
             )
+            postSlackMessage(errorMessage, error, "File: AddAccountPage")
         }
     })
 

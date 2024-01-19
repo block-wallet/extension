@@ -33,7 +33,10 @@ import {
     TransactionType,
 } from "../context/commTypes"
 
-import { rejectReplacementTransaction } from "../context/commActions"
+import {
+    postSlackMessage,
+    rejectReplacementTransaction,
+} from "../context/commActions"
 
 // Utils
 import { getTransactionType } from "../util/getTransactionType"
@@ -318,8 +321,13 @@ const CancelAndSpeedUpComponent = ({
                 setIsLoading(false)
             })
             .catch((e) => {
+                postSlackMessage(
+                    "We couldn't find the transaction.",
+                    e,
+                    "File: CancelSpeedUpCommon. TransactionId: " +
+                        transaction.id
+                )
                 log.error(e)
-
                 history.push({
                     pathname: "/home",
                     state: {
@@ -374,6 +382,13 @@ const CancelAndSpeedUpComponent = ({
                         ? `You don't have enough funds to ${type} the transaction.`
                         : `The transaction that you are trying to ${type} has already been mined.`,
                 })
+
+                if (error)
+                    postSlackMessage(
+                        error?.message,
+                        e,
+                        "File: CancelSpeedUpCommon"
+                    )
             }
         )
     }

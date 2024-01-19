@@ -9,7 +9,7 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import TextInput from "../../components/input/TextInput"
 import PopupFooter from "../../components/popup/PopupFooter"
-import { renameAccount } from "../../context/commActions"
+import { postSlackMessage, renameAccount } from "../../context/commActions"
 import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
@@ -81,11 +81,12 @@ const EditAccountPage = () => {
             await renameAccount(account.address, data.accountName)
 
             dispatch({ type: "setStatus", payload: { status: "success" } })
-        } catch {
+        } catch (err) {
+            const errorMessage = "Error renaming the account"
             setError(
                 "accountName",
                 {
-                    message: "Error renaming the account",
+                    message: errorMessage,
                 },
                 {
                     shouldFocus: true,
@@ -93,7 +94,7 @@ const EditAccountPage = () => {
             )
 
             dispatch({ type: "setStatus", payload: { status: "error" } })
-
+            postSlackMessage(errorMessage, err, "File: EditAccountPage")
             return Promise.reject()
         }
     })

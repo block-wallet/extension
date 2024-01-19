@@ -5,7 +5,7 @@ import { DappRequestParams } from "@block-wallet/background/utils/types/ethereum
 
 import { DappReq } from "../../context/hooks/useDappRequest"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import { confirmDappRequest } from "../../context/commActions"
+import { confirmDappRequest, postSlackMessage } from "../../context/commActions"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 
 import PopupFooter from "../../components/popup/PopupFooter"
@@ -75,6 +75,11 @@ const SwitchEthereumChain: FunctionComponent<DappRequestProps> = ({
                     },
                 },
             })
+            postSlackMessage(
+                "Error confirming switch chain transaction.",
+                err,
+                "File: SwitchEthereumChain"
+            )
         }
     }
 

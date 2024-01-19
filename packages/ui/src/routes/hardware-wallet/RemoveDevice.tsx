@@ -16,7 +16,10 @@ import { Classes } from "../../styles"
 import HardwareWalletSetupLayout from "./SetupLayout"
 import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
 import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
-import { removeHardwareWallet } from "../../context/commActions"
+import {
+    postSlackMessage,
+    removeHardwareWallet,
+} from "../../context/commActions"
 import { getAccountTypeFromDevice } from "../../util/hardwareDevice"
 import { capitalize } from "../../util/capitalize"
 
@@ -109,6 +112,11 @@ const HardwareWalletRemoveDevicePage = () => {
                 }
             }
         } catch (e: any) {
+            postSlackMessage(
+                "Error removing hardware wallet.",
+                e,
+                "File: RemoveDevice"
+            )
         } finally {
             setIsLoading(false)
         }

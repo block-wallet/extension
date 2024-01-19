@@ -25,6 +25,7 @@ import {
     getLatestGasPrice,
     rejectTransaction,
     getSwapTransactionGasLimit,
+    postSlackMessage,
 } from "../../context/commActions"
 import {
     SwapParameters,
@@ -358,6 +359,11 @@ const SwapPageConfirm: FC<{}> = () => {
             setSwapParameters(swapParams)
         } catch (error) {
             setError(capitalize(error.message || "Error fetching swap"))
+            postSlackMessage(
+                "Error fetching swap",
+                error,
+                "File: SwapConfirmPage"
+            )
         } finally {
             setTimeoutStart(new Date().getTime())
             setIsFetchingSwaps(false)
@@ -398,7 +404,13 @@ const SwapPageConfirm: FC<{}> = () => {
 
                     isGasInitialized.current = true
                 } catch (error) {
-                    setError("Error fetching gas default")
+                    const errorMessage = "Error fetching gas default"
+                    setError(errorMessage)
+                    postSlackMessage(
+                        errorMessage,
+                        error,
+                        "File: SwapConfirmPage"
+                    )
                 } finally {
                     setIsGasLoading(false)
                 }

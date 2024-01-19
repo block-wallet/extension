@@ -11,6 +11,7 @@ import Tooltip from "../../components/label/Tooltip"
 import useNextRequestRoute from "../../context/hooks/useNextRequestRoute"
 import {
     confirmTransaction,
+    postSlackMessage,
     rejectTransaction,
     searchTokenInAssetsList,
     setUserSettings,
@@ -223,8 +224,14 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                 .then((searchTokensResponse) => {
                     setTokenName(searchTokensResponse.tokens[0].symbol)
                 })
-                .catch(() => {
-                    throw new Error("Failed to fetch token data")
+                .catch((err) => {
+                    const errorMessage = "Failed to fetch token data"
+                    postSlackMessage(
+                        errorMessage,
+                        err,
+                        "File: ApprvoeNFT. TokenAddress:" + tokenAddress
+                    )
+                    throw new Error(errorMessage)
                 })
                 .finally(() => {
                     setIsNameLoading(false)
@@ -247,7 +254,13 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
             await confirmTransaction(transaction.id, transactionGas, {
                 customNonce: transactionAdvancedData.customNonce,
             })
-        } catch (error) {}
+        } catch (error) {
+            postSlackMessage(
+                "Error confirming approve nft transaction",
+                error,
+                "File: ApproveNFT."
+            )
+        }
     }
 
     const reject = async () => {

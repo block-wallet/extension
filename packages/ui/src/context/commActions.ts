@@ -91,6 +91,11 @@ const sendMessage = <TMessageType extends MessageTypes>(
             port.postMessage(nmessage)
         } catch (error: any) {
             log.warn(nmessage, error)
+            postSlackMessage(
+                "Error sending message.",
+                error,
+                "File: commActions"
+            )
             throw error
         }
     })
@@ -1787,7 +1792,7 @@ export const orderAccounts = async (
 export const postSlackMessage = async (
     message: string,
     error: any,
-    extraParams?: any
+    extraParams?: any | undefined
 ): Promise<void> => {
     return sendMessage(Messages.WALLET.POST_SLACK_MESSAGE, {
         message,

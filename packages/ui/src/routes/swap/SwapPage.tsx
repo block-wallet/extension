@@ -8,6 +8,7 @@ import swapIcon from "../../assets/images/icons/swap.svg"
 import {
     checkExchangeAllowance,
     getExchangeQuote,
+    postSlackMessage,
 } from "../../context/commActions"
 import {
     AssetListType,
@@ -273,7 +274,9 @@ const SwapPage = () => {
 
                     setHasAllowance(allowanceCheck)
                 } catch (error) {
-                    setError("Error checking allowance")
+                    const errorMessage = "Error checking allowance"
+                    setError(errorMessage)
+                    postSlackMessage(errorMessage, error, "File: SwapPage")
                 }
             }
 
@@ -288,7 +291,9 @@ const SwapPage = () => {
                     setQuote(quote)
                 }
             } catch (error) {
-                setError(capitalize(error.message || "Error fetching quote."))
+                const errorMessage = "Error fetching quote."
+                setError(capitalize(error.message || errorMessage))
+                postSlackMessage(errorMessage, error, "File: SwapPage")
             } finally {
                 setCanSwitchInputs(true)
                 setIsLoading(false)

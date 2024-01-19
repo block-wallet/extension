@@ -6,7 +6,11 @@ import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 
-import { resetAccount, lockApp } from "../../context/commActions"
+import {
+    resetAccount,
+    lockApp,
+    postSlackMessage,
+} from "../../context/commActions"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { Classes } from "../../styles"
 import useStateLogs from "../../util/hooks/useStateLogs"
@@ -34,6 +38,11 @@ const ResetAccountPage = () => {
                 })
             }, 1000)
         } catch (error) {
+            postSlackMessage(
+                "Error reseting account",
+                error,
+                "File: ResetAccountPage"
+            )
             dispatch({
                 type: "setStatus",
                 payload: { status: "error" },

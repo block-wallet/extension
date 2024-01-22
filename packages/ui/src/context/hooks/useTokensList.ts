@@ -12,6 +12,7 @@ import { isHiddenAccount } from "../../util/account"
 import { AssetsSortOptions, sortTokensByValue } from "../../util/tokenUtils"
 import { useMemo } from "react"
 import { Rates } from "@block-wallet/background/controllers/ExchangeRatesController"
+import { useExchangeRatesState } from "../background/useExchangeRatesState"
 
 export type TokenWithBalance = { token: Token; balance: BigNumber }
 
@@ -31,13 +32,10 @@ const useGetAccountNetworkTokensBalances = (
     accountTokensOrder: AccountTokenOrder
     exchangeRates: Rates
 } => {
-    const {
-        accounts,
-        selectedAddress,
-        hiddenAccounts,
-        accountTokensOrder,
-        exchangeRates,
-    } = useBlankState()!
+    const { accounts, selectedAddress, hiddenAccounts, accountTokensOrder } =
+        useBlankState()!
+
+    const { state: exchangeRates } = useExchangeRatesState()
 
     let balances = account
         ? isHiddenAccount(account)
@@ -66,7 +64,7 @@ const useGetAccountNetworkTokensBalances = (
         balances: balances,
         chainId: chainId,
         accountTokensOrder: arrAccountTokensOrder,
-        exchangeRates: exchangeRates,
+        exchangeRates: exchangeRates.exchangeRates,
     }
 }
 

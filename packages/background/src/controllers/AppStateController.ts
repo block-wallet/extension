@@ -6,6 +6,15 @@ import KeyringControllerDerivated from './KeyringControllerDerivated';
 import TransactionController from './transactions/TransactionController';
 import browser from 'webextension-polyfill';
 
+const STICKY_STORAGE_DATA_TTL = 60000 * 10;
+
+export interface AppStateControllerMemState {
+    expiredStickyStorage: boolean;
+    isAppUnlocked: boolean;
+    lockedByTimeout: boolean;
+    idleTimeout: number;
+}
+
 export interface AppStateControllerState {
     idleTimeout: number; // Minutes until auto-lock - Zero if disabled
     isAppUnlocked: boolean;
@@ -18,15 +27,24 @@ export enum AppStateEvents {
     APP_UNLOCKED = 'APP_UNLOCKED',
 }
 
-export default class AppStateController extends BaseController<AppStateControllerState> {
+export default class AppStateController extends BaseController<
+    AppStateControllerState,
+    AppStateControllerMemState
+> {
     private _timer: ReturnType<typeof setTimeout> | null;
+    private _stickyStorageTimer: ReturnType<typeof setTimeout> | undefined;
 
     constructor(
         initState: AppStateControllerState,
         private readonly _keyringController: KeyringControllerDerivated,
         private readonly _transactionController: TransactionController
     ) {
-        super(initState);
+        super(initState, {
+            idleTimeout: initState.idleTimeout,
+            isAppUnlocked: initState.isAppUnlocked,
+            lockedByTimeout: initState.lockedByTimeout,
+            expiredStickyStorage: false,
+        });
 
         this._timer = null;
 
@@ -45,6 +63,28 @@ export default class AppStateController extends BaseController<AppStateControlle
         }
 
         this._resetTimer();
+        this.store.subscribe(
+            (
+                newState: AppStateControllerState,
+                oldState?: AppStateControllerState
+            ) => {
+                //To avoid sending the lastActiveTime to the UI, update the UIStore based on the store data.
+
+                if (newState.isAppUnlocked !== oldState?.isAppUnlocked) {
+                    this.UIStore.updateState({
+                        isAppUnlocked: newState.isAppUnlocked,
+                        lockedByTimeout: newState.lockedByTimeout,
+                    });
+                    return;
+                }
+
+                if (newState.idleTimeout !== oldState?.idleTimeout) {
+                    this.UIStore.updateState({
+                        idleTimeout: newState.idleTimeout,
+                    });
+                }
+            }
+        );
     }
 
     /**
@@ -54,11 +94,8 @@ export default class AppStateController extends BaseController<AppStateControlle
     public setLastActiveTime = (): void => {
         this.store.updateState({ lastActiveTime: new Date().getTime() });
         this._resetTimer();
+        this._resetStickyStorageTimer();
     };
-
-    public get lastActiveTime(): number {
-        return this.lastActiveTime;
-    }
 
     /**
      * Set a custom time in minutes for the extension auto block
@@ -139,6 +176,19 @@ export default class AppStateController extends BaseController<AppStateControlle
         }
     };
 
+    private _resetStickyStorageTimer = () => {
+        if (this._stickyStorageTimer) {
+            clearTimeout(this._stickyStorageTimer);
+        }
+        //only update UIStore when it is necessary.
+        if (this.UIStore.getState().expiredStickyStorage) {
+            this.UIStore.updateState({ expiredStickyStorage: false });
+        }
+
+        this._stickyStorageTimer = setTimeout(() => {
+            this.UIStore.updateState({ expiredStickyStorage: true });
+        }, STICKY_STORAGE_DATA_TTL);
+    };
     public autoUnlock = async (): Promise<void> => {
         if (isManifestV3()) {
             const { isAppUnlocked } = this.store.getState();
@@ -176,6 +226,7 @@ export default class AppStateController extends BaseController<AppStateControlle
         // Update controller state
         this.store.updateState({
             isAppUnlocked: true,
+            lockedByTimeout: false,
         });
 
         this._resetTimer();

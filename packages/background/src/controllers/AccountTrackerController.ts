@@ -28,7 +28,7 @@ import {
     getAddressBalances as getAddressBalancesFromSingleCallBalancesContract,
     isSingleCallBalancesContractAvailable,
 } from '../utils/balance-checker/balanceChecker';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash';
 import {
     ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
     Network,
@@ -1651,7 +1651,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         assetAddressToGetBalance: string[],
         deletedUserTokens: string[]
     ): void {
-        const stateAccounts = this.store.getState().accounts;
+        const stateAccounts = cloneDeep(this.store.getState().accounts);
 
         const finalNativeTokenBalance = assetAddressToGetBalance.includes(
             NATIVE_TOKEN_ADDRESS
@@ -1685,29 +1685,35 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
         }
 
-        this.store.updateState({
-            accounts: {
-                ...this.store.getState().accounts,
-                [accountAddress]: {
-                    ...this.store.getState().accounts[accountAddress],
-                    balances: {
-                        ...this.store.getState().accounts[accountAddress]
-                            .balances,
-                        [chainId]: {
-                            nativeTokenBalance: finalNativeTokenBalance,
-                            tokens: finalTokens,
-                        },
+        const newState: Accounts = {
+            ...this.store.getState().accounts,
+            [accountAddress]: {
+                ...this.store.getState().accounts[accountAddress],
+                balances: {
+                    ...this.store.getState().accounts[accountAddress].balances,
+                    [chainId]: {
+                        nativeTokenBalance: finalNativeTokenBalance,
+                        tokens: finalTokens,
                     },
                 },
             },
-        });
+        };
 
-        this.emit(
-            AccountTrackerEvents.BALANCE_UPDATED,
-            chainId,
-            accountAddress,
-            assetAddressToGetBalance
-        );
+        const shouldUpdate = !isEqual(newState, this.store.getState().accounts);
+
+        //only update state if it has changed.
+        if (shouldUpdate) {
+            this.store.updateState({
+                accounts: newState,
+            });
+
+            this.emit(
+                AccountTrackerEvents.BALANCE_UPDATED,
+                chainId,
+                accountAddress,
+                assetAddressToGetBalance
+            );
+        }
     }
 
     /**

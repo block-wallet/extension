@@ -1531,6 +1531,7 @@ describe('Transactions Controller', () => {
                     .transactionReceipt
             ).to.be.deep.equal({
                 status: 0,
+                logs: [],
             });
         });
 

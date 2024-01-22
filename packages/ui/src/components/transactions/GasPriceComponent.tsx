@@ -1,4 +1,11 @@
-import { FunctionComponent, useRef, useState, useEffect, useMemo } from "react"
+import {
+    FunctionComponent,
+    useRef,
+    useState,
+    useEffect,
+    useMemo,
+    useCallback,
+} from "react"
 import classnames from "classnames"
 import { BigNumber } from "@ethersproject/bignumber"
 
@@ -42,6 +49,7 @@ import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import WarningDialog from "../dialog/WarningDialog"
 import { calculateGasPricesFromTransactionFees } from "../../util/gasPrice"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 import { updateGasPrices } from "../../context/commActions"
 
 import { GAS_PRICE_UPDATE_INTERVAL } from "../../util/constants"
@@ -582,8 +590,10 @@ const GasPriceComponent: FunctionComponent<{
     useOnClickOutside(ref, () => setActive(false))
 
     //State
-    const { exchangeRates, nativeCurrency, localeInfo, networkNativeCurrency } =
-        useBlankState()!
+    const { nativeCurrency, localeInfo } = useBlankState()!
+    const {
+        state: { exchangeRates, networkNativeCurrency },
+    } = useExchangeRatesState()
 
     const { estimatedBaseFee: baseFeePerGas, gasPricesLevels } =
         useGasPriceData()
@@ -617,70 +627,84 @@ const GasPriceComponent: FunctionComponent<{
     const [transactionSpeeds, setTransactionSpeeds] =
         useState<TransactionSpeed>(getTransactionSpeeds(gasPricesLevels))
 
-    const getGasOption = (label: string, gasFees: TransactionFeeData) => {
-        const {
-            minValue,
-            maxValue,
-            minValueNativeCurrency,
-            maxValueNativeCurrency,
-        } = calculateGasPricesFromTransactionFees(gasFees, baseFee, {
+    const getGasOption = useCallback(
+        (label: string, gasFees: TransactionFeeData) => {
+            const {
+                minValue,
+                maxValue,
+                minValueNativeCurrency,
+                maxValueNativeCurrency,
+            } = calculateGasPricesFromTransactionFees(gasFees, baseFee, {
+                exchangeRates,
+                localeInfo: {
+                    currency: nativeCurrency,
+                    language: localeInfo,
+                },
+                networkNativeCurrency: {
+                    symbol: networkNativeCurrency.symbol,
+                    decimals: nativeCurrencyDecimals,
+                },
+            })
+
+            const minValueFormatted = formatRounded(
+                formatUnits(minValue.lt(maxValue) ? minValue : maxValue),
+                5
+            )
+
+            const maxValueFormatted = formatRounded(
+                formatUnits(minValue.gt(maxValue) ? minValue : maxValue),
+                5
+            )
+
+            const networkSymbol = networkNativeCurrency.symbol
+
+            // For parent's label, apply displayOnlyMaxValue flag. Otherwise always display range
+            const totalETHCost =
+                (label !== "Custom" || minValue.lte(maxValue)) &&
+                !displayOnlyMaxValue
+                    ? `${minValueFormatted} ${networkSymbol} - ${maxValueFormatted} ${networkSymbol}`
+                    : `${formatRounded(
+                          formatUnits(maxValue),
+                          5
+                      )} ${networkSymbol}`
+
+            const totalNativeCurrencyCost =
+                (label !== "Custom" || minValue.lte(maxValue)) &&
+                !displayOnlyMaxValue
+                    ? `${minValueNativeCurrency} - ${maxValueNativeCurrency}`
+                    : maxValueNativeCurrency
+
+            const totalETHCostRange =
+                label !== "Custom" || minValue.lte(maxValue)
+                    ? `${minValueFormatted} ${networkNativeCurrency.symbol} - ${maxValueFormatted} ${networkNativeCurrency.symbol}`
+                    : `${formatRounded(formatUnits(maxValue), 5)} ${
+                          networkNativeCurrency.symbol
+                      }`
+
+            const totalNativeCurrencyCostRange =
+                label !== "Custom" || minValue.lte(maxValue)
+                    ? `${minValueNativeCurrency} - ${maxValueNativeCurrency}`
+                    : maxValueNativeCurrency
+
+            return {
+                label,
+                gasFees,
+                totalETHCost,
+                totalNativeCurrencyCost,
+                totalETHCostRange,
+                totalNativeCurrencyCostRange,
+            } as GasPriceOption
+        },
+        [
+            baseFee,
+            displayOnlyMaxValue,
             exchangeRates,
-            localeInfo: {
-                currency: nativeCurrency,
-                language: localeInfo,
-            },
-            networkNativeCurrency: {
-                symbol: networkNativeCurrency.symbol,
-                decimals: nativeCurrencyDecimals,
-            },
-        })
-
-        const minValueFormatted = formatRounded(
-            formatUnits(minValue.lt(maxValue) ? minValue : maxValue),
-            5
-        )
-
-        const maxValueFormatted = formatRounded(
-            formatUnits(minValue.gt(maxValue) ? minValue : maxValue),
-            5
-        )
-
-        const networkSymbol = networkNativeCurrency.symbol
-
-        // For parent's label, apply displayOnlyMaxValue flag. Otherwise always display range
-        const totalETHCost =
-            (label !== "Custom" || minValue.lte(maxValue)) &&
-            !displayOnlyMaxValue
-                ? `${minValueFormatted} ${networkSymbol} - ${maxValueFormatted} ${networkSymbol}`
-                : `${formatRounded(formatUnits(maxValue), 5)} ${networkSymbol}`
-
-        const totalNativeCurrencyCost =
-            (label !== "Custom" || minValue.lte(maxValue)) &&
-            !displayOnlyMaxValue
-                ? `${minValueNativeCurrency} - ${maxValueNativeCurrency}`
-                : maxValueNativeCurrency
-
-        const totalETHCostRange =
-            label !== "Custom" || minValue.lte(maxValue)
-                ? `${minValueFormatted} ${networkNativeCurrency.symbol} - ${maxValueFormatted} ${networkNativeCurrency.symbol}`
-                : `${formatRounded(formatUnits(maxValue), 5)} ${
-                      networkNativeCurrency.symbol
-                  }`
-
-        const totalNativeCurrencyCostRange =
-            label !== "Custom" || minValue.lte(maxValue)
-                ? `${minValueNativeCurrency} - ${maxValueNativeCurrency}`
-                : maxValueNativeCurrency
-
-        return {
-            label,
-            gasFees,
-            totalETHCost,
-            totalNativeCurrencyCost,
-            totalETHCostRange,
-            totalNativeCurrencyCostRange,
-        } as GasPriceOption
-    }
+            localeInfo,
+            nativeCurrency,
+            nativeCurrencyDecimals,
+            networkNativeCurrency.symbol,
+        ]
+    )
 
     const [gasOptions, setGasOptions] = useState<GasPriceOption[]>([])
 
@@ -755,7 +779,12 @@ const GasPriceComponent: FunctionComponent<{
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isParentLoading, gasPricesLevels, defaultGas.feeData.gasLimit])
+    }, [
+        isParentLoading,
+        gasPricesLevels,
+        defaultGas.feeData.gasLimit,
+        getGasOption,
+    ])
 
     useEffect(() => {
         setBaseFee(BigNumber.from(baseFeePerGas))

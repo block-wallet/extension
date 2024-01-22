@@ -32,7 +32,7 @@ import { SignedTransaction } from './erc-20/transactions/SignedTransaction';
 import { TransactionArgument } from './transactions/ContractSignatureParser';
 import TransactionController from './transactions/TransactionController';
 import { fetchBlockWithRetries } from '../utils/blockFetch';
-import { isNil } from 'lodash';
+import { cloneDeep, isNil } from 'lodash';
 import { paddedToChecksumAddress } from '../utils/addressUtils';
 import { RPCLogsFetcher } from '../utils/rpc/RPCLogsFetcher';
 import { EtherscanFetcher } from '../utils/scanner/EtherscanFetcher';
@@ -287,7 +287,7 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         address: string = this._preferencesController.getSelectedAddress(),
         transactionsWatched: TransactionsWatched
     ): void {
-        const state = this.store.getState() || {};
+        const state = cloneDeep(this.store.getState()) || {};
 
         if (!state.transactions) {
             state.transactions = {};

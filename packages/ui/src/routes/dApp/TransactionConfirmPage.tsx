@@ -78,6 +78,7 @@ import TransactionDetails from "../../components/transactions/TransactionDetails
 import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
 import { canUserSubmitTransaction } from "../../util/transactionUtils"
 import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 const TransactionConfirmPage = () => {
     //Retrieves all the transactions to be processed
@@ -114,14 +115,16 @@ const TransactionConfirm: React.FC<{
     //Hooks
     const {
         accounts,
-        exchangeRates,
         nativeCurrency,
         localeInfo,
-        networkNativeCurrency,
         selectedAddress,
         settings,
         defaultGasOption,
     } = useBlankState()!
+    const {
+        state: { exchangeRates, networkNativeCurrency },
+    } = useExchangeRatesState()
+
     const { isEIP1559Compatible, defaultNetworkLogo } = useSelectedNetwork()
     const [gasPriceThresholdWarning, setGasPriceThresholdWarning] = useState<{
         message?: string

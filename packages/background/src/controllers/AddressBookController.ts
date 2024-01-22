@@ -8,6 +8,7 @@ import {
     TransactionMeta,
 } from './transactions/utils/types';
 import { PreferencesController } from './PreferencesController';
+import { isEqual } from 'lodash';
 import { isNativeTokenAddress } from '../utils/token';
 import { formatName } from '../utils/account';
 
@@ -356,15 +357,22 @@ export class AddressBookController extends BaseController<AddressBookControllerM
             }
         }
 
-        this.store.setState({
-            ...this.store.getState(),
-            recentAddresses: {
-                ...this.store.getState().recentAddresses,
-                [network]: {
-                    ...recentAddresses,
+        if (
+            !isEqual(
+                recentAddresses,
+                this.store.getState().recentAddresses[network] || {}
+            )
+        ) {
+            this.store.setState({
+                ...this.store.getState(),
+                recentAddresses: {
+                    ...this.store.getState().recentAddresses,
+                    [network]: {
+                        ...recentAddresses,
+                    },
                 },
-            },
-        });
+            });
+        }
 
         return recentAddresses;
     }

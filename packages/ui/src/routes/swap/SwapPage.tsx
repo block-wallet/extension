@@ -37,6 +37,7 @@ import { useCallback } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
 import { GetAmountYupSchema } from "../../util/yup/GetAmountSchema"
 import { ApproveOperation } from "../transaction/ApprovePage"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 import { DEFAULT_EXCHANGE_TYPE } from "../../util/exchangeUtils"
 
 interface SwapPageLocalState {
@@ -70,8 +71,10 @@ const SwapPage = () => {
         SWAP_QUOTE_REFRESH_TIMEOUT
     )
 
-    const { selectedAddress, nativeCurrency, localeInfo, exchangeRates } =
-        useBlankState()!
+    const { selectedAddress, nativeCurrency, localeInfo } = useBlankState()!
+    const {
+        state: { exchangeRates },
+    } = useExchangeRatesState()
 
     const { nativeToken } = useTokensList()
 

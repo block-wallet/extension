@@ -25,6 +25,7 @@ import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { formatHashLastChars, formatName } from "../../util/formatAccount"
 import Icon, { IconName } from "../../components/ui/Icon"
 import Dropdown from "../../components/ui/Dropdown/Dropdown"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 export type ConnectedSiteAccountsLocationState = {
     origin: string
@@ -48,7 +49,10 @@ const ConnectedSiteAccount: FunctionComponent<{
 }) => {
     const [hasDialog, setHasDialog] = useState(false)
 
-    const { selectedAddress, networkNativeCurrency } = useBlankState()!
+    const { selectedAddress } = useBlankState()!
+    const {
+        state: { networkNativeCurrency },
+    } = useExchangeRatesState()
     const { chainId } = useSelectedNetwork()
 
     return (

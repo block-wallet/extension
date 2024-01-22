@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from "react"
-
 import { HashRouter, Redirect, Route, useHistory } from "react-router-dom"
 import { useBlankState } from "../context/background/backgroundHooks"
 import PendingSetupPage from "../routes/setup/PendingSetupPage"
@@ -16,16 +15,12 @@ import IdleComponent from "../components/IdleComponent"
 import WalletNews from "../components/news/WalletNews"
 import LocationHolder from "./LocationHolder"
 import { useLocationRecovery } from "../util/hooks/useLocationRecovery"
-import { timeExceedsTTL } from "../util/time"
 import useClearStickyStorage from "../context/hooks/useClearStickyStorage"
 import {
     getNonSubmittedTransactions,
     TransactionOrigin,
 } from "../util/getNonSubmittedTransactions"
 import browser from "webextension-polyfill"
-
-//10 minutes
-const LOCAL_STORAGE_DATA_TTL = 60000 * 10
 
 /**  Purpose of this component is to check in Blank State if there is any pending connect to site or transaction confirm
  *  in order to show that page always, whenever the extension is loaded and unlocked.
@@ -37,7 +32,7 @@ const PopupComponent = () => {
         permissionRequests,
         dappRequests,
         transactions,
-        lastActiveTime,
+        expiredStickyStorage,
     } = useBlankState()!
     const unapprovedTransactions = getNonSubmittedTransactions(
         transactions,
@@ -61,12 +56,7 @@ const PopupComponent = () => {
     )
 
     useLayoutEffect(() => {
-        if (
-            showPage ||
-            showUnlock ||
-            (lastActiveTime &&
-                timeExceedsTTL(lastActiveTime, LOCAL_STORAGE_DATA_TTL))
-        ) {
+        if (showPage || showUnlock || expiredStickyStorage) {
             // If the wallet is locked or if we're in a dApp request
             // We should get rid of all the localSotrage stuff.
             clearStickyStorage()

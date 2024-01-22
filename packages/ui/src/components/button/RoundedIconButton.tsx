@@ -1,16 +1,30 @@
 import { FC } from "react"
 import classnames from "classnames"
+import AnimatedIcon, { AnimatedIconName } from "../AnimatedIcon"
 
 interface RoundedIconButtonProps {
     Icon: React.ElementType
     disabled: boolean
     children: React.ReactNode
+    isLoading?: boolean
+}
+
+export const RoundedLoadingButton = () => {
+    return (
+        <div className="flex flex-row items-center justify-center w-full h-full">
+            <AnimatedIcon
+                icon={AnimatedIconName.BlueCircleLoadingSkeleton}
+                className="w-4 h-4 pointer-events-none rotate-180"
+            />
+        </div>
+    )
 }
 
 const RoundedIconButton: FC<RoundedIconButtonProps> = ({
     children,
     disabled,
     Icon,
+    isLoading,
 }) => {
     return (
         <>
@@ -21,7 +35,7 @@ const RoundedIconButton: FC<RoundedIconButtonProps> = ({
                 )}
                 style={{ transform: "scaleY(-1)" }}
             >
-                <Icon />
+                {isLoading ? <RoundedLoadingButton /> : <Icon />}
             </div>
             <span className="text-[13px] font-medium">{children}</span>
         </>

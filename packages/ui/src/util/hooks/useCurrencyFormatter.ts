@@ -1,10 +1,14 @@
 import { BigNumber } from "@ethersproject/bignumber"
 import { useBlankState } from "../../context/background/backgroundHooks"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 import { formatCurrency, toCurrencyAmount } from "../formatCurrency"
 import { getValueByKey } from "../objectUtils"
 
 const useCurrencyFromatter = () => {
     const state = useBlankState()!
+    const {
+        state: { exchangeRates },
+    } = useExchangeRatesState()
     const format = (
         amount: BigNumber,
         tokenSymbol: string,
@@ -14,7 +18,7 @@ const useCurrencyFromatter = () => {
         const currencyAmount = toCurrencyAmount(
             amount || BigNumber.from(0),
             getValueByKey(
-                state.exchangeRates,
+                exchangeRates,
                 isNativeCurrency ? tokenSymbol.toUpperCase() : tokenSymbol,
                 0
             ),

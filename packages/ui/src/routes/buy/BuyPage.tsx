@@ -15,13 +15,15 @@ import { CurrencySelection } from "../../components/currency/CurrencySelection"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { getOnrampCurrencies } from "../../context/commActions"
 import { ONRAMPER_API_KEY } from "../../util/onrampUtils"
+import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 
 const BuyPage = () => {
     const history = useOnMountHistory()
     const [selectedToken, setSelectedToken] = useState<Token>()
     const [acceptedTerms, setAcceptedTerms] = useState(false)
     const currenctAccountInfo = useSelectedAccount()
-    const { nativeCurrency, networkNativeCurrency } = useBlankState()!
+    const { nativeCurrency } = useBlankState()!
+    const networkNativeCurrency = useSelectedNetwork()!.nativeCurrency
     const [selectedCurrency, setSelectedCurrency] = useState<Currency>()
     const [currencyList, setCurrencyList] = useState<Currency[]>([])
     const [tokenList, setTokenList] = useState<Token[]>([])

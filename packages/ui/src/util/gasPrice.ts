@@ -5,7 +5,7 @@ import { DEFAULT_TRANSACTION_GAS_PERCENTAGE_THRESHOLD } from "./constants"
 import { formatCurrency, toCurrencyAmount } from "./formatCurrency"
 import { FeeData } from "@ethersproject/abstract-provider"
 import { formatUnits } from "@ethersproject/units"
-import { DisplayGasPricesData } from "../components/gas/GasPricesInfo"
+import { DisplayGasPricesData } from "../components/home/GasPricesInfo"
 
 interface GasFeesCalculation {
     minValue: BigNumber

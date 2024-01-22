@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { FC, useState } from "react"
 import { classnames } from "../../styles"
 
 import useAccountAllowances from "../../context/hooks/useAccountAllowances"
@@ -25,14 +25,15 @@ const tabs = [
     },
 ]
 
-const ActivityAllowancesView = () => {
+const ActivityAllowancesView: FC<{ tokenAddress: string }> = ({
+    tokenAddress,
+}) => {
     const history = useOnMountHistory()
 
     const [tab, setTab] = useState(
         history.location.state.tab === TabLabels.ALLOWANCES ? tabs[1] : tabs[0]
     )
     const TabComponent = tab.component
-    const tokenAddress: string = history.location.state.address
 
     const allowances = useAccountAllowances(
         AllowancesFilters.TOKEN,
@@ -44,7 +45,7 @@ const ActivityAllowancesView = () => {
     }
 
     return (
-        <div className="flex flex-col w-full !mt-0">
+        <div className="flex flex-col w-full h-full !mt-0">
             <HorizontalSelect
                 options={tabs}
                 value={tab}

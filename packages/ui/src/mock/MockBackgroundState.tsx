@@ -137,10 +137,6 @@ export const initBackgroundState: BackgroundStateType = {
             },
         },
         recentAddresses: {} as AddressBook,
-        activityList: {
-            confirmed: [],
-            pending: [],
-        },
         hiddenAccounts: {},
         accounts: {
             "0xd7Fd7EDcb7376c490b0e45e391e8040928F73081": {
@@ -322,8 +318,7 @@ export const initBackgroundState: BackgroundStateType = {
         txSignTimeout: 0,
         unapprovedTransactions: {},
         previousWithdrawals: [],
-        lastActiveTime: 0,
-
+        expiredStickyStorage: false,
         depositsCount: {
             eth: [
                 {
@@ -394,41 +389,7 @@ export const initBackgroundState: BackgroundStateType = {
         isVaultInitialized: true,
         isImportingDeposits: false,
         importingErrors: [],
-        exchangeRates: { ETH: 2300, DAI: 1 },
-        networkNativeCurrency: {
-            symbol: "ETH",
-            // Default Coingecko id for ETH rates
-            coingeckoPlatformId: "ethereum",
-        },
-        isRatesChangingAfterNetworkChange: false,
         isEIP1559Compatible: { 5: true },
-        gasPriceData: {
-            5: {
-                blockGasLimit: BigNumber.from(0),
-                estimatedBaseFee: BigNumber.from(0),
-                gasPricesLevels: {
-                    slow: {
-                        gasPrice: BigNumber.from(111111111110),
-                        maxPriorityFeePerGas: BigNumber.from(0),
-                        maxFeePerGas: BigNumber.from(0),
-                        lastBaseFeePerGas: null,
-                    },
-                    average: {
-                        gasPrice: BigNumber.from(111111111110),
-                        maxPriorityFeePerGas: BigNumber.from(0),
-                        maxFeePerGas: BigNumber.from(0),
-                        lastBaseFeePerGas: null,
-                    },
-                    fast: {
-                        gasPrice: BigNumber.from(111111111110),
-                        maxPriorityFeePerGas: BigNumber.from(0),
-                        maxFeePerGas: BigNumber.from(0),
-                        lastBaseFeePerGas: null,
-                    },
-                },
-                baseFee: BigNumber.from("0x02540be400"),
-            },
-        },
         showTestNetworks: true,
         showWelcomeMessage: false,
         showDefaultWalletPreferences: false,

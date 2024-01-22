@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 import { Flatten } from './helpers';
-import { BlankAppUIState } from '../constants/initialState';
+import {
+    ActivityListUIState,
+    ExchangeRatesUIState,
+    GasPricesUIState,
+    BlankAppUIState,
+} from '../constants/initialState';
 import { BigNumber } from '@ethersproject/bignumber';
 import {
     AccountInfo,
@@ -438,7 +443,16 @@ export interface RequestSignatures {
         RequestUpdateSitePermissions,
         boolean
     ];
-    [Messages.STATE.GET]: [undefined, ResponseGetState];
+    [Messages.STATE.GET]: [RequestGetState, ResponseGetState];
+    [Messages.STATE.SUBSCRIBE]: [
+        RequestSubscribeState,
+        boolean,
+        StateSubscription
+    ];
+    [Messages.STATE.GET_REMOTE_CONFIG]: [
+        undefined,
+        RemoteConfigsControllerState
+    ];
     [Messages.ENS.RESOLVE_NAME]: [RequestEnsResolve, string | null];
     [Messages.ENS.LOOKUP_ADDRESS]: [RequestEnsLookup, string | null];
     [Messages.UD.RESOLVE_NAME]: [RequestUDResolve, string | null];
@@ -508,11 +522,6 @@ export interface RequestSignatures {
     [Messages.WALLET.REQUEST_SEED_PHRASE]: [RequestSeedPhrase, string];
     [Messages.WALLET.SETUP_COMPLETE]: [RequestCompleteSetup, void];
     [Messages.WALLET.RESET]: [RequestWalletReset, boolean];
-    [Messages.STATE.SUBSCRIBE]: [undefined, boolean, StateSubscription];
-    [Messages.STATE.GET_REMOTE_CONFIG]: [
-        undefined,
-        RemoteConfigsControllerState
-    ];
     [Messages.TOKEN.GET_BALANCE]: [RequestGetTokenBalance, BigNumber];
     [Messages.TOKEN.GET_TOKENS]: [RequestGetTokens, ITokens];
     [Messages.TOKEN.GET_USER_TOKENS]: [RequestGetUserTokens, ITokens];
@@ -1151,13 +1160,31 @@ export type ResponseTypes = {
 export type ResponseType<TMessageType extends keyof RequestSignatures> =
     RequestSignatures[TMessageType][1];
 
-export type ResponseGetState = Flatten<BlankAppUIState>;
+export interface ResponseBlankGetWithdrawalGasCost {
+    estimatedGas: BigNumber;
+    fee: BigNumber;
+    total: BigNumber;
+}
+
+export type ResponseGetAppState = Flatten<BlankAppUIState>;
+export type ResponseGetExchangeRatesState = Flatten<ExchangeRatesUIState>;
+export type ResponseGetGasPricesState = Flatten<GasPricesUIState>;
+export type ResponseGetActivityListState = Flatten<ActivityListUIState>;
+
+export type ResponseGetState =
+    | ResponseGetAppState
+    | ResponseGetExchangeRatesState
+    | ResponseGetGasPricesState
+    | ResponseGetActivityListState;
 
 export type SubscriptionMessageTypes = {
     [MessageType in keyof RequestSignatures]: RequestSignatures[MessageType][2];
 };
 
-export type StateSubscription = Flatten<BlankAppUIState>;
+export type AppStateSubscription = Flatten<BlankAppUIState>;
+export type ExchangeRatesStateSubscription = Flatten<ExchangeRatesUIState>;
+export type GasPricesStateSubscription = Flatten<GasPricesUIState>;
+export type ActivityListStateSubscription = Flatten<ActivityListUIState>;
 
 export interface ExternalEventSubscription {
     eventName: ProviderEvents;
@@ -1247,6 +1274,30 @@ export type Handlers = Record<string, Handler>;
 
 export enum BackgroundActions {
     CLOSE_WINDOW = 'CLOSE_WINDOW',
+}
+
+export enum StateType {
+    APP_STATE = 'APP_STATE',
+    EXCHANGE_RATES = 'EXCHANGE_RATES',
+    GAS_PRICES = 'GAS_PRICES',
+    ACTIVITY_LIST = 'ACTIVITY_LIST',
+}
+
+export interface RequestSubscribeState {
+    stateType: StateType;
+}
+
+export interface RequestGetState {
+    stateType: StateType;
+}
+
+export type StateSubscription =
+    | AppStateSubscription
+    | ExchangeRatesStateSubscription
+    | GasPricesStateSubscription
+    | ActivityListStateSubscription;
+export interface RequestSetHotkeys {
+    enabled: boolean;
 }
 
 export interface RequestSetHotkeys {

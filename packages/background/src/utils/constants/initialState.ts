@@ -6,7 +6,10 @@ import { ValuesOf } from '../types/helpers';
 import { IObservableStore } from '../../infrastructure/stores/ObservableStore';
 
 import { AccountTrackerState } from '../../controllers/AccountTrackerController';
-import { AppStateControllerState } from '../../controllers/AppStateController';
+import {
+    AppStateControllerMemState,
+    AppStateControllerState,
+} from '../../controllers/AppStateController';
 import { OnboardingControllerState } from '../../controllers/OnboardingController';
 import { PreferencesControllerState } from '../../controllers/PreferencesController';
 import { ExchangeRatesControllerState } from '../../controllers/ExchangeRatesController';
@@ -77,15 +80,12 @@ export type BlankAppState = {
 
 export type BlankAppUIState = {
     AccountTrackerController: AccountTrackerState;
-    AppStateController: AppStateControllerState;
+    AppStateController: AppStateControllerMemState;
     KeyringController: KeyringControllerMemState;
     OnboardingController: OnboardingControllerState;
     PreferencesController: PreferencesControllerState;
     TransactionController: TransactionVolatileControllerState;
     BlankDepositController: PrivacyControllerUIStoreState;
-    ExchangeRatesController: ExchangeRatesControllerState;
-    GasPricesController: GasPricesControllerState;
-    ActivityListController: IActivityListState;
     TokenController: TokenControllerState;
     PermissionsController: PermissionsControllerState;
     NetworkController: NetworkControllerState;
@@ -95,6 +95,20 @@ export type BlankAppUIState = {
     BlankProviderController: BlankProviderControllerState;
     OnrampController: OnrampControllerMemState;
 };
+
+export type ExchangeRatesUIState = {
+    ExchangeRatesController: ExchangeRatesControllerState;
+};
+
+export type GasPricesUIState = {
+    GasPricesController: GasPricesControllerState;
+};
+
+export type ActivityListUIState = {
+    ActivityListController: IActivityListState;
+};
+
+export type UIState = BlankAppUIState | ExchangeRatesUIState | GasPricesUIState;
 
 export type BlankAppStoreConfig<S> = {
     [controller in keyof Partial<S>]: IObservableStore<ValuesOf<S>>;

@@ -65,6 +65,7 @@ import { HardwareWalletOpTypes } from "../../context/commTypes"
 import { useInProgressInternalTransaction } from "../../context/hooks/useInProgressInternalTransaction"
 import { rejectTransaction } from "../../context/commActions"
 import { getValueByKey } from "../../util/objectUtils"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 import { AddressDisplay } from "../../components/addressBook/AddressDisplay"
 import { useAccountNameByAddress } from "../../context/hooks/useAccountNameByAddress"
 import log from "loglevel"
@@ -204,6 +205,9 @@ const SendConfirmPage = () => {
     const { clear: clearLocationRecovery } = useLocationRecovery()
     const [allowAmountZero, setAllowAmountZero] = useState<boolean>(true)
     const blankState = useBlankState()!
+    const {
+        state: { exchangeRates },
+    } = useExchangeRatesState()
     const network = useSelectedNetwork()
     const history: any = useOnMountHistory()
     const balance = useSelectedAccountBalance()
@@ -347,7 +351,7 @@ const SendConfirmPage = () => {
             setNativeCurrency(
                 toCurrencyAmount(
                     txAmount,
-                    getValueByKey(blankState.exchangeRates, symbol, 0),
+                    getValueByKey(exchangeRates, symbol, 0),
                     decimals
                 )
             )

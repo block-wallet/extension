@@ -7,8 +7,13 @@ import { isPopup } from "./context/util/isPopup"
 import PopupRouter from "./router/PopupRouter"
 import TabRouter from "./router/TabRouter"
 import { WindowIdProvider } from "./context/hooks/useWindowId"
+import { Profiler } from "react"
+import useMetricCollector from "./util/useMetricCollector"
+import { GasPricesStateProvider } from "./context/background/useGasPricesState"
+import { ExchangeRatesStateProvider } from "./context/background/useExchangeRatesState"
+import { ActivityListStateProvider } from "./context/background/useActivityListState"
 
-const AppLoading = () => {
+export const AppLoading = () => {
     return (
         <div className="w-full h-full flex flex-row items-center justify-center bg-primary-grey-default">
             <Spinner />
@@ -22,7 +27,17 @@ const App = () => {
         <ModalProvider>
             <WindowIdProvider>
                 <GlobalModal />
-                {isPopup() ? <PopupRouter /> : <TabRouter />}
+                {isPopup() ? (
+                    <GasPricesStateProvider>
+                        <ExchangeRatesStateProvider>
+                            <ActivityListStateProvider>
+                                <PopupRouter />
+                            </ActivityListStateProvider>
+                        </ExchangeRatesStateProvider>
+                    </GasPricesStateProvider>
+                ) : (
+                    <TabRouter />
+                )}
             </WindowIdProvider>
         </ModalProvider>
     ) : (
@@ -30,10 +45,15 @@ const App = () => {
     )
 }
 
-const WrappedApp = () => (
-    <BackgroundState>
-        <App />
-    </BackgroundState>
-)
+const WrappedApp = () => {
+    const collect = useMetricCollector()
+    return (
+        <BackgroundState>
+            <Profiler id="app" onRender={collect}>
+                <App />
+            </Profiler>
+        </BackgroundState>
+    )
+}
 
 export default WrappedApp

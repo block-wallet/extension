@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState } from "react"
-import LoadingOverlay from "../../components/loading/LoadingOverlay"
 import { getWindowId } from "../commActions"
 
 export const WindowIdContext = createContext({
@@ -23,7 +22,7 @@ const WindowIdProvider = ({
 
     return (
         <WindowIdContext.Provider value={{ windowId }}>
-            {!windowId ? <LoadingOverlay /> : children}
+            {children}
         </WindowIdContext.Provider>
     )
 }

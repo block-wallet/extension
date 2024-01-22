@@ -6,18 +6,23 @@ import { AccountInfo } from "@block-wallet/background/controllers/AccountTracker
 import { formatUnits } from "@ethersproject/units"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatRounded } from "../../util/formatRounded"
+import { useExchangeRatesState } from "../background/useExchangeRatesState"
 
 interface NetWorthBalance {
-    displayNetWorth: boolean;
-    nativeCurrencyAmount?: string;
-    nativeTokenBalance?: string;
-    nativeTokenBalanceRounded?: string;
-    netWorth?: string;
+    displayNetWorth: boolean
+    nativeCurrencyAmount?: string
+    nativeTokenBalance?: string
+    nativeTokenBalanceRounded?: string
+    netWorth?: string
 }
 
 const useNetWorthBalance = (account?: AccountInfo): NetWorthBalance => {
-    const { exchangeRates, nativeCurrency, localeInfo, settings } = useBlankState()!
-    const displayNetWorth = settings.displayNetWorth;
+    const {
+        state: { exchangeRates },
+    } = useExchangeRatesState()
+
+    const { nativeCurrency, localeInfo, settings } = useBlankState()!
+    const displayNetWorth = settings.displayNetWorth
 
     const assets = useTokensList(account)
 
@@ -25,9 +30,7 @@ const useNetWorthBalance = (account?: AccountInfo): NetWorthBalance => {
 
     const nativeToken = assets.nativeToken
 
-
     if (displayNetWorth) {
-
         let netWorth = toCurrencyAmount(
             nativeToken.balance,
             exchangeRates[nativeToken.token.symbol.toUpperCase()],
@@ -50,9 +53,8 @@ const useNetWorthBalance = (account?: AccountInfo): NetWorthBalance => {
                 locale_info: localeInfo,
                 returnNonBreakingSpace: true,
                 showSymbol: false,
-            })
+            }),
         }
-
     }
 
     // Native token balance only. i.e.: 0.1 ETH
@@ -65,11 +67,8 @@ const useNetWorthBalance = (account?: AccountInfo): NetWorthBalance => {
         displayNetWorth,
         nativeCurrencyAmount: formatCurrency(
             toCurrencyAmount(
-                nativeToken.balance ||
-                BigNumber.from(0),
-                exchangeRates[
-                nativeToken.token.symbol
-                ],
+                nativeToken.balance || BigNumber.from(0),
+                exchangeRates[nativeToken.token.symbol],
                 nativeToken.token.decimals
             ),
             {
@@ -80,7 +79,9 @@ const useNetWorthBalance = (account?: AccountInfo): NetWorthBalance => {
             }
         ),
         nativeTokenBalance: `${nativeTokenBalance} ${nativeToken.token.symbol}`,
-        nativeTokenBalanceRounded: `${formatRounded(nativeTokenBalance, 5)} ${nativeToken.token.symbol}`,
+        nativeTokenBalanceRounded: `${formatRounded(nativeTokenBalance, 5)} ${
+            nativeToken.token.symbol
+        }`,
     }
 }
 

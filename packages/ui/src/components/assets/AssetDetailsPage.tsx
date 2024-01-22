@@ -1,6 +1,5 @@
 import { formatUnits } from "@ethersproject/units"
 import { useState } from "react"
-import { Link } from "react-router-dom"
 import { deleteCustomToken } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
@@ -11,29 +10,28 @@ import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetAssetByTokenAddress from "../../util/hooks/useGetAssetByTokenAddress"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
-import RoundedIconButton from "../button/RoundedIconButton"
-import AnimatedIcon, { AnimatedIconName } from "../../components/AnimatedIcon"
-import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
 import openExternal from "../../assets/images/icons/open_external.svg"
 import PopupHeader from "../popup/PopupHeader"
 import PopupLayout from "../popup/PopupLayout"
 import TokenSummary from "../token/TokenSummary"
-
 import log from "loglevel"
 import ConfirmDialog from "../dialog/ConfirmDialog"
 import { isNativeTokenAddress } from "../../util/tokenUtils"
 import SuccessDialog from "../dialog/SuccessDialog"
 import { formatName } from "../../util/formatAccount"
 import Icon, { IconName } from "../ui/Icon"
-import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 import ActivityAllowancesView from "./ActivityAllowancesView"
 import TokenLogo from "../token/TokenLogo"
+import PanelButtons from "../home/PanelButtons"
 
 const AssetDetailsPage = () => {
     const state = useBlankState()!
     const history: any = useOnMountHistory()
     const address = history.location.state.address
-
+    const {
+        state: { isRatesChangingAfterNetworkChange },
+    } = useExchangeRatesState()
     const { availableNetworks, selectedNetwork } = useBlankState()!
 
     const account = useSelectedAccount()
@@ -182,6 +180,7 @@ const AssetDetailsPage = () => {
                         <TokenSummary.TokenBalance
                             className="flex flex-row space-x-1"
                             title={`${formattedTokenBalance} ${token.symbol}`}
+                            isLoading={state.isNetworkChanging}
                         >
                             <span
                                 className="truncate w-full max-w-xs"
@@ -190,7 +189,9 @@ const AssetDetailsPage = () => {
                                 {`${roundedTokenBalance} ${token.symbol}`}
                             </span>
                         </TokenSummary.TokenBalance>
-                        <TokenSummary.ExchangeRateBalance>
+                        <TokenSummary.ExchangeRateBalance
+                            isLoading={isRatesChangingAfterNetworkChange}
+                        >
                             {currencyFormatter.format(
                                 balance,
                                 token.symbol,
@@ -199,103 +200,38 @@ const AssetDetailsPage = () => {
                             )}
                         </TokenSummary.ExchangeRateBalance>
                     </TokenSummary.Balances>
-                    <TokenSummary.Actions className="pb-4">
-                        <Link
-                            to={{
-                                pathname: "/send",
-                                state: { asset, transitionDirection: "left" },
+                    <TokenSummary.Actions className="mb-4">
+                        <PanelButtons.Send
+                            disabled={disabledActions}
+                            redirectState={{
+                                asset,
+                                transitionDirection: "left",
                             }}
-                            draggable={false}
-                            className={classnames(
-                                "flex flex-col items-center space-y-2 group",
-                                !isSendEnabled && "pointer-events-none"
-                            )}
-                        >
-                            <RoundedIconButton
-                                Icon={ArrowHoverAnimation}
-                                disabled={!isSendEnabled}
-                            >
-                                Send
-                            </RoundedIconButton>
-                        </Link>
+                        />
                         {isSwapEnabled && (
-                            <Link
-                                to={{
-                                    pathname: "/swap",
-                                    state: {
-                                        fromToken: asset.token,
-                                        fromTokenBalance: asset.balance,
-                                        fromAssetPage: true,
-                                        transitionDirection: "left",
-                                    },
+                            <PanelButtons.Swap
+                                disabled={disabledActions}
+                                redirectState={{
+                                    fromToken: asset.token,
+                                    fromTokenBalance: asset.balance,
+                                    fromAssetPage: true,
+                                    transitionDirection: "left",
                                 }}
-                                draggable={false}
-                                className={classnames(
-                                    "flex flex-col items-center space-y-2 group",
-                                    disabledActions && "pointer-events-none"
-                                )}
-                            >
-                                <div
-                                    className={classnames(
-                                        "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        disabledActions
-                                            ? "bg-gray-300"
-                                            : "bg-primary-blue-default"
-                                    )}
-                                    style={{ transform: "scaleY(-1)" }}
-                                >
-                                    <DoubleArrowHoverAnimation />
-                                </div>
-                                <span className="text-[13px] font-medium">
-                                    Swap
-                                </span>
-                            </Link>
+                            />
                         )}
                         {isBridgeEnabled && (
-                            <Link
-                                to={{
-                                    pathname: "/bridge",
-                                    state: {
-                                        token: asset.token,
-                                        fromAssetPage: true,
-                                        transitionDirection: "left",
-                                    },
+                            <PanelButtons.Bridge
+                                disabled={disabledActions}
+                                redirectState={{
+                                    token: asset.token,
+                                    fromAssetPage: true,
+                                    transitionDirection: "left",
                                 }}
-                                draggable={false}
-                                className={classnames(
-                                    "flex flex-col items-center space-y-2 group",
-                                    disabledActions && "pointer-events-none"
-                                )}
-                            >
-                                <div
-                                    className={classnames(
-                                        "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
-                                        disabledActions
-                                            ? "bg-gray-300"
-                                            : "bg-primary-blue-default"
-                                    )}
-                                    style={{ transform: "scaleY(-1)" }}
-                                >
-                                    {disabledActions ? (
-                                        <Icon
-                                            name={IconName.DISABLED_BRIDGE}
-                                            size="xl"
-                                        />
-                                    ) : (
-                                        <AnimatedIcon
-                                            icon={AnimatedIconName.Bridge}
-                                            className="cursor-pointer"
-                                        />
-                                    )}
-                                </div>
-                                <span className="text-[13px] font-medium">
-                                    Bridge
-                                </span>
-                            </Link>
+                            />
                         )}
                     </TokenSummary.Actions>
                 </TokenSummary>
-                <ActivityAllowancesView />
+                <ActivityAllowancesView tokenAddress={asset.token.address} />
             </div>
         </PopupLayout>
     )

@@ -19,7 +19,7 @@ import { searchTokenInAssetsList } from "../../context/commActions"
 import { useCustomCompareEffect } from "use-custom-compare"
 import { useSwappedTokenList } from "../../context/hooks/useSwappedTokenList"
 import AssetDropdownDisplay from "./AssetDropdownDisplay"
-import AssetList from "./AssetList"
+import AssetsDropdownList from "./AssetsDropdownList"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { AssetsSortOptions } from "../../util/tokenUtils"
@@ -305,7 +305,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
                     defaultValue={search ?? ""}
                 />
             </div>
-            <AssetList
+            <AssetsDropdownList
                 addTokenState={addTokenState}
                 assets={searchResult}
                 onAssetClick={onAssetClick}

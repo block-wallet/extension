@@ -1,20 +1,17 @@
 import { FC } from "react"
 import classnames from "classnames"
-import { useBlankState } from "../../context/background/backgroundHooks"
-import BalanceLoadingSkeleton from "../skeleton/BalanceLoadingSkeleton"
+import AnimatedIcon, { AnimatedIconName } from "../AnimatedIcon"
+interface TokenSummaryMembersProps {
+    title?: string
+    className?: string
+    children: React.ReactNode
+    isLoading?: boolean
+}
 
 interface TokenSummaryMembers {
     Balances: FC<{ children: React.ReactNode; className?: string }>
-    TokenBalance: FC<{
-        title?: string
-        children: React.ReactNode
-        className?: string
-    }>
-    ExchangeRateBalance: FC<{
-        title?: string
-        className?: string
-        children: React.ReactNode
-    }>
+    TokenBalance: FC<TokenSummaryMembersProps>
+    ExchangeRateBalance: FC<TokenSummaryMembersProps>
     TokenName: FC<{ title?: string; children: React.ReactNode }>
     Actions: FC<{ children: React.ReactNode; className?: string | undefined }>
 }
@@ -44,32 +41,33 @@ const Balances = ({
     children: React.ReactNode
     className?: string
 }) => {
-    const state = useBlankState()!
-
-    const isLoading = state.isNetworkChanging
-
     return (
-        <>
-            {isLoading ? (
-                <BalanceLoadingSkeleton />
-            ) : (
-                <div
-                    className={
-                        "flex flex-col items-center space-y-1 " + className
-                    }
-                >
-                    {children}
-                </div>
+        <div
+            className={classnames(
+                "flex flex-col items-center space-y-1",
+                className
             )}
-        </>
+        >
+            {children}
+        </div>
     )
 }
 
-const TokenBalance: FC<{
-    title?: string
-    className?: string
-    children: React.ReactNode
-}> = ({ children, title, className }) => {
+const TokenBalance: FC<TokenSummaryMembersProps> = ({
+    children,
+    title,
+    className,
+    isLoading,
+}) => {
+    if (isLoading) {
+        return (
+            <AnimatedIcon
+                icon={AnimatedIconName.BlueLineLoadingSkeleton}
+                className="w-32 h-4 pointer-events-none"
+                svgClassName="rounded-md"
+            />
+        )
+    }
     return (
         <span
             className={classnames("text-[32px] font-semibold", className)}
@@ -80,11 +78,21 @@ const TokenBalance: FC<{
     )
 }
 
-const ExchangeRateBalance: FC<{
-    title?: string
-    className?: string
-    children: React.ReactNode
-}> = ({ children, title, className }) => {
+const ExchangeRateBalance: FC<TokenSummaryMembersProps> = ({
+    children,
+    title,
+    className,
+    isLoading,
+}) => {
+    if (isLoading) {
+        return (
+            <AnimatedIcon
+                icon={AnimatedIconName.BlueLineLoadingSkeleton}
+                className="w-16 h-4 pointer-events-none rotate-180"
+                svgClassName="rounded-md"
+            />
+        )
+    }
     return (
         <span
             className={classnames("text-sm text-primary-grey-dark", className)}

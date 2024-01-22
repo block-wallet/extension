@@ -38,6 +38,7 @@ import {
     isFeeMarketEIP1559Values,
     isGasPriceValue,
     normalizeTransaction,
+    pruneTransaction,
     validateGasValues,
     validateTransaction,
 } from './utils/utils';
@@ -325,7 +326,7 @@ export class TransactionController extends BaseController<
             }
         );
 
-        // Instantiate contract signature parser
+        // Instantiate contrafact signature parser
         this._contractSignatureParser = new ContractSignatureParser(
             _networkController
         );
@@ -1878,7 +1879,7 @@ export class TransactionController extends BaseController<
             transactionMeta.methodSignature = methodSignature;
         }
 
-        transactions[index] = transactionMeta;
+        transactions[index] = pruneTransaction(transactionMeta);
 
         this.store.updateState({
             transactions: this.trimTransactionsForState(transactions),
@@ -2612,8 +2613,9 @@ export class TransactionController extends BaseController<
     ): void => {
         const transactions = this.store.getState().transactions.map((tx) => {
             if (tx.id === txId) {
+                const prunedTx = pruneTransaction(tx);
                 return {
-                    ...tx,
+                    ...prunedTx,
                     ...updates,
                 };
             }

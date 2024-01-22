@@ -28,12 +28,14 @@ const AllowanceItem = ({
     spender,
     showToken = false,
     fromAssetDetails = false,
+    className,
 }: {
     allowance: TokenAllowance
     token: AllowanceDisplayData
     spender: AllowanceDisplayData
     showToken?: boolean
     fromAssetDetails?: boolean
+    className?: string
 }) => {
     const history = useOnMountHistory()
     const { selectedNetwork, availableNetworks } = useBlankState()!
@@ -164,9 +166,10 @@ const AllowanceItem = ({
             }}
             className={classnames(
                 "flex flex-row items-center justify-between py-4 mr-1 transition duration-300 -ml-6 px-6 w-[calc(100%+3rem)]",
+                className,
                 !isHoveringButton &&
                     !open &&
-                    "hover:cursor-pointer hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50"
+                    "hover:cursor-pointer hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 bg-clip-padding"
             )}
         >
             <DetailsDialog

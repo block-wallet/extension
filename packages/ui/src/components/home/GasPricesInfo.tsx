@@ -25,6 +25,7 @@ import { SEND_GAS_COST } from "../../util/constants"
 import car from "../../assets/images/icons/car.svg"
 import scooter from "../../assets/images/icons/scooter.svg"
 import plane from "../../assets/images/icons/plane.svg"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 import { useHotkeys } from "react-hotkeys-hook"
 import { componentsHotkeys } from "../../util/hotkeys"
 
@@ -116,14 +117,10 @@ const GasPricesInfo: FC = () => {
     const [active, setActive] = useState(false)
     const [calculateGasCost] = useState<"SEND">("SEND")
     const {
-        exchangeRates,
-        nativeCurrency,
-        localeInfo,
-        networkNativeCurrency,
-        isNetworkChanging,
-        hotkeysEnabled,
-    } = useBlankState()!
-
+        state: { exchangeRates, networkNativeCurrency },
+    } = useExchangeRatesState()
+    const { nativeCurrency, localeInfo, isNetworkChanging, hotkeysEnabled } =
+        useBlankState()!
     const {
         showGasLevels,
         isEIP1559Compatible,

@@ -54,6 +54,7 @@ import { populateBridgeTransaction } from "../../util/bridgeUtils"
 import BridgeErrorMessage, { BridgeErrorType } from "./BridgeErrorMessage"
 import usePersistedLocalStorageForm from "../../util/hooks/usePersistedLocalStorageForm"
 import { secondsToEstimatedMinutes } from "../../util/time"
+import { useExchangeRatesState } from "../../context/background/useExchangeRatesState"
 
 interface SetupBridgePageLocalState {
     amount?: string
@@ -84,11 +85,13 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
         selectedAddress,
         nativeCurrency,
         localeInfo,
-        exchangeRates,
         availableNetworks,
         selectedNetwork,
         availableBridgeChains,
     } = useBlankState()!
+    const {
+        state: { exchangeRates },
+    } = useExchangeRatesState()
     const { nativeToken } = useTokensList()
 
     const [bridgeDetails, setBridgeDetails] = useState<{

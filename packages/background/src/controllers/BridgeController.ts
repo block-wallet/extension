@@ -49,7 +49,10 @@ import { BaseController } from '../infrastructure/BaseController';
 import TokenAllowanceController from './erc-20/transactions//TokenAllowanceController';
 import { fillTokenData, isNativeTokenAddress } from '../utils/token';
 import { AccountTrackerController } from './AccountTrackerController';
+import { pruneTransaction } from './transactions/utils/utils';
 import { unixTimestampToJSTimestamp } from '../utils/timestamp';
+
+//Constants
 const TIMEOUT_FETCH_RECEIVING_TX = 2 * HOUR;
 const STATUS_API_CALLS_DELAY = 30 * SECOND;
 const BRIDGE_STATUS_INVALID_MAX_COUNT = 10;
@@ -712,10 +715,10 @@ export default class BridgeController extends BaseController<
         };
         const chainTx = stateTransactions[chainId] || {};
         const addrTransactions = chainTx[address] || {};
-        const newTransaction = {
+        const newTransaction = pruneTransaction({
             ...(addrTransactions[txHash] || {}),
             ...updates,
-        };
+        });
         this.store.updateState({
             bridgeReceivingTransactions: {
                 ...stateTransactions,

@@ -29,13 +29,18 @@ const AssetAllowances = () => {
                             allowance.displayData.address
                         }
                     >
-                        {index > 0 && <hr />}
+                        {index > 0 && (
+                            <div className="px-6">
+                                <hr />
+                            </div>
+                        )}
                         <AllowanceItem
                             allowance={allowance.allowance}
                             token={tokenAllowances?.groupBy}
                             spender={allowance.displayData}
                             showToken={false}
                             fromAssetDetails={true}
+                            className="px-12"
                         />
                     </div>
                 ))
@@ -44,7 +49,7 @@ const AssetAllowances = () => {
                     {emptyMessage}
                 </span>
             )}
-            <div className="flex flex-col w-full mt-4">
+            <div className="flex flex-col w-full px-6 py-2">
                 <ActionButton
                     icon={<GearIcon />}
                     label="Manage Allowances"

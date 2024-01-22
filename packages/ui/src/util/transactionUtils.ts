@@ -94,20 +94,23 @@ export const getUITransactionParams = (
         gasPrice: !isEIP1559Compatible
             ? BigNumber.from(
                   transaction?.transactionParams.gasPrice ??
-                      gasPricesLevels.average.gasPrice
+                      gasPricesLevels.average?.gasPrice ??
+                      0
               )
             : undefined,
         //EIP-1559
         maxPriorityFeePerGas: isEIP1559Compatible
             ? BigNumber.from(
                   transaction?.transactionParams.maxPriorityFeePerGas ??
-                      gasPricesLevels.average.maxPriorityFeePerGas
+                      gasPricesLevels.average?.maxPriorityFeePerGas ??
+                      0
               )
             : undefined,
         maxFeePerGas: isEIP1559Compatible
             ? BigNumber.from(
                   transaction?.transactionParams.maxFeePerGas ??
-                      gasPricesLevels.average.maxFeePerGas
+                      gasPricesLevels.average?.maxFeePerGas ??
+                      0
               )
             : undefined,
     }

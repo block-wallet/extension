@@ -358,6 +358,19 @@ export function normalizeEnsName(ensName: string): string | null {
     return null;
 }
 
+export function pruneTransaction(tx: TransactionMeta): TransactionMeta {
+    if (tx.transactionReceipt) {
+        return {
+            ...tx,
+            transactionReceipt: {
+                ...tx.transactionReceipt,
+                logs: [],
+            },
+        };
+    }
+    return tx;
+}
+
 export function resolveAllownaceParamsFromTransaction(
     transactionMeta: TransactionMeta
 ): { spenderAddress: string; tokenAddress: string } | undefined {

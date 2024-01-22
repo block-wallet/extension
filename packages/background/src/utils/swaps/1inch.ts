@@ -18,7 +18,7 @@ import {
     get1InchErrorMessageFromResponse,
     map1InchErrorMessage,
 } from './1inchError';
-import { BigNumber } from 'ethers/lib/ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { ContractSignatureParser } from '@block-wallet/background/controllers/transactions/ContractSignatureParser';
 
 const KLAYTN_MAINNET_CHAIN_ID = 8217;

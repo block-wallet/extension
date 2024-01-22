@@ -1,10 +1,9 @@
 import { FC, Fragment, useEffect, useState } from "react"
 import Dropdown from "../ui/Dropdown/Dropdown"
 import { DropdownOutlinedIconButton } from "../ui/Dropdown/DropdownButton"
-import Icon, { IconName } from "../ui/Icon"
+import { IconName } from "../ui/Icon"
 import { AssetsSortOptions } from "../../util/tokenUtils"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import ExpandableItem from "../bridge/ExpandableItem"
 import { setHideSmallBalances } from "../../context/commActions"
 interface AssetsSortProps {
     selectedValue: string
@@ -44,59 +43,41 @@ const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
                         buttonClassName="h-10"
                     />
                 </Dropdown.Button>
-                <Dropdown.Menu
-                    id="sort-dropdown"
-                    className="w-36 py-2 !mt-1 border-2"
-                >
-                    <ExpandableItem
-                        className="ml-2"
-                        expandable
-                        expanded={
-                            <>
-                                {sortOptions.map(({ value, label }) => {
-                                    return (
-                                        <Fragment key={value}>
-                                            <Dropdown.MenuItem
-                                                value={value}
-                                                selected={
-                                                    selectedValue === value
-                                                }
-                                                className="p-1 px-3 font-semibold text-primary-black-default"
-                                            >
-                                                {label}
-                                            </Dropdown.MenuItem>
-                                        </Fragment>
-                                    )
-                                })}
-                            </>
-                        }
+                <Dropdown.Menu id="filter-menu" className="w-44 py-2 mt-0">
+                    <div className="p-2 px-3 text-xs text-primary-grey-dark font-normal">
+                        SORT BY
+                    </div>
+
+                    {sortOptions.map(({ value, label }) => {
+                        return (
+                            <Fragment key={value}>
+                                <Dropdown.MenuItem
+                                    value={value}
+                                    selected={selectedValue === value}
+                                    className="p-1 px-3 font-semibold text-primary-black-default"
+                                >
+                                    {label}
+                                </Dropdown.MenuItem>
+                            </Fragment>
+                        )
+                    })}
+
+                    <hr className="border-0.5 border-primary-grey-hover w-full my-1" />
+                    <label
+                        className="p-2 pl-3 pr-1 text-sm text-primary-grey-dark font-normal cursor-pointer"
+                        htmlFor="hideSmallBalances"
                     >
-                        <div className="p-2 text-xs text-black font-normal">
-                            SORT BY
-                        </div>
-                    </ExpandableItem>
-                    <hr className="border-0.5 border-primary-grey-hover w-full" />
-                    <div className="p-2 text-xs text-black font-normal ml-7">
-                        HIDE
-                    </div>
-                    <div className="flex flex-row items-center">
-                        <label
-                            onClick={() =>
-                                setHideSmallBalancesChk(!hideSmallBalancesChk)
-                            }
-                            className=" cursor-pointer font-semibold pl-2 w-4/5 ml-1 text-primary-black-default"
-                        >
-                            Small balances
-                        </label>
-                        {hideSmallBalancesChk && (
-                            <Icon
-                                size="sm"
-                                name={IconName.CHECKMARK}
-                                profile="selected"
-                                className="ml-1"
-                            />
-                        )}
-                    </div>
+                        Hide Small Balances
+                    </label>
+                    <input
+                        id="hideSmallBalances"
+                        type="checkbox"
+                        className="border-2 border-primary-grey-hover rounded-md focus:ring-0 cursor-pointer"
+                        checked={hideSmallBalancesChk}
+                        onChange={() =>
+                            setHideSmallBalancesChk(!hideSmallBalancesChk)
+                        }
+                    />
                 </Dropdown.Menu>
             </Dropdown>
         </div>

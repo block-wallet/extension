@@ -23,14 +23,14 @@ import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits } from "@ethersproject/units"
 import { formatRounded } from "../../util/formatRounded"
 import { AssetsSortOptions, isNativeTokenAddress } from "../../util/tokenUtils"
-
-import { ActionButton } from "./../button/ActionButton"
 import AssetsLoadingSkeleton from "./../skeleton/AssetsLoadingSkeleton"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import SearchInput from "../input/SearchInput"
 import AssetsButton from "../assets/AssetsButton"
 import AssetsSort from "../assets/AssetsSort"
 import { setTokensSortValue } from "../../context/commActions"
+import AutoSizer from "react-virtualized/dist/commonjs/AutoSizer"
+import List from "react-virtualized/dist/commonjs/List"
 export type AssetItem = {
     token: Token
     balance: BigNumber
@@ -123,10 +123,15 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
     const isLoading = state.isNetworkChanging
 
     const [deletedTokens, setDeletedTokens] = useState([] as string[])
+    const [currentAssets, setCurrentAssets] = useState(assets)
     const pushDeleteTokens = (deleteToken: string) => {
         setDeletedTokens([...deletedTokens, deleteToken])
     }
-
+    useEffect(() => {
+        setCurrentAssets(
+            assets.filter((t) => !deletedTokens.includes(t.token.address))
+        )
+    }, [assets, deletedTokens])
     // the action of delete a token is not sync, we include this blick of code for not showing deleted tokens while they are being deleted.
     const newDeleted: string[] = []
     deletedTokens.forEach((t) => {
@@ -138,28 +143,61 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
         setDeletedTokens(newDeleted)
     }
 
+    const ref = useRef<any>()
+
+    useEffect(() => {
+        // react-virtualized does not recompute row height when the underlying transaction data changes.
+        // thats why we force a height recompution here and adjust tx height based on its state.
+        ref.current && ref.current.recomputeRowHeights(0)
+    }, [currentAssets])
+
     return (
-        <div
-            className="flex flex-col flex-1 w-full space-y-0"
-            role="list"
-            aria-label="assets"
-        >
+        <>
             {isLoading ? (
-                <AssetsLoadingSkeleton />
+                <div
+                    className="flex flex-col flex-1 w-full space-y-0"
+                    role="list"
+                    aria-label="assets"
+                >
+                    <AssetsLoadingSkeleton />
+                </div>
             ) : (
-                assets
-                    .filter((t) => !deletedTokens.includes(t.token.address))
-                    .map((a, i) => (
-                        <Fragment key={i}>
-                            {i > 0 ? <hr /> : null}
-                            <Asset
-                                asset={a}
-                                pushDeleteTokens={pushDeleteTokens}
-                            />
-                        </Fragment>
-                    ))
+                <AutoSizer className="hide-scroll snap-y">
+                    {({ width, height }) => (
+                        <List
+                            id="assets-list"
+                            height={height}
+                            width={width}
+                            style={{
+                                overflowX: "hidden",
+                            }}
+                            ref={ref}
+                            rowCount={currentAssets.length}
+                            overscanRowCount={5}
+                            rowHeight={76} // height in px
+                            className="hide-scroll"
+                            rowRenderer={({
+                                style,
+                                key,
+                                index,
+                            }: {
+                                style: any
+                                key: string
+                                index: number
+                            }) => (
+                                <div style={style} key={key}>
+                                    {index > 0 ? <hr /> : null}
+                                    <Asset
+                                        asset={currentAssets[index]}
+                                        pushDeleteTokens={pushDeleteTokens}
+                                    />
+                                </div>
+                            )}
+                        ></List>
+                    )}
+                </AutoSizer>
             )}
-        </div>
+        </>
     )
 }
 
@@ -228,19 +266,10 @@ const AssetsList = () => {
                 </div>
             </div>
             <div
-                className="flex flex-col w-full space-y-4"
-                data-testid="assets-list"
+                className="flex flex-col flex-1 w-full space-y-0 h-full min-h-[400px]"
+                data-testid="activity-list"
             >
-                <div className="flex flex-col w-full space-y-1">
-                    <SubAssetList assets={tokensResult} />
-                </div>
-                <div className="flex flex-col w-full space-y-1">
-                    <ActionButton
-                        icon={plus}
-                        label="Add Token"
-                        to="/settings/tokens/add"
-                    />
-                </div>
+                <SubAssetList assets={tokensResult} />
             </div>
         </>
     )

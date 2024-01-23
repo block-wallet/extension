@@ -1849,12 +1849,14 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
             return balances;
         } catch (error) {
-            const errorMessage = 'Error in _getAddressBalancesFromMultipleCallBalances'
-            log.warn(
+            const errorMessage =
+                'Error in _getAddressBalancesFromMultipleCallBalances';
+            log.warn(errorMessage, error);
+            postBkgSlackMessage(
                 errorMessage,
-                error
+                error,
+                'File: AccountTrackerController'
             );
-            postBkgSlackMessage(errorMessage, error, "File: AccountTrackerController")
             throw error;
         }
     }
@@ -2097,8 +2099,12 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             );
 
             return balances[NATIVE_TOKEN_ADDRESS];
-        } catch(error) {
-            postBkgSlackMessage("Error getting address balances", error, "File: AccountTrackerController")
+        } catch (error) {
+            postBkgSlackMessage(
+                'Error getting address balances',
+                error,
+                'File: AccountTrackerController'
+            );
             return undefined;
         }
     }

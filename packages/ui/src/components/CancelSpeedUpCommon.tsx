@@ -617,7 +617,7 @@ const CancelAndSpeedUpComponent = ({
                     error: texts?.error ?? "",
                 }}
                 gifs={gifs}
-                timeout={2900}
+                timeout={1500}
                 clickOutsideToClose={false}
                 txHash={replacementTx?.transactionParams.hash}
                 onDone={() => {
@@ -636,6 +636,7 @@ const CancelAndSpeedUpComponent = ({
                         })
                     }
                 }}
+                showCloseButton
             />
             <div className="w-full h-full">
                 <PopupLayout

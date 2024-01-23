@@ -2034,16 +2034,12 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
 
             keyring.perPage = pageSize;
-            let deviceAccounts: [] = [];
 
-            if (device === Devices.KEYSTONE) {
-                deviceAccounts = (await this._keyringController.getQRPage(
-                    pageIndex
-                )) as [];
-            } else {
-                deviceAccounts = await keyring.getPage(pageIndex);
-            }
-
+            const deviceAccounts: [] = await this._keyringController.getPage(
+                device,
+                keyring,
+                pageIndex
+            );
             if (deviceAccounts) {
                 const checkIfAccountNameExists = (
                     name: string,

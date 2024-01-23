@@ -664,6 +664,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 }}
                 gifs={gifs}
                 hideButton
+                showCloseButton
             />
             {(isTokenLoading || isNameLoading) && <LoadingOverlay />}
             <CheckBoxDialog

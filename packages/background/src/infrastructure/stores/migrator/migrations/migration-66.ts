@@ -88,15 +88,6 @@ export default {
             },
         };
 
-        updatedNetworks.RSK_TESTNET = {
-            ...updatedNetworks.RSK_TESTNET,
-            iconUrls: INITIAL_NETWORKS.RSK_TESTNET.iconUrls,
-            nativeCurrency: {
-                ...updatedNetworks.RSK_TESTNET.nativeCurrency,
-                logo: INITIAL_NETWORKS.RSK_TESTNET.nativeCurrency.logo,
-            },
-        };
-
         updatedNetworks.LOCALHOST = {
             ...updatedNetworks.LOCALHOST,
             nativeCurrency: {

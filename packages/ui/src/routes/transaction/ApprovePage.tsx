@@ -674,10 +674,11 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         "There was an error while approving the asset.",
                 }}
                 txHash={inProgressTransaction?.transactionParams.hash}
-                timeout={2900}
+                timeout={1500}
                 onDone={onDone}
                 clickOutsideToClose={false}
                 gifs={gifs}
+                showCloseButton
             />
             <div className="px-6 py-2 flex flex-row items-center">
                 <AccountIcon

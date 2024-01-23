@@ -88,4 +88,15 @@ module.exports = (entry) => ({
         syncWebAssembly: true,
     },
     plugins,
+    optimization: {
+        splitChunks: {
+            cacheGroups: {
+                vendor: {
+                    test: /[\\/]node_modules[\\/](@block-wallet)/,
+                    name: 'bw-libs',
+                    chunks: 'initial'
+                }
+            }
+        }
+    }
 });

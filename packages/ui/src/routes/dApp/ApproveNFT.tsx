@@ -392,6 +392,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                 onDone={closeDialog}
                 gifs={gifs}
                 hideButton
+                showCloseButton
             />
             {isNameLoading && <LoadingOverlay />}
             <CheckBoxDialog

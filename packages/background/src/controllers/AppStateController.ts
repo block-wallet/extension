@@ -5,6 +5,7 @@ import { isManifestV3 } from '../utils/manifest';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 import TransactionController from './transactions/TransactionController';
 import browser from 'webextension-polyfill';
+import { postBkgSlackMessage } from '../utils/slack/slackUtils';
 
 export interface AppStateControllerState {
     idleTimeout: number; // Minutes until auto-lock - Zero if disabled
@@ -106,7 +107,13 @@ export default class AppStateController extends BaseController<AppStateControlle
             // event emit
             this.emit(AppStateEvents.APP_LOCKED);
         } catch (error) {
-            throw new Error(error.message || error);
+            const errorMessage = error.message || error;
+            postBkgSlackMessage(
+                errorMessage,
+                error,
+                'File: AppStateController'
+            );
+            throw new Error(errorMessage);
         }
     };
 
@@ -129,13 +136,25 @@ export default class AppStateController extends BaseController<AppStateControlle
                     browser.storage.session
                         .set({ loginToken })
                         .catch((err: any) => {
-                            log.error('error setting loginToken', err);
+                            const errorMessage = 'Error setting loginToken';
+                            log.error(errorMessage, err);
+                            postBkgSlackMessage(
+                                errorMessage,
+                                err,
+                                'File: AppStateController'
+                            );
                         });
             }
 
             await this._postLoginAction();
         } catch (error) {
-            throw new Error(error.message || error);
+            const errorMessage = error.message || error;
+            postBkgSlackMessage(
+                errorMessage,
+                error,
+                'File: AppStateController'
+            );
+            throw new Error(errorMessage);
         }
     };
 

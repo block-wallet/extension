@@ -17,6 +17,7 @@ import { resolvePreferencesAfterWalletUpdate } from './utils/userPreferences';
 import { CONTENT } from './utils/types/communication';
 import { isManifestV3 } from './utils/manifest';
 import browser from 'webextension-polyfill';
+import { postBkgSlackMessage } from './utils/slack/slackUtils';
 
 // Initialize Block State Store
 const blankStateStore = new BlankStorageStore();
@@ -179,6 +180,7 @@ const initBlockWallet = async () => {
 // Start block wallet
 initBlockWallet().catch((error) => {
     log.error(error.message || error);
+    postBkgSlackMessage('Error initiating blockwallet.', error, 'File: index');
 });
 
 // On install, open onboarding tab

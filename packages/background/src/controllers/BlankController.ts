@@ -247,7 +247,7 @@ import CampaignsController from './CampaignsController';
 import { NotificationController } from './NotificationController';
 import browser from 'webextension-polyfill';
 import OnrampController from './OnrampController';
-import { getSlackService } from '../utils/slackService';
+import { getSlackService } from '../utils/slack/slackService';
 
 export interface BlankControllerProps {
     initState: BlankAppState;

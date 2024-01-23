@@ -1,10 +1,12 @@
-import httpClient from '../utils/http';
+import httpClient from '../../utils/http';
 import log from 'loglevel';
-import { customHeadersForBlockWalletNode } from './nodes';
-import { MINUTE } from './constants/time';
+import { customHeadersForBlockWalletNode } from './../nodes';
+import { MINUTE } from './../constants/time';
+import { toError } from '../toError';
+import { slackMessageBody } from './slackUtils';
+import { isDevEnvironment } from './../env';
 
-export const BLOCK_WALLET_SLACK_ENDPOINT =
-    'https://message.blockwallet.io/simple';
+export const BLOCK_WALLET_SLACK_ENDPOINT = 'https://slack-proxy.blockwallet.io';
 
 export interface SlackService {
     postMessage(
@@ -20,19 +22,22 @@ export const slackService: (
 ) => SlackService = (baseEndpoint: string) => ({
     async postMessage(message, error, extraParams) {
         try {
-            const query = `${baseEndpoint}/message`;
+            if (isDevEnvironment()) return;
 
+            const query = `${baseEndpoint}`;
+            const safeError = toError(error);
+            const body = slackMessageBody(
+                message,
+                safeError.message,
+                extraParams
+            );
             await httpClient.request<Record<string, Record<string, number>>>(
                 query,
                 {
-                    headers: customHeadersForBlockWalletNode,
+                    // headers: customHeadersForBlockWalletNode,
                     timeout: 1.5 * MINUTE,
                     method: 'POST',
-                    params: {
-                        message: message,
-                        error: error,
-                        extraParams: extraParams,
-                    },
+                    body: body,
                 }
             );
 

@@ -3,6 +3,7 @@ import * as yup from "yup"
 import { BigNumber } from "@ethersproject/bignumber"
 import { DEFAULT_DECIMALS } from "../constants"
 import { parseUnits } from "@ethersproject/units"
+import { postSlackMessage } from "../../context/commActions"
 
 export const GetAmountYupSchema = (
     fromToken: Token | undefined,
@@ -29,6 +30,11 @@ export const GetAmountYupSchema = (
 
                     return true
                 } catch (error) {
+                    postSlackMessage(
+                        "Invalid amount validation error.",
+                        error,
+                        "File: GetAmountSchema"
+                    )
                     return false
                 }
             })
@@ -41,6 +47,11 @@ export const GetAmountYupSchema = (
 
                     return parsed.lte(fromTokenBalance)
                 } catch (error) {
+                    postSlackMessage(
+                        "Insufficient balance validation error.",
+                        error,
+                        "File: GetAmountSchema"
+                    )
                     return false
                 }
             }),

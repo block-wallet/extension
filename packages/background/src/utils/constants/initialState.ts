@@ -179,6 +179,7 @@ const initialState: BlankAppState = {
         defaultGasOption: 'medium',
         hotkeysEnabled: true,
         tokensSortValue: 'CUSTOM',
+        hideSmallBalances: false,
     },
     TransactionController: {
         transactions: [],

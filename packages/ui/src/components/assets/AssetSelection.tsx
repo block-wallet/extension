@@ -79,12 +79,13 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
     addTokenState,
     register,
 }) => {
-    const { tokensSortValue } = useBlankState()!
+    const { tokensSortValue, hideSmallBalances } = useBlankState()!
     const [searchResult, setSearchResult] = useState<TokenWithBalance[]>([])
     const [search, setSearch] = useState<string | null>(null)
     const [assetList, setAssetList] = useState<TokenWithBalance[]>([])
     const defaultAssetList = useTokenListWithNativeToken(
-        tokensSortValue as AssetsSortOptions
+        tokensSortValue as AssetsSortOptions,
+        hideSmallBalances
     )
 
     const swappedAssetList = useSwappedTokenList()

@@ -100,11 +100,37 @@ export const sortTokensByValue = (
     sortValue: AssetsSortOptions,
     tokensList: TokenWithBalance[],
     accountTokensOrder: AccountTokenOrder,
-    exchangeRates: Rates
+    exchangeRates: Rates,
+    hideSmallBalances: boolean,
+    networkNativeCurrencySymbol: string
 ): TokenWithBalance[] => {
-    if (tokensList.length > 1) {
-        let accountTokens = [...tokensList]
+    let accountTokens: TokenWithBalance[] = []
 
+    if (hideSmallBalances) {
+        accountTokens = tokensList.filter((token) => {
+            const isNativeCurrencyA = isNativeTokenAddress(token.token.address)
+
+            const currencyAmountA = toCurrencyAmount(
+                BigNumber.from(token.balance),
+                getValueByKey(
+                    exchangeRates,
+                    isNativeCurrencyA
+                        ? token.token.symbol.toUpperCase()
+                        : token.token.symbol,
+                    0
+                ),
+                token.token.decimals
+            )
+
+            return (
+                currencyAmountA > 0.01 ||
+                token.token.symbol.toLowerCase() ===
+                    networkNativeCurrencySymbol.toLowerCase()
+            )
+        })
+    } else accountTokens = [...tokensList]
+
+    if (accountTokens.length > 1) {
         switch (sortValue) {
             case AssetsSortOptions.BALANCE:
                 accountTokens.sort((tokenA, tokenB) => {
@@ -215,5 +241,5 @@ export const sortTokensByValue = (
         return accountTokens
     }
 
-    return tokensList
+    return accountTokens
 }

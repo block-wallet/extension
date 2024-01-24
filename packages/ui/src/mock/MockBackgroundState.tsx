@@ -22,6 +22,7 @@ export const initBackgroundState: BackgroundStateType = {
         hotkeysEnabled: true,
         tokensSortValue: "CUSTOM",
         accountTokensOrder: {},
+        hideSmallBalances: false,
         filters: {
             account: [],
         },

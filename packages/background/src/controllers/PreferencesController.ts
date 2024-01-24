@@ -61,6 +61,7 @@ export interface PreferencesControllerState {
     defaultGasOption: DefaultGasOptions;
     hotkeysEnabled: boolean;
     tokensSortValue: string;
+    hideSmallBalances: boolean;
 }
 
 export interface PreferencesControllerProps {
@@ -363,5 +364,21 @@ export class PreferencesController extends BaseController<PreferencesControllerS
      */
     public set tokensSortValue(sortValue: string) {
         this.store.updateState({ tokensSortValue: sortValue });
+    }
+
+    /**
+     * Gets if hideSmallBalances is allowed in the extension
+     */
+    public get hideSmallBalances(): boolean {
+        return this.store.getState().hideSmallBalances;
+    }
+
+    /**
+     * Set if hideSmallBalances is allowed in the extension
+     *
+     * @param enabled hideSmallBalances status
+     */
+    public set hideSmallBalances(enabled: boolean) {
+        this.store.updateState({ hideSmallBalances: enabled });
     }
 }

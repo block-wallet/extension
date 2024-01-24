@@ -1,13 +1,13 @@
 import { PopupTabs } from "@block-wallet/background/controllers/PreferencesController"
 import { FunctionComponent, useEffect, useState } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
-import { useBlankState } from "../context/background/backgroundHooks"
-import { updatePopupTab } from "../context/commActions"
-import { useOnMountHistory } from "../context/hooks/useOnMount"
-import ActivityList from "./ActivityList"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import { updatePopupTab } from "../../context/commActions"
+import { useOnMountHistory } from "../../context/hooks/useOnMount"
+import ActivityList from "./../ActivityList"
 import AssetsList from "./AssetsList"
-import HorizontalSelect from "./input/HorizontalSelect"
-import { componentsHotkeys } from "../util/hotkeys"
+import HorizontalSelect from "./../input/HorizontalSelect"
+import { componentsHotkeys } from "../../util/hotkeys"
 
 const tabs = [
     {

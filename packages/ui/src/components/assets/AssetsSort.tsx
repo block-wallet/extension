@@ -43,7 +43,7 @@ const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
                         buttonClassName="h-10"
                     />
                 </Dropdown.Button>
-                <Dropdown.Menu id="filter-menu" className="w-44 py-2 mt-0">
+                <Dropdown.Menu id="filter-menu" className="w-40 py-2 mt-0">
                     <div className="p-2 px-3 text-xs text-primary-grey-dark font-normal">
                         SORT BY
                     </div>
@@ -64,7 +64,7 @@ const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
 
                     <hr className="border-0.5 border-primary-grey-hover w-full my-1" />
                     <label
-                        className="p-2 pl-3 pr-1 text-sm text-primary-grey-dark font-normal cursor-pointer"
+                        className="p-2 pl-3 pr-1 text-xs text-primary-grey-dark font-normal cursor-pointer"
                         htmlFor="hideSmallBalances"
                     >
                         Hide Small Balances
@@ -72,7 +72,7 @@ const AssetsSort: FC<AssetsSortProps> = ({ selectedValue, onClick }) => {
                     <input
                         id="hideSmallBalances"
                         type="checkbox"
-                        className="border-2 border-primary-grey-hover rounded-md focus:ring-0 cursor-pointer"
+                        className="border-2 border-primary-grey-hover rounded-md focus:ring-0 cursor-pointer ml-2"
                         checked={hideSmallBalancesChk}
                         onChange={() =>
                             setHideSmallBalancesChk(!hideSmallBalancesChk)

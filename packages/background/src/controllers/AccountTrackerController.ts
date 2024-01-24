@@ -64,7 +64,6 @@ import { ContractDetails, fetchContractDetails } from '../utils/contractsInfo';
 import { getMaxBlockBatchSize } from '../utils/rpc/rpcConfigBuilder';
 import TransactionController from './transactions/TransactionController';
 import { resolveAllownaceParamsFromTransaction } from './transactions/utils/utils';
-import { postBkgSlackMessage } from '../utils/slack/slackUtils';
 
 export enum AccountStatus {
     ACTIVE = 'ACTIVE',
@@ -246,11 +245,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     const errorMessage =
                         'An error ocurred while updating the accounts';
                     log.warn(errorMessage, err.message);
-                    postBkgSlackMessage(
-                        errorMessage,
-                        err,
-                        'File: AccountTrackerController'
-                    );
                 } finally {
                     this.store.updateState({ isAccountTrackerLoading: false });
                 }
@@ -276,11 +270,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     const errorMessage =
                         'An error ocurred while updating the accounts';
                     log.warn(errorMessage, err.message);
-                    postBkgSlackMessage(
-                        errorMessage,
-                        err,
-                        'File: AccountTrackerController'
-                    );
                 }
             }
         );
@@ -612,11 +601,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             const errorMessage =
                 'Unable to get total supply of token: ' + tokenAddress;
             log.warn(errorMessage, e);
-            postBkgSlackMessage(
-                errorMessage,
-                e,
-                'File: AccountTrackerController'
-            );
         }
 
         return {
@@ -743,11 +727,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 } catch (e) {
                     const errorMessage = `Error fetching spender: ${spender} allowance for token ${tokenAddress}`;
                     log.warn(errorMessage, e);
-                    postBkgSlackMessage(
-                        errorMessage,
-                        e,
-                        'File: AccountTrackerController'
-                    );
                     continue;
                 }
             }
@@ -892,11 +871,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         const errorMessage =
                             'Error requesting _tokenOperationsController.allowance';
                         log.warn(errorMessage, e);
-                        postBkgSlackMessage(
-                            errorMessage,
-                            e,
-                            'File: AccountTrackerController'
-                        );
                         continue;
                     }
                 }
@@ -1019,11 +993,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 const errorMessage =
                     'Error getting old allowance transaction by hash';
                 log.warn(errorMessage, e);
-                postBkgSlackMessage(
-                    errorMessage,
-                    e,
-                    'File: AccountTrackerController'
-                );
             }
             if (!queryFromBlock) {
                 //Query only one batch in case we don't have the queryFromBlock
@@ -1662,11 +1631,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             const errorMessage =
                 'Block Account Tracker single call balance fetch failed';
             log.warn(errorMessage, error);
-            postBkgSlackMessage(
-                errorMessage,
-                error,
-                'File: AccountTrackerController'
-            );
         }
     }
 
@@ -1781,11 +1745,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     const errorMessage =
                         'Error in _getAddressBalances calling getAddressBalancesFromSingleCallBalancesContract';
                     log.warn(errorMessage, error);
-                    postBkgSlackMessage(
-                        errorMessage,
-                        error,
-                        'File: AccountTrackerController'
-                    );
                     return await this._getAddressBalancesFromMultipleCallBalances(
                         provider,
                         accountAddress,
@@ -1802,11 +1761,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         } catch (error) {
             const errorMessage = 'Error in _getAddressBalances';
             log.warn(errorMessage, error);
-            postBkgSlackMessage(
-                errorMessage,
-                error,
-                'File: AccountTrackerController'
-            );
             throw error;
         }
     }
@@ -1852,11 +1806,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             const errorMessage =
                 'Error in _getAddressBalancesFromMultipleCallBalances';
             log.warn(errorMessage, error);
-            postBkgSlackMessage(
-                errorMessage,
-                error,
-                'File: AccountTrackerController'
-            );
             throw error;
         }
     }
@@ -2100,11 +2049,6 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
             return balances[NATIVE_TOKEN_ADDRESS];
         } catch (error) {
-            postBkgSlackMessage(
-                'Error getting address balances',
-                error,
-                'File: AccountTrackerController'
-            );
             return undefined;
         }
     }

@@ -540,11 +540,17 @@ const TransactionItem: React.FC<{
     return (
         <>
             <div
-                className={`flex flex-col px-6 py-4 -ml-6 transition duration-300 hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 ${
-                    !(txHash && transaction.transactionParams.from) &&
-                    "cursor-default"
-                }`}
-                style={{ width: "calc(100% + 3rem)", height: itemHeight }}
+                className={classNames(
+                    "flex flex-col px-6 py-4 transition duration-300 hover:bg-primary-grey-default",
+                    "hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 -ml-1 cursor-pointer",
+                    txHash &&
+                        transaction.transactionParams.from &&
+                        "cursor-default"
+                )}
+                style={{
+                    width: "calc(88% + 3rem)",
+                    height: itemHeight,
+                }}
                 role="button"
                 data-txid={txHash}
                 onClick={() => {

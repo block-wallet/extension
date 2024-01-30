@@ -97,13 +97,14 @@ const TransactionsList: React.FC<{
                 />
             )}
             <AutoSizer className="hide-scroll snap-y">
-                {({ width, height }) => (
+                {({ height }) => (
                     <List
                         id="transactions-list"
                         height={height}
-                        width={width}
+                        width={358}
                         style={{
                             overflowX: "hidden",
+                            marginLeft: "-24px",
                         }}
                         ref={ref}
                         rowCount={transactions.length}

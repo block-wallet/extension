@@ -73,7 +73,7 @@ const Asset: FunctionComponent<{
                 })
             }
             className={classnames(
-                "flex flex-row items-center justify-between px-6 pt-5 pb-4 transition duration-300",
+                "flex flex-row items-center justify-between px-6 py-4 transition duration-300",
                 "hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50",
                 "cursor-pointer"
             )}
@@ -179,7 +179,7 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
                             ref={ref}
                             rowCount={currentAssets.length}
                             overscanRowCount={5}
-                            rowHeight={76} // height in px
+                            rowHeight={72} // height in px
                             className="hide-scroll"
                             rowRenderer={({
                                 style,

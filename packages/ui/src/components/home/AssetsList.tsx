@@ -9,7 +9,7 @@ import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useTokenSearch from "../../util/hooks/token/useTokenSearch"
 
 ///Icons + Classes
-import { Classes } from "../../styles/classes"
+import { Classes, classnames } from "../../styles/classes"
 import plus from "../../assets/images/icons/plus.svg"
 import unknownTokenIcon from "../../assets/images/unknown_token.svg"
 import ChevronRightIcon from "../icons/ChevronRightIcon"
@@ -72,8 +72,12 @@ const Asset: FunctionComponent<{
                     },
                 })
             }
-            className="flex flex-row items-center justify-between px-6 py-5 -ml-6 transition duration-300 hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50 cursor-pointer"
-            style={{ width: "calc(100% + 2 * 1.5rem)" }}
+            className={classnames(
+                "flex flex-row items-center justify-between px-6 pt-5 pb-4 transition duration-300",
+                "hover:bg-primary-100 hover:bg-opacity-50 active:bg-primary-200 active:bg-opacity-50",
+                "cursor-pointer"
+            )}
+            style={{ width: "calc(88% + 3rem)" }}
             role="listitem"
             aria-label={asset.token.symbol}
         >
@@ -163,13 +167,14 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
                 </div>
             ) : (
                 <AutoSizer className="hide-scroll snap-y">
-                    {({ width, height }) => (
+                    {({ height }) => (
                         <List
                             id="assets-list"
                             height={height}
-                            width={width}
+                            width={358}
                             style={{
                                 overflowX: "hidden",
+                                marginLeft: "-24px",
                             }}
                             ref={ref}
                             rowCount={currentAssets.length}

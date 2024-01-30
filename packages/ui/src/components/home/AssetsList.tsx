@@ -191,7 +191,11 @@ const SubAssetList: FunctionComponent<{ assets: TokenList }> = ({ assets }) => {
                                 index: number
                             }) => (
                                 <div style={style} key={key}>
-                                    {index > 0 ? <hr /> : null}
+                                    {index > 0 ? (
+                                        <div className="px-6">
+                                            <hr />
+                                        </div>
+                                    ) : null}
                                     <Asset
                                         asset={currentAssets[index]}
                                         pushDeleteTokens={pushDeleteTokens}

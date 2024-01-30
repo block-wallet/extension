@@ -2046,17 +2046,21 @@ export default class BlankController extends EventEmitter {
         blockExplorerUrl,
         currencySymbol,
         test,
+        switchToNetwork,
     }: RequestAddNetwork): Promise<void> {
-        return this.networkController.addNetwork({
-            chainId: Number(chainId),
-            chainName: name,
-            rpcUrls: [rpcUrl],
-            blockExplorerUrls: [blockExplorerUrl],
-            nativeCurrency: {
-                symbol: currencySymbol,
+        return this.networkController.addNetwork(
+            {
+                chainId: Number(chainId),
+                chainName: name,
+                rpcUrls: [rpcUrl],
+                blockExplorerUrls: [blockExplorerUrl],
+                nativeCurrency: {
+                    symbol: currencySymbol,
+                },
+                test: test,
             },
-            test: test,
-        });
+            switchToNetwork
+        );
     }
 
     /**

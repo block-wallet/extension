@@ -792,6 +792,8 @@ export interface RequestAddNetwork {
     currencySymbol: string;
     blockExplorerUrl: string;
     test: boolean;
+    // Flag to indicate if we should switch to the added/edited network after saving changes.
+    switchToNetwork: boolean;
 }
 
 export interface RequestEditNetwork {

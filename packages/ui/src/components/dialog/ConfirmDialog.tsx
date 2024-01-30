@@ -4,6 +4,16 @@ import { Classes } from "../../styles"
 import CloseIcon from "../icons/CloseIcon"
 import Dialog from "./Dialog"
 
+export interface ConfirmDialogState {
+    title?: string
+    message?: string
+    confirmText?: string
+    cancelText?: string
+    open: boolean
+    onConfirm?: () => void
+    onClose?: () => void
+}
+
 const ConfirmDialog: FunctionComponent<{
     title: string
     message: string
@@ -13,6 +23,7 @@ const ConfirmDialog: FunctionComponent<{
     isConfirmDisabled?: boolean // if true, confirm button is disabled
     confirmDisabledUntil?: Date // if set, confirm button is disabled until this time (no need to use isConfirmDisabled in this case)
     confirmText?: string
+    cancelText?: string
 }> = ({
     title,
     message,
@@ -22,6 +33,7 @@ const ConfirmDialog: FunctionComponent<{
     isConfirmDisabled = false,
     confirmDisabledUntil,
     confirmText = "Confirm",
+    cancelText = "Cancel",
 }) => {
     const [secondsRemaining, setSecondsRemaining] = useState(0)
 
@@ -85,7 +97,7 @@ const ConfirmDialog: FunctionComponent<{
                                 onClose()
                             }}
                         >
-                            Cancel
+                            {cancelText}
                         </button>
                         <button
                             onClick={(e) => {

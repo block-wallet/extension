@@ -100,7 +100,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
                         ? "border-yellow-400 focus:border-yellow-400"
                         : "",
                     readOnly || disabled ? "cursor-not-allowed" : "",
-                    !endLabel ? "" : "mt-0 items-center",
+                    !endLabel ? "" : "!mt-0 items-center",
                     className
                 )}
                 placeholder={placeholder ? placeholder : ""}

@@ -12,7 +12,7 @@ import { getAccountColor } from "../../util/getAccountColor"
 import AccountIcon from "../icons/AccountIcon"
 import checkmarkIcon from "../../assets/images/icons/checkmark_mini.svg"
 import { classnames } from "../../styles"
-import ConfirmDialog from "../dialog/ConfirmDialog"
+import ConfirmDialog, { ConfirmDialogState } from "../dialog/ConfirmDialog"
 import CopyTooltip from "../label/СopyToClipboardTooltip"
 import useIsHovering from "../../util/hooks/useIsHovering"
 import {
@@ -26,13 +26,6 @@ import useCopyToClipboard from "../../util/hooks/useCopyToClipboard"
 import Dropdown from "../ui/Dropdown/Dropdown"
 import { useAddressWithChainIdChecksum } from "../../util/hooks/useSelectedAddressWithChainIdChecksum"
 import useNetWorthBalance from "../../context/hooks/useNetWorthBalance"
-
-interface ConfirmDialogState {
-    isOpen: boolean
-    onConfirm?: () => void
-    title?: string
-    message?: string
-}
 
 interface AccountDisplayProps {
     account: AccountInfo
@@ -62,7 +55,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
     className,
 }) => {
     const [confirmationDialog, setConfirmationDialog] =
-        useState<ConfirmDialogState>({ isOpen: false })
+        useState<ConfirmDialogState>({ open: false })
     const { isHovering: isHoveringMenu, getIsHoveringProps } = useIsHovering()
     const checksumAddress = useAddressWithChainIdChecksum(account?.address)
     const {
@@ -80,7 +73,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
         }
         setConfirmationDialog({
             onConfirm: () => optionMetadata.handler!(checksumAddress),
-            isOpen: true,
+            open: true,
             title: optionMetadata.confirmationTitle,
             message: optionMetadata.confirmationMessage,
         })
@@ -98,7 +91,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                     "flex flex-row items-center justify-between w-full rounded-lg",
                     hoverStyle &&
                         "hover:bg-primary-grey-default cursor-pointer",
-                    confirmationDialog.isOpen && "!cursor-default",
+                    confirmationDialog.open && "!cursor-default",
                     className
                 )}
                 onClick={() => onClickAccount && onClickAccount(account)}
@@ -230,8 +223,8 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
             <ConfirmDialog
                 title={confirmationDialog.title || ""}
                 message={confirmationDialog.message || ""}
-                open={confirmationDialog.isOpen}
-                onClose={() => setConfirmationDialog({ isOpen: false })}
+                open={confirmationDialog.open}
+                onClose={() => setConfirmationDialog({ open: false })}
                 onConfirm={confirmationDialog.onConfirm!}
             />
         </>

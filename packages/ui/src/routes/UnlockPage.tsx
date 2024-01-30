@@ -105,7 +105,7 @@ const UnlockPage = () => {
         <PopupLayout
             header={
                 <PopupHeader
-                    title="Unlock App"
+                    title="Unlock BlockWallet"
                     close={false}
                     backButton={false}
                     className="w-full justify-between"

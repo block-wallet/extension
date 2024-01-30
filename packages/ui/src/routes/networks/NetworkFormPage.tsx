@@ -14,6 +14,7 @@ import {
     getDefaultRpc,
     getSpecificChainDetails,
     removeNetwork,
+    changeNetwork,
 } from "../../context/commActions"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
 import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
@@ -28,7 +29,9 @@ import { LINKS } from "../../util/constants"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import Alert from "../../components/ui/Alert"
 import Icon, { IconName } from "../../components/ui/Icon"
-import ConfirmDialog from "../../components/dialog/ConfirmDialog"
+import ConfirmDialog, {
+    ConfirmDialogState,
+} from "../../components/dialog/ConfirmDialog"
 import { ChainListItem } from "@block-wallet/background/utils/chainlist"
 import { parseChainId } from "../../util/networkUtils"
 import CollapsableMessage from "../../components/CollapsableMessage"
@@ -134,7 +137,6 @@ const NetworkFormPage = ({
     const addNetworkInvoke = useAsyncInvoke()
     const removeNetworkInvoke = useAsyncInvoke()
     const [isValidating, setIsValidating] = useState<boolean>(false)
-    const [confirmDeletion, setConfirmDeletion] = useState<boolean>(false)
     const [rpcValidationStatus, setRpcValidationStatus] =
         useState<RPCUrlValidation>(RPCUrlValidation.EMPTY)
     const [rpcChainId, setRpcChainId] = useState<number>(0)
@@ -148,6 +150,11 @@ const NetworkFormPage = ({
     const [defaultRpcUrl, setDefaultRpcUrl] = useState<string | undefined>(
         undefined
     )
+
+    const [confirmationDialog, setConfirmationDialog] =
+        useState<ConfirmDialogState>({ open: false })
+
+    const [switchToNetwork, setSwitchToNetwork] = useState<boolean>(false)
 
     useEffect(() => {
         if (!network?.chainId) return
@@ -265,20 +272,38 @@ const NetworkFormPage = ({
             name: data.name!,
             rpcUrl: data.rpcUrl,
             test: !!data.test,
+            switchToNetwork: false,
         }
-        addNetworkInvoke.run(
-            isEdit
-                ? editNetwork({
-                      chainId: parseChainId(data.chainId)!.toString(),
-                      updates: {
-                          rpcUrl: data.rpcUrl,
-                          blockExplorerUrl: data.blockExplorerUrl,
-                          name: data.name!,
-                          test: !!data.test,
-                      },
-                  })
-                : addNetwork(networkData)
-        )
+
+        if (!isEdit) {
+            setConfirmationDialog({
+                title: "Switch Network",
+                message: `Do you want to switch to ${networkData.name} network?`,
+                open: true,
+                confirmText: "Yes",
+                cancelText: "No",
+                onConfirm: async () => {
+                    networkData.switchToNetwork = true
+                    setSwitchToNetwork(true)
+                },
+                onClose: () => {
+                    setConfirmationDialog({ open: false })
+                    addNetworkInvoke.run(addNetwork(networkData))
+                },
+            })
+        } else {
+            addNetworkInvoke.run(
+                editNetwork({
+                    chainId: parseChainId(data.chainId)!.toString(),
+                    updates: {
+                        rpcUrl: data.rpcUrl,
+                        blockExplorerUrl: data.blockExplorerUrl,
+                        name: data.name!,
+                        test: !!data.test,
+                    },
+                })
+            )
+        }
     })
     useEffect(() => {
         const existingNetwork = Object.values(availableNetworks).find(
@@ -358,7 +383,14 @@ const NetworkFormPage = ({
                                   <div
                                       key={1}
                                       onClick={() => {
-                                          setConfirmDeletion(true)
+                                          setConfirmationDialog({
+                                              title: "Delete Network",
+                                              message: `Are you sure you want to delete ${network?.name}?`,
+                                              open: true,
+                                              onConfirm: () => {
+                                                  deleteNetwork()
+                                              },
+                                          })
                                       }}
                                       className={
                                           "text-red-500 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 rounded-md w-40"
@@ -413,7 +445,7 @@ const NetworkFormPage = ({
                     }}
                     isCollapsedByDefault
                     collapsedMessage={
-                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-semibold justify-center mt-1">
+                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-semibold justify-center">
                             <AiOutlineWarning className="w-4 h-4 yellow-300" />
                             <span className="text-xs text-yellow-900">
                                 <span className="font-semibold">
@@ -452,7 +484,10 @@ const NetworkFormPage = ({
                     if (addNetworkInvoke.isError) {
                         return addNetworkInvoke.reset()
                     }
-                    history.push("/settings/networks")
+
+                    history.push(
+                        isEdit || !switchToNetwork ? "/settings/networks" : "/"
+                    )
                 }}
             />
             <WaitingDialog
@@ -488,14 +523,16 @@ const NetworkFormPage = ({
                 showCloseButton
             />
             <ConfirmDialog
-                title="Delete Network"
-                message={`Are you sure you want to delete ${network?.name}?`}
-                open={confirmDeletion}
-                onClose={() => setConfirmDeletion(false)}
-                onConfirm={() => {
-                    deleteNetwork()
-                    setConfirmDeletion(false)
-                }}
+                title={confirmationDialog.title!}
+                message={confirmationDialog.message!}
+                open={confirmationDialog.open}
+                confirmText={confirmationDialog.confirmText}
+                cancelText={confirmationDialog.cancelText}
+                onClose={
+                    confirmationDialog.onClose ??
+                    (() => setConfirmationDialog({ open: false }))
+                }
+                onConfirm={confirmationDialog.onConfirm!}
             />
             <div className="flex flex-col w-full justify-between flex-1 h-full !-mt-3">
                 <div className="flex flex-col flex-1 p-6 space-y-3">

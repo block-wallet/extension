@@ -146,7 +146,7 @@ jobs:
           git push origin $RELEASE_BRANCH
 
       - name: Install node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           registry-url: https://npm.pkg.github.com
@@ -215,7 +215,7 @@ jobs:
   #        token: ${{ secrets.PAT }}
 
   #    - name: Install node
-  #      uses: actions/setup-node@v3
+  #      uses: actions/setup-node@v4
   #      with:
   #        node-version-file: .nvmrc
 

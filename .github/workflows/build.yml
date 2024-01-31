@@ -65,7 +65,7 @@ jobs:
           chmod +x /usr/local/bin/semver
 
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT }}
           ref: ${{ env.GITHUB_REF_NAME }}
@@ -93,7 +93,7 @@ jobs:
       version_without_preffix: ${{ steps.remove_preffix.outputs.version }}
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT }}
           ref: ${{ env.TARGET_BRANCH }}
@@ -208,7 +208,7 @@ jobs:
   #    DBUS_SESSION_BUS_ADDRESS: /dev/null
   #  steps:
   #    - name: Checkout e2e repository
-  #      uses: actions/checkout@v3
+  #      uses: actions/checkout@v4
   #      with:
   #        repository: block-wallet/e2e-tests
   #        ref: refs/heads/main
@@ -354,7 +354,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT }}
 

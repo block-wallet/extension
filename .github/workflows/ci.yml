@@ -244,7 +244,7 @@ jobs:
 
       - name: Save extension url
         if: startsWith(github.head_ref, 'dependabot/') == false
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BLOCK_WALLET_FOLDER }}
           if-no-files-found: error

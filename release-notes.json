@@ -1036,6 +1036,32 @@
                 }
             ],
             "version": "1.2.2"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Improved dApp connectivity via EIP-6963 support."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Instant connect when adding new networks."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Added option to hide Small Balances."
+                        },
+                        {
+                            "type": "success",
+                            "message": "Minor Bugs fixes & improvements."
+                        }
+                    ]
+                }
+            ],
+            "version": "1.2.3"
         }
     ]
 }

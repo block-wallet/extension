@@ -3,6 +3,7 @@ import { ButtonWithLoading } from "../button/ButtonWithLoading"
 import { Classes } from "../../styles"
 import QRCode from "qrcode.react"
 import Divider from "../Divider"
+import Spinner from "../spinner/Spinner"
 
 interface Props {
     QRValues?: string[]
@@ -51,7 +52,9 @@ const TransactionShowQR: FC<Props> = ({ onBack, onSuccess, QRValues }) => {
                                     includeMargin={true}
                                 />
                             ) : (
-                                <div className="w-64 h-64"></div>
+                                <div className="flex items-center w-64 h-64 pl-28">
+                                    <Spinner color={"black"} size={"40"} />
+                                </div>
                             )}
                             <Divider />
                             <div className="flex w-full space-x-2 mt-3">

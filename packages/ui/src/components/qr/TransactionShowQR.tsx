@@ -33,7 +33,7 @@ const TransactionShowQR: FC<Props> = ({ onBack, onSuccess, QRValues }) => {
             clearTimeout(timeoutRef)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [QRValue])
+    }, [QRValue, QRValues])
 
     return (
         <div className="flex flex-col items-center justify-center">

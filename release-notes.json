@@ -1062,6 +1062,20 @@
                 }
             ],
             "version": "1.2.3"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Fixes",
+                    "notes": [
+                        {
+                            "type": "warn",
+                            "message": "Fixed Keystone connectivity issues."
+                        }
+                    ]
+                }
+            ],
+            "version": "1.2.4"
         }
     ]
 }

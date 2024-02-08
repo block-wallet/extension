@@ -11,7 +11,7 @@ export const BLOCK_WALLET_SLACK_ENDPOINT = 'https://slack-proxy.blockwallet.io';
 export interface SlackService {
     postMessage(
         message: string,
-        error: any,
+        error: Error,
         extraParams?: any | undefined
     ): Promise<void>;
 }
@@ -28,13 +28,13 @@ export const slackService: (
             const safeError = toError(error);
             const body = slackMessageBody(
                 message,
-                safeError.message,
+                safeError.stack,
                 extraParams
             );
             await httpClient.request<Record<string, Record<string, number>>>(
                 query,
                 {
-                    // headers: customHeadersForBlockWalletNode,
+                    headers: customHeadersForBlockWalletNode,
                     timeout: 1.5 * MINUTE,
                     method: 'POST',
                     body: body,

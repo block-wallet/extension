@@ -1791,7 +1791,7 @@ export const orderAccounts = async (
  */
 export const postSlackMessage = async (
     message: string,
-    error: any,
+    error: Error,
     extraParams?: any | undefined
 ): Promise<void> => {
     return sendMessage(Messages.WALLET.POST_SLACK_MESSAGE, {

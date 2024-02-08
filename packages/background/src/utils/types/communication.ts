@@ -1265,6 +1265,6 @@ export interface RequestOrderAccounts {
 
 export interface RequestPostSlackMessage {
     message: string;
-    error: any;
+    error: Error;
     extraParams?: any | undefined;
 }

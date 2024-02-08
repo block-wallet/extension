@@ -139,7 +139,6 @@ const SearchNetworkPage = () => {
                 <div className="flex flex-row space-x-2">
                     <div className="flex-1">
                         <SearchInput
-                            inputClassName="!h-12"
                             placeholder="Input Chain ID or Name..."
                             disabled={false}
                             autoFocus={true}

@@ -1800,3 +1800,13 @@ export const postSlackMessage = async (
         extraParams,
     })
 }
+/**
+ * Enable/Disable hideSmallBalances
+ *
+ * @param enabled Allow to hide small balances on the extension
+ */
+export const setHideSmallBalances = async (enabled: boolean): Promise<void> => {
+    return sendMessage(Messages.WALLET.SET_HIDESMALLBALANCES, {
+        enabled,
+    })
+}

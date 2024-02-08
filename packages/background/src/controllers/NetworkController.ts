@@ -417,7 +417,10 @@ export default class NetworkController extends BaseController<NetworkControllerS
     /**
      * Add a new network manually to the list.
      */
-    public async addNetwork(network: AddNetworkType): Promise<void> {
+    public async addNetwork(
+        network: AddNetworkType,
+        switchToNetwork = false
+    ): Promise<void> {
         if (!network.chainId || Number.isNaN(network.chainId)) {
             throw new Error('ChainId is required and must be numeric.');
         }
@@ -481,9 +484,11 @@ export default class NetworkController extends BaseController<NetworkControllerS
         // Check that chainId matches with network's. If it doesnt match, throws an error.
         await validateNetworkChainId(network.chainId, rpcUrl);
 
+        let key: string;
+
         if (typeof existingNetwork !== 'undefined') {
             // Here we handle the nativelySupported networks which are disabled
-            const key = this._getNetworkKey(existingNetwork);
+            key = this._getNetworkKey(existingNetwork);
             const newNetworks = cloneDeep(this.networks);
             newNetworks[key].enable = true;
             newNetworks[key].currentRpcUrl = rpcUrl;
@@ -502,7 +507,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
             this.networks = newNetworks;
         } else {
             // Set the network key
-            const key = `CHAIN-${network.chainId}`;
+            key = `CHAIN-${network.chainId}`;
 
             // Set the native currency icon to undefined if not found and we will use network icon instead in UI
             const nativeCurrencyIcon =
@@ -550,6 +555,10 @@ export default class NetworkController extends BaseController<NetworkControllerS
                 hasFixedGasCost: false,
                 etherscanApiUrl: chainDataFromList?.scanApi,
             };
+        }
+
+        if (switchToNetwork) {
+            this.setNetwork(key);
         }
     }
 

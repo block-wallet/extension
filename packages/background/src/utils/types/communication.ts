@@ -253,6 +253,7 @@ enum WALLET {
     //onramp
     GET_ONRAMP_CURRENCIES = 'GET_ONRAMP_CURRENCIES',
     POST_SLACK_MESSAGE = 'POST_SLACK_MESSAGE',
+    SET_HIDESMALLBALANCES = 'SET_HIDESMALLBALANCES',
 }
 
 enum TOKEN {
@@ -609,6 +610,10 @@ export interface RequestSignatures {
     [Messages.WALLET.SET_HOTKEYS_ENABLED]: [RequestSetHotkeys, void];
     [Messages.WALLET.GET_ONRAMP_CURRENCIES]: [void, GetOnRampCurrencies];
     [Messages.WALLET.POST_SLACK_MESSAGE]: [RequestPostSlackMessage, void];
+    [Messages.WALLET.SET_HIDESMALLBALANCES]: [
+        RequestSetHideSmallBalances,
+        void
+    ];
 }
 
 export type MessageTypes = keyof RequestSignatures;
@@ -789,6 +794,8 @@ export interface RequestAddNetwork {
     currencySymbol: string;
     blockExplorerUrl: string;
     test: boolean;
+    // Flag to indicate if we should switch to the added/edited network after saving changes.
+    switchToNetwork: boolean;
 }
 
 export interface RequestEditNetwork {
@@ -1267,4 +1274,8 @@ export interface RequestPostSlackMessage {
     message: string;
     error: Error;
     extraParams?: any | undefined;
+}
+
+export interface RequestSetHideSmallBalances {
+    enabled: boolean;
 }

@@ -15,11 +15,14 @@ import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import SuccessDialog from "../../components/dialog/SuccessDialog"
 import { AssetsSortOptions } from "../../util/tokenUtils"
 import { AccountTokenOrder } from "@block-wallet/background/controllers/AccountTrackerController"
+import { useBlankState } from "../../context/background/backgroundHooks"
 
 const TokensPage = () => {
+    const { hideSmallBalances } = useBlankState()!
     const history = useOnMountHistory()
     const availableTokens = useTokenListWithNativeToken(
-        AssetsSortOptions.CUSTOM
+        AssetsSortOptions.CUSTOM,
+        hideSmallBalances
     )
     const [tokens, setTokens] = useState<TokenWithBalance[]>([])
     const isFromHomePage = history.location.state?.isFromHomePage ?? false

@@ -1,4 +1,4 @@
-import { CSSProperties, useState } from "react"
+import { CSSProperties } from "react"
 import { FaExchangeAlt } from "react-icons/fa"
 import { FiUpload } from "react-icons/fi"
 import { RiCopperCoinFill } from "react-icons/ri"
@@ -36,12 +36,10 @@ import { RichedTransactionMeta } from "../../util/transactionUtils"
 import Dots from "../loading/LoadingDots"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetBridgeTransactionsData from "../../util/hooks/useGetBridgeTransactionsData"
-import BridgeDetails from "../bridge/BridgeDetails"
 import {
     BRIDGE_PENDING_STATUS,
     getBridgePendingMessage,
 } from "../../util/bridgeUtils"
-import TransactionDetails from "./TransactionDetails"
 import { formatUnits } from "ethers/lib/utils"
 import TokenLogo from "../token/TokenLogo"
 
@@ -149,7 +147,7 @@ const getTransactionItemStyles = (
     return { formattedLabel, typeCss, amountCss }
 }
 
-const transactionIcons = {
+const transactionIcons: Record<TransactionCategories, any> = {
     [TransactionCategories.BLANK_DEPOSIT]: <img src={blankLogo} alt="blank" />,
     [TransactionCategories.BLANK_WITHDRAWAL]: (
         <img src={blankLogo} alt="BlockWallet" />
@@ -303,10 +301,10 @@ const getTransactionTime = (
         )
             return [{ color: "text-red-600", label: "Cancelled" }]
         // If we're here, we're waiting to see if the transaction will be cancelled
-        else if (metaType === MetaType.REGULAR_CANCELLING)
+        else if (metaType === MetaType.REGULAR_CANCELLING && !isQueued)
             return [{ color: "text-primary-grey-dark", label: "Cancelling..." }]
         // If we're here, we're waiting to see if the transaction will be sped up
-        else if (metaType === MetaType.REGULAR_SPEEDING_UP)
+        else if (metaType === MetaType.REGULAR_SPEEDING_UP && !isQueued)
             return [
                 { color: "text-primary-grey-dark", label: "Speeding up..." },
             ]
@@ -423,7 +421,9 @@ const getTransactionTimeOrStatus = (
 const TransactionItem: React.FC<{
     transaction: RichedTransactionMeta
     index: number
-}> = ({ index, transaction }) => {
+    itemHeight: number
+    onClick: () => void
+}> = ({ index, transaction, onClick, itemHeight }) => {
     const {
         transactionParams: { value, hash },
         methodSignature,
@@ -441,6 +441,7 @@ const TransactionItem: React.FC<{
         transactionCategory,
         advancedData,
     } = transaction
+
     const bridgeTransactionsData = useGetBridgeTransactionsData(transaction)
 
     const history: any = useOnMountHistory()
@@ -448,8 +449,6 @@ const TransactionItem: React.FC<{
 
     const { nativeCurrency: networkNativeCurrency, defaultNetworkLogo } =
         useSelectedNetwork()
-
-    const [hasDetails, setHasDetails] = useState(false)
 
     const txHash = hash
     let transfer = transferType ?? {
@@ -538,39 +537,28 @@ const TransactionItem: React.FC<{
             TransactionCategories.INCOMING_BRIDGE_PLACEHOLDER &&
         !isBlankWithdraw
 
-    const OperationDetails =
-        transactionCategory &&
-        [
-            TransactionCategories.BRIDGE,
-            TransactionCategories.INCOMING_BRIDGE_REFUND,
-            TransactionCategories.INCOMING_BRIDGE,
-        ].includes(transactionCategory)
-            ? BridgeDetails
-            : TransactionDetails
-
     return (
         <>
-            <OperationDetails
-                transaction={transaction}
-                open={hasDetails}
-                onClose={() => setHasDetails(false)}
-            />
-
             <div
-                className={`flex flex-col px-6 py-4 -ml-6 transition duration-300 hover:bg-primary-grey-default hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 ${
-                    !(txHash && transaction.transactionParams.from) &&
-                    "cursor-default"
-                }`}
-                style={{ width: "calc(100% + 3rem)" }}
+                className={classNames(
+                    "flex flex-col px-6 py-4 transition duration-300 hover:bg-primary-grey-default",
+                    "hover:bg-opacity-50 active:bg-primary-grey-hover active:bg-opacity-50 -ml-1 cursor-pointer",
+                    txHash &&
+                        transaction.transactionParams.from &&
+                        "cursor-default"
+                )}
+                style={{
+                    width: "calc(88% + 3rem)",
+                    height: itemHeight,
+                }}
                 role="button"
                 data-txid={txHash}
                 onClick={() => {
                     if (txHash && transaction.transactionParams.from) {
-                        setHasDetails(true)
+                        onClick()
                     }
                 }}
             >
-                {/* Type */}
                 <div className="flex flex-row items-center w-full justify-between">
                     <TransactionIcon
                         transaction={{

@@ -123,6 +123,7 @@ import {
     RequestTokensOrder,
     RequestOrderAccounts,
     RequestPostSlackMessage,
+    RequestSetHideSmallBalances,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -1219,6 +1220,9 @@ export default class BlankController extends EventEmitter {
             case Messages.WALLET.POST_SLACK_MESSAGE:
                 return this.postSlackMessage(
                     request as RequestPostSlackMessage
+            case Messages.WALLET.SET_HIDESMALLBALANCES:
+                return this.setHideSmallBalances(
+                    request as RequestSetHideSmallBalances
                 );
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
@@ -2047,17 +2051,21 @@ export default class BlankController extends EventEmitter {
         blockExplorerUrl,
         currencySymbol,
         test,
+        switchToNetwork,
     }: RequestAddNetwork): Promise<void> {
-        return this.networkController.addNetwork({
-            chainId: Number(chainId),
-            chainName: name,
-            rpcUrls: [rpcUrl],
-            blockExplorerUrls: [blockExplorerUrl],
-            nativeCurrency: {
-                symbol: currencySymbol,
+        return this.networkController.addNetwork(
+            {
+                chainId: Number(chainId),
+                chainName: name,
+                rpcUrls: [rpcUrl],
+                blockExplorerUrls: [blockExplorerUrl],
+                nativeCurrency: {
+                    symbol: currencySymbol,
+                },
+                test: test,
             },
-            test: test,
-        });
+            switchToNetwork
+        );
     }
 
     /**
@@ -3575,5 +3583,13 @@ export default class BlankController extends EventEmitter {
     }: RequestPostSlackMessage): Promise<void> {
         const slackService = getSlackService();
         slackService.postMessage(message, error, extraParams);
+    }
+     
+    /** Set hideSmallBalances enabled/disabled
+     *
+     * @param enabled indicates if the extension show token with balance < 0.01 USD
+     */
+    private setHideSmallBalances({ enabled }: RequestSetHideSmallBalances) {
+        this.preferencesController.hideSmallBalances = enabled;
     }
 }

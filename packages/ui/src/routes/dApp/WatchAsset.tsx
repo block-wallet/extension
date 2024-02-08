@@ -10,11 +10,7 @@ import { AiFillQuestionCircle } from "react-icons/ai"
 import { Classes } from "../../styles/classes"
 import { DappReq } from "../../context/hooks/useDappRequest"
 import { capitalize } from "../../util/capitalize"
-import {
-    confirmDappRequest,
-    getTokenBalance,
-    postSlackMessage,
-} from "../../context/commActions"
+import { confirmDappRequest, getTokenBalance } from "../../context/commActions"
 import { formatHash, formatName } from "../../util/formatAccount"
 import { formatNumberLength } from "../../util/formatNumberLength"
 import { formatUnits } from "@ethersproject/units"
@@ -105,11 +101,6 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                     },
                 },
             })
-            postSlackMessage(
-                "Error confirming dApp add token request.",
-                err,
-                "File: WatchAsset"
-            )
         }
     }
 
@@ -160,11 +151,6 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                 if (error.message.includes("code=CALL_EXCEPTION")) {
                     setBalance(UNKNOWN_BALANCE)
                 }
-                postSlackMessage(
-                    "Error getting token balance.",
-                    error,
-                    "File: ApproveAsset. TokenAddress: " + token.address
-                )
             })
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])

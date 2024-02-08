@@ -8,7 +8,7 @@ import PopupFooter from "../popup/PopupFooter"
 import PopupHeader from "../popup/PopupHeader"
 import PopupLayout from "../popup/PopupLayout"
 import { LINKS } from "../../util/constants"
-import { postSlackMessage, resetAccount } from "../../context/commActions"
+import { resetAccount } from "../../context/commActions"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import WaitingDialog, { useWaitingDialog } from "../dialog/WaitingDialog"
 
@@ -47,11 +47,6 @@ const ErrorFallbackPage: FunctionComponent<{
                 type: "setStatus",
                 payload: { status: "error" },
             })
-            postSlackMessage(
-                "Error trying to reset account.",
-                error,
-                "File: ErrorFallbackPage"
-            )
         }
     }
 

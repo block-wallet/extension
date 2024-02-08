@@ -37,11 +37,6 @@ const useSubmitOnEnter = ({
             run(
                 onSubmit().catch((err) => {
                     log.error(err)
-                    postSlackMessage(
-                        "Error submiting on enter.",
-                        err,
-                        "File: useSubmitOnEnter"
-                    )
                 })
             )
         }

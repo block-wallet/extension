@@ -19,7 +19,6 @@ import useNextRequestRoute from "../../context/hooks/useNextRequestRoute"
 import {
     confirmTransaction,
     getTokenBalance,
-    postSlackMessage,
     rejectTransaction,
     searchTokenInAssetsList,
     setUserSettings,
@@ -360,11 +359,6 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 if (error.message.includes("code=CALL_EXCEPTION")) {
                     setAssetBalance(UNKNOWN_BALANCE)
                 }
-                postSlackMessage(
-                    "Error getting token balance.",
-                    error,
-                    "File: ApproveAsset. TokenAddress: " + tokenAddress
-                )
             })
             .finally(() => {
                 setIsTokenLoading(false)
@@ -378,11 +372,6 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
             })
             .catch((err) => {
                 const errorMessage = "Failed to fetch token data"
-                postSlackMessage(
-                    errorMessage,
-                    err,
-                    "File: ApproveAsset. TokenAddress: " + tokenAddress
-                )
                 throw new Error(errorMessage)
             })
             .finally(() => {
@@ -405,11 +394,6 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
         } catch (error) {
             console.log(error)
             dispatch({ type: "open", payload: { status: "error" } })
-            postSlackMessage(
-                "Error confirming approve asset transaction.",
-                error,
-                "File: ApproveAsset"
-            )
         }
     }
 

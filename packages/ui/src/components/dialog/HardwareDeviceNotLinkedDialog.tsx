@@ -1,7 +1,4 @@
-import {
-    openHardwareReconnect,
-    postSlackMessage,
-} from "../../context/commActions"
+import { openHardwareReconnect } from "../../context/commActions"
 import { DEVICE_RECONNECTION_WARNING_STEPS } from "../../util/connectionStepUtils"
 import WarningDialog from "./WarningDialog"
 import ClickableText from "../../components/button/ClickableText"
@@ -41,13 +38,7 @@ const HardwareDeviceNotLinkedDialog: React.FC<{
             if (resultOk) {
                 onDone()
             }
-        } catch (error) {
-            postSlackMessage(
-                "Error connecting hardware device.",
-                error,
-                "File: HardwareDeviceNotLinkedDialog"
-            )
-        }
+        } catch (error) {}
     }
     return (
         <WarningDialog

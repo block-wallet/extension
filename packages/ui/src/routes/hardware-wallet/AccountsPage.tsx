@@ -7,7 +7,6 @@ import {
     getHardwareWalletHDPath,
     setHardwareWalletHDPath,
     selectAccount,
-    postSlackMessage,
 } from "../../context/commActions"
 import {
     AccountInfo,
@@ -104,11 +103,6 @@ const HardwareWalletAccountsPage = () => {
             await getHardwareWalletAccounts(vendor, 2, 10)
         } catch (e) {
             setEnabledPagination(false)
-            postSlackMessage(
-                "Error checking keystone accounts.",
-                e,
-                "File: AccountsPage"
-            )
         }
     }, [vendor])
 
@@ -127,7 +121,6 @@ const HardwareWalletAccountsPage = () => {
         } catch (e) {
             log.error(e)
             setState({ deviceNotReady: true })
-            postSlackMessage("Error getting accounts.", e, "File: AccountsPage")
         }
     }, [state.currentPage, state.pageSize, vendor])
 
@@ -162,11 +155,6 @@ const HardwareWalletAccountsPage = () => {
                         await selectAccount(state.selectedAccounts[0].address)
                         resolve(true)
                     } catch (e) {
-                        postSlackMessage(
-                            "Error importing hardware wallet accounts.",
-                            e,
-                            "File: AccountsPage"
-                        )
                         reject(e)
                     }
                 })
@@ -177,11 +165,6 @@ const HardwareWalletAccountsPage = () => {
             })
         } catch (e) {
             log.error(e)
-            postSlackMessage(
-                "Error importing accounts.",
-                e,
-                "File: AccountsPage"
-            )
         }
     }
 
@@ -199,13 +182,7 @@ const HardwareWalletAccountsPage = () => {
             // Clear the state after the HD path is updated
             setState({ selectedAccounts: [], currentPage: 1 })
             setHDPath(hdPath)
-        } catch (e) {
-            postSlackMessage(
-                "Error setting HW HDPath.",
-                e,
-                "File: AccountsPage"
-            )
-        }
+        } catch (e) {}
     }
 
     const onUpdatePageSize = (pageSize: number) => {

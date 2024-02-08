@@ -1,10 +1,7 @@
 import { useState } from "react"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import log from "loglevel"
-import {
-    isAccountDeviceLinked,
-    postSlackMessage,
-} from "../../context/commActions"
+import { isAccountDeviceLinked } from "../../context/commActions"
 const useCheckAccountDeviceLinked = () => {
     const [isDeviceUnlinked, setIsDeviceUnlinked] = useState<boolean>(false)
     const { selectedAddress } = useBlankState()!
@@ -17,11 +14,6 @@ const useCheckAccountDeviceLinked = () => {
             }
         } catch (e) {
             log.error(e)
-            postSlackMessage(
-                "Error checking if device is linked.",
-                e,
-                "File: useCheckAccountDeviceLinked"
-            )
         }
         return true
     }

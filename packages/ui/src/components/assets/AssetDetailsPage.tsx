@@ -1,7 +1,7 @@
 import { formatUnits } from "@ethersproject/units"
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { deleteCustomToken, postSlackMessage } from "../../context/commActions"
+import { deleteCustomToken } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
@@ -74,7 +74,6 @@ const AssetDetailsPage = () => {
         } catch (error) {
             const errorMessage = "Eror deleting token from list"
             log.error(errorMessage)
-            postSlackMessage(errorMessage, error, "File: AssetDetailsPage.")
         }
     }
 

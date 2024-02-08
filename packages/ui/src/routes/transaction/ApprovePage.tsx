@@ -19,7 +19,6 @@ import {
     getApproveTransactionGasLimit,
     getExchangeSpender,
     getLatestGasPrice,
-    postSlackMessage,
 } from "../../context/commActions"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
 import { useTokensList } from "../../context/hooks/useTokensList"
@@ -440,11 +439,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 type: "setStatus",
                 payload: { status: "error", texts: { error: e.message } },
             })
-            postSlackMessage(
-                "Error submiting the allowance request.",
-                e,
-                "File: ApprovePage"
-            )
         }
     }
 

@@ -1,6 +1,5 @@
 import { v4 as createUuid } from "uuid"
 import { generatePhishingPrevention } from "@block-wallet/phishing-prevention"
-import { postSlackMessage } from "../context/commActions"
 
 /**
  * generatePhishingPreventionBase64
@@ -21,8 +20,6 @@ export const generatePhishingPreventionBase64 = async (
     try {
         return generatePhishingPrevention(uuid, 175)
     } catch (e) {
-        const errorMessage = "Error generating the phishing prevention image"
-        postSlackMessage(errorMessage, e, "File: phishingPrevention")
-        return Promise.reject(errorMessage)
+        return Promise.reject("Error generating the phishing prevention image")
     }
 }

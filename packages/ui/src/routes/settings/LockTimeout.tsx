@@ -2,11 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import PopupFooter from "../../components/popup/PopupFooter"
-import {
-    getIdleTimeout,
-    postSlackMessage,
-    setIdleTimeout,
-} from "../../context/commActions"
+import { getIdleTimeout, setIdleTimeout } from "../../context/commActions"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import WaitingDialog, {
     useWaitingDialog,
@@ -48,11 +44,6 @@ const LockTimeout = () => {
         } catch (error) {
             dispatch({ type: "setStatus", payload: { status: "error" } })
             // throw new Error("Could not update the lock timeout")
-            postSlackMessage(
-                "Error saving lock timeout.",
-                error,
-                "File: LockTimeout"
-            )
         }
     }, [dispatch, selectedTimeout])
 

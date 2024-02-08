@@ -9,7 +9,7 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import TextInput from "../../components/input/TextInput"
 import PopupFooter from "../../components/popup/PopupFooter"
-import { postSlackMessage, renameAccount } from "../../context/commActions"
+import { renameAccount } from "../../context/commActions"
 import WaitingDialog, {
     useWaitingDialog,
 } from "../../components/dialog/WaitingDialog"
@@ -94,7 +94,6 @@ const EditAccountPage = () => {
             )
 
             dispatch({ type: "setStatus", payload: { status: "error" } })
-            postSlackMessage(errorMessage, err, "File: EditAccountPage")
             return Promise.reject()
         }
     })

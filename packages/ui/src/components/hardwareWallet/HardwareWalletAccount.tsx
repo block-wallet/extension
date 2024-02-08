@@ -3,7 +3,7 @@ import classnames from "classnames"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits } from "ethers/lib/utils"
 import { useState } from "react"
-import { getAccountBalance, postSlackMessage } from "../../context/commActions"
+import { getAccountBalance } from "../../context/commActions"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { Classes } from "../../styles"
 import { formatHash } from "../../util/formatAccount"
@@ -59,11 +59,6 @@ export const HardwareWalletAccount = ({
             )
         } catch (error) {
             setBalance("<Error fetching>")
-            postSlackMessage(
-                "Error fetching account balance.",
-                error,
-                "File: HardwareWalletAccount"
-            )
         } finally {
             setIsLoading(false)
         }

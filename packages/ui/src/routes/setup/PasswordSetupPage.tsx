@@ -11,11 +11,7 @@ import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 
-import {
-    createWallet,
-    postSlackMessage,
-    requestSeedPhrase,
-} from "../../context/commActions"
+import { createWallet, requestSeedPhrase } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import log from "loglevel"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
@@ -91,21 +87,11 @@ const PasswordSetupPage = () => {
                     .catch((err) => {
                         log.error(err)
                         setIsCreating(false)
-                        postSlackMessage(
-                            "Error requesting seedPhrase",
-                            err,
-                            "File: PasswordSetupPage."
-                        )
                     })
             })
             .catch((err) => {
                 log.error(err)
                 setIsCreating(false)
-                postSlackMessage(
-                    "Error creating wallet.",
-                    err,
-                    "File: PasswordSetupPage"
-                )
             })
     })
 

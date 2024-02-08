@@ -17,7 +17,6 @@ import {
     exportAccountPrivateKey,
     exportAccountJson,
     requestSeedPhrase,
-    postSlackMessage,
 } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
@@ -129,11 +128,6 @@ const ExportAccountPage = () => {
                 }
             )
             setIsVerificationInProgress(false)
-            postSlackMessage(
-                "Error submiting export account page.",
-                e,
-                "File: ExportAccountPage"
-            )
             return Promise.reject()
         }
     })

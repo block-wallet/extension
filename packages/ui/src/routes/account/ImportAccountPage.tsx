@@ -13,7 +13,6 @@ import { useHistory } from "react-router-dom"
 import useNewAccountHelper from "./useNewAccountHelper"
 import {
     importAccountPrivateKey,
-    postSlackMessage,
     selectAccount,
 } from "../../context/commActions"
 import TextInput from "../../components/input/TextInput"
@@ -97,11 +96,6 @@ const ImportAccountPage = () => {
                         await selectAccount(newAccount.address)
                         resolve(true)
                     } catch (e) {
-                        postSlackMessage(
-                            "Error importing account private key",
-                            e,
-                            "File: ImportAccountPage"
-                        )
                         reject(e)
                     }
                 })
@@ -134,7 +128,6 @@ const ImportAccountPage = () => {
                     }
                 )
             }
-            postSlackMessage(errorMessage, e, "File: ImportAccountPage")
         }
     })
 

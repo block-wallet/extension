@@ -7,7 +7,6 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
 import {
     createAccount as createAccountAction,
-    postSlackMessage,
     selectAccount,
 } from "../../context/commActions"
 import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
@@ -81,7 +80,6 @@ const AddAccountPage = () => {
                     shouldFocus: true,
                 }
             )
-            postSlackMessage(errorMessage, error, "File: AddAccountPage")
         }
     })
 

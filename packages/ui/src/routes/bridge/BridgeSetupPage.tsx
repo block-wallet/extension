@@ -28,7 +28,6 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import {
     getBridgeAvailableRoutes,
     getBridgeQuote,
-    postSlackMessage,
 } from "../../context/commActions"
 import { capitalize } from "../../util/capitalize"
 import { BridgeConfirmPageLocalState } from "./BridgeConfirmPage"
@@ -330,13 +329,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     setAvailableRoutes([])
                     setIsFetchingRoutes(false)
                 }
-
-                postSlackMessage(
-                    errorMessage,
-                    error,
-                    "File: BridgeSetupPage. isValidFetch:" +
-                        isValidFetch.toString()
-                )
             }
         }
 
@@ -392,13 +384,6 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     setBridgeQuoteError(BridgeErrorType.OTHER)
                     setisFetchingQuote(false)
                 }
-
-                postSlackMessage(
-                    "Error fetching quotes",
-                    error,
-                    "File: BridgeSetupPage. isValidFetch:" +
-                        isValidFetch.toString()
-                )
             }
         }
 

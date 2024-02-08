@@ -46,7 +46,6 @@ import {
 import {
     confirmTransaction,
     getNextNonce,
-    postSlackMessage,
     rejectTransaction,
     setUserSettings,
 } from "../../context/commActions"
@@ -355,13 +354,7 @@ const TransactionConfirm: React.FC<{
                 transactionGas,
                 transactionAdvancedData
             )
-        } catch (e) {
-            postSlackMessage(
-                "Error confirming transaction",
-                e,
-                "File: TransactionConfirmPage."
-            )
-        }
+        } catch (e) {}
     }
 
     const reject = async () => {

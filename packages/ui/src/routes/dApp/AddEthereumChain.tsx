@@ -2,7 +2,7 @@ import { FunctionComponent, useState } from "react"
 import { NormalizedAddEthereumChainParameter } from "@block-wallet/background/utils/types/ethereum"
 
 import { DappReq } from "../../context/hooks/useDappRequest"
-import { confirmDappRequest, postSlackMessage } from "../../context/commActions"
+import { confirmDappRequest } from "../../context/commActions"
 
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import WaitingDialog, {
@@ -113,11 +113,6 @@ const AddEthereumChain: FunctionComponent<DappRequestProps> = ({
                     },
                 },
             })
-            postSlackMessage(
-                "Error adding new eth chain.",
-                err,
-                "File: AddEthereumChain"
-            )
         }
     }
 

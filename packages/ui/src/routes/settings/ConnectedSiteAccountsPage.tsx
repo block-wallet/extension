@@ -9,7 +9,6 @@ import PopupLayout from "../../components/popup/PopupLayout"
 import ConfirmDialog from "../../components/dialog/ConfirmDialog"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import {
-    postSlackMessage,
     removeAccountFromSite,
     selectAccount,
     updateSitePermissions,
@@ -199,26 +198,14 @@ const ConnectedSiteAccountsPage = () => {
                     pathname: "/",
                 })
             }
-        } catch (error) {
-            postSlackMessage(
-                "Error removing account from site.",
-                error,
-                "File: ConnectedSiteAccountsPage"
-            )
-        }
+        } catch (error) {}
     }
 
     const handleConnectSite = async (address: string) => {
         try {
             connectedAccounts.push(address)
             updateSitePermissions(origin, connectedAccounts)
-        } catch (error) {
-            postSlackMessage(
-                "Error updating site permissions.",
-                error,
-                "File: ConnectedSiteAccountsPage"
-            )
-        }
+        } catch (error) {}
     }
 
     const handleSwitchAccount = async (address: string) => {
@@ -227,13 +214,7 @@ const ConnectedSiteAccountsPage = () => {
             history.push({
                 pathname: "/",
             })
-        } catch (error) {
-            postSlackMessage(
-                "Error switching account.",
-                error,
-                "File: ConnectedSiteAccountsPage"
-            )
-        }
+        } catch (error) {}
     }
 
     return !permission ? (

@@ -14,7 +14,6 @@ import {
     getDefaultRpc,
     getSpecificChainDetails,
     removeNetwork,
-    postSlackMessage,
     changeNetwork,
 } from "../../context/commActions"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
@@ -252,11 +251,6 @@ const NetworkFormPage = ({
                 } catch (e) {
                     //Invalid URL if we were not able to fetch the chainId using the rpcUrl.
                     setRpcValidationStatus(RPCUrlValidation.INVALID_ENDPOINT)
-                    postSlackMessage(
-                        "Error fetching chainId using the rpcUrl.",
-                        e,
-                        "File: NetworkFormPage"
-                    )
                 }
             } finally {
                 setIsValidating(false)

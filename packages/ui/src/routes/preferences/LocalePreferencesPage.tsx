@@ -9,7 +9,6 @@ import PopupLayout from "../../components/popup/PopupLayout"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import {
     getValidCurrencies,
-    postSlackMessage,
     setNativeCurrency,
 } from "../../context/commActions"
 import { CurrencySelection } from "../../components/currency/CurrencySelection"
@@ -34,9 +33,7 @@ const LocalePreferencesPage = () => {
             await setNativeCurrency(newCurrency.code)
             setShowSuccessDialog(true)
         } catch (e) {
-            const errorMessage = "Could not update the currency"
-            postSlackMessage(errorMessage, e, "File: LocalePreferencesPage")
-            throw new Error(errorMessage)
+            throw new Error("Could not update the currency")
         } finally {
             setIsLoading(false)
         }

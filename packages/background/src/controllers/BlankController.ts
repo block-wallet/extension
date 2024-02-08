@@ -1220,6 +1220,7 @@ export default class BlankController extends EventEmitter {
             case Messages.WALLET.POST_SLACK_MESSAGE:
                 return this.postSlackMessage(
                     request as RequestPostSlackMessage
+                );
             case Messages.WALLET.SET_HIDESMALLBALANCES:
                 return this.setHideSmallBalances(
                     request as RequestSetHideSmallBalances
@@ -3584,7 +3585,7 @@ export default class BlankController extends EventEmitter {
         const slackService = getSlackService();
         slackService.postMessage(message, error, extraParams);
     }
-     
+
     /** Set hideSmallBalances enabled/disabled
      *
      * @param enabled indicates if the extension show token with balance < 0.01 USD

@@ -29,11 +29,6 @@ const AddressBookPage: FunctionComponent<{
         } catch (error) {
             // TODO: show error
             //  setError(error.message)
-            postSlackMessage(
-                "Error removing contact",
-                error,
-                "File: AddressBookPage"
-            )
         }
     }
 

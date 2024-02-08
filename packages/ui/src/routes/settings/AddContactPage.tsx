@@ -15,7 +15,7 @@ import {
     useAddressBookRecentAddresses,
 } from "../../context/hooks/useAddressBook"
 import { isValidAddress } from "ethereumjs-util"
-import { addressBookSet, postSlackMessage } from "../../context/commActions"
+import { addressBookSet } from "../../context/commActions"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import WaitingDialog, {
     useWaitingDialog,
@@ -106,11 +106,6 @@ const AddContactPage = () => {
                 }
             )
             dispatch({ type: "setStatus", payload: { status: "error" } })
-            postSlackMessage(
-                "Error saving the new contact",
-                error,
-                "File: AddContactPage"
-            )
             return Promise.reject()
         }
     })

@@ -5,10 +5,7 @@ import AppIcon from "../../components/icons/AppIcon"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import {
-    postSlackMessage,
-    removeAccountFromSite,
-} from "../../context/commActions"
+import { removeAccountFromSite } from "../../context/commActions"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
 import { FaGlobe } from "react-icons/fa"
@@ -84,13 +81,7 @@ const ConnectedSitesPage = () => {
     const handleDeleteClick = async (origin: string) => {
         try {
             await removeAccountFromSite(origin, state.selectedAddress)
-        } catch (error) {
-            postSlackMessage(
-                "Error removing account from site.",
-                error,
-                "File: ConnectedSitesPage"
-            )
-        }
+        } catch (error) {}
     }
 
     return (

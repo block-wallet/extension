@@ -25,7 +25,6 @@ import {
     executeBridge,
     getBridgeQuote,
     getLatestGasPrice,
-    postSlackMessage,
     rejectTransaction,
 } from "../../context/commActions"
 import {
@@ -422,11 +421,6 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 } catch (error) {
                     const errorMessage = "Error fetching gas default"
                     setError(errorMessage)
-                    postSlackMessage(
-                        errorMessage,
-                        error,
-                        "File: BridgeConfirmPage"
-                    )
                 } finally {
                     setIsGasLoading(false)
                 }
@@ -481,11 +475,6 @@ const BridgeConfirmPage: FunctionComponent<{}> = () => {
                 }
             } catch (error) {
                 errorType = BridgeErrorType.OTHER
-                postSlackMessage(
-                    "Bridge other error",
-                    error,
-                    "File: BridgeConfirmPage"
-                )
             } finally {
                 //in case the effect was unmounted after invoking the background
                 if (isValidFetch) {

@@ -30,7 +30,6 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import {
     getLatestGasPrice,
     getSendTransactionGasLimit,
-    postSlackMessage,
     sendEther,
     sendToken,
 } from "../../context/commActions"
@@ -352,13 +351,7 @@ const SendConfirmPage = () => {
                     decimals
                 )
             )
-        } catch (e) {
-            postSlackMessage(
-                "Error calculating native currency",
-                e,
-                "File: SendConfirmPage"
-            )
-        }
+        } catch (e) {}
     }
 
     const schema = GetAmountYupSchema(
@@ -492,11 +485,6 @@ const SendConfirmPage = () => {
                 ...prev,
                 submitted: false,
             }))
-            postSlackMessage(
-                "Error on sending transaction.",
-                error,
-                "File: SendConfirmPage"
-            )
         }
     })
 
@@ -656,11 +644,6 @@ const SendConfirmPage = () => {
             if (error.message.match(/bigger than zero/gi)) {
                 setAllowAmountZero(false)
             }
-            postSlackMessage(
-                "Error fetching gas limit.",
-                error,
-                "File: SendConfirmPage"
-            )
         } finally {
             setIsGasLoading(false)
         }

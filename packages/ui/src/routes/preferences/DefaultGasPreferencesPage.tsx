@@ -10,10 +10,7 @@ import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import { useBlankState } from "../../context/background/backgroundHooks"
-import {
-    postSlackMessage,
-    setDefaultGasPreference,
-} from "../../context/commActions"
+import { setDefaultGasPreference } from "../../context/commActions"
 
 const gasOptions = [
     { name: "low", desc: "Cheaper but slower" },
@@ -35,9 +32,7 @@ const DefaultGasPreferencesPage = () => {
             await setDefaultGasPreference(selectedOption)
             setShowSuccessDialog(true)
         } catch (e) {
-            const errorMessage = "Could not update the default gas option"
-            postSlackMessage(errorMessage, e, "File: DefaultGasPreferencesPage")
-            throw new Error(errorMessage)
+            throw new Error("Could not update the default gas option")
         } finally {
             setIsLoading(false)
         }

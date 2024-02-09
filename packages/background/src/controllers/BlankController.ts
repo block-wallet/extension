@@ -249,6 +249,7 @@ import { NotificationController } from './NotificationController';
 import browser from 'webextension-polyfill';
 import OnrampController from './OnrampController';
 import { getSlackService } from '../utils/slack/slackService';
+import { postBkgSlackMessage } from '../utils/slack/slackUtils';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -770,6 +771,10 @@ export default class BlankController extends EventEmitter {
                 const safeError = toError(error);
 
                 log.error('[err]', source, safeError.message);
+                postBkgSlackMessage(
+                    '[err] ' + source + '. ' + safeError.message,
+                    error
+                );
                 this.blankProviderController.cancelPendingDAppRequests();
                 // only send message back to port if it's still connected
                 if (isPortConnected) {

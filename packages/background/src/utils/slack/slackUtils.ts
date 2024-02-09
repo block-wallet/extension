@@ -14,7 +14,7 @@ export const slackMessageBody = (
     error: any,
     extraParams?: any | undefined
 ): string => {
-    const body = `{
+    let body = `{
         "blocks": [
             {
                 "type": "header",
@@ -68,8 +68,12 @@ export const slackMessageBody = (
                         ]
                     }
                 ]
-            },
-            {
+            }`;
+
+    if (extraParams) {
+        body =
+            body +
+            `,{
                 "type": "rich_text",
                 "elements": [
                     {
@@ -89,9 +93,10 @@ export const slackMessageBody = (
                         ]
                     }
                 ]
-            }
-        ]
-    }`;
+            }`;
+    }
+
+    body = body + `]}`;
 
     return body;
 };

@@ -26,11 +26,7 @@ export const slackService: (
 
             const query = `${baseEndpoint}`;
             const safeError = toError(error);
-            const body = slackMessageBody(
-                message,
-                safeError.stack,
-                extraParams
-            );
+            const body = slackMessageBody(message, safeError, extraParams);
             await httpClient.request<Record<string, Record<string, number>>>(
                 query,
                 {

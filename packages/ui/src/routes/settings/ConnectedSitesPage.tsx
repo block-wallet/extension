@@ -81,7 +81,7 @@ const ConnectedSitesPage = () => {
     const handleDeleteClick = async (origin: string) => {
         try {
             await removeAccountFromSite(origin, state.selectedAddress)
-        } catch (error) {}
+        } catch {}
     }
 
     return (

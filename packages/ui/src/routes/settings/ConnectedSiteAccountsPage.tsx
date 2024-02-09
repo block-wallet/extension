@@ -198,14 +198,14 @@ const ConnectedSiteAccountsPage = () => {
                     pathname: "/",
                 })
             }
-        } catch (error) {}
+        } catch {}
     }
 
     const handleConnectSite = async (address: string) => {
         try {
             connectedAccounts.push(address)
             updateSitePermissions(origin, connectedAccounts)
-        } catch (error) {}
+        } catch {}
     }
 
     const handleSwitchAccount = async (address: string) => {
@@ -214,7 +214,7 @@ const ConnectedSiteAccountsPage = () => {
             history.push({
                 pathname: "/",
             })
-        } catch (error) {}
+        } catch {}
     }
 
     return !permission ? (

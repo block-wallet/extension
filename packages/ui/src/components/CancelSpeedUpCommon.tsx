@@ -319,6 +319,7 @@ const CancelAndSpeedUpComponent = ({
             })
             .catch((e) => {
                 log.error(e)
+
                 history.push({
                     pathname: "/home",
                     state: {

@@ -223,9 +223,8 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
                 .then((searchTokensResponse) => {
                     setTokenName(searchTokensResponse.tokens[0].symbol)
                 })
-                .catch((err) => {
-                    const errorMessage = "Failed to fetch token data"
-                    throw new Error(errorMessage)
+                .catch(() => {
+                    throw new Error("Failed to fetch token data")
                 })
                 .finally(() => {
                     setIsNameLoading(false)

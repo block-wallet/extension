@@ -73,7 +73,7 @@ const SettingsPage = () => {
             if (!isImportingDeposits) {
                 lockApp()
             }
-        } catch (error) {
+        } catch {
             handleError("Error logging out")
         }
     }

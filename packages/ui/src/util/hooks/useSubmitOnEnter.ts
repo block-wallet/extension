@@ -1,7 +1,6 @@
 import log from "loglevel"
 import { useEffect, useRef } from "react"
 import useAsyncInvoke from "./useAsyncInvoke"
-import { postSlackMessage } from "../../context/commActions"
 
 export interface submitOnEnterProps {
     onSubmit?: () => Promise<any>

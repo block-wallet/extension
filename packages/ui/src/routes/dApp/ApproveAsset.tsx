@@ -370,9 +370,8 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 setTokenName(token.symbol)
                 setTokenLogo(token.logo)
             })
-            .catch((err) => {
-                const errorMessage = "Failed to fetch token data"
-                throw new Error(errorMessage)
+            .catch(() => {
+                throw new Error("Failed to fetch token data")
             })
             .finally(() => {
                 setIsNameLoading(false)

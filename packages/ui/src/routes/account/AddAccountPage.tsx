@@ -70,11 +70,10 @@ const AddAccountPage = () => {
                 })
             )
         } catch (error: any) {
-            const errorMessage = error.message ?? "Error creating the account"
             setError(
                 "accountName",
                 {
-                    message: errorMessage,
+                    message: error.message ?? "Error creating the account",
                 },
                 {
                     shouldFocus: true,

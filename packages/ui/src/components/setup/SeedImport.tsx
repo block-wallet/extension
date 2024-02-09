@@ -89,10 +89,9 @@ const SeedImport: FunctionComponent<{
 
             await action(password, seedPhrase.join(" "))
         } catch (error) {
-            const errorMessage = "Error importing seed phrase"
             log.error(error.message || error)
 
-            setSeedPhraseError(errorMessage)
+            setSeedPhraseError("Error importing seed phrase")
         } finally {
             setIsLoading(false)
         }

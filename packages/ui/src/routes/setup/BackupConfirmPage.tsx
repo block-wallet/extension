@@ -196,7 +196,7 @@ const BackupConfirmPage = () => {
             } else {
                 setVerificationError("Verification failed")
             }
-        } catch (error) {
+        } catch {
             setVerificationError("Error verificating the seed phrase")
         }
         setIsVerificationInProgress(false)

@@ -128,6 +128,7 @@ const ExportAccountPage = () => {
                 }
             )
             setIsVerificationInProgress(false)
+
             return Promise.reject()
         }
     })

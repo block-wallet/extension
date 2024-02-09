@@ -72,8 +72,7 @@ const AssetDetailsPage = () => {
 
             history.push({ pathname: "/home" })
         } catch (error) {
-            const errorMessage = "Eror deleting token from list"
-            log.error(errorMessage)
+            log.error("Eror deleting token from list")
         }
     }
 

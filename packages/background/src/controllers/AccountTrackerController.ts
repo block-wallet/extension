@@ -242,9 +242,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         });
                     }
                 } catch (err) {
-                    const errorMessage =
-                        'An error ocurred while updating the accounts';
-                    log.warn(errorMessage, err.message);
+                    log.warn(
+                        'An error ocurred while updating the accounts',
+                        err.message
+                    );
                 } finally {
                     this.store.updateState({ isAccountTrackerLoading: false });
                 }
@@ -267,9 +268,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         chainId
                     );
                 } catch (err) {
-                    const errorMessage =
-                        'An error ocurred while updating the accounts';
-                    log.warn(errorMessage, err.message);
+                    log.warn(
+                        'An error ocurred while updating the accounts',
+                        err.message
+                    );
                 }
             }
         );
@@ -598,9 +600,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 networkProvider
             );
         } catch (e) {
-            const errorMessage =
-                'Unable to get total supply of token: ' + tokenAddress;
-            log.warn(errorMessage, e);
+            log.warn('Unable to get total supply of token: ' + tokenAddress, e);
         }
 
         return {
@@ -725,8 +725,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         spender: contractInfo,
                     };
                 } catch (e) {
-                    const errorMessage = `Error fetching spender: ${spender} allowance for token ${tokenAddress}`;
-                    log.warn(errorMessage, e);
+                    log.warn(
+                        `Error fetching spender: ${spender} allowance for token ${tokenAddress}`,
+                        e
+                    );
                     continue;
                 }
             }
@@ -868,9 +870,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                 : undefined,
                         };
                     } catch (e) {
-                        const errorMessage =
-                            'Error requesting _tokenOperationsController.allowance';
-                        log.warn(errorMessage, e);
+                        log.warn(
+                            'Error requesting _tokenOperationsController.allowance',
+                            e
+                        );
                         continue;
                     }
                 }
@@ -990,9 +993,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     queryFromBlock = oldTtransaction.blockNumber;
                 }
             } catch (e) {
-                const errorMessage =
-                    'Error getting old allowance transaction by hash';
-                log.warn(errorMessage, e);
+                log.warn('Error getting old allowance transaction by hash', e);
             }
             if (!queryFromBlock) {
                 //Query only one batch in case we don't have the queryFromBlock
@@ -1628,9 +1629,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 deletedUserTokens
             );
         } catch (error) {
-            const errorMessage =
-                'Block Account Tracker single call balance fetch failed';
-            log.warn(errorMessage, error);
+            log.warn(
+                'Block Account Tracker single call balance fetch failed',
+                error
+            );
         }
     }
 
@@ -1742,9 +1744,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         chainId
                     );
                 } catch (error) {
-                    const errorMessage =
-                        'Error in _getAddressBalances calling getAddressBalancesFromSingleCallBalancesContract';
-                    log.warn(errorMessage, error);
+                    log.warn(
+                        'Error in _getAddressBalances calling getAddressBalancesFromSingleCallBalancesContract',
+                        error
+                    );
                     return await this._getAddressBalancesFromMultipleCallBalances(
                         provider,
                         accountAddress,
@@ -1759,8 +1762,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 );
             }
         } catch (error) {
-            const errorMessage = 'Error in _getAddressBalances';
-            log.warn(errorMessage, error);
+            log.warn('Error in _getAddressBalances', error);
             throw error;
         }
     }
@@ -1803,9 +1805,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
             return balances;
         } catch (error) {
-            const errorMessage =
-                'Error in _getAddressBalancesFromMultipleCallBalances';
-            log.warn(errorMessage, error);
+            log.warn(
+                'Error in _getAddressBalancesFromMultipleCallBalances',
+                error
+            );
             throw error;
         }
     }
@@ -2048,7 +2051,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             );
 
             return balances[NATIVE_TOKEN_ADDRESS];
-        } catch (error) {
+        } catch {
             return undefined;
         }
     }

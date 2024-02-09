@@ -288,8 +288,7 @@ const SwapPage = () => {
                     setQuote(quote)
                 }
             } catch (error) {
-                const errorMessage = "Error fetching quote."
-                setError(capitalize(error.message || errorMessage))
+                setError(capitalize(error.message || "Error fetching quote."))
             } finally {
                 setCanSwitchInputs(true)
                 setIsLoading(false)

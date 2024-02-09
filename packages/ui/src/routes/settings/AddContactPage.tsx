@@ -95,7 +95,7 @@ const AddContactPage = () => {
             )
 
             dispatch({ type: "setStatus", payload: { status: "success" } })
-        } catch (error) {
+        } catch {
             setError(
                 "contactName",
                 {
@@ -106,6 +106,7 @@ const AddContactPage = () => {
                 }
             )
             dispatch({ type: "setStatus", payload: { status: "error" } })
+
             return Promise.reject()
         }
     })

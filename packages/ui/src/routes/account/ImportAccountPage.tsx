@@ -101,27 +101,24 @@ const ImportAccountPage = () => {
                 })
             )
         } catch (e: any) {
-            let errorMessage = ""
             if (
                 e.message ===
                 "The account you're are trying to import is a duplicate"
             ) {
-                errorMessage = "Account already exists"
                 setError(
                     "privateKey",
                     {
-                        message: errorMessage,
+                        message: "Account already exists",
                     },
                     {
                         shouldFocus: true,
                     }
                 )
             } else {
-                errorMessage = "Error importing the account"
                 setError(
                     "privateKey",
                     {
-                        message: errorMessage,
+                        message: "Error importing the account",
                     },
                     {
                         shouldFocus: true,

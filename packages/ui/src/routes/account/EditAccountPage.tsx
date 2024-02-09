@@ -82,11 +82,10 @@ const EditAccountPage = () => {
 
             dispatch({ type: "setStatus", payload: { status: "success" } })
         } catch (err) {
-            const errorMessage = "Error renaming the account"
             setError(
                 "accountName",
                 {
-                    message: errorMessage,
+                    message: "Error renaming the account",
                 },
                 {
                     shouldFocus: true,
@@ -94,6 +93,7 @@ const EditAccountPage = () => {
             )
 
             dispatch({ type: "setStatus", payload: { status: "error" } })
+
             return Promise.reject()
         }
     })

@@ -351,7 +351,7 @@ const SendConfirmPage = () => {
                     decimals
                 )
             )
-        } catch (e) {}
+        } catch {}
     }
 
     const schema = GetAmountYupSchema(

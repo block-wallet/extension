@@ -398,8 +398,7 @@ const SwapPageConfirm: FC<{}> = () => {
 
                     isGasInitialized.current = true
                 } catch (error) {
-                    const errorMessage = "Error fetching gas default"
-                    setError(errorMessage)
+                    setError("Error fetching gas default")
                 } finally {
                     setIsGasLoading(false)
                 }

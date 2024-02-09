@@ -89,11 +89,10 @@ const UnlockPage = () => {
             }
             setIsLoading(false)
         } catch (e: any) {
-            const errorMessage = "Error unlocking the extension"
             setError(
                 "password",
                 {
-                    message: errorMessage,
+                    message: "Error unlocking the extension",
                 },
                 {
                     shouldFocus: true,

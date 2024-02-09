@@ -323,9 +323,10 @@ const BridgeSetupPage: FunctionComponent<{}> = () => {
                     setIsFetchingRoutes(false)
                 }
             } catch (error) {
-                const errorMessage = error.message || "Error fetching routes."
                 if (isValidFetch) {
-                    setRoutesError(capitalize(errorMessage))
+                    setRoutesError(
+                        capitalize(error.message || "Error fetching routes.")
+                    )
                     setAvailableRoutes([])
                     setIsFetchingRoutes(false)
                 }

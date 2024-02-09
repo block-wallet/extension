@@ -130,15 +130,13 @@ export default class AppStateController extends BaseController<AppStateControlle
                     browser.storage.session
                         .set({ loginToken })
                         .catch((err: any) => {
-                            const errorMessage = 'Error setting loginToken';
-                            log.error(errorMessage, err);
+                            log.error('error setting loginToken', err);
                         });
             }
 
             await this._postLoginAction();
         } catch (error) {
-            const errorMessage = error.message || error;
-            throw new Error(errorMessage);
+            throw new Error(error.message || error);
         }
     };
 

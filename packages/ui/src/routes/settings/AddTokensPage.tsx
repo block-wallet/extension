@@ -60,9 +60,7 @@ const AddTokensPage = () => {
 
                         return setResults([...exacts, ...others])
                     })
-                    .catch((err) => {
-                        log.error(err)
-                    })
+                    .catch((err) => log.error(err))
             } else {
                 setResults([])
             }

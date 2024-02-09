@@ -3,8 +3,8 @@ import { useEffect, useRef } from "react"
 import useAsyncInvoke from "./useAsyncInvoke"
 
 export interface submitOnEnterProps {
-    onSubmit?: () => Promise<any>,
-    isFormValid?: boolean,
+    onSubmit?: () => Promise<any>
+    isFormValid?: boolean
     isEnabled?: boolean
 }
 
@@ -15,7 +15,11 @@ export interface submitOnEnterProps {
  * @param isFormValid flag that indicates if the form is valid, this applies when the form implements Yup client-side validations.
  * @param isEnabled flag that indicates if submit button is enabled according to page logic.
  */
-const useSubmitOnEnter = ({ onSubmit = undefined, isFormValid = true, isEnabled = true }: submitOnEnterProps) => {
+const useSubmitOnEnter = ({
+    onSubmit = undefined,
+    isFormValid = true,
+    isEnabled = true,
+}: submitOnEnterProps) => {
     const canSubmit = useRef(isEnabled)
     const { run, isError } = useAsyncInvoke()
 
@@ -29,7 +33,11 @@ const useSubmitOnEnter = ({ onSubmit = undefined, isFormValid = true, isEnabled 
             if (!canSubmit.current) return
 
             canSubmit.current = false
-            run(onSubmit().catch(err => log.error(err)))
+            run(
+                onSubmit().catch((err) => {
+                    log.error(err)
+                })
+            )
         }
 
         // Event listener
@@ -50,9 +58,7 @@ const useSubmitOnEnter = ({ onSubmit = undefined, isFormValid = true, isEnabled 
         if (isFormValid && !canSubmit.current) {
             canSubmit.current = true
         }
-
     }, [isFormValid])
-
 
     // This effect handles the case where the form is invalid in background and the promise is rejected, so we allow submitting again.
     useEffect(() => {
@@ -60,7 +66,6 @@ const useSubmitOnEnter = ({ onSubmit = undefined, isFormValid = true, isEnabled 
             canSubmit.current = true
         }
     }, [isError])
-
 
     // Handle submit button being enabled according to page logic
     useEffect(() => {

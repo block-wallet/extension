@@ -106,7 +106,8 @@ export default class AppStateController extends BaseController<AppStateControlle
             // event emit
             this.emit(AppStateEvents.APP_LOCKED);
         } catch (error) {
-            throw new Error(error.message || error);
+            const errorMessage = error.message || error;
+            throw new Error(errorMessage);
         }
     };
 

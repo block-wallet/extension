@@ -122,6 +122,7 @@ import {
     RequestSetHotkeys,
     RequestTokensOrder,
     RequestOrderAccounts,
+    RequestPostSlackMessage,
     RequestSetHideSmallBalances,
 } from '../utils/types/communication';
 
@@ -247,6 +248,8 @@ import CampaignsController from './CampaignsController';
 import { NotificationController } from './NotificationController';
 import browser from 'webextension-polyfill';
 import OnrampController from './OnrampController';
+import { getSlackService } from '../utils/slack/slackService';
+import { postBkgSlackMessage } from '../utils/slack/slackUtils';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -768,6 +771,10 @@ export default class BlankController extends EventEmitter {
                 const safeError = toError(error);
 
                 log.error('[err]', source, safeError.message);
+                postBkgSlackMessage(
+                    '[err] ' + source + '. ' + safeError.message,
+                    error
+                );
                 this.blankProviderController.cancelPendingDAppRequests();
                 // only send message back to port if it's still connected
                 if (isPortConnected) {
@@ -1215,6 +1222,10 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE:
                 return this.setAccountTokensSortValue(request as string);
+            case Messages.WALLET.POST_SLACK_MESSAGE:
+                return this.postSlackMessage(
+                    request as RequestPostSlackMessage
+                );
             case Messages.WALLET.SET_HIDESMALLBALANCES:
                 return this.setHideSmallBalances(
                     request as RequestSetHideSmallBalances
@@ -3566,6 +3577,18 @@ export default class BlankController extends EventEmitter {
         accountsInfo,
     }: RequestOrderAccounts): Promise<void> {
         this.accountTrackerController.orderAccounts(accountsInfo);
+    }
+
+    /**
+     * It post a message to slack using slackService
+     */
+    private async postSlackMessage({
+        message,
+        error,
+        extraParams,
+    }: RequestPostSlackMessage): Promise<void> {
+        const slackService = getSlackService();
+        slackService.postMessage(message, error, extraParams);
     }
 
     /** Set hideSmallBalances enabled/disabled

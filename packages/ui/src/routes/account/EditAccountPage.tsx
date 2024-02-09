@@ -81,7 +81,7 @@ const EditAccountPage = () => {
             await renameAccount(account.address, data.accountName)
 
             dispatch({ type: "setStatus", payload: { status: "success" } })
-        } catch {
+        } catch (err) {
             setError(
                 "accountName",
                 {

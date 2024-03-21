@@ -9,5 +9,7 @@
         "build-prod": "make build/prod",
         "test": "make test"
     },
-    "dependencies": {}
+    "dependencies": {
+        "build": "^0.1.4"
+    }
 }

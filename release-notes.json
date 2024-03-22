@@ -1090,6 +1090,20 @@
                 }
             ],
             "version": "1.2.5"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Added New Chains and Tokens."
+                        }
+                    ]
+                }
+            ],
+            "version": "1.2.6"
         }
     ]
 }

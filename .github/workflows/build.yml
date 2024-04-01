@@ -412,7 +412,7 @@ jobs:
               "attachments": [
                 {
                   "color": "good",
-                  "pretext": "The pull request was created. After reviewing it, please merge it to continue the release process that will launch *Release (automated)*. CC: <@U01H6J242BY>, <@U021GBLL00Z>",
+                  "pretext": "The pull request was created. After reviewing it, please merge it to continue the release process that will launch *Release (automated)*.",
                   "author_name": "GitHub Pull Request ${{ github.event.inputs.extension-version }}",
                   "author_link": "${{ needs.pull_request.outputs.pr_url }}",
                   "title": "GitHub Pull Request for the release ${{ github.event.inputs.extension-version }} created as draft"

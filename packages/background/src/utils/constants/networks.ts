@@ -20,9 +20,10 @@ export type Network = {
         name: string;
         symbol: string;
         decimals: number;
+        logo?: string; // Used if the native currency logo is different from network logo
     };
     hasFixedGasCost?: boolean;
-    iconUrls?: string[];
+    iconUrls?: string[]; // Network logo
     enable: boolean;
     features: BlankSupportedFeatures[];
     test: boolean;
@@ -34,13 +35,15 @@ export type Network = {
         maxPriorityFeePerGas?: BigNumber;
         gasPrice?: BigNumber;
     };
-    rpcUrls: string[];
+    currentRpcUrl: string;
     defaultRpcUrl?: string;
+    backupRpcUrls?: string[];
     blockExplorerUrls?: string[];
     blockExplorerName?: string;
     etherscanApiUrl?: string;
     actionsTimeIntervals: ActionsTimeInterval;
     tornadoIntervals?: TornadoIntervals;
+    rpcUrls?: string[];
 
     /**
      * Indicates whether the network is natively supported
@@ -69,6 +72,7 @@ export interface AddNetworkType {
         symbol: string;
         name?: string;
         decimals?: number;
+        logo?: string;
     };
     rpcUrls?: string[];
     test: boolean;
@@ -162,13 +166,20 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: true,
         showGasLevels: true,
-        rpcUrls: [`https://mainnet-node.blockwallet.io`],
+        currentRpcUrl: `https://mainnet-node.blockwallet.io`,
         defaultRpcUrl: `https://mainnet-node.blockwallet.io`,
+        backupRpcUrls: [
+            'https://mainnet.blockwallet.io',
+            'https://rpc.ankr.com/eth/',
+        ],
+        iconUrls: [
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
+        ],
         blockExplorerUrls: ['https://etherscan.io'],
         blockExplorerName: 'Etherscan',
         etherscanApiUrl: 'https://api.etherscan.io',
         actionsTimeIntervals: {
-            ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES,
+            ...FAST_TIME_INTERVALS_DEFAULT_VALUES,
         },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
@@ -185,6 +196,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         hasFixedGasCost: false,
         enable: true,
@@ -193,8 +205,15 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,
-        rpcUrls: ['https://arbitrum-node.blockwallet.io'],
+        currentRpcUrl: 'https://arbitrum-node.blockwallet.io',
+        iconUrls: [
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/arbitrum/info/logo.png',
+        ],
         defaultRpcUrl: 'https://arbitrum-node.blockwallet.io',
+        backupRpcUrls: [
+            'https://arbitrum.blockwallet.io',
+            'https://rpc.ankr.com/arbitrum',
+        ],
         blockExplorerUrls: ['https://arbiscan.io'],
         blockExplorerName: 'Arbiscan',
         etherscanApiUrl: 'https://api.arbiscan.io',
@@ -216,6 +235,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         hasFixedGasCost: false,
         gasLowerCap: {
@@ -227,8 +247,15 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,
-        rpcUrls: ['https://optimism-node.blockwallet.io'],
+        currentRpcUrl: 'https://optimism-node.blockwallet.io',
+        iconUrls: [
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/optimism/info/logo.png',
+        ],
         defaultRpcUrl: 'https://optimism-node.blockwallet.io',
+        backupRpcUrls: [
+            'https://optimism.blockwallet.io',
+            'https://rpc.ankr.com/optimism/',
+        ],
         blockExplorerUrls: ['https://optimistic.etherscan.io'],
         blockExplorerName: 'Etherscan',
         etherscanApiUrl: 'https://api-optimistic.etherscan.io',
@@ -259,8 +286,12 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
-        rpcUrls: ['https://bsc.blockwallet.io'],
-        defaultRpcUrl: 'https://bsc.blockwallet.io',
+        currentRpcUrl: 'https://bsc-node.blockwallet.io',
+        defaultRpcUrl: 'https://bsc-node.blockwallet.io',
+        backupRpcUrls: [
+            'https://bsc.blockwallet.io',
+            'https://rpc.ankr.com/bsc/',
+        ],
         blockExplorerUrls: ['https://bscscan.com'],
         blockExplorerName: 'Bscscan',
         etherscanApiUrl: 'https://api.bscscan.com',
@@ -296,8 +327,12 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
-        rpcUrls: [`https://polygon-node.blockwallet.io`],
+        currentRpcUrl: `https://polygon-node.blockwallet.io`,
         defaultRpcUrl: `https://polygon-node.blockwallet.io`,
+        backupRpcUrls: [
+            'https://polygon.blockwallet.io',
+            'https://rpc.ankr.com/polygon/',
+        ],
         blockExplorerUrls: ['https://polygonscan.com'],
         blockExplorerName: 'Polygonscan',
         etherscanApiUrl: 'https://api.polygonscan.com',
@@ -333,8 +368,12 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
-        rpcUrls: [`https://avax-node.blockwallet.io`],
+        currentRpcUrl: `https://avax-node.blockwallet.io`,
         defaultRpcUrl: `https://avax-node.blockwallet.io`,
+        backupRpcUrls: [
+            'https://avax.blockwallet.io',
+            'https://rpc.ankr.com/avalanche/',
+        ],
         blockExplorerUrls: ['https://snowtrace.io/'],
         blockExplorerName: 'Snowtrace',
         etherscanApiUrl: 'https://api.snowtrace.io/',
@@ -367,8 +406,12 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
-        rpcUrls: [`https://fantom-node.blockwallet.io`],
+        currentRpcUrl: `https://fantom-node.blockwallet.io`,
         defaultRpcUrl: `https://fantom-node.blockwallet.io`,
+        backupRpcUrls: [
+            'https://fantom.blockwallet.io',
+            'https://rpc.ankr.com/fantom/',
+        ],
         blockExplorerUrls: ['https://ftmscan.com'],
         blockExplorerName: 'FTMScan',
         etherscanApiUrl: 'https://api.ftmscan.com',
@@ -388,6 +431,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'xDAI',
             symbol: 'xDAI',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/xdai/assets/0x/logo.png',
         },
         hasFixedGasCost: false,
         enable: true,
@@ -397,10 +441,14 @@ export const INITIAL_NETWORKS: Networks = {
         ens: false,
         showGasLevels: false,
         iconUrls: [
-            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/xdai/assets/0x/logo.png',
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/xdai/info/logo.png',
         ],
-        rpcUrls: ['https://xdai-node.blockwallet.io'],
+        currentRpcUrl: 'https://xdai-node.blockwallet.io',
         defaultRpcUrl: 'https://xdai-node.blockwallet.io',
+        backupRpcUrls: [
+            'https://xdai.blockwallet.io',
+            'https://rpc.ankr.com/gnosis/',
+        ],
         blockExplorerUrls: ['https://blockscout.com/xdai/mainnet'],
         blockExplorerName: 'Blockscout',
         etherscanApiUrl: 'https://api-gnosis.etherscan.io',
@@ -420,6 +468,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Smart Bitcoin',
             symbol: 'RBTC',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
         },
         hasFixedGasCost: false,
         enable: true,
@@ -429,10 +478,14 @@ export const INITIAL_NETWORKS: Networks = {
         ens: false,
         showGasLevels: false, // "Slow" gas level might be lower than the minimumGasPrice so the tx will be rejected
         iconUrls: [
-            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/info/logo.png',
         ],
-        rpcUrls: ['https://rsk-node.blockwallet.io'],
+        currentRpcUrl: 'https://rsk-node.blockwallet.io',
         defaultRpcUrl: 'https://rsk-node.blockwallet.io',
+        backupRpcUrls: [
+            'https://rsk.blockwallet.io',
+            'https://public-node.rsk.co	',
+        ],
         blockExplorerName: 'RSK Explorer',
         blockExplorerUrls: ['https://explorer.rsk.co'],
         actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
@@ -451,6 +504,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zksync/info/logo.png',
@@ -462,8 +516,12 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,
-        rpcUrls: [`https://zksync-node.blockwallet.io`],
+        currentRpcUrl: `https://zksync-node.blockwallet.io`,
         defaultRpcUrl: `https://zksync-node.blockwallet.io`,
+        backupRpcUrls: [
+            'https://zksync.blockwallet.io',
+            'https://mainnet.era.zksync.io',
+        ],
         blockExplorerUrls: ['https://explorer.zksync.io/'],
         blockExplorerName: 'zkSync Explorer',
         actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
@@ -482,6 +540,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/polygonzkevm/info/logo.png',
@@ -493,10 +552,50 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,
-        rpcUrls: [`https://polygon-zkevm-node.blockwallet.io`],
+        currentRpcUrl: `https://polygon-zkevm-node.blockwallet.io`,
         defaultRpcUrl: `https://polygon-zkevm-node.blockwallet.io`,
+        backupRpcUrls: [
+            'https://polygon-zkevm.blockwallet.io',
+            'https://rpc.ankr.com/polygon_zkevm',
+        ],
         blockExplorerUrls: ['https://zkevm.polygonscan.com/'],
         blockExplorerName: 'Polygon zkEVM Explorer',
+        actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
+        tornadoIntervals: {
+            depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
+            derivationsForward: DERIVATIONS_FORWARD,
+        },
+        nativelySupported: true,
+    },
+    SCROLL_MAINNET: {
+        name: 'scroll_mainnet',
+        desc: 'Scroll',
+        chainId: 534352,
+        networkVersion: '534352',
+        nativeCurrency: {
+            name: 'Ether',
+            symbol: 'ETH',
+            decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
+        },
+        iconUrls: [
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/scroll/info/logo.png',
+        ],
+        hasFixedGasCost: false,
+        enable: true,
+        test: false,
+        order: 12,
+        features: [FEATURES.SENDS],
+        ens: false,
+        showGasLevels: false,
+        currentRpcUrl: 'https://scroll-node.blockwallet.io',
+        defaultRpcUrl: 'https://scroll-node.blockwallet.io',
+        backupRpcUrls: [
+            'https://scroll.blockwallet.io',
+            'https://rpc.scroll.io/',
+        ],
+        blockExplorerName: 'Scroll Blockchain Explorer',
+        blockExplorerUrls: ['https://scrollscan.com/'],
         actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
@@ -521,8 +620,15 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: true,
         showGasLevels: true,
-        rpcUrls: [`https://goerli-node.blockwallet.io`],
+        iconUrls: [
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
+        ],
+        currentRpcUrl: `https://goerli-node.blockwallet.io`,
         defaultRpcUrl: `https://goerli-node.blockwallet.io`,
+        backupRpcUrls: [
+            'https://goerli.blockwallet.io',
+            'https://rpc.ankr.com/eth_goerli',
+        ],
         blockExplorerUrls: ['https://goerli.etherscan.io'],
         blockExplorerName: 'Etherscan',
         etherscanApiUrl: 'https://api-goerli.etherscan.io',
@@ -553,7 +659,7 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
-        rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545'],
+        currentRpcUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545',
         blockExplorerUrls: ['https://testnet.bscscan.io'],
         blockExplorerName: 'Bscscan',
         actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
@@ -583,9 +689,9 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: true,
-        rpcUrls: [`https://matic-mumbai.chainstacklabs.com`],
+        currentRpcUrl: `https://matic-mumbai.chainstacklabs.com`,
         blockExplorerUrls: ['https://mumbai.polygonscan.com'],
-        blockExplorerName: 'Etherscan',
+        blockExplorerName: 'Polygonscan',
         etherscanApiUrl: 'https://mumbai.polygonscan.com',
         actionsTimeIntervals: { ...TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
@@ -603,6 +709,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zksync/info/logo.png',
@@ -614,8 +721,12 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,
-        rpcUrls: [`https://zksync-testnet-node.blockwallet.io`],
+        currentRpcUrl: `https://zksync-testnet-node.blockwallet.io`,
         defaultRpcUrl: `https://zksync-testnet-node.blockwallet.io`,
+        backupRpcUrls: [
+            'https://zksync-testnet.blockwallet.io',
+            'https://testnet.era.zksync.dev',
+        ],
         blockExplorerUrls: ['https://goerli.explorer.zksync.io'],
         blockExplorerName: 'zkSync Testnet Explorer',
         actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
@@ -627,13 +738,14 @@ export const INITIAL_NETWORKS: Networks = {
     },
     SCROLL_L2_TESTNET: {
         name: 'scroll_l2_testnet',
-        desc: 'Scroll Alpha Testnet',
-        chainId: 534353,
-        networkVersion: '534353',
+        desc: 'Scroll Sepolia Testnet',
+        chainId: 534351,
+        networkVersion: '534351',
         nativeCurrency: {
             name: 'Ether',
-            symbol: 'TSETH',
+            symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         iconUrls: [
             'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/scroll/info/logo.png',
@@ -645,10 +757,11 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,
-        rpcUrls: [`https://scroll-l2-testnet-node.blockwallet.io`],
-        defaultRpcUrl: `https://scroll-l2-testnet-node.blockwallet.io`,
-        blockExplorerUrls: ['https://blockscout.scroll.io/'],
-        blockExplorerName: 'Scroll L2 Explorer',
+        currentRpcUrl: `https://sepolia-rpc.scroll.io/`,
+        defaultRpcUrl: `https://sepolia-rpc.scroll.io/`,
+        backupRpcUrls: ['https://rpc.ankr.com/scroll_sepolia_testnet/'],
+        blockExplorerUrls: ['https://sepolia.scrollscan.com/'],
+        blockExplorerName: 'Scroll Sepolia Explorer',
         actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
@@ -656,29 +769,63 @@ export const INITIAL_NETWORKS: Networks = {
         },
         nativelySupported: true,
     },
-    RSK_TESTNET: {
-        name: 'rsk_testnet',
-        desc: 'Rootstock Testnet',
-        chainId: 31,
-        networkVersion: '31',
+    X1_TESTNET: {
+        name: 'X1_Testnet',
+        desc: 'X1 Testnet',
+        chainId: 195,
+        networkVersion: '195',
         nativeCurrency: {
-            name: 'Testnet Smart Bitcoin',
-            symbol: 'tRBTC',
+            name: 'OKB',
+            symbol: 'OKB',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/x1/info/logo.png',
         },
+        iconUrls: [
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/x1/info/logo.png',
+        ],
         hasFixedGasCost: false,
         enable: true,
         test: true,
         order: 10,
         features: [FEATURES.SENDS],
         ens: false,
+        showGasLevels: false,
+        currentRpcUrl: `https://testrpc.x1.tech/`,
+        defaultRpcUrl: `https://testrpc.x1.tech/`,
+        backupRpcUrls: ['https://x1testrpc.okx.com/'],
+        blockExplorerUrls: ['https://www.oklink.com/x1-test'],
+        blockExplorerName: 'X1 Testnet Explorer',
+        actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
+        tornadoIntervals: {
+            depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
+            derivationsForward: DERIVATIONS_FORWARD,
+        },
+        nativelySupported: true,
+    },
+    ZETACHAIN_TESTNET: {
+        name: 'zetachain_testnet',
+        desc: 'ZetaChain Testnet',
+        chainId: 7001,
+        networkVersion: '7001',
+        nativeCurrency: {
+            name: 'Testnet ZETA',
+            symbol: 'aZETA',
+            decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zetachaintestnet/info/logo.png',
+        },
+        hasFixedGasCost: false,
+        enable: true,
+        test: true,
+        order: 11,
+        features: [FEATURES.SENDS],
+        ens: false,
         showGasLevels: true,
         iconUrls: [
-            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/rsk/assets/0x/logo.png',
+            'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/zetachaintestnet/info/logo.png',
         ],
-        rpcUrls: ['https://did.testnet.rsk.co:4444'],
-        blockExplorerName: 'RSK Testnet Explorer',
-        blockExplorerUrls: ['https://explorer.testnet.rsk.co'],
+        currentRpcUrl: 'https://rpc.ankr.com/zetachain_evm_athens_testnet',
+        blockExplorerName: 'ZetaChain Testnet Explorer',
+        blockExplorerUrls: ['https://zetachain-athens-3.blockscout.com/'],
         actionsTimeIntervals: { ...SLOW_TESTNET_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,
@@ -695,6 +842,7 @@ export const INITIAL_NETWORKS: Networks = {
             name: 'Ether',
             symbol: 'ETH',
             decimals: 18,
+            logo: 'https://raw.githubusercontent.com/block-wallet/assets/master/blockchains/ethereum/info/logo.png',
         },
         hasFixedGasCost: false,
         enable: true,
@@ -703,7 +851,7 @@ export const INITIAL_NETWORKS: Networks = {
         features: [FEATURES.SENDS],
         ens: false,
         showGasLevels: false,
-        rpcUrls: ['http://localhost:8545'],
+        currentRpcUrl: 'http://localhost:8545',
         actionsTimeIntervals: { ...ACTIONS_TIME_INTERVALS_DEFAULT_VALUES },
         tornadoIntervals: {
             depositConfirmations: DEFAULT_TORNADO_CONFIRMATION,

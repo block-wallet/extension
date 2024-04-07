@@ -16,12 +16,19 @@ import {
 } from '@block-wallet/background/controllers/erc-20/TokenController';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
 import { sleep } from '@block-wallet/background/utils/sleep';
+import * as ManifestUtils from '@block-wallet/background/utils/manifest';
+import sinon from 'sinon';
+
+
+
 
 describe('AppState Controller', function () {
     let appStateController: AppStateController;
     const defaultIdleTimeout = 5;
 
     this.beforeAll(function () {
+        sinon.stub(ManifestUtils, 'isManifestV3').returns(false)
+
         const networkController = getNetworkControllerInstance();
         const preferencesController = mockPreferencesController;
         const permissionsController = mockedPermissionsController;
@@ -93,6 +100,11 @@ describe('AppState Controller', function () {
                 { txHistoryLimit: 40 }
             )
         );
+
+    });
+
+    this.afterAll(function () {
+        sinon.restore();
     });
 
     it('should update the last user active time', async function () {

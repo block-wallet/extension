@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { createHash } from 'crypto';
+import browser from 'webextension-polyfill';
 
 export const SALT =
-    chrome && chrome.runtime && chrome.runtime.id ? chrome.runtime.id : 'salt';
+    browser && browser.runtime && browser.runtime.id
+        ? browser.runtime.id
+        : 'salt';
 
 export function Hash(
     target: any,

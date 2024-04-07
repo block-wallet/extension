@@ -2,7 +2,7 @@ import {
     getAccountNativeTokenBalanceForChain,
     fetchLatestGasPriceForChain,
 } from "../commActions"
-import { useMemo, useEffect, useCallback, useState } from "react"
+import { useMemo, useCallback, useState } from "react"
 import useAsyncInvoke, { Status } from "../../util/hooks/useAsyncInvoke"
 import { BigNumber } from "@ethersproject/bignumber"
 import { GasPriceData } from "@block-wallet/background/controllers/GasPricesController"
@@ -60,7 +60,7 @@ export const useSelectedAccountHasEnoughNativeTokensToSend = (
                 })
             })
         )
-    }, [])
+    }, [chainId, run])
 
     return useMemo(() => {
         let result = undefined
@@ -84,5 +84,6 @@ export const useSelectedAccountHasEnoughNativeTokensToSend = (
             }
         }
         return { isLoading, result, check }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoading, data, check])
 }

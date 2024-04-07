@@ -33,16 +33,6 @@ export default {
             updatedNetworks
         );
 
-        const rskTestnetNonNativeKey = networkController.getNonNativeNetworkKey(
-            INITIAL_NETWORKS.RSK_TESTNET.chainId
-        );
-        updatedNetworks = addNetworkUsingValuesDefinedByTheUser(
-            'RSK_TESTNET',
-            rskTestnetNonNativeKey,
-            INITIAL_NETWORKS.RSK_TESTNET,
-            updatedNetworks
-        );
-
         updatedNetworks.LOCALHOST = {
             ...updatedNetworks.LOCALHOST,
             order: updatedNetworks.LOCALHOST.order + 1,

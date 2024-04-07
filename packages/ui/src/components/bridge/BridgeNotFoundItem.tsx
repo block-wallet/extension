@@ -23,7 +23,7 @@ const BridgeNotFoundItem = ({
             >
                 <ArrowUpDown active={!isCollapsed} />
                 <div>
-                    <span className="ml-1 font-bold">{tool}</span>
+                    <span className="ml-1 font-semibold">{tool}</span>
                 </div>
             </div>
             <div
@@ -32,12 +32,12 @@ const BridgeNotFoundItem = ({
                     isCollapsed ? "h-0" : ""
                 )}
             >
-                <div className="ml-1 text-gray-500">
+                <div className="ml-1 text-primary-grey-dark">
                     {message}
 
                     {details.map((d, i) => (
                         <li key={d + i}>
-                            <i className="ml-1 text-gray-500">{d}</i>
+                            <i className="ml-1 text-primary-grey-dark">{d}</i>
                         </li>
                     ))}
                 </div>

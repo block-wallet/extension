@@ -5,7 +5,7 @@ import OutlinedButton from "../ui/OutlinedButton"
 const AllowancesFilterButton = ({ onClick }: { onClick: () => void }) => {
     return (
         <div
-            className="relative text-sm text-primary-300"
+            className="relative text-sm text-primary-blue-default"
             title={"Refresh Allowances"}
         >
             <OutlinedButton className={classnames("w-auto")} onClick={onClick}>

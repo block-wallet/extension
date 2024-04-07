@@ -1,4 +1,6 @@
-const VERSION = '8.2.8-beta.4';
+import browser from 'webextension-polyfill';
+
+const VERSION = '9.0.6';
 const versionN = VERSION.split('.').map((s) => parseInt(s, 10));
 // const DIRECTORY = `${ versionN[0] }${ (versionN[1] > 0 ? `.${versionN[1]}` : '') }/`;
 const DIRECTORY = `${versionN[0]}/`;
@@ -11,30 +13,25 @@ const switchToPopupTab = (event?: any) => {
     if (!event) {
         // triggered from 'usb-permissions-close' message
         // close current tab
-        chrome.tabs.query(
-            {
-                currentWindow: true,
-                active: true,
-            },
-            (current) => {
+        browser.tabs
+            .query({ currentWindow: true, active: true })
+            .then((current) => {
                 if (current.length <= 0) return;
                 const id = current[0].id;
-                chrome.tabs.remove(Number(id));
-            }
-        );
+                browser.tabs.remove(Number(id));
+            });
     }
 
     // find tab by popup pattern and switch to it
-    chrome.tabs.query(
-        {
+    browser.tabs
+        .query({
             url: `${url}popup.html`,
-        },
-        (tabs) => {
+        })
+        .then((tabs) => {
             if (tabs.length <= 0) return;
             const id = tabs[0].id;
-            chrome.tabs.update(Number(id), { active: true });
-        }
-    );
+            browser.tabs.update(Number(id), { active: true });
+        });
 };
 
 window.addEventListener('message', (event) => {
@@ -48,7 +45,7 @@ window.addEventListener('message', (event) => {
         iframe.contentWindow?.postMessage(
             {
                 type: 'usb-permissions-init',
-                extension: chrome.runtime.id,
+                extension: browser.runtime.id,
             },
             '*'
         );

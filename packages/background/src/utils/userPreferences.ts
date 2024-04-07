@@ -3,12 +3,12 @@ import {
     ReleaseNote,
 } from '../controllers/PreferencesController';
 import { generateReleaseNotesNews } from './releaseNotes';
-
+import browser from 'webextension-polyfill';
 interface ReleaseNotesFile {
     releaseNotes: ReleaseNote[];
 }
 export const getReleaseNotes = async (): Promise<ReleaseNote[]> => {
-    const url = chrome.runtime.getURL('/release-notes.json');
+    const url = browser.runtime.getURL('/release-notes.json');
     try {
         const response = await fetch(url);
         const parsedFile: ReleaseNotesFile = await response.json();

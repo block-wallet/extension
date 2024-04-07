@@ -35,8 +35,8 @@ const ToggleButton: FunctionComponent<{
     const backgroundStyle = disabled
         ? "bg-gray-200"
         : isChecked
-        ? "bg-primary-300"
-        : "bg-primary-200"
+        ? "bg-primary-blue-default"
+        : "bg-primary-grey-hover"
 
     const onClick = () => {
         if (!disabled && !readOnly) {
@@ -51,7 +51,7 @@ const ToggleButton: FunctionComponent<{
                 !disabled && !readOnly && "cursor-pointer"
             )}
         >
-            {label && <div className="font-bold text-sm">{label}</div>}
+            {label && <div className="font-semibold text-sm">{label}</div>}
             <div className="group relative">
                 <div
                     className={classnames(

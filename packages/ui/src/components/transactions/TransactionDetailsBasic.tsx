@@ -411,7 +411,7 @@ export const TransactionDetailsBasic: FunctionComponent<
                     </div>
                     <span
                         title={from}
-                        className="pl-2 font-bold text-sm truncate"
+                        className="pl-2 font-semibold text-sm truncate"
                     >
                         {fromName
                             ? formatName(fromName, 12)
@@ -448,7 +448,7 @@ export const TransactionDetailsBasic: FunctionComponent<
                     </div>
                     <span
                         title={transactionTo}
-                        className="pl-2 font-bold text-sm truncate"
+                        className="pl-2 font-semibold text-sm truncate"
                     >
                         {transaction.transactionCategory !==
                         TransactionCategories.CONTRACT_DEPLOYMENT
@@ -483,7 +483,7 @@ export const TransactionDetailsBasic: FunctionComponent<
                             )}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex flex-row items-center space-x-2 text-sm font-bold text-primary-300"
+                            className="flex flex-row items-center space-x-2 text-sm font-semibold text-primary-blue-default"
                         >
                             <span>View on {explorerName}</span>
                             <img

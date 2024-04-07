@@ -84,6 +84,57 @@ describe('Network controller', function () {
                 await networkController.getEIP1559Compatibility(5, false);
             expect(shouldNotBeCompatibleWithEIP155).equal(false);
         });
+        it('Catched by the NO_EIP_1559_NETWORKS list', async () => {
+            networkController.store.updateState({
+                isEIP1559Compatible: {},
+            });
+
+            const shouldBeCompatibleWithEIP155 =
+                await networkController.getEIP1559Compatibility(324, false);
+            expect(shouldBeCompatibleWithEIP155).equal(false);
+        });
+        it('The chain fee service indicates EIP 1559 compatibility', async () => {
+            networkController.store.updateState({
+                isEIP1559Compatible: {},
+            });
+
+            const shouldBeCompatibleWithEIP155 =
+                await networkController.getEIP1559Compatibility(5, false);
+            expect(shouldBeCompatibleWithEIP155).equal(true);
+        });
+        it('The chain fee service indicates NO EIP 1559 compatibility', async () => {
+            const providerStub = sinon.stub(
+                networkController.getProvider(),
+                'getBlock'
+            );
+            const feeHistoryStub = sinon.stub(
+                networkController.getProvider(),
+                'send'
+            );
+
+            networkController.store.updateState({
+                isEIP1559Compatible: {},
+            });
+
+            providerStub.onFirstCall().returns(
+                new Promise((resolve) => {
+                    resolve({ baseFeePerGas: BigNumber.from('1') } as Block);
+                })
+            );
+            feeHistoryStub.onFirstCall().returns(
+                new Promise((_, err) => {
+                    err(new Error('some error'));
+                })
+            );
+
+            networkController.store.updateState({
+                isEIP1559Compatible: {},
+            });
+
+            const shouldBeCompatibleWithEIP155 =
+                await networkController.getEIP1559Compatibility(1101, false);
+            expect(shouldBeCompatibleWithEIP155).equal(false);
+        });
         it('There is not a value for the chain', async () => {
             const providerStub = sinon.stub(
                 networkController.getProvider(),
@@ -116,7 +167,7 @@ describe('Network controller', function () {
             );
 
             const shouldBeCompatibleWithEIP155 =
-                await networkController.getEIP1559Compatibility(5, false);
+                await networkController.getEIP1559Compatibility(555, false);
             expect(shouldBeCompatibleWithEIP155).equal(true);
 
             networkController.store.updateState({
@@ -124,7 +175,7 @@ describe('Network controller', function () {
             });
 
             const shouldNotBeCompatibleWithEIP155 =
-                await networkController.getEIP1559Compatibility(5, false);
+                await networkController.getEIP1559Compatibility(555, false);
             expect(shouldNotBeCompatibleWithEIP155).equal(false);
         });
         it('eth_feeHistory is not available', async () => {
@@ -153,7 +204,7 @@ describe('Network controller', function () {
             );
 
             const shouldBeNotCompatibleWithEIP155 =
-                await networkController.getEIP1559Compatibility(5, false);
+                await networkController.getEIP1559Compatibility(555, false);
             expect(shouldBeNotCompatibleWithEIP155).equal(false);
         });
         it('eth_feeHistory is available', async () => {
@@ -231,7 +282,7 @@ describe('Network controller', function () {
             );
 
             const shouldNotBeCompatibleWithEIP155 =
-                await networkController.getEIP1559Compatibility(5, true);
+                await networkController.getEIP1559Compatibility(555, true);
             expect(shouldNotBeCompatibleWithEIP155).equal(false);
         });
     });

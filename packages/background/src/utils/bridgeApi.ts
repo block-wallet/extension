@@ -14,16 +14,8 @@ import {
     lifiFeeCostsToIBridgeFeeCosts,
     lifiTokenToIToken,
     LIFI_BRIDGE_ENDPOINT,
+    LIFI_KEY_HEADER,
 } from './types/lifi';
-
-const getMessageFromLiFiError = (errCode: string) => {
-    if (errCode === 'AMOUNT_TOO_LOW') {
-        return 'The amount is too low for executing this bridge.';
-    }
-    if (errCode === 'QUOTE_NOT_FOUND') {
-        return "There isn't a quote for the requested parameters.";
-    }
-};
 
 export class QuoteNotFoundError extends Error {
     details: LiFiErrorResponse;
@@ -175,14 +167,16 @@ const LiFiBridge: IBridge = {
         chainId: number
     ): Promise<IToken[]> {
         const response = await httpClient.request<GetLifiTokensResponse>(
-            `${LIFI_BRIDGE_ENDPOINT}/tokens`
+            `${LIFI_BRIDGE_ENDPOINT}/tokens`,
+            { headers: LIFI_KEY_HEADER }
         );
         const chainTokens = response.tokens[chainId] || [];
         return chainTokens.map(lifiTokenToIToken);
     },
     getSupportedChains: async function (): Promise<IChain[]> {
         const response = await httpClient.request<GetLifiChainsResponse>(
-            `${LIFI_BRIDGE_ENDPOINT}/chains`
+            `${LIFI_BRIDGE_ENDPOINT}/chains`,
+            { headers: LIFI_KEY_HEADER }
         );
         const chains = response.chains || [];
         return chains.map((chain) => ({
@@ -205,6 +199,7 @@ const LiFiBridge: IBridge = {
                     fromToken: request.fromTokenAddress,
                     toToken: request.toTokenAddress,
                 },
+                headers: LIFI_KEY_HEADER,
             }
         );
         const result = response.connections;
@@ -232,6 +227,7 @@ const LiFiBridge: IBridge = {
                     slippage: r.slippage,
                     fee: BASE_BRIDGE_FEE,
                 },
+                headers: LIFI_KEY_HEADER,
             });
             const responseData = response as GetLiFiQuoteResponse;
             return {
@@ -257,10 +253,7 @@ const LiFiBridge: IBridge = {
                 throw new Error('Request parameters are invalid.');
             } else if (e.status === 404) {
                 const quoteError = e.response as LiFiErrorResponse;
-                const errorCode = quoteError.errors?.length
-                    ? quoteError.errors[0].code
-                    : 'QUOTE_NOT_FOUND';
-                const message = getMessageFromLiFiError(errorCode);
+                const message = quoteError.message;
                 throw new QuoteNotFoundError(message, quoteError);
             }
             throw e;
@@ -276,6 +269,7 @@ const LiFiBridge: IBridge = {
                 toChain: r.toChainId,
                 txHash: r.sendTxHash,
             },
+            headers: LIFI_KEY_HEADER,
             cache: 'no-cache',
         });
         const responseData = response as GetLiFiStatusResponse;

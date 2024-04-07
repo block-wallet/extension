@@ -30,7 +30,6 @@ import {
 import { Block, Log } from '@ethersproject/abstract-provider';
 import { SignedTransaction } from './erc-20/transactions/SignedTransaction';
 import { TransactionArgument } from './transactions/ContractSignatureParser';
-import { showTransactionNotification } from '../utils/notifications';
 import TransactionController from './transactions/TransactionController';
 import { fetchBlockWithRetries } from '../utils/blockFetch';
 import { isNil } from 'lodash';
@@ -199,23 +198,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                         true
                     );
                 }
-            }
-        );
-
-        // Show incoming transaction notification
-        this.on(
-            TransactionWatcherControllerEvents.INCOMING_TRANSACTION,
-            async (
-                _chainId: number,
-                _address: string,
-                _transactionType: WatchedTransactionType,
-                txMeta: TransactionMeta
-            ) => {
-                if (
-                    this._preferencesController.settings
-                        .subscribedToNotifications
-                )
-                    showTransactionNotification(txMeta);
             }
         );
 

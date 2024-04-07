@@ -67,7 +67,7 @@ const AddTokensPage = () => {
         } else {
             setResults([])
         }
-    }, [searchedValue])
+    }, [searchedValue, isManualTokenView])
 
     const handleSubmitEnabled = async (value: boolean) => {
         setSubmitEnabled(value)
@@ -97,6 +97,21 @@ const AddTokensPage = () => {
                     }}
                     networkIndicator
                 />
+            }
+            showProviderStatus
+            footer={
+                <PopupFooter>
+                    <ButtonWithLoading
+                        label="Next"
+                        disabled={!submitEnabled}
+                        type="submit"
+                        formId={
+                            isManualTokenView
+                                ? "manualViewForm"
+                                : "listViewForm"
+                        }
+                    />
+                </PopupFooter>
             }
             // submitOnEnter={{ isEnabled: submitEnabled }}
         >
@@ -132,20 +147,6 @@ const AddTokensPage = () => {
                         />
                     )}
                 </div>
-                <hr className="border-0.5 border-gray-200 w-full" />
-                {/* FOOTER */}
-                <PopupFooter>
-                    <ButtonWithLoading
-                        label="Next"
-                        disabled={!submitEnabled}
-                        type="submit"
-                        formId={
-                            isManualTokenView
-                                ? "manualViewForm"
-                                : "listViewForm"
-                        }
-                    />
-                </PopupFooter>
             </div>
         </PopupLayout>
     )

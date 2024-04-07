@@ -11,7 +11,6 @@ import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import useGetAssetByTokenAddress from "../../util/hooks/useGetAssetByTokenAddress"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
-import { AssetIcon } from "../AssetsList"
 import RoundedIconButton from "../button/RoundedIconButton"
 import AnimatedIcon, { AnimatedIconName } from "../../components/AnimatedIcon"
 import ArrowHoverAnimation from "../icons/ArrowHoverAnimation"
@@ -28,6 +27,7 @@ import { formatName } from "../../util/formatAccount"
 import Icon, { IconName } from "../ui/Icon"
 import DoubleArrowHoverAnimation from "../icons/DoubleArrowHoverAnimation"
 import ActivityAllowancesView from "./ActivityAllowancesView"
+import TokenLogo from "../token/TokenLogo"
 
 const AssetDetailsPage = () => {
     const state = useBlankState()!
@@ -89,6 +89,7 @@ const AssetDetailsPage = () => {
                     )}`}
                     close={false}
                     disabled={isRemoving}
+                    networkIndicator
                     actions={
                         !isNative
                             ? [
@@ -143,6 +144,7 @@ const AssetDetailsPage = () => {
                     }
                 />
             }
+            showProviderStatus
         >
             <ConfirmDialog
                 title="Remove Token"
@@ -166,9 +168,14 @@ const AssetDetailsPage = () => {
             />
 
             <div className="flex flex-col items-start flex-1 w-full h-0 max-h-screen p-6 space-y-6 overflow-auto hide-scroll">
-                <TokenSummary minHeight="13rem" className="mt-2">
-                    <TokenSummary.Balances className="mt-2">
-                        <AssetIcon filled asset={token} />
+                <TokenSummary>
+                    <TokenSummary.Balances>
+                        <TokenLogo
+                            logo={token.logo}
+                            name={token.symbol ?? ""}
+                            filled={true}
+                            logoSize="big"
+                        />
                         <TokenSummary.TokenName>
                             {token.name}
                         </TokenSummary.TokenName>
@@ -192,7 +199,7 @@ const AssetDetailsPage = () => {
                             )}
                         </TokenSummary.ExchangeRateBalance>
                     </TokenSummary.Balances>
-                    <TokenSummary.Actions className="mb-4">
+                    <TokenSummary.Actions className="pb-4">
                         <Link
                             to={{
                                 pathname: "/send",
@@ -233,13 +240,13 @@ const AssetDetailsPage = () => {
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
                                         disabledActions
                                             ? "bg-gray-300"
-                                            : "bg-primary-300"
+                                            : "bg-primary-blue-default"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
                                     <DoubleArrowHoverAnimation />
                                 </div>
-                                <span className="text-xs font-medium">
+                                <span className="text-[13px] font-medium">
                                     Swap
                                 </span>
                             </Link>
@@ -265,7 +272,7 @@ const AssetDetailsPage = () => {
                                         "w-8 h-8 overflow-hidden transition duration-300 rounded-full group-hover:opacity-75",
                                         disabledActions
                                             ? "bg-gray-300"
-                                            : "bg-primary-300"
+                                            : "bg-primary-blue-default"
                                     )}
                                     style={{ transform: "scaleY(-1)" }}
                                 >
@@ -281,7 +288,7 @@ const AssetDetailsPage = () => {
                                         />
                                     )}
                                 </div>
-                                <span className="text-xs font-medium">
+                                <span className="text-[13px] font-medium">
                                     Bridge
                                 </span>
                             </Link>

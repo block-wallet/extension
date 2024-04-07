@@ -34,7 +34,7 @@ const useTransactions = () => {
                     amount: value ? value : BigNumber.from("0"),
                     currency: networkNativeCurrency.symbol,
                     decimals: networkNativeCurrency.decimals,
-                    logo: defaultNetworkLogo,
+                    logo: networkNativeCurrency.logo ?? defaultNetworkLogo,
                 },
             }
         })

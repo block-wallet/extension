@@ -13,6 +13,10 @@ export class RequestError extends Error {
 
 const GET = 'GET';
 
+export function isHttpsURL(url: string): boolean {
+    return url.startsWith('https://');
+}
+
 function isJsonResponse(r: Response) {
     return r.headers.get('content-type')?.includes('application/json');
 }
@@ -81,11 +85,18 @@ const request = async <T>(
     }
 
     // If response is not ok, check if content-type is json before converting.
-    const data = isJsonResponse(response) && (await response.json());
+    const data = isJsonResponse(response) ? await response.json() : undefined;
 
     // Check if there's an 'error' or err' key in the response
-    const errMessage =
-        'error' in data ? data.error : 'err' in data ? data.err : undefined;
+    let errMessage = '';
+    if (data && typeof data === 'object') {
+        for (const prop in data) {
+            if (['err', 'error'].includes(prop)) {
+                errMessage = data[prop];
+                break;
+            }
+        }
+    }
 
     // Throw the request error
     throw new RequestError(

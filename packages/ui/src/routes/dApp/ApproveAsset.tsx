@@ -64,7 +64,7 @@ import {
     formatHashLastChars,
     formatName,
 } from "../../util/formatAccount"
-import { formatRounded } from "../../util/formatRounded"
+import { formatRounded, formatRoundedUp } from "../../util/formatRounded"
 import { getAccountColor } from "../../util/getAccountColor"
 import { parseAllowance } from "../../util/approval"
 import useDebouncedState from "../../util/hooks/useDebouncedState"
@@ -180,15 +180,6 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const selectedAccountBalance = useSelectedAccountBalance()
     const { nativeToken } = useTokensList()
 
-    // Get data from window.localStorage
-    const [, setPersistedData] = useLocalStorageState<ApproveAssetPageState>(
-        "approveasset.form",
-        {
-            initialValue: { txId: "" },
-            volatile: true,
-        }
-    )
-
     const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
         useCheckAccountDeviceLinked()
 
@@ -272,12 +263,14 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const defaultAllowance = transaction.advancedData?.allowance!
 
     const [allowance, setAllowance] = useState(
-        formatUnits(defaultAllowance, tokenDecimals)
+        formatRoundedUp(formatUnits(defaultAllowance, tokenDecimals))
     )
     useEffect(() => {
         // To reset the default value if there is multiple queued transactions
-        setAllowance(formatUnits(defaultAllowance, tokenDecimals))
-    }, [defaultAllowance])
+        setAllowance(
+            formatRoundedUp(formatUnits(defaultAllowance, tokenDecimals))
+        )
+    }, [defaultAllowance, tokenDecimals])
 
     useEffect(() => {
         setIsManuallyRejected(false)
@@ -388,7 +381,6 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const approve = async () => {
         try {
             dispatch({ type: "open", payload: { status: "loading" } })
-
             const isLinked = await checkDeviceIsLinked()
             if (!isLinked) {
                 closeDialog()
@@ -398,7 +390,10 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 customAllowance: parseAllowance(allowance, tokenDecimals),
                 customNonce: transactionAdvancedData.customNonce,
             })
-        } catch (error) {}
+        } catch (error) {
+            console.log(error)
+            dispatch({ type: "open", payload: { status: "error" } })
+        }
     }
 
     const reject = async () => {
@@ -450,7 +445,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                         href={spenderAddressExplorerLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-primary-300 hover:underline"
+                        className="text-primary-blue-default hover:underline"
                     >
                         {spenderName}
                     </a>{" "}
@@ -463,7 +458,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                         href={spenderAddressExplorerLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-primary-300 hover:underline"
+                        className="text-primary-blue-default hover:underline"
                     >
                         {spenderName}
                     </a>{" "}
@@ -476,15 +471,15 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
     const mainSection = (
         <>
             <div className="px-6 py-3">
-                <p className="text-sm font-bold pb-2 break-word">
+                <p className="text-sm font-semibold pb-2 break-word">
                     {mainSectionTitle}
                 </p>
-                <p className="text-sm text-gray-500 break-word">
+                <p className="text-sm text-primary-grey-dark break-word">
                     {mainSectionText}
                 </p>
                 {currentAllowanceValue && (
                     <p
-                        className="flex items-center space-x-1 text-sm text-gray-500 break-word mt-2"
+                        className="flex items-center space-x-1 text-sm text-primary-grey-dark break-word mt-2"
                         title={`${Number(
                             formatUnits(currentAllowanceValue, tokenDecimals)
                         )} ${tokenName}`}
@@ -514,7 +509,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     currentAllowance={currentAllowanceValue}
                 />
                 <div className="flex flex-col">
-                    <label className="text-sm text-gray-600 mb-2">
+                    <label className="text-[13px] font-medium text-primary-grey-dark mb-2">
                         Gas Price
                     </label>
                     {!isEIP1559Compatible ? (
@@ -584,7 +579,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                         <div className="group relative">
                             <AiFillInfoCircle
                                 size={26}
-                                className="pl-2 text-primary-200 cursor-pointer hover:text-primary-300"
+                                className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
                             />
                             <Tooltip
                                 content={`${transactionCount - 1} more ${
@@ -621,6 +616,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     </>
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingDialog
                 open={isOpen}
@@ -651,6 +647,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                 }}
                 gifs={gifs}
                 hideButton
+                showCloseButton
             />
             {(isTokenLoading || isNameLoading) && <LoadingOverlay />}
             <CheckBoxDialog
@@ -685,11 +682,11 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                     fill={getAccountColor(account.address)}
                 />
                 <div className="relative flex flex-col group space-y-1 ml-4">
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-semibold">
                         {formatName(account.name, 15)}
                     </span>
                     <span
-                        className="text-xs text-gray-600 truncate"
+                        className="text-xs text-primary-grey-dark truncate"
                         title={account.address}
                     >
                         {formatHash(account.address)}
@@ -700,7 +697,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                         className="flex flex-row items-center"
                         title={`${formatName(assetBalance, 18)} ${tokenName}`}
                     >
-                        <span className="text-xs text-gray-600 truncate">
+                        <span className="text-xs text-primary-grey-dark truncate">
                             {`${formatName(assetBalance, 18)}`}
                         </span>
                         <img
@@ -727,7 +724,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
                             18
                         )} ${nativeToken.token.symbol}`}
                     >
-                        <span className="text-xs text-gray-600 truncate">
+                        <span className="text-xs text-primary-grey-dark truncate">
                             {formatName(
                                 formatRounded(
                                     formatUnits(

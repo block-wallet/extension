@@ -1,244 +1,212 @@
 [
-  {
-    "code": "btc",
-    "name": "Bitcoin"
-  },
-  {
-    "code": "eth",
-    "name": "Ethereum"
-  },
-  {
-    "code": "ltc",
-    "name": "Binance-Peg Litecoin"
-  },
-  {
-    "code": "bch",
-    "name": "Binance-Peg Bitcoin Cash"
-  },
-  {
-    "code": "bnb",
-    "name": "Binance Coin"
-  },
-  {
-    "code": "eos",
-    "name": "Binance-Peg EOS"
-  },
-  {
-    "code": "xrp",
-    "name": "Binance-Peg XRP"
-  },
-  {
-    "code": "xlm",
-    "name": "Stellar"
-  },
-  {
-    "code": "link",
-    "name": "Chainlink"
-  },
-  {
-    "code": "dot",
-    "name": "Binance-Peg Polkadot"
-  },
-  {
-    "code": "yfi",
-    "name": "yearn.finance"
-  },
-  {
-    "code": "usd",
-    "name": "United States Dollar"
-  },
-  {
-    "code": "aed",
-    "name": "UAE Dirham"
-  },
-  {
-    "code": "ars",
-    "name": "Argentine Peso"
-  },
-  {
-    "code": "aud",
-    "name": "Australian Dollar"
-  },
-  {
-    "code": "bdt",
-    "name": "Bangladeshi Taka"
-  },
-  {
-    "code": "bhd",
-    "name": "Bahraini Dinar"
-  },
-  {
-    "code": "bmd",
-    "name": "Bermudian Dollar"
-  },
-  {
-    "code": "brl",
-    "name": "Brazilian Real"
-  },
-  {
-    "code": "cad",
-    "name": "Canadian Dollar"
-  },
-  {
-    "code": "chf",
-    "name": "Swiss Franc"
-  },
-  {
-    "code": "clp",
-    "name": "Chilean Peso"
-  },
-  {
-    "code": "cny",
-    "name": "Chinese Renminbi"
-  },
-  {
-    "code": "czk",
-    "name": "Czech Koruna"
-  },
-  {
-    "code": "dkk",
-    "name": "Danish Krone"
-  },
-  {
-    "code": "eur",
-    "name": "Euro"
-  },
-  {
-    "code": "gbp",
-    "name": "Pound Sterling"
-  },
-  {
-    "code": "hkd",
-    "name": "Hong Kong Dollar"
-  },
-  {
-    "code": "huf",
-    "name": "Hungarian Forint"
-  },
-  {
-    "code": "idr",
-    "name": "Indonesian Rupiah"
-  },
-  {
-    "code": "ils",
-    "name": "Israeli New Shekel"
-  },
-  {
-    "code": "inr",
-    "name": "Indian Rupee"
-  },
-  {
-    "code": "jpy",
-    "name": "Japanese Yen"
-  },
-  {
-    "code": "krw",
-    "name": "South Korean Won"
-  },
-  {
-    "code": "kwd",
-    "name": "Kuwaiti Dinar"
-  },
-  {
-    "code": "lkr",
-    "name": "Sri Lanka Rupee"
-  },
-  {
-    "code": "mmk",
-    "name": "Burmese Kyat"
-  },
-  {
-    "code": "mxn",
-    "name": "Mexican Peso"
-  },
-  {
-    "code": "myr",
-    "name": "Malaysian Ringgit"
-  },
-  {
-    "code": "ngn",
-    "name": "Nigerian Naira"
-  },
-  {
-    "code": "nok",
-    "name": "Norwegian Krone"
-  },
-  {
-    "code": "nzd",
-    "name": "New Zealand Dollar"
-  },
-  {
-    "code": "php",
-    "name": "Philippine Peso"
-  },
-  {
-    "code": "pkr",
-    "name": "Pakistani Rupee"
-  },
-  {
-    "code": "pln",
-    "name": "Polish Złoty"
-  },
-  {
-    "code": "rub",
-    "name": "Russian Ruble"
-  },
-  {
-    "code": "sar",
-    "name": "Saudi Riyal"
-  },
-  {
-    "code": "sek",
-    "name": "Swedish Krona"
-  },
-  {
-    "code": "sgd",
-    "name": "Singapore Dollar"
-  },
-  {
-    "code": "thb",
-    "name": "Thai Baht"
-  },
-  {
-    "code": "try",
-    "name": "Turkish Lira"
-  },
-  {
-    "code": "twd",
-    "name": "New Taiwan Dollar"
-  },
-  {
-    "code": "uah",
-    "name": "Ukrainian Hryvnia"
-  },
-  {
-    "code": "vef"
-  },
-  {
-    "code": "vnd",
-    "name": "Vietnamese Đồng"
-  },
-  {
-    "code": "zar",
-    "name": "South African Rand"
-  },
-  {
-    "code": "xdr",
-    "name": "Special Drawing Rights"
-  },
-  {
-    "code": "xag",
-    "name": "Xrpalike Gene"
-  },
-  {
-    "code": "xau"
-  },
-  {
-    "code": "bits",
-    "name": "Bitswift"
-  },
-  {
-    "code": "sats",
-    "name": "Baby Satoshi"
-  }
+    {
+        "code": "btc",
+        "name": "Bitcoin"
+    },
+    {
+        "code": "eth",
+        "name": "Ethereum"
+    },
+    {
+        "code": "bnb",
+        "name": "Binance Coin"
+    },
+    {
+        "code": "usd",
+        "name": "United States Dollar"
+    },
+    {
+        "code": "aed",
+        "name": "UAE Dirham"
+    },
+    {
+        "code": "ars",
+        "name": "Argentine Peso"
+    },
+    {
+        "code": "aud",
+        "name": "Australian Dollar"
+    },
+    {
+        "code": "bdt",
+        "name": "Bangladeshi Taka"
+    },
+    {
+        "code": "bhd",
+        "name": "Bahraini Dinar"
+    },
+    {
+        "code": "bmd",
+        "name": "Bermudian Dollar"
+    },
+    {
+        "code": "brl",
+        "name": "Brazilian Real"
+    },
+    {
+        "code": "cad",
+        "name": "Canadian Dollar"
+    },
+    {
+        "code": "chf",
+        "name": "Swiss Franc"
+    },
+    {
+        "code": "clp",
+        "name": "Chilean Peso"
+    },
+    {
+        "code": "cny",
+        "name": "Chinese Renminbi"
+    },
+    {
+        "code": "czk",
+        "name": "Czech Koruna"
+    },
+    {
+        "code": "dkk",
+        "name": "Danish Krone"
+    },
+    {
+        "code": "eur",
+        "name": "Euro"
+    },
+    {
+        "code": "gbp",
+        "name": "Pound Sterling"
+    },
+    {
+        "code": "hkd",
+        "name": "Hong Kong Dollar"
+    },
+    {
+        "code": "huf",
+        "name": "Hungarian Forint"
+    },
+    {
+        "code": "idr",
+        "name": "Indonesian Rupiah"
+    },
+    {
+        "code": "ils",
+        "name": "Israeli New Shekel"
+    },
+    {
+        "code": "inr",
+        "name": "Indian Rupee"
+    },
+    {
+        "code": "jpy",
+        "name": "Japanese Yen"
+    },
+    {
+        "code": "krw",
+        "name": "South Korean Won"
+    },
+    {
+        "code": "kwd",
+        "name": "Kuwaiti Dinar"
+    },
+    {
+        "code": "lkr",
+        "name": "Sri Lanka Rupee"
+    },
+    {
+        "code": "mmk",
+        "name": "Burmese Kyat"
+    },
+    {
+        "code": "mxn",
+        "name": "Mexican Peso"
+    },
+    {
+        "code": "myr",
+        "name": "Malaysian Ringgit"
+    },
+    {
+        "code": "ngn",
+        "name": "Nigerian Naira"
+    },
+    {
+        "code": "nok",
+        "name": "Norwegian Krone"
+    },
+    {
+        "code": "nzd",
+        "name": "New Zealand Dollar"
+    },
+    {
+        "code": "php",
+        "name": "Philippine Peso"
+    },
+    {
+        "code": "pkr",
+        "name": "Pakistani Rupee"
+    },
+    {
+        "code": "pln",
+        "name": "Polish Złoty"
+    },
+    {
+        "code": "rub",
+        "name": "Russian Ruble"
+    },
+    {
+        "code": "sar",
+        "name": "Saudi Riyal"
+    },
+    {
+        "code": "sek",
+        "name": "Swedish Krona"
+    },
+    {
+        "code": "sgd",
+        "name": "Singapore Dollar"
+    },
+    {
+        "code": "thb",
+        "name": "Thai Baht"
+    },
+    {
+        "code": "try",
+        "name": "Turkish Lira"
+    },
+    {
+        "code": "twd",
+        "name": "New Taiwan Dollar"
+    },
+    {
+        "code": "uah",
+        "name": "Ukrainian Hryvnia"
+    },
+    {
+        "code": "vef"
+    },
+    {
+        "code": "vnd",
+        "name": "Vietnamese Đồng"
+    },
+    {
+        "code": "zar",
+        "name": "South African Rand"
+    },
+    {
+        "code": "xdr",
+        "name": "Special Drawing Rights"
+    },
+    {
+        "code": "xag",
+        "name": "Xrpalike Gene"
+    },
+    {
+        "code": "xau"
+    },
+    {
+        "code": "bits",
+        "name": "Bitswift"
+    },
+    {
+        "code": "sats",
+        "name": "Baby Satoshi"
+    }
 ]

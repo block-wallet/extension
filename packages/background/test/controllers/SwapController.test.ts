@@ -29,11 +29,11 @@ import {
     TokenController,
     TokenControllerProps,
 } from '../../src/controllers/erc-20/TokenController';
-import { BASE_SWAP_FEE } from '../../src/utils/types/1inch';
 import httpClient from './../../src/utils/http';
 import { TypedTransaction } from '@ethereumjs/tx';
 import TokenAllowanceController from '@block-wallet/background/controllers/erc-20/transactions/TokenAllowanceController';
 import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
+import { BASE_SWAP_FEE } from '@block-wallet/background/utils/swaps/1inch';
 
 const BLANK_TOKEN_ADDRESS = '0x41a3dba3d677e573636ba691a70ff2d606c29666';
 
@@ -131,7 +131,8 @@ describe('Swap Controller', function () {
             networkController,
             transactionController,
             tokenController,
-            tokenAllowanceController
+            tokenAllowanceController,
+            gasPricesController
         );
     });
 
@@ -159,17 +160,27 @@ describe('Swap Controller', function () {
                 await swapController.getExchangeQuote(
                     'Not an exchange type' as ExchangeType,
                     {
-                        fromTokenAddress:
-                            '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                        toTokenAddress:
-                            '0x41a3dba3d677e573636ba691a70ff2d606c29666',
+                        fromToken: {
+                            address:
+                                '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                            decimals: 18,
+                            name: 'Ether',
+                            symbol: 'ETH',
+                        },
+                        toToken: {
+                            address:
+                                '0x41a3dba3d677e573636ba691a70ff2d606c29666',
+                            decimals: 18,
+                            name: 'Token',
+                            symbol: 'TKN',
+                        },
                         amount: '10000000000000000',
                     }
                 );
             });
 
             expect(error).not.to.be.undefined;
-            expect(error).to.be.equal('Exchange type not supported');
+            expect(error).to.be.equal('Exchange type not supported.');
         });
 
         it('Should fail for bad exchange type on swap params', async function () {
@@ -177,9 +188,26 @@ describe('Swap Controller', function () {
                 await swapController.getExchangeParameters(
                     'Not an exchange type' as ExchangeType,
                     {
-                        fromTokenAddress:
-                            '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                        toTokenAddress: BLANK_TOKEN_ADDRESS,
+                        fromToken: {
+                            symbol: 'ETH',
+                            name: 'Ethereum',
+                            decimals: 18,
+                            address:
+                                '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                            logoURI:
+                                'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
+                            tags: ['native'],
+                        },
+                        toToken: {
+                            symbol: 'ETH',
+                            name: 'Ethereum',
+                            decimals: 18,
+                            address:
+                                '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                            logoURI:
+                                'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
+                            tags: ['native'],
+                        },
                         amount: '10000000000000000',
                         fromAddress: accounts.goerli[0].address,
                         slippage: 0.5,
@@ -188,7 +216,7 @@ describe('Swap Controller', function () {
             });
 
             expect(error).not.to.be.undefined;
-            expect(error).to.be.equal('Exchange type not supported');
+            expect(error).to.be.equal('Exchange type not supported.');
         });
 
         it('Should fail for bad exchange type on execute exchange', async function () {
@@ -246,7 +274,7 @@ describe('Swap Controller', function () {
             });
 
             expect(error).not.to.be.undefined;
-            expect(error).to.be.equal('Exchange type not supported');
+            expect(error).to.be.equal('Exchange type not supported.');
         });
     });
 
@@ -410,10 +438,18 @@ describe('Swap Controller', function () {
 
             error = await expectThrowsAsync(async () => {
                 await swapController.getExchangeQuote(ExchangeType.SWAP_1INCH, {
-                    fromTokenAddress:
-                        '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                    toTokenAddress:
-                        '0x41a3dba3d677e573636ba691a70ff2d606c29666',
+                    fromToken: {
+                        address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                        decimals: 18,
+                        name: 'Ether',
+                        symbol: 'ETH',
+                    },
+                    toToken: {
+                        address: '0x41a3dba3d677e573636ba691a70ff2d606c29666',
+                        decimals: 18,
+                        name: 'Token',
+                        symbol: 'TKN',
+                    },
                     amount: '10000000000000000',
                 });
             });
@@ -466,9 +502,18 @@ describe('Swap Controller', function () {
             const res = await swapController.getExchangeQuote(
                 ExchangeType.SWAP_1INCH,
                 {
-                    fromTokenAddress:
-                        '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                    toTokenAddress: BLANK_TOKEN_ADDRESS,
+                    fromToken: {
+                        address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                        decimals: 18,
+                        name: 'Ether',
+                        symbol: 'ETH',
+                    },
+                    toToken: {
+                        address: BLANK_TOKEN_ADDRESS,
+                        decimals: 18,
+                        name: 'Token',
+                        symbol: 'TKN',
+                    },
                     amount: '10000000000000000',
                 }
             );
@@ -483,7 +528,7 @@ describe('Swap Controller', function () {
             expect(res.fromTokenAmount).to.be.equal('10000000000000000');
             expect(res.toTokenAmount).to.be.equal('200000000000000000000');
             expect(BigNumber.isBigNumber(res.blockWalletFee)).to.be.true;
-            expect(res.blockWalletFee.toString()).to.be.equal(
+            expect(res.blockWalletFee!.toString()).to.be.equal(
                 BigNumber.from(res.fromTokenAmount)
                     .mul(BASE_SWAP_FEE * 10)
                     .div(1000)
@@ -516,9 +561,26 @@ describe('Swap Controller', function () {
                 await swapController.getExchangeParameters(
                     ExchangeType.SWAP_1INCH,
                     {
-                        fromTokenAddress:
-                            '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                        toTokenAddress: BLANK_TOKEN_ADDRESS,
+                        fromToken: {
+                            symbol: 'ETH',
+                            name: 'Ethereum',
+                            decimals: 18,
+                            address:
+                                '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                            logoURI:
+                                'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
+                            tags: ['native'],
+                        },
+                        toToken: {
+                            symbol: 'BLANK',
+                            name: 'GoBlank Token',
+                            decimals: 18,
+                            address:
+                                '0x41a3dba3d677e573636ba691a70ff2d606c29666',
+                            logoURI:
+                                'https://tokens.1inch.io/0xaec7e1f531bb09115103c53ba76829910ec48966.png',
+                            tags: ['tokens'],
+                        },
                         amount: '10000000000000000',
                         fromAddress: accounts.goerli[0].address,
                         slippage: 0.5,
@@ -624,9 +686,24 @@ describe('Swap Controller', function () {
             const res = await swapController.getExchangeParameters(
                 ExchangeType.SWAP_1INCH,
                 {
-                    fromTokenAddress:
-                        '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                    toTokenAddress: BLANK_TOKEN_ADDRESS,
+                    fromToken: {
+                        symbol: 'ETH',
+                        name: 'Ethereum',
+                        decimals: 18,
+                        address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                        logoURI:
+                            'https://tokens.1inch.io/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png',
+                        tags: ['native'],
+                    },
+                    toToken: {
+                        symbol: 'BLANK',
+                        name: 'GoBlank Token',
+                        decimals: 18,
+                        address: '0x41a3dba3d677e573636ba691a70ff2d606c29666',
+                        logoURI:
+                            'https://tokens.1inch.io/0xaec7e1f531bb09115103c53ba76829910ec48966.png',
+                        tags: ['tokens'],
+                    },
                     amount: '10000000000000000',
                     fromAddress: accounts.goerli[0].address,
                     slippage: 0.5,
@@ -845,7 +922,7 @@ describe('Swap Controller', function () {
             });
 
             expect(error).not.to.be.undefined;
-            expect(error).to.be.equal('Error executing 1Inch Swap');
+            expect(error).to.be.equal('Error executing Swap');
         });
 
         it('Should submit a swap transaction', async function () {

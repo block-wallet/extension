@@ -2,11 +2,12 @@ import { FC, useState } from "react"
 import TransactionShowQR from "./TransactionShowQR"
 import TransactionReadQR from "./TransactionReadQR"
 import { QRTransactionParams } from "@block-wallet/background/controllers/transactions/utils/types"
+import { URParameter } from "./QRReader"
 
 interface Props {
     qrParams?: QRTransactionParams
     onBack: () => void
-    onQRSignatureProvided: (qrSignature: string) => Promise<boolean>
+    onQRSignatureProvided: (ur: URParameter) => Promise<boolean>
 }
 
 const TransactionQR: FC<Props> = ({

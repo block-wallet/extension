@@ -3,6 +3,7 @@ TS_NODE_COMPILER_OPTIONS := $(shell echo {\"module\": \"commonjs\" })
 BRANCH					 := $(shell git symbolic-ref --short -q HEAD | sed 's/[\.\/]/-/g')
 TS_CONFIG_PATHS 		 := true
 ENVIRONMENT				 ?= dev
+BROWSER					 ?= chrome
 export
 
 #test:
@@ -30,14 +31,26 @@ else
 	npx webpack --config ./webpack/webpack.config.js
 endif
 	@cp ./src/infrastructure/hardware/trezor/trezor-usb-permissions.html ../../dist/trezor-usb-permissions.html
+ifeq ($(BROWSER), firefox)
+	$(MAKE) copy/firefox
+endif
+
+
+
+copy/firefox:
+	@mkdir -p ../../dist-firefox
+	@cp ../../dist/background.js ../../dist-firefox/background.js
+	@cp ../../dist/trezor-usb-permissions.html ../../dist-firefox/trezor-usb-permissions.html
+	@cp -r ../../dist/vendor/* ../../dist-firefox/vendor
+
 
 depcheck:
 	@npx depcheck
 
-version/patch: 
+version/patch:
 	@yarn version --patch
 
-version/minor: 
+version/minor:
 	@yarn version --minor
 
 version/major:

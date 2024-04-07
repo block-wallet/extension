@@ -3,12 +3,14 @@ import { PreferencesController } from '@block-wallet/background/controllers/Pref
 import { providerInstances } from '@block-wallet/background/infrastructure/connection';
 import { expect } from 'chai';
 import { mockPreferencesController } from '../mocks/mock-preferences';
+import browser from 'webextension-polyfill';
 
 describe('Permissions Controller', function () {
+    chrome.runtime.id = "testid";
     const portId = '7e24f69d-c740-4eb3-9c6e-4d47df491005';
 
     providerInstances[portId] = {
-        port: chrome.runtime.connect(),
+        port: browser.runtime.connect(),
         tabId: 420,
         windowId: 404,
         origin: 'https://app.uniswap.org',
@@ -166,8 +168,8 @@ describe('Permissions Controller', function () {
 
             for (let i = 1; i < 4; i++) {
                 permissionsController['_handlers'][`${i}`] = {
-                    reject: (error: Error) => {},
-                    resolve: (data: any) => {},
+                    reject: (error: Error) => { },
+                    resolve: (data: any) => { },
                 };
             }
 

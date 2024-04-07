@@ -15,7 +15,7 @@ import {
     DappReq,
     DappRequestSigningStatus,
 } from "../../context/hooks/useDappRequest"
-import ReactJson from "react-json-view"
+import { JsonView, allExpanded, defaultStyles } from "react-json-view-lite"
 import {
     attemptRejectDappRequest,
     confirmDappRequest,
@@ -53,6 +53,8 @@ import DAppPopupHeader from "../../components/dApp/DAppPopupHeader"
 import DAppOrigin from "../../components/dApp/DAppOrigin"
 import { getNetworkNameFromChainId } from "../../util/getExplorer"
 import CodeBlock from "../../components/ui/CodeBlock"
+
+import "react-json-view-lite/dist/index.css"
 
 const SignPage = () => {
     return (
@@ -206,10 +208,10 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
             if (param) {
                 return (
                     <>
-                        <span className="font-bold pt-1">
+                        <span className="font-semibold pt-1">
                             {formattedDomainKeyNames[displayOrder[i]]}
                         </span>
-                        <span className="text-gray-600 allow-select-all">
+                        <span className="text-primary-grey-dark allow-select-all">
                             {param}
                         </span>
                     </>
@@ -239,10 +241,10 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                         wideMargins={false}
                     />
                     <div className="w-full px-3 py-3 text-sm text-red-500 bg-red-100 rounded">
-                        <strong className="font-bold">Warning: </strong>
+                        <strong className="font-semibold">Warning: </strong>
                         {`Make sure you trust ${origin}. Signing this could grant complete control of your assets`}
                     </div>
-                    <span className="font-bold py-2">Message</span>
+                    <span className="font-semibold py-2">Message</span>
                     <CodeBlock className="max-h-56">
                         <>{rawData ?? data}</>
                     </CodeBlock>
@@ -253,7 +255,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
         if (method === "personal_sign") {
             return (
                 <>
-                    <span className="font-bold py-2">Message</span>
+                    <span className="font-semibold py-2">Message</span>
                     <CodeBlock className="max-h-56">
                         <>{rawData ?? data}</>
                     </CodeBlock>
@@ -268,10 +270,10 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                     {v1Data.map((param: V1TypedData) => {
                         return (
                             <>
-                                <span className="font-bold pt-1">
+                                <span className="font-semibold pt-1">
                                     {param.name}
                                 </span>
-                                <span className="text-gray-600 allow-select-all">
+                                <span className="text-primary-grey-dark allow-select-all">
                                     {`${param.value}`}
                                 </span>
                             </>
@@ -285,16 +287,11 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
         return (
             <>
                 {formatTypedDomain(v4Data.domain)}
-                <span className="font-bold py-1">Message</span>
-                <ReactJson
-                    enableClipboard
-                    src={v4Data.message}
-                    name={null}
-                    indentWidth={1}
-                    iconStyle={"triangle"}
-                    displayObjectSize={false}
-                    displayDataTypes={false}
-                    quotesOnKeys={false}
+                <span className="font-semibold py-1">Message</span>
+                <JsonView
+                    data={v4Data.message}
+                    style={{ ...defaultStyles, container: "" }}
+                    shouldInitiallyExpand={allExpanded}
                 />
             </>
         )
@@ -348,6 +345,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                 onDone={closeDialog}
                 gifs={gifs}
                 hideButton
+                showCloseButton
             />
             <CheckBoxDialog
                 message={`Approval request was sent with an account that's different from the selected one in your wallet. \n\n Please select if you want to continue or reject the transaction.`}
@@ -376,7 +374,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
             />
             <DAppOrigin name={origin} iconURL={websiteIcon} />
             <Divider />
-            <span className="font-bold px-6 py-3 text-sm text-gray-800">
+            <span className="font-semibold px-6 py-3 text-sm text-gray-800">
                 Signing Account
             </span>
             <div className="flex flex-col px-6">
@@ -390,7 +388,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                         className="relative flex flex-col group space-y-1"
                         onClick={copy}
                     >
-                        <span className="text-sm font-bold">
+                        <span className="text-sm font-semibold">
                             {formatName(accountData.name, 15)}
                             {" ("}
                             {formatNumberLength(
@@ -402,7 +400,7 @@ const Sign: FunctionComponent<PropsWithChildren<DappRequestProps>> = ({
                             )}
                             {` ${nativeToken.token.symbol})`}
                         </span>
-                        <span className="text-xs text-gray-600">
+                        <span className="text-xs text-primary-grey-dark">
                             {formatHash(accountData.address)}
                         </span>
                         <CopyTooltip copied={copied} />

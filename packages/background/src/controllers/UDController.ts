@@ -20,13 +20,13 @@ export class UDController {
                         Layer1: {
                             url: this._networkController.searchNetworkByName(
                                 'mainnet'
-                            ).rpcUrls[0],
+                            ).currentRpcUrl,
                             network: 'mainnet',
                         },
                         Layer2: {
                             url: this._networkController.searchNetworkByName(
                                 'polygon'
-                            ).rpcUrls[0],
+                            ).currentRpcUrl,
                             network: 'polygon-mainnet',
                         },
                     },

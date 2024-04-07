@@ -10,7 +10,7 @@ import {
 } from "react"
 import {
     TokenWithBalance,
-    useTokensList,
+    useTokenListWithNativeToken,
 } from "../../context/hooks/useTokensList"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatRounded } from "../../util/formatRounded"
@@ -21,6 +21,8 @@ import { useSwappedTokenList } from "../../context/hooks/useSwappedTokenList"
 import AssetDropdownDisplay from "./AssetDropdownDisplay"
 import AssetList from "./AssetList"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import { AssetsSortOptions } from "../../util/tokenUtils"
 
 export enum AssetListType {
     ALL = "ALL",
@@ -77,14 +79,16 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
     addTokenState,
     register,
 }) => {
+    const { tokensSortValue, hideSmallBalances } = useBlankState()!
     const [searchResult, setSearchResult] = useState<TokenWithBalance[]>([])
     const [search, setSearch] = useState<string | null>(null)
     const [assetList, setAssetList] = useState<TokenWithBalance[]>([])
+    const defaultAssetList = useTokenListWithNativeToken(
+        tokensSortValue as AssetsSortOptions,
+        hideSmallBalances
+    )
 
-    const { currentNetworkTokens, nativeToken } = useTokensList()
     const swappedAssetList = useSwappedTokenList()
-
-    const defaultAssetList = [nativeToken].concat(currentNetworkTokens)
 
     useEffect(() => {
         // Only set asset list if this keeps being empty due to hooks init

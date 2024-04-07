@@ -9,7 +9,7 @@ import Divider from "../../components/Divider"
 // Assets & icons
 import ledgerImg from "../../assets/images/icons/ledger.svg"
 import trezorImg from "../../assets/images/icons/trezor.svg"
-import keystoneImg from "../../assets/images/icons/keystone.svg"
+import keystoneImg from "../../assets/images/keystone.png"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { Classes } from "../../styles"
 
@@ -19,7 +19,6 @@ import { AccountInfo } from "@block-wallet/background/controllers/AccountTracker
 import { removeHardwareWallet } from "../../context/commActions"
 import { getAccountTypeFromDevice } from "../../util/hardwareDevice"
 import { capitalize } from "../../util/capitalize"
-import { bool } from "yup"
 
 type DeviceButtonProps = {
     device: Devices
@@ -84,6 +83,10 @@ const HardwareWalletRemoveDevicePage = () => {
     const history = useOnMountHistory()
     const [selectedVendor, setSelectedVendor] = useState<Devices>()
     const [isLoading, setIsLoading] = useState<boolean>(false)
+    const isFromAccountsPage =
+        history.location.state && history.location.state.isFromAccountsPage
+            ? history.location.state.isFromAccountsPage
+            : false
 
     const next = async () => {
         if (!selectedVendor) {
@@ -95,10 +98,16 @@ const HardwareWalletRemoveDevicePage = () => {
             const result = await removeHardwareWallet(selectedVendor)
 
             if (result) {
-                history.push({
-                    pathname: "/hardware-wallet/remove-device/success",
-                    state: { vendor: selectedVendor },
-                })
+                if (!isFromAccountsPage) {
+                    history.push({
+                        pathname: "/hardware-wallet/remove-device/success",
+                        state: { vendor: selectedVendor },
+                    })
+                } else {
+                    history.push({
+                        pathname: "/hardware-wallet",
+                    })
+                }
             }
         } catch (e: any) {
         } finally {

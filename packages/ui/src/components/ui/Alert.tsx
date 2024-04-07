@@ -1,5 +1,5 @@
 import classnames from "classnames"
-import { MouseEventHandler, PropsWithChildren } from "react"
+import { PropsWithChildren } from "react"
 interface AlertProps {
     type: "error" | "warn" | "info"
     className?: string
@@ -32,7 +32,7 @@ const Alert: React.FC<PropsWithChildren<AlertProps>> = ({
             onClick={onClick}
             className={classnames(
                 classes.background,
-                "opacity-90 rounded-md w-full p-4 flex space-x-2 items-center font-bold justify-center",
+                "opacity-90 rounded-md w-full p-4 flex space-x-2 items-center font-semibold justify-center",
                 className
             )}
         >

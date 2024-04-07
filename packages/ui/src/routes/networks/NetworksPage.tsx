@@ -1,11 +1,6 @@
 import { DndProvider } from "react-dnd"
-
-import { keccak256 } from "@ethersproject/keccak256"
-import { toUtf8Bytes } from "@ethersproject/strings"
-
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { useCallback, useEffect, useState } from "react"
-
 import PopupHeader from "../../components/popup/PopupHeader"
 import PopupLayout from "../../components/popup/PopupLayout"
 import NetworkDisplay from "../../components/networks/NetworkDisplay"
@@ -76,7 +71,7 @@ const NetworksPage = () => {
 
             setNetworks(newNetworks)
         },
-        [mainNetworks, testNetworks]
+        [findNetworkCard, mainNetworks, testNetworks]
     )
 
     function onSuccessfulDrop(isTestnet: boolean) {
@@ -127,6 +122,7 @@ const NetworksPage = () => {
             )
         setMainNetworks(parsedAvailableNetworks.mainnets)
         setTestNetworks(parsedAvailableNetworks.testnets)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     return (
@@ -148,7 +144,9 @@ const NetworksPage = () => {
                 />
                 <DndProvider backend={HTML5Backend}>
                     <div className="flex flex-col space-y-2">
-                        <span className="text-xs text-gray-500">MAINNET</span>
+                        <span className="text-xs text-primary-grey-dark">
+                            MAINNET
+                        </span>
                         <div className="flex flex-col space-y-2">
                             {mainNetworks.map((network) => (
                                 <NetworkDisplay
@@ -163,7 +161,7 @@ const NetworksPage = () => {
                                 />
                             ))}
                         </div>
-                        <span className="text-xs text-gray-500 mt-4">
+                        <span className="text-xs text-primary-grey-dark mt-4">
                             TESTNET
                         </span>
                         <div className="flex flex-col space-y-2">

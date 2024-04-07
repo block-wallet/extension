@@ -14,6 +14,7 @@ import {
     getDefaultRpc,
     getSpecificChainDetails,
     removeNetwork,
+    changeNetwork,
 } from "../../context/commActions"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
 import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
@@ -28,10 +29,12 @@ import { LINKS } from "../../util/constants"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import Alert from "../../components/ui/Alert"
 import Icon, { IconName } from "../../components/ui/Icon"
-import ConfirmDialog from "../../components/dialog/ConfirmDialog"
+import ConfirmDialog, {
+    ConfirmDialogState,
+} from "../../components/dialog/ConfirmDialog"
 import { ChainListItem } from "@block-wallet/background/utils/chainlist"
 import { parseChainId } from "../../util/networkUtils"
-import CollapsableWarning from "../../components/CollapsableWarning"
+import CollapsableMessage from "../../components/CollapsableMessage"
 import { AiOutlineWarning } from "react-icons/ai"
 import usePersistedLocalStorageForm from "../../util/hooks/usePersistedLocalStorageForm"
 
@@ -134,23 +137,31 @@ const NetworkFormPage = ({
     const addNetworkInvoke = useAsyncInvoke()
     const removeNetworkInvoke = useAsyncInvoke()
     const [isValidating, setIsValidating] = useState<boolean>(false)
-    const [confirmDeletion, setConfirmDeletion] = useState<boolean>(false)
     const [rpcValidationStatus, setRpcValidationStatus] =
         useState<RPCUrlValidation>(RPCUrlValidation.EMPTY)
     const [rpcChainId, setRpcChainId] = useState<number>(0)
     const [isNativelySupported, setIsNativelySupported] =
         useState<boolean>(false)
-    const { availableNetworks, isProviderNetworkOnline } = useBlankState()!
+    const {
+        availableNetworks,
+        providerStatus: { isCurrentProviderOnline },
+    } = useBlankState()!
 
     const [defaultRpcUrl, setDefaultRpcUrl] = useState<string | undefined>(
         undefined
     )
+
+    const [confirmationDialog, setConfirmationDialog] =
+        useState<ConfirmDialogState>({ open: false })
+
+    const [switchToNetwork, setSwitchToNetwork] = useState<boolean>(false)
 
     useEffect(() => {
         if (!network?.chainId) return
         getDefaultRpc(network?.chainId).then((defaultRpc) => {
             setDefaultRpcUrl(defaultRpc)
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const {
@@ -250,6 +261,7 @@ const NetworkFormPage = ({
         return () => {
             ref && clearTimeout(ref!)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [watchChainId, watchRPCUrl, setIsValidating])
 
     const onSave = handleSubmit(async (data: networkFormData) => {
@@ -260,20 +272,38 @@ const NetworkFormPage = ({
             name: data.name!,
             rpcUrl: data.rpcUrl,
             test: !!data.test,
+            switchToNetwork: false,
         }
-        addNetworkInvoke.run(
-            isEdit
-                ? editNetwork({
-                      chainId: parseChainId(data.chainId)!.toString(),
-                      updates: {
-                          rpcUrl: data.rpcUrl,
-                          blockExplorerUrl: data.blockExplorerUrl,
-                          name: data.name!,
-                          test: !!data.test,
-                      },
-                  })
-                : addNetwork(networkData)
-        )
+
+        if (!isEdit) {
+            setConfirmationDialog({
+                title: "Switch Network",
+                message: `Do you want to switch to ${networkData.name} network?`,
+                open: true,
+                confirmText: "Yes",
+                cancelText: "No",
+                onConfirm: async () => {
+                    networkData.switchToNetwork = true
+                    setSwitchToNetwork(true)
+                },
+                onClose: () => {
+                    setConfirmationDialog({ open: false })
+                    addNetworkInvoke.run(addNetwork(networkData))
+                },
+            })
+        } else {
+            addNetworkInvoke.run(
+                editNetwork({
+                    chainId: parseChainId(data.chainId)!.toString(),
+                    updates: {
+                        rpcUrl: data.rpcUrl,
+                        blockExplorerUrl: data.blockExplorerUrl,
+                        name: data.name!,
+                        test: !!data.test,
+                    },
+                })
+            )
+        }
     })
     useEffect(() => {
         const existingNetwork = Object.values(availableNetworks).find(
@@ -282,6 +312,7 @@ const NetworkFormPage = ({
         setIsNativelySupported(
             existingNetwork ? existingNetwork.nativelySupported : false
         )
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [watchChainId])
     const deleteNetwork = () => {
         removeNetworkInvoke.run(removeNetwork(network!.chainId!))
@@ -325,7 +356,7 @@ const NetworkFormPage = ({
     const editingSelectedNetwork =
         isEdit &&
         selectedChainId === Number(watchChainId) &&
-        isProviderNetworkOnline
+        isCurrentProviderOnline
 
     const canSubmitForm =
         Object.keys(errors).length === 0 &&
@@ -352,7 +383,14 @@ const NetworkFormPage = ({
                                   <div
                                       key={1}
                                       onClick={() => {
-                                          setConfirmDeletion(true)
+                                          setConfirmationDialog({
+                                              title: "Delete Network",
+                                              message: `Are you sure you want to delete ${network?.name}?`,
+                                              open: true,
+                                              onConfirm: () => {
+                                                  deleteNetwork()
+                                              },
+                                          })
                                       }}
                                       className={
                                           "text-red-500 cursor-pointer flex flex-row items-center p-2 hover:bg-gray-100 rounded-md w-40"
@@ -385,7 +423,7 @@ const NetworkFormPage = ({
             }
         >
             {!isNativelySupported && (
-                <CollapsableWarning
+                <CollapsableMessage
                     dialog={{
                         title: "Warning",
                         message: (
@@ -393,7 +431,7 @@ const NetworkFormPage = ({
                                 BlockWallet does not verify custom networks.
                                 Make sure you understand{" "}
                                 <a
-                                    className="underline text-blue-600 hover:text-blue-800"
+                                    className="underline text-primary-blue-default hover:text-primary-blue-hover"
                                     href={LINKS.ARTICLES.CUSTOM_NETWORK_RISKS}
                                     target="_blank"
                                     rel="noreferrer"
@@ -407,10 +445,10 @@ const NetworkFormPage = ({
                     }}
                     isCollapsedByDefault
                     collapsedMessage={
-                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-bold justify-center">
+                        <div className="text-center  bg-yellow-200 hover:bg-yellow-100 opacity-90  w-full p-2 space-x-2 flex tems-center font-semibold justify-center">
                             <AiOutlineWarning className="w-4 h-4 yellow-300" />
                             <span className="text-xs text-yellow-900">
-                                <span className="font-bold">
+                                <span className="font-semibold">
                                     BlockWallet does not verify custom networks.
                                 </span>
                             </span>
@@ -446,7 +484,10 @@ const NetworkFormPage = ({
                     if (addNetworkInvoke.isError) {
                         return addNetworkInvoke.reset()
                     }
-                    history.replace("/settings/networks")
+
+                    history.push(
+                        isEdit || !switchToNetwork ? "/settings/networks" : "/"
+                    )
                 }}
             />
             <WaitingDialog
@@ -479,19 +520,22 @@ const NetworkFormPage = ({
                     }
                     history.push("/settings/networks")
                 }}
+                showCloseButton
             />
             <ConfirmDialog
-                title="Delete Network"
-                message={`Are you sure you want to delete ${network?.name}?`}
-                open={confirmDeletion}
-                onClose={() => setConfirmDeletion(false)}
-                onConfirm={() => {
-                    deleteNetwork()
-                    setConfirmDeletion(false)
-                }}
+                title={confirmationDialog.title!}
+                message={confirmationDialog.message!}
+                open={confirmationDialog.open}
+                confirmText={confirmationDialog.confirmText}
+                cancelText={confirmationDialog.cancelText}
+                onClose={
+                    confirmationDialog.onClose ??
+                    (() => setConfirmationDialog({ open: false }))
+                }
+                onConfirm={confirmationDialog.onConfirm!}
             />
-            <div className="flex flex-col w-full justify-between flex-1 h-full">
-                <div className="flex flex-col flex-1 p-6 pt-4 space-y-3">
+            <div className="flex flex-col w-full justify-between flex-1 h-full !-mt-3">
+                <div className="flex flex-col flex-1 p-6 space-y-3">
                     <div className="flex flex-col space-y-1">
                         <TextInput
                             appearance="outline"
@@ -537,7 +581,7 @@ const NetworkFormPage = ({
                         {defaultRpcUrl && !isUsingDefaultRPC && (
                             <div className="flex flex-col items-end mt-2 -mb-4">
                                 <span
-                                    className="text-xs font-bold text-primary-300 cursor-pointer hover:underline"
+                                    className="text-xs font-semibold text-primary-blue-default cursor-pointer hover:underline"
                                     onClick={() => {
                                         setValue("rpcUrl", defaultRpcUrl)
                                     }}
@@ -567,8 +611,8 @@ const NetworkFormPage = ({
                                 and it must match with the chain ID returned by
                                 the RPC endpoint configured above. You can enter
                                 a decimal or a{" "}
-                                <span className="font-bold">0x</span> prefixed
-                                hexadecimal number.
+                                <span className="font-semibold">0x</span>{" "}
+                                prefixed hexadecimal number.
                             </span>
                         }
                         defaultValue={network?.chainId}
@@ -613,7 +657,7 @@ const NetworkFormPage = ({
                     />
                     {networkAlreadyExistError && (
                         <Alert type="error">
-                            <span className="font-bold">Error: </span>
+                            <span className="font-semibold">Error: </span>
                             <span className="font-medium">
                                 The network you're trying to add already exists.
                                 Try editing the existing network instead.

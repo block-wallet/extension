@@ -5,7 +5,7 @@ import KeyringController, {
 import { Hash, Hasheable } from '../utils/hasher';
 import { Mutex } from 'async-mutex';
 import LedgerBridgeKeyring from '@block-wallet/eth-ledger-bridge-keyring';
-import TrezorKeyring from '@block-wallet/eth-trezor-keyring';
+import { TrezorKeyring } from '@block-wallet/eth-trezor-keyring';
 import { Devices } from '../utils/types/hardware';
 import log from 'loglevel';
 import { HDPaths, BIP44_PATH } from '../utils/types/hardware';
@@ -367,7 +367,9 @@ export default class KeyringControllerDerivated extends KeyringController {
      */
     public async getHDPathForDevice(device: Devices): Promise<string> {
         const keyring = await this.getKeyringFromDevice(device);
-        return keyring ? keyring.hdPath : this._HDPathForDevice(device);
+        return keyring && keyring.hdPath !== ''
+            ? keyring.hdPath
+            : this._HDPathForDevice(device);
     }
 
     /**
@@ -1073,5 +1075,50 @@ export default class KeyringControllerDerivated extends KeyringController {
      */
     public cancelQRHardwareSignRequest() {
         this.emit(KeyringControllerEvents.QR_SIGNATURE_SUBMIT);
+    }
+
+    /**
+     * Returns accounts from the device by page
+     *
+     * @param device
+     * @param keyring
+     * @param page
+     * @returns
+     */
+    async getPage(
+        device: Devices,
+        keyring: any,
+        pageIndex: number
+    ): Promise<[]> {
+        try {
+            if (device === Devices.KEYSTONE) {
+                return (await this.getQRPage(pageIndex)) as [];
+            } else if (device === Devices.TREZOR) {
+                const currentPage = (await keyring.serialize()).page;
+
+                let accounts;
+                if (pageIndex > currentPage) {
+                    // increments
+                    for (let i = 1; i < pageIndex - currentPage; i++) {
+                        await keyring.getNextPage();
+                    }
+                    accounts = await keyring.getNextPage();
+                } else if (pageIndex < currentPage) {
+                    // decrements
+                    for (let i = 1; i < currentPage - pageIndex; i++) {
+                        await keyring.getPreviousPage();
+                    }
+                    accounts = await keyring.getPreviousPage();
+                } else {
+                    await keyring.getNextPage();
+                    accounts = await keyring.getPreviousPage();
+                }
+                return accounts;
+            } else {
+                return await keyring.getPage(pageIndex);
+            }
+        } catch (e) {
+            throw new Error(`Unspecified error retrieving page, ${e}`);
+        }
     }
 }

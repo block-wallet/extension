@@ -77,6 +77,10 @@ module.exports = (entry) => ({
             crypto: require.resolve('crypto-browserify'),
             stream: require.resolve('stream-browserify'),
             buffer: require.resolve('buffer/'),
+            http: require.resolve('stream-http'),
+            https: require.resolve('https-browserify'),
+            zlib: require.resolve('browserify-zlib'),
+            url: require.resolve('url/')
         },
     },
     experiments: {
@@ -84,4 +88,15 @@ module.exports = (entry) => ({
         syncWebAssembly: true,
     },
     plugins,
+    optimization: {
+        splitChunks: {
+            cacheGroups: {
+                vendor: {
+                    test: /[\\/]node_modules[\\/](@block-wallet)/,
+                    name: 'bw-libs',
+                    chunks: 'initial'
+                }
+            }
+        }
+    }
 });

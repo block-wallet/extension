@@ -1,5 +1,4 @@
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
-import { memoize } from 'lodash';
 import { getChainListItem } from './chainlist';
 import {
     AddEthereumChainParameter,
@@ -9,6 +8,7 @@ import {
     isABlockWalletNode,
     customHeadersForBlockWalletNode,
 } from '../utils/nodes';
+import { isHttpsURL } from './http';
 
 /**
  * It validates and parses the chainId parameter checking if it's in the expected form
@@ -82,20 +82,18 @@ export const validateNetworkChainId = async (
  *
  * @param rpcUrl The RPC endpoint
  */
-export const getCustomRpcChainId = memoize(
-    async (rpcUrl: string): Promise<number> => {
-        // Check that chainId matches with network's
-        const tempProvider = new StaticJsonRpcProvider({
-            url: rpcUrl,
-            headers: isABlockWalletNode(rpcUrl)
-                ? customHeadersForBlockWalletNode
-                : undefined,
-        });
-        const { chainId: rpcChainId } = await tempProvider.getNetwork();
+export const getCustomRpcChainId = async (rpcUrl: string): Promise<number> => {
+    // Check that chainId matches with network's
+    const tempProvider = new StaticJsonRpcProvider({
+        url: rpcUrl,
+        headers: isABlockWalletNode(rpcUrl)
+            ? customHeadersForBlockWalletNode
+            : undefined,
+    });
+    const { chainId: rpcChainId } = await tempProvider.getNetwork();
 
-        return rpcChainId;
-    }
-);
+    return rpcChainId;
+};
 
 /**
  * Validates the parameters passed to add a new chain
@@ -119,7 +117,7 @@ export const validateAddEthereumChainParameters = async (
             throw new Error('Invalid type for blockExplorerUrls');
         } else {
             const explorerUrl = blockExplorerUrls[0];
-            if (explorerUrl && explorerUrl.indexOf('https://') === -1) {
+            if (explorerUrl && !isHttpsURL(explorerUrl)) {
                 throw new Error('Block explorer endpoint must be https');
             }
         }
@@ -129,7 +127,7 @@ export const validateAddEthereumChainParameters = async (
         if (!Array.isArray(iconUrls)) {
             throw new Error('Invalid type for iconUrls');
         } else {
-            if (iconUrls.length > 0 && iconUrls[0].indexOf('https://') === -1) {
+            if (iconUrls.length > 0 && !isHttpsURL(iconUrls[0])) {
                 throw new Error(
                     'Invalid icon URL provided: protocol must be https'
                 );
@@ -146,17 +144,14 @@ export const validateAddEthereumChainParameters = async (
             throw new Error('Invalid type for rpcUrls');
         } else {
             const rpcUrl = rpcUrls[0];
-            if (rpcUrl && rpcUrl.indexOf('https://') === -1) {
+            if (rpcUrl && !isHttpsURL(rpcUrl)) {
                 throw new Error('Invalid RPC provided: protocol must be https');
             }
         }
     } else {
         if (chainDataFromList) {
             const rpcUrl = chainDataFromList.rpc[0];
-            if (
-                typeof rpcUrl === 'undefined' ||
-                rpcUrl.indexOf('https://') === -1
-            ) {
+            if (typeof rpcUrl === 'undefined' || !isHttpsURL(rpcUrl)) {
                 throw new Error('Invalid RPC provided');
             }
         }

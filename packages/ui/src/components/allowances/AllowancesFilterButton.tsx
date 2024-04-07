@@ -21,7 +21,7 @@ const AllowancesFilterButton = ({
     onChangeFilter: (newFilter: AllowancesFilters) => void
 }) => {
     return (
-        <div className="relative text-sm text-primary-300">
+        <div className="relative text-sm text-primary-blue-default">
             <Dropdown
                 onClickItem={(selected) => {
                     onChangeFilter(selected)
@@ -31,7 +31,7 @@ const AllowancesFilterButton = ({
                     <DropdownOutlinedIconButton iconName={IconName.GROUP} />
                 </Dropdown.Button>
                 <Dropdown.Menu id="filter-menu" className="w-36 py-2">
-                    <div className="p-2 px-3 text-xs text-gray-600 font-normal">
+                    <div className="p-2 px-3 text-xs text-primary-grey-dark font-normal">
                         GROUP BY
                     </div>
                     {filterOptions.map(({ value, label }) => {
@@ -40,7 +40,7 @@ const AllowancesFilterButton = ({
                                 <Dropdown.MenuItem
                                     value={value}
                                     selected={filter === value}
-                                    className="p-2 px-3 font-semibold text-black"
+                                    className="p-2 px-3 font-semibold text-primary-black-default"
                                 >
                                     {label}
                                 </Dropdown.MenuItem>

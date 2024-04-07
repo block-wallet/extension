@@ -6,7 +6,6 @@ import {
     createCustomExplorerLink,
     createCustomAccountLink,
 } from "@block-wallet/explorer-link"
-import { capitalize } from "./capitalize"
 
 export const getChainIdFromNetwork = (networks: Networks, network?: String) => {
     if (!network) {

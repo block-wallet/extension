@@ -34,7 +34,7 @@ const Checkbox = ({
             type="checkbox"
             checked={checked}
             className={classnames(
-                " cursor-pointer w-4 h-4 border-1 border-gray-200 rounded-md focus:ring-0",
+                " cursor-pointer w-4 h-4 border-1 border-primary-grey-hover rounded-md focus:ring-0",
                 className && className
             )}
             onChange={() => {

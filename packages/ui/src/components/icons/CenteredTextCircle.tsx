@@ -16,7 +16,7 @@ const CenteredTextCircle = ({ text, size }: CenteredTextCircleProps) => {
             className="border-2 border-black rounded-full flex items-center justify-center"
             style={{ width: circleSize, height: circleSize }}
         >
-            <span className="font-bold">{text}</span>
+            <span className="font-semibold">{text}</span>
         </div>
     )
 }

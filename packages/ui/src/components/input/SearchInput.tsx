@@ -31,6 +31,8 @@ type SearchInputProps = {
     minSearchChar?: number
     defaultValue?: string
     inputClassName?: string
+    searchShowSkeleton?: React.Dispatch<React.SetStateAction<boolean>>
+    showClearIcon?: boolean
 }
 
 /**
@@ -54,6 +56,7 @@ type SearchInputProps = {
  * @param debounceTime - Set the debouncing time.
  * @param minSearchChar - Set a minimum char before triggering `onChange`. Note that this has the priority over `onChange` and `debounce`.
  * @param defaultValue - In AssetSelection we already have a value which was previously looked for. So we paste it as default in case of "add new token"
+ * @param showClearIcon - It makes input as "search" intut instead of "text" input
  */
 const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
     (
@@ -75,6 +78,8 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             register,
             defaultValue,
             inputClassName,
+            searchShowSkeleton,
+            showClearIcon = false,
         }: SearchInputProps,
         ref
     ) => {
@@ -108,7 +113,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
                 <div
                     className={classnames(
                         "flex justify-start items-center relative",
-                        label ? "mt-2" : "",
+                        label ? "" : "",
                         error !== "" || warning !== "" ? "mb-2" : ""
                     )}
                 >
@@ -123,7 +128,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
 
                     <input
                         name={name ? name : "Search"}
-                        type="text"
+                        type={showClearIcon ? "search" : "text"}
                         ref={useMergeRefs(
                             inputRef,
                             ref,
@@ -131,7 +136,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
                         )}
                         className={classnames(
                             Classes.inputBordered,
-                            "w-full relative z-0 outline-none	transition-all delay-100",
+                            "w-full relative z-0 outline-none transition-all delay-100",
                             isFocus ? "pl-2" : "pl-9",
                             inputClassName,
                             isValid
@@ -154,11 +159,18 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
                                 if (timeoutIdRef.current)
                                     clearTimeout(timeoutIdRef.current)
 
-                                timeoutIdRef.current = setTimeout(
-                                    () => onValueChanged(e),
-                                    debounceTime
-                                )
+                                timeoutIdRef.current = setTimeout(() => {
+                                    onValueChanged(e)
+
+                                    if (
+                                        searchShowSkeleton &&
+                                        e.target.value !== ""
+                                    )
+                                        searchShowSkeleton(true)
+                                }, debounceTime)
                             } else {
+                                if (searchShowSkeleton && e.target.value !== "")
+                                    searchShowSkeleton(true)
                                 onValueChanged(e)
                             }
                         }}
@@ -166,7 +178,6 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
                         onFocus={() => setIsFocus(true)}
                         defaultValue={defaultValue ?? ""}
                     />
-
                     <CheckmarkCircle
                         classes={`
               h-4 transition-all delay-100

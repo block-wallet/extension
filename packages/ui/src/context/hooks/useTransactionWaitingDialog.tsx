@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect } from "react"
 import { useWaitingDialog } from "../../components/dialog/WaitingDialog"
 import {
     AccountType,
@@ -26,6 +26,7 @@ import {
     hardwareQrCancelSignRequest,
     hardwareQrSubmitSignature,
 } from "../commActions"
+import { URParameter } from "@block-wallet/background/utils/types/communication"
 
 const messages: {
     [key in HardwareWalletOpTypes]: {
@@ -113,7 +114,7 @@ const Timer = ({
     let timeData = secondsToMMSS(seconds)
     return (
         <span>
-            {initialCaption} <span className="font-bold">{timeData}</span>
+            {initialCaption} <span className="font-semibold">{timeData}</span>
         </span>
     )
 }
@@ -237,13 +238,13 @@ export const useTransactionWaitingDialog = (
                                             hardwareQrCancelSignRequest()
                                         }}
                                         onQRSignatureProvided={(
-                                            qrSignature: string
+                                            ur: URParameter
                                         ) => {
                                             if (transaction.qrParams) {
                                                 return hardwareQrSubmitSignature(
                                                     transaction.qrParams
                                                         .requestId,
-                                                    qrSignature
+                                                    ur
                                                 )
                                             } else {
                                                 callbacks.reject()
@@ -311,8 +312,8 @@ export const useTransactionWaitingDialog = (
                 })
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
-        !transaction,
         transaction?.id,
         transaction?.status,
         transaction?.error,

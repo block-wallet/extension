@@ -163,11 +163,20 @@ export interface Accounts {
     [address: string]: AccountInfo;
 }
 
+export interface AccountTokenOrder {
+    [tokenAddress: string]: number;
+}
+
 export interface AccountTrackerState {
     accounts: Accounts;
     hiddenAccounts: Accounts;
     isAccountTrackerLoading: boolean;
     isRefreshingAllowances: boolean;
+    accountTokensOrder: {
+        [accountAddress: string]: {
+            [chainId: number]: AccountTokenOrder;
+        };
+    };
 }
 
 export enum AccountTrackerEvents {
@@ -175,6 +184,7 @@ export enum AccountTrackerEvents {
     ACCOUNT_REMOVED = 'ACCOUNT_REMOVED',
     CLEARED_ACCOUNTS = 'CLEARED_ACCOUNTS',
     BALANCE_UPDATED = 'BALANCE_UPDATED',
+    ACCOUNTS_ORDER_UPDATED = 'ACCOUNTS_ORDER_UPDATED',
 }
 
 export interface UpdateAccountsOptions {
@@ -199,6 +209,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             hiddenAccounts: {},
             isRefreshingAllowances: false,
             isAccountTrackerLoading: false,
+            accountTokensOrder: {},
         }
     ) {
         super(initialState);
@@ -1410,6 +1421,20 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     }
 
     /**
+     * Get account name
+     *
+     * @param address account address
+     * @return name of the account
+     */
+    public getAccountName(address: string): string | undefined {
+        const { accounts } = this.store.getState();
+
+        const accountName = accounts[checksummedAddress(address)]?.name;
+
+        return accountName;
+    }
+
+    /**
      * BalanceChecker is deployed on main eth (test)nets and requires a single call.
      * For all other networks, call this._updateAccount for each account in state.
      * if @param addresses is present this method will only update those accounts.
@@ -1963,16 +1988,12 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
 
             keyring.perPage = pageSize;
-            let deviceAccounts: [] = [];
 
-            if (device === Devices.KEYSTONE) {
-                deviceAccounts = (await this._keyringController.getQRPage(
-                    pageIndex
-                )) as [];
-            } else {
-                deviceAccounts = await keyring.getPage(pageIndex);
-            }
-
+            const deviceAccounts: [] = await this._keyringController.getPage(
+                device,
+                keyring,
+                pageIndex
+            );
             if (deviceAccounts) {
                 const checkIfAccountNameExists = (
                     name: string,
@@ -2033,5 +2054,64 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         } catch {
             return undefined;
         }
+    }
+
+    public getAllAccountAddresses(): string[] {
+        const { accounts, hiddenAccounts } = this.store.getState();
+        return Object.keys(accounts || {}).concat(
+            Object.keys(hiddenAccounts || {})
+        );
+    }
+
+    /**
+     * Change list of tokens order by account and chainId.
+     */
+    public async editAccountTokensOrder(
+        tokensOrder: AccountTokenOrder
+    ): Promise<void> {
+        const chainId = this._networkController.network.chainId;
+        const accountAddress = this._preferencesController.getSelectedAddress();
+
+        this.store.updateState({
+            accountTokensOrder: {
+                ...this.store.getState().accountTokensOrder,
+                [accountAddress]: {
+                    ...this.store.getState().accountTokensOrder[accountAddress],
+                    [chainId]: tokensOrder,
+                },
+            },
+        });
+    }
+
+    /**
+     * orderAccounts
+     *
+     * @param accounts array with all the accounts ordered by the user
+     */
+    public orderAccounts(accountsInfo: AccountInfo[]): void {
+        const accounts = this.store.getState().accounts;
+        const hiddenAccounts = this.store.getState().hiddenAccounts;
+
+        accountsInfo.forEach((account) => {
+            const address = account.address;
+            if (accounts[address]) {
+                accounts[address] = {
+                    ...accounts[address],
+                    index: account.index,
+                };
+            }
+            if (hiddenAccounts[address]) {
+                hiddenAccounts[address] = {
+                    ...hiddenAccounts[address],
+                    index: account.index,
+                };
+            }
+        });
+
+        // save accounts state
+        this.store.updateState({
+            accounts: accounts,
+            hiddenAccounts: hiddenAccounts,
+        });
     }
 }

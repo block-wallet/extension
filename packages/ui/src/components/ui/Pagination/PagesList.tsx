@@ -14,8 +14,8 @@ const PageButton: React.FC<
                 "text-sm p-3",
                 selected
                     ? "text-gray-800 font-semibold cursor-default"
-                    : "text-gray-500 cursor-pointer hover:text-gray-800 ",
-                disabled && "text-gray-500 !cursor-not-allowed"
+                    : "text-primary-grey-dark cursor-pointer hover:text-gray-800 ",
+                disabled && "text-primary-grey-dark !cursor-not-allowed"
             )}
             onClick={!disabled ? onClick : void 0}
         >
@@ -50,7 +50,7 @@ const StickyFirstPage = ({
     return (
         <>
             {button}
-            <span className="font-bold text-sm p-3">...</span>
+            <span className="font-semibold text-sm p-3">...</span>
         </>
     )
 }

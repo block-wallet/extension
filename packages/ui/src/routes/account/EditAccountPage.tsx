@@ -137,7 +137,7 @@ const EditAccountPage = () => {
                     success: "Congratulations",
                     error: "Error",
                 }}
-                timeout={2900}
+                timeout={1500}
                 texts={{
                     loading: "Account is being renamed...",
                     success: "Your changes have been succesfully saved!",
@@ -154,6 +154,7 @@ const EditAccountPage = () => {
                         state: { fromAccountList },
                     })
                 }}
+                showCloseButton
             />
             <div className="flex flex-col justify-between flex-1 h-full">
                 <div className="flex flex-col flex-1 p-6 space-y-1">

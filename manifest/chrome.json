@@ -1,0 +1,34 @@
+{
+    "background": {
+        "scripts": [
+            "hot-reload.js",
+            "background.js",
+            "bw-libs.js"
+        ]
+    },
+    "content_scripts": [
+        {
+            "js": [
+                "content.js"
+            ],
+            "matches": [
+                "http://*/*",
+                "https://*/*"
+            ],
+            "exclude_matches": [
+                "https://block-wallet.github.io/eth-ledger-bridge-keyring/*",
+                "https://connect.trezor.io/*"
+            ],
+            "run_at": "document_start",
+            "all_frames": true
+        },
+        {
+            "js": [
+                "vendor/trezor/trezor-content.js"
+            ],
+            "matches": [
+                "*://connect.trezor.io/*/popup.html"
+            ]
+        }
+    ]
+}

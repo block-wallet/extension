@@ -10,7 +10,7 @@ import arrowRight from "../../assets/images/icons/arrow_right_black.svg"
 import CopyTooltip from "../label/СopyToClipboardTooltip"
 import {
     formatHash,
-    formatHashLastChars,
+    formatHashFirstLastChars,
     formatName,
 } from "../../util/formatAccount"
 import { useSortedAccounts } from "../../context/hooks/useSortedAccounts"
@@ -111,7 +111,7 @@ export const TransactionDetailsBasic: FunctionComponent<
                     label: "Spender",
                     value: spenderData
                         ? formatName(spenderData.name, 18)
-                        : `Spender ${formatHashLastChars(spenderAddress)}`,
+                        : `Spender ${formatHashFirstLastChars(spenderAddress)}`,
                     link: generateExplorerLink(
                         state.availableNetworks,
                         state.selectedNetwork,

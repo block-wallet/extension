@@ -61,7 +61,7 @@ import AllowanceInput from "../../components/transactions/AllowanceInput"
 
 import {
     formatHash,
-    formatHashLastChars,
+    formatHashFirstLastChars,
     formatName,
 } from "../../util/formatAccount"
 import { formatRounded, formatRoundedUp } from "../../util/formatRounded"
@@ -195,7 +195,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
 
     const spenderName =
         transaction.approveAllowanceParams?.spenderInfo?.name ??
-        `Spender ${formatHashLastChars(spenderAddress)}`
+        `Spender ${formatHashFirstLastChars(spenderAddress)}`
 
     const spenderAddressExplorerLink = generateExplorerLink(
         availableNetworks,
@@ -424,7 +424,7 @@ const ApproveAsset: FunctionComponent<ApproveAssetProps> = ({
 
     const origin = (
         <span className="inline-block" title={transaction.origin}>
-            {formatName(transaction.origin, 27)}
+            {formatName(transaction.origin, 60)}
         </span>
     )
     const isFromBlockWallet = transaction.origin === "blank"

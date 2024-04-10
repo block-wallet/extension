@@ -1118,6 +1118,20 @@
                 }
             ],
             "version": "1.2.7"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Some minor fixes in BNB and token allowance"
+                        }
+                    ]
+                }
+            ],
+            "version": "1.2.8"
         }
     ]
 }

@@ -3,7 +3,7 @@ import { IMigration } from '../IMigration';
 import { BigNumber } from '@ethersproject/bignumber';
 
 /**
- * This migration updates the gas lower cap for polygon
+ * This migration updates the gas lower cap for bnb
  */
 export default {
     migrate: async (persistedState: BlankAppState) => {

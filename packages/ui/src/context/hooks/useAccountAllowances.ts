@@ -5,7 +5,7 @@ import { useSelectedAccount } from "./useSelectedAccount"
 import { useSelectedNetwork } from "./useSelectedNetwork"
 
 import { AllowancesFilters } from "../../components/allowances/AllowancesFilterButton"
-import { formatHashLastChars } from "../../util/formatAccount"
+import { formatHashFirstLastChars } from "../../util/formatAccount"
 
 /**
  * The data to display in the allowance List Item
@@ -84,8 +84,10 @@ const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
                                 name: allowance.spender?.name
                                     ? `${
                                           allowance.spender?.name
-                                      } ${formatHashLastChars(spenderAddress)}`
-                                    : `Spender ${formatHashLastChars(
+                                      } ${formatHashFirstLastChars(
+                                          spenderAddress
+                                      )}`
+                                    : `Spender ${formatHashFirstLastChars(
                                           spenderAddress
                                       )}`,
                                 address: spenderAddress,
@@ -124,10 +126,10 @@ const useAccountAllowances = (groupBy: AllowancesFilters, search?: string) => {
                                     name: spenderAllowance.spender?.name
                                         ? `${
                                               spenderAllowance.spender?.name
-                                          } ${formatHashLastChars(
+                                          } ${formatHashFirstLastChars(
                                               spenderAddress
                                           )}`
-                                        : `Spender ${formatHashLastChars(
+                                        : `Spender ${formatHashFirstLastChars(
                                               spenderAddress
                                           )}`,
                                     address: spenderAddress,

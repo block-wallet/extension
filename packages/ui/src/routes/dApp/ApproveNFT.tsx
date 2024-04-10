@@ -31,7 +31,7 @@ import {
     TransactionCategories,
 } from "../../context/commTypes"
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
-import { formatHashLastChars, formatName } from "../../util/formatAccount"
+import { formatHashFirstLastChars, formatName } from "../../util/formatAccount"
 import { formatRounded } from "../../util/formatRounded"
 import { formatUnits } from "@ethersproject/units"
 import { getAddress } from "@ethersproject/address"
@@ -170,7 +170,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
     const spenderAddress = transaction.approveAllowanceParams?.spenderAddress!
     const spenderName =
         transaction.approveAllowanceParams?.spenderInfo?.name ??
-        `Spender ${formatHashLastChars(
+        `Spender ${formatHashFirstLastChars(
             transaction.approveAllowanceParams?.spenderAddress!
         )}`
 
@@ -278,7 +278,7 @@ const ApproveNFT: FunctionComponent<ApproveNFTProps> = ({
 
     const origin = (
         <span className="inline-block" title={transaction.origin}>
-            {formatName(transaction.origin, 30)}
+            {formatName(transaction.origin, 60)}
         </span>
     )
 

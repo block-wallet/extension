@@ -29,7 +29,7 @@ import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import {
     formatHash,
-    formatHashLastChars,
+    formatHashFirstLastChars,
     formatName,
 } from "../../util/formatAccount"
 import { formatRounded, formatRoundedUp } from "../../util/formatRounded"
@@ -263,7 +263,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
             setSpenderName(
                 currentSpenderAllowances?.groupBy.name ??
-                    `Spender ${formatHashLastChars(spenderAddress)}`
+                    `Spender ${formatHashFirstLastChars(spenderAddress)}`
             )
 
             setSpenderAddressExplorerLink(
@@ -298,7 +298,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 )
                 setSpenderName(
                     currentSpenderAllowances?.groupBy.name ??
-                        `Spender ${formatHashLastChars(spenderAddress)}`
+                        `Spender ${formatHashFirstLastChars(spenderAddress)}`
                 )
                 setSpenderAddressExplorerLink(
                     generateExplorerLink(

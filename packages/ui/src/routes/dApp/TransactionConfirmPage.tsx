@@ -377,65 +377,56 @@ const TransactionConfirm: React.FC<{
     const transactionValues = () => {
         const formattedValue = formatNumberLength(
             formatUnits(params.value!, network.nativeCurrency.decimals),
-            networkNativeCurrency.symbol.length > 3 ? 8 : 9
+            network.nativeCurrency.decimals,
+            false
         )
 
-        const totalLength =
-            formattedValue.length + networkNativeCurrency.symbol.length
-        const valueWidth = totalLength >= 5 ? "w-7/12" : "w-4/12"
-        const originWidth = totalLength >= 5 ? "w-5/12" : "w-8/12"
         return (
-            <GenericTooltip
-                top
-                className="w-60 p-2 ml-8 break-all"
-                content={
-                    <div>
-                        <p>
-                            <span className="font-semibold">Total value: </span>
-                            {formatUnits(
-                                params.value!,
-                                network.nativeCurrency.decimals
-                            )}{" "}
-                            {networkNativeCurrency.symbol}
-                        </p>
-                        <p>
-                            <span className="font-semibold">Origin: </span>
-                            <span data-testid="transaction-origin">
-                                {transaction.origin}
+            <>
+                <p className="text-sm font-semibold pb-1 break-word">
+                    {/* <span className="text-xs pointer-events-none w-12/12 font-semibold"> */}
+                    {transaction.origin}
+                    {/* </span> */}
+                </p>
+                <GenericTooltip
+                    top
+                    className="w-60 p-2 ml-8 break-all"
+                    content={
+                        <div>
+                            <p>
+                                <span className="font-semibold">
+                                    Total value:{" "}
+                                </span>
+                                {formatUnits(
+                                    params.value!,
+                                    network.nativeCurrency.decimals
+                                )}{" "}
+                                {networkNativeCurrency.symbol}
+                            </p>
+                        </div>
+                    }
+                >
+                    <div className="flex items-center p-4 rounded-md bg-primary-grey-default justify-between  hover:bg-primary-grey-hover">
+                        <div
+                            className={classnames(
+                                "flex flex-row items-center pointer-events-none",
+                                "w-12/12"
+                            )}
+                        >
+                            <img
+                                src={defaultNetworkLogo}
+                                alt={network.nativeCurrency.symbol}
+                                width="20px"
+                                height="18px"
+                                draggable={false}
+                            />
+                            <span className="font-black pl-1 text-sm">
+                                {formattedValue} {networkNativeCurrency.symbol}
                             </span>
-                        </p>
+                        </div>
                     </div>
-                }
-            >
-                <div className="flex items-center p-4 rounded-md bg-primary-grey-default justify-between  hover:bg-primary-grey-hover">
-                    <div
-                        className={classnames(
-                            "flex flex-row items-center pointer-events-none",
-                            valueWidth
-                        )}
-                    >
-                        <img
-                            src={defaultNetworkLogo}
-                            alt={network.nativeCurrency.symbol}
-                            width="20px"
-                            height="18px"
-                            draggable={false}
-                        />
-                        <span className="font-black pl-1 text-sm">
-                            {formattedValue} {networkNativeCurrency.symbol}
-                        </span>
-                    </div>
-
-                    <span
-                        className={classnames(
-                            "text-xxs text-right truncate justify-self-end pointer-events-none",
-                            originWidth
-                        )}
-                    >
-                        {transaction.origin}
-                    </span>
-                </div>
-            </GenericTooltip>
+                </GenericTooltip>
+            </>
         )
     }
 
@@ -560,7 +551,7 @@ const TransactionConfirm: React.FC<{
                     </div>
                     <span
                         title={accountName}
-                        className="pl-2 font-semibold text-sm truncate ..."
+                        className="pl-2 font-semibold text-xs truncate ..."
                     >
                         {formatName(accountName, 24)}
                     </span>
@@ -596,8 +587,8 @@ const TransactionConfirm: React.FC<{
                         onClick={() => onCopy(params?.to)}
                     >
                         <AccountIcon className="h-6 w-6" fill="black" />
-                        <span className="pl-2 font-semibold text-sm">
-                            ...{params.to!.slice(-6)}
+                        <span className="pl-2 font-semibold text-xs">
+                            {params.to!.slice(0, 6)} ...{params.to!.slice(-4)}
                         </span>
                         <CopyTooltip copied={copied} />
                     </div>

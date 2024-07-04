@@ -1146,6 +1146,20 @@
                 }
             ],
             "version": "1.2.9"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Some minor fixes"
+                        }
+                    ]
+                }
+            ],
+            "version": "1.2.10"
         }
     ]
 }

@@ -1174,6 +1174,20 @@
                 }
             ],
             "version": "1.2.11"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "aleph zero network"
+                        }
+                    ]
+                }
+            ],
+            "version": "1.2.12"
         }
     ]
 }

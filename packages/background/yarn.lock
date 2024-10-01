@@ -199,9 +199,9 @@
     "@babel/helper-validator-identifier" "^7.22.20"
     to-fast-properties "^2.0.0"
 
-"@block-wallet/chains-assets@https://github.com/block-wallet/chains-assets#v0.0.61":
-  version "0.0.61"
-  resolved "https://github.com/block-wallet/chains-assets#ba876cc8e33eee1bd37f44bff457d7948cb220a0"
+"@block-wallet/chains-assets@https://github.com/block-wallet/chains-assets#v0.0.62":
+  version "0.0.62"
+  resolved "https://github.com/block-wallet/chains-assets#a8ad8d88c744c4cfb644d141636c0562d1cbad9d"
 
 "@block-wallet/eth-ledger-bridge-keyring@https://github.com/block-wallet/eth-ledger-bridge-keyring#v0.14.1":
   version "0.14.0"

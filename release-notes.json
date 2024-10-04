@@ -1188,6 +1188,20 @@
                 }
             ],
             "version": "1.2.12"
+        },
+        {
+            "sections": [
+                {
+                    "title": "Features",
+                    "notes": [
+                        {
+                            "type": "success",
+                            "message": "Morph Network"
+                        }
+                    ]
+                }
+            ],
+            "version": "1.2.13"
         }
     ]
 }

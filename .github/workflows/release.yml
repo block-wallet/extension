@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_RELEASE_BUCKET }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_RELEASE_BUCKET }}
@@ -102,7 +102,7 @@ jobs:
               "attachments": [
                 {
                   "color": "good",
-                  "pretext": "New release ${{ needs.release.outputs.extension }}: <${{ needs.release.outputs.s3_url }}/block-wallet-${{ needs.release.outputs.extension }}.zip| extension.zip> and <${{ needs.release.outputs.s3_url }}/block-wallet-${{ needs.release.outputs.extension }}.checksum| checksum>. After uploading it to the store please publish the GitHub Release to finish the release process.\nCC: <@U01H6J242BY>, <@U021GBLL00Z>, <@U01HRUM7XUH>",
+                  "pretext": "New release ${{ needs.release.outputs.extension }}: <${{ needs.release.outputs.s3_url }}/block-wallet-${{ needs.release.outputs.extension }}.zip| extension.zip> and <${{ needs.release.outputs.s3_url }}/block-wallet-${{ needs.release.outputs.extension }}.checksum| checksum>. After uploading it to the store please publish the GitHub Release to finish the release process.\n: <@U01HRUM7XUH>",
                   "author_name": "GitHub Release ${{ needs.release.outputs.extension }}",
                   "author_link": "${{ needs.release.outputs.html_url }}",
                   "title": "GitHub Release ${{ needs.release.outputs.extension }} has been created as a draft."

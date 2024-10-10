@@ -23,6 +23,7 @@ export type loadingDialogProps = {
     txHash?: string // Success only: If valid hash, shows explorer link i.e. View on Etherscan
     hideButton?: boolean
     clickOutsideToClose?: boolean
+    showCloseButton?: boolean
 }
 
 type state = {
@@ -147,6 +148,7 @@ const WaitingDialog = ({
     onDone,
     hideButton,
     clickOutsideToClose,
+    showCloseButton = false,
 }: loadingDialogProps) => {
     if (!open) return <></>
 
@@ -173,6 +175,7 @@ const WaitingDialog = ({
                         clickOutsideToClose === false ? () => {} : onDone
                     }
                     hideButton={hideButton}
+                    showCloseButton={showCloseButton}
                 />
             )
         case "error":
@@ -187,6 +190,7 @@ const WaitingDialog = ({
                         clickOutsideToClose === false ? () => {} : onDone
                     }
                     hideButton={hideButton}
+                    showCloseButton={showCloseButton}
                 />
             )
         case "idle":

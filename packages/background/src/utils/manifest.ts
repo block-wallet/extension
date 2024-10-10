@@ -1,7 +1,6 @@
+import browser from 'webextension-polyfill';
+
 export const isManifestV3 = () => {
-    if (!chrome || !chrome.runtime || !chrome.runtime.getManifest()) {
-        return false;
-    } else {
-        return chrome.runtime.getManifest().manifest_version === 3;
-    }
+    console.log('isManifestV3');
+    return browser.runtime.getManifest().manifest_version === 3;
 };

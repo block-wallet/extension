@@ -12,6 +12,7 @@ import React, {
     useRef,
     FC,
     useCallback,
+    useLayoutEffect,
 } from "react"
 import TransactionDetails from "../../components/transactions/TransactionDetails"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
@@ -23,19 +24,21 @@ import {
     executeExchange,
     getLatestGasPrice,
     rejectTransaction,
+    getSwapTransactionGasLimit,
 } from "../../context/commActions"
 import {
-    SwapQuote,
     SwapParameters,
+    SwapQuoteResponse,
+    SwapRequestParams,
     SwapTransaction,
 } from "@block-wallet/background/controllers/SwapController"
 import {
-    ExchangeType,
     HardwareWalletOpTypes,
     TransactionCategories,
     TransactionStatus,
 } from "../../context/commTypes"
 import {
+    DEFAULT_EXCHANGE_TYPE,
     calcExchangeRate,
     calculatePricePercentageImpact,
     isSwapNativeTokenAddress,
@@ -44,9 +47,8 @@ import {
 import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
-import { OneInchSwapRequestParams } from "@block-wallet/background/utils/types/1inch"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { classnames, Classes } from "../../styles"
+import { classnames } from "../../styles"
 import { formatRounded } from "../../util/formatRounded"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
@@ -81,10 +83,15 @@ import PriceImpactDialog from "../../components/swaps/PriceImpactDialog"
 
 export interface SwapConfirmPageLocalState {
     fromToken: Token
-    swapQuote: SwapQuote
+    swapQuote: SwapQuoteResponse
     toToken: Token
     amount?: string
     allowanceTransactionId?: string
+}
+
+interface SwapConfirmPagePersistedState {
+    submitted: boolean
+    txId: string
 }
 
 const NOT_ENOUGH_BALANCE_ERROR =
@@ -111,25 +118,46 @@ const SwapPageConfirm: FC<{}> = () => {
         QUOTE_REFRESH_TIMEOUT
     )
 
-    const [persistedData, setPersistedData] = useLocalStorageState(
-        "swaps.confirm",
-        {
+    const [persistedData, setPersistedData] =
+        useLocalStorageState<SwapConfirmPagePersistedState>("swaps.confirm", {
             initialValue: {
                 submitted: false,
+                txId: "",
             },
             volatile: true,
-        }
-    )
+        })
 
     const { clear: clearLocationRecovery } = useLocationRecovery()
     const { transaction: inProgressTransaction, clearTransaction } =
         useInProgressInternalTransaction({
             categories: [TransactionCategories.EXCHANGE],
+            txId: persistedData.txId,
         })
+    const selectedAccount = useSelectedAccount()
 
     useEffect(() => {
+        if (
+            inProgressTransaction?.id &&
+            persistedData.submitted &&
+            persistedData.txId !== inProgressTransaction?.id
+        ) {
+            if (isHardwareWallet(selectedAccount.accountType)) {
+                setPersistedData((prev: SwapConfirmPagePersistedState) => ({
+                    ...prev,
+                    txId: inProgressTransaction?.id,
+                }))
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [inProgressTransaction?.id])
+
+    useLayoutEffect(() => {
         // Redirect to homepage if there is no pending transaction
-        if (!inProgressTransaction?.id && persistedData.submitted) {
+        if (
+            !inProgressTransaction?.id &&
+            persistedData.submitted &&
+            !persistedData.txId
+        ) {
             history.push("/")
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -137,7 +165,6 @@ const SwapPageConfirm: FC<{}> = () => {
 
     const { gasPricesLevels } = useGasPriceData()
     const { isEIP1559Compatible } = useSelectedNetwork()
-    const selectedAccount = useSelectedAccount()
     const { defaultGasOption } = useBlankState()!
     const { nativeToken } = useTokensList()
     const { isDeviceUnlinked, checkDeviceIsLinked, resetDeviceLinkStatus } =
@@ -151,6 +178,7 @@ const SwapPageConfirm: FC<{}> = () => {
                       status: inProgressTransaction.status,
                       error: inProgressTransaction.error as Error,
                       epochTime: inProgressTransaction?.approveTime,
+                      qrParams: inProgressTransaction?.qrParams,
                   }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,
@@ -283,9 +311,10 @@ const SwapPageConfirm: FC<{}> = () => {
                 clearLocationRecovery()
             }
 
-            setPersistedData({
+            setPersistedData((prev: SwapConfirmPagePersistedState) => ({
+                ...prev,
                 submitted: true,
-            })
+            }))
 
             const swapTransactionParams: SwapTransaction = {
                 ...swapParameters,
@@ -305,10 +334,7 @@ const SwapPageConfirm: FC<{}> = () => {
                     gas: selectedGasLimit.toNumber() || swapParameters.tx.gas,
                 },
             }
-            await executeExchange(
-                ExchangeType.SWAP_1INCH,
-                swapTransactionParams
-            )
+            await executeExchange(DEFAULT_EXCHANGE_TYPE, swapTransactionParams)
         } else {
             closeDialog()
         }
@@ -317,16 +343,16 @@ const SwapPageConfirm: FC<{}> = () => {
     const updateSwapParameters = useCallback(async () => {
         setError(undefined)
         setIsFetchingSwaps(true)
-        const params: OneInchSwapRequestParams = {
+        const params: SwapRequestParams = {
             fromAddress: selectedAccount.address,
-            fromTokenAddress: swapQuote.fromToken.address,
-            toTokenAddress: swapQuote.toToken.address,
+            fromToken: swapQuote.fromToken,
+            toToken: swapQuote.toToken,
             amount: swapQuote.fromTokenAmount,
             slippage: advancedSettings.slippage,
         }
         try {
             const swapParams = await getExchangeParameters(
-                ExchangeType.SWAP_1INCH,
+                DEFAULT_EXCHANGE_TYPE,
                 params
             )
             setSwapParameters(swapParams)
@@ -336,6 +362,7 @@ const SwapPageConfirm: FC<{}> = () => {
             setTimeoutStart(new Date().getTime())
             setIsFetchingSwaps(false)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         selectedAccount.address,
         advancedSettings.slippage,
@@ -360,9 +387,13 @@ const SwapPageConfirm: FC<{}> = () => {
                         gasPrice = await getLatestGasPrice()
                     }
 
+                    let gasLimitEstimation = await getSwapTransactionGasLimit(
+                        swapParameters.tx
+                    )
+
                     setDefaultGas({
                         gasPrice: BigNumber.from(gasPrice),
-                        gasLimit: BigNumber.from(swapParameters.tx.gas),
+                        gasLimit: BigNumber.from(gasLimitEstimation.gasLimit),
                     })
 
                     isGasInitialized.current = true
@@ -459,6 +490,7 @@ const SwapPageConfirm: FC<{}> = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingAllowanceTransactionDialog
                 status={allowanceTxDialogStatus}
@@ -490,14 +522,18 @@ const SwapPageConfirm: FC<{}> = () => {
                 }}
                 clickOutsideToClose={false}
                 txHash={inProgressTransaction?.transactionParams.hash}
-                timeout={2900}
+                timeout={1500}
                 gifs={gifs}
                 onDone={React.useCallback(() => {
                     if (status === "error") {
                         closeDialog()
-                        setPersistedData({
-                            submitted: false,
-                        })
+                        setPersistedData(
+                            (prev: SwapConfirmPagePersistedState) => ({
+                                ...prev,
+                                submitted: true,
+                                txId: "",
+                            })
+                        )
                         clearTransaction()
                         return
                     }
@@ -510,6 +546,7 @@ const SwapPageConfirm: FC<{}> = () => {
                     setPersistedData,
                     clearTransaction,
                 ])}
+                showCloseButton
             />
             {swapParameters && (
                 <TransactionDetails
@@ -578,7 +615,7 @@ const SwapPageConfirm: FC<{}> = () => {
                 />
 
                 {/* Rates */}
-                <p className="text-sm py-1 leading-loose text-gray-500 uppercase text-center w-full">
+                <p className="text-sm py-1 leading-loose text-primary-grey-dark uppercase text-center w-full">
                     {`1 ${fromToken.symbol} = ${formatNumberLength(
                         formatRounded(exchangeRate.toFixed(10), 8),
                         10
@@ -586,7 +623,9 @@ const SwapPageConfirm: FC<{}> = () => {
                 </p>
 
                 {/* Gas */}
-                <p className="text-sm text-gray-600 pb-1 pt-0.5">Gas Price</p>
+                <p className="text-[13px] font-medium pb-1 pt-0.5 text-primary-grey-dark">
+                    Gas Price
+                </p>
                 {isEIP1559Compatible ? (
                     <GasPriceComponent
                         defaultGas={{
@@ -656,12 +695,12 @@ const SwapPageConfirm: FC<{}> = () => {
                             swapParameters && setShowDetails(true)
                         }}
                         className={classnames(
-                            "w-full ml-2",
+                            "!w-full ml-2 h-12 space-x-2 p-4 ",
                             !swapParameters &&
                                 "cursor-not-allowed hover:border-default"
                         )}
                     >
-                        <span className="font-bold text-sm">Details</span>
+                        <span className="font-semibold text-sm">Details</span>
                         <Icon name={IconName.RIGHT_CHEVRON} size="sm" />
                     </OutlinedButton>
                 </div>
@@ -677,7 +716,7 @@ const SwapPageConfirm: FC<{}> = () => {
                                     type="warn"
                                     className={classnames(
                                         "p-2",
-                                        "font-bold",
+                                        "font-semibold",
                                         "cursor-pointer hover:opacity-50",
                                         "text-left"
                                     )}

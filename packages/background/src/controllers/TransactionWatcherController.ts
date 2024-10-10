@@ -1,5 +1,5 @@
 import { Mutex } from 'async-mutex';
-import { isValidAddress, toChecksumAddress } from 'ethereumjs-util';
+import { isValidAddress, toChecksumAddress } from '@ethereumjs/util';
 import { BigNumber } from '@ethersproject/bignumber';
 import { TransactionResponse } from '@ethersproject/providers';
 import { LogDescription, ParamType } from '@ethersproject/abi';
@@ -30,7 +30,6 @@ import {
 import { Block, Log } from '@ethersproject/abstract-provider';
 import { SignedTransaction } from './erc-20/transactions/SignedTransaction';
 import { TransactionArgument } from './transactions/ContractSignatureParser';
-import { showIncomingTransactionNotification } from '../utils/notifications';
 import TransactionController from './transactions/TransactionController';
 import { fetchBlockWithRetries } from '../utils/blockFetch';
 import { isNil } from 'lodash';
@@ -95,7 +94,7 @@ export interface TransactionWatcherControllerState {
 export const TRANSACTION_TYPE_STATUS: {
     [type in WatchedTransactionType]: boolean;
 } = {
-    txlist: false,
+    txlist: true,
     tokentx: true,
     tokennfttx: false,
     token1155tx: false,
@@ -199,34 +198,6 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
                         true
                     );
                 }
-            }
-        );
-
-        // Show incoming transaction notification
-        this.on(
-            'INCOMING_TRANSACTION',
-            async (
-                chainId: number,
-                address: string,
-                transactionType: WatchedTransactionType
-            ) => {
-                let section:
-                    | ''
-                    | 'tokentxns'
-                    | 'tokentxnsErc721'
-                    | 'tokentxnsErc1155' = '';
-                switch (transactionType) {
-                    case WatchedTransactionType.ERC20:
-                        section = 'tokentxns';
-                        break;
-                    case WatchedTransactionType.ERC721:
-                        section = 'tokentxnsErc721';
-                        break;
-                    case WatchedTransactionType.ERC1155:
-                        section = 'tokentxnsErc1155';
-                        break;
-                }
-                showIncomingTransactionNotification(address, chainId, section);
             }
         );
 
@@ -1470,19 +1441,29 @@ export class TransactionWatcherController extends BaseController<TransactionWatc
         currentTransactions: TransactionByHash,
         newTransactions: TransactionByHash
     ) => {
+        const allTransactions = this._transactionController.getTransactions();
+
         if (Object.keys(currentTransactions).length) {
             for (const transactionHash in newTransactions) {
                 if (
                     this._sameAddress(
                         newTransactions[transactionHash].transactionParams.to,
                         address
+                    ) &&
+                    // Discard incoming transaction if it's from a BlockWallet swap
+                    !allTransactions.find(
+                        (tx) =>
+                            tx.transactionParams.hash === transactionHash &&
+                            tx.transactionCategory ===
+                                TransactionCategories.EXCHANGE
                     )
                 ) {
                     this.emit(
                         TransactionWatcherControllerEvents.INCOMING_TRANSACTION,
                         chainId,
                         address,
-                        transactionType
+                        transactionType,
+                        newTransactions[transactionHash]
                     );
                     break;
                 }

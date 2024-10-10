@@ -15,9 +15,9 @@ const Badge: React.FC<PropsWithChildren<{ position?: Position }>> = (
     const offset = offsets[position || "top-right"]
     return (
         <div
-            className={`flex justify-center items-center absolute h-5 w-5 bg-primary-300 rounded-xl ${offset}`}
+            className={`flex justify-center items-center absolute h-5 w-5 bg-primary-blue-default rounded-xl ${offset}`}
         >
-            <span className="text-white font-bold text-sm">{children}</span>
+            <span className="text-white font-semibold text-sm">{children}</span>
         </div>
     )
 }

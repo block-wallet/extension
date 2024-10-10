@@ -5,7 +5,7 @@ import {
     isValidAddress,
     stripHexPrefix,
     toChecksumAddress,
-} from 'ethereumjs-util';
+} from '@ethereumjs/util';
 import {
     JSONRPCMethod,
     MessageSchema,

@@ -142,7 +142,12 @@ const persistedState: DeepPartial<BlankAppState> = {
         selectedNetwork: 'mainnet',
         isNetworkChanging: false,
         isUserNetworkOnline: true,
-        isProviderNetworkOnline: true,
+        providerStatus: {
+            isCurrentProviderOnline: true,
+            isDefaultProviderOnline: true,
+            isBackupProviderOnline: true,
+            isUsingBackupProvider: false,
+        },
         isEIP1559Compatible: {},
     },
     TransactionController: {
@@ -156,6 +161,9 @@ const initialState: newBlankAppState = {
     TransactionWatcherControllerState: {
         transactions: {},
         tokenAllowanceEvents: {},
+    },
+    CampaignsController: {
+        enrollments: {},
     },
     BridgeController: {
         bridgeReceivingTransactions: {},
@@ -187,6 +195,7 @@ const initialState: newBlankAppState = {
         isRefreshingAllowances: false,
         hiddenAccounts: {},
         accounts: {},
+        accountTokensOrder: {},
     },
     AppStateController: {
         idleTimeout: 5,
@@ -207,7 +216,12 @@ const initialState: newBlankAppState = {
         availableNetworks: INITIAL_NETWORKS,
         isNetworkChanging: false,
         isUserNetworkOnline: true,
-        isProviderNetworkOnline: true,
+        providerStatus: {
+            isCurrentProviderOnline: true,
+            isDefaultProviderOnline: true,
+            isBackupProviderOnline: true,
+            isUsingBackupProvider: false,
+        },
         isEIP1559Compatible: {},
     },
     OnboardingController: {
@@ -227,12 +241,16 @@ const initialState: newBlankAppState = {
         antiPhishingImage: '',
         settings: {
             hideAddressWarning: false,
+            hideSendToContractWarning: false,
+            hideSendToNullWarning: false,
             subscribedToReleaseaNotes: true,
+            subscribedToNotifications: true,
             useAntiPhishingProtection: true,
             defaultBrowserWallet: true,
             hideEstimatedGasExceedsThresholdWarning: false,
             hideDepositsExternalAccountsWarning: false,
             hideBridgeInsufficientNativeTokenWarning: false,
+            displayNetWorth: true,
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',
@@ -242,6 +260,9 @@ const initialState: newBlankAppState = {
             account: [],
         },
         defaultGasOption: 'medium',
+        hotkeysEnabled: true,
+        tokensSortValue: 'CUSTOM',
+        hideSmallBalances: false,
     },
     TransactionController: {
         transactions: [],
@@ -332,6 +353,9 @@ describe('State reconciler', () => {
             BlockUpdatesController: {
                 blockData: { 5: { blockNumber: -1 } },
             },
+            CampaignsController: {
+                enrollments: {},
+            },
             AddressBookController: {
                 addressBook: {} as AddressBook,
                 recentAddresses: {} as AddressBook,
@@ -364,6 +388,7 @@ describe('State reconciler', () => {
                     },
                 },
                 hiddenAccounts: {},
+                accountTokensOrder: {},
             },
             AppStateController: {
                 idleTimeout: 5,
@@ -440,7 +465,12 @@ describe('State reconciler', () => {
                 availableNetworks: INITIAL_NETWORKS,
                 isNetworkChanging: false,
                 isUserNetworkOnline: true,
-                isProviderNetworkOnline: true,
+                providerStatus: {
+                    isCurrentProviderOnline: true,
+                    isDefaultProviderOnline: true,
+                    isBackupProviderOnline: true,
+                    isUsingBackupProvider: false,
+                },
                 isEIP1559Compatible: {},
             },
             PreferencesController: {
@@ -454,13 +484,17 @@ describe('State reconciler', () => {
                 showDefaultWalletPreferences: false,
                 popupTab: 'activity',
                 settings: {
+                    subscribedToNotifications: true,
                     subscribedToReleaseaNotes: true,
                     hideAddressWarning: false,
+                    hideSendToContractWarning: false,
+                    hideSendToNullWarning: false,
                     useAntiPhishingProtection: true,
                     defaultBrowserWallet: true,
                     hideEstimatedGasExceedsThresholdWarning: false,
                     hideDepositsExternalAccountsWarning: false,
                     hideBridgeInsufficientNativeTokenWarning: false,
+                    displayNetWorth: true,
                 },
                 releaseNotesSettings: {
                     lastVersionUserSawNews: '0.1.3',
@@ -470,6 +504,9 @@ describe('State reconciler', () => {
                     account: [],
                 },
                 defaultGasOption: 'medium',
+                hotkeysEnabled: true,
+                tokensSortValue: 'CUSTOM',
+                hideSmallBalances: false,
             },
             TransactionController: {
                 transactions: [],

@@ -16,12 +16,11 @@ import {
 import { BigNumber } from "@ethersproject/bignumber"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { BASE_SWAP_FEE, SWAP_QUOTE_REFRESH_TIMEOUT } from "../../util/constants"
-import { ExchangeType } from "../../context/commTypes"
 import { InferType } from "yup"
 import { SwapConfirmPageLocalState } from "./SwapConfirmPage"
-import { SwapQuote } from "@block-wallet/background/controllers/SwapController"
+import { SwapQuoteResponse } from "@block-wallet/background/controllers/SwapController"
 import { Token } from "@block-wallet/background/controllers/erc-20/Token"
-import { classnames, Classes } from "../../styles"
+import { classnames } from "../../styles"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
 import { formatUnits, parseUnits } from "@ethersproject/units"
 import { useBlankState } from "../../context/background/backgroundHooks"
@@ -30,8 +29,6 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { yupResolver } from "@hookform/resolvers/yup"
 import useCountdown from "../../util/hooks/useCountdown"
-import GenericTooltip from "../../components/label/GenericTooltip"
-import { AiFillInfoCircle } from "react-icons/ai"
 import { formatNumberLength } from "../../util/formatNumberLength"
 import RefreshLabel from "../../components/swaps/RefreshLabel"
 import { capitalize } from "../../util/capitalize"
@@ -40,10 +37,11 @@ import { useCallback } from "react"
 import { useTokenBalance } from "../../context/hooks/useTokenBalance"
 import { GetAmountYupSchema } from "../../util/yup/GetAmountSchema"
 import { ApproveOperation } from "../transaction/ApprovePage"
+import { DEFAULT_EXCHANGE_TYPE } from "../../util/exchangeUtils"
 
 interface SwapPageLocalState {
     fromToken?: Token
-    swapQuote?: SwapQuote
+    swapQuote?: SwapQuoteResponse
     toToken?: Token
     fromAssetPage?: boolean
     amount?: string
@@ -82,7 +80,7 @@ const SwapPage = () => {
     const [inputFocus, setInputFocus] = useState(false)
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [hasAllowance, setHasAllowance] = useState<boolean>(true)
-    const [quote, setQuote] = useState<SwapQuote | undefined>(swapQuote)
+    const [quote, setQuote] = useState<SwapQuoteResponse | undefined>(swapQuote)
     const [canSwitchInputs, setCanSwitchInputs] = useState<boolean>(true)
 
     const [swapDataState, setSwapDataState] = useLocalStorageState<SwapState>(
@@ -145,7 +143,7 @@ const SwapPage = () => {
                       currency: nativeCurrency,
                       locale_info: localeInfo,
                       returnNonBreakingSpace: false,
-                      showSymbol: true,
+                      showSymbol: false,
                   }
               )
             : undefined
@@ -269,7 +267,7 @@ const SwapPage = () => {
                     const allowanceCheck = await checkExchangeAllowance(
                         selectedAddress,
                         bigNumberAmount!,
-                        ExchangeType.SWAP_1INCH,
+                        DEFAULT_EXCHANGE_TYPE,
                         tokenFrom!.address
                     )
 
@@ -280,10 +278,11 @@ const SwapPage = () => {
             }
 
             try {
-                const quote = await getExchangeQuote(ExchangeType.SWAP_1INCH, {
-                    fromTokenAddress: tokenFrom!.address,
-                    toTokenAddress: tokenTo!.address,
+                const quote = await getExchangeQuote(DEFAULT_EXCHANGE_TYPE, {
+                    fromToken: tokenFrom!,
+                    toToken: tokenTo!,
                     amount: bigNumberAmount!.toString(),
+                    fromAddress: selectedAddress,
                 })
                 if (isValidFetch) {
                     setQuote(quote)
@@ -374,16 +373,18 @@ const SwapPage = () => {
                     close="/"
                     networkIndicator
                     keepState
-                    onBack={() =>
-                        fromAssetPage
-                            ? history.push({
-                                  pathname: "/asset/details",
-                                  state: {
-                                      address: fromToken?.address,
-                                  },
-                              })
-                            : history.push("/home")
-                    }
+                    onBack={() => {
+                        history.push(
+                            fromAssetPage
+                                ? {
+                                      pathname: "/asset/details",
+                                      state: {
+                                          address: fromToken?.address,
+                                      },
+                                  }
+                                : { pathname: "/home" }
+                        )
+                    }}
                 />
             }
             footer={
@@ -396,6 +397,7 @@ const SwapPage = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             {rate && tokenTo && quote ? (
                 <RateUpdateDialog
@@ -405,17 +407,19 @@ const SwapPage = () => {
                     rate={rate}
                 />
             ) : null}
-            <div className="flex flex-col px-6 py-4 h-full">
+            <div className="flex flex-col p-6 h-full">
                 <div
                     className={classnames(
                         "flex flex-row",
                         // Error message height
-                        !errors.amount?.message && "mb-[22px]"
+                        !errors.amount?.message && "mb-5"
                     )}
                 >
                     {/* Asset */}
                     <div className="flex flex-col space w-1/2 pr-1.5">
-                        <p className="mb-2 text-sm text-gray-600">Swap From</p>
+                        <p className="mb-2 text-[13px] font-medium text-primary-grey-dark">
+                            Swap From
+                        </p>
                         <AssetSelection
                             selectedAssetList={AssetListType.DEFAULT}
                             selectedAsset={
@@ -432,6 +436,7 @@ const SwapPage = () => {
                                     switchInputs()
                                 } else {
                                     setQuote(undefined)
+                                    setError(undefined)
                                     setSwapDataState((prev: SwapState) => ({
                                         ...prev,
                                         tokenFrom: asset.token,
@@ -459,8 +464,8 @@ const SwapPage = () => {
                                     "ml-auto text-sm",
                                     isUsingNetworkNativeCurrency && "invisible",
                                     isMaxAmountEnabled
-                                        ? "text-blue-500 hover:text-blue-800 cursor-pointer"
-                                        : "text-gray-600 cursor-default"
+                                        ? "text-primary-blue-default hover:text-primary-blue-hover cursor-pointer"
+                                        : "text-primary-grey-dark cursor-default"
                                 )}
                                 onClick={() => {
                                     if (isMaxAmountEnabled) {
@@ -477,10 +482,10 @@ const SwapPage = () => {
                         </div>
                         <div
                             className={classnames(
-                                "flex flex-col items-stretch rounded-md p-4 h-[4.5rem] hover:bg-primary-200 w-full",
+                                "flex flex-col items-stretch rounded-md p-4 h-[4rem] hover:bg-primary-grey-hover w-full",
                                 inputFocus
-                                    ? "bg-primary-200"
-                                    : "bg-primary-100",
+                                    ? "bg-primary-grey-hover"
+                                    : "bg-primary-grey-default",
                                 errors.amount
                                     ? "border-red-400"
                                     : "border-opacity-0 border-transparent"
@@ -505,7 +510,7 @@ const SwapPage = () => {
                             />
                             <p
                                 className={classnames(
-                                    "text-xs text-gray-600 mt-1",
+                                    "text-xs text-primary-grey-dark",
                                     !formattedAmount && "hidden"
                                 )}
                             >
@@ -541,7 +546,9 @@ const SwapPage = () => {
                     </button>
                 </div>
 
-                <p className="text-sm text-gray-600 pb-3">Swap To</p>
+                <p className="text-[13px] font-medium text-primary-grey-dark mb-2">
+                    Swap To
+                </p>
                 <AssetSelection
                     displayIcon
                     selectedAssetList={AssetListType.DEFAULT}
@@ -559,6 +566,7 @@ const SwapPage = () => {
                             switchInputs()
                         } else {
                             setQuote(undefined)
+                            setError(undefined)
                             setSwapDataState((prev: SwapState) => ({
                                 ...prev,
                                 tokenTo: asset.token,
@@ -576,7 +584,7 @@ const SwapPage = () => {
                     }}
                 />
                 {swapFee && (
-                    <div className="flex items-center pt-2 text-xs text-gray-600 pt-0.5 mr-1 mt-2">
+                    <div className="flex items-center text-xs text-primary-grey-dark pt-0.5 mr-1 mt-2">
                         <span>{`BlockWallet fee (${BASE_SWAP_FEE}%): ${swapFee}`}</span>
                     </div>
                 )}

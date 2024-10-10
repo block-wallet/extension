@@ -1,4 +1,4 @@
-import AutoSizer from "react-virtualized-auto-sizer"
+import AutoSizer, { Size } from "react-virtualized-auto-sizer"
 import { FixedSizeList as List } from "react-window"
 
 // Components
@@ -8,8 +8,8 @@ import { useOnMountHistory } from "../../context/hooks/useOnMount"
 // Assets
 import searchIcon from "../../assets/images/icons/search.svg"
 import { TokenResponse } from "../../routes/settings/AddTokensPage"
-import { useEffect, useState } from "react"
-import useAsyncInvoke from "../../util/hooks/useAsyncInvoke"
+import { useCallback, useEffect, useState } from "react"
+import log from "loglevel"
 
 export interface tokenSearchView {
     isSearchEmpty?: boolean
@@ -26,13 +26,12 @@ const SearchedTokenView = ({
     setSubmitEnabled = undefined,
     submitForm = false,
 }: tokenSearchView) => {
-    const { run } = useAsyncInvoke()
     const history = useOnMountHistory()
     const [message, setMessage] = useState<string>("")
     const [selected, setSelected] = useState<TokenResponse[]>([])
 
     // Handlers
-    const onSubmit = async () => {
+    const onSubmit = useCallback(() => {
         try {
             // Valid form data
             if (selected.length > 0) {
@@ -48,11 +47,11 @@ const SearchedTokenView = ({
                 // Prevent manual form submission
                 setMessage("Please select a token first.")
             }
-        } catch (event) {
+        } catch (error) {
             // Invalid form data
-            console.log(event)
+            log.error(error)
         }
-    }
+    }, [history, searchedValue, selected])
 
     // Functions
     const addToken = (token: TokenResponse) => {
@@ -86,15 +85,15 @@ const SearchedTokenView = ({
 
     useEffect(() => {
         if (submitForm) {
-            run(onSubmit())
+            onSubmit()
         }
-    }, [submitForm])
+    }, [submitForm, onSubmit])
 
     useEffect(() => {
         if (setSubmitEnabled) {
             setSubmitEnabled(selected.length > 0)
         }
-    }, [selected])
+    }, [selected, setSubmitEnabled])
 
     return (
         <div className="h-full">
@@ -115,9 +114,9 @@ const SearchedTokenView = ({
                             alt="search"
                             className="w-7 h-7 absolute z-10"
                         />
-                        <div className="w-20 h-20 bg-primary-100 rounded-full relative z-0"></div>
+                        <div className="w-20 h-20 bg-primary-grey-default rounded-full relative z-0"></div>
                     </div>
-                    <span className="text-sm text-gray-600 text-center">
+                    <span className="text-sm text-primary-grey-dark text-center">
                         Add the tokens that you've acquired using BlockWallet.
                         <br />
                         Enter an address for adding a custom token.
@@ -126,7 +125,7 @@ const SearchedTokenView = ({
             ) : (
                 <div className="w-full h-0 max-h-screen px-6 pb-0 mt-16">
                     <div
-                        className={`text-xs text-gray-500 pt-4 pb-0 ${
+                        className={`text-xs text-primary-grey-dark pt-4 pb-0 ${
                             selected.length <= 0 ? "hidden" : "visible"
                         }`}
                     >
@@ -152,7 +151,7 @@ const SearchedTokenView = ({
                         })}
                     </div>
                     <div
-                        className={`text-xs text-gray-500 pt-4 pb-1 ${
+                        className={`text-xs text-primary-grey-dark pt-4 pb-1 ${
                             isSearchEmpty ? "hidden" : "visible"
                         }`}
                     >
@@ -160,7 +159,7 @@ const SearchedTokenView = ({
                     </div>
                     <div className="flex flex-col">
                         {results.length < 1 && selected.length <= 0 ? (
-                            <div className="text-base font-bold text-black w-full text-center mt-4">
+                            <div className="text-base font-semibold text-primary-black-default w-full text-center mt-4">
                                 No match
                             </div>
                         ) : (
@@ -171,7 +170,7 @@ const SearchedTokenView = ({
                                 className="w-full"
                             >
                                 <AutoSizer>
-                                    {({ width, height }) => (
+                                    {({ width, height }: Size) => (
                                         <List
                                             height={height}
                                             width={width}

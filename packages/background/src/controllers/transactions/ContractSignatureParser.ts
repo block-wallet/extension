@@ -236,19 +236,18 @@ export class ContractSignatureParser {
             // this retry is for network/http errors
             const result = await retryHandling(
                 () =>
-                    httpClient.get<{
+                    httpClient.request<{
                         status: string;
                         result: string;
                         message?: string;
-                    }>(
-                        `${etherscanAPI}/api`,
-                        {
+                    }>(`${etherscanAPI}/api`, {
+                        params: {
                             module: 'contract',
                             action: 'getabi',
                             address,
                         },
-                        30000
-                    ),
+                        timeout: 30000,
+                    }),
                 API_CALLS_DELAY
             );
 
@@ -342,10 +341,12 @@ export class ContractSignatureParser {
             try {
                 fourByteResponse = await retryHandling(
                     () =>
-                        httpClient.get<FourByteResponse>(
+                        httpClient.request<FourByteResponse>(
                             `https://www.4byte.directory/api/v1/signatures/`,
                             {
-                                hex_signature: bytes,
+                                params: {
+                                    hex_signature: bytes,
+                                },
                             }
                         ),
                     API_CALLS_DELAY

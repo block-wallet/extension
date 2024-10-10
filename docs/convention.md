@@ -10,7 +10,7 @@ Using a semantic Git commit method can greatly improve the readability of Git lo
 
 ## Commit messages
 
-Semantic Git commits start with a semantic tag and use an imperative voice. Git commit messages should be prefixed with one the following tags:
+Semantic Git commits start with a semantic tag and use an imperative voice. Git commit messages should be prefixed with one of the following tags:
 
 ```
 feat: implement new features for endusers
@@ -37,7 +37,7 @@ Example
 ```"feat: add ability to view most popular posts"```
 
 ### fix
-The fix: tag should be used to identify any bug fixes to production code. This includes any fix that would effect the enduser, not the build process.
+The fix: tag should be used to identify any bug fixes to production code. This includes any fix that would affect the enduser, not the build process.
 
 Example
 
@@ -51,9 +51,9 @@ Example
 ```"docs: add detailed installation instructions for Ubuntu"```
 
 ### style
-The style: tag should be used to identify changes made to the code style, which do not effect the enduser. Note that this is separate from the styling of user interfaces, which does effect the enduser. For example, a style change may indicate a change from using tab indentation to spaces.
+The style: tag should be used to identify changes made to the code style, which do not affect the enduser. Note that this is separate from the styling of user interfaces, which does affect the enduser. For example, a style change may indicate a change from using tab indentation to spaces.
 
-For style updates that would effect the enduser, such as CSS changes, use the feat: tag instead.
+For style updates that would affect the enduser, such as CSS changes, use the feat: tag instead.
 
 Example
 
@@ -83,7 +83,7 @@ Example
 
 ## Branch names
 
-Based on the previous standard, the branch names must start with the following preffixes:
+Based on the previous standard, the branch names must start with the following prefixes:
 
 ```
 feat/: implement new features for endusers
@@ -94,7 +94,7 @@ refactor/: refactoring of code
 test/: adding or updating tests
 chore/: updates to build process
 release/: updates related to a new release. This is only used by our Release workflow.
-dependabot/: branch use by the Dependabot
+dependabot/: branch used by the Dependabot
 ```
 
 # Fix 

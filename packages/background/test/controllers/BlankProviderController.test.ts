@@ -42,13 +42,12 @@ import BlockFetchController from '@block-wallet/background/controllers/block-upd
 import { ExternalEventSubscription } from '@block-wallet/background/utils/types/communication';
 import * as random from '@block-wallet/background/utils/randomBytes';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
-import { PrivacyAsyncController } from '@block-wallet/background/controllers/privacy/PrivacyAsyncController';
+import * as ManifestUtils from '@block-wallet/background/utils/manifest';
 
 const UNI_ORIGIN = 'https://app.uniswap.org';
 const TX_HASH =
     '0x3979f7ae255171ae6c6fd1c625219b45e2da7e52e6401028c29f0f27581af601';
 const TEXT_FOR_HASH = 'HASH ME';
-
 describe('Blank Provider Controller', function () {
     const defaultIdleTimeout = 500000;
     const portId = '7e24f69d-c740-4eb3-9c6e-4d47df491005';
@@ -66,7 +65,7 @@ describe('Blank Provider Controller', function () {
     };
 
     providerInstances[portId] = {
-        port: chrome.runtime.connect(),
+        port: chrome.runtime.connect() as any,
         tabId: 420,
         windowId: 404,
         origin: UNI_ORIGIN,
@@ -154,6 +153,8 @@ describe('Blank Provider Controller', function () {
     let transactionWatcherController: TransactionWatcherController;
 
     beforeEach(function () {
+        sinon.stub(ManifestUtils, 'isManifestV3').returns(false);
+
         // Instantiate objects
         networkController = getNetworkControllerInstance();
 
@@ -209,11 +210,12 @@ describe('Blank Provider Controller', function () {
             gasPricesController,
             tokenController,
             blockUpdatesController,
+            mockKeyringController,
             {
                 transactions: [],
                 txSignTimeout: 0,
             },
-            async (ethTx: TypedTransaction) => {
+            async (_: string, ethTx: TypedTransaction) => {
                 const privateKey = Buffer.from(accounts.goerli[0].key, 'hex');
                 return Promise.resolve(ethTx.sign(privateKey));
             },
@@ -259,7 +261,7 @@ describe('Blank Provider Controller', function () {
         );
     });
 
-    afterEach(function () {
+    this.afterEach(function () {
         sinon.restore();
     });
 

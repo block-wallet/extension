@@ -16,6 +16,7 @@ import PasswordInput from "../components/input/PasswordInput"
 import { useBlankState } from "../context/background/backgroundHooks"
 import getRequestRouteAndStatus from "../context/util/getRequestRouteAndStatus"
 import { verifyPassword, requestSeedPhrase } from "../context/commActions"
+import log from "loglevel"
 
 const schema = yup.object().shape({
     password: yup.string().required("Password required."),
@@ -67,7 +68,7 @@ const ReminderPage = () => {
                 setPassword(data.password)
                 setSeedPhrase(seedPhrase)
             })
-            .catch(console.log)
+            .catch(log.error)
     })
 
     useEffect(() => {
@@ -119,7 +120,7 @@ const ReminderPage = () => {
             {shouldEnterPassword ? (
                 <div className="p-6 flex flex-col space-y-8">
                     <div className="flex flex-col space-y-2">
-                        <span className="text-center text-base font-bold font-title">
+                        <span className="text-center text-base font-semibold">
                             Enter your password to back up your seed phrase.
                         </span>
                     </div>
@@ -135,7 +136,7 @@ const ReminderPage = () => {
                 </div>
             ) : (
                 <div className="flex-1 flex flex-col items-center justify-center w-full h-0 max-h-screen p-6">
-                    <div className="flex flex-col space-y-8 p-2 text-gray-600 text-sm">
+                    <div className="flex flex-col space-y-8 p-2 text-primary-grey-dark text-sm">
                         <span>
                             Your seed phrase is the key to your wallet. It makes
                             it possible to restore your wallet after losing

@@ -107,10 +107,22 @@ import {
     RequestAccountReset,
     RequestSetDefaultGas,
     RequestCalculateApproveTransactionGasLimit,
+    RequestCalculateSwapTransactionGasLimit,
     RequestApproveAllowance,
     RequestAddAsNewApproveTransaction,
     RequestGetExchangeSpender,
     Origin,
+    SubmitQRHardwareCryptoHDKeyOrAccountMessage,
+    SubmitQRHardwareSignatureMessage,
+    CancelQRHardwareSignRequestMessage,
+    RequestUpdateTransactionStatus,
+    AddressType,
+    RequestSwitchProvider,
+    RequestIsEnrolled,
+    RequestSetHotkeys,
+    RequestTokensOrder,
+    RequestOrderAccounts,
+    RequestSetHideSmallBalances,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -148,7 +160,6 @@ import { ExchangeRatesController } from './ExchangeRatesController';
 import {
     AccountInfo,
     AccountTrackerController,
-    AccountType,
     DeviceAccountInfo,
 } from './AccountTrackerController';
 
@@ -158,7 +169,10 @@ import {
     TokenControllerProps,
     NATIVE_TOKEN_ADDRESS,
 } from './erc-20/TokenController';
-import SwapController, { SwapParameters, SwapQuote } from './SwapController';
+import SwapController, {
+    SwapParameters,
+    SwapQuoteResponse,
+} from './SwapController';
 import {
     FetchTokenResponse,
     IToken,
@@ -182,10 +196,8 @@ import {
     AddressBookEntry,
     NetworkAddressBook,
 } from './AddressBookController';
-import { Devices } from '../utils/types/hardware';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 
-import { showSetUpCompleteNotification } from '../utils/notifications';
 import { extensionInstances } from '../infrastructure/connection';
 import {
     focusWindow,
@@ -231,6 +243,10 @@ import RemoteConfigsController, {
     RemoteConfigsControllerState,
 } from './RemoteConfigsController';
 import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
+import CampaignsController from './CampaignsController';
+import { NotificationController } from './NotificationController';
+import browser from 'webextension-polyfill';
+import OnrampController from './OnrampController';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -271,6 +287,9 @@ export default class BlankController extends EventEmitter {
     private readonly transactionWatcherController: TransactionWatcherController;
     private readonly tokenAllowanceController: TokenAllowanceController;
     private readonly remoteConfigsController: RemoteConfigsController;
+    private readonly campaignsController: CampaignsController;
+    private readonly notificationController: NotificationController;
+    private readonly onrampController: OnrampController;
 
     // Stores
     private readonly store: ComposedStore<BlankAppState>;
@@ -278,10 +297,11 @@ export default class BlankController extends EventEmitter {
 
     private readonly _devTools: any;
 
-    private subscriptions: Record<string, chrome.runtime.Port>;
+    private subscriptions: Record<string, browser.Runtime.Port>;
     private isSetupComplete: boolean;
 
     constructor(props: BlankControllerProps) {
+        console.log('blank controller constructor');
         super();
 
         const initState = props.initState;
@@ -364,8 +384,11 @@ export default class BlankController extends EventEmitter {
             this.gasPricesController,
             this.tokenController,
             this.blockUpdatesController,
+            this.keyringController,
             initState.TransactionController,
-            this.keyringController.signTransaction.bind(this.keyringController)
+            this.keyringController.signEthTransaction.bind(
+                this.keyringController
+            )
         );
 
         this.privacyController = new PrivacyAsyncController({
@@ -400,6 +423,11 @@ export default class BlankController extends EventEmitter {
             initState.AccountTrackerController
         );
 
+        this.campaignsController = new CampaignsController(
+            this.accountTrackerController,
+            initState.CampaignsController
+        );
+
         this.exchangeRatesController = new ExchangeRatesController(
             initState.ExchangeRatesController,
             this.preferencesController,
@@ -430,7 +458,8 @@ export default class BlankController extends EventEmitter {
             this.networkController,
             this.transactionController,
             this.tokenController,
-            this.tokenAllowanceController
+            this.tokenAllowanceController,
+            this.gasPricesController
         );
 
         this.bridgeController = new BridgeController(
@@ -458,6 +487,17 @@ export default class BlankController extends EventEmitter {
             preferencesController: this.preferencesController,
         });
 
+        this.onrampController = new OnrampController(this.networkController);
+
+        this.notificationController = new NotificationController(
+            this.preferencesController,
+            this.transactionWatcherController,
+            this.transactionController,
+            this.accountTrackerController,
+            this.addressBookController,
+            this.ensController
+        );
+
         this.store = new ComposedStore<BlankAppState>({
             NetworkController: this.networkController.store,
             AppStateController: this.appStateController.store,
@@ -478,6 +518,7 @@ export default class BlankController extends EventEmitter {
             TransactionWatcherControllerState:
                 this.transactionWatcherController.store,
             BridgeController: this.bridgeController.store,
+            CampaignsController: this.campaignsController.store,
         });
 
         this.UIStore = new ComposedStore<BlankAppUIState>({
@@ -498,6 +539,7 @@ export default class BlankController extends EventEmitter {
             BlankProviderController: this.blankProviderController.store,
             SwapController: this.swapController.UIStore,
             BridgeController: this.bridgeController.UIStore,
+            OnrampController: this.onrampController.store,
         });
 
         // Check controllers on app lock/unlock
@@ -529,6 +571,8 @@ export default class BlankController extends EventEmitter {
 
         // mv3 auto unlock
         this.appStateController.autoUnlock();
+
+        console.log('blank controller constructor finished');
     }
 
     /**
@@ -557,6 +601,16 @@ export default class BlankController extends EventEmitter {
             this.appStateController.store.getState().isAppUnlocked;
 
         this.blockUpdatesController.setActiveSubscriptions(
+            isAppUnlocked,
+            activeSubscription
+        );
+
+        this.networkController.setActiveSubscriptions(
+            isAppUnlocked,
+            activeSubscription
+        );
+
+        this.gasPricesController.manageActiveSubscriptions(
             isAppUnlocked,
             activeSubscription
         );
@@ -605,7 +659,7 @@ export default class BlankController extends EventEmitter {
      */
     private createSubscription<TMessageType extends MessageTypes>(
         id: string,
-        port: chrome.runtime.Port
+        port: browser.Runtime.Port
     ): (data: SubscriptionMessageTypes[TMessageType]) => void {
         this.subscriptions[id] = port;
 
@@ -613,8 +667,33 @@ export default class BlankController extends EventEmitter {
         this.manageControllers();
 
         return (subscription: unknown): void => {
-            if (this.subscriptions[id]) {
-                port.postMessage({ id, subscription });
+            try {
+                if (this.subscriptions[id]) {
+                    // fixing 'DataCloneError' error
+                    // https://stackoverflow.com/questions/68467946/datacloneerror-the-object-could-not-be-cloned-firefox-browser
+                    const message = {
+                        id,
+                        subscription:
+                            subscription && typeof subscription !== undefined
+                                ? JSON.parse(JSON.stringify(subscription))
+                                : subscription,
+                    };
+
+                    port.postMessage(message);
+                }
+            } catch (err) {
+                const safeError = toError(err);
+                log.error('[err]', safeError.message);
+                if (
+                    safeError.message
+                        .toLowerCase()
+                        .includes(
+                            'attempting to use a disconnected port object'
+                        )
+                ) {
+                    port.disconnect();
+                    this.unsubscribe(id);
+                }
             }
         };
     }
@@ -643,7 +722,7 @@ export default class BlankController extends EventEmitter {
      */
     public handler<TMessageType extends MessageTypes>(
         { id, message, request }: TransportRequestMessage<TMessageType>,
-        port: chrome.runtime.Port,
+        port: browser.Runtime.Port,
         portId: string
     ): void {
         let isPortConnected = true;
@@ -651,7 +730,8 @@ export default class BlankController extends EventEmitter {
         const source = `${from}: ${id}: ${message}`;
 
         port.onDisconnect.addListener(() => {
-            const error = chrome.runtime.lastError;
+            this.unsubscribe(id);
+            const error = browser.runtime.lastError;
             isPortConnected = false;
             if (error) {
                 log.error(error);
@@ -670,14 +750,28 @@ export default class BlankController extends EventEmitter {
                     throw new Error('Port has been disconnected');
                 }
 
-                port.postMessage({ id, response });
+                // fixing 'DataCloneError' error
+                // https://stackoverflow.com/questions/68467946/datacloneerror-the-object-could-not-be-cloned-firefox-browser
+                const message = {
+                    id,
+                    response:
+                        response && typeof response !== undefined
+                            ? JSON.parse(JSON.stringify(response))
+                            : response,
+                };
+                try {
+                    port.postMessage(message);
+                } catch (error: any) {
+                    log.warn(message, error);
+                    throw error;
+                }
             })
             .catch((error: unknown): void => {
                 // Always pass an error object to the client
                 const safeError = toError(error);
 
                 log.error('[err]', source, safeError.message);
-
+                this.blankProviderController.cancelPendingDAppRequests();
                 // only send message back to port if it's still connected
                 if (isPortConnected) {
                     port.postMessage({
@@ -703,10 +797,12 @@ export default class BlankController extends EventEmitter {
         id: string,
         type: MessageTypes,
         request: RequestTypes[MessageTypes],
-        port: chrome.runtime.Port,
+        port: browser.Runtime.Port,
         portId: string
     ): Promise<ResponseType<MessageTypes>> {
         switch (type) {
+            case Messages.ADDRESS.GET_TYPE:
+                return this.getAddressType(request as string);
             case Messages.ACCOUNT.CREATE:
                 return this.accountCreate(request as RequestAccountCreate);
             case Messages.ACCOUNT.EXPORT_JSON:
@@ -745,6 +841,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.ACCOUNT.REFRESH_TOKEN_ALLOWANCES:
                 return this.refreshAccountTokenAllowances();
+            case Messages.ACCOUNT.ORDER_ACCOUNTS:
+                return this.orderAccounts(request as RequestOrderAccounts);
             case Messages.APP.GET_IDLE_TIMEOUT:
                 return this.getIdleTimeout();
             case Messages.APP.SET_IDLE_TIMEOUT:
@@ -818,6 +916,8 @@ export default class BlankController extends EventEmitter {
                 return this.setProviderIcon(request as RequestSetIcon, portId);
             case Messages.EXTERNAL.GET_PROVIDER_CONFIG:
                 return this.getProviderRemoteConfig();
+            case Messages.EXTERNAL.IS_ENROLLED:
+                return this.isEnrolledInCampaign(request as RequestIsEnrolled);
             case Messages.NETWORK.CHANGE:
                 return this.networkChange(request as RequestNetworkChange);
             case Messages.NETWORK.SET_SHOW_TEST_NETWORKS:
@@ -834,6 +934,8 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.NETWORK.REMOVE_NETWORK:
                 return this.removeNetwork(request as RequestRemoveNetwork);
+            case Messages.NETWORK.SWITCH_PROVIDER:
+                return this.switchProvider(request as RequestSwitchProvider);
             case Messages.NETWORK.GET_SPECIFIC_CHAIN_DETAILS:
                 return this.getChainData(request as RequestGetChainData);
             case Messages.NETWORK.GET_DEFAULT_RPC:
@@ -878,6 +980,10 @@ export default class BlankController extends EventEmitter {
                 return this.rejectTransaction(
                     request as RequestRejectTransaction
                 );
+            case Messages.TRANSACTION.UPDATE_STATUS:
+                return this.updateTransactionStatus(
+                    request as RequestUpdateTransactionStatus
+                );
             case Messages.TRANSACTION.REJECT_REPLACEMENT_TRANSACTION:
                 return this.rejectReplacementTransaction(
                     request as RequestRejectTransaction
@@ -890,6 +996,8 @@ export default class BlankController extends EventEmitter {
                 return this.udResolve(request as RequestUDResolve);
             case Messages.TRANSACTION.GET_LATEST_GAS_PRICE:
                 return this.getLatestGasPrice();
+            case Messages.TRANSACTION.UPDATE_GAS_PRICE:
+                return this.updateGasPrices();
             case Messages.TRANSACTION.FETCH_LATEST_GAS_PRICE:
                 return this.fetchLatestGasPriceForChain(request as number);
             case Messages.TRANSACTION.SEND_ETHER:
@@ -921,6 +1029,10 @@ export default class BlankController extends EventEmitter {
             case Messages.TRANSACTION.CALCULATE_SEND_TRANSACTION_GAS_LIMIT:
                 return this.calculateSendTransactionGasLimit(
                     request as RequestCalculateSendTransactionGasLimit
+                );
+            case Messages.TRANSACTION.CALCULATE_SWAP_TRANSACTION_GAS_LIMIT:
+                return this.calculateSwapTransactionGasLimit(
+                    request as RequestCalculateSwapTransactionGasLimit
                 );
             case Messages.TRANSACTION.CANCEL_TRANSACTION:
                 return this.cancelTransaction(
@@ -1050,6 +1162,18 @@ export default class BlankController extends EventEmitter {
                 return this.removeHardwareWallet(
                     request as RequestRemoveHardwareWallet
                 );
+            case Messages.WALLET.HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT:
+                return this.hardwareQrSubmitCryptoHdKeyOrAccount(
+                    request as SubmitQRHardwareCryptoHDKeyOrAccountMessage
+                );
+            case Messages.WALLET.HARDWARE_QR_SUBMIT_SIGNATURE:
+                return this.hardwareQrSubmitSignature(
+                    request as SubmitQRHardwareSignatureMessage
+                );
+            case Messages.WALLET.HARDWARE_QR_CANCEL_SIGN_REQUEST:
+                return this.hardwareQrCancelSignRequest(
+                    request as CancelQRHardwareSignRequestMessage
+                );
             case Messages.APP.OPEN_HW_CONNECT:
                 return this.openHardwareConnect();
             case Messages.APP.OPEN_HW_REMOVE:
@@ -1084,6 +1208,20 @@ export default class BlankController extends EventEmitter {
                 );
             case Messages.BROWSER.GET_WINDOW_ID:
                 return getCurrentWindowId();
+            case Messages.WALLET.SET_HOTKEYS_ENABLED:
+                return this.setHotkeysStatus(request as RequestSetHotkeys);
+            case Messages.WALLET.GET_ONRAMP_CURRENCIES:
+                return this.getOnrampCurrencies();
+            case Messages.ACCOUNT.EDIT_ACCOUNT_TOKENS_ORDER:
+                return this.editAccountTokensOrder(
+                    request as RequestTokensOrder
+                );
+            case Messages.ACCOUNT.SET_ACCOUNT_SORT_VALUE:
+                return this.setAccountTokensSortValue(request as string);
+            case Messages.WALLET.SET_HIDESMALLBALANCES:
+                return this.setHideSmallBalances(
+                    request as RequestSetHideSmallBalances
+                );
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
         }
@@ -1552,12 +1690,27 @@ export default class BlankController extends EventEmitter {
      * Method to reject transaction proposed by external source
      *
      * @param transactionMeta - transaction data
-     * @param tabId - id of the tab where the extension is opened (needed to close the window)
      */
     private rejectTransaction = async ({
         transactionId,
     }: RequestRejectTransaction) => {
         return this.transactionController.rejectTransaction(transactionId);
+    };
+
+    /**
+     * Method to update transaction status
+     *
+     * @param transactionId - transaction id
+     * @param tabId - id of the tab where the extension is opened (needed to close the window)
+     */
+    private updateTransactionStatus = async ({
+        transactionId,
+        status,
+    }: RequestUpdateTransactionStatus) => {
+        return this.transactionController.updateTransactionStatus(
+            transactionId,
+            status
+        );
     };
 
     /**
@@ -1662,7 +1815,7 @@ export default class BlankController extends EventEmitter {
     private async getExchangeQuote({
         exchangeType,
         quoteParams,
-    }: RequestGetExchangeQuote): Promise<SwapQuote> {
+    }: RequestGetExchangeQuote): Promise<SwapQuoteResponse> {
         return this.swapController.getExchangeQuote(exchangeType, quoteParams);
     }
 
@@ -1896,17 +2049,21 @@ export default class BlankController extends EventEmitter {
         blockExplorerUrl,
         currencySymbol,
         test,
+        switchToNetwork,
     }: RequestAddNetwork): Promise<void> {
-        return this.networkController.addNetwork({
-            chainId: Number(chainId),
-            chainName: name,
-            rpcUrls: [rpcUrl],
-            blockExplorerUrls: [blockExplorerUrl],
-            nativeCurrency: {
-                symbol: currencySymbol,
+        return this.networkController.addNetwork(
+            {
+                chainId: Number(chainId),
+                chainName: name,
+                rpcUrls: [rpcUrl],
+                blockExplorerUrls: [blockExplorerUrl],
+                nativeCurrency: {
+                    symbol: currencySymbol,
+                },
+                test: test,
             },
-            test: test,
-        });
+            switchToNetwork
+        );
     }
 
     /**
@@ -1965,6 +2122,26 @@ export default class BlankController extends EventEmitter {
         return Object.values(INITIAL_NETWORKS).find(
             (network) => network.chainId === chainId
         )?.defaultRpcUrl;
+    }
+
+    /**
+     * switchProvider
+     *
+     * @param chainId chain identifier of the network
+     * @param providerType provider type {default, backup, custom}
+     * @param customRpcUrl custom rpc url of the network
+     *
+     */
+    private async switchProvider({
+        chainId,
+        providerType,
+        customRpcUrl,
+    }: RequestSwitchProvider): Promise<void> {
+        return this.networkController.switchProvider(
+            chainId,
+            providerType,
+            customRpcUrl
+        );
     }
 
     /**
@@ -2047,6 +2224,10 @@ export default class BlankController extends EventEmitter {
 
     private getProviderRemoteConfig(): RemoteConfigsControllerState['provider'] {
         return this.remoteConfigsController.providerConfig;
+    }
+
+    private async isEnrolledInCampaign(r: RequestIsEnrolled): Promise<boolean> {
+        return this.campaignsController.isEnrolled(r.campaignId);
     }
 
     /**
@@ -2286,6 +2467,14 @@ export default class BlankController extends EventEmitter {
     }
 
     /**
+     * Updates the gas price levels
+     */
+    private async updateGasPrices() {
+        const currentBlockNumber = this.blockUpdatesController.getBlockNumber();
+        this.gasPricesController.updateGasPrices(currentBlockNumber);
+    }
+
+    /**
      * It returns the current network latest gas price by fetching it from the Fee service or network
      */
     private async fetchLatestGasPriceForChain(
@@ -2311,6 +2500,15 @@ export default class BlankController extends EventEmitter {
             spender,
             amount,
         });
+    }
+
+    /**
+     * Calculate the gas limit for a Swap transaction
+     */
+    private async calculateSwapTransactionGasLimit({
+        tx,
+    }: RequestCalculateSwapTransactionGasLimit): Promise<TransactionGasEstimation> {
+        return this.swapController.estimateSwapGas(tx);
     }
 
     private cancelTransaction({
@@ -2402,10 +2600,14 @@ export default class BlankController extends EventEmitter {
         if (isNativeToken) {
             // Native Token and Not a custom network, returns SEND_GAS_COST const.
             if (hasFixedGasCost) {
-                return {
-                    gasLimit: BigNumber.from(SEND_GAS_COST),
-                    estimationSucceeded: true,
-                };
+                const isContract =
+                    await this.networkController.isAddressContract(to);
+                if (!isContract) {
+                    return {
+                        gasLimit: BigNumber.from(SEND_GAS_COST),
+                        estimationSucceeded: true,
+                    };
+                }
             }
 
             // Native token of a custom network, estimets gas with fallback price.
@@ -2647,7 +2849,7 @@ export default class BlankController extends EventEmitter {
     }: RequestCompleteSetup): Promise<void> {
         if (!this.isSetupComplete) {
             if (sendNotification) {
-                showSetUpCompleteNotification();
+                this.notificationController.showSetUpCompleteNotification();
             }
             this.isSetupComplete = true;
         }
@@ -2657,7 +2859,7 @@ export default class BlankController extends EventEmitter {
      * State subscription method
      *
      */
-    private stateSubscribe(id: string, port: chrome.runtime.Port): boolean {
+    private stateSubscribe(id: string, port: browser.Runtime.Port): boolean {
         const cb = this.createSubscription<typeof Messages.STATE.SUBSCRIBE>(
             id,
             port
@@ -2684,7 +2886,7 @@ export default class BlankController extends EventEmitter {
      */
     private blankProviderEventSubscribe(
         id: string,
-        port: chrome.runtime.Port,
+        port: browser.Runtime.Port,
         portId: string
     ): boolean {
         const cb = this.createSubscription<
@@ -3222,7 +3424,7 @@ export default class BlankController extends EventEmitter {
         device,
     }: RequestRemoveHardwareWallet): Promise<boolean> {
         const accountType =
-            device === Devices.LEDGER ? AccountType.LEDGER : AccountType.TREZOR;
+            this.accountTrackerController.getAccountTypeFromDevice(device);
         const removeAccountPromises: Promise<boolean>[] = [];
 
         const accounts =
@@ -3248,6 +3450,47 @@ export default class BlankController extends EventEmitter {
         return true;
     }
 
+    private async hardwareQrSubmitCryptoHdKeyOrAccount({
+        ur,
+    }: SubmitQRHardwareCryptoHDKeyOrAccountMessage): Promise<boolean> {
+        try {
+            if (ur.type === 'crypto-hdkey') {
+                await this.keyringController.submitQRHardwareCryptoHDKey(
+                    ur.cbor
+                );
+            } else {
+                await this.keyringController.submitQRHardwareCryptoAccount(
+                    ur.cbor
+                );
+            }
+            return true;
+        } catch (err) {
+            log.error(err);
+            return false;
+        }
+    }
+
+    private async hardwareQrSubmitSignature({
+        requestId,
+        ur,
+    }: SubmitQRHardwareSignatureMessage): Promise<boolean> {
+        try {
+            this.keyringController.submitQRHardwareSignature(
+                requestId,
+                Buffer.from(ur.cbor, 'hex')
+            );
+            return true;
+        } catch (err) {
+            log.error(err);
+            return false;
+        }
+    }
+
+    private async hardwareQrCancelSignRequest({}: CancelQRHardwareSignRequestMessage): Promise<boolean> {
+        this.keyringController.cancelQRHardwareSignRequest();
+        return true;
+    }
+
     /*
      * Get the specificrelease note of a version
      * @returns the notes (if exists) of the version
@@ -3257,5 +3500,82 @@ export default class BlankController extends EventEmitter {
         version,
     }: RequestGenerateOnDemandReleaseNotes): Promise<ReleaseNote[]> {
         return generateOnDemandReleaseNotes(version);
+    }
+
+    /**
+     * Get Address type (normal, native, smart contract, erc20)
+     * @param address - hex address
+     * @returns AddressType
+     */
+    private async getAddressType(address: string): Promise<AddressType> {
+        if (isNativeTokenAddress(address)) return AddressType.NULL;
+
+        const isContract = await this.networkController.isAddressContract(
+            address
+        );
+        if (isContract) {
+            const tokenSearch = await this.tokenController.search(address);
+            if (tokenSearch.tokens.length > 0 && tokenSearch.tokens[0].symbol)
+                return AddressType.ERC20;
+            return AddressType.SMART_CONTRACT;
+        }
+
+        return AddressType.NORMAL;
+    }
+
+    /** Set hotkeys enabled/disabled
+     *
+     * @param enabled indicates if the extension can use hotkeys
+     */
+    private setHotkeysStatus({ enabled }: RequestSetHotkeys) {
+        this.preferencesController.hotkeysStatus = enabled;
+    }
+
+    /** Get onramp currencies
+     *
+     */
+    private getOnrampCurrencies() {
+        return this.onrampController.getCurrencies();
+    }
+
+    /**
+     * editAccountTokensOrder
+     *
+     * @param address The address identifier of the token contract
+     * @param order Order of token
+     */
+    private async editAccountTokensOrder(
+        tokensOrder: RequestTokensOrder
+    ): Promise<void> {
+        return this.accountTrackerController.editAccountTokensOrder(
+            tokensOrder
+        );
+    }
+
+    /** Set tokens list default sort value
+     *
+     * @param tokensSortValue indicates which sort value we will use
+     */
+    private setAccountTokensSortValue(tokensSortValue: string) {
+        this.preferencesController.tokensSortValue = tokensSortValue;
+    }
+
+    /**
+     * orderAccounts
+     *
+     * @param accounts array with all the accounts ordered by the user
+     */
+    private async orderAccounts({
+        accountsInfo,
+    }: RequestOrderAccounts): Promise<void> {
+        this.accountTrackerController.orderAccounts(accountsInfo);
+    }
+
+    /** Set hideSmallBalances enabled/disabled
+     *
+     * @param enabled indicates if the extension show token with balance < 0.01 USD
+     */
+    private setHideSmallBalances({ enabled }: RequestSetHideSmallBalances) {
+        this.preferencesController.hideSmallBalances = enabled;
     }
 }

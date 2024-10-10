@@ -23,7 +23,11 @@ export const getDefaultAccountName = (accountNumber: number): string => {
 /**
  * The list of account types that are considered hardware wallets.
  */
-export const HARDWARE_TYPES = [AccountType.TREZOR, AccountType.LEDGER]
+export const HARDWARE_TYPES = [
+    AccountType.TREZOR,
+    AccountType.LEDGER,
+    AccountType.KEYSTONE,
+]
 
 /**
  * isHardwareWallet

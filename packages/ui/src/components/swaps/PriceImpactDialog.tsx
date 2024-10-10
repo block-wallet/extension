@@ -1,10 +1,10 @@
-import { BasicToken } from "@block-wallet/background/utils/types/1inch"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits } from "ethers/lib/utils"
 import { FC } from "react"
 import { formatRounded } from "../../util/formatRounded"
 import useCurrencyFromatter from "../../util/hooks/useCurrencyFormatter"
 import WarningDialog from "../dialog/WarningDialog"
+import { BasicToken } from "@block-wallet/background/utils/swaps/1inch"
 
 interface HighPriceImpactDialogProps {
     onClose: () => void
@@ -37,7 +37,9 @@ const HighPriceImpactExplained: FC<
             difference in the values you are about to swap.
             <div className="flex flex-col space-y-2 text-left mt-2">
                 <div>
-                    <span className="font-bold text-black">You pay</span>
+                    <span className="font-semibold text-primary-black-default">
+                        You pay
+                    </span>
                     <br />
                     {`${formatToken(fromToken.token, fromToken.amount)} ~=
                     ${format(
@@ -47,7 +49,9 @@ const HighPriceImpactExplained: FC<
                     )}`}
                 </div>
                 <div className="mt-2">
-                    <span className="font-bold text-black">You get</span>
+                    <span className="font-semibold text-primary-black-default">
+                        You get
+                    </span>
                     <br />
                     {`${formatToken(
                         toToken.token,

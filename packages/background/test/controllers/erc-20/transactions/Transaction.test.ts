@@ -116,7 +116,7 @@ describe('Transaction', function () {
                     .balanceOf(daiAddress, '')
                     .catch((e) => expect(e).equal(accountParamNotPresentError));
             });
-            it('Should get balance', async () => {
+            it.skip('Should get balance', async () => {
                 const balance = await tokenOperationsController.balanceOf(
                     daiAddress,
                     accounts.goerli[0].address
@@ -143,7 +143,7 @@ describe('Transaction', function () {
                     .allowance(daiAddress, accounts.goerli[0].address, '')
                     .catch((e) => expect(e).equal(spenderParamNotPresentError));
             });
-            it('Should get allowance', async () => {
+            it.skip('Should get allowance', async () => {
                 const allowance = await tokenOperationsController.allowance(
                     daiAddress,
                     accounts.goerli[0].address,

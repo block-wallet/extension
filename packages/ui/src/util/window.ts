@@ -1,9 +1,11 @@
+import browser from "webextension-polyfill"
+
 /**
  * Checks for runtime error
  *
  */
 const checkForError = () => {
-    const error = chrome.runtime.lastError
+    const error = browser.runtime.lastError
     if (!error) {
         return undefined
     }
@@ -16,13 +18,13 @@ const checkForError = () => {
  */
 export const closeCurrentTab = (): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-        chrome.tabs &&
-            chrome.tabs.getCurrent((tab) => {
+        browser.tabs &&
+            browser.tabs.getCurrent().then((tab) => {
                 const error = checkForError()
                 if (error) {
                     reject(error)
                 }
-                chrome.tabs.remove(tab?.id!, () => {
+                browser.tabs.remove(tab?.id!).then(() => {
                     const error = checkForError()
                     if (error) {
                         reject(error)
@@ -31,4 +33,28 @@ export const closeCurrentTab = (): Promise<void> => {
                 })
             })
     })
+}
+
+export enum Browsers {
+    CHROME = "chrome",
+    OPERA = "opera",
+    FIREFOX = "firefox",
+}
+
+/**
+ * Detects chromium based browsers.
+ * @returns true if the browser is chromium based
+ */
+
+export function getBrowserInfo(): Browsers {
+    const userAgent = window.navigator.userAgent.toLowerCase()
+
+    if (userAgent.indexOf("opera") !== -1 || userAgent.indexOf("opr") !== -1)
+        return Browsers.OPERA
+
+    if (userAgent.indexOf("firefox") !== -1) return Browsers.FIREFOX
+
+    if (userAgent.indexOf("chrome") !== -1) return Browsers.CHROME
+
+    return Browsers.CHROME
 }

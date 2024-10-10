@@ -8,69 +8,87 @@ import { SiteMetadata } from "@block-wallet/provider/types"
 import { checkRedraw } from "./util/platform"
 import { isWindow } from "./util/isWindow"
 import log from "loglevel"
+import browser from "webextension-polyfill"
 
 export const handlers: Handlers = {}
-export let port: chrome.runtime.Port
+export let port: browser.Runtime.Port
 export let isPortConnected: boolean = false
 export let session: { origin: string; data: SiteMetadata } | null = null
 export let isAutomaticClose: boolean = false
+
+const portConnection = () => {
+    port.onMessage.removeListener(messageListener)
+    port.onDisconnect.removeListener(disconectListener)
+    port.disconnect()
+    initPort()
+    port.onMessage.addListener(messageListener)
+    port.onDisconnect.addListener(disconectListener)
+}
+
+const disconectListener = () => {
+    const error = browser.runtime.lastError
+    if (error) {
+        log.error("Port disconnected", error.message)
+    } else {
+        log.debug("Port disconnected")
+    }
+}
+
+const messageListener = (data: TransportResponseMessage<MessageTypes>) => {
+    const handler = handlers[data.id]
+
+    if (!handler) {
+        // Check for background actions
+        if (data.id === BackgroundActions.CLOSE_WINDOW) {
+            isAutomaticClose = true
+            window.close()
+        } else {
+            log.error("Unknown response", data)
+        }
+        return
+    }
+
+    if (!handler.subscriber) {
+        delete handlers[data.id]
+    }
+
+    if (data.subscription) {
+        ; (handler.subscriber as Function)(data.subscription)
+    } else if ("error" in data) {
+        // Deserialze error object
+        const parsedError = JSON.parse(data.error!)
+        const err = new Error(parsedError.message)
+        err.stack = parsedError.stack
+        err.name = parsedError.name
+
+        if (
+            err.message
+                .toLowerCase()
+                .includes("attempting to use a disconnected port object")
+        )
+            portConnection()
+        // Reject promise
+        else handler.reject(err)
+    } else {
+        handler.resolve(data.response)
+    }
+}
 
 /**
  * Connect ports
  */
 const initPort = () => {
     // Open port
-    port = chrome.runtime.connect({ name: Origin.EXTENSION })
+    port = browser.runtime.connect({ name: Origin.EXTENSION })
 
     // Override postMessage function
     // port.postMessage = postMessageWithRetry(port.postMessage)
 
     // Check for error
-    port.onDisconnect.addListener(() => {
-        const error = chrome.runtime.lastError
-        if (error) {
-            log.error("Port disconnected", error.message)
-        } else {
-            log.debug("Port disconnected")
-        }
-    })
+    port.onDisconnect.addListener(disconectListener)
 
     // Add port message listener
-    port.onMessage.addListener(
-        (data: TransportResponseMessage<MessageTypes>): void => {
-            const handler = handlers[data.id]
-
-            if (!handler) {
-                // Check for background actions
-                if (data.id === BackgroundActions.CLOSE_WINDOW) {
-                    isAutomaticClose = true
-                    window.close()
-                } else {
-                    log.error("Unknown response", data)
-                }
-                return
-            }
-
-            if (!handler.subscriber) {
-                delete handlers[data.id]
-            }
-
-            if (data.subscription) {
-                ;(handler.subscriber as Function)(data.subscription)
-            } else if ("error" in data) {
-                // Deserialze error object
-                const parsedError = JSON.parse(data.error!)
-                const err = new Error(parsedError.message)
-                err.stack = parsedError.stack
-                err.name = parsedError.name
-
-                // Reject promise
-                handler.reject(err)
-            } else {
-                handler.resolve(data.response)
-            }
-        }
-    )
+    port.onMessage.addListener(messageListener)
 
     isPortConnected = true
 }
@@ -80,11 +98,11 @@ const initPort = () => {
  * Checks if the background is running before connecting the port
  */
 export const initialize = () => {
-    chrome.runtime &&
-        chrome.runtime.sendMessage(
-            { message: "isBlankInitialized" },
-            (response: any) => {
-                const error = chrome.runtime.lastError
+    browser.runtime &&
+        browser.runtime
+            .sendMessage({ message: "isBlankInitialized" })
+            .then((response: any) => {
+                const error = browser.runtime.lastError
                 if (!response || error) {
                     setTimeout(initialize, 100)
                 } else {
@@ -94,14 +112,13 @@ export const initialize = () => {
                         }
                     }
                 }
-            }
-        )
+            })
 }
 
 // Setup session
-chrome.tabs.query(
-    { active: true, currentWindow: true },
-    async (tabs: chrome.tabs.Tab[]) => {
+browser.tabs
+    .query({ active: true, currentWindow: true })
+    .then(async (tabs: browser.Tabs.Tab[]) => {
         const isWindowPopup = await isWindow()
 
         if (!isWindowPopup || !tabs[0]) {
@@ -123,8 +140,7 @@ chrome.tabs.query(
                 },
             }
         }
-    }
-)
+    })
 
 // Run init function
 initialize()

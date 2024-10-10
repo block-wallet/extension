@@ -1,6 +1,6 @@
 import { ITokens } from '@block-wallet/background/controllers/erc-20/Token';
 import { BlankAppState } from '@block-wallet/background/utils/constants/initialState';
-import { isValidAddress, toChecksumAddress } from 'ethereumjs-util';
+import { isValidAddress, toChecksumAddress } from '@ethereumjs/util';
 import { IMigration } from '../IMigration';
 /**
  * This migration updates user token's addresses from the user's token list

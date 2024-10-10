@@ -10,7 +10,6 @@ import {
 import { parseEther } from "@ethersproject/units"
 import { CurrencyAmountPair } from "@block-wallet/background/controllers/privacy/types"
 import { DappReq } from "../../context/hooks/useDappRequest"
-import { TransactionMeta } from "@block-wallet/background/controllers/transactions/utils/types"
 import { NormalizedAddEthereumChainParameter } from "@block-wallet/background/utils/types/ethereum"
 
 export const Popup = () => (
@@ -62,10 +61,10 @@ const generateTx = (i: number) => ({
 })
 
 const mockTxs = [0, 1, 2, 3, 4].map(generateTx)
-const mockTxsByHash = mockTxs.reduce((o, tx) => {
+/* const mockTxsByHash = mockTxs.reduce((o, tx) => {
     o[tx.id] = tx
     return o
-}, {} as any)
+}, {} as any) */
 
 export const PopupTransactions = () => (
     <MockPopup

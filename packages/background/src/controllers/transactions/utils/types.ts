@@ -99,6 +99,12 @@ export interface TransactionMeta {
     exchangeParams?: ExchangeParams;
     bridgeParams?: BridgeTransactionParams;
     approveAllowanceParams?: ApproveAllowanceParams;
+    qrParams?: QRTransactionParams;
+}
+
+export interface QRTransactionParams {
+    requestId: string;
+    qrSignRequest: string[];
 }
 
 export interface BridgeTransactionParams {
@@ -134,6 +140,8 @@ export interface ApproveAllowanceParams {
     isUnlimited: boolean;
     spenderInfo?: ContractDetails;
     token: Token;
+    //In case it is an NFT
+    tokenId?: BigNumber;
 }
 
 export interface uiTransactionParams extends TransactionParams {
@@ -240,4 +248,10 @@ export enum WatchedTransactionType {
     ERC20 = 'tokentx',
     ERC721 = 'tokennfttx',
     ERC1155 = 'token1155tx',
+}
+
+export interface SignatureData {
+    v: bigint;
+    r: Buffer;
+    s: Buffer;
 }

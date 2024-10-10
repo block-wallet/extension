@@ -13,16 +13,22 @@ import resetIcon from "../../assets/images/icons/reset.svg"
 import allowancesIcon from "../../assets/images/icons/allowances.svg"
 import qrIcon from "../../assets/images/icons/qr_icon.svg"
 import sites from "../../assets/images/icons/connected_sites.svg"
-import editIcon from "../../assets/images/icons/pencil.svg"
+import EditIcon from "../icons/EditIcon"
 import { generateExplorerLink, getExplorerTitle } from "../../util/getExplorer"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import classnames from "classnames"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import { HARDWARE_TYPES } from "../../util/account"
 import { openHardwareRemove } from "../../context/commActions"
+import browser from "webextension-polyfill"
+import { useHotkeys } from "react-hotkeys-hook"
+import { componentsHotkeys } from "../../util/hotkeys"
+import accounts_order from "../../assets/images/icons/accounts_order.svg"
+import assets_order from "../../assets/images/icons/assets_order.svg"
 
 const AccountMenu = () => {
-    const { availableNetworks, selectedNetwork } = useBlankState()!
+    const { availableNetworks, selectedNetwork, hotkeysEnabled } =
+        useBlankState()!
     const account = useSelectedAccount()
     const checksumAddress = useSelectedAddressWithChainIdChecksum()
     const history = useOnMountHistory()
@@ -63,6 +69,19 @@ const AccountMenu = () => {
         },
     ]
 
+    const accountMenuHotkeys = componentsHotkeys.AccountMenu
+    useHotkeys(accountMenuHotkeys, () => {
+        if (!hotkeysEnabled) return
+        browser.tabs.create({
+            url: generateExplorerLink(
+                availableNetworks,
+                selectedNetwork,
+                account.address,
+                "address"
+            ),
+        })
+    })
+
     const disabledOptions: { [k: string]: boolean } = {}
     const tooltipOptions: { [k: string]: string } = {}
 
@@ -93,6 +112,18 @@ const AccountMenu = () => {
     })
 
     options.push({
+        icon: assets_order,
+        label: "Assets order",
+        to: "/accounts/menu/tokensOrder",
+    })
+
+    options.push({
+        icon: accounts_order,
+        label: "Acounts Order",
+        to: "/accounts/menu/order",
+    })
+
+    options.push({
         icon: resetIcon,
         label: "Reset Account",
         to: "/accounts/menu/reset",
@@ -110,10 +141,11 @@ const AccountMenu = () => {
                                 : "/settings",
                         })
                     }}
+                    networkIndicator
                 />
             }
         >
-            <div className="flex flex-col p-6 space-y-4 text-sm text-gray-500">
+            <div className="flex flex-col p-6 pt-4 space-y-4 text-sm text-primary-grey-dark">
                 <div className="flex flex-col">
                     <AccountDisplay
                         account={account}
@@ -130,9 +162,9 @@ const AccountMenu = () => {
                                         },
                                     })
                                 }}
-                                className="cursor-pointer p-2 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                                className="cursor-pointer p-2 transition duration-300 rounded-full text-primary-black-default hover:bg-primary-grey-default hover:text-primary-blue-default"
                             >
-                                <img src={editIcon} alt="Edit"></img>
+                                <EditIcon />
                             </div>,
                         ]}
                     />
@@ -148,7 +180,9 @@ const AccountMenu = () => {
                             onChange={(option) =>
                                 option.to
                                     ? option.to.includes("https://")
-                                        ? chrome.tabs.create({ url: option.to })
+                                        ? browser.tabs.create({
+                                              url: option.to,
+                                          })
                                         : history.push({
                                               pathname: option.to,
                                               state: {
@@ -177,7 +211,7 @@ const AccountMenu = () => {
                                                 }
                                             />
                                         </div>
-                                        <span className="font-bold">
+                                        <span className="font-semibold">
                                             {option.label}
                                         </span>
                                     </>

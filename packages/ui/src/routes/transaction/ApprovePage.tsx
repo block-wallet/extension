@@ -11,6 +11,7 @@ import {
     FunctionComponent,
     useMemo,
     useCallback,
+    useLayoutEffect,
 } from "react"
 import {
     approveBridgeAllowance,
@@ -28,10 +29,10 @@ import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import {
     formatHash,
-    formatHashLastChars,
+    formatHashFirstLastChars,
     formatName,
 } from "../../util/formatAccount"
-import { formatRounded } from "../../util/formatRounded"
+import { formatRounded, formatRoundedUp } from "../../util/formatRounded"
 import { formatUnits, parseUnits } from "@ethersproject/units"
 import { getAccountColor } from "../../util/getAccountColor"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
@@ -49,7 +50,6 @@ import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionW
 import { HardwareWalletOpTypes } from "../../context/commTypes"
 import { rejectTransaction } from "../../context/commActions"
 import { SwapConfirmPageLocalState } from "../swap/SwapConfirmPage"
-import { ExchangeType } from "../../context/commTypes"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { BridgeConfirmPageLocalState } from "../bridge/BridgeConfirmPage"
 import { useBlankState } from "../../context/background/backgroundHooks"
@@ -61,6 +61,7 @@ import { useSelectedAccountBalance } from "../../context/hooks/useSelectedAccoun
 
 import unknownTokenIcon from "../../assets/images/unknown_token.svg"
 import { generateExplorerLink } from "../../util/getExplorer"
+import { DEFAULT_EXCHANGE_TYPE } from "../../util/exchangeUtils"
 
 const UNLIMITED_ALLOWANCE = MaxUint256
 
@@ -72,11 +73,13 @@ export enum ApproveOperation {
 interface ApprovePageState {
     assetAllowance: BigNumber
     submitted: boolean
+    txId: string
 }
 
 const INITIAL_VALUE_PERSISTED_DATA = {
     assetAllowance: UNLIMITED_ALLOWANCE,
     submitted: false,
+    txId: "",
 }
 
 export interface ApprovePageLocalState {
@@ -99,6 +102,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
         () => history.location.state as ApprovePageLocalState,
         [history.location.state]
     )
+    const selectedAccount = useSelectedAccount()
 
     // Get data from window.localStorage
     const [persistedData, setPersistedData] =
@@ -109,19 +113,43 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
     // Hooks
     const { transaction: inProgressTransaction, clearTransaction } =
-        useInProgressInternalTransaction()
+        useInProgressInternalTransaction({ txId: persistedData.txId })
+
     useEffect(() => {
+        if (
+            inProgressTransaction?.id &&
+            persistedData.submitted &&
+            persistedData.txId !== inProgressTransaction?.id
+        ) {
+            if (isHardwareWallet(selectedAccount.accountType)) {
+                setPersistedData((prev: ApprovePageState) => ({
+                    ...prev,
+                    txId: inProgressTransaction?.id,
+                }))
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [inProgressTransaction?.id])
+
+    useLayoutEffect(() => {
         // Tx was either rejected or submitted when the pop-up was closed.
         // If we opened back the pop-up, and there aren't any pending transactions,
         // we should redirect to the home page (this is only checked on component mount)
-        if (!inProgressTransaction?.id && persistedData.submitted) {
+        if (
+            !inProgressTransaction?.id &&
+            persistedData.submitted &&
+            !persistedData.txId
+        ) {
+            setPersistedData(() => ({
+                ...INITIAL_VALUE_PERSISTED_DATA,
+                submitted: false,
+            }))
             history.push("/")
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
     const selectedAccountBalance = useSelectedAccountBalance()
 
-    const selectedAccount = useSelectedAccount()
     const { chainId, isEIP1559Compatible } = useSelectedNetwork()
     const { defaultGasOption, selectedNetwork, availableNetworks } =
         useBlankState()!
@@ -134,6 +162,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                       status: inProgressTransaction?.status,
                       error: inProgressTransaction?.error as Error,
                       epochTime: inProgressTransaction?.approveTime,
+                      qrParams: inProgressTransaction?.qrParams,
                   }
                 : undefined,
             HardwareWalletOpTypes.APPROVE_ALLOWANCE,
@@ -146,8 +175,6 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 }, [inProgressTransaction?.id]),
             }
         )
-
-    const { assetAllowance } = persistedData || INITIAL_VALUE_PERSISTED_DATA
 
     const [isGasUpdating, setIsGasUpdating] = useState<boolean>(false)
     const [hasBalance, setHasBalance] = useState<boolean>(false)
@@ -166,7 +193,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const [isAllowanceValid, setIsAllowanceValid] = useState(true)
     const [allowanceAmount, setAllowanceAmount] = useState(
         minAllowance
-            ? formatUnits(minAllowance, assetDecimals)
+            ? formatRoundedUp(formatUnits(minAllowance, assetDecimals))
             : formatUnits(UNLIMITED_ALLOWANCE, assetDecimals)
     )
 
@@ -236,7 +263,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
 
             setSpenderName(
                 currentSpenderAllowances?.groupBy.name ??
-                    `Spender ${formatHashLastChars(spenderAddress)}`
+                    `Spender ${formatHashFirstLastChars(spenderAddress)}`
             )
 
             setSpenderAddressExplorerLink(
@@ -249,42 +276,41 @@ const ApprovePage: FunctionComponent<{}> = () => {
             )
         } else {
             const nextState = nextLocationState as SwapConfirmPageLocalState
-            getExchangeSpender(ExchangeType.SWAP_1INCH).then(
-                (spenderAddress) => {
-                    const currentSpenderAllowances = currentAllowances.find(
+            getExchangeSpender(DEFAULT_EXCHANGE_TYPE).then((spenderAddress) => {
+                const currentSpenderAllowances = currentAllowances.find(
+                    (allowance) =>
+                        allowance.groupBy.address.toLowerCase() ===
+                        spenderAddress.toLowerCase()
+                )
+
+                const currentAllowance =
+                    currentSpenderAllowances?.allowances?.find(
                         (allowance) =>
-                            allowance.groupBy.address.toLowerCase() ===
-                            spenderAddress.toLowerCase()
+                            allowance.displayData.address.toLowerCase() ===
+                            nextState.swapQuote.fromToken.address.toLowerCase()
                     )
 
-                    const currentAllowance =
-                        currentSpenderAllowances?.allowances?.find(
-                            (allowance) =>
-                                allowance.displayData.address.toLowerCase() ===
-                                nextState.swapQuote.fromToken.address.toLowerCase()
-                        )
-
-                    setCurrentAllowanceValue(
-                        currentAllowance?.allowance?.value ?? BigNumber.from(0)
+                setCurrentAllowanceValue(
+                    currentAllowance?.allowance?.value ?? BigNumber.from(0)
+                )
+                setIsCurrentAllowanceUnlimited(
+                    currentAllowance?.allowance?.isUnlimited
+                )
+                setSpenderName(
+                    currentSpenderAllowances?.groupBy.name ??
+                        `Spender ${formatHashFirstLastChars(spenderAddress)}`
+                )
+                setSpenderAddressExplorerLink(
+                    generateExplorerLink(
+                        availableNetworks,
+                        selectedNetwork,
+                        spenderAddress,
+                        "address"
                     )
-                    setIsCurrentAllowanceUnlimited(
-                        currentAllowance?.allowance?.isUnlimited
-                    )
-                    setSpenderName(
-                        currentSpenderAllowances?.groupBy.name ??
-                            `Spender ${formatHashLastChars(spenderAddress)}`
-                    )
-                    setSpenderAddressExplorerLink(
-                        generateExplorerLink(
-                            availableNetworks,
-                            selectedNetwork,
-                            spenderAddress,
-                            "address"
-                        )
-                    )
-                }
-            )
+                )
+            })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     // Fees
@@ -357,7 +383,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                 allowanceResponse = await approveExchange(
                     parseUnits(allowanceAmount, assetDecimals),
                     BigNumber.from(nextState.swapQuote.fromTokenAmount),
-                    ExchangeType.SWAP_1INCH,
+                    DEFAULT_EXCHANGE_TYPE,
                     {
                         gasPrice: !isEIP1559Compatible
                             ? selectedGasPrice
@@ -422,6 +448,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
             setPersistedData((prev: ApprovePageState) => ({
                 ...prev,
                 submitted: false,
+                txId: "",
             }))
             clearTransaction()
             return
@@ -477,7 +504,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         href={spenderAddressExplorerLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-primary-300 hover:underline"
+                        className="text-primary-blue-default hover:underline"
                     >
                         {spenderName}
                     </a>{" "}
@@ -490,7 +517,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         href={spenderAddressExplorerLink}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-primary-300 hover:underline"
+                        className="text-primary-blue-default hover:underline"
                     >
                         {spenderName}
                     </a>{" "}
@@ -503,11 +530,13 @@ const ApprovePage: FunctionComponent<{}> = () => {
     const mainSection = (
         <>
             <div className="flex flex-col space-y-3 px-6 py-4">
-                <p className="text-sm font-bold">{`You are about to update your ${assetName} allowance`}</p>
-                <p className="text-sm text-gray-500">{mainSectionText}</p>
+                <p className="text-sm font-semibold">{`You are about to update your ${assetName} allowance`}</p>
+                <p className="text-sm text-primary-grey-dark">
+                    {mainSectionText}
+                </p>
                 {currentAllowanceValue && (
                     <p
-                        className="flex items-center space-x-1 text-sm text-gray-500 break-word mt-2"
+                        className="flex items-center space-x-1 text-sm text-primary-grey-dark break-word mt-2"
                         title={`${Number(
                             formatUnits(currentAllowanceValue, assetDecimals)
                         )} ${assetName}`}
@@ -538,7 +567,9 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     currentAllowance={currentAllowanceValue}
                 />
 
-                <label className="text-sm text-gray-600">Gas Price</label>
+                <label className="text-[13px] font-medium text-primary-grey-dark">
+                    Gas Price
+                </label>
                 {!isEIP1559Compatible ? (
                     <GasPriceSelector
                         defaultLevel={defaultGasOption || "medium"}
@@ -587,7 +618,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     }}
                     buttonDisplay={false}
                 />
-                <ErrorMessage>
+                <ErrorMessage className="!mt-0">
                     {hasBalance ? undefined : "Insufficient funds"}
                 </ErrorMessage>
             </div>
@@ -617,6 +648,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     />
                 </PopupFooter>
             }
+            showProviderStatus
         >
             <WaitingDialog
                 open={isOpen}
@@ -636,10 +668,11 @@ const ApprovePage: FunctionComponent<{}> = () => {
                         "There was an error while approving the asset.",
                 }}
                 txHash={inProgressTransaction?.transactionParams.hash}
-                timeout={2900}
+                timeout={1500}
                 onDone={onDone}
                 clickOutsideToClose={false}
                 gifs={gifs}
+                showCloseButton
             />
             <div className="px-6 py-2 flex flex-row items-center">
                 <AccountIcon
@@ -647,11 +680,11 @@ const ApprovePage: FunctionComponent<{}> = () => {
                     fill={getAccountColor(selectedAccount.address)}
                 />
                 <div className="relative flex flex-col group space-y-1 ml-4">
-                    <span className="text-sm font-bold">
+                    <span className="text-sm font-semibold">
                         {formatName(selectedAccount.name, 15)}
                     </span>
                     <span
-                        className="text-xs text-gray-600 truncate"
+                        className="text-xs text-primary-grey-dark truncate"
                         title={selectedAccount.address}
                     >
                         {formatHash(selectedAccount.address)}
@@ -664,7 +697,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                             formatUnits(assetBalance || "0", assetDecimals)
                         )} ${assetName}`}
                     >
-                        <span className="text-xs text-gray-600 truncate">
+                        <span className="text-xs text-primary-grey-dark truncate">
                             {`${formatRounded(
                                 formatUnits(assetBalance || "0", assetDecimals)
                             )}`}
@@ -693,7 +726,7 @@ const ApprovePage: FunctionComponent<{}> = () => {
                             18
                         )} ${nativeToken.token.symbol}`}
                     >
-                        <span className="text-xs text-gray-600 truncate">
+                        <span className="text-xs text-primary-grey-dark truncate">
                             {formatName(
                                 formatRounded(
                                     formatUnits(

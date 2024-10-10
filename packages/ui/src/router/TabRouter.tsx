@@ -13,6 +13,7 @@ import { makeRoutes } from "../util/makeRoutes"
 import HardwareWalletVendorsPage from "../routes/hardware-wallet/VendorsPage"
 import HardwareWalletAccountsPage from "../routes/hardware-wallet/AccountsPage"
 import HardwareWalletConnectionPage from "../routes/hardware-wallet/HardwareWalletConnectionPage"
+import KeystoneConnectionPage from "../routes/hardware-wallet/KeystoneConnectionPage"
 import HardwareWalletReconnectionPage from "../routes/hardware-wallet/HardwareWalletReconnectionPage"
 import HardwareWalletSuccessPage from "../routes/hardware-wallet/SuccessPage"
 import HardwareWalletRemoveDevicePage from "../routes/hardware-wallet/RemoveDevice"
@@ -53,6 +54,11 @@ const introRoutes = makeRoutes([
         path: "/hardware-wallet/connect",
         exact: true,
         component: HardwareWalletConnectionPage,
+    },
+    {
+        path: "/hardware-wallet/keystone-connect",
+        exact: true,
+        component: KeystoneConnectionPage,
     },
     {
         path: "/hardware-wallet/:vendor/reconnect",

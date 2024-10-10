@@ -55,6 +55,7 @@ import { useSelectedAccount } from "../context/hooks/useSelectedAccount"
 import useCheckAccountDeviceLinked from "../util/hooks/useCheckAccountDeviceLinked"
 import HardwareDeviceNotLinkedDialog from "./dialog/HardwareDeviceNotLinkedDialog"
 import { getDeviceFromAccountType } from "../util/hardwareDevice"
+import log from "loglevel"
 
 // Schema
 export const formSchema = yup.object({
@@ -241,6 +242,7 @@ const CancelAndSpeedUpComponent = ({
                       status: replacementTx.status,
                       error: replacementTx.error as Error,
                       epochTime: replacementTx?.approveTime,
+                      qrParams: transaction?.qrParams,
                   }
                 : undefined,
             type === "cancel"
@@ -316,7 +318,7 @@ const CancelAndSpeedUpComponent = ({
                 setIsLoading(false)
             })
             .catch((e) => {
-                console.log(e)
+                log.error(e)
 
                 history.push({
                     pathname: "/home",
@@ -477,27 +479,22 @@ const CancelAndSpeedUpComponent = ({
         }
     }
 
-    const notEnoughFunds =
-        type === "speed up" &&
-        currentBalance
-            .sub(BigNumber.from(transaction.transactionParams.value ?? "0"))
-            .sub(
-                calcGasPrice(transactionType, {
-                    gasLimit: oldGasLimit,
-                    gasPrice: oldGasPrice,
-                    maxFeePerGas: oldMaxFeePerGas,
-                })
-            )
-            .lt(
-                calcGasPrice(transactionType, {
-                    gasLimit: parseUnits(newFees.gasLimit || "0", "wei"),
-                    gasPrice: parseUnits(newFees.gasPrice || "0", "gwei"),
-                    maxFeePerGas: parseUnits(
-                        newFees.maxFeePerGas || "0",
-                        "gwei"
-                    ),
-                })
-            )
+    const notEnoughFunds = currentBalance
+        .sub(BigNumber.from(transaction.transactionParams.value ?? "0"))
+        .sub(
+            calcGasPrice(transactionType, {
+                gasLimit: oldGasLimit,
+                gasPrice: oldGasPrice,
+                maxFeePerGas: oldMaxFeePerGas,
+            })
+        )
+        .lt(
+            calcGasPrice(transactionType, {
+                gasLimit: parseUnits(newFees.gasLimit || "0", "wei"),
+                gasPrice: parseUnits(newFees.gasPrice || "0", "gwei"),
+                maxFeePerGas: parseUnits(newFees.maxFeePerGas || "0", "gwei"),
+            })
+        )
 
     useEffect(() => {
         if (!notEnoughFunds && error?.type !== "notEnoughFunds") return
@@ -605,7 +602,7 @@ const CancelAndSpeedUpComponent = ({
                     error: texts?.error ?? "",
                 }}
                 gifs={gifs}
-                timeout={2900}
+                timeout={1500}
                 clickOutsideToClose={false}
                 txHash={replacementTx?.transactionParams.hash}
                 onDone={() => {
@@ -624,6 +621,7 @@ const CancelAndSpeedUpComponent = ({
                         })
                     }
                 }}
+                showCloseButton
             />
             <div className="w-full h-full">
                 <PopupLayout
@@ -689,7 +687,7 @@ const CancelAndSpeedUpComponent = ({
                             )}
                         </div>
                         <hr
-                            className="border-0.5 border-gray-200"
+                            className="border-0.5 border-primary-grey-hover"
                             style={{
                                 width: "calc(100% + 3rem)",
                                 marginLeft: "-1.5rem",
@@ -882,7 +880,7 @@ const CancelAndSpeedUpComponent = ({
                                 View all details
                             </ClickableText>
                             {baseFeePerGas && (
-                                <span className="block text-gray-500 text-xs mt-px">
+                                <span className="block text-primary-grey-dark text-xs mt-px">
                                     Last base fee:{" "}
                                     {formatUnits(baseFeePerGas, "gwei")} GWEI
                                 </span>

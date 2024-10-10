@@ -11,6 +11,11 @@ export const BRIDGE_REFERRER_ADDRESS =
 
 export const LIFI_NATIVE_ADDRESS = '0x0000000000000000000000000000000000000000';
 
+export const LIFI_KEY_HEADER = {
+    'x-lifi-api-key':
+        'dbc88206-1461-4c10-b12b-f44e20e46e52.f225f863-4b69-4f67-be6d-1aa4fb8e0162',
+};
+
 // Base endpoint
 export const LIFI_BRIDGE_ENDPOINT = 'https://li.quest/v1';
 
@@ -114,13 +119,7 @@ interface QuoteAction {
     fromAddress?: string;
     toAddress: string;
 }
-interface QuoteNotFoundErrorDetails {
-    errorType: string;
-    code: string;
-    action: QuoteAction;
-    tool: string;
-    message: string;
-}
+
 interface LiFiTransactionRequest {
     from: string;
     to: string;
@@ -147,9 +146,28 @@ interface Connection {
     toTokens: LiFiToken[];
 }
 
+interface Failed {
+    overallPath: string;
+    subpaths: { [key: string]: Subpath[] };
+}
+
+interface Subpath {
+    errorType: string;
+    code: string;
+    action: QuoteAction;
+    tool: string;
+    message: string;
+}
+
+interface FilteredOut {
+    overallPath: string;
+    reason: string;
+}
+
 export interface LiFiErrorResponse {
     message: string;
-    errors: QuoteNotFoundErrorDetails[];
+    code: number;
+    errors: { filteredOut: FilteredOut[]; failed: Failed[] };
 }
 
 export const lifiTokenToIToken = (token: LiFiToken): IToken => {

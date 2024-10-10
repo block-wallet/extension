@@ -10,16 +10,19 @@ import {
 import log from 'loglevel';
 import {
     addHexPrefix,
-    bnToHex,
+    bigIntToBuffer,
+    bigIntToHex,
     bufferToHex,
     isValidAddress,
+    isValidSignature,
     toChecksumAddress,
-} from 'ethereumjs-util';
+} from '@ethereumjs/util';
 import { TransactionFactory, TypedTransaction } from '@ethereumjs/tx';
 import { v4 as uuid } from 'uuid';
 import { Mutex } from 'async-mutex';
 import {
     MetaType,
+    QRTransactionParams,
     TransactionCategories,
     TransactionEvents,
     TransactionMeta,
@@ -47,7 +50,6 @@ import PermissionsController from '../PermissionsController';
 import { GasPricesController } from '../GasPricesController';
 import { ContractSignatureParser } from './ContractSignatureParser';
 import { BaseController } from '../../infrastructure/BaseController';
-import { showTransactionNotification } from '../../utils/notifications';
 import { reverse } from '../../utils/array';
 import { TokenController } from '../erc-20/TokenController';
 import { ApproveTransaction } from '../erc-20/transactions/ApproveTransaction';
@@ -67,9 +69,12 @@ import { NFTContract } from '../erc-721/NFTContract';
 import httpClient from '../../utils/http';
 import { fetchBlockWithRetries } from '../../utils/blockFetch';
 import { unixTimestampToJSTimestamp } from '../../utils/timestamp';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isNil } from 'lodash';
 import { isUnlimitedAllowance } from '../../utils/token';
 import { fetchContractDetails } from '../../utils/contractsInfo';
+import KeyringControllerDerivated, {
+    KeyringControllerEvents,
+} from '../KeyringControllerDerivated';
 
 /**
  * It indicates the amount of blocks to wait after marking
@@ -276,14 +281,17 @@ export class TransactionController extends BaseController<
         private readonly _gasPricesController: GasPricesController,
         private readonly _tokenController: TokenController,
         private readonly _blockUpdatesController: BlockUpdatesController,
+        private readonly _keyringController: KeyringControllerDerivated,
         initialState: TransactionControllerState,
         /**
          * Method used to sign transactions
          */
         public sign: (
+            transactionId: string,
             transaction: TypedTransaction,
             from: string
         ) => Promise<TypedTransaction>,
+
         public config: {
             txHistoryLimit: number;
         } = {
@@ -352,9 +360,29 @@ export class TransactionController extends BaseController<
             this._blockUpdatesCallback
         );
 
-        // Show browser notification on transaction status update
-        this.subscribeNotifications();
+        // Subscription to QR signature requests
+        this._keyringController.on(
+            KeyringControllerEvents.QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED,
+            this.updateTransactionQRSignatureRequest
+        );
     }
+
+    // Sets a qrSignRequest in a transaction meta object
+    private updateTransactionQRSignatureRequest = async (
+        transactionId: string,
+        requestId: string,
+        qrSignRequest: string[]
+    ) => {
+        const transactionMeta = this.getTransaction(transactionId);
+        if (transactionMeta) {
+            transactionMeta.qrParams = {
+                requestId,
+                qrSignRequest,
+            } as QRTransactionParams;
+
+            this.updateTransaction(transactionMeta);
+        }
+    };
 
     /**
      * _blockUpdatesCallback
@@ -422,20 +450,6 @@ export class TransactionController extends BaseController<
             return result;
         }, {} as { [key: string]: TransactionMeta });
     };
-
-    private subscribeNotifications() {
-        this.on(
-            TransactionEvents.STATUS_UPDATE,
-            (transactionMeta: TransactionMeta) => {
-                if (
-                    transactionMeta.status === TransactionStatus.CONFIRMED ||
-                    transactionMeta.status === TransactionStatus.FAILED
-                ) {
-                    showTransactionNotification(transactionMeta);
-                }
-            }
-        );
-    }
 
     /**
      * Queries for transaction statuses
@@ -579,6 +593,8 @@ export class TransactionController extends BaseController<
                     transactionMeta.advancedData = advancedData;
                     transactionMeta.approveAllowanceParams =
                         approveAllowanceParams;
+                    // Ensure that approve transactions do not send anything in the value parameter to prevent potential native asset steal.
+                    transaction.value = undefined;
                 }
 
                 // Push transaction so extension can trigger window without waiting for gas values
@@ -654,7 +670,7 @@ export class TransactionController extends BaseController<
             );
 
             // Get token data
-            const token =
+            const { token, fetchFailed } =
                 await this._tokenController.searchTokenWithTotalSupply(
                     transactionMeta.transactionParams.to!
                 );
@@ -676,7 +692,7 @@ export class TransactionController extends BaseController<
                 token,
             };
 
-            if (!token.decimals) {
+            if (fetchFailed || !token.decimals || !token.totalSupply) {
                 // Check if it is an NFT
                 const nftContract = new NFTContract({
                     networkController: this._networkController,
@@ -687,13 +703,19 @@ export class TransactionController extends BaseController<
                     _value
                 );
 
-                if (tokenURI) {
-                    advancedData = {
-                        tokenId: _value,
-                    };
-                } else {
-                    throw new Error('Failed fetching token data');
+                if (isNil(tokenURI)) {
+                    throw new Error('Unable to get token URI from contract.');
                 }
+
+                //TODO remove advanced data (check where it use and run proper migrations)
+                advancedData = {
+                    tokenId: _value,
+                };
+                approveAllowanceParams.tokenId = _value;
+                approveAllowanceParams.token = {
+                    ...approveAllowanceParams.token,
+                    type: 'ERC721',
+                };
             } else {
                 advancedData = {
                     decimals: token.decimals,
@@ -731,23 +753,12 @@ export class TransactionController extends BaseController<
                         BigNumber.from(feeData.maxPriorityFeePerGas);
                 }
             }
-        } else {
-            // Gas price
-            if (!transactionMeta.transactionParams.gasPrice) {
-                if (feeData.gasPrice) {
-                    transactionMeta.transactionParams.gasPrice = BigNumber.from(
-                        feeData.gasPrice
-                    );
-                }
-            }
-        }
 
-        /**
-         * Checks if the network is compatible with EIP1559 but the
-         * the transaction is legacy and then Transforms the gas configuration
-         * of the legacy transaction to the EIP1559 fee data.
-         */
-        if (chainIsEIP1559Compatible) {
+            /**
+             * Checks if the network is compatible with EIP1559 but the
+             * the transaction is legacy and then Transforms the gas configuration
+             * of the legacy transaction to the EIP1559 fee data.
+             */
             if (
                 getTransactionType(transactionMeta.transactionParams) !=
                 TransactionType.FEE_MARKET_EIP1559
@@ -759,6 +770,19 @@ export class TransactionController extends BaseController<
                     transactionMeta.transactionParams.gasPrice;
                 transactionMeta.transactionParams.gasPrice = undefined;
             }
+        } else {
+            // Gas price
+            if (!transactionMeta.transactionParams.gasPrice) {
+                if (feeData.gasPrice) {
+                    transactionMeta.transactionParams.gasPrice = BigNumber.from(
+                        feeData.gasPrice
+                    );
+                }
+            }
+
+            // If the network is not EIP-1559 compatible, we remove maxPriority and maxFee parameters in case they come with a value, specially from dApps.
+            transactionMeta.transactionParams.maxPriorityFeePerGas = undefined;
+            transactionMeta.transactionParams.maxFeePerGas = undefined;
         }
 
         return transactionMeta;
@@ -894,6 +918,9 @@ export class TransactionController extends BaseController<
         let provider: StaticJsonRpcProvider;
 
         if (!transactionMeta) {
+            // Release approve lock
+            releaseLock();
+
             throw new Error('The specified transaction does not exist');
         }
 
@@ -914,7 +941,8 @@ export class TransactionController extends BaseController<
             const { APPROVED: status } = TransactionStatus;
 
             let txNonce = nonce;
-            if (!txNonce) {
+            // this includes 0 as posible value
+            if (typeof txNonce === 'undefined' || txNonce === undefined) {
                 // Get new nonce
                 nonceLock = await this._nonceTracker.getNonceLock(from!);
                 txNonce = nonceLock.nextNonce;
@@ -936,6 +964,9 @@ export class TransactionController extends BaseController<
                         transactionMeta.transactionParams.data!
                     );
                 transactionMeta.methodSignature = methodSignature;
+
+                // Ensure that approve transactions do not send anything in the value parameter to prevent potential native asset steal.
+                transactionMeta.transactionParams.value = undefined;
             }
 
             transactionMeta.status = status;
@@ -981,6 +1012,9 @@ export class TransactionController extends BaseController<
                 from!
             );
 
+            // remove QR
+            transactionMeta.qrParams = undefined;
+
             // Check for HW flow cancellation
             if (this.isTransactionRejected(transactionID)) {
                 return;
@@ -990,10 +1024,10 @@ export class TransactionController extends BaseController<
             transactionMeta.status = TransactionStatus.SIGNED;
 
             // Set r,s,v values
-            transactionMeta.transactionParams.r = bnToHex(signedTx.r!);
-            transactionMeta.transactionParams.s = bnToHex(signedTx.s!);
+            transactionMeta.transactionParams.r = bigIntToHex(signedTx.r!);
+            transactionMeta.transactionParams.s = bigIntToHex(signedTx.s!);
             transactionMeta.transactionParams.v = BigNumber.from(
-                bnToHex(signedTx.v!)
+                bigIntToHex(signedTx.v!)
             ).toNumber();
 
             // Serialize transaction & update
@@ -1110,7 +1144,7 @@ export class TransactionController extends BaseController<
                     timeoutRef = setTimeout(() => {
                         reject(new SignTimeoutError());
                     }, txTimeout);
-                    this.sign(unsignedEthTx, from)
+                    this.sign(transactionId, unsignedEthTx, from)
                         .then(resolve)
                         .catch(reject)
                         .finally(__clearTimeouts);
@@ -1146,8 +1180,29 @@ export class TransactionController extends BaseController<
         );
 
         // Add r,s,v values
-        if (!signedTx.r || !signedTx.s || !signedTx.v)
+        if (
+            !signedTx.r ||
+            !signedTx.s ||
+            // for eip1559 v is 0.
+            // https://github.com/ethereumjs/ethereumjs-monorepo/blob/master/packages/tx/src/eip1559Transaction.ts#L382
+            (!signedTx.v && signedTx.v?.toString() !== '0')
+        )
             throw new Error('An error while signing the transaction ocurred');
+
+        if (
+            !isValidSignature(
+                signedTx.v,
+                bigIntToBuffer(signedTx.r),
+                bigIntToBuffer(signedTx.s),
+                undefined,
+                BigInt(this._networkController.network.chainId)
+            )
+        ) {
+            throw new Error('An error while signing the transaction ocurred');
+        }
+
+        // recover and validate the address from the signature
+        signedTx.getSenderAddress();
 
         return signedTx;
     }
@@ -1165,6 +1220,27 @@ export class TransactionController extends BaseController<
         }
         transactionMeta.status = TransactionStatus.REJECTED;
         this.hub.emit(`${transactionMeta.id}:finished`, transactionMeta);
+        this.updateTransaction(transactionMeta);
+    }
+
+    /**
+     * Updates transaction status
+     *
+     * @param transactionID - The ID of the transaction to update.
+     * @param status - the new transaction status
+     */
+    public updateTransactionStatus(
+        transactionID: string,
+        status: TransactionStatus
+    ): void {
+        const transactionMeta = this.getTransaction(transactionID);
+        if (!transactionMeta) {
+            throw new Error('The specified transaction does not exist');
+        }
+        transactionMeta.status = status;
+        if (status === TransactionStatus.REJECTED) {
+            this.hub.emit(`${transactionMeta.id}:finished`, transactionMeta);
+        }
         this.updateTransaction(transactionMeta);
     }
 
@@ -1457,9 +1533,9 @@ export class TransactionController extends BaseController<
         newTransactionMeta.status = TransactionStatus.SIGNED;
         newTransactionMeta.transactionParams = {
             ...newTransactionMeta.transactionParams,
-            r: bnToHex(signedTx.r!),
-            s: bnToHex(signedTx.s!),
-            v: BigNumber.from(bnToHex(signedTx.v!)).toNumber(),
+            r: bigIntToHex(signedTx.r!),
+            s: bigIntToHex(signedTx.s!),
+            v: BigNumber.from(bigIntToHex(signedTx.v!)).toNumber(),
         };
         this.store.updateState({
             transactions: this.trimTransactionsForState(transactions),
@@ -1662,9 +1738,9 @@ export class TransactionController extends BaseController<
         newTransactionMeta.status = TransactionStatus.SIGNED;
         newTransactionMeta.transactionParams = {
             ...newTransactionMeta.transactionParams,
-            r: bnToHex(signedTx.r!),
-            s: bnToHex(signedTx.s!),
-            v: BigNumber.from(bnToHex(signedTx.v!)).toNumber(),
+            r: bigIntToHex(signedTx.r!),
+            s: bigIntToHex(signedTx.s!),
+            v: BigNumber.from(bigIntToHex(signedTx.v!)).toNumber(),
         };
         this.store.updateState({
             transactions: this.trimTransactionsForState(transactions),
@@ -2240,7 +2316,7 @@ export class TransactionController extends BaseController<
     ): Promise<[TransactionMeta, boolean]> {
         const baseUrl = 'https://protect.flashbots.net/tx/';
 
-        const response = await httpClient.get<FlashbotsStatusResponse>(
+        const response = await httpClient.request<FlashbotsStatusResponse>(
             baseUrl + meta.transactionParams.hash
         );
 
@@ -2399,6 +2475,18 @@ export class TransactionController extends BaseController<
                 'Error estimating the transaction gas. Fallbacking to block gasLimit',
                 error
             );
+
+            //Transaction will fail no matter how much gas the user sets
+            if (
+                error.reason &&
+                error.reason.match(
+                    /Transfer amount must be greater than zero/gi
+                )
+            ) {
+                throw new Error(
+                    'This token only allows transfers bigger than zero.'
+                );
+            }
 
             const hasFixedGasCost =
                 this._networkController.hasChainFixedGasCost(

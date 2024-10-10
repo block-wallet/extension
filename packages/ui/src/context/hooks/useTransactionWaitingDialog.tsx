@@ -2,11 +2,15 @@ import { useCallback, useEffect } from "react"
 import { useWaitingDialog } from "../../components/dialog/WaitingDialog"
 import {
     AccountType,
+    Devices,
     HardwareWalletOpTypes,
     TransactionStatus,
 } from "../commTypes"
 import { getAwaitingSigningMessage } from "../../util/getAwaitingSigningMessage"
-import { isTransactionOrRequestAwaitingSigning } from "../../util/transactionUtils"
+import {
+    isTransactionOrRequestAwaitingSigning,
+    isTransactionOrRequestRejected,
+} from "../../util/transactionUtils"
 import { DappRequestSigningStatus } from "./useDappRequest"
 import AnimatedIcon, { AnimatedIconName } from "../../components/AnimatedIcon"
 import Divider from "../../components/Divider"
@@ -15,6 +19,14 @@ import { isHardwareWallet } from "../../util/account"
 import { useBlankState } from "../background/backgroundHooks"
 import useCountdown from "../../util/hooks/useCountdown"
 import { secondsToMMSS } from "../../util/time"
+import { QRTransactionParams } from "@block-wallet/background/controllers/transactions/utils/types"
+import { getDeviceFromAccountType } from "../../util/hardwareDevice"
+import TransactionQR from "../../components/qr/TransactionQR"
+import {
+    hardwareQrCancelSignRequest,
+    hardwareQrSubmitSignature,
+} from "../commActions"
+import { URParameter } from "@block-wallet/background/utils/types/communication"
 
 const messages: {
     [key in HardwareWalletOpTypes]: {
@@ -102,7 +114,7 @@ const Timer = ({
     let timeData = secondsToMMSS(seconds)
     return (
         <span>
-            {initialCaption} <span className="font-bold">{timeData}</span>
+            {initialCaption} <span className="font-semibold">{timeData}</span>
         </span>
     )
 }
@@ -170,6 +182,7 @@ export const useTransactionWaitingDialog = (
               status: TransactionStatus | DappRequestSigningStatus | undefined
               error: Error | undefined
               epochTime?: number
+              qrParams?: QRTransactionParams
           }
         | undefined,
     operation: HardwareWalletOpTypes,
@@ -178,10 +191,17 @@ export const useTransactionWaitingDialog = (
         reject: () => void
     }
 ) => {
+    const keystoneVendor =
+        getDeviceFromAccountType(accountType) === Devices.KEYSTONE
+    const trezorVendor =
+        getDeviceFromAccountType(accountType) === Devices.TREZOR
     const { texts, titles, dispatch, status, isOpen, gifs } = useWaitingDialog({
         defaultStatus: "idle",
+        defaultIsOpen: true,
     })
+
     const txTimeout = useTransactionTimeout()
+
     useEffect(() => {
         if (transaction?.status) {
             if (isTransactionOrRequestAwaitingSigning(transaction.status)) {
@@ -191,6 +211,7 @@ export const useTransactionWaitingDialog = (
                     transaction?.status,
                     operation
                 )
+
                 dispatch({
                     type: "open",
                     payload: {
@@ -198,16 +219,40 @@ export const useTransactionWaitingDialog = (
                         titles: { loading: message.titles.confirming },
                         texts: {
                             loading: isHardwareWallet(accountType) ? (
-                                <WaitingHWConfirmation
-                                    message={
-                                        hwDeviceMessage ??
-                                        message.texts.confirming
-                                    }
-                                    operation={operation}
-                                    reject={callbacks.reject}
-                                    txTime={transaction?.epochTime}
-                                    txTimeout={txTimeout}
-                                />
+                                !keystoneVendor ? (
+                                    <WaitingHWConfirmation
+                                        message={
+                                            hwDeviceMessage ??
+                                            message.texts.confirming
+                                        }
+                                        operation={operation}
+                                        reject={callbacks.reject}
+                                        txTime={transaction?.epochTime}
+                                        txTimeout={txTimeout}
+                                    />
+                                ) : (
+                                    <TransactionQR
+                                        qrParams={transaction.qrParams}
+                                        onBack={() => {
+                                            callbacks.reject()
+                                            hardwareQrCancelSignRequest()
+                                        }}
+                                        onQRSignatureProvided={(
+                                            ur: URParameter
+                                        ) => {
+                                            if (transaction.qrParams) {
+                                                return hardwareQrSubmitSignature(
+                                                    transaction.qrParams
+                                                        .requestId,
+                                                    ur
+                                                )
+                                            } else {
+                                                callbacks.reject()
+                                                return hardwareQrCancelSignRequest()
+                                            }
+                                        }}
+                                    />
+                                )
                             ) : (
                                 message.texts.confirming
                             ),
@@ -233,7 +278,8 @@ export const useTransactionWaitingDialog = (
                 [
                     TransactionStatus.FAILED,
                     DappRequestSigningStatus.FAILED,
-                ].includes(transaction.status)
+                ].includes(transaction.status) &&
+                !trezorVendor
             ) {
                 const message = messages[operation]
                 dispatch({
@@ -251,10 +297,7 @@ export const useTransactionWaitingDialog = (
                     },
                 })
             } else if (
-                [
-                    TransactionStatus.REJECTED,
-                    DappRequestSigningStatus.REJECTED,
-                ].includes(transaction.status)
+                isTransactionOrRequestRejected(transaction.status, trezorVendor)
             ) {
                 const message = messages[operation]
                 dispatch({
@@ -269,11 +312,15 @@ export const useTransactionWaitingDialog = (
                 })
             }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         transaction?.id,
         transaction?.status,
         transaction?.error,
         transaction?.epochTime,
+        transaction?.qrParams,
+        transaction?.qrParams?.requestId,
+        transaction?.qrParams?.qrSignRequest,
         dispatch,
         operation,
         accountType,

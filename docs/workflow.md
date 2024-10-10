@@ -12,7 +12,7 @@ Once the previous pull request is merged this workflow is launched. It creates t
 
 ## Convention
 
-This workflow runs when a pull request is opened with master as a targer branch. It checks that the commit messages and branch name follow our [convention](docs/convention.md)
+This workflow runs when a pull request is opened with master as a target branch. It checks that the commit messages and branch name follow our [convention](docs/convention.md)
 
 ## CI
 

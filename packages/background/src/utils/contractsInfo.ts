@@ -24,7 +24,7 @@ export async function fetchContractDetails(
     try {
         const responseText = await retryHandling<string>(
             () =>
-                http.get(
+                http.request(
                     `${CONTRACTS_URL}/${chainId}/${toChecksumAddress(
                         address
                     )}.json`

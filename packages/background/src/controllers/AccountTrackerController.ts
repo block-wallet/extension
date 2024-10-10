@@ -1,7 +1,10 @@
 import NetworkController, { NetworkEvents } from './NetworkController';
 import { BaseController } from '../infrastructure/BaseController';
 import { BigNumber } from '@ethersproject/bignumber';
-import { StaticJsonRpcProvider } from '@ethersproject/providers/';
+import {
+    StaticJsonRpcProvider,
+    TransactionResponse,
+} from '@ethersproject/providers';
 import { Zero } from '@ethersproject/constants';
 import {
     ImportStrategy,
@@ -14,7 +17,7 @@ import {
     TokenControllerEvents,
 } from './erc-20/TokenController';
 import { Token } from './erc-20/Token';
-import { toChecksumAddress } from 'ethereumjs-util';
+import { toChecksumAddress } from '@ethereumjs/util';
 import { TokenOperationsController } from './erc-20/transactions/TokenOperationsController';
 import { Mutex } from 'async-mutex';
 import initialState from '../utils/constants/initialState';
@@ -54,7 +57,6 @@ import {
     WatchedTransactionType,
 } from './transactions/utils/types';
 import { retryHandling } from '../utils/retryHandling';
-import { providers } from 'ethers';
 import { RPCLogsFetcher } from '../utils/rpc/RPCLogsFetcher';
 import { getTokenApprovalLogsTopics } from '../utils/logsQuery';
 import { runPromiseSafely } from '../utils/promises';
@@ -126,6 +128,7 @@ export enum AccountType {
     HD_ACCOUNT = 'HD Account',
     LEDGER = 'Ledger',
     TREZOR = 'Trezor',
+    KEYSTONE = 'Keystone',
     EXTERNAL = 'External',
 }
 
@@ -160,11 +163,20 @@ export interface Accounts {
     [address: string]: AccountInfo;
 }
 
+export interface AccountTokenOrder {
+    [tokenAddress: string]: number;
+}
+
 export interface AccountTrackerState {
     accounts: Accounts;
     hiddenAccounts: Accounts;
     isAccountTrackerLoading: boolean;
     isRefreshingAllowances: boolean;
+    accountTokensOrder: {
+        [accountAddress: string]: {
+            [chainId: number]: AccountTokenOrder;
+        };
+    };
 }
 
 export enum AccountTrackerEvents {
@@ -172,6 +184,7 @@ export enum AccountTrackerEvents {
     ACCOUNT_REMOVED = 'ACCOUNT_REMOVED',
     CLEARED_ACCOUNTS = 'CLEARED_ACCOUNTS',
     BALANCE_UPDATED = 'BALANCE_UPDATED',
+    ACCOUNTS_ORDER_UPDATED = 'ACCOUNTS_ORDER_UPDATED',
 }
 
 export interface UpdateAccountsOptions {
@@ -196,6 +209,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             hiddenAccounts: {},
             isRefreshingAllowances: false,
             isAccountTrackerLoading: false,
+            accountTokensOrder: {},
         }
     ) {
         super(initialState);
@@ -972,7 +986,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         if (lastTxHash) {
             try {
                 const oldTtransaction =
-                    await retryHandling<providers.TransactionResponse>(() =>
+                    await retryHandling<TransactionResponse>(() =>
                         provider.getTransaction(lastTxHash)
                     );
                 if (oldTtransaction.blockNumber) {
@@ -1103,6 +1117,27 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     }
 
     /**
+     * getAccountTypeFromDevice
+     *
+     * @param device The device type
+     * @returns The Account Type instance name
+     */
+    public getAccountTypeFromDevice(
+        device: Devices
+    ): AccountType.LEDGER | AccountType.TREZOR | AccountType.KEYSTONE {
+        switch (device) {
+            case Devices.LEDGER:
+                return AccountType.LEDGER;
+            case Devices.TREZOR:
+                return AccountType.TREZOR;
+            case Devices.KEYSTONE:
+                return AccountType.KEYSTONE;
+            default:
+                throw new Error('Invalid device');
+        }
+    }
+
+    /**
      * importHardwareWalletAccounts
      *
      * Imports all the accounts that the user has specified from the device
@@ -1142,14 +1177,14 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             // Calculates new account index
             const accountIndex = this._getNewAccountIndex(trackedAccounts);
 
+            // Gets the account type
+            const accountType = this.getAccountTypeFromDevice(device);
+
             // Add new account to the account tracker
             const accountInfo: AccountInfo = {
                 address: newAccount,
                 name,
-                accountType:
-                    device === Devices.LEDGER
-                        ? AccountType.LEDGER
-                        : AccountType.TREZOR, // HW wallet account
+                accountType,
                 index: accountIndex,
                 balances: {},
                 status: AccountStatus.ACTIVE,
@@ -1288,17 +1323,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             throw new Error('Can only hide internal accounts');
         }
 
-        // if only one internal account exists, cannot hide it
-        let internalAccounts = 0;
+        const accountsNumber = Object.keys(accounts).length;
 
-        for (const address of Object.keys(accounts)) {
-            if (accounts[address].accountType === AccountType.HD_ACCOUNT) {
-                internalAccounts++;
-            }
-        }
-
-        if (internalAccounts === 1) {
-            throw new Error("Can't hide last internal account");
+        if (accountsNumber === 1) {
+            throw new Error("Can't hide last account");
         }
 
         // if account is currently selected, change accounts
@@ -1390,6 +1418,20 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
         // save accounts state
         this.store.updateState({ accounts });
+    }
+
+    /**
+     * Get account name
+     *
+     * @param address account address
+     * @return name of the account
+     */
+    public getAccountName(address: string): string | undefined {
+        const { accounts } = this.store.getState();
+
+        const accountName = accounts[checksummedAddress(address)]?.name;
+
+        return accountName;
     }
 
     /**
@@ -1527,6 +1569,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 assetAddressToGetBalance
             );
 
+            const network =
+                this._networkController.getNetworkFromChainId(chainId);
+
             for (const tokenAddress in balances) {
                 const balance = balances[tokenAddress];
 
@@ -1549,7 +1594,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             if (
                                 balance.gt(zero) &&
                                 !userTokens.includes(tokenAddress) &&
-                                knownTokens.includes(tokenAddress) // the token has to be known (not spam)
+                                (network?.test ||
+                                    knownTokens.includes(tokenAddress)) // the token has to be known (not spam) in mainnets
                             ) {
                                 await this._tokenController.addCustomToken(
                                     token,
@@ -1935,13 +1981,19 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
 
             // Check if the keyring is unlocked, if not unlock it
-            if (!keyring.isUnlocked()) {
-                await keyring.unlock();
+            if (device !== Devices.KEYSTONE) {
+                if (!keyring.isUnlocked()) {
+                    await keyring.unlock();
+                }
             }
 
             keyring.perPage = pageSize;
-            const deviceAccounts = await keyring.getPage(pageIndex);
 
+            const deviceAccounts: [] = await this._keyringController.getPage(
+                device,
+                keyring,
+                pageIndex
+            );
             if (deviceAccounts) {
                 const checkIfAccountNameExists = (
                     name: string,
@@ -2002,5 +2054,64 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         } catch {
             return undefined;
         }
+    }
+
+    public getAllAccountAddresses(): string[] {
+        const { accounts, hiddenAccounts } = this.store.getState();
+        return Object.keys(accounts || {}).concat(
+            Object.keys(hiddenAccounts || {})
+        );
+    }
+
+    /**
+     * Change list of tokens order by account and chainId.
+     */
+    public async editAccountTokensOrder(
+        tokensOrder: AccountTokenOrder
+    ): Promise<void> {
+        const chainId = this._networkController.network.chainId;
+        const accountAddress = this._preferencesController.getSelectedAddress();
+
+        this.store.updateState({
+            accountTokensOrder: {
+                ...this.store.getState().accountTokensOrder,
+                [accountAddress]: {
+                    ...this.store.getState().accountTokensOrder[accountAddress],
+                    [chainId]: tokensOrder,
+                },
+            },
+        });
+    }
+
+    /**
+     * orderAccounts
+     *
+     * @param accounts array with all the accounts ordered by the user
+     */
+    public orderAccounts(accountsInfo: AccountInfo[]): void {
+        const accounts = this.store.getState().accounts;
+        const hiddenAccounts = this.store.getState().hiddenAccounts;
+
+        accountsInfo.forEach((account) => {
+            const address = account.address;
+            if (accounts[address]) {
+                accounts[address] = {
+                    ...accounts[address],
+                    index: account.index,
+                };
+            }
+            if (hiddenAccounts[address]) {
+                hiddenAccounts[address] = {
+                    ...hiddenAccounts[address],
+                    index: account.index,
+                };
+            }
+        });
+
+        // save accounts state
+        this.store.updateState({
+            accounts: accounts,
+            hiddenAccounts: hiddenAccounts,
+        });
     }
 }

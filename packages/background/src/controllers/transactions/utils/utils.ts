@@ -1,4 +1,4 @@
-import { addHexPrefix, isHexString, isValidAddress } from 'ethereumjs-util';
+import { addHexPrefix, isHexString, isValidAddress } from '@ethereumjs/util';
 import { BigNumber } from '@ethersproject/bignumber';
 import { TransactionMeta, TransactionParams, TransactionType } from './types';
 import ensNamehash from 'eth-ens-namehash';
@@ -74,7 +74,7 @@ export function normalizeTransaction(
 
 /**
  * Validates that the input is a hex address. This utility method is a thin
- * wrapper around ethereumjs-util.isValidAddress, with the exception that it
+ * wrapper around @ethereumjs/util.isValidAddress, with the exception that it
  * does not throw an error when provided values that are not hex strings. In
  * addition, and by default, this method will return true for hex strings that
  * meet the length requirement of a hex address, but are not prefixed with `0x`

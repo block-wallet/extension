@@ -12,7 +12,10 @@ export class RequestError extends Error {
 }
 
 const GET = 'GET';
-const POST = 'POST';
+
+export function isHttpsURL(url: string): boolean {
+    return url.startsWith('https://');
+}
 
 function isJsonResponse(r: Response) {
     return r.headers.get('content-type')?.includes('application/json');
@@ -42,22 +45,23 @@ const fetchWithTimeout = async (
     return response;
 };
 
+const defaultOptions = {
+    method: GET,
+    timeout: 60000,
+    cache: 'default' as RequestCache,
+};
 const request = async <T>(
     url: string,
-    params: Record<string, any> | undefined,
-    method = GET,
-    timeout = 60000,
-    cache: RequestCache = 'default'
+    options: RequestOptions = defaultOptions
 ): Promise<T> => {
-    const options: RequestInit & { timeout?: number } = {
-        method,
-        timeout,
-        cache,
+    const safeOptions: RequestOptions = {
+        ...defaultOptions,
+        ...options,
     };
 
     // Check the method and set the options accordingly
-    if (method === GET) {
-        const safeParams = Object.entries(params || {}).reduce(
+    if (safeOptions.method === GET) {
+        const safeParams = Object.entries(safeOptions.params || {}).reduce(
             (acc, [key, value]) => {
                 if (isNil(value)) {
                     return acc;
@@ -70,12 +74,10 @@ const request = async <T>(
             {}
         );
         url += '?' + new URLSearchParams(safeParams).toString();
-    } else {
-        options.body = JSON.stringify(params);
     }
 
     // Fetch with timeout
-    const response = await fetchWithTimeout(url, options);
+    const response = await fetchWithTimeout(url, safeOptions);
 
     // If response ok, we assume data is JSON type
     if (response.ok) {
@@ -83,11 +85,18 @@ const request = async <T>(
     }
 
     // If response is not ok, check if content-type is json before converting.
-    const data = isJsonResponse(response) && (await response.json());
+    const data = isJsonResponse(response) ? await response.json() : undefined;
 
     // Check if there's an 'error' or err' key in the response
-    const errMessage =
-        'error' in data ? data.error : 'err' in data ? data.err : undefined;
+    let errMessage = '';
+    if (data && typeof data === 'object') {
+        for (const prop in data) {
+            if (['err', 'error'].includes(prop)) {
+                errMessage = data[prop];
+                break;
+            }
+        }
+    }
 
     // Throw the request error
     throw new RequestError(
@@ -97,57 +106,22 @@ const request = async <T>(
     );
 };
 
-const get = async <
-    T,
-    P extends Record<string, any> | undefined = Record<string, any>
->(
-    url: string,
-    params?: P,
-    timeout?: number,
-    cache?: RequestCache
-) => request<T>(url, params, GET, timeout, cache);
-
-const post = async <
-    T,
-    P extends Record<string, any> | undefined = Record<string, any>
->(
-    url: string,
-    params?: P,
-    timeout?: number,
-    cache?: RequestCache
-) => request<T>(url, params, POST, timeout, cache);
+export interface RequestOptions extends RequestInit {
+    params?: Record<string, any> | undefined;
+    timeout?: number;
+}
 
 interface HttpClient {
     /**
      * Performs an HTTP GET request
      *
      * @param url the URL
-     * @param params query parameters
+     * @param options options of the request
      * @returns The parsed JSON response
      */
-    get<T, P extends Record<string, any> | undefined = Record<string, any>>(
-        url: string,
-        params?: P,
-        timeout?: number,
-        cache?: RequestCache
-    ): Promise<T>;
-
-    /**
-     * Performs an HTTP POST request
-     *
-     * @param url the URL
-     * @param params The body content
-     * @returns The parsed JSON response
-     */
-    post<T, P extends Record<string, any> | undefined = Record<string, any>>(
-        url: string,
-        params?: P,
-        timeout?: number,
-        cache?: RequestCache
-    ): Promise<T>;
+    request<T>(url: string, options?: RequestOptions): Promise<T>;
 }
 
 export default {
-    get,
-    post,
+    request,
 } as HttpClient;

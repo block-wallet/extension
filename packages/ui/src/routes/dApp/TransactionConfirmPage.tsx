@@ -204,6 +204,7 @@ const TransactionConfirm: React.FC<{
                       status: transaction.status,
                       error: transaction.error as Error,
                       epochTime: transaction?.approveTime,
+                      qrParams: transaction?.qrParams,
                   }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,
@@ -376,65 +377,56 @@ const TransactionConfirm: React.FC<{
     const transactionValues = () => {
         const formattedValue = formatNumberLength(
             formatUnits(params.value!, network.nativeCurrency.decimals),
-            networkNativeCurrency.symbol.length > 3 ? 8 : 9
+            network.nativeCurrency.decimals,
+            false
         )
 
-        const totalLength =
-            formattedValue.length + networkNativeCurrency.symbol.length
-        const valueWidth = totalLength >= 5 ? "w-7/12" : "w-4/12"
-        const originWidth = totalLength >= 5 ? "w-5/12" : "w-8/12"
         return (
-            <GenericTooltip
-                top
-                className="w-60 p-2 ml-8 break-all"
-                content={
-                    <div>
-                        <p>
-                            <span className="font-bold">Total value: </span>
-                            {formatUnits(
-                                params.value!,
-                                network.nativeCurrency.decimals
-                            )}{" "}
-                            {networkNativeCurrency.symbol}
-                        </p>
-                        <p>
-                            <span className="font-bold">Origin: </span>
-                            <span data-testid="transaction-origin">
-                                {transaction.origin}
+            <>
+                <p className="text-sm font-semibold pb-1 break-word">
+                    {/* <span className="text-xs pointer-events-none w-12/12 font-semibold"> */}
+                    {transaction.origin}
+                    {/* </span> */}
+                </p>
+                <GenericTooltip
+                    top
+                    className="w-60 p-2 ml-8 break-all"
+                    content={
+                        <div>
+                            <p>
+                                <span className="font-semibold">
+                                    Total value:{" "}
+                                </span>
+                                {formatUnits(
+                                    params.value!,
+                                    network.nativeCurrency.decimals
+                                )}{" "}
+                                {networkNativeCurrency.symbol}
+                            </p>
+                        </div>
+                    }
+                >
+                    <div className="flex items-center p-4 rounded-md bg-primary-grey-default justify-between  hover:bg-primary-grey-hover">
+                        <div
+                            className={classnames(
+                                "flex flex-row items-center pointer-events-none",
+                                "w-12/12"
+                            )}
+                        >
+                            <img
+                                src={defaultNetworkLogo}
+                                alt={network.nativeCurrency.symbol}
+                                width="20px"
+                                height="18px"
+                                draggable={false}
+                            />
+                            <span className="font-black pl-1 text-sm">
+                                {formattedValue} {networkNativeCurrency.symbol}
                             </span>
-                        </p>
+                        </div>
                     </div>
-                }
-            >
-                <div className="flex items-center p-4 rounded-md bg-primary-100 justify-between  hover:bg-primary-200">
-                    <div
-                        className={classnames(
-                            "flex flex-row items-center pointer-events-none",
-                            valueWidth
-                        )}
-                    >
-                        <img
-                            src={defaultNetworkLogo}
-                            alt={network.nativeCurrency.symbol}
-                            width="20px"
-                            height="18px"
-                            draggable={false}
-                        />
-                        <span className="font-black pl-1 text-sm">
-                            {formattedValue} {networkNativeCurrency.symbol}
-                        </span>
-                    </div>
-
-                    <span
-                        className={classnames(
-                            "text-xxs text-right truncate justify-self-end pointer-events-none",
-                            originWidth
-                        )}
-                    >
-                        {transaction.origin}
-                    </span>
-                </div>
-            </GenericTooltip>
+                </GenericTooltip>
+            </>
         )
     }
 
@@ -460,7 +452,8 @@ const TransactionConfirm: React.FC<{
                     <ButtonWithLoading
                         onClick={reject}
                         buttonClass={Classes.liteButton}
-                        disabled={!canUserSubmitTransaction(transaction.status)}
+                        // Removed to prevent stuck txs.
+                        //disabled={!canUserSubmitTransaction(transaction.status)}
                         label="Reject"
                     ></ButtonWithLoading>
                     <ButtonWithLoading
@@ -494,6 +487,7 @@ const TransactionConfirm: React.FC<{
                 onDone={closeDialog}
                 gifs={gifs}
                 hideButton
+                showCloseButton
             />
             <TransactionDetails
                 transaction={transaction}
@@ -557,7 +551,7 @@ const TransactionConfirm: React.FC<{
                     </div>
                     <span
                         title={accountName}
-                        className="pl-2 font-bold text-sm truncate ..."
+                        className="pl-2 font-semibold text-xs truncate ..."
                     >
                         {formatName(accountName, 24)}
                     </span>
@@ -593,15 +587,15 @@ const TransactionConfirm: React.FC<{
                         onClick={() => onCopy(params?.to)}
                     >
                         <AccountIcon className="h-6 w-6" fill="black" />
-                        <span className="pl-2 font-bold text-sm">
-                            ...{params.to!.slice(-6)}
+                        <span className="pl-2 font-semibold text-xs">
+                            {params.to!.slice(0, 6)} ...{params.to!.slice(-4)}
                         </span>
                         <CopyTooltip copied={copied} />
                     </div>
                 ) : (
                     <div className="flex flex-row items-center relative w-2/5 justify-end">
                         <BsFileEarmarkText size={24} />
-                        <span className="pl-1 font-bold text-sm">
+                        <span className="pl-1 font-semibold text-sm">
                             New Contract
                         </span>
                     </div>
@@ -612,9 +606,9 @@ const TransactionConfirm: React.FC<{
                 <div className="flex flex-row w-full items-center justify-start py-0.5 ">
                     <HiOutlineExclamationCircle
                         size={20}
-                        className="text-gray-600 font-bold"
+                        className="text-primary-grey-dark font-semibold"
                     />
-                    <div className="text-xs text-gray-600 pl-2 font-medium capitalize flex items-center justify-between w-full">
+                    <div className="text-xs text-primary-grey-dark pl-2 font-medium capitalize flex items-center justify-between w-full">
                         {description ? (
                             <>
                                 <GenericTooltip
@@ -645,7 +639,7 @@ const TransactionConfirm: React.FC<{
                     <label
                         className={classnames(
                             Classes.inputLabel,
-                            "text-gray-600 pb-2"
+                            "text-primary-grey-dark pb-2"
                         )}
                     >
                         Gas Price
@@ -688,7 +682,7 @@ const TransactionConfirm: React.FC<{
                 <div className="flex flex-col space-y-2">
                     <div
                         className={classnames(
-                            "flex flex-col items-start px-4 pt-4 space-y rounded-md bg-primary-100",
+                            "flex flex-col items-start px-4 pt-4 space-y rounded-md bg-primary-grey-default",
                             !hasBalance
                                 ? "border border-red-400 pb-2"
                                 : "border-opacity-0 border-transparent pb-4"
@@ -699,7 +693,7 @@ const TransactionConfirm: React.FC<{
                                 htmlFor="amount"
                                 className={classnames(
                                     Classes.inputLabel,
-                                    "text-gray-500"
+                                    "text-primary-grey-dark"
                                 )}
                             >
                                 AMOUNT + {isEIP1559Compatible && " MAX "} GAS
@@ -707,7 +701,7 @@ const TransactionConfirm: React.FC<{
                             </label>
                         </div>
                         <div className="flex flex-col w-full space-y-1">
-                            <div className="flex flex-row items-center justify-between w-full font-bold">
+                            <div className="flex flex-row items-center justify-between w-full font-semibold">
                                 <span className="w-2/12 text-sm">Total:</span>
                                 <span className="flex flex-row items-center justify-end w-10/12">
                                     <img
@@ -743,11 +737,11 @@ const TransactionConfirm: React.FC<{
                                     {selectedCurrency.toUpperCase()} */}
                                 </span>
                             </div>
-                            <span className="ml-auto text-xs text-gray-500">
+                            <span className="ml-auto text-xs text-primary-grey-dark">
                                 {formatCurrency(totalInNativeCurrency, {
                                     currency: nativeCurrency,
                                     locale_info: localeInfo,
-                                    showSymbol: true,
+                                    showSymbol: false,
                                 })}
                             </span>
                             <span className="text-xs text-red-500">
@@ -768,6 +762,7 @@ const TransactionConfirm: React.FC<{
                             flashbots: newSettings.flashbots,
                         })
                     }}
+                    buttonDisplay={false}
                 />
             </div>
             <HardwareDeviceNotLinkedDialog

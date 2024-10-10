@@ -51,12 +51,16 @@ describe('userPreferences tests', () => {
                     {
                         settings: {
                             subscribedToReleaseaNotes: false,
+                            subscribedToNotifications: true,
                             hideAddressWarning: false,
+                            hideSendToContractWarning: false,
+                            hideSendToNullWarning: false,
                             useAntiPhishingProtection: true,
                             defaultBrowserWallet: true,
                             hideEstimatedGasExceedsThresholdWarning: false,
                             hideDepositsExternalAccountsWarning: false,
                             hideBridgeInsufficientNativeTokenWarning: false,
+                            displayNetWorth: true
                         },
                     },
                     '2.0.0'
@@ -74,12 +78,17 @@ describe('userPreferences tests', () => {
                     {
                         settings: {
                             subscribedToReleaseaNotes: true,
+                            subscribedToNotifications: true,
                             hideAddressWarning: false,
+                            hideSendToContractWarning: false,
+                            hideSendToNullWarning: false,
                             useAntiPhishingProtection: true,
                             defaultBrowserWallet: true,
                             hideEstimatedGasExceedsThresholdWarning: false,
                             hideDepositsExternalAccountsWarning: false,
                             hideBridgeInsufficientNativeTokenWarning: false,
+                            displayNetWorth: true
+
                         },
                         releaseNotesSettings: {
                             lastVersionUserSawNews: '2.0.0',
@@ -101,12 +110,17 @@ describe('userPreferences tests', () => {
                     {
                         settings: {
                             subscribedToReleaseaNotes: true,
+                            subscribedToNotifications: true,
                             hideAddressWarning: false,
+                            hideSendToContractWarning: false,
+                            hideSendToNullWarning: false,
                             useAntiPhishingProtection: true,
                             defaultBrowserWallet: true,
                             hideEstimatedGasExceedsThresholdWarning: false,
                             hideDepositsExternalAccountsWarning: false,
                             hideBridgeInsufficientNativeTokenWarning: false,
+                            displayNetWorth: true
+
                         },
                         releaseNotesSettings: {
                             lastVersionUserSawNews: '1.0.0',

@@ -25,7 +25,6 @@ import {
 } from "@block-wallet/background/controllers/transactions/utils/types"
 import { DetailedItem } from "../components/transactions/TransactionDetailsList"
 import { BridgeTransactionsData } from "./hooks/useGetBridgeTransactionsData"
-import isNil from "./isNil"
 import { formatUnits } from "@ethersproject/units"
 import { bnOr0 } from "./numberUtils"
 

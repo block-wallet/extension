@@ -50,6 +50,8 @@ import {
 import { SwapControllerMemState } from '@block-wallet/background/controllers/SwapController';
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import CACHED_INCOMPATIBLE_SITES from '@block-wallet/remote-configs/provider/incompatible_sites.json';
+import { CampaignsControllerState } from '@block-wallet/background/controllers/CampaignsController';
+import { OnrampControllerMemState } from '@block-wallet/background/controllers/OnrampController';
 
 export type BlankAppState = {
     AccountTrackerController: AccountTrackerState;
@@ -70,6 +72,7 @@ export type BlankAppState = {
     TransactionWatcherControllerState: TransactionWatcherControllerState;
     BridgeController: BridgeControllerState;
     RemoteConfigsController: RemoteConfigsControllerState;
+    CampaignsController: CampaignsControllerState;
 };
 
 export type BlankAppUIState = {
@@ -90,6 +93,7 @@ export type BlankAppUIState = {
     BridgeController: BridgeControllerMemState;
     SwapController: SwapControllerMemState;
     BlankProviderController: BlankProviderControllerState;
+    OnrampController: OnrampControllerMemState;
 };
 
 export type BlankAppStoreConfig<S> = {
@@ -121,6 +125,7 @@ const initialState: BlankAppState = {
         hiddenAccounts: {},
         isRefreshingAllowances: false,
         isAccountTrackerLoading: false,
+        accountTokensOrder: {},
     },
     AppStateController: {
         idleTimeout: 5,
@@ -129,6 +134,9 @@ const initialState: BlankAppState = {
         lockedByTimeout: false,
     },
     BlockUpdatesController: { blockData: {} },
+    CampaignsController: {
+        enrollments: {},
+    },
     KeyringController: {
         isUnlocked: false,
         keyringTypes: [],
@@ -152,12 +160,16 @@ const initialState: BlankAppState = {
         popupTab: 'activity',
         settings: {
             hideAddressWarning: false, // Shown by default,
+            hideSendToContractWarning: false, // Shown by default
+            hideSendToNullWarning: false, // Shown by default
             subscribedToReleaseaNotes: true,
+            subscribedToNotifications: true,
             useAntiPhishingProtection: true,
             defaultBrowserWallet: true,
             hideEstimatedGasExceedsThresholdWarning: false, // Shown by default,
             hideDepositsExternalAccountsWarning: false,
             hideBridgeInsufficientNativeTokenWarning: false, // Shown by default
+            displayNetWorth: true,
         },
         releaseNotesSettings: {
             lastVersionUserSawNews: '0.1.3',
@@ -167,6 +179,9 @@ const initialState: BlankAppState = {
             account: [],
         },
         defaultGasOption: 'medium',
+        hotkeysEnabled: true,
+        tokensSortValue: 'CUSTOM',
+        hideSmallBalances: false,
     },
     TransactionController: {
         transactions: [],
@@ -190,7 +205,12 @@ const initialState: BlankAppState = {
         availableNetworks: INITIAL_NETWORKS,
         isNetworkChanging: false,
         isUserNetworkOnline: true,
-        isProviderNetworkOnline: true,
+        providerStatus: {
+            isCurrentProviderOnline: true,
+            isDefaultProviderOnline: true,
+            isBackupProviderOnline: true,
+            isUsingBackupProvider: false,
+        },
         isEIP1559Compatible: {},
     },
     ExchangeRatesController: {

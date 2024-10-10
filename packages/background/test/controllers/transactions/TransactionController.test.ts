@@ -30,6 +30,8 @@ import BlockUpdatesController from '@block-wallet/background/controllers/block-u
 import BlockFetchController from '@block-wallet/background/controllers/block-updates/BlockFetchController';
 import { TokenController } from '@block-wallet/background/controllers/erc-20/TokenController';
 import { TokenOperationsController } from '@block-wallet/background/controllers/erc-20/transactions/TokenOperationsController';
+import { mockKeyringController } from 'test/mocks/mock-keyring-controller';
+
 
 // TODO: Test gas override
 
@@ -123,11 +125,12 @@ describe('Transactions Controller', () => {
                 gasPricesController,
                 tokenController,
                 blockUpdatesController,
+                mockKeyringController,
                 {
                     transactions: [],
                     txSignTimeout: 0,
                 },
-                async (ethTx: TypedTransaction) => {
+                async (_: string, ethTx: TypedTransaction) => {
                     const privateKey = Buffer.from(
                         mockedAccounts.goerli[0].key,
                         'hex'
@@ -157,7 +160,7 @@ describe('Transactions Controller', () => {
                 }),
                 estimateGas: () => BigNumber.from('150000'),
                 getGasPrice: () => BigNumber.from('2000000000'),
-                on: (event: string, func: Function) => {},
+                on: (event: string, func: Function) => { },
                 getCode: (addresOrName: string) => Promise.resolve('0xabc'),
             });
             sinon.stub(gasPricesController, 'getState').returns({
@@ -182,7 +185,7 @@ describe('Transactions Controller', () => {
         it('Should fallback the gasLimit to the latest block one', async () => {
             sinon.stub(networkController, 'getProvider').returns({
                 ...providerMock,
-                on: (event: string, func: Function) => {},
+                on: (event: string, func: Function) => { },
                 getGasPrice: () => BigNumber.from('2000000000'),
                 estimateGas: () => {
                     throw new Error('Error estimating');
@@ -213,7 +216,7 @@ describe('Transactions Controller', () => {
         it('Should fail while trying to estimate gas and return a fallback value', async () => {
             sinon.stub(networkController, 'getProvider').returns({
                 ...providerMock,
-                on: (event: string, func: Function) => {},
+                on: (event: string, func: Function) => { },
                 getGasPrice: () => BigNumber.from('2000000000'),
                 estimateGas: () => {
                     throw new Error('Error estimating');
@@ -252,7 +255,7 @@ describe('Transactions Controller', () => {
                 }),
                 estimateGas: () => BigNumber.from('150000'),
                 getGasPrice: () => BigNumber.from('2000000000'),
-                on: (event: string, func: Function) => {},
+                on: (event: string, func: Function) => { },
                 getCode: (addresOrName: string) => Promise.resolve('0xabc'),
             });
             sinon.stub(gasPricesController, 'getState').returns({
@@ -277,7 +280,7 @@ describe('Transactions Controller', () => {
         it('Should return the unmodified estimated gasLimit', async () => {
             sinon.stub(networkController, 'getProvider').returns({
                 ...providerMock,
-                on: (event: string, func: Function) => {},
+                on: (event: string, func: Function) => { },
                 getGasPrice: () => BigNumber.from('2000000000'),
                 estimateGas: () => BigNumber.from('190000'),
                 getBlock: (block: any) => ({
@@ -306,7 +309,7 @@ describe('Transactions Controller', () => {
         it('Should return the send gas cost', async () => {
             sinon.stub(networkController, 'getProvider').returns({
                 ...providerMock,
-                on: (event: string, func: Function) => {},
+                on: (event: string, func: Function) => { },
                 getGasPrice: () => BigNumber.from('2000000000'),
                 estimateGas: () => BigNumber.from('21000'),
                 getBlock: (block: any) => ({
@@ -339,7 +342,7 @@ describe('Transactions Controller', () => {
 
             sinon.stub(networkController, 'getProvider').returns({
                 ...providerMock,
-                on: (event: string, func: Function) => {},
+                on: (event: string, func: Function) => { },
                 getGasPrice: () => BigNumber.from('2000000000'),
                 estimateGas: () => {
                     return BigNumber.from('1200000');
@@ -455,11 +458,12 @@ describe('Transactions Controller', () => {
                 gasPricesController,
                 tokenController,
                 blockUpdatesController,
+                mockKeyringController,
                 {
                     transactions: [],
                     txSignTimeout: 0,
                 },
-                async (ethTx: TypedTransaction) => {
+                async (_: string, ethTx: TypedTransaction) => {
                     const privateKey = Buffer.from(
                         mockedAccounts.goerli[0].key,
                         'hex'
@@ -1126,17 +1130,17 @@ describe('Transactions Controller', () => {
                         return hash ===
                             '0x4930060e5e465f32c78cea9d467b8d7e9176653cd0416040c44af404dac53fed'
                             ? Promise.resolve({
-                                  status: 1,
-                              })
+                                status: 1,
+                            })
                             : Promise.resolve(null);
                     },
                     getTransaction: (hash) => {
                         return hash ===
                             '0x4930060e5e465f32c78cea9d467b8d7e9176653cd0416040c44af404dac53fed'
                             ? Promise.resolve({
-                                  blockNumber: 1,
-                                  timestamp: new Date().getTime() / 1000,
-                              })
+                                blockNumber: 1,
+                                timestamp: new Date().getTime() / 1000,
+                            })
                             : Promise.resolve(null);
                     },
                 });
@@ -1240,17 +1244,17 @@ describe('Transactions Controller', () => {
                         return hash ===
                             '0x4930060e5e465f32c78cea9d467b8d7e9176653cd0416040c44af404dac53fed'
                             ? Promise.resolve({
-                                  status: 1,
-                              })
+                                status: 1,
+                            })
                             : Promise.resolve(null);
                     },
                     getTransaction: (hash) => {
                         return hash ===
                             '0x4930060e5e465f32c78cea9d467b8d7e9176653cd0416040c44af404dac53fed'
                             ? Promise.resolve({
-                                  blockNumber: 1,
-                                  timestamp: new Date().getTime() / 1000,
-                              })
+                                blockNumber: 1,
+                                timestamp: new Date().getTime() / 1000,
+                            })
                             : Promise.resolve(null);
                     },
                 });
@@ -1305,6 +1309,10 @@ describe('Transactions Controller', () => {
                     gasLimit: BigNumber.from(SEND_GAS_COST),
                 })
             );
+
+            sinon.stub(networkController, 'getEIP1559Compatibility').returns(
+                Promise.resolve(true)
+            )
 
             const { transactionMeta } =
                 await transactionController.addTransaction({
@@ -1776,11 +1784,12 @@ describe('Transactions Controller', () => {
                 gasPricesController,
                 tokenController,
                 blockUpdatesController,
+                mockKeyringController,
                 {
                     transactions: [],
                     txSignTimeout: 0,
                 },
-                async (ethTx: TypedTransaction) => {
+                async (_: string, ethTx: TypedTransaction) => {
                     const privateKey = Buffer.from(
                         mockedAccounts.goerli[0].key,
                         'hex'
@@ -1850,6 +1859,8 @@ describe('Transactions Controller', () => {
             expect(updatedTx).deep.equal({
                 transactionParams: {
                     gasPrice: BigNumber.from('10'),
+                    maxFeePerGas: undefined,
+                    maxPriorityFeePerGas: undefined
                 },
             } as TransactionMeta);
         });

@@ -1,7 +1,7 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { MaxUint256 } from '@ethersproject/constants';
 import { PopulatedTransaction } from '@ethersproject/contracts';
-import { isHexString, isValidAddress, stripHexPrefix } from 'ethereumjs-util';
+import { isHexString, isValidAddress, stripHexPrefix } from '@ethereumjs/util';
 import { TransactionGasEstimation } from '../../transactions/TransactionController';
 import {
     TransactionCategories,

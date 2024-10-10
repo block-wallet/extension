@@ -10,6 +10,7 @@ export const useSelectedNetwork = () => {
         isUserNetworkOnline,
         availableBridgeChains,
         availableSwapChainIds,
+        availableOnrampChains,
     } = useBlankState()!
 
     const network = availableNetworks[selectedNetwork.toUpperCase()]
@@ -22,8 +23,17 @@ export const useSelectedNetwork = () => {
             isFeatureEnabled(network, "sends") && isUserNetworkOnline,
         isTornadoEnabled: isFeatureEnabled(network, "tornado"),
         isSwapEnabled: availableSwapChainIds.includes(network.chainId),
-        isBridgeEnabled: availableBridgeChains.find(
-            (chain) => chain.id === network.chainId
-        ),
+        isBridgeEnabled:
+            availableBridgeChains && availableBridgeChains.length
+                ? availableBridgeChains.some(
+                      (chain) => chain.id === network.chainId
+                  )
+                : false,
+        isOnrampEnabled:
+            availableOnrampChains && availableOnrampChains.length
+                ? availableOnrampChains.some(
+                      (chain) => chain.id === network.chainId
+                  )
+                : false,
     }
 }

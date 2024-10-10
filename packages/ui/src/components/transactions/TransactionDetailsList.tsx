@@ -1,4 +1,4 @@
-import { FC, ReactElement, ReactNode } from "react"
+import { FC, ReactNode } from "react"
 import Divider from "../Divider"
 import TransactionDetailItem from "./TransactionDetailsItem"
 
@@ -13,10 +13,10 @@ export interface DetailedItem {
     link?: string // Not to be used with expandable
 }
 
-type TransactionDetailItem = DetailedItem | undefined
+type TransactionDetailItemType = DetailedItem | undefined
 
 interface TransactionDetailsListProps {
-    details: TransactionDetailItem[]
+    details: TransactionDetailItemType[]
 }
 
 const TransactionDetailsList: FC<TransactionDetailsListProps> = ({

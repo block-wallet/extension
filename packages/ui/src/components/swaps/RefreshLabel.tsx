@@ -1,4 +1,3 @@
-import React from "react"
 import classnames from "classnames"
 import Icon, { IconName } from "../ui/Icon"
 
@@ -16,7 +15,9 @@ const RefreshLabel: React.FC<Props> = ({ value, className }) => {
             )}
         >
             <Icon name={IconName.CLOCK} />
-            <span className="text-xs text-gray-600">Refreshes in {value}</span>
+            <span className="text-xs text-primary-grey-dark">
+                Refreshes in {value}
+            </span>
         </div>
     )
 }

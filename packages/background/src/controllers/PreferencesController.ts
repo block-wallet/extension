@@ -1,16 +1,24 @@
-import { toChecksumAddress } from 'ethereumjs-util';
+import { toChecksumAddress } from '@ethereumjs/util';
 import { BaseController } from '../infrastructure/BaseController';
 
 export interface UserSettings {
     // Setting that indicates if a warning is shown when receiving a transaction from an address different from the selected one.
     hideAddressWarning: boolean;
+    // Setting that indicates if a warning is shown when sending a transaction to a contract address.
+    hideSendToContractWarning: boolean;
+    // Setting that indicates if a warning is shown when sending a transaction to null address.
+    hideSendToNullWarning: boolean;
     subscribedToReleaseaNotes: boolean;
+    subscribedToNotifications: boolean;
     useAntiPhishingProtection: boolean;
     defaultBrowserWallet: boolean;
     hideEstimatedGasExceedsThresholdWarning: boolean;
     //whether we should display the warning while making a deposit with an external/hardware account or not.
     hideDepositsExternalAccountsWarning: boolean;
     hideBridgeInsufficientNativeTokenWarning: boolean;
+
+    // Indicates if the wallet displays net worth in native currency value or native token balance.
+    displayNetWorth: boolean;
 }
 
 export interface Note {
@@ -51,6 +59,9 @@ export interface PreferencesControllerState {
     releaseNotesSettings: ReleaseNotesSettings;
     filters: FilterPreferences;
     defaultGasOption: DefaultGasOptions;
+    hotkeysEnabled: boolean;
+    tokensSortValue: string;
+    hideSmallBalances: boolean;
 }
 
 export interface PreferencesControllerProps {
@@ -323,5 +334,51 @@ export class PreferencesController extends BaseController<PreferencesControllerS
                 defaultBrowserWallet: enabled,
             },
         });
+    }
+
+    /**
+     * Gets if hotkeys are allowed in the extension
+     */
+    public get hotkeysStatus(): boolean {
+        return this.store.getState().hotkeysEnabled;
+    }
+
+    /**
+     * Set if hotkeys are allowed in the extension
+     *
+     * @param enabled hotkeys status
+     */
+    public set hotkeysStatus(enabled: boolean) {
+        this.store.updateState({ hotkeysEnabled: enabled });
+    }
+
+    /**
+     * Gets tokens sort value
+     */
+    public get tokensSortValue(): string {
+        return this.store.getState().tokensSortValue;
+    }
+
+    /**
+     * Sets tokens sort value
+     */
+    public set tokensSortValue(sortValue: string) {
+        this.store.updateState({ tokensSortValue: sortValue });
+    }
+
+    /**
+     * Gets if hideSmallBalances is allowed in the extension
+     */
+    public get hideSmallBalances(): boolean {
+        return this.store.getState().hideSmallBalances;
+    }
+
+    /**
+     * Set if hideSmallBalances is allowed in the extension
+     *
+     * @param enabled hideSmallBalances status
+     */
+    public set hideSmallBalances(enabled: boolean) {
+        this.store.updateState({ hideSmallBalances: enabled });
     }
 }

@@ -27,12 +27,16 @@ testInitState = {
     popupTab: 'activity',
     settings: {
         hideAddressWarning: false, // Shown by default
+        hideSendToContractWarning: false, // Shown by default
+        hideSendToNullWarning: false, // Shown by default
         subscribedToReleaseaNotes: true,
+        subscribedToNotifications: true,
         useAntiPhishingProtection: true,
         defaultBrowserWallet: true,
         hideEstimatedGasExceedsThresholdWarning: false,
         hideDepositsExternalAccountsWarning: false,
         hideBridgeInsufficientNativeTokenWarning: false,
+        displayNetWorth: true,
     },
     releaseNotesSettings: {
         lastVersionUserSawNews: '0.1.3',
@@ -41,7 +45,10 @@ testInitState = {
     filters: {
         account: [],
     },
-    defaultGasOption: "medium"
+    defaultGasOption: 'medium',
+    hotkeysEnabled: true,
+    tokensSortValue: 'CUSTOM',
+    hideSmallBalances: false,
 };
 
 const mockPreferencesController = new PreferencesController({

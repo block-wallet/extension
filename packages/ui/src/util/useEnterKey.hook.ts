@@ -12,5 +12,6 @@ export const useEnterKey = (submitCallback: Function) => {
         return () => {
             document.removeEventListener("keydown", listener)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 }

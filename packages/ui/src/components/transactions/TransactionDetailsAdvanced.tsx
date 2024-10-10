@@ -56,7 +56,7 @@ const ArgumentValue = ({
 
     return (
         <div className="flex">
-            <ExpandableText className="allow-select text-gray-600 pt-1">
+            <ExpandableText className="allow-select text-primary-grey-dark pt-1">
                 {parsedValue as string}
             </ExpandableText>
             {isValidAddress(parsedValue as string) && (
@@ -102,7 +102,7 @@ const Argument = ({
                         <ArrowUpDown active={!isCollapsed} />
                     </div>
                 )}
-                <p className="pl-1 pt-1 font-bold">{name}</p>
+                <p className="pl-1 pt-1 font-semibold">{name}</p>
             </div>
             <div
                 className={classNames(
@@ -126,7 +126,7 @@ export const TransactionDetails: FunctionComponent<
     if (!signature) {
         return (
             <div className="h-full flex items-center">
-                <p className="w-full text-lg text-center text-gray-600">
+                <p className="w-full text-lg text-center text-primary-grey-dark">
                     Details are not available
                 </p>
             </div>
@@ -141,7 +141,7 @@ export const TransactionDetails: FunctionComponent<
                 <div className="overflow-x-auto whitespace-nowrap horizontal-custom-scroll py-1">
                     <pre className="bg-gray-100 w-full p-4 rounded">
                         <code className="allow-select">
-                            <span className="font-bold allow-select">
+                            <span className="font-semibold allow-select">
                                 <GenericTooltip
                                     bottom
                                     disabled={parsedName.length < 25}
@@ -159,7 +159,7 @@ export const TransactionDetails: FunctionComponent<
                             {signature.args.map((arg, i) => (
                                 <span className="allow-select" key={i}>
                                     <br />
-                                    <span className="text-primary-300 allow-select">{`\u00A0\u00A0\u00A0\u00A0${arg.type}`}</span>
+                                    <span className="text-primary-blue-default allow-select">{`\u00A0\u00A0\u00A0\u00A0${arg.type}`}</span>
                                     {arg.name ? ` ${arg.name}` : ""}
                                     {i !== signature.args.length - 1 ? "," : ""}
                                 </span>

@@ -12,8 +12,8 @@ const PageControlButton: React.FC<
     return (
         <button
             className={classnames(
-                "border rounded-md border-primary-200 hover:border-primary-300 p-3 cursor-pointer items-center",
-                "disabled:border-gray-200 disabled:pointer-events-none disabled:cursor-default disabled:bg-gray-100"
+                "border rounded-md border-primary-200 hover:border-primary-blue-default p-3 cursor-pointer items-center",
+                "disabled:border-primary-grey-hover disabled:pointer-events-none disabled:cursor-default disabled:bg-gray-100"
             )}
             onClick={onClick}
             disabled={disabled}
@@ -63,14 +63,31 @@ const PaginationControls: React.FC<{
     pages: number
     currentPage: number
     onChangePage: (nextPage: number) => void
-}> = ({ pages, stickyFirstPage, currentPage, onChangePage, disabled }) => {
+    className?: string
+    showArrows?: boolean
+}> = ({
+    pages,
+    stickyFirstPage,
+    currentPage,
+    onChangePage,
+    disabled,
+    className,
+    showArrows = true,
+}) => {
     return (
-        <div className="flex justify-evenly items-center">
-            <Previous
-                disabled={disabled}
-                currentPage={currentPage}
-                onChangePage={onChangePage}
-            />
+        <div
+            className={classnames(
+                "flex justify-evenly items-center",
+                className
+            )}
+        >
+            {showArrows && (
+                <Previous
+                    disabled={disabled}
+                    currentPage={currentPage}
+                    onChangePage={onChangePage}
+                />
+            )}
             <div className="fullscreen-x-scrollbar" style={{ maxWidth: 230 }}>
                 <PagesList
                     disabled={disabled}
@@ -80,11 +97,13 @@ const PaginationControls: React.FC<{
                     onChangePage={onChangePage}
                 />
             </div>
-            <Next
-                disabled={disabled}
-                currentPage={currentPage}
-                onChangePage={onChangePage}
-            />
+            {showArrows && (
+                <Next
+                    disabled={disabled}
+                    currentPage={currentPage}
+                    onChangePage={onChangePage}
+                />
+            )}
         </div>
     )
 }

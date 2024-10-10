@@ -40,7 +40,7 @@ const AssetAllowances = () => {
                     </div>
                 ))
             ) : (
-                <span className="text-sm text-gray-500 pt-4 mx-auto">
+                <span className="text-sm text-primary-grey-dark pt-4 mx-auto">
                     {emptyMessage}
                 </span>
             )}

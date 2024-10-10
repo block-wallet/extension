@@ -3,7 +3,7 @@ import { classnames } from "../../styles"
 
 /**
  * # ⚠️
- * The `color` props expects a text color: `text-white`, `text-primary-300`, etc...
+ * The `color` props expects a text color: `text-white`, `text-primary-blue-default`, etc...
  */
 const Spinner: FunctionComponent<{
     size?: string
@@ -11,7 +11,7 @@ const Spinner: FunctionComponent<{
     iconTextSeparation?: string
     color?: string
 }> = ({
-    size = "1rem",
+    size = "16px",
     text = "",
     iconTextSeparation = "4px",
     color = "text-primary-100",
@@ -45,7 +45,7 @@ const Spinner: FunctionComponent<{
                 r="20"
                 fill="none"
                 strokeWidth="2"
-                className="animate-spinner-dash stroke-primary-300 linecap-round"
+                className="animate-spinner-dash stroke-primary-blue-default linecap-round"
             ></circle>
         </svg>
         {text}

@@ -8,6 +8,8 @@ import {
     KeyringController,
 } from '@metamask/eth-keyring-controller';
 import mockEncryptor from 'test/mocks/mock-encryptor';
+import { hexToString } from '@block-wallet/background/utils/signature';
+import { bufferToHex } from '@ethereumjs/util';
 
 describe('KeyringControllerDerivated', () => {
     const MOCK_PASSWORD = 'passoword';
@@ -357,7 +359,9 @@ describe('KeyringControllerDerivated', () => {
                 vault.keyrings[0].type
             )[0];
             const serialized = await primaryKeyring.serialize();
-            const seedPhraseToCheck = serialized.mnemonic;
+            const seedPhraseToCheck = hexToString(
+                bufferToHex(serialized.mnemonic)
+            );
             expect(seedPhraseToCheck).not.equal('');
 
             expect(seedPhraseToCheck).equal(seedPhrase);

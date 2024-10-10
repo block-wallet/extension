@@ -5,7 +5,7 @@ import {
     isValidPrivate,
     stripHexPrefix,
     toBuffer,
-} from 'ethereumjs-util';
+} from '@ethereumjs/util';
 
 export enum ImportStrategy {
     PRIVATE_KEY = 'PRIVATE_KEY',
@@ -79,4 +79,12 @@ export const getAccountJson = async (
     const account = Wallet.fromPrivateKey(pk);
     const v3FormattedAcc = await account.toV3(password);
     return JSON.stringify(v3FormattedAcc);
+};
+
+export const formatName = (name: string, maxLength = 25) => {
+    if (name.length < maxLength) {
+        return name;
+    } else {
+        return `${name.slice(0, maxLength - 3)}...`;
+    }
 };

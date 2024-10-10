@@ -1,4 +1,4 @@
-import { FunctionComponent, useState } from "react"
+import { FunctionComponent } from "react"
 import Dialog from "../dialog/Dialog"
 import CloseIcon from "../icons/CloseIcon"
 import Divider from "../Divider"
@@ -28,33 +28,37 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
 > = ({ open, onClose, details }) => {
     let errorsByTool = new Map<string, BridgeError[]>()
 
-    details.errors.map((error) => {
-        const err = {
-            code: error.code,
-            type: error.tool,
-            message: error.message,
-            fromToken: error.action.fromToken.symbol,
-            toToken: error.action.toToken.symbol,
-        }
-        if (errorsByTool.has(error.tool)) {
-            errorsByTool.get(error.tool)?.push(err)
-        } else {
-            errorsByTool.set(error.tool, [err])
-        }
+    details.errors.failed.forEach((error) => {
+        Object.values(error.subpaths).forEach((subpaths) => {
+            subpaths.forEach((subpath) => {
+                const err = {
+                    code: subpath.code,
+                    type: subpath.tool,
+                    message: subpath.message,
+                    fromToken: subpath.action.fromToken.symbol,
+                    toToken: subpath.action.toToken.symbol,
+                }
+                if (errorsByTool.has(subpath.tool)) {
+                    errorsByTool.get(subpath.tool)?.push(err)
+                } else {
+                    errorsByTool.set(subpath.tool, [err])
+                }
+            })
+        })
     })
     return (
         <Dialog open={open} onClickOutside={onClose}>
             <span className="absolute top-0 right-0 p-4 z-50">
                 <div
                     onClick={onClose}
-                    className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-100 hover:text-primary-300"
+                    className="cursor-pointer p-2 ml-auto -mr-2 text-gray-900 transition duration-300 rounded-full hover:bg-primary-grey-default hover:text-primary-blue-default"
                 >
                     <CloseIcon size="10" />
                 </div>
             </span>
 
             <div className="flex flex-col w-full h-full">
-                <h2 className="px-2 pr-0 pb-4 mt-2 text-lg font-bold">
+                <h2 className="px-2 pr-0 pb-4 mt-2 text-lg font-semibold">
                     Unable to generate a quote
                 </h2>
                 <Divider />
@@ -63,7 +67,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                     style={{ width: "calc(100% + 1.5rem)" }}
                 >
                     <div className="p-1">
-                        <span className="text-sm font-bold">Summary</span>
+                        <span className="text-sm font-semibold">Summary</span>
                         <div className="mt-2">{details.message}</div>
 
                         {errorsByTool && errorsByTool.size > 0 && (
@@ -73,7 +77,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                                 </div>
                                 <div className="flex-1 flex flex-col">
                                     <main className="p-1">
-                                        <span className="text-sm font-bold">
+                                        <span className="text-sm font-semibold">
                                             Errors by tool
                                         </span>
                                         <br />
@@ -111,7 +115,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                             href={LINKS.ARTICLES.BRIDGES}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-300"
+                            className="flex flex-row items-center space-x-2 text-xs font-semibold text-primary-blue-default"
                         >
                             <span>Read about bridges</span>
                             <img
@@ -127,7 +131,7 @@ export const BridgeNotFoundQuoteDetails: FunctionComponent<
                             target="_blank"
                             rel="noopener noreferrer"
                             download={"quote_not_found.json"}
-                            className="flex flex-row items-center space-x-2 text-xs font-bold text-primary-300"
+                            className="flex flex-row items-center space-x-2 text-xs font-semibold text-primary-blue-default"
                         >
                             <span>Download report</span>
                             <img

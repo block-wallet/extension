@@ -16,11 +16,6 @@ export default {
             desc: INITIAL_NETWORKS.RSK.desc,
         };
 
-        updatedNetworks.RSK_TESTNET = {
-            ...updatedNetworks.RSK_TESTNET,
-            desc: INITIAL_NETWORKS.RSK_TESTNET.desc,
-        };
-
         const orderedNetworks = normalizeNetworksOrder(updatedNetworks);
 
         return {

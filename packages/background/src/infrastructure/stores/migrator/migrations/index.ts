@@ -59,6 +59,20 @@ import migration57 from './migration-57';
 import migration58 from './migration-58';
 import migration59 from './migration-59';
 import migration60 from './migration-60';
+import migration61 from './migration-61';
+import migration62 from './migration-62';
+import migration63 from './migration-63';
+import migration64 from './migration-64';
+import migration65 from './migration-65';
+import migration66 from './migration-66';
+import migration67 from './migration-67';
+import migration68 from './migration-68';
+import migration69 from './migration-69';
+import migration70 from './migration-70';
+import migration71 from './migration-71';
+import migration72 from './migration-72';
+import migration73 from './migration-73';
+import migration74 from './migration-74';
 
 const migrations: IMigration[] = [
     migration01,
@@ -121,5 +135,20 @@ const migrations: IMigration[] = [
     migration58,
     migration59,
     migration60,
+    migration61,
+    migration62,
+    migration63,
+    migration64,
+    migration65,
+    migration66,
+    migration67,
+    migration68,
+    migration69,
+    migration70,
+    migration71,
+    migration72,
+    migration73,
+    migration74,
 ];
+
 export default (): IMigration[] => migrations;

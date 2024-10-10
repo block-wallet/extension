@@ -8,6 +8,7 @@ import { Mutex } from 'async-mutex';
 import log from 'loglevel';
 import { SignalMessage, Signals } from './types';
 import { checkScriptLoad } from './utils/site';
+import browser from 'webextension-polyfill';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
@@ -19,10 +20,13 @@ const EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR =
 
 let providerOverridden = false;
 
+console.log('content.ts');
+
 function injectProvider() {
+    console.log('injectProvider');
     if (!isManifestV3()) {
         const injectableScript = blankProvider;
-        const injectableScriptSourceMapURL = `//# sourceURL=${chrome.runtime.getURL(
+        const injectableScriptSourceMapURL = `//# sourceURL=${browser.runtime.getURL(
             'blankProvider.js'
         )}\n`;
         const BUNDLE = injectableScript + injectableScriptSourceMapURL;
@@ -52,21 +56,22 @@ const SW_KEEP_ALIVE_INTERVAL = 1000;
 let SW_ALIVE = false;
 let EXTENSION_CONTEXT_VALID = true;
 let portReinitialized = false;
-let timeoutRef: NodeJS.Timer;
+let timeoutRef: NodeJS.Timeout;
 
 function swKeepAlive() {
+    console.log('swKeepAlive');
     return new Promise<void>((resolve) => {
         try {
-            chrome.runtime.sendMessage(
-                { message: CONTENT.SW_KEEP_ALIVE },
-                () => {
-                    if (chrome.runtime.lastError) {
+            browser.runtime
+                .sendMessage({ message: CONTENT.SW_KEEP_ALIVE })
+                .then(() => {
+                    if (browser.runtime.lastError) {
                         log.info(
                             'Error keeping alive:',
-                            chrome.runtime.lastError.message ||
-                                chrome.runtime.lastError
+                            browser.runtime.lastError.message ||
+                                browser.runtime.lastError
                         );
-                        const err = chrome.runtime.lastError.message || '';
+                        const err = browser.runtime.lastError.message || '';
                         SW_ALIVE = !err.includes(
                             'Receiving end does not exist'
                         );
@@ -75,8 +80,7 @@ function swKeepAlive() {
                         SW_ALIVE = true;
                     }
                     resolve();
-                }
-            );
+                });
         } catch (e) {
             let message = `BlockWallet: ${e}`;
             if (e.message === EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR) {
@@ -90,6 +94,7 @@ function swKeepAlive() {
 }
 
 async function keepExtensionAlive() {
+    console.log('keepExtensionAlive');
     await swKeepAlive();
     if (EXTENSION_CONTEXT_VALID) {
         timeoutRef = setTimeout(keepExtensionAlive, SW_KEEP_ALIVE_INTERVAL);
@@ -106,14 +111,14 @@ function sleep(ms: number): Promise<unknown> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-let port: chrome.runtime.Port | undefined = undefined;
+let port: browser.Runtime.Port | undefined = undefined;
 const initMutex: Mutex = new Mutex();
 
 // Check background settings for script load
-chrome.runtime.sendMessage(
-    { message: CONTENT.SHOULD_INJECT },
-    (response: { shouldInject: boolean }): void => {
-        const error = chrome.runtime.lastError;
+browser.runtime
+    .sendMessage({ message: CONTENT.SHOULD_INJECT })
+    .then((response: { shouldInject: boolean }): void => {
+        const error = browser.runtime.lastError;
         const shouldLoad = checkScriptLoad();
         if (
             port &&
@@ -130,8 +135,7 @@ chrome.runtime.sendMessage(
         } else if (providerOverridden) {
             injectProvider();
         }
-    }
-);
+    });
 
 // Setup window listener
 const windowListener = async ({
@@ -141,8 +145,13 @@ const windowListener = async ({
     // Only allow messages from our window, by the inject
     if (
         source !== window ||
+        source.origin === 'null' ||
         data.origin !== Origin.PROVIDER ||
-        !Object.values(EXTERNAL).includes(data.message)
+        !Object.values(EXTERNAL).includes(data.message) ||
+        // data.id should match the format indicated on BlankProvider.js because it could be set maliciously by a web page
+        // Regex validates the following format
+        // `${Date.now()}.${++this._requestId}` --> 1694708163916.8
+        !/^(\d+)\.\d+$/.test(data.id)
     ) {
         return;
     }
@@ -151,17 +160,22 @@ const windowListener = async ({
     const postMessage = async (
         data: WindowTransportRequestMessage
     ): Promise<void> => {
+        const message =
+            data && typeof data !== undefined
+                ? JSON.parse(JSON.stringify(data))
+                : data;
         try {
             if (!SW_ALIVE || !port) {
                 // Port was reinitialized, force retry
                 throw new Error();
             }
-            port.postMessage(data);
+            port.postMessage(message);
         } catch (error) {
+            log.warn(message, error);
             // If this fails due to SW being inactive, retry
             await sleep(30);
             log.debug('waiting for SW to startup...');
-            return postMessage(data);
+            return postMessage(message);
         }
     };
 
@@ -174,15 +188,24 @@ window.addEventListener('message', (message) => {
 
 // Init function
 const init = () => {
+    console.log('init');
     // Setup port connection
-    port = chrome.runtime.connect({ name: Origin.PROVIDER });
+    port = browser.runtime.connect({ name: Origin.PROVIDER });
 
     // Set callback to send any messages from the extension back to the page
-    port.onMessage.addListener((message): void => {
-        window.postMessage(
-            { ...message, origin: Origin.BACKGROUND },
-            window.location.href
-        );
+    port.onMessage.addListener((message: any): void => {
+        const nmessage = {
+            ...(message && typeof message !== undefined
+                ? JSON.parse(JSON.stringify(message))
+                : message),
+            origin: Origin.BACKGROUND,
+        };
+        try {
+            window.postMessage(nmessage, window.location.href);
+        } catch (error: any) {
+            log.warn(nmessage, error);
+            throw error;
+        }
     });
 
     if (isManifestV3()) {

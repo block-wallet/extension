@@ -16,6 +16,7 @@ import { isAddress } from "@ethersproject/address"
 import PopupFooter from "../../components/popup/PopupFooter"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import useLocalStorageState from "../../util/hooks/useLocalStorageState"
+import log from "loglevel"
 
 // Types
 export type TokenResponse = {
@@ -59,14 +60,14 @@ const AddTokensPage = () => {
 
                         return setResults([...exacts, ...others])
                     })
-                    .catch((err) => console.log(err))
+                    .catch((err) => log.error(err))
             } else {
                 setResults([])
             }
         } else {
             setResults([])
         }
-    }, [searchedValue])
+    }, [searchedValue, isManualTokenView])
 
     const handleSubmitEnabled = async (value: boolean) => {
         setSubmitEnabled(value)
@@ -96,6 +97,21 @@ const AddTokensPage = () => {
                     }}
                     networkIndicator
                 />
+            }
+            showProviderStatus
+            footer={
+                <PopupFooter>
+                    <ButtonWithLoading
+                        label="Next"
+                        disabled={!submitEnabled}
+                        type="submit"
+                        formId={
+                            isManualTokenView
+                                ? "manualViewForm"
+                                : "listViewForm"
+                        }
+                    />
+                </PopupFooter>
             }
             // submitOnEnter={{ isEnabled: submitEnabled }}
         >
@@ -131,20 +147,6 @@ const AddTokensPage = () => {
                         />
                     )}
                 </div>
-                <hr className="border-0.5 border-gray-200 w-full" />
-                {/* FOOTER */}
-                <PopupFooter>
-                    <ButtonWithLoading
-                        label="Next"
-                        disabled={!submitEnabled}
-                        type="submit"
-                        formId={
-                            isManualTokenView
-                                ? "manualViewForm"
-                                : "listViewForm"
-                        }
-                    />
-                </PopupFooter>
             </div>
         </PopupLayout>
     )

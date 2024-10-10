@@ -21,8 +21,8 @@ const PROFILES: ProfileDef = {
         icon: "#FFBB54",
     },
     info: {
-        background: "#49c5ff",
-        icon: "white",
+        background: " #08090A",
+        icon: "#EEF1EF",
     },
     outlined: {
         background: "#FFBB54",

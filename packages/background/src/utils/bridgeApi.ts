@@ -14,16 +14,8 @@ import {
     lifiFeeCostsToIBridgeFeeCosts,
     lifiTokenToIToken,
     LIFI_BRIDGE_ENDPOINT,
+    LIFI_KEY_HEADER,
 } from './types/lifi';
-
-const getMessageFromLiFiError = (errCode: string) => {
-    if (errCode === 'AMOUNT_TOO_LOW') {
-        return 'The amount is too low for executing this bridge.';
-    }
-    if (errCode === 'QUOTE_NOT_FOUND') {
-        return "There isn't a quote for the requested parameters.";
-    }
-};
 
 export class QuoteNotFoundError extends Error {
     details: LiFiErrorResponse;
@@ -174,15 +166,17 @@ const LiFiBridge: IBridge = {
     getSupportedTokensForChain: async function (
         chainId: number
     ): Promise<IToken[]> {
-        const response = await httpClient.get<GetLifiTokensResponse>(
-            `${LIFI_BRIDGE_ENDPOINT}/tokens`
+        const response = await httpClient.request<GetLifiTokensResponse>(
+            `${LIFI_BRIDGE_ENDPOINT}/tokens`,
+            { headers: LIFI_KEY_HEADER }
         );
         const chainTokens = response.tokens[chainId] || [];
         return chainTokens.map(lifiTokenToIToken);
     },
     getSupportedChains: async function (): Promise<IChain[]> {
-        const response = await httpClient.get<GetLifiChainsResponse>(
-            `${LIFI_BRIDGE_ENDPOINT}/chains`
+        const response = await httpClient.request<GetLifiChainsResponse>(
+            `${LIFI_BRIDGE_ENDPOINT}/chains`,
+            { headers: LIFI_KEY_HEADER }
         );
         const chains = response.chains || [];
         return chains.map((chain) => ({
@@ -195,14 +189,17 @@ const LiFiBridge: IBridge = {
     getRoutes: async function (
         request: getBridgeRoutesRequest
     ): Promise<IBridgeRoute[]> {
-        const response = await httpClient.get<GetLifiConnectionsResponse>(
+        const response = await httpClient.request<GetLifiConnectionsResponse>(
             `${LIFI_BRIDGE_ENDPOINT}/connections`,
             {
-                allowExchanges: '[]',
-                fromChain: request.fromChainId,
-                toChain: request.toChainId,
-                fromToken: request.fromTokenAddress,
-                toToken: request.toTokenAddress,
+                params: {
+                    allowExchanges: '[]',
+                    fromChain: request.fromChainId,
+                    toChain: request.toChainId,
+                    fromToken: request.fromTokenAddress,
+                    toToken: request.toTokenAddress,
+                },
+                headers: LIFI_KEY_HEADER,
             }
         );
         const result = response.connections;
@@ -215,19 +212,22 @@ const LiFiBridge: IBridge = {
     },
     getQuote: async function (r: getBridgeQuoteRequest): Promise<IBridgeQuote> {
         try {
-            const response = await httpClient.get<
+            const response = await httpClient.request<
                 GetLiFiQuoteResponse | LiFiErrorResponse
             >(`${LIFI_BRIDGE_ENDPOINT}/quote`, {
-                fromToken: r.fromTokenAddress,
-                toToken: r.toTokenAddress,
-                fromChain: r.fromChainId,
-                toChain: r.toChainId,
-                fromAmount: r.fromAmount,
-                fromAddress: r.fromAddress,
-                referrer: r.referrer,
-                integrator: 'blockwallet.io',
-                slippage: r.slippage,
-                fee: BASE_BRIDGE_FEE,
+                params: {
+                    fromToken: r.fromTokenAddress,
+                    toToken: r.toTokenAddress,
+                    fromChain: r.fromChainId,
+                    toChain: r.toChainId,
+                    fromAmount: r.fromAmount,
+                    fromAddress: r.fromAddress,
+                    referrer: r.referrer,
+                    integrator: 'blockwallet.io',
+                    slippage: r.slippage,
+                    fee: BASE_BRIDGE_FEE,
+                },
+                headers: LIFI_KEY_HEADER,
             });
             const responseData = response as GetLiFiQuoteResponse;
             return {
@@ -253,29 +253,25 @@ const LiFiBridge: IBridge = {
                 throw new Error('Request parameters are invalid.');
             } else if (e.status === 404) {
                 const quoteError = e.response as LiFiErrorResponse;
-                const errorCode = quoteError.errors?.length
-                    ? quoteError.errors[0].code
-                    : 'QUOTE_NOT_FOUND';
-                const message = getMessageFromLiFiError(errorCode);
+                const message = quoteError.message;
                 throw new QuoteNotFoundError(message, quoteError);
             }
             throw e;
         }
     },
     getStatus: async function (r: getStatusRequest): Promise<IBridgeStatus> {
-        const response = await httpClient.get<
+        const response = await httpClient.request<
             GetLiFiStatusResponse | LiFiErrorResponse
-        >(
-            `${LIFI_BRIDGE_ENDPOINT}/status`,
-            {
+        >(`${LIFI_BRIDGE_ENDPOINT}/status`, {
+            params: {
                 bridge: r.tool,
                 fromChain: r.fromChainId,
                 toChain: r.toChainId,
                 txHash: r.sendTxHash,
             },
-            undefined,
-            'no-cache'
-        );
+            headers: LIFI_KEY_HEADER,
+            cache: 'no-cache',
+        });
         const responseData = response as GetLiFiStatusResponse;
 
         return {

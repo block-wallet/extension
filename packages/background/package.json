@@ -17,7 +17,6 @@
         "@unstoppabledomains/resolution": "^8.5.0",
         "async-mutex": "^0.4.0",
         "bip39": "^3.0.4",
-        "browser-passworder": "^2.0.3",
         "compare-versions": "^6.0.0-rc.1",
         "eslint-webpack-plugin": "^4.0.0",
         "eth-ens-namehash": "^2.0.8",

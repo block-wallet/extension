@@ -46,14 +46,15 @@
     "host_permissions": ["file://*/*", "http://*/*", "https://*/*"],
     "short_name": "BlockWallet",
     "commands": {
-        "_execute_browser_action": {
+        "_execute_action": {
             "suggested_key": {
                 "default": "Alt+O"
-            }
+            },
+            "description": "Start the extension"
         }
     },
-    "version": "1.2.13",
-    "version_name": "1.2.13",
+    "version": "1.2.14",
+    "version_name": "1.2.14",
     "web_accessible_resources": [
         {
             "resources": ["blankProvider.js", "keep-alive"],

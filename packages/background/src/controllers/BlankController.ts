@@ -301,6 +301,7 @@ export default class BlankController extends EventEmitter {
     private isSetupComplete: boolean;
 
     constructor(props: BlankControllerProps) {
+        console.log('blank controller constructor');
         super();
 
         const initState = props.initState;
@@ -570,6 +571,8 @@ export default class BlankController extends EventEmitter {
 
         // mv3 auto unlock
         this.appStateController.autoUnlock();
+
+        console.log('blank controller constructor finished');
     }
 
     /**

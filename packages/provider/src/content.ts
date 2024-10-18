@@ -15,22 +15,30 @@ import browser from 'webextension-polyfill';
 import blankProvider from '../../../dist/blankProvider.js?raw';
 import { isManifestV3 } from '@block-wallet/background/utils/manifest';
 
+const EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR =
+    'Extension context invalidated.';
+
 let providerOverridden = false;
 
-function injectProvider() {
-    const injectableScript = blankProvider;
-    const injectableScriptSourceMapURL = `//# sourceURL=${browser.runtime.getURL(
-        'blankProvider.js'
-    )}\n`;
-    const BUNDLE = injectableScript + injectableScriptSourceMapURL;
+console.log('content.ts');
 
-    const container = document.head || document.documentElement;
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.textContent = BUNDLE;
-    script.setAttribute('async', 'false');
-    container.insertBefore(script, container.children[0]);
-    container.removeChild(script);
+function injectProvider() {
+    console.log('injectProvider');
+    if (!isManifestV3()) {
+        const injectableScript = blankProvider;
+        const injectableScriptSourceMapURL = `//# sourceURL=${browser.runtime.getURL(
+            'blankProvider.js'
+        )}\n`;
+        const BUNDLE = injectableScript + injectableScriptSourceMapURL;
+
+        const container = document.head || document.documentElement;
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.textContent = BUNDLE;
+        script.setAttribute('async', 'false');
+        container.insertBefore(script, container.children[0]);
+        container.removeChild(script);
+    }
 }
 
 window.addEventListener('ethereum#initialized', (e: Event) => {
@@ -44,30 +52,57 @@ window.addEventListener('ethereum#initialized', (e: Event) => {
 
 injectProvider();
 
-const SW_KEEP_ALIVE_INTERVAL = 10;
+const SW_KEEP_ALIVE_INTERVAL = 1000;
 let SW_ALIVE = false;
+let EXTENSION_CONTEXT_VALID = true;
 let portReinitialized = false;
-let intervalRef: NodeJS.Timeout;
+let timeoutRef: NodeJS.Timeout;
+
+function swKeepAlive() {
+    console.log('swKeepAlive');
+    return new Promise<void>((resolve) => {
+        try {
+            browser.runtime
+                .sendMessage({ message: CONTENT.SW_KEEP_ALIVE })
+                .then(() => {
+                    if (browser.runtime.lastError) {
+                        log.info(
+                            'Error keeping alive:',
+                            browser.runtime.lastError.message ||
+                                browser.runtime.lastError
+                        );
+                        const err = browser.runtime.lastError.message || '';
+                        SW_ALIVE = !err.includes(
+                            'Receiving end does not exist'
+                        );
+                        portReinitialized = SW_ALIVE;
+                    } else {
+                        SW_ALIVE = true;
+                    }
+                    resolve();
+                });
+        } catch (e) {
+            let message = `BlockWallet: ${e}`;
+            if (e.message === EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR) {
+                EXTENSION_CONTEXT_VALID = false;
+                message = `BlockWallet: Please refresh the page. ${e}`;
+            }
+            log.error(message);
+            resolve();
+        }
+    });
+}
+
+async function keepExtensionAlive() {
+    console.log('keepExtensionAlive');
+    await swKeepAlive();
+    if (EXTENSION_CONTEXT_VALID) {
+        timeoutRef = setTimeout(keepExtensionAlive, SW_KEEP_ALIVE_INTERVAL);
+    }
+}
 
 if (isManifestV3()) {
-    intervalRef = setInterval(() => {
-        browser.runtime
-            .sendMessage({ message: CONTENT.SW_KEEP_ALIVE })
-            .then(() => {
-                if (browser.runtime.lastError) {
-                    log.info(
-                        'Error keeping alive:',
-                        browser.runtime.lastError.message ||
-                            browser.runtime.lastError
-                    );
-                    const err = browser.runtime.lastError.message || '';
-                    SW_ALIVE = !err.includes('Receiving end does not exist');
-                    portReinitialized = SW_ALIVE;
-                } else {
-                    SW_ALIVE = true;
-                }
-            });
-    }, SW_KEEP_ALIVE_INTERVAL);
+    keepExtensionAlive();
 } else {
     SW_ALIVE = true;
 }
@@ -91,8 +126,8 @@ browser.runtime
             //If provider has been overridden by another wallet, then remove connection.
             providerOverridden
         ) {
-            if (isManifestV3() && intervalRef) {
-                clearInterval(intervalRef);
+            if (isManifestV3() && timeoutRef) {
+                clearTimeout(timeoutRef);
             }
             port.disconnect();
             window.removeEventListener('message', windowListener);
@@ -153,6 +188,7 @@ window.addEventListener('message', (message) => {
 
 // Init function
 const init = () => {
+    console.log('init');
     // Setup port connection
     port = browser.runtime.connect({ name: Origin.PROVIDER });
 

@@ -3,7 +3,10 @@ import { expect } from 'chai';
 import KeyringControllerDerivated, {
     KeyringTypes,
 } from '@block-wallet/background/controllers/KeyringControllerDerivated';
-import KeyringController from 'eth-keyring-controller';
+import {
+    KeyringBuilder,
+    KeyringController,
+} from '@metamask/eth-keyring-controller';
 import mockEncryptor from 'test/mocks/mock-encryptor';
 import { hexToString } from '@block-wallet/background/utils/signature';
 import { bufferToHex } from '@ethereumjs/util';
@@ -94,14 +97,19 @@ describe('KeyringControllerDerivated', () => {
                     });
                 };
             }
+            const mockKeyTreeBuilder: KeyringBuilder = () => mockKeyTree;
+            mockKeyTreeBuilder.type = KeyringTypes.HD_KEY_TREE;
+
+            const keyTreeBuilder: KeyringBuilder = () => keyTree;
+            keyTreeBuilder.type = KeyringTypes.HD_KEY_TREE;
 
             sinon
-                .stub(KeyringController.prototype, 'getKeyringsByType')
-                .returns([keyTree]);
+                .stub(KeyringController.prototype, 'getKeyringBuilderForType')
+                .returns(keyTreeBuilder);
 
             sinon
-                .stub(KeyringController.prototype, 'getKeyringClassForType')
-                .returns(mockKeyTree);
+                .stub(KeyringController.prototype, 'getKeyringBuilderForType')
+                .returns(mockKeyTreeBuilder);
 
             try {
                 await (keyringControllerDerivated as any)['verifyAccounts']();
@@ -138,13 +146,16 @@ describe('KeyringControllerDerivated', () => {
                 };
             }
 
+            const mockKeyTreeBuilder: KeyringBuilder = () => mockKeyTree;
+            mockKeyTreeBuilder.type = KeyringTypes.HD_KEY_TREE;
+
             sinon
                 .stub(KeyringController.prototype, 'getKeyringsByType')
                 .returns([keyTree]);
 
             sinon
-                .stub(KeyringController.prototype, 'getKeyringClassForType')
-                .returns(mockKeyTree);
+                .stub(KeyringController.prototype, 'getKeyringBuilderForType')
+                .returns(mockKeyTreeBuilder);
 
             try {
                 await (keyringControllerDerivated as any)['verifyAccounts']();

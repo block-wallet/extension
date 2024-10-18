@@ -19,6 +19,7 @@ import { isManifestV3 } from './utils/manifest';
 import browser from 'webextension-polyfill';
 
 // Initialize Block State Store
+console.log('blankStateStore');
 const blankStateStore = new BlankStorageStore();
 
 /**
@@ -115,6 +116,7 @@ const updateExtensionBadge = (label: string) => {
  *
  */
 const initBlockWallet = async () => {
+    console.log('initBlockWallet');
     // Get persisted state
     const initState = await getPersistedState;
 
@@ -176,6 +178,8 @@ const initBlockWallet = async () => {
     log.setLevel((process.env.LOG_LEVEL as LogLevelDesc) || 'error');
 };
 
+console.log('index.ts start');
+
 // Start block wallet
 initBlockWallet().catch((error) => {
     log.error(error.message || error);
@@ -194,11 +198,32 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
     }
 });
 
+const registerBlankProviderContentScript = async () => {
+    console.log('registerBlankProviderContentScript');
+    try {
+        await (browser.scripting as any).registerContentScripts([
+            {
+                id: 'blankProvider',
+                matches: ['file://*/*', 'http://*/*', 'https://*/*'],
+                js: ['blankProvider.js'],
+                runAt: 'document_start',
+                world: 'MAIN',
+            },
+        ]);
+    } catch (err) {
+        console.warn(
+            `Dropped attempt to register blankProvider content script. ${err}`
+        );
+    }
+};
+
 if (isManifestV3()) {
+    console.log('v3');
     // this keeps alive the service worker.
     // when it goes 'inactive' it is restarted.
     browser.alarms.create({ delayInMinutes: 0.5, periodInMinutes: 0.05 });
     browser.alarms.onAlarm.addListener(() => {
         fetch(browser.runtime.getURL('keep-alive'));
     });
+    registerBlankProviderContentScript();
 }

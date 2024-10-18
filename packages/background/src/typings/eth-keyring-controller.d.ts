@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/ban-types */
-declare module 'eth-keyring-controller' {
+
+declare module '@metamask/eth-keyring-controller' {
     import { TypedTransaction } from '@ethereumjs/tx';
     import { IObservableStore } from '../infrastructure/stores/ObservableStore';
     import { EventEmitter } from 'events';
@@ -10,6 +11,8 @@ declare module 'eth-keyring-controller' {
         keyringTypes: any;
         keyrings: any[];
         vault: string;
+        encryptionKey: string;
+        encryptionSalt: string;
     }
 
     export interface KeyringControllerMemState {
@@ -18,15 +21,27 @@ declare module 'eth-keyring-controller' {
         keyrings: any[];
     }
 
+    export type Keyring = any;
+
+    export type KeyringBuilder = {
+        (): Keyring;
+        type: KeyringTypes;
+    };
+
+    export type KeyringBuilderFactoryType = (
+        keyring: Keyring
+    ) => KeyringBuilder;
+
+    export const keyringBuilderFactory: KeyringBuilderFactoryType;
+
     export interface KeyringControllerProps {
         initState?: Partial<KeyringControllerState>;
         encryptor?: any;
-        keyringTypes?: any;
+        cacheEncryptionKey?: boolean;
+        keyringBuilders?: KeyringBuilderFactory[];
     }
 
-    export type Keyring = any;
-
-    export default class KeyringController extends EventEmitter {
+    export class KeyringController extends EventEmitter {
         memStore: IObservableStore<KeyringControllerMemState>;
         store: IObservableStore<KeyringControllerState>;
 
@@ -126,6 +141,22 @@ declare module 'eth-keyring-controller' {
         submitPassword(password: string): Promise<KeyringControllerState>;
 
         /**
+         * Submit Encryption Key.
+         *
+         * Attempts to decrypt the current vault and load its keyrings
+         * into memory based on the vault and CryptoKey information.
+         *
+         * @fires KeyringController#unlock
+         * @param {string} encryptionKey - The encrypted key information used to decrypt the vault.
+         * @param {string} encryptionSalt - The salt used to generate the last key.
+         * @returns {Promise<object>} A Promise that resolves to the state.
+         */
+        submitEncryptionKey(
+            encryptionKey: string,
+            encryptionSalt: string
+        ): Promise<KeyringControllerState>;
+
+        /**
          * Verify Password
          *
          * Attempts to decrypt the current vault with a given password
@@ -204,19 +235,6 @@ declare module 'eth-keyring-controller' {
          * @returns {Promise<void>} A Promise that resolves if the operation was successful.
          */
         removeAccount(address: string | string[]): Promise<void>;
-
-        /**
-         * Get Keyring Class For Type
-         *
-         * Searches the current `keyringTypes` array
-         * for a Keyring class whose unique `type` property
-         * matches the provided `type`,
-         * returning it if it exists.
-         *
-         * @param {string} type - The type whose class to get.
-         * @returns {Keyring|undefined} The class, if it exists.
-         */
-        getKeyringClassForType(type: string): Keyring | undefined;
 
         /**
          * Sign Ethereum Transaction
@@ -387,6 +405,19 @@ declare module 'eth-keyring-controller' {
         restoreKeyring(serialized: any): Promise<any>;
 
         /**
+         * Get Keyring Class For Type
+         *
+         * Searches the current `keyringBuilders` array
+         * for a Keyring builder whose unique `type` property
+         * matches the provided `type`,
+         * returning it if it exists.
+         *
+         * @param {string} type - The type whose class to get.
+         * @returns {Keyring|undefined} The class, if it exists.
+         */
+        getKeyringBuilderForType(type: string): KeyringBuilder | undefined;
+
+        /**
          * Display For Keyring
          *
          * Is used for adding the current keyrings to the state object.
@@ -402,5 +433,7 @@ declare module 'eth-keyring-controller' {
          * Used before initializing a new vault.
          */
         clearKeyrings(): Promise<void>;
+
+        _newKeyring(type: string, data: any): Promise<Keyring | undefined>;
     }
 }

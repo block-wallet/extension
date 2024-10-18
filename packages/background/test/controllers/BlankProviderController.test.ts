@@ -44,7 +44,6 @@ import * as random from '@block-wallet/background/utils/randomBytes';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
 import * as ManifestUtils from '@block-wallet/background/utils/manifest';
 
-
 const UNI_ORIGIN = 'https://app.uniswap.org';
 const TX_HASH =
     '0x3979f7ae255171ae6c6fd1c625219b45e2da7e52e6401028c29f0f27581af601';
@@ -158,7 +157,7 @@ describe('Blank Provider Controller', function () {
     let transactionWatcherController: TransactionWatcherController;
 
     beforeEach(function () {
-        sinon.stub(ManifestUtils, 'isManifestV3').returns(false)
+        sinon.stub(ManifestUtils, 'isManifestV3').returns(false);
 
         // Instantiate objects
         networkController = getNetworkControllerInstance();
@@ -265,8 +264,6 @@ describe('Blank Provider Controller', function () {
             Wallet.createRandom().address
         );
     });
-
-
 
     this.afterEach(function () {
         sinon.restore();

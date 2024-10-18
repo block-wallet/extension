@@ -1,20 +1,12 @@
 {
     "author": "BlockWallet",
     "background": {
-        "scripts": [
-            "background.js",
-            "bw-libs.js"
-        ]
+        "service_worker": "background.js"
     },
     "content_scripts": [
         {
-            "js": [
-                "content.js"
-            ],
-            "matches": [
-                "http://*/*",
-                "https://*/*"
-            ],
+            "js": ["content.js"],
+            "matches": ["http://*/*", "https://*/*"],
             "exclude_matches": [
                 "https://block-wallet.github.io/eth-ledger-bridge-keyring/*",
                 "https://connect.trezor.io/*"
@@ -23,15 +15,11 @@
             "all_frames": true
         },
         {
-            "js": [
-                "vendor/trezor/trezor-content.js"
-            ],
-            "matches": [
-                "*://connect.trezor.io/*/popup.html"
-            ]
+            "js": ["vendor/trezor/trezor-content.js"],
+            "matches": ["*://connect.trezor.io/*/popup.html"]
         }
     ],
-    "browser_action": {
+    "action": {
         "default_popup": "popup.html",
         "default_title": "BlockWallet"
     },
@@ -42,29 +30,35 @@
         "48": "icons/icon-48.png",
         "128": "icons/icon-128.png"
     },
-    "content_security_policy": "script-src 'self'; object-src 'self'",
-    "manifest_version": 2,
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'"
+    },
+    "manifest_version": 3,
     "name": "BlockWallet",
     "permissions": [
         "activeTab",
         "storage",
         "unlimitedStorage",
         "notifications",
-        "https://*.blockwallet.io/*",
-        "https://*.etherscan.io/*",
-        "https://*.bscscan.com/*",
-        "https://*.polygonscan.com/*"
+        "alarms",
+        "scripting"
     ],
+    "host_permissions": ["file://*/*", "http://*/*", "https://*/*"],
     "short_name": "BlockWallet",
     "commands": {
-        "_execute_browser_action": {
+        "_execute_action": {
             "suggested_key": {
                 "default": "Alt+O"
-            }
+            },
+            "description": "Start the extension"
         }
     },
     "version": "1.2.14",
+    "version_name": "1.2.14",
     "web_accessible_resources": [
-        "blankProvider.js"
+        {
+            "resources": ["blankProvider.js", "keep-alive"],
+            "matches": ["<all_urls>"]
+        }
     ]
 }

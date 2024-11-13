@@ -1,4 +1,4 @@
-declare module 'browser-passworder' {
+declare module '@metamask/browser-passworder' {
     declare function encrypt<T>(password: string, dataObj: T): Promise<string>;
     declare function decrypt<T>(
         password: string,

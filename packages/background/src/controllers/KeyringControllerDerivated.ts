@@ -1,11 +1,14 @@
-import KeyringController, {
+import {
+    KeyringController,
+    keyringBuilderFactory,
     KeyringControllerProps,
     KeyringControllerState,
-} from 'eth-keyring-controller';
+} from '@metamask/eth-keyring-controller';
+import * as customEncryptor from '@metamask/browser-passworder';
 import { Hash, Hasheable } from '../utils/hasher';
 import { Mutex } from 'async-mutex';
 import LedgerBridgeKeyring from '@block-wallet/eth-ledger-bridge-keyring';
-import { TrezorKeyring } from '@block-wallet/eth-trezor-keyring';
+import { TrezorKeyring } from 'eth-trezor-keyring';
 import { Devices } from '../utils/types/hardware';
 import log from 'loglevel';
 import { HDPaths, BIP44_PATH } from '../utils/types/hardware';
@@ -37,6 +40,7 @@ import {
     stripHexPrefix,
 } from '@ethereumjs/util';
 import { hexToString } from '../utils/signature';
+import { isManifestV3 } from '../utils/manifest';
 
 export enum KeyringControllerEvents {
     QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED = 'QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED',
@@ -65,7 +69,14 @@ export default class KeyringControllerDerivated extends KeyringController {
     private readonly _qrHardwareKeyring: QRHardwareKeyring;
 
     constructor(opts: KeyringControllerProps) {
-        opts.keyringTypes = [LedgerBridgeKeyring, TrezorKeyring, QRKeyring];
+        opts.keyringBuilders = [
+            keyringBuilderFactory(LedgerBridgeKeyring),
+            keyringBuilderFactory(TrezorKeyring),
+            keyringBuilderFactory(QRKeyring),
+        ];
+        opts.cacheEncryptionKey = isManifestV3();
+        opts.encryptor = customEncryptor;
+
         super(opts);
 
         this._mutex = new Mutex();
@@ -294,15 +305,19 @@ export default class KeyringControllerDerivated extends KeyringController {
 
         // Generate a new keyring
         const keyringController = new KeyringController({});
-        const Keyring = keyringController.getKeyringClassForType(
-            KeyringTypes.HD_KEY_TREE
-        );
         const opts = {
             mnemonic: seedPhrase,
             numberOfAccounts: createdAccounts.length,
         };
 
-        const keyring = new Keyring(opts);
+        const keyring = await keyringController._newKeyring(
+            KeyringTypes.HD_KEY_TREE,
+            opts
+        );
+        if (!keyring) {
+            throw new Error('Unable to generate keyring of type HD_KEY_TREE');
+        }
+
         const restoredAccounts = await keyring.getAccounts();
 
         if (restoredAccounts.length !== createdAccounts.length) {

@@ -5,7 +5,7 @@
     "dependencies": {
         "@block-wallet/chains-assets": "https://github.com/block-wallet/chains-assets#v0.0.67",
         "@block-wallet/eth-ledger-bridge-keyring": "https://github.com/block-wallet/eth-ledger-bridge-keyring#v0.14.1",
-        "@block-wallet/eth-trezor-keyring": "https://github.com/block-wallet/eth-trezor-keyring#v1.0.1",
+        "eth-trezor-keyring": "https://github.com/block-wallet/eth-trezor-keyring#v0.10.2",
         "@block-wallet/explorer-link": "https://github.com/block-wallet/explorer-link#v2.2.2",
         "@block-wallet/remote-configs": "https://github.com/block-wallet/remote-configs#v1.1.0",
         "@ethereumjs/tx": "^4.0.2",
@@ -20,14 +20,14 @@
         "compare-versions": "^6.0.0-rc.1",
         "eslint-webpack-plugin": "^4.0.0",
         "eth-ens-namehash": "^2.0.8",
-        "eth-keyring-controller": "^7.0.2",
+        "@metamask/eth-keyring-controller": "^10.0.0",
         "ethereumjs-wallet": "^1.0.2",
         "ethers": "^5.7.0",
         "lodash": "^4.17.21",
         "loglevel": "^1.8.1",
         "schema-validator": "git+https://github.com/block-wallet/schema-validator.git",
         "uuid": "^9.0.0",
-        "webextension-polyfill": "^0.10.0"
+        "webextension-polyfill": "^0.12.0"
     },
     "devDependencies": {
         "@types/bn.js": "^5.1.1",

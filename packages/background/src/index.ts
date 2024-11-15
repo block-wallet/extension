@@ -194,6 +194,24 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
     }
 });
 
+const registerBlankProviderContentScript = async () => {
+    try {
+        await (chrome.scripting as any).registerContentScripts([
+            {
+                id: 'blankProvider',
+                matches: ['file://*/*', 'http://*/*', 'https://*/*'],
+                js: ['blankProvider.js'],
+                runAt: 'document_start',
+                world: 'MAIN',
+            },
+        ]);
+    } catch (err) {
+        console.warn(
+            `Dropped attempt to register blankProvider content script. ${err}`
+        );
+    }
+};
+
 if (isManifestV3()) {
     // this keeps alive the service worker.
     // when it goes 'inactive' it is restarted.
@@ -201,4 +219,5 @@ if (isManifestV3()) {
     browser.alarms.onAlarm.addListener(() => {
         fetch(browser.runtime.getURL('keep-alive'));
     });
+    registerBlankProviderContentScript();
 }

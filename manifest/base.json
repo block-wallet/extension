@@ -41,7 +41,8 @@
         "unlimitedStorage",
         "notifications",
         "alarms",
-        "scripting"
+        "scripting",
+        "tabs"
     ],
     "host_permissions": ["file://*/*", "http://*/*", "https://*/*"],
     "short_name": "BlockWallet",
@@ -57,8 +58,12 @@
     "version_name": "1.2.15",
     "web_accessible_resources": [
         {
-            "resources": ["blankProvider.js", "keep-alive"],
-            "matches": ["<all_urls>"]
+            "resources": ["blankProvider.js", "keep-alive", "background.js"],
+            "matches": ["*://*/*"]
+        },
+        {
+            "resources": ["images/*"],
+            "matches": ["*://*/*"]
         }
     ]
 }

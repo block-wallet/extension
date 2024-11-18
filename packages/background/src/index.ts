@@ -100,13 +100,15 @@ const getDevTools = () => {
 /**
  * updates the extension badge
  */
-const updateExtensionBadge = (label: string) => {
+const updateExtensionBadge = async (label: string) => {
     if (isManifestV3()) {
-        browser.action.setBadgeText({ text: label });
-        browser.action.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
+        await browser.action.setBadgeText({ text: label });
+        await browser.action.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
     } else {
-        browser.browserAction.setBadgeText({ text: label });
-        browser.browserAction.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
+        await browser.browserAction.setBadgeText({ text: label });
+        await browser.browserAction.setBadgeBackgroundColor({
+            color: '#1673FF',
+        }); // BlockWallet primary color
     }
 };
 
@@ -196,13 +198,13 @@ browser.runtime.onInstalled.addListener(({ reason }) => {
 
 const registerBlankProviderContentScript = async () => {
     try {
-        await (chrome.scripting as any).registerContentScripts([
+        await browser.scripting.registerContentScripts([
             {
                 id: 'blankProvider',
                 matches: ['file://*/*', 'http://*/*', 'https://*/*'],
                 js: ['blankProvider.js'],
                 runAt: 'document_start',
-                world: 'MAIN',
+                // world: 'MAIN',
             },
         ]);
     } catch (err) {

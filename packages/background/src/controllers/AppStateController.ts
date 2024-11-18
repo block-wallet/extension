@@ -143,17 +143,16 @@ export default class AppStateController extends BaseController<AppStateControlle
     private _getSessionToken(): Promise<SessionToken | undefined> {
         return new Promise((resolve) => {
             // @ts-ignore
-            if (chrome.storage.session) {
+            if (browser.storage.session) {
                 // @ts-ignore
-                chrome.storage.session.get(
-                    ['sessionToken'],
-                    async ({ sessionToken }: { [key: string]: any }) => {
+                browser.storage.session
+                    .get(['sessionToken'])
+                    .then(async ({ sessionToken }: { [key: string]: any }) => {
                         if (!sessionToken) {
                             resolve(undefined);
                         }
                         resolve(sessionToken as SessionToken);
-                    }
-                );
+                    });
             } else {
                 resolve(undefined);
             }
@@ -164,9 +163,9 @@ export default class AppStateController extends BaseController<AppStateControlle
         sessionToken: SessionToken
     ): Promise<SessionToken> {
         // @ts-ignore
-        if (chrome.storage.session) {
+        if (browser.storage.session) {
             // @ts-ignore
-            await chrome.storage.session
+            await browser.storage.session
                 .set({
                     sessionToken: {
                         encryptionKey: sessionToken.encryptionKey,

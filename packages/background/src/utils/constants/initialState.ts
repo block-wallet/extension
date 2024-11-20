@@ -1,7 +1,7 @@
 import {
     KeyringControllerState,
     KeyringControllerMemState,
-} from 'eth-keyring-controller';
+} from '@metamask/eth-keyring-controller';
 import { ValuesOf } from '../types/helpers';
 import { IObservableStore } from '../../infrastructure/stores/ObservableStore';
 
@@ -142,6 +142,8 @@ const initialState: BlankAppState = {
         keyringTypes: [],
         keyrings: [],
         vault: '',
+        encryptionKey: '',
+        encryptionSalt: '',
     },
     OnboardingController: {
         isOnboarded: false,

@@ -22,7 +22,6 @@ import {
     getNonSubmittedTransactions,
     TransactionOrigin,
 } from "../util/getNonSubmittedTransactions"
-import browser from "webextension-polyfill"
 
 //10 minutes
 const LOCAL_STORAGE_DATA_TTL = 60000 * 10
@@ -111,7 +110,7 @@ const PopupRouter = ({
     const state = useBlankState()!
     const isOnboarded = state?.isOnboarded
     const resetHandler = async () => {
-        browser.runtime.reload()
+        chrome.runtime.reload()
     }
 
     const [shouldShowDialog, setShouldShowDialog] = useState(false)

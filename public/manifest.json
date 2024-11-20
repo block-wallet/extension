@@ -21,7 +21,12 @@
     ],
     "action": {
         "default_popup": "popup.html",
-        "default_title": "BlockWallet"
+        "default_title": "BlockWallet",
+        "default_icon": {
+            "16": "icons/icon-16.png",
+            "48": "icons/icon-48.png",
+            "128": "icons/icon-128.png"
+        }
     },
     "description": "All eyes on your dreams with BlockWallet - your self-custodial Web3 wallet that handles the rest.",
     "homepage_url": "https://www.blockwallet.io/",
@@ -31,7 +36,7 @@
         "128": "icons/icon-128.png"
     },
     "content_security_policy": {
-        "extension_pages": "default-src 'self'; script-src 'self'; object-src 'self'"
+        "extension_pages": "script-src 'self'; object-src 'self'"
     },
     "manifest_version": 3,
     "name": "BlockWallet",

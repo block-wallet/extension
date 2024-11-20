@@ -1,11 +1,9 @@
-import browser from "webextension-polyfill"
-
 /**
  * Checks for runtime error
  *
  */
 const checkForError = () => {
-    const error = browser.runtime.lastError
+    const error = chrome.runtime.lastError
     if (!error) {
         return undefined
     }
@@ -18,13 +16,13 @@ const checkForError = () => {
  */
 export const closeCurrentTab = (): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-        browser.tabs &&
-            browser.tabs.getCurrent().then((tab) => {
+        chrome.tabs &&
+            chrome.tabs.getCurrent().then((tab) => {
                 const error = checkForError()
                 if (error) {
                     reject(error)
                 }
-                browser.tabs.remove(tab?.id!).then(() => {
+                chrome.tabs.remove(tab?.id!).then(() => {
                     const error = checkForError()
                     if (error) {
                         reject(error)

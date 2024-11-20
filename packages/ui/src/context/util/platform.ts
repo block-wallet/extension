@@ -1,5 +1,3 @@
-import browser from "webextension-polyfill"
-
 /**
  * Temporary workaround for secondary monitors on MacOS where redraws don't happen
  * @See https://bugs.chromium.org/p/chromium/issues/detail?id=971701
@@ -28,8 +26,8 @@ export const checkRedraw = () => {
  * Returns the platform info
  *
  */
-export const getPlatformInfo = (): Promise<browser.Runtime.PlatformInfo> => {
-    return browser.runtime.getPlatformInfo()
+export const getPlatformInfo = (): Promise<chrome.runtime.PlatformInfo> => {
+    return chrome.runtime.getPlatformInfo()
 }
 
 export const getCurrentOS = () => {

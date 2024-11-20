@@ -26,7 +26,7 @@ import { useBlankState } from "../../context/background/backgroundHooks"
 import classNames from "classnames"
 import GenericTooltip from "../../components/label/GenericTooltip"
 import { openHardwareConnect } from "../../context/commActions"
-import browser from "webextension-polyfill"
+
 import { useHotkeys } from "react-hotkeys-hook"
 import { componentsHotkeys } from "../../util/hotkeys"
 
@@ -120,7 +120,7 @@ const SettingsPage = () => {
                                     return
                                 }
                                 option.to.includes("https://")
-                                    ? browser.tabs.create({ url: option.to })
+                                    ? chrome.tabs.create({ url: option.to })
                                     : history.push({
                                           pathname: option.to,
                                           state: {

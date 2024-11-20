@@ -8,7 +8,6 @@ import { Mutex } from 'async-mutex';
 import log from 'loglevel';
 import { SignalMessage, Signals } from './types';
 import { checkScriptLoad } from './utils/site';
-import browser from 'webextension-polyfill';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
@@ -23,7 +22,7 @@ let providerOverridden = false;
 function injectProvider() {
     if (!isManifestV3()) {
         const injectableScript = blankProvider;
-        const injectableScriptSourceMapURL = `//# sourceURL=${browser.runtime.getURL(
+        const injectableScriptSourceMapURL = `//# sourceURL=${chrome.runtime.getURL(
             'blankProvider.js'
         )}\n`;
         const BUNDLE = injectableScript + injectableScriptSourceMapURL;
@@ -58,16 +57,16 @@ let timeoutRef: NodeJS.Timeout;
 function swKeepAlive() {
     return new Promise<void>((resolve) => {
         try {
-            browser.runtime
-                .sendMessage({ message: CONTENT.SW_KEEP_ALIVE })
-                .then(() => {
-                    if (browser.runtime.lastError) {
+            chrome.runtime.sendMessage(
+                { message: CONTENT.SW_KEEP_ALIVE },
+                () => {
+                    if (chrome.runtime.lastError) {
                         log.info(
                             'Error keeping alive:',
-                            browser.runtime.lastError.message ||
-                                browser.runtime.lastError
+                            chrome.runtime.lastError.message ||
+                                chrome.runtime.lastError
                         );
-                        const err = browser.runtime.lastError.message || '';
+                        const err = chrome.runtime.lastError.message || '';
                         SW_ALIVE = !err.includes(
                             'Receiving end does not exist'
                         );
@@ -76,7 +75,8 @@ function swKeepAlive() {
                         SW_ALIVE = true;
                     }
                     resolve();
-                });
+                }
+            );
         } catch (e) {
             let message = `BlockWallet: ${e}`;
             if (e.message === EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR) {
@@ -106,18 +106,20 @@ function sleep(ms: number): Promise<unknown> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-let port: browser.Runtime.Port | undefined = undefined;
+let port: chrome.runtime.Port | undefined = undefined;
 const initMutex: Mutex = new Mutex();
 
 // Check background settings for script load
-browser.runtime
-    .sendMessage({ message: CONTENT.SHOULD_INJECT })
-    .then((response: { shouldInject: boolean }): void => {
-        const error = browser.runtime.lastError;
+chrome.runtime.sendMessage(
+    { message: CONTENT.SHOULD_INJECT },
+    (response: { shouldInject: boolean }): void => {
+        const error = chrome.runtime.lastError;
         const shouldLoad = checkScriptLoad();
         if (
             port &&
-            (response.shouldInject !== true || shouldLoad !== true || error) &&
+            ((response && response.shouldInject !== true) ||
+                shouldLoad !== true ||
+                error) &&
             //If provider has been overridden by another wallet, then remove connection.
             providerOverridden
         ) {
@@ -130,7 +132,8 @@ browser.runtime
         } else if (providerOverridden) {
             injectProvider();
         }
-    });
+    }
+);
 
 // Setup window listener
 const windowListener = async ({
@@ -174,7 +177,7 @@ window.addEventListener('message', (message) => {
 // Init function
 const init = () => {
     // Setup port connection
-    port = browser.runtime.connect({ name: Origin.PROVIDER });
+    port = chrome.runtime.connect({ name: Origin.PROVIDER });
 
     // Set callback to send any messages from the extension back to the page
     port.onMessage.addListener((message): void => {

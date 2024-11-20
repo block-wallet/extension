@@ -4,7 +4,6 @@ import { BaseController } from '../infrastructure/BaseController';
 import { isManifestV3 } from '../utils/manifest';
 import KeyringControllerDerivated from './KeyringControllerDerivated';
 import TransactionController from './transactions/TransactionController';
-import browser from 'webextension-polyfill';
 
 export interface AppStateControllerState {
     idleTimeout: number; // Minutes until auto-lock - Zero if disabled
@@ -102,7 +101,7 @@ export default class AppStateController extends BaseController<AppStateControlle
             // Removing login token from storage
             if (isManifestV3()) {
                 // @ts-ignore
-                browser.storage.session && browser.storage.session.clear();
+                chrome.storage.session && chrome.storage.session.clear();
             }
 
             // Update controller state
@@ -143,9 +142,9 @@ export default class AppStateController extends BaseController<AppStateControlle
     private _getSessionToken(): Promise<SessionToken | undefined> {
         return new Promise((resolve) => {
             // @ts-ignore
-            if (browser.storage.session) {
+            if (chrome.storage.session) {
                 // @ts-ignore
-                browser.storage.session
+                chrome.storage.session
                     .get(['sessionToken'])
                     .then(async ({ sessionToken }: { [key: string]: any }) => {
                         if (!sessionToken) {
@@ -163,9 +162,9 @@ export default class AppStateController extends BaseController<AppStateControlle
         sessionToken: SessionToken
     ): Promise<SessionToken> {
         // @ts-ignore
-        if (browser.storage.session) {
+        if (chrome.storage.session) {
             // @ts-ignore
-            await browser.storage.session
+            await chrome.storage.session
                 .set({
                     sessionToken: {
                         encryptionKey: sessionToken.encryptionKey,

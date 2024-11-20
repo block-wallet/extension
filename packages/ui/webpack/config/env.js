@@ -88,8 +88,8 @@ function getClientEnvironment(publicUrl) {
                 // Whether or not react-refresh is enabled.
                 // It is defined here so it is available in the webpackHotDevClient.
                 FAST_REFRESH: process.env.FAST_REFRESH !== "false",
-                VERSION: require("../../../../manifest/base.json").version,
-                VERSION_NAME: require("../../../../manifest/base.json")
+                VERSION: require("../../../../public/manifest.json").version,
+                VERSION_NAME: require("../../../../public/manifest.json")
                     .version_name,
             }
         )

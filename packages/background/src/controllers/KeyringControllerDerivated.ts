@@ -1,32 +1,27 @@
 import {
-    KeyringController,
     keyringBuilderFactory,
+    KeyringController,
     KeyringControllerProps,
     KeyringControllerState,
 } from '@metamask/eth-keyring-controller';
 import * as customEncryptor from '@metamask/browser-passworder';
 import { Hash, Hasheable } from '../utils/hasher';
 import { Mutex } from 'async-mutex';
-import LedgerBridgeKeyring from '@block-wallet/eth-ledger-bridge-keyring';
-import { TrezorKeyring } from '@block-wallet/eth-trezor-keyring';
 import { Devices } from '../utils/types/hardware';
 import log from 'loglevel';
 import { HDPaths, BIP44_PATH } from '../utils/types/hardware';
-import {
-    AccessListEIP2930Transaction,
-    Transaction,
-    TypedTransaction,
-} from '@ethereumjs/tx';
-import { concatSig, SignTypedDataVersion } from '@metamask/eth-sig-util';
-import {
-    MetaMaskKeyring as QRKeyring,
-    MetaMaskKeyring as QRHardwareKeyring,
-} from '@keystonehq/metamask-airgapped-keyring';
-import {
-    DataType,
-    ETHSignature,
-    EthSignRequest,
-} from '@keystonehq/bc-ur-registry-eth';
+import LedgerBridgeKeyring from '@block-wallet/eth-ledger-bridge-keyring';
+import TrezorKeyring from 'eth-trezor-keyring';
+import { TypedTransaction } from '@ethereumjs/tx';
+// import {
+//     MetaMaskKeyring as QRKeyring,
+//     MetaMaskKeyring as QRHardwareKeyring,
+// } from '@keystonehq/metamask-airgapped-keyring';
+// import {
+//     DataType,
+//     ETHSignature,
+//     EthSignRequest,
+// } from '@keystonehq/bc-ur-registry-eth';
 
 import rlp from 'rlp';
 import { v4 } from 'uuid';
@@ -66,21 +61,21 @@ interface QRSignatureRequest {
 
 export default class KeyringControllerDerivated extends KeyringController {
     private readonly _mutex: Mutex;
-    private readonly _qrHardwareKeyring: QRHardwareKeyring;
+    // private readonly _qrHardwareKeyring: QRHardwareKeyring;
 
     constructor(opts: KeyringControllerProps) {
-        // opts.keyringBuilders = [
-        //     keyringBuilderFactory(LedgerBridgeKeyring),
-        //     keyringBuilderFactory(TrezorKeyring),
-        //     keyringBuilderFactory(QRKeyring),
-        // ];
-        // opts.cacheEncryptionKey = isManifestV3();
-        // opts.encryptor = customEncryptor;
+        opts.keyringBuilders = [
+            keyringBuilderFactory(LedgerBridgeKeyring),
+            keyringBuilderFactory(TrezorKeyring),
+            //keyringBuilderFactory(QRKeyring),
+        ];
+        opts.cacheEncryptionKey = isManifestV3();
+        opts.encryptor = customEncryptor;
 
-        super({});
+        super(opts);
 
         this._mutex = new Mutex();
-        this._qrHardwareKeyring = new QRHardwareKeyring();
+        //this._qrHardwareKeyring = new QRHardwareKeyring();
     }
 
     /**
@@ -616,6 +611,7 @@ export default class KeyringControllerDerivated extends KeyringController {
         opts?: any
     ): Promise<TypedTransaction> {
         const keyringType = await this.getKeyringTypeFromAccount(_fromAddress);
+        /*
         if (keyringType === KeyringTypes.QR) {
             // cancels any previous signature request
             this.cancelQRHardwareSignRequest();
@@ -657,15 +653,16 @@ export default class KeyringControllerDerivated extends KeyringController {
                 return ethTx;
             }
         } else {
-            return this._mutex.runExclusive(
-                async (): Promise<TypedTransaction> => {
-                    if (keyringType === KeyringTypes.TREZOR) {
-                        await this.connectHardwareKeyring(Devices.TREZOR);
-                    }
-                    return super.signTransaction(ethTx, _fromAddress, opts);
-                }
-            );
+            */
+        return this._mutex.runExclusive(async (): Promise<TypedTransaction> => {
+            if (keyringType === KeyringTypes.TREZOR) {
+                await this.connectHardwareKeyring(Devices.TREZOR);
+            }
+            return super.signTransaction(ethTx, _fromAddress, opts);
+        });
+        /*
         }
+            */
     }
 
     /**
@@ -687,16 +684,20 @@ export default class KeyringControllerDerivated extends KeyringController {
         const keyringType = await this.getKeyringTypeFromAccount(
             msgParams.from
         );
+        /*
         if (keyringType === KeyringTypes.QR) {
             return await this._signQRMessage(msgParams, opts);
         } else {
-            return this._mutex.runExclusive(async () => {
-                if (keyringType === KeyringTypes.TREZOR) {
-                    await this.connectHardwareKeyring(Devices.TREZOR);
-                }
-                return super.signMessage(msgParams, opts);
-            });
+         */
+        return this._mutex.runExclusive(async () => {
+            if (keyringType === KeyringTypes.TREZOR) {
+                await this.connectHardwareKeyring(Devices.TREZOR);
+            }
+            return super.signMessage(msgParams, opts);
+        });
+        /*
         }
+            */
     }
 
     /**
@@ -719,16 +720,20 @@ export default class KeyringControllerDerivated extends KeyringController {
         const keyringType = await this.getKeyringTypeFromAccount(
             msgParams.from
         );
+        /*
         if (keyringType === KeyringTypes.QR) {
             return await this._signQRMessage(msgParams, opts);
         } else {
-            return this._mutex.runExclusive(async () => {
-                if (keyringType === KeyringTypes.TREZOR) {
-                    await this.connectHardwareKeyring(Devices.TREZOR);
-                }
-                return super.signPersonalMessage(msgParams, opts);
-            });
+            */
+        return this._mutex.runExclusive(async () => {
+            if (keyringType === KeyringTypes.TREZOR) {
+                await this.connectHardwareKeyring(Devices.TREZOR);
+            }
+            return super.signPersonalMessage(msgParams, opts);
+        });
+        /*
         }
+            */
     }
 
     /**
@@ -750,18 +755,23 @@ export default class KeyringControllerDerivated extends KeyringController {
         const keyringType = await this.getKeyringTypeFromAccount(
             msgParams.from
         );
+        /*
         if (keyringType === KeyringTypes.QR) {
             return await this._signQRMessage(msgParams, opts, true);
         } else {
-            return this._mutex.runExclusive(async () => {
-                if (keyringType === KeyringTypes.TREZOR) {
-                    await this.connectHardwareKeyring(Devices.TREZOR);
-                }
-                return super.signTypedMessage(msgParams, opts);
-            });
+            */
+        return this._mutex.runExclusive(async () => {
+            if (keyringType === KeyringTypes.TREZOR) {
+                await this.connectHardwareKeyring(Devices.TREZOR);
+            }
+            return super.signTypedMessage(msgParams, opts);
+        });
+        /*
         }
+            */
     }
 
+    /*
     private async _signQRMessage(
         msgParams: {
             from: string;
@@ -794,6 +804,7 @@ export default class KeyringControllerDerivated extends KeyringController {
         const { v, r, s } = await this.QRsignatureSubmission(signRequest);
         return concatSig(bigIntToBuffer(v), r, s);
     }
+    */
 
     /**
      * setLedgerWebHIDTransportType
@@ -817,6 +828,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      *
      * @returns The added keyring
      */
+    /*
     async getOrAddQRKeyring(): Promise<QRKeyring> {
         let keyring = await this.getKeyringFromDevice(Devices.KEYSTONE);
         if (!keyring) {
@@ -825,6 +837,7 @@ export default class KeyringControllerDerivated extends KeyringController {
         }
         return keyring;
     }
+    */
 
     /**
      * Returns accounts from the QR device by page
@@ -832,6 +845,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @param page
      * @returns
      */
+    /*
     async getQRPage(
         page: number
     ): Promise<{ balance: string; address: string; index: number }[]> {
@@ -867,12 +881,14 @@ export default class KeyringControllerDerivated extends KeyringController {
             throw new Error(`Unspecified error when connect QR Hardware, ${e}`);
         }
     }
+    */
 
     /**
      * Submites the HDKey of the QR device
      *
      * @param cbor
      */
+    /*
     async submitQRHardwareCryptoHDKey(cbor: string) {
         return this._mutex.runExclusive(async () => {
             const read = this._qrHardwareKeyring.readKeyring();
@@ -881,12 +897,14 @@ export default class KeyringControllerDerivated extends KeyringController {
             this.fullUpdate();
         });
     }
+    */
 
     /**
      * Submites the account of the QR device
      *
      * @param cbor
      */
+    /*
     async submitQRHardwareCryptoAccount(cbor: string) {
         return this._mutex.runExclusive(async () => {
             const r = this._qrHardwareKeyring.readKeyring();
@@ -895,6 +913,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             this.fullUpdate();
         });
     }
+    */
 
     /**
      * Generates a ETH Sign request to be signed with a QR device
@@ -905,6 +924,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @returns {Promise<QRSignatureRequest>} The transaction sign request object QR as string.
      */
     /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+    /*
     public async getQRETHSignRequest(
         ethTx: TypedTransaction,
         _fromAddress: string
@@ -945,6 +965,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             };
         });
     }
+    */
 
     /**
      * Generates a message sign request to be signed with a QR device
@@ -954,6 +975,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @returns {Promise<QRSignatureRequest>} The message sign request object QR as string.
      */
     /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+    /*
     public async getQRMessageSignRequest(msgParams: {
         from: string;
         data: string;
@@ -983,6 +1005,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             };
         });
     }
+    */
 
     /**
      * Generates a typed message sign request to be signed with a QR device
@@ -992,6 +1015,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @returns {Promise<QRSignatureRequest>} The typed message sign request object QR as string.
      */
     /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+    /*
     public async getQRTypedMessageSignRequest(
         msgParams: {
             from: string;
@@ -1034,12 +1058,14 @@ export default class KeyringControllerDerivated extends KeyringController {
             };
         });
     }
+    */
 
     /**
      * After requesting a QR sign this function waits for the signed message
      * @param signRequest
      * @returns
      */
+    /*
     private async QRsignatureSubmission(
         signRequest: QRSignatureRequest
     ): Promise<SignatureData> {
@@ -1061,6 +1087,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             );
         });
     }
+    */
 
     /**
      * Submits the signature generate by the QR device
@@ -1068,6 +1095,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @param requestId
      * @param cbor
      */
+    /*
     public submitQRHardwareSignature(requestId: string, cbor: Buffer) {
         const ethSignature = ETHSignature.fromCBOR(cbor);
         const signature = ethSignature.getSignature(); // it will return the signature r,s,v
@@ -1084,6 +1112,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             signatureData
         );
     }
+    */
 
     /**
      * Cancels an ongoing sign request
@@ -1106,9 +1135,10 @@ export default class KeyringControllerDerivated extends KeyringController {
         pageIndex: number
     ): Promise<[]> {
         try {
+            /*
             if (device === Devices.KEYSTONE) {
                 return (await this.getQRPage(pageIndex)) as [];
-            } else if (device === Devices.TREZOR) {
+            } else */ if (device === Devices.TREZOR) {
                 const currentPage = (await keyring.serialize()).page;
 
                 let accounts;

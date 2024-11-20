@@ -7,7 +7,7 @@ import BlankController, {
 import BlankStorageStore from './infrastructure/stores/BlankStorageStore';
 import initialState, { BlankAppState } from './utils/constants/initialState';
 import reconcileState from './infrastructure/stores/migrator/reconcileState';
-import { compareVersions } from 'compare-versions';
+import compareVersions from 'compare-versions';
 import { getVersion, openExtensionInBrowser } from './utils/window';
 import { setupConnection } from './infrastructure/connection';
 import { migrator } from './infrastructure/stores/migrator/migrator';
@@ -16,7 +16,6 @@ import log, { LogLevelDesc } from 'loglevel';
 import { resolvePreferencesAfterWalletUpdate } from './utils/userPreferences';
 import { CONTENT } from './utils/types/communication';
 import { isManifestV3 } from './utils/manifest';
-import browser from 'webextension-polyfill';
 
 // Initialize Block State Store
 const blankStateStore = new BlankStorageStore();
@@ -100,13 +99,13 @@ const getDevTools = () => {
 /**
  * updates the extension badge
  */
-const updateExtensionBadge = async (label: string) => {
+const updateExtensionBadge = (label: string) => {
     if (isManifestV3()) {
-        await browser.action.setBadgeText({ text: label });
-        await browser.action.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
+        chrome.action.setBadgeText({ text: label });
+        chrome.action.setBadgeBackgroundColor({ color: '#1673FF' }); // BlockWallet primary color
     } else {
-        await browser.browserAction.setBadgeText({ text: label });
-        await browser.browserAction.setBadgeBackgroundColor({
+        chrome.browserAction.setBadgeText({ text: label });
+        chrome.browserAction.setBadgeBackgroundColor({
             color: '#1673FF',
         }); // BlockWallet primary color
     }
@@ -149,18 +148,16 @@ const initBlockWallet = async () => {
     );
 
     // Setup connection
-    browser.runtime.onConnect.addListener((port) => {
+    chrome.runtime.onConnect.addListener((port) => {
         setupConnection(port, blankController);
     });
 
     // Set isBlankInitialized response and should inject response
-    browser.runtime.onMessage.addListener((request, _, sendResponse) => {
+    chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
         if (request.message === 'isBlankInitialized') {
-            return Promise.resolve({ isBlankInitialized: true });
+            sendResponse({ isBlankInitialized: true });
         } else if (request.message === CONTENT.SHOULD_INJECT) {
-            return Promise.resolve({
-                shouldInject: blankController.shouldInject(),
-            });
+            sendResponse({ shouldInject: blankController.shouldInject() });
         } else if (request.message === CONTENT.SW_KEEP_ALIVE) {
             sendResponse();
         }
@@ -184,21 +181,21 @@ initBlockWallet().catch((error) => {
 });
 
 // On install, open onboarding tab
-browser.runtime.onInstalled.addListener(({ reason }) => {
+chrome.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === 'install') {
-        browser.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
+        chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
         openExtensionInBrowser();
     }
 
     // For existing users, when the extension gets updated we also set the uninstall form.
     if (reason === 'update') {
-        browser.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
+        chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
     }
 });
 
 const registerBlankProviderContentScript = async () => {
     try {
-        await browser.scripting.registerContentScripts([
+        await chrome.scripting.registerContentScripts([
             {
                 id: 'blankProvider',
                 matches: ['file://*/*', 'http://*/*', 'https://*/*'],
@@ -217,9 +214,9 @@ const registerBlankProviderContentScript = async () => {
 if (isManifestV3()) {
     // this keeps alive the service worker.
     // when it goes 'inactive' it is restarted.
-    browser.alarms.create({ delayInMinutes: 0.5, periodInMinutes: 0.05 });
-    browser.alarms.onAlarm.addListener(() => {
-        fetch(browser.runtime.getURL('keep-alive'));
+    chrome.alarms.create({ delayInMinutes: 0.5, periodInMinutes: 0.05 });
+    chrome.alarms.onAlarm.addListener(() => {
+        fetch(chrome.runtime.getURL('keep-alive'));
     });
     registerBlankProviderContentScript();
 }

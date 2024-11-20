@@ -1,5 +1,5 @@
 import { ReleaseNote } from '../controllers/PreferencesController';
-import { compareVersions, validate } from 'compare-versions';
+import compareVersions, { validate } from 'compare-versions';
 interface Options {
     lastVersionSeen?: string;
     stackNotes?: boolean;

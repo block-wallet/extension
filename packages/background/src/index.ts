@@ -192,16 +192,15 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
         chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
     }
 });
-
 const registerBlankProviderContentScript = async () => {
     try {
-        await chrome.scripting.registerContentScripts([
+        await (chrome.scripting as any).registerContentScripts([
             {
                 id: 'blankProvider',
                 matches: ['file://*/*', 'http://*/*', 'https://*/*'],
                 js: ['blankProvider.js'],
                 runAt: 'document_start',
-                // world: 'MAIN',
+                world: 'MAIN',
             },
         ]);
     } catch (err) {

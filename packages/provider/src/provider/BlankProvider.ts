@@ -35,6 +35,7 @@ import {
     getBlockWalletCompatibility,
     updateBlockWalletCompatibility,
 } from '../utils/compatibility';
+import log from 'loglevel';
 
 interface BlankProviderState {
     accounts: string[];
@@ -129,7 +130,7 @@ export default class BlankProvider
         // Set site icon
         this._setIcon();
 
-        console.log('provider initialized');
+        console.log('BlockWallet Provider initialized');
     }
 
     /**
@@ -164,11 +165,7 @@ export default class BlankProvider
     }
 
     private async reInitializeSubscriptions() {
-        console.log(
-            'reInitializeSubscriptions',
-            'init',
-            this._ethSubscriptions
-        );
+        log.trace('reInitializeSubscriptions', 'init', this._ethSubscriptions);
         for (const reqId in this._ethSubscriptions) {
             const { params, subId, prevSubId } = this._ethSubscriptions[reqId];
             const request: RequestArguments = {
@@ -176,7 +173,7 @@ export default class BlankProvider
                 params,
             };
 
-            console.log(reqId, 'request', request);
+            log.trace(reqId, 'request', request);
             await this._postMessage(
                 Messages.EXTERNAL.REQUEST,
                 request,
@@ -186,7 +183,7 @@ export default class BlankProvider
             this._ethSubscriptions[reqId].prevSubId =
                 prevSubId && prevSubId !== '' ? prevSubId : subId;
         }
-        console.log('reInitializeSubscriptions', 'end', this._ethSubscriptions);
+        log.trace('reInitializeSubscriptions', 'end', this._ethSubscriptions);
     }
 
     /**
@@ -422,8 +419,6 @@ export default class BlankProvider
         const { accounts, chainId, networkVersion } = await this._postMessage(
             Messages.EXTERNAL.SETUP_PROVIDER
         );
-
-        console.log('_setupProvider', accounts, chainId, networkVersion);
 
         if (chainId !== undefined && networkVersion !== undefined) {
             this.networkVersion = networkVersion;
@@ -699,7 +694,7 @@ export default class BlankProvider
                     },
                 };
 
-                console.log(
+                log.trace(
                     '_emitSubscriptionMessage',
                     'message overridden',
                     message

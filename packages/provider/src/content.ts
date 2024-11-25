@@ -82,7 +82,7 @@ function swKeepAlive() {
                 EXTENSION_CONTEXT_VALID = false;
                 message = `BlockWallet: Please refresh the page. ${e}`;
             }
-            console.log(message);
+            console.log('swKeepAlive error', message);
             resolve();
         }
     });
@@ -187,7 +187,6 @@ window.addEventListener('message', (message) => {
 
 // Init function
 const init = () => {
-    console.log('init');
     // Setup port connection
     port = chrome.runtime.connect({ name: Origin.PROVIDER });
 
@@ -239,7 +238,6 @@ const init = () => {
         });
     }
     portReinitialized = true;
-    console.log('init', portReinitialized);
 };
 
 init();

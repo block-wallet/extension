@@ -5,7 +5,6 @@ import {
     WindowTransportRequestMessage,
 } from '@block-wallet/background/utils/types/communication';
 import { Mutex } from 'async-mutex';
-import log from 'loglevel';
 import { SignalMessage, Signals } from './types';
 import { checkScriptLoad } from './utils/site';
 
@@ -61,7 +60,7 @@ function swKeepAlive() {
                 { message: CONTENT.SW_KEEP_ALIVE },
                 () => {
                     if (chrome.runtime.lastError) {
-                        log.info(
+                        console.log(
                             'Error keeping alive:',
                             chrome.runtime.lastError.message ||
                                 chrome.runtime.lastError
@@ -83,7 +82,7 @@ function swKeepAlive() {
                 EXTENSION_CONTEXT_VALID = false;
                 message = `BlockWallet: Please refresh the page. ${e}`;
             }
-            log.error(message);
+            console.log(message);
             resolve();
         }
     });
@@ -117,9 +116,7 @@ chrome.runtime.sendMessage(
         const shouldLoad = checkScriptLoad();
         if (
             port &&
-            ((response && response.shouldInject !== true) ||
-                shouldLoad !== true ||
-                error) &&
+            (response.shouldInject !== true || shouldLoad !== true || error) &&
             //If provider has been overridden by another wallet, then remove connection.
             providerOverridden
         ) {
@@ -128,7 +125,9 @@ chrome.runtime.sendMessage(
             }
             port.disconnect();
             window.removeEventListener('message', windowListener);
-            log.warn('BlockWallet: Provider not injected due to user setting.');
+            console.log(
+                'BlockWallet: Provider not injected due to user setting.'
+            );
         } else if (providerOverridden) {
             injectProvider();
         }
@@ -136,15 +135,22 @@ chrome.runtime.sendMessage(
 );
 
 // Setup window listener
+
 const windowListener = async ({
     data,
+
     source,
 }: MessageEvent<WindowTransportRequestMessage>): Promise<void> => {
     // Only allow messages from our window, by the inject
     if (
         source !== window ||
+        source.origin === 'null' ||
         data.origin !== Origin.PROVIDER ||
-        !Object.values(EXTERNAL).includes(data.message)
+        !Object.values(EXTERNAL).includes(data.message) ||
+        // data.id should match the format indicated on BlankProvider.js because it could be set maliciously by a web page
+        // Regex validates the following format
+        // `${Date.now()}.${++this._requestId}` --> 1694708163916.8
+        !/^(\d+)\.\d+$/.test(data.id)
     ) {
         return;
     }
@@ -153,17 +159,22 @@ const windowListener = async ({
     const postMessage = async (
         data: WindowTransportRequestMessage
     ): Promise<void> => {
+        const message =
+            data && typeof data !== undefined
+                ? JSON.parse(JSON.stringify(data))
+                : data;
         try {
             if (!SW_ALIVE || !port) {
                 // Port was reinitialized, force retry
                 throw new Error();
             }
-            port.postMessage(data);
+            port.postMessage(message);
         } catch (error) {
+            console.log(message, error);
             // If this fails due to SW being inactive, retry
             await sleep(30);
-            log.debug('waiting for SW to startup...');
-            return postMessage(data);
+            console.log('waiting for SW to startup...');
+            return postMessage(message);
         }
     };
 
@@ -176,32 +187,42 @@ window.addEventListener('message', (message) => {
 
 // Init function
 const init = () => {
+    console.log('init');
     // Setup port connection
     port = chrome.runtime.connect({ name: Origin.PROVIDER });
 
     // Set callback to send any messages from the extension back to the page
-    port.onMessage.addListener((message): void => {
-        window.postMessage(
-            { ...message, origin: Origin.BACKGROUND },
-            window.location.href
-        );
+    port.onMessage.addListener((message: any): void => {
+        const nmessage = {
+            ...(message && typeof message !== undefined
+                ? JSON.parse(JSON.stringify(message))
+                : message),
+
+            origin: Origin.BACKGROUND,
+        };
+        try {
+            window.postMessage(nmessage, window.location.href);
+        } catch (error: any) {
+            console.log(nmessage, error);
+            throw error;
+        }
     });
 
     if (isManifestV3()) {
         port.onDisconnect.addListener(() => {
             initMutex.runExclusive(async () => {
-                log.info('port disconnection');
+                console.log('port disconnection');
                 SW_ALIVE = false; // If we've reached this point, we can't expect this to be false and wait until this has changed.
                 await sleep(200);
 
                 // Port has been disconnected, reinitialize once
                 while (SW_ALIVE === false) {
-                    log.debug('waiting for SW to be restarted...');
+                    console.log('waiting for SW to be restarted...');
                     await sleep(100);
                 }
 
                 if (!portReinitialized) {
-                    log.info('reinitializing port...');
+                    console.log('reinitializing port...');
 
                     init();
 
@@ -218,6 +239,7 @@ const init = () => {
         });
     }
     portReinitialized = true;
+    console.log('init', portReinitialized);
 };
 
 init();

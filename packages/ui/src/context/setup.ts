@@ -117,9 +117,9 @@ export const initialize = () => {
 }
 
 // Setup session
-chrome.tabs
-    .query({ active: true, currentWindow: true })
-    .then(async (tabs: chrome.tabs.Tab[]) => {
+chrome.tabs.query(
+    { active: true, currentWindow: true },
+    async (tabs: chrome.tabs.Tab[]) => {
         const isWindowPopup = await isWindow()
 
         if (!isWindowPopup || !tabs[0]) {
@@ -141,7 +141,8 @@ chrome.tabs
                 },
             }
         }
-    })
+    }
+)
 
 // Run init function
 initialize()

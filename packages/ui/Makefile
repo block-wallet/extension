@@ -1,7 +1,6 @@
 INLINE_RUNTIME_CHUNK	:= false
 BROWSER					?= chrome
 
-
 test/ui:
 	yarn test --testTimeout 10000
 

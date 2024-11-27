@@ -2,15 +2,9 @@ Thanks to:
 
 Aleksandras: https://github.com/AleksandrasG
 
-Eze: https://github.com/IchBinEze
+DEV: https://github.com/chk0912
 
-Julian: https://github.com/julianariel
-
-Rodrigo: https://github.com/rodr-r
-
-Martin: https://github.com/martnLecam
-
-Leandro: https://github.com/leablock
+SRE: https://github.com/sreblock
 
 MetaMask/Transaction-controller MIT license. You may obtain a copy of the here:
 https://github.com/MetaMask/transaction-controller/blob/master/LICENSE

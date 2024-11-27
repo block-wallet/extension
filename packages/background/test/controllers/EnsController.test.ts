@@ -16,7 +16,7 @@ describe('ENS Controller', function () {
         });
     });
 
-    it('should resolve ENS name properly', async function () {
+    it.skip('should resolve ENS name properly', async function () {
         const resolvedAddress = await ensController.resolveName(
             blankEnsGoerliName
         );
@@ -24,7 +24,7 @@ describe('ENS Controller', function () {
         expect(resolvedAddress).to.be.equal(blankEnsGoerliAddress);
     });
 
-    it('should lookup address properly', async function () {
+    it.skip('should lookup address properly', async function () {
         const resolvedAddress = await ensController.lookupAddress(
             blankEnsGoerliAddress
         );

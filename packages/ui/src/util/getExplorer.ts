@@ -64,6 +64,10 @@ export const generateExplorerLink = (
         return undefined
     }
 
+    if (!network.blockExplorerUrls[0].trim()) {
+        return undefined
+    }
+
     if (type === "tx") {
         return createCustomExplorerLink(value, network.blockExplorerUrls[0])
     } else if (type === "address") {

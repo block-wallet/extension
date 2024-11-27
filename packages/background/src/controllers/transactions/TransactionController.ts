@@ -10,8 +10,6 @@ import {
 import log from 'loglevel';
 import {
     addHexPrefix,
-    bigIntToBuffer,
-    bigIntToHex,
     bufferToHex,
     isValidAddress,
     isValidSignature,
@@ -75,6 +73,7 @@ import { fetchContractDetails } from '../../utils/contractsInfo';
 import KeyringControllerDerivated, {
     KeyringControllerEvents,
 } from '../KeyringControllerDerivated';
+import { bnToHex, bnToUnpaddedBuffer } from 'ethereumjs-util';
 
 /**
  * It indicates the amount of blocks to wait after marking
@@ -1024,10 +1023,10 @@ export class TransactionController extends BaseController<
             transactionMeta.status = TransactionStatus.SIGNED;
 
             // Set r,s,v values
-            transactionMeta.transactionParams.r = bigIntToHex(signedTx.r!);
-            transactionMeta.transactionParams.s = bigIntToHex(signedTx.s!);
+            transactionMeta.transactionParams.r = bnToHex(signedTx.r!);
+            transactionMeta.transactionParams.s = bnToHex(signedTx.s!);
             transactionMeta.transactionParams.v = BigNumber.from(
-                bigIntToHex(signedTx.v!)
+                bnToHex(signedTx.v!)
             ).toNumber();
 
             // Serialize transaction & update
@@ -1185,15 +1184,15 @@ export class TransactionController extends BaseController<
             !signedTx.s ||
             // for eip1559 v is 0.
             // https://github.com/ethereumjs/ethereumjs-monorepo/blob/master/packages/tx/src/eip1559Transaction.ts#L382
-            (!signedTx.v && signedTx.v?.toString() !== '0')
+            (!signedTx.v && bnToHex(signedTx.v!) !== '0')
         )
             throw new Error('An error while signing the transaction ocurred');
 
         if (
             !isValidSignature(
-                signedTx.v,
-                bigIntToBuffer(signedTx.r),
-                bigIntToBuffer(signedTx.s),
+                BigInt(bnToHex(signedTx.v!)),
+                bnToUnpaddedBuffer(signedTx.r),
+                bnToUnpaddedBuffer(signedTx.s),
                 undefined,
                 BigInt(this._networkController.network.chainId)
             )
@@ -1533,9 +1532,9 @@ export class TransactionController extends BaseController<
         newTransactionMeta.status = TransactionStatus.SIGNED;
         newTransactionMeta.transactionParams = {
             ...newTransactionMeta.transactionParams,
-            r: bigIntToHex(signedTx.r!),
-            s: bigIntToHex(signedTx.s!),
-            v: BigNumber.from(bigIntToHex(signedTx.v!)).toNumber(),
+            r: bnToHex(signedTx.r!),
+            s: bnToHex(signedTx.s!),
+            v: BigNumber.from(bnToHex(signedTx.v!)).toNumber(),
         };
         this.store.updateState({
             transactions: this.trimTransactionsForState(transactions),
@@ -1738,9 +1737,9 @@ export class TransactionController extends BaseController<
         newTransactionMeta.status = TransactionStatus.SIGNED;
         newTransactionMeta.transactionParams = {
             ...newTransactionMeta.transactionParams,
-            r: bigIntToHex(signedTx.r!),
-            s: bigIntToHex(signedTx.s!),
-            v: BigNumber.from(bigIntToHex(signedTx.v!)).toNumber(),
+            r: bnToHex(signedTx.r!),
+            s: bnToHex(signedTx.s!),
+            v: BigNumber.from(bnToHex(signedTx.v!)).toNumber(),
         };
         this.store.updateState({
             transactions: this.trimTransactionsForState(transactions),

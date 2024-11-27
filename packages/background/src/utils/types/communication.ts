@@ -64,7 +64,6 @@ import {
 import { GasPriceData } from '@block-wallet/background/controllers/GasPricesController';
 import { RemoteConfigsControllerState } from '@block-wallet/background/controllers/RemoteConfigsController';
 import { TypedTransaction } from '@ethereumjs/tx';
-import browser from 'webextension-polyfill';
 import { GetOnRampCurrencies } from '@block-wallet/background/controllers/OnrampController';
 import { SwapTxMeta } from '../swaps/1inch';
 
@@ -1224,7 +1223,7 @@ export enum Origin {
 }
 
 export interface ExtensionInstances {
-    [id: string]: { port: browser.Runtime.Port };
+    [id: string]: { port: chrome.runtime.Port };
 }
 
 export interface ProviderInstances {
@@ -1232,7 +1231,7 @@ export interface ProviderInstances {
 }
 
 export interface ProviderInstance {
-    port: browser.Runtime.Port;
+    port: chrome.runtime.Port;
     tabId: number;
     windowId: number;
     origin: string;

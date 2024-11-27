@@ -4,7 +4,6 @@ import {
     TOKENS_LIST,
     ASSETS_BLOCKCHAINS_CHAIN_ID,
 } from '@block-wallet/chains-assets';
-import browser from 'webextension-polyfill';
 
 export const GOBLANK_TOKEN_DATA: {
     addresses: { [chainId in number]: string };
@@ -22,7 +21,7 @@ export const GOBLANK_TOKEN_DATA: {
     symbol: 'BLANK',
     type: 'ERC20',
     decimals: 18,
-    logo: browser.runtime.getURL('icons/icon-48.png'),
+    logo: chrome.runtime.getURL('icons/icon-48.png'),
 };
 
 export const getBlankTokenDataByChainId = (

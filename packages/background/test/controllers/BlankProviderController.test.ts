@@ -44,16 +44,11 @@ import * as random from '@block-wallet/background/utils/randomBytes';
 import { TransactionWatcherController } from '@block-wallet/background/controllers/TransactionWatcherController';
 import * as ManifestUtils from '@block-wallet/background/utils/manifest';
 
-
 const UNI_ORIGIN = 'https://app.uniswap.org';
 const TX_HASH =
     '0x3979f7ae255171ae6c6fd1c625219b45e2da7e52e6401028c29f0f27581af601';
 const TEXT_FOR_HASH = 'HASH ME';
 describe('Blank Provider Controller', function () {
-
-
-
-
     const defaultIdleTimeout = 500000;
     const portId = '7e24f69d-c740-4eb3-9c6e-4d47df491005';
     const accounts = {
@@ -158,7 +153,7 @@ describe('Blank Provider Controller', function () {
     let transactionWatcherController: TransactionWatcherController;
 
     beforeEach(function () {
-        sinon.stub(ManifestUtils, 'isManifestV3').returns(false)
+        sinon.stub(ManifestUtils, 'isManifestV3').returns(false);
 
         // Instantiate objects
         networkController = getNetworkControllerInstance();
@@ -266,8 +261,6 @@ describe('Blank Provider Controller', function () {
         );
     });
 
-
-
     this.afterEach(function () {
         sinon.restore();
     });
@@ -303,8 +296,8 @@ describe('Blank Provider Controller', function () {
 
             for (let i = 1; i < 4; i++) {
                 blankProviderController['_requestHandlers'][`${i}`] = {
-                    reject: (error: Error) => { },
-                    resolve: (data: any) => { },
+                    reject: (error: Error) => {},
+                    resolve: (data: any) => {},
                 };
             }
 

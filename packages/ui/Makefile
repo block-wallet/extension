@@ -1,7 +1,6 @@
 INLINE_RUNTIME_CHUNK	:= false
 BROWSER					?= chrome
 
-
 test/ui:
 	yarn test --testTimeout 10000
 
@@ -31,8 +30,8 @@ copy/chrome:
 	@mv ../../dist/index.html ../../dist/popup.html
 
 build/manifest:
-	@echo 'Generating manifest.json for $(BROWSER)...'
-	@node webpack/scripts/manifest.js $(BROWSER)
+	# @echo 'Generating manifest.json for $(BROWSER)...'
+	# @node webpack/scripts/manifest.js $(BROWSER)
 
 depcheck:
 	@npx depcheck

@@ -33,14 +33,13 @@ const watchChanges = (dir, lastTimestamp) => {
 chrome.management.getSelf((self) => {
     if (self.installType === 'development') {
         chrome.runtime.getPackageDirectoryEntry((dir) => watchChanges(dir));
-        chrome.tabs.query(
-            { active: true, lastFocusedWindow: true },
-            (tabs) => {
+        chrome.tabs
+            .query({ active: true, lastFocusedWindow: true })
+            .then((tabs) => {
                 // NB: see https://github.com/xpl/crx-hotreload/issues/5
                 if (tabs[0]) {
                     chrome.tabs.reload(tabs[0].id);
                 }
-            }
-        );
+            });
     }
 });

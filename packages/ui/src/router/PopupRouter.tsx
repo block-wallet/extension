@@ -23,6 +23,7 @@ import {
     TransactionOrigin,
 } from "../util/getNonSubmittedTransactions"
 import browser from "webextension-polyfill"
+import { postSlackMessage } from "../context/commActions"
 
 //10 minutes
 const LOCAL_STORAGE_DATA_TTL = 60000 * 10
@@ -114,6 +115,15 @@ const PopupRouter = ({
         browser.runtime.reload()
     }
 
+    const errorHandler = (
+        error: Error,
+        info: {
+            componentStack: string
+        }
+    ) => {
+        postSlackMessage(error.message, error, info.componentStack)
+    }
+
     const [shouldShowDialog, setShouldShowDialog] = useState(false)
 
     useEffect(() => {
@@ -127,6 +137,7 @@ const PopupRouter = ({
                     FallbackComponent={ErrorFallbackPage}
                     onReset={resetHandler}
                     resetKeys={[state.isAppUnlocked]}
+                    onError={errorHandler}
                 >
                     {isOnboarded ? (
                         <>

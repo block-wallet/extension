@@ -24,15 +24,15 @@ const useCheckAccountDeviceLinked = () => {
         resetDeviceLinkStatus: () => setIsDeviceUnlinked(false),
         //Wraps a function and checks whether the device is linked or not.
         //If the device is linked, executes the wrapped function. If not, then the function ins not executed.
-        checkDeviceIsLinkedWrapper: (
-            wrappedFn: (...args: any) => any
-        ) => async (...args: any) => {
-            const ok = await check()
-            if (ok) {
-                return wrappedFn(...args)
-            }
-            return false
-        },
+        checkDeviceIsLinkedWrapper:
+            (wrappedFn: (...args: any) => any) =>
+            async (...args: any) => {
+                const ok = await check()
+                if (ok) {
+                    return wrappedFn(...args)
+                }
+                return false
+            },
     }
 }
 

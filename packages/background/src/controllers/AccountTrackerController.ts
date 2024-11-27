@@ -600,7 +600,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 networkProvider
             );
         } catch (e) {
-            log.warn('Unable to get total supply of token:', tokenAddress, e);
+            log.warn('Unable to get total supply of token: ' + tokenAddress, e);
         }
 
         return {

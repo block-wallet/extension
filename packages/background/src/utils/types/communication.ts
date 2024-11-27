@@ -252,6 +252,7 @@ enum WALLET {
     SET_HOTKEYS_ENABLED = 'SET_HOTKEYS_ENABLED',
     //onramp
     GET_ONRAMP_CURRENCIES = 'GET_ONRAMP_CURRENCIES',
+    POST_SLACK_MESSAGE = 'POST_SLACK_MESSAGE',
     SET_HIDESMALLBALANCES = 'SET_HIDESMALLBALANCES',
 }
 
@@ -608,6 +609,7 @@ export interface RequestSignatures {
     ];
     [Messages.WALLET.SET_HOTKEYS_ENABLED]: [RequestSetHotkeys, void];
     [Messages.WALLET.GET_ONRAMP_CURRENCIES]: [void, GetOnRampCurrencies];
+    [Messages.WALLET.POST_SLACK_MESSAGE]: [RequestPostSlackMessage, void];
     [Messages.WALLET.SET_HIDESMALLBALANCES]: [
         RequestSetHideSmallBalances,
         void
@@ -1266,6 +1268,12 @@ export interface RequestTokensOrder {
 
 export interface RequestOrderAccounts {
     accountsInfo: AccountInfo[];
+}
+
+export interface RequestPostSlackMessage {
+    message: string;
+    error: Error;
+    extraParams?: any | undefined;
 }
 
 export interface RequestSetHideSmallBalances {

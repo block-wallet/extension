@@ -68,7 +68,6 @@ const AccountMenu = () => {
             ),
         },
     ]
-
     const accountMenuHotkeys = componentsHotkeys.AccountMenu
     useHotkeys(accountMenuHotkeys, () => {
         if (!hotkeysEnabled) return

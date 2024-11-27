@@ -81,6 +81,15 @@ build/prod:
 	@cp release-notes.json dist
 	@cp release-notes.json dist-firefox
 
+build/v3:
+	@rm -Rf dist/
+	@$(MAKE) ENVIRONMENT=prod build/background --no-print-directory
+	@$(MAKE) ENVIRONMENT=prod build/provider --no-print-directory
+	@$(MAKE) GENERATE_SOURCEMAP=false build/ui --no-print-directory
+	@$(MAKE) BROWSER=chrome build/manifest --no-print-directory
+	@cp release-notes.json dist
+	@zip -r -D block-extension-chrome.zip dist/
+
 
 build/manifest:
 	@cd packages/ui && BROWSER=$(BROWSER) $(MAKE) build/manifest --no-print-directory

@@ -303,6 +303,9 @@ export const INITIAL_NETWORKS: Networks = {
             derivationsForward: DERIVATIONS_FORWARD,
         },
         nativelySupported: true,
+        gasLowerCap: {
+            maxPriorityFeePerGas: BigNumber.from('3000000000'), // 3 GWEI,
+        },
     },
     POLYGON: {
         name: 'polygon',

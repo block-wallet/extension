@@ -13,7 +13,7 @@ export const formatName = (
     maxLength: number = 13
 ): string => {
     if (!accountName) {
-        return 'Account'
+        return "Account"
     } else {
         if (accountName.length < maxLength) {
             return accountName
@@ -24,6 +24,18 @@ export const formatName = (
 }
 
 export const formatHashLastChars = (hash: string, chars: number = 4) => {
-
     return `(...${hash.slice(-chars)})`
+}
+
+export const formatHashFirstLastChars = (
+    hash: string,
+    first: number = 6,
+    last: number = 4
+) => {
+    if (first + last >= hash.length) {
+        return hash
+    }
+    const firstPart = hash.slice(0, first)
+    const lastPart = hash.slice(-last)
+    return `(${firstPart}...${lastPart})`
 }

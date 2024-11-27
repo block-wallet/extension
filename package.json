@@ -1,6 +1,6 @@
 {
     "name": "extension",
-    "version": "1.2.4",
+    "version": "1.2.15",
     "private": true,
     "scripts": {
         "install": "make install/ci",
@@ -9,5 +9,7 @@
         "build-prod": "make build/prod",
         "test": "make test"
     },
-    "dependencies": {}
+    "dependencies": {
+        "build": "^0.1.4"
+    }
 }

@@ -23,7 +23,6 @@ import {
 import { formatTokenAmount } from '../utils/token';
 import { fetchContractDetails } from '../utils/contractsInfo';
 import { formatName } from '../utils/account';
-import browser from 'webextension-polyfill';
 import { isHttpsURL } from '../utils/http';
 
 interface ChainListItemWithExplorerUrl extends ChainListItem {
@@ -76,7 +75,7 @@ export class NotificationController {
         const url = '';
         const title = 'BlockWallet is ready!';
         const message =
-            "You've completed the set-up process. Check the extension in the upper right corner of your browser.";
+            "You've completed the set-up process. Check the extension in the upper right corner of your chrome.";
 
         this.showNotification(title, message, url);
     }
@@ -148,10 +147,10 @@ export class NotificationController {
             urlObject.searchParams.set('timestamp', Date.now().toString());
             notificationUrl = urlObject.toString();
         }
-        browser.notifications.create(notificationUrl, {
+        chrome.notifications.create(notificationUrl, {
             title: title,
             message: message,
-            iconUrl: browser.runtime.getURL('icons/icon-48.png'),
+            iconUrl: chrome.runtime.getURL('icons/icon-48.png'),
             type: 'basic',
             isClickable: url ? true : false,
             contextMessage: contextMessage,
@@ -159,7 +158,7 @@ export class NotificationController {
     }
 
     private addOnClickListener() {
-        const onClickListener = browser.notifications.onClicked;
+        const onClickListener = chrome.notifications.onClicked;
 
         if (!onClickListener.hasListener(this.linkToExplorer)) {
             onClickListener.addListener(this.linkToExplorer);
@@ -168,7 +167,7 @@ export class NotificationController {
 
     private linkToExplorer(url: string) {
         if (isHttpsURL(url)) {
-            browser.tabs.create({ url: url });
+            chrome.tabs.create({ url: url });
         }
     }
 

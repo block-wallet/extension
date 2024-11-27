@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Common, Hardfork } from '@ethereumjs/common';
+import Common, { Hardfork } from '@ethereumjs/common';
 import { BaseController } from '../infrastructure/BaseController';
 import {
     Network,

@@ -31,11 +31,11 @@ import { ethErrors } from 'eth-rpc-errors';
 import { getIconData } from '../utils/site';
 import { JSONRPCMethod } from '@block-wallet/background/utils/types/ethereum';
 import { validateError } from '../utils/errors';
-import log from 'loglevel';
 import {
     getBlockWalletCompatibility,
     updateBlockWalletCompatibility,
 } from '../utils/compatibility';
+import log from 'loglevel';
 
 interface BlankProviderState {
     accounts: string[];
@@ -129,6 +129,8 @@ export default class BlankProvider
 
         // Set site icon
         this._setIcon();
+
+        console.log('BlockWallet Provider initialized');
     }
 
     /**
@@ -198,7 +200,7 @@ export default class BlankProvider
                 this.reInitializeSubscriptions();
                 break;
             default:
-                log.debug('Unrecognized signal received');
+                console.log('Unrecognized signal received');
                 break;
         }
     }
@@ -263,8 +265,7 @@ export default class BlankProvider
         const handler = this._handlers[data.id];
 
         if (!handler) {
-            log.error('Unknown response', data);
-
+            console.log('Unknown response', data);
             return;
         }
 
@@ -500,7 +501,7 @@ export default class BlankProvider
             try {
                 window.postMessage(nmessage, window.location.href);
             } catch (error: any) {
-                log.warn(nmessage, error);
+                console.log(nmessage, error);
                 throw error;
             }
         });
@@ -755,7 +756,7 @@ export default class BlankProvider
                     }
                 }
 
-                log.trace(
+                console.log(
                     'eth_unsubscribe',
                     'subIdToUnsubscribe',
                     subIdToUnsubscribe,
@@ -780,7 +781,7 @@ export default class BlankProvider
         data: TransportResponseMessage<TMessageType>
     ): void => {
         if ('id' in data && data.id in this._ethSubscriptions) {
-            log.trace(
+            console.log(
                 'setEthSubscriptionsSubId',
                 'found',
                 this._ethSubscriptions[data.id],
@@ -803,7 +804,7 @@ export default class BlankProvider
             'notification',
         ];
         if (deprecatedMethods.includes(methodName) || force) {
-            log.warn(
+            console.log(
                 `BlockWallet: '${methodName}' is deprecated and may be removed in the future. See: https://eips.ethereum.org/EIPS/eip-1193`
             );
         }

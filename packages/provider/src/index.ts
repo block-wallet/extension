@@ -14,6 +14,11 @@ const blankProvider: BlankProvider = new BlankProvider();
 
 const provider = new Proxy(blankProvider, {
     deleteProperty: () => true,
+    // fix issue with Proxy unable to access private variables from getters
+    // https://stackoverflow.com/a/73051482
+    get(target, propName: 'chainId' | 'networkVersion' | 'selectedAddress') {
+        return target[propName];
+    },
 });
 
 function announceProvider() {
@@ -30,7 +35,8 @@ function announceProvider() {
     );
 }
 
-window.addEventListener('eip6963:requestProvider', () => {
+window.addEventListener('eip6963:requestProvider', (event) => {
+    console.log('requestProvider', event);
     announceProvider();
 });
 announceProvider();
@@ -38,7 +44,6 @@ announceProvider();
 shimWeb3(provider);
 
 (window as Window & InjectedWindow).ethereum = provider;
-
 window.dispatchEvent(
     new CustomEvent('ethereum#initialized', { detail: 'isBlockWallet' })
 );
@@ -56,8 +61,10 @@ window.addEventListener(
             data.origin !== Origin.BACKGROUND ||
             !blankProvider
         ) {
+            log.trace('addEventListener', source, data.origin, !blankProvider);
             return;
         }
+        log.trace('addEventListener', data);
 
         // Check if we're reinitializing the SW
         if ('signal' in data) {

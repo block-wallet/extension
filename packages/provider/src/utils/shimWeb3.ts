@@ -1,6 +1,5 @@
 import BlankProvider from '../provider/BlankProvider';
 import { InjectedWindow } from '../types';
-import log from 'loglevel';
 
 /**
  * If no existing window.web3 is found, this function injects a web3 "shim" to
@@ -28,7 +27,7 @@ const shimWeb3 = (provider: BlankProvider): void => {
             get: (target, property, ...args) => {
                 if (property === 'currentProvider' && !loggedCurrentProvider) {
                     loggedCurrentProvider = true;
-                    log.warn(
+                    console.log(
                         'You are accessing the BlockWallet window.web3.currentProvider shim. This property is deprecated; use window.ethereum instead.'
                     );
                 } else if (
@@ -37,12 +36,12 @@ const shimWeb3 = (provider: BlankProvider): void => {
                     !loggedMissingProperty
                 ) {
                     loggedMissingProperty = true;
-                    log.error('Web3 is not injected');
+                    console.log('Web3 is not injected');
                 }
                 return Reflect.get(target, property, ...args);
             },
             set: (...args) => {
-                log.warn(
+                console.log(
                     'You are accessing the BlockWallet window.web3 shim. This object is deprecated; use window.ethereum instead.'
                 );
                 return Reflect.set(...args);

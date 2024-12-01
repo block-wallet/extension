@@ -28,7 +28,7 @@ jobs:
     if: startsWith(github.head_ref, 'dependabot/') == false
     steps:
       - name: Checkout monorepo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install node
         uses: actions/setup-node@v3
@@ -109,7 +109,7 @@ jobs:
     if: startsWith(github.head_ref, 'dependabot/') == false
     steps:
       - name: Checkout monorepo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install node
         uses: actions/setup-node@v3
@@ -175,7 +175,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout monorepo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install node
         uses: actions/setup-node@v3

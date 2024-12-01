@@ -186,14 +186,14 @@ jobs:
           make build/prod
 
       - name: Save extension folder
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: blockwallet-extension
           if-no-files-found: error
           path: dist
 
       - name: Save Firefox extension folder
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: blockwallet-extension-firefox
           if-no-files-found: error
@@ -268,7 +268,7 @@ jobs:
   #        convert screenshots/release-notes-${{ needs.build.outputs.version_without_preffix }}.png -crop ${{ env.WIDTH }}x${{ env.HEIGHT }}+0+0 $EXTENSION_NAME.png
 
   #    - name: Save screenshot of release notes
-  #      uses: actions/upload-artifact@v3
+  #      uses: actions/upload-artifact@v4
   #      with:
   #        name: screenshot
   #        if-no-files-found: error

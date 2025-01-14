@@ -152,7 +152,7 @@ See the [Acknowledgments](docs/acknowledgments.md) file for details
     </picture>
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://twitter.com/GetBlockWallet">
+  <a href="https://x.com/GetBlockWallet">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://blockwallet.io/static/images/logo-twitter.svg" />
       <source media="(prefers-color-scheme: light)" srcset="https://blockwallet.io/static/images/logo-twitter-d.svg" />

@@ -1026,7 +1026,7 @@ This package contains the following license and notice below:
 
 [![npm version](https://badge.fury.io/js/dom-confetti.svg)](https://www.npmjs.com/package/dom-confetti)
 
-License MIT, copyright [Daniel Lundin](https://twitter.com/danielundin) 2019
+License MIT, copyright [Daniel Lundin](https://x.com/danielundin) 2019
 
 -----------
 

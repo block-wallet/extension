@@ -7842,7 +7842,7 @@ esrecurse.visit(
 ### License
 
 Copyright (C) 2014 [Yusuke Suzuki](https://github.com/Constellation)
- (twitter: [@Constellation](https://twitter.com/Constellation)) and other contributors.
+ (twitter: [@Constellation](https://x.com/Constellation)) and other contributors.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:

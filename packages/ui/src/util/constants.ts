@@ -43,7 +43,7 @@ export const LINKS = {
     TELEGRAM: "https://t.me/blockwallet",
     DISCORD: "https://discord.gg/blockwallet",
     GITHUB: "https://github.com/block-wallet/",
-    TWITTER: "https://twitter.com/GetBlockWallet",
+    TWITTER: "https://x.com/GetBlockWallet",
     WEBSITE_BUG_REPORT: "https://blockwallet.io/bug-report.html",
     GITHUB_BUG_REPORT:
         "https://github.com/block-wallet/extension/issues/new?assignees=&labels=&template=bug_report.md&title=",

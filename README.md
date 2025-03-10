@@ -1,4 +1,4 @@
-<br /> 
+<br />
 <p align="center">
   <a href="https://blockwallet.io">
     <picture>
@@ -78,9 +78,22 @@ Once you installed everything run the command
 make build
 ```
 
+#### Manifest Generation
+
+The extension uses Manifest V3 for Chrome, which is handled by the UI package's Makefile. To generate or update the manifest file separately, you can run:
+
+```
+cd packages/ui
+make build/manifest BROWSER=chrome
+```
+
+This will generate the manifest.json file according to the Chrome Manifest V3 specifications. If you're making changes to the extension's permissions or features, make sure to update the manifest templates following the [Chrome Manifest V3 guidelines](https://developer.chrome.com/docs/extensions/mv3/intro/).
+
+Note: Firefox manifest remains in Manifest V2 format and can be generated with `BROWSER=firefox`.
+
 ### Running the tests
 
-Once you build the extension run the command
+Once you installed everything and built the extension run the command
 
 ```
 make test

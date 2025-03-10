@@ -26,14 +26,14 @@ export const useSelectedNetwork = () => {
         isBridgeEnabled:
             availableBridgeChains && availableBridgeChains.length
                 ? availableBridgeChains.some(
-                      (chain) => chain.id === network.chainId
-                  )
+                    (chain) => chain.id === network.chainId
+                )
                 : false,
         isOnrampEnabled:
             availableOnrampChains && availableOnrampChains.length
                 ? availableOnrampChains.some(
-                      (chain) => chain.id === network.chainId
-                  )
+                    (chain) => chain.id === network.chainId
+                )
                 : false,
     }
 }

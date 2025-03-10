@@ -68,7 +68,6 @@
         "@types/react-transition-group": "^4.4.5",
         "@types/react-virtualized-auto-sizer": "^1.0.1",
         "@types/react-window": "^1.8.5",
-        "@types/styled-components": "^5.1.9",
         "@types/uuid": "^8.3.4",
         "@types/w3c-web-hid": "^1.0.3",
         "@types/webextension-polyfill": "^0.10.1",
@@ -80,6 +79,7 @@
         "babel-jest": "^27.4.2",
         "babel-loader": "^8.2.3",
         "babel-plugin-named-asset-import": "^0.3.8",
+        "babel-plugin-styled-components": "^2.1.4",
         "babel-preset-react-app": "^10.0.1",
         "buffer": "^6.0.3",
         "camelcase": "^6.2.1",
@@ -242,6 +242,9 @@
                     "runtime": "automatic"
                 }
             ]
+        ],
+        "plugins": [
+            "babel-plugin-styled-components"
         ]
     }
 }

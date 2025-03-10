@@ -3,6 +3,7 @@ import { StrictMode } from "react"
 import Modal from "react-modal"
 import App from "./App"
 import { createRoot } from "react-dom/client"
+import { StyledComponentsRegistry } from "./utils/styledComponentsRegistry"
 
 import "./styles"
 
@@ -15,6 +16,8 @@ const container = document.getElementById("root")
 const root = createRoot(container!)
 root.render(
     <StrictMode>
-        <App />
+        <StyledComponentsRegistry>
+            <App />
+        </StyledComponentsRegistry>
     </StrictMode>
 )

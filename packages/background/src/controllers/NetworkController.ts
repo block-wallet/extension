@@ -184,7 +184,7 @@ export default class NetworkController extends BaseController<NetworkControllerS
      * @param v fiat ticker
      */
     public set selectedNetwork(v: string) {
-        this.store.updateState({ selectedNetwork: v });
+        this.store.updateState({ selectedNetwork: v.toLowerCase() });
     }
 
     /**
@@ -853,9 +853,9 @@ export default class NetworkController extends BaseController<NetworkControllerS
             // Check if provider is ready and update network status
             this._updateProviderNetworkStatus();
 
-            // Update selected network
+            // Update selected network - ensure it's stored in lowercase
             this.store.updateState({
-                selectedNetwork: networkName,
+                selectedNetwork: network.name.toLowerCase(),
             });
 
             // check for eip1559 compatibility
@@ -1074,8 +1074,8 @@ export default class NetworkController extends BaseController<NetworkControllerS
                         providerType === ProviderType.BACKUP
                             ? providerStatus.isBackupProviderOnline
                             : providerType === ProviderType.DEFAULT
-                            ? providerStatus.isDefaultProviderOnline
-                            : providerStatus.isCurrentProviderOnline;
+                                ? providerStatus.isDefaultProviderOnline
+                                : providerStatus.isCurrentProviderOnline;
 
                     if (
                         currentProviderStatus === newStatus ||
@@ -1089,8 +1089,8 @@ export default class NetworkController extends BaseController<NetworkControllerS
                         providerType === ProviderType.BACKUP
                             ? { isBackupProviderOnline: newStatus }
                             : providerType === ProviderType.DEFAULT
-                            ? { isDefaultProviderOnline: newStatus }
-                            : { isCurrentProviderOnline: newStatus };
+                                ? { isDefaultProviderOnline: newStatus }
+                                : { isCurrentProviderOnline: newStatus };
 
                     this.store.updateState({
                         providerStatus: {

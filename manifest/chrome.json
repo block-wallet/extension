@@ -4,8 +4,12 @@
     },
     "content_scripts": [
         {
-            "js": ["content.js"],
-            "matches": ["http://*/*", "https://*/*"],
+            "js": [
+                "content.js"
+            ],
+            "matches": [
+                "https://*/*"
+            ],
             "exclude_matches": [
                 "https://block-wallet.github.io/eth-ledger-bridge-keyring/*",
                 "https://connect.trezor.io/*"
@@ -14,8 +18,12 @@
             "all_frames": true
         },
         {
-            "js": ["vendor/trezor/trezor-content.js"],
-            "matches": ["*://connect.trezor.io/*/popup.html"]
+            "js": [
+                "vendor/trezor/trezor-content.js"
+            ],
+            "matches": [
+                "https://connect.trezor.io/*/popup.html"
+            ]
         }
     ]
 }

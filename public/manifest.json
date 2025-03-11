@@ -9,7 +9,6 @@
                 "content.js"
             ],
             "matches": [
-                "http://*/*",
                 "https://*/*"
             ],
             "exclude_matches": [
@@ -24,7 +23,7 @@
                 "vendor/trezor/trezor-content.js"
             ],
             "matches": [
-                "*://connect.trezor.io/*/popup.html"
+                "https://connect.trezor.io/*/popup.html"
             ]
         }
     ],
@@ -45,7 +44,7 @@
         "128": "icons/icon-128.png"
     },
     "content_security_policy": {
-        "extension_pages": "default-src 'self'; connect-src 'self' https://mainnet-node.blockwallet.io https://mainnet.blockwallet.io https://raw.githubusercontent.com https://chain-fee.blockwallet.io https://api.onramper.com https://li.quest https://rpc.ankr.com https://api.etherscan.io https://api.coingecko.com; img-src 'self' data:; script-src 'self'; object-src 'self'"
+        "extension_pages": "default-src 'self'; connect-src 'self' https://mainnet-node.blockwallet.io https://mainnet.blockwallet.io https://raw.githubusercontent.com https://chain-fee.blockwallet.io https://api.onramper.com https://li.quest https://rpc.ankr.com https://api.etherscan.io https://api.coingecko.com; img-src 'self' data:; script-src 'self'; object-src 'none'"
     },
     "manifest_version": 3,
     "name": "BlockWallet",
@@ -54,14 +53,18 @@
         "storage",
         "unlimitedStorage",
         "notifications",
-        "alarms",
-        "scripting",
-        "tabs"
+        "alarms"
     ],
     "host_permissions": [
-        "file://*/*",
-        "http://*/*",
-        "https://*/*"
+        "https://mainnet-node.blockwallet.io/*",
+        "https://mainnet.blockwallet.io/*",
+        "https://raw.githubusercontent.com/*",
+        "https://chain-fee.blockwallet.io/*",
+        "https://api.onramper.com/*",
+        "https://li.quest/*",
+        "https://rpc.ankr.com/*",
+        "https://api.etherscan.io/*",
+        "https://api.coingecko.com/*"
     ],
     "short_name": "BlockWallet",
     "commands": {
@@ -82,7 +85,7 @@
                 "background.js"
             ],
             "matches": [
-                "*://*/*"
+                "https://*/*"
             ]
         },
         {
@@ -90,13 +93,13 @@
                 "images/*"
             ],
             "matches": [
-                "*://*/*"
+                "https://*/*"
             ]
         }
     ],
     "externally_connectable": {
         "matches": [
-            "*://*/*"
+            "https://*/*"
         ]
     }
 }

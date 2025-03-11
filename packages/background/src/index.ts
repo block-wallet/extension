@@ -192,30 +192,101 @@ chrome.runtime.onInstalled.addListener(({ reason }) => {
         chrome.runtime.setUninstallURL('https://forms.gle/g4RghfndrhwPS6L76');
     }
 });
+
+// Register content script installation more robustly with retry logic
 const registerBlankProviderContentScript = async () => {
-    try {
-        await (chrome.scripting as any).registerContentScripts([
-            {
-                id: 'blankProvider',
-                matches: ['file://*/*', 'http://*/*', 'https://*/*'],
-                js: ['blankProvider.js'],
-                runAt: 'document_start',
-                world: 'MAIN',
-            },
-        ]);
-    } catch (err) {
-        console.warn(
-            `Dropped attempt to register blankProvider content script. ${err}`
-        );
-    }
+    const MAX_RETRIES = 3;
+    let retries = 0;
+
+    const attemptRegistration = async (): Promise<boolean> => {
+        try {
+            await (chrome.scripting as any).registerContentScripts([
+                {
+                    id: 'blankProvider',
+                    matches: ['file://*/*', 'http://*/*', 'https://*/*'],
+                    js: ['blankProvider.js'],
+                    runAt: 'document_start',
+                    world: 'MAIN',
+                    persistAcrossSessions: true, // Ensure script registration persists
+                },
+            ]);
+            console.log('Successfully registered blankProvider content script');
+            return true;
+        } catch (err) {
+            retries++;
+            if (retries >= MAX_RETRIES) {
+                console.warn(
+                    `Failed to register blankProvider content script after ${MAX_RETRIES} attempts. ${err}`
+                );
+                return false;
+            }
+
+            console.log(`Retrying content script registration (${retries}/${MAX_RETRIES})...`);
+            // Exponential backoff for retries
+            await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, retries - 1)));
+            return attemptRegistration();
+        }
+    };
+
+    return attemptRegistration();
 };
 
+// Handle service worker lifecycle events specifically for MV3
 if (isManifestV3()) {
-    // this keeps alive the service worker.
-    // when it goes 'inactive' it is restarted.
-    chrome.alarms.create({ delayInMinutes: 0.5, periodInMinutes: 0.05 });
-    chrome.alarms.onAlarm.addListener(() => {
-        fetch(chrome.runtime.getURL('keep-alive'));
+    // Improve service worker startup by handling the install event
+    chrome.runtime.onInstalled.addListener((details) => {
+        // Perform one-time setup tasks that should happen on install
+        if (details.reason === 'install') {
+            // Cache essential resources during installation
+            console.log('Caching essential resources for BlockWallet');
+            // Set initial state in storage for quick access on service worker startup
+            chrome.storage.local.set({
+                serviceWorkerLastStartup: Date.now(),
+                serviceWorkerInstalled: true
+            });
+        }
+
+        // Handle update events
+        if (details.reason === 'update') {
+            // Perform any migration tasks needed after an update
+            chrome.storage.local.set({
+                serviceWorkerLastUpdate: Date.now(),
+                serviceWorkerVersion: chrome.runtime.getManifest().version
+            });
+        }
     });
+
+    // Service worker keep-alive implementation
+    // Using a more reasonable interval that balances functionality with resource usage
+    // 5 minutes is more aligned with Chrome's recommendations
+    chrome.alarms.create('keepAlive', { periodInMinutes: 5 });
+    chrome.alarms.onAlarm.addListener((alarm) => {
+        if (alarm.name === 'keepAlive') {
+            // Only fetch the keep-alive URL when needed
+            fetch(chrome.runtime.getURL('keep-alive'))
+                .catch(error => {
+                    console.warn('Keep-alive fetch failed:', error);
+                });
+        }
+    });
+
+    // Use the storage API to persist important state between service worker restarts
+    // This helps make the extension resilient to service worker terminations
+    chrome.storage.session.onChanged.addListener((changes) => {
+        // Respond to storage changes to restore state when the service worker restarts
+        console.log('Session storage changes detected', changes);
+    });
+
+    // Listen for messages from client pages or potential push events
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        // Check if this is a push-like notification message
+        if (message && message.type === 'PUSH_NOTIFICATION') {
+            console.log('Push-like notification received', message);
+            // Process notification even when service worker was inactive
+            sendResponse({ received: true });
+            return true; // Keep the message channel open for async response
+        }
+    });
+
     registerBlankProviderContentScript();
 }

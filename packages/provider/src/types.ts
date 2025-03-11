@@ -218,11 +218,13 @@ export interface SiteMetadata {
 
 export enum Signals {
     SW_REINIT = 'SW_REINIT',
+    SW_UNAVAILABLE = 'SW_UNAVAILABLE',
 }
 
 export type SignalMessage = {
     origin: Origin;
     signal: Signals;
+    message?: string; // Optional message for signals that need to communicate additional info
 };
 
 export interface EIP6963ProviderInfo {

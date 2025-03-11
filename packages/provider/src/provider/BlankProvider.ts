@@ -50,8 +50,7 @@ const MAX_EVENT_LISTENERS = 100;
  */
 export default class BlankProvider
     extends SafeEventEmitter
-    implements EthereumProvider
-{
+    implements EthereumProvider {
     public isBlockWallet = true;
     public isMetaMask = true;
     public chainId: string | null;
@@ -193,11 +192,16 @@ export default class BlankProvider
      *
      * @param signal The signal received
      */
-    public handleSignal(signal: Signals): void {
+    public handleSignal(signal: Signals, message?: string): void {
         switch (signal) {
             case Signals.SW_REINIT:
                 this._eventSubscription(this._eventHandler);
                 this.reInitializeSubscriptions();
+                break;
+            case Signals.SW_UNAVAILABLE:
+                // Emit a service worker unavailable event that the dapp can listen for
+                this.emit('serviceWorkerUnavailable', { message });
+                console.warn('BlockWallet service worker unavailable:', message || 'Service worker disconnected');
                 break;
             default:
                 console.log('Unrecognized signal received');
@@ -326,8 +330,8 @@ export default class BlankProvider
             const params = Array.isArray(callbackOrParams)
                 ? callbackOrParams
                 : callbackOrParams !== undefined
-                ? [callbackOrParams]
-                : [];
+                    ? [callbackOrParams]
+                    : [];
             const request: RequestArguments = {
                 method,
                 params,
@@ -524,7 +528,7 @@ export default class BlankProvider
         if (response.result === undefined) {
             throw new Error(
                 `Please provide a callback parameter to call ${request.method} ` +
-                    'asynchronously.'
+                'asynchronously.'
             );
         }
 

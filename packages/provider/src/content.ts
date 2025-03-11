@@ -47,7 +47,8 @@ window.addEventListener('ethereum#initialized', (e: Event) => {
 
 injectProvider();
 
-const SW_KEEP_ALIVE_INTERVAL = 1000;
+// Keep-alive implementation with improved interval and error handling
+const SW_KEEP_ALIVE_INTERVAL = 10000; // Increased to 10 seconds to reduce resource usage
 let SW_ALIVE = false;
 let EXTENSION_CONTEXT_VALID = true;
 let portReinitialized = false;
@@ -60,15 +61,16 @@ function swKeepAlive() {
                 { message: CONTENT.SW_KEEP_ALIVE },
                 () => {
                     if (chrome.runtime.lastError) {
-                        console.log(
-                            'Error keeping alive:',
-                            chrome.runtime.lastError.message ||
-                                chrome.runtime.lastError
-                        );
-                        const err = chrome.runtime.lastError.message || '';
-                        SW_ALIVE = !err.includes(
-                            'Receiving end does not exist'
-                        );
+                        const errorMessage = chrome.runtime.lastError.message || '';
+                        // Log only meaningful errors
+                        if (!errorMessage.includes('Receiving end does not exist')) {
+                            console.log(
+                                'Error keeping alive:',
+                                errorMessage || chrome.runtime.lastError
+                            );
+                        }
+                        const err = errorMessage || '';
+                        SW_ALIVE = !err.includes('Receiving end does not exist');
                         portReinitialized = SW_ALIVE;
                     } else {
                         SW_ALIVE = true;
@@ -82,7 +84,7 @@ function swKeepAlive() {
                 EXTENSION_CONTEXT_VALID = false;
                 message = `BlockWallet: Please refresh the page. ${e}`;
             }
-            console.log('swKeepAlive error', message);
+            console.warn('swKeepAlive error', message); // Use warn instead of log
             resolve();
         }
     });
@@ -91,12 +93,24 @@ function swKeepAlive() {
 async function keepExtensionAlive() {
     await swKeepAlive();
     if (EXTENSION_CONTEXT_VALID) {
+        // Clear any existing timeout to prevent multiple timers
+        if (timeoutRef) {
+            clearTimeout(timeoutRef);
+        }
         timeoutRef = setTimeout(keepExtensionAlive, SW_KEEP_ALIVE_INTERVAL);
     }
 }
 
+// Only use keep-alive in Manifest V3, and ensure cleanup on page unload
 if (isManifestV3()) {
     keepExtensionAlive();
+
+    // Cleanup on page unload to prevent memory leaks
+    window.addEventListener('beforeunload', () => {
+        if (timeoutRef) {
+            clearTimeout(timeoutRef);
+        }
+    });
 } else {
     SW_ALIVE = true;
 }
@@ -185,58 +199,104 @@ window.addEventListener('message', (message) => {
     windowListener(message);
 });
 
-// Init function
+// Init function with improved connection resilience and state management
 const init = () => {
-    // Setup port connection
-    port = chrome.runtime.connect({ name: Origin.PROVIDER });
-
-    // Set callback to send any messages from the extension back to the page
-    port.onMessage.addListener((message: any): void => {
-        const nmessage = {
-            ...(message && typeof message !== undefined
-                ? JSON.parse(JSON.stringify(message))
-                : message),
-
-            origin: Origin.BACKGROUND,
-        };
+    // Close existing port if it exists to prevent port leaks
+    if (port) {
         try {
-            window.postMessage(nmessage, window.location.href);
-        } catch (error: any) {
-            console.log(nmessage, error);
-            throw error;
+            port.disconnect();
+        } catch (e) {
+            console.warn('Error disconnecting existing port:', e);
         }
-    });
-
-    if (isManifestV3()) {
-        port.onDisconnect.addListener(() => {
-            initMutex.runExclusive(async () => {
-                console.log('port disconnection');
-                SW_ALIVE = false; // If we've reached this point, we can't expect this to be false and wait until this has changed.
-                await sleep(200);
-
-                // Port has been disconnected, reinitialize once
-                while (SW_ALIVE === false) {
-                    console.log('waiting for SW to be restarted...');
-                    await sleep(100);
-                }
-
-                if (!portReinitialized) {
-                    console.log('reinitializing port...');
-
-                    init();
-
-                    // Signal SW_REINIT in case there were active subscriptions
-                    window.postMessage(
-                        {
-                            signal: Signals.SW_REINIT,
-                            origin: Origin.BACKGROUND,
-                        } as SignalMessage,
-                        window.location.href
-                    );
-                }
-            });
-        });
     }
+
+    try {
+        // Setup port connection with error handling
+        port = chrome.runtime.connect({ name: Origin.PROVIDER });
+
+        // Set callback to send any messages from the extension back to the page
+        port.onMessage.addListener((message: any): void => {
+            // Clone message to avoid issues with structured cloning
+            const nmessage = {
+                ...(message && typeof message !== undefined
+                    ? JSON.parse(JSON.stringify(message))
+                    : message),
+                origin: Origin.BACKGROUND,
+            };
+
+            try {
+                window.postMessage(nmessage, window.location.href);
+            } catch (error: any) {
+                console.warn('Error posting message to window:', error);
+                // Don't throw here - we want to be resilient to errors
+            }
+        });
+
+        if (isManifestV3()) {
+            // Handle disconnection with improved reconnection logic
+            port.onDisconnect.addListener(() => {
+                const lastError = chrome.runtime.lastError;
+
+                initMutex.runExclusive(async () => {
+                    console.log('Port disconnection detected',
+                        lastError ? `Error: ${lastError.message}` : '');
+
+                    SW_ALIVE = false;
+
+                    // Store reconnection attempts to prevent infinite loop
+                    let reconnectAttempts = 0;
+                    const MAX_RECONNECT_ATTEMPTS = 5;
+
+                    // Wait for service worker to potentially restart
+                    await sleep(200);
+
+                    // Attempt to reconnect with backoff strategy
+                    while (SW_ALIVE === false && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                        console.log(`Waiting for SW to be restarted... Attempt ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS}`);
+                        await sleep(100 * Math.pow(2, reconnectAttempts));
+                        await swKeepAlive(); // Check if service worker is back
+                        reconnectAttempts++;
+                    }
+
+                    if (SW_ALIVE && !portReinitialized) {
+                        console.log('Reinitializing port connection...');
+
+                        // Reinitialize the connection
+                        init();
+
+                        // Signal SW_REINIT in case there were active subscriptions
+                        window.postMessage(
+                            {
+                                signal: Signals.SW_REINIT,
+                                origin: Origin.BACKGROUND,
+                            } as SignalMessage,
+                            window.location.href
+                        );
+                    } else if (!SW_ALIVE) {
+                        console.warn('Failed to reconnect to service worker after multiple attempts');
+                        // Notify user that they may need to refresh the page
+                        window.postMessage(
+                            {
+                                signal: Signals.SW_UNAVAILABLE,
+                                origin: Origin.BACKGROUND,
+                                message: 'Extension service worker unavailable. Please refresh the page.'
+                            } as SignalMessage,
+                            window.location.href
+                        );
+                    }
+                });
+            });
+        }
+    } catch (error) {
+        console.error('Failed to initialize port connection:', error);
+        // Set a timer to retry initialization
+        setTimeout(() => {
+            if (!port || !SW_ALIVE) {
+                init();
+            }
+        }, 2000);
+    }
+
     portReinitialized = true;
 };
 

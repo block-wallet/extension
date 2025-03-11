@@ -68,7 +68,7 @@ window.addEventListener(
 
         // Check if we're reinitializing the SW
         if ('signal' in data) {
-            blankProvider.handleSignal(data.signal);
+            blankProvider.handleSignal(data.signal, data.message);
         } else if (data.id) {
             blankProvider.handleResponse(data);
         } else {

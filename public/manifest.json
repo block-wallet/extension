@@ -1,7 +1,8 @@
 {
     "author": "BlockWallet",
     "background": {
-        "service_worker": "background.js"
+        "service_worker": "background.js",
+        "type": "module"
     },
     "content_scripts": [
         {
@@ -16,7 +17,8 @@
                 "https://connect.trezor.io/*"
             ],
             "run_at": "document_start",
-            "all_frames": true
+            "all_frames": true,
+            "world": "ISOLATED"
         },
         {
             "js": [
@@ -24,7 +26,8 @@
             ],
             "matches": [
                 "https://connect.trezor.io/*/popup.html"
-            ]
+            ],
+            "world": "ISOLATED"
         }
     ],
     "action": {
@@ -44,7 +47,7 @@
         "128": "icons/icon-128.png"
     },
     "content_security_policy": {
-        "extension_pages": "default-src 'self'; connect-src 'self' https://mainnet-node.blockwallet.io https://mainnet.blockwallet.io https://raw.githubusercontent.com https://chain-fee.blockwallet.io https://api.onramper.com https://li.quest https://rpc.ankr.com https://api.etherscan.io https://api.coingecko.com; img-src 'self' data:; script-src 'self'; object-src 'none'"
+        "extension_pages": "default-src 'self'; connect-src 'self' https://mainnet-node.blockwallet.io https://mainnet.blockwallet.io https://raw.githubusercontent.com https://chain-fee.blockwallet.io https://api.onramper.com https://li.quest https://rpc.ankr.com https://api.etherscan.io https://api.coingecko.com; img-src 'self' data:; script-src 'self'; object-src 'none'; worker-src 'self'"
     },
     "manifest_version": 3,
     "name": "BlockWallet",
@@ -55,6 +58,7 @@
         "notifications",
         "alarms"
     ],
+    "optional_permissions": [],
     "host_permissions": [
         "https://mainnet-node.blockwallet.io/*",
         "https://mainnet.blockwallet.io/*",
@@ -66,6 +70,7 @@
         "https://api.etherscan.io/*",
         "https://api.coingecko.com/*"
     ],
+    "optional_host_permissions": [],
     "short_name": "BlockWallet",
     "commands": {
         "_execute_action": {
@@ -86,7 +91,8 @@
             ],
             "matches": [
                 "https://*/*"
-            ]
+            ],
+            "use_dynamic_url": false
         },
         {
             "resources": [
@@ -94,12 +100,24 @@
             ],
             "matches": [
                 "https://*/*"
-            ]
+            ],
+            "use_dynamic_url": false
         }
     ],
     "externally_connectable": {
         "matches": [
             "https://*/*"
-        ]
+        ],
+        "accepts_tls_channel_id": false
+    },
+    "minimum_chrome_version": "88",
+    "side_panel": {
+        "default_path": "popup.html"
+    },
+    "cross_origin_embedder_policy": {
+        "value": "require-corp"
+    },
+    "cross_origin_opener_policy": {
+        "value": "same-origin"
     }
 }

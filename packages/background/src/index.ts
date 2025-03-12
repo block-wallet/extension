@@ -200,7 +200,31 @@ const registerBlankProviderContentScript = async () => {
 
     const attemptRegistration = async (): Promise<boolean> => {
         try {
-            await (chrome.scripting as any).registerContentScripts([
+            // Check if the content script API is available
+            if (!chrome.scripting || typeof chrome.scripting.registerContentScripts !== 'function') {
+                console.warn('Chrome scripting API is not available in this browser/environment');
+                return false;
+            }
+
+            // Safe check for getRegisteredContentScripts
+            if (typeof chrome.scripting.getRegisteredContentScripts === 'function') {
+                try {
+                    const existingScripts = await chrome.scripting.getRegisteredContentScripts({
+                        ids: ['blankProvider']
+                    });
+
+                    // If already registered, no need to register again
+                    if (existingScripts && existingScripts.length > 0) {
+                        console.log('blankProvider content script is already registered');
+                        return true;
+                    }
+                } catch (checkErr) {
+                    console.warn('Error checking for registered scripts:', checkErr);
+                }
+            }
+
+            // Register the content script if not already registered or if we couldn't check
+            await chrome.scripting.registerContentScripts([
                 {
                     id: 'blankProvider',
                     matches: ['file://*/*', 'http://*/*', 'https://*/*'],
@@ -231,6 +255,17 @@ const registerBlankProviderContentScript = async () => {
     return attemptRegistration();
 };
 
+/**
+ * Helper function to persist critical state data
+ */
+function persistCriticalState() {
+    chrome.storage.session.set({
+        lastActiveTimestamp: Date.now(),
+        controllerStatus: 'active'
+        // Add other critical keys if needed
+    });
+}
+
 // Handle service worker lifecycle events specifically for MV3
 if (isManifestV3()) {
     // Improve service worker startup by handling the install event
@@ -259,13 +294,19 @@ if (isManifestV3()) {
     // Service worker keep-alive implementation
     // Using a more reasonable interval that balances functionality with resource usage
     // 5 minutes is more aligned with Chrome's recommendations
-    chrome.alarms.create('keepAlive', { periodInMinutes: 5 });
+    // Added small initial delay to speed up the first ping after installation
+    chrome.alarms.create('keepAlive', { periodInMinutes: 5, delayInMinutes: 0.1 });
+
     chrome.alarms.onAlarm.addListener((alarm) => {
         if (alarm.name === 'keepAlive') {
             // Only fetch the keep-alive URL when needed
             fetch(chrome.runtime.getURL('keep-alive'))
                 .catch(error => {
                     console.warn('Keep-alive fetch failed:', error);
+                })
+                .finally(() => {
+                    // Persist critical state regardless of fetch outcome
+                    persistCriticalState();
                 });
         }
     });

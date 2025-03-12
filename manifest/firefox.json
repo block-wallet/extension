@@ -4,8 +4,8 @@
             "browser-polyfill.min.js",
             "background.js",
             "bw-libs.js"
-
-        ]
+        ],
+        "type": "module"
     },
     "content_scripts": [
         {

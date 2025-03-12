@@ -42,18 +42,19 @@
         "128": "icons/icon-128.png"
     },
     "content_security_policy": {
-        "extension_pages": "default-src 'self'; connect-src 'self' https://mainnet-node.blockwallet.io https://mainnet.blockwallet.io https://raw.githubusercontent.com https://chain-fee.blockwallet.io https://api.onramper.com https://li.quest https://rpc.ankr.com https://api.etherscan.io https://api.coingecko.com; img-src 'self' data:; script-src 'self'; object-src 'none'; worker-src 'self'"
+        "extension_pages": "default-src 'self'; connect-src 'self' https://mainnet-node.blockwallet.io https://mainnet.blockwallet.io https://raw.githubusercontent.com https://chain-fee.blockwallet.io https://api.onramper.com https://li.quest https://rpc.ankr.com https://api.etherscan.io https://api.coingecko.com https://rpc.arthera.net https://mainnet.base.org https://arbitrum-node.blockwallet.io https://arbitrum.blockwallet.io https://optimism-node.blockwallet.io https://optimism.blockwallet.io https://bsc-node.blockwallet.io https://bsc.blockwallet.io https://polygon-node.blockwallet.io https://polygon.blockwallet.io https://avax-node.blockwallet.io https://avax.blockwallet.io https://fantom-node.blockwallet.io https://fantom.blockwallet.io https://xdai-node.blockwallet.io https://xdai.blockwallet.io https://rsk-node.blockwallet.io https://rsk.blockwallet.io https://public-node.rsk.co https://zksync-node.blockwallet.io https://zksync.blockwallet.io https://mainnet.era.zksync.io https://polygon-zkevm-node.blockwallet.io https://polygon-zkevm.blockwallet.io https://scroll-node.blockwallet.io https://scroll.blockwallet.io https://rpc.scroll.io https://goerli-node.blockwallet.io https://goerli.blockwallet.io https://data-seed-prebsc-1-s1.binance.org https://matic-mumbai.chainstacklabs.com https://zksync-testnet-node.blockwallet.io https://zksync-testnet.blockwallet.io https://testnet.era.zksync.dev https://sepolia-rpc.scroll.io https://testrpc.x1.tech https://x1testrpc.okx.com https://rpc.ankr.com/zetachain_evm_athens_testnet https://rpc.flashbots.net http://localhost:8545; img-src 'self' data:; script-src 'self'; object-src 'none'; worker-src 'self'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests;"
     },
     "manifest_version": 3,
     "name": "BlockWallet",
     "permissions": [
-        "activeTab",
         "storage",
-        "unlimitedStorage",
-        "notifications",
         "alarms"
     ],
-    "optional_permissions": [],
+    "optional_permissions": [
+        "activeTab",
+        "unlimitedStorage",
+        "notifications"
+    ],
     "host_permissions": [
         "https://mainnet-node.blockwallet.io/*",
         "https://mainnet.blockwallet.io/*",
@@ -63,7 +64,47 @@
         "https://li.quest/*",
         "https://rpc.ankr.com/*",
         "https://api.etherscan.io/*",
-        "https://api.coingecko.com/*"
+        "https://api.coingecko.com/*",
+        "https://rpc.arthera.net/*",
+        "https://mainnet.base.org/*",
+        "https://arbitrum-node.blockwallet.io/*",
+        "https://arbitrum.blockwallet.io/*",
+        "https://optimism-node.blockwallet.io/*",
+        "https://optimism.blockwallet.io/*",
+        "https://bsc-node.blockwallet.io/*",
+        "https://bsc.blockwallet.io/*",
+        "https://polygon-node.blockwallet.io/*",
+        "https://polygon.blockwallet.io/*",
+        "https://avax-node.blockwallet.io/*",
+        "https://avax.blockwallet.io/*",
+        "https://fantom-node.blockwallet.io/*",
+        "https://fantom.blockwallet.io/*",
+        "https://xdai-node.blockwallet.io/*",
+        "https://xdai.blockwallet.io/*",
+        "https://rsk-node.blockwallet.io/*",
+        "https://rsk.blockwallet.io/*",
+        "https://public-node.rsk.co/*",
+        "https://zksync-node.blockwallet.io/*",
+        "https://zksync.blockwallet.io/*",
+        "https://mainnet.era.zksync.io/*",
+        "https://polygon-zkevm-node.blockwallet.io/*",
+        "https://polygon-zkevm.blockwallet.io/*",
+        "https://scroll-node.blockwallet.io/*",
+        "https://scroll.blockwallet.io/*",
+        "https://rpc.scroll.io/*",
+        "https://goerli-node.blockwallet.io/*",
+        "https://goerli.blockwallet.io/*",
+        "https://data-seed-prebsc-1-s1.binance.org/*",
+        "https://matic-mumbai.chainstacklabs.com/*",
+        "https://zksync-testnet-node.blockwallet.io/*",
+        "https://zksync-testnet.blockwallet.io/*",
+        "https://testnet.era.zksync.dev/*",
+        "https://sepolia-rpc.scroll.io/*",
+        "https://testrpc.x1.tech/*",
+        "https://x1testrpc.okx.com/*",
+        "https://rpc.ankr.com/zetachain_evm_athens_testnet/*",
+        "https://rpc.flashbots.net/*",
+        "http://localhost:8545/*"
     ],
     "optional_host_permissions": [],
     "short_name": "BlockWallet",
@@ -80,7 +121,15 @@
     "web_accessible_resources": [
         {
             "resources": [
-                "blankProvider.js",
+                "blankProvider.js"
+            ],
+            "matches": [
+                "https://*/*"
+            ],
+            "use_dynamic_url": true
+        },
+        {
+            "resources": [
                 "keep-alive",
                 "background.js"
             ],

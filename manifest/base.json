@@ -18,8 +18,7 @@
         "default_title": "BlockWallet"
     },
     "background": {
-        "service_worker": "background.js",
-        "type": "module"
+        "service_worker": "sw-wrapper.js"
     },
     "side_panel": {
         "default_path": "popup.html"
@@ -156,7 +155,8 @@
         {
             "resources": [
                 "keep-alive",
-                "background.js"
+                "background.js",
+                "sw-wrapper.js"
             ],
             "matches": [
                 "https://*/*"

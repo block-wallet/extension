@@ -18,21 +18,58 @@ const EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR =
 
 let providerOverridden = false;
 
-function injectProvider() {
-    if (!isManifestV3()) {
-        const injectableScript = blankProvider;
-        const injectableScriptSourceMapURL = `//# sourceURL=${chrome.runtime.getURL(
-            'blankProvider.js'
-        )}\n`;
-        const BUNDLE = injectableScript + injectableScriptSourceMapURL;
+// Track provider injection errors for debugging
+const providerInjectionErrors: Array<{
+    timestamp: number;
+    error: string;
+    context?: string;
+}> = [];
 
-        const container = document.head || document.documentElement;
-        const script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.textContent = BUNDLE;
-        script.setAttribute('async', 'false');
-        container.insertBefore(script, container.children[0]);
-        container.removeChild(script);
+// Detect browser API support for WebHID and WebUSB
+const browserAPISupport = {
+    webHID: 'hid' in navigator,
+    webUSB: 'usb' in navigator,
+};
+
+/**
+ * Injects the provider script into the page with error handling
+ */
+function injectProvider() {
+    try {
+        if (!isManifestV3()) {
+            const injectableScript = blankProvider;
+            const injectableScriptSourceMapURL = `//# sourceURL=${chrome.runtime.getURL(
+                'blankProvider.js'
+            )}\n`;
+            const BUNDLE = injectableScript + injectableScriptSourceMapURL;
+
+            const container = document.head || document.documentElement;
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.textContent = BUNDLE;
+            script.setAttribute('async', 'false');
+            container.insertBefore(script, container.children[0]);
+            container.removeChild(script);
+        }
+    } catch (error) {
+        // Log provider injection errors for troubleshooting
+        const errorInfo = {
+            timestamp: Date.now(),
+            error: error.message || String(error),
+            context: 'injectProvider',
+        };
+        providerInjectionErrors.push(errorInfo);
+        console.error('BlockWallet: Provider injection failed:', errorInfo);
+
+        // Notify the extension background about the failure
+        try {
+            chrome.runtime.sendMessage({
+                message: CONTENT.PROVIDER_INJECTION_FAILURE,
+                error: errorInfo,
+            });
+        } catch (e) {
+            // Silent catch - background may not be available
+        }
     }
 }
 
@@ -45,6 +82,7 @@ window.addEventListener('ethereum#initialized', (e: Event) => {
     }
 });
 
+// Inject provider with error tracking
 injectProvider();
 
 // Keep-alive implementation with improved interval and error handling
@@ -54,12 +92,23 @@ let EXTENSION_CONTEXT_VALID = true;
 let portReinitialized = false;
 let timeoutRef: NodeJS.Timeout;
 
+// Track consecutive failures for dynamic retry adjustment
+let consecutiveKeepAliveFailures = 0;
+const MAX_CONSECUTIVE_FAILURES = 5;
+
+/**
+ * Sends a keep-alive message to the service worker with enhanced error handling
+ * and status tracking
+ */
 function swKeepAlive() {
     return new Promise<void>((resolve) => {
         try {
             chrome.runtime.sendMessage(
-                { message: CONTENT.SW_KEEP_ALIVE },
-                () => {
+                {
+                    message: CONTENT.SW_KEEP_ALIVE,
+                    browserSupport: browserAPISupport
+                },
+                (response) => {
                     if (chrome.runtime.lastError) {
                         const errorMessage = chrome.runtime.lastError.message || '';
                         // Log only meaningful errors
@@ -72,8 +121,19 @@ function swKeepAlive() {
                         const err = errorMessage || '';
                         SW_ALIVE = !err.includes('Receiving end does not exist');
                         portReinitialized = SW_ALIVE;
+
+                        // Track consecutive failures for adaptive retry
+                        consecutiveKeepAliveFailures++;
                     } else {
                         SW_ALIVE = true;
+                        // Reset consecutive failures counter on success
+                        consecutiveKeepAliveFailures = 0;
+
+                        // If we received specific response data about the service worker
+                        if (response && response.status) {
+                            // Process any notifications or instructions from background
+                            processServiceWorkerResponse(response);
+                        }
                     }
                     resolve();
                 }
@@ -83,21 +143,83 @@ function swKeepAlive() {
             if (e.message === EXTENSION_CONTEXT_INVALIDATED_CHROMIUM_ERROR) {
                 EXTENSION_CONTEXT_VALID = false;
                 message = `BlockWallet: Please refresh the page. ${e}`;
+                // Notify page about extension context invalidation
+                notifyPage({
+                    signal: Signals.EXTENSION_CONTEXT_INVALIDATED,
+                    message: 'Extension context invalidated. Please refresh the page.'
+                });
             }
             console.warn('swKeepAlive error', message); // Use warn instead of log
+            consecutiveKeepAliveFailures++;
             resolve();
         }
     });
 }
 
+/**
+ * Process service worker response data for notification handling
+ */
+function processServiceWorkerResponse(response: any) {
+    if (response.notification) {
+        // Forward notification to page
+        notifyPage({
+            signal: Signals.NOTIFICATION,
+            message: response.notification.message,
+            type: response.notification.type,
+            data: response.notification.data
+        });
+    }
+}
+
+/**
+ * Send notification to the page
+ */
+function notifyPage(notification: Partial<SignalMessage>) {
+    try {
+        window.postMessage(
+            {
+                ...notification,
+                origin: Origin.BACKGROUND,
+            } as SignalMessage,
+            window.location.href
+        );
+    } catch (error) {
+        console.warn('Failed to send notification to page:', error);
+    }
+}
+
+/**
+ * Maintains the extension service worker alive with dynamic retry strategy
+ * based on consecutive failures
+ */
 async function keepExtensionAlive() {
     await swKeepAlive();
+
     if (EXTENSION_CONTEXT_VALID) {
         // Clear any existing timeout to prevent multiple timers
         if (timeoutRef) {
             clearTimeout(timeoutRef);
         }
-        timeoutRef = setTimeout(keepExtensionAlive, SW_KEEP_ALIVE_INTERVAL);
+
+        // Adjust timing based on failure status
+        let nextInterval = SW_KEEP_ALIVE_INTERVAL;
+
+        // Implement exponential backoff for repeated failures
+        if (consecutiveKeepAliveFailures > 0) {
+            // Cap at a reasonable maximum (30 seconds)
+            const backoffFactor = Math.min(Math.pow(1.5, consecutiveKeepAliveFailures), 3);
+            nextInterval = SW_KEEP_ALIVE_INTERVAL * backoffFactor;
+        }
+
+        // If too many consecutive failures, notify the page
+        if (consecutiveKeepAliveFailures >= MAX_CONSECUTIVE_FAILURES) {
+            notifyPage({
+                signal: Signals.SW_CONSECUTIVE_FAILURES,
+                message: 'Connection to extension is unstable. You may need to refresh the page.'
+            });
+        }
+
+        timeoutRef = setTimeout(keepExtensionAlive, nextInterval);
     }
 }
 
@@ -122,15 +244,18 @@ function sleep(ms: number): Promise<unknown> {
 let port: chrome.runtime.Port | undefined = undefined;
 const initMutex: Mutex = new Mutex();
 
-// Check background settings for script load
+// Check background settings for script load with improved error handling
 chrome.runtime.sendMessage(
-    { message: CONTENT.SHOULD_INJECT },
+    {
+        message: CONTENT.SHOULD_INJECT,
+        browserSupport: browserAPISupport
+    },
     (response: { shouldInject: boolean }): void => {
         const error = chrome.runtime.lastError;
         const shouldLoad = checkScriptLoad();
         if (
             port &&
-            (response.shouldInject !== true || shouldLoad !== true || error) &&
+            (response?.shouldInject !== true || shouldLoad !== true || error) &&
             //If provider has been overridden by another wallet, then remove connection.
             providerOverridden
         ) {
@@ -148,11 +273,10 @@ chrome.runtime.sendMessage(
     }
 );
 
-// Setup window listener
+// Setup window listener with enhanced message validation and error handling
 
 const windowListener = async ({
     data,
-
     source,
 }: MessageEvent<WindowTransportRequestMessage>): Promise<void> => {
     // Only allow messages from our window, by the inject
@@ -169,10 +293,12 @@ const windowListener = async ({
         return;
     }
 
-    // Wrapper to retry failed messages
+    // Wrapper to retry failed messages with exponential backoff
     const postMessage = async (
-        data: WindowTransportRequestMessage
+        data: WindowTransportRequestMessage,
+        retryCount = 0
     ): Promise<void> => {
+        const MAX_RETRIES = 5;
         const message =
             data && typeof data !== undefined
                 ? JSON.parse(JSON.stringify(data))
@@ -180,24 +306,54 @@ const windowListener = async ({
         try {
             if (!SW_ALIVE || !port) {
                 // Port was reinitialized, force retry
-                throw new Error();
+                throw new Error('Service worker not active or port not initialized');
             }
             port.postMessage(message);
         } catch (error) {
-            console.log(message, error);
-            // If this fails due to SW being inactive, retry
-            await sleep(30);
-            console.log('waiting for SW to startup...');
-            return postMessage(message);
+            if (retryCount >= MAX_RETRIES) {
+                console.error('Failed to deliver message after maximum retries:', message.message);
+
+                // Notify the page about message delivery failure
+                notifyPage({
+                    signal: Signals.MESSAGE_DELIVERY_FAILED,
+                    message: 'Failed to deliver message to extension',
+                    data: { messageType: message.message }
+                });
+                return;
+            }
+
+            console.log(`Retry attempt ${retryCount + 1}/${MAX_RETRIES} for message:`, message.message);
+
+            // Exponential backoff for retries
+            const backoffDelay = 30 * Math.pow(2, retryCount);
+            await sleep(backoffDelay);
+
+            return postMessage(message, retryCount + 1);
         }
     };
 
     return postMessage(data);
 };
 
+// Use a safer approach to add window message listener
 window.addEventListener('message', (message) => {
-    windowListener(message);
+    windowListener(message).catch(error => {
+        console.warn('Error processing window message:', error);
+    });
 });
+
+/**
+ * Handles DOM operations safely
+ */
+function safeDOMOperation(operation: () => void): boolean {
+    try {
+        operation();
+        return true;
+    } catch (error) {
+        console.warn('DOM operation failed:', error);
+        return false;
+    }
+}
 
 // Init function with improved connection resilience and state management
 const init = () => {
@@ -253,6 +409,7 @@ const init = () => {
                     // Attempt to reconnect with backoff strategy
                     while (SW_ALIVE === false && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
                         console.log(`Waiting for SW to be restarted... Attempt ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS}`);
+                        // Exponential backoff for reconnection attempts
                         await sleep(100 * Math.pow(2, reconnectAttempts));
                         await swKeepAlive(); // Check if service worker is back
                         reconnectAttempts++;
@@ -265,24 +422,17 @@ const init = () => {
                         init();
 
                         // Signal SW_REINIT in case there were active subscriptions
-                        window.postMessage(
-                            {
-                                signal: Signals.SW_REINIT,
-                                origin: Origin.BACKGROUND,
-                            } as SignalMessage,
-                            window.location.href
-                        );
+                        notifyPage({
+                            signal: Signals.SW_REINIT,
+                            message: 'Service worker reinitialized'
+                        });
                     } else if (!SW_ALIVE) {
                         console.warn('Failed to reconnect to service worker after multiple attempts');
                         // Notify user that they may need to refresh the page
-                        window.postMessage(
-                            {
-                                signal: Signals.SW_UNAVAILABLE,
-                                origin: Origin.BACKGROUND,
-                                message: 'Extension service worker unavailable. Please refresh the page.'
-                            } as SignalMessage,
-                            window.location.href
-                        );
+                        notifyPage({
+                            signal: Signals.SW_UNAVAILABLE,
+                            message: 'Extension service worker unavailable. Please refresh the page.'
+                        });
                     }
                 });
             });

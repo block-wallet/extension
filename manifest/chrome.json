@@ -1,6 +1,6 @@
 {
     "background": {
-        "service_worker": "background.js"
+        "service_worker": "sw-wrapper.js"
     },
     "content_scripts": [
         {
@@ -23,6 +23,27 @@
             ],
             "matches": [
                 "https://connect.trezor.io/*/popup.html"
+            ]
+        }
+    ],
+    "permissions": [
+        "storage"
+    ],
+    "optional_permissions": [
+        "offscreen"
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "offscreen.html",
+                "hardware-wallet-bridge.html",
+                "offscreen.js",
+                "hardware-wallet-bridge.js",
+                "background.js",
+                "sw-wrapper.js"
+            ],
+            "matches": [
+                "https://*/*"
             ]
         }
     ]

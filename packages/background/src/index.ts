@@ -17,8 +17,24 @@ import { resolvePreferencesAfterWalletUpdate } from './utils/userPreferences';
 import { CONTENT } from './utils/types/communication';
 import { isManifestV3 } from './utils/manifest';
 
+// Set log level
+log.setLevel(process.env.NODE_ENV === 'production' ? 'warn' : 'debug');
+
 // Initialize Block State Store
 const blankStateStore = new BlankStorageStore();
+
+/**
+ * Ensures storage API is available before proceeding
+ * @returns Promise that resolves when storage is available
+ */
+const ensureStorageAvailable = async (): Promise<void> => {
+    try {
+        await blankStateStore.ensureStorageAvailable();
+        log.info('Storage API is available');
+    } catch (error) {
+        log.error('Storage API not available, using initial state', error);
+    }
+};
 
 /**
  * Load state from persistence
@@ -27,59 +43,67 @@ const blankStateStore = new BlankStorageStore();
  */
 const getPersistedState = new Promise<BlankAppState>((resolve) => {
     const getStateAndVersion = async () => {
-        const packageVersion = require('../package.json').version;
-        let version = await blankStateStore.getVersion();
+        try {
+            // Ensure storage is available before proceeding
+            await ensureStorageAvailable();
 
-        // If version is not set (i.e. First install) set the current package.json version
-        if (!version) {
-            version = packageVersion as string;
-            await blankStateStore.setVersion(version);
-        }
+            const packageVersion = require('../package.json').version;
+            let version = await blankStateStore.getVersion();
 
-        // State retrieval callback
-        const handleStoredState = async (storedState: BlankAppState) => {
-            if (storedState === undefined) {
-                resolve(initialState);
-            } else {
-                // Check if version has changed and reconcile the state
-                if (compareVersions(packageVersion, version!)) {
-                    let reconciledState = reconcileState(
-                        storedState,
-                        initialState
-                    );
-
-                    // Run migrations
-                    reconciledState = await migrator(
-                        version!,
-                        reconciledState as DeepPartial<BlankAppState>
-                    );
-
-                    // Update persisted store version to newly one
-                    await blankStateStore.setVersion(packageVersion!);
-
-                    const manifestVersion = getVersion();
-
-                    //calculate release notes here
-                    const { releaseNotesSettings } =
-                        await resolvePreferencesAfterWalletUpdate(
-                            reconciledState.PreferencesController,
-                            manifestVersion
-                        );
-                    reconciledState.PreferencesController.releaseNotesSettings =
-                        releaseNotesSettings!;
-
-                    // Persist reconciled state
-                    blankStateStore.set('blankState', reconciledState);
-
-                    resolve(reconciledState);
-                } else {
-                    resolve(storedState);
-                }
+            // If version is not set (i.e. First install) set the current package.json version
+            if (!version) {
+                version = packageVersion as string;
+                await blankStateStore.setVersion(version);
             }
-        };
 
-        // Get persisted state
-        blankStateStore.get('blankState', handleStoredState);
+            // State retrieval callback
+            const handleStoredState = async (storedState: BlankAppState) => {
+                if (storedState === undefined) {
+                    resolve(initialState);
+                } else {
+                    // Check if version has changed and reconcile the state
+                    if (compareVersions(packageVersion, version!)) {
+                        let reconciledState = reconcileState(
+                            storedState,
+                            initialState
+                        );
+
+                        // Run migrations
+                        reconciledState = await migrator(
+                            version!,
+                            reconciledState as DeepPartial<BlankAppState>
+                        );
+
+                        // Update persisted store version to newly one
+                        await blankStateStore.setVersion(packageVersion!);
+
+                        const manifestVersion = getVersion();
+
+                        //calculate release notes here
+                        const { releaseNotesSettings } =
+                            await resolvePreferencesAfterWalletUpdate(
+                                reconciledState.PreferencesController,
+                                manifestVersion
+                            );
+                        reconciledState.PreferencesController.releaseNotesSettings =
+                            releaseNotesSettings!;
+
+                        // Persist reconciled state
+                        blankStateStore.set('blankState', reconciledState);
+
+                        resolve(reconciledState);
+                    } else {
+                        resolve(storedState);
+                    }
+                }
+            };
+
+            // Get persisted state
+            blankStateStore.get('blankState', handleStoredState);
+        } catch (error) {
+            log.error('Error retrieving persisted state', error);
+            resolve(initialState);
+        }
     };
 
     getStateAndVersion();
@@ -295,21 +319,45 @@ if (isManifestV3()) {
     // Using a more reasonable interval that balances functionality with resource usage
     // 5 minutes is more aligned with Chrome's recommendations
     // Added small initial delay to speed up the first ping after installation
-    chrome.alarms.create('keepAlive', { periodInMinutes: 5, delayInMinutes: 0.1 });
-
-    chrome.alarms.onAlarm.addListener((alarm) => {
-        if (alarm.name === 'keepAlive') {
-            // Only fetch the keep-alive URL when needed
-            fetch(chrome.runtime.getURL('keep-alive'))
-                .catch(error => {
-                    console.warn('Keep-alive fetch failed:', error);
-                })
-                .finally(() => {
-                    // Persist critical state regardless of fetch outcome
-                    persistCriticalState();
-                });
+    try {
+        if (chrome?.alarms?.create) {
+            chrome.alarms.create('keepAlive', { periodInMinutes: 5, delayInMinutes: 0.1 });
+            log.info('Keep-alive alarm created successfully');
+        } else {
+            log.warn('chrome.alarms.create not available, skipping keep-alive setup');
         }
-    });
+    } catch (error) {
+        log.error('Error creating keep-alive alarm:', error);
+    }
+
+    try {
+        if (chrome?.alarms?.onAlarm?.addListener) {
+            chrome.alarms.onAlarm.addListener((alarm) => {
+                if (alarm.name === 'keepAlive') {
+                    // Only fetch the keep-alive URL when needed
+                    try {
+                        fetch(chrome.runtime.getURL('keep-alive'))
+                            .catch(error => {
+                                log.warn('Keep-alive fetch failed:', error);
+                            })
+                            .finally(() => {
+                                // Persist critical state regardless of fetch outcome
+                                persistCriticalState();
+                            });
+                    } catch (error) {
+                        log.error('Error during keep-alive fetch:', error);
+                        // Still try to persist state even if fetch fails
+                        persistCriticalState();
+                    }
+                }
+            });
+            log.info('Alarm listener added successfully');
+        } else {
+            log.warn('chrome.alarms.onAlarm.addListener not available, skipping listener setup');
+        }
+    } catch (error) {
+        log.error('Error adding alarm listener:', error);
+    }
 
     // Use the storage API to persist important state between service worker restarts
     // This helps make the extension resilient to service worker terminations

@@ -219,12 +219,18 @@ export interface SiteMetadata {
 export enum Signals {
     SW_REINIT = 'SW_REINIT',
     SW_UNAVAILABLE = 'SW_UNAVAILABLE',
+    EXTENSION_CONTEXT_INVALIDATED = 'EXTENSION_CONTEXT_INVALIDATED',
+    SW_CONSECUTIVE_FAILURES = 'SW_CONSECUTIVE_FAILURES',
+    MESSAGE_DELIVERY_FAILED = 'MESSAGE_DELIVERY_FAILED',
+    NOTIFICATION = 'NOTIFICATION',
 }
 
 export type SignalMessage = {
     origin: Origin;
     signal: Signals;
     message?: string; // Optional message for signals that need to communicate additional info
+    type?: string; // For notification type
+    data?: any; // For additional structured data
 };
 
 export interface EIP6963ProviderInfo {

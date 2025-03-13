@@ -51,7 +51,8 @@
     ],
     "permissions": [
         "storage",
-        "alarms"
+        "alarms",
+        "scripting"
     ],
     "optional_permissions": [
         "activeTab",

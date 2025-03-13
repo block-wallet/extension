@@ -27,7 +27,9 @@
         }
     ],
     "permissions": [
-        "storage"
+        "storage",
+        "alarms",
+        "scripting"
     ],
     "optional_permissions": [
         "offscreen"

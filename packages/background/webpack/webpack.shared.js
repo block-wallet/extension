@@ -44,12 +44,15 @@ const plugins = [
 module.exports = (entry) => ({
     mode: 'production',
     entry,
-    // target: ['webworker','es6'],
+    // Explicitly set target to webworker to ensure compatibility with service worker
+    target: 'webworker',
     output: {
         filename: '[name].js',
         globalObject: 'this',
-        // chunkLoading: 'import',
+        // Remove chunkLoading comment as it's not needed and could cause issues
         path: path.resolve(__dirname, '../../../dist'),
+        // Ensure we're not using ES modules in the output
+        module: false,
     },
     module: {
         rules: [

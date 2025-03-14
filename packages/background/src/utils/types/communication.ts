@@ -243,6 +243,7 @@ enum WALLET {
     HARDWARE_GET_HD_PATH = 'HARDWARE_GET_HD_PATH',
     HARDWARE_SET_HD_PATH = 'HARDWARE_SET_HD_PATH',
     HARDWARE_IS_LINKED = 'HARDWARE_IS_LINKED',
+    HARDWARE_COMPLETE_CONNECTION = 'HARDWARE_COMPLETE_CONNECTION',
     SET_DEFAULT_GAS = 'SET_DEFAULT_GAS',
     // qr hardware devices
     HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT = 'HARDWARE_QR_SUBMIT_CRYPTO_HD_KEY_OR_ACCOUNT',
@@ -573,7 +574,10 @@ export interface RequestSignatures {
         RequestGetValidCurrencies,
         Currency[]
     ];
-    [Messages.WALLET.HARDWARE_CONNECT]: [RequestConnectHardwareWallet, boolean];
+    [Messages.WALLET.HARDWARE_CONNECT]: [
+        RequestConnectHardwareWallet,
+        boolean | { needsUserGesture: boolean; deviceName: string }
+    ];
     [Messages.WALLET.HARDWARE_REMOVE]: [RequestRemoveHardwareWallet, boolean];
     [Messages.WALLET.HARDWARE_GET_ACCOUNTS]: [
         RequestGetHardwareWalletAccounts,
@@ -586,6 +590,10 @@ export interface RequestSignatures {
     [Messages.WALLET.HARDWARE_GET_HD_PATH]: [RequestWalletGetHDPath, string];
     [Messages.WALLET.HARDWARE_SET_HD_PATH]: [RequestWalletSetHDPath, void];
     [Messages.WALLET.HARDWARE_IS_LINKED]: [RequestIsDeviceConnected, boolean];
+    [Messages.WALLET.HARDWARE_COMPLETE_CONNECTION]: [
+        RequestCompleteHardwareConnection,
+        boolean
+    ];
     [Messages.FILTERS.SET_ACCOUNT_FILTERS]: [
         RequestSetAccountFilters,
         undefined
@@ -758,8 +766,8 @@ export interface RequestApproveAllowance {
     customNonce?: number;
 }
 
-export interface RequestGetBridgeTokens { }
-export interface RequestGetBridgeAvailableChains { }
+export interface RequestGetBridgeTokens {}
+export interface RequestGetBridgeAvailableChains {}
 export interface RequestGetBridgeQuote {
     checkAllowance: boolean;
     quoteRequest: BridgeQuoteRequest;
@@ -1067,7 +1075,7 @@ export interface RequestSetNativeCurrency {
     currencyCode: string;
 }
 
-export interface RequestGetValidCurrencies { }
+export interface RequestGetValidCurrencies {}
 
 export interface RequestToggleReleaseNotesSubscription {
     releaseNotesSubscriptionEnabled: boolean;
@@ -1090,7 +1098,7 @@ export interface RequestUpdateTransactionStatus {
     status: TransactionStatus;
 }
 
-export interface RequestAddressBookClear { }
+export interface RequestAddressBookClear {}
 
 export interface RequestAddressBookDelete {
     address: string;
@@ -1102,7 +1110,7 @@ export interface RequestAddressBookSet {
     note?: string;
 }
 
-export interface RequestAddressBookGet { }
+export interface RequestAddressBookGet {}
 export interface RequestAddressBookGetByAddress {
     address: string;
 }
@@ -1124,6 +1132,11 @@ export interface RequestNextNonce {
 export interface RequestConnectHardwareWallet {
     device: Devices;
 }
+
+export interface RequestCompleteHardwareConnection {
+    device: Devices;
+}
+
 export interface RequestRemoveHardwareWallet {
     device: Devices;
 }
@@ -1207,9 +1220,9 @@ export interface SubmitQRHardwareSignatureMessage {
     requestId: string;
     ur: URParameter;
 }
-export interface CancelQRHardwareSignRequestMessage { }
+export interface CancelQRHardwareSignRequestMessage {}
 
-export interface DismissMessage { }
+export interface DismissMessage {}
 
 export interface GetQRHardwareETHSignRequestMessage {
     ethTx: TypedTransaction;

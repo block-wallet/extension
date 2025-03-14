@@ -225,25 +225,39 @@ const registerBlankProviderContentScript = async () => {
     const attemptRegistration = async (): Promise<boolean> => {
         try {
             // Check if the content script API is available
-            if (!chrome.scripting || typeof chrome.scripting.registerContentScripts !== 'function') {
-                console.warn('Chrome scripting API is not available in this browser/environment');
+            if (
+                !chrome.scripting ||
+                typeof chrome.scripting.registerContentScripts !== 'function'
+            ) {
+                console.warn(
+                    'Chrome scripting API is not available in this browser/environment'
+                );
                 return false;
             }
 
             // Safe check for getRegisteredContentScripts
-            if (typeof chrome.scripting.getRegisteredContentScripts === 'function') {
+            if (
+                typeof chrome.scripting.getRegisteredContentScripts ===
+                'function'
+            ) {
                 try {
-                    const existingScripts = await chrome.scripting.getRegisteredContentScripts({
-                        ids: ['blankProvider']
-                    });
+                    const existingScripts =
+                        await chrome.scripting.getRegisteredContentScripts({
+                            ids: ['blankProvider'],
+                        });
 
                     // If already registered, no need to register again
                     if (existingScripts && existingScripts.length > 0) {
-                        console.log('blankProvider content script is already registered');
+                        console.log(
+                            'blankProvider content script is already registered'
+                        );
                         return true;
                     }
                 } catch (checkErr) {
-                    console.warn('Error checking for registered scripts:', checkErr);
+                    console.warn(
+                        'Error checking for registered scripts:',
+                        checkErr
+                    );
                 }
             }
 
@@ -269,9 +283,13 @@ const registerBlankProviderContentScript = async () => {
                 return false;
             }
 
-            console.log(`Retrying content script registration (${retries}/${MAX_RETRIES})...`);
+            console.log(
+                `Retrying content script registration (${retries}/${MAX_RETRIES})...`
+            );
             // Exponential backoff for retries
-            await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, retries - 1)));
+            await new Promise((resolve) =>
+                setTimeout(resolve, 500 * Math.pow(2, retries - 1))
+            );
             return attemptRegistration();
         }
     };
@@ -285,7 +303,7 @@ const registerBlankProviderContentScript = async () => {
 function persistCriticalState() {
     chrome.storage.session.set({
         lastActiveTimestamp: Date.now(),
-        controllerStatus: 'active'
+        controllerStatus: 'active',
         // Add other critical keys if needed
     });
 }
@@ -301,7 +319,7 @@ if (isManifestV3()) {
             // Set initial state in storage for quick access on service worker startup
             chrome.storage.local.set({
                 serviceWorkerLastStartup: Date.now(),
-                serviceWorkerInstalled: true
+                serviceWorkerInstalled: true,
             });
         }
 
@@ -310,7 +328,7 @@ if (isManifestV3()) {
             // Perform any migration tasks needed after an update
             chrome.storage.local.set({
                 serviceWorkerLastUpdate: Date.now(),
-                serviceWorkerVersion: chrome.runtime.getManifest().version
+                serviceWorkerVersion: chrome.runtime.getManifest().version,
             });
         }
     });
@@ -321,10 +339,15 @@ if (isManifestV3()) {
     // Added small initial delay to speed up the first ping after installation
     try {
         if (chrome?.alarms?.create) {
-            chrome.alarms.create('keepAlive', { periodInMinutes: 5, delayInMinutes: 0.1 });
+            chrome.alarms.create('keepAlive', {
+                periodInMinutes: 5,
+                delayInMinutes: 0.1,
+            });
             log.info('Keep-alive alarm created successfully');
         } else {
-            log.warn('chrome.alarms.create not available, skipping keep-alive setup');
+            log.warn(
+                'chrome.alarms.create not available, skipping keep-alive setup'
+            );
         }
     } catch (error) {
         log.error('Error creating keep-alive alarm:', error);
@@ -337,7 +360,7 @@ if (isManifestV3()) {
                     // Only fetch the keep-alive URL when needed
                     try {
                         fetch(chrome.runtime.getURL('keep-alive'))
-                            .catch(error => {
+                            .catch((error) => {
                                 log.warn('Keep-alive fetch failed:', error);
                             })
                             .finally(() => {
@@ -353,7 +376,9 @@ if (isManifestV3()) {
             });
             log.info('Alarm listener added successfully');
         } else {
-            log.warn('chrome.alarms.onAlarm.addListener not available, skipping listener setup');
+            log.warn(
+                'chrome.alarms.onAlarm.addListener not available, skipping listener setup'
+            );
         }
     } catch (error) {
         log.error('Error adding alarm listener:', error);

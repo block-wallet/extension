@@ -70,7 +70,7 @@ interface QRSignatureRequest {
 
 /**
  * KeyringControllerDerivated
- * 
+ *
  * This class extends the base KeyringController to provide additional functionality
  * for managing keyrings, hardware wallets, and cryptographic operations.
  * It includes enhanced error handling, detailed logging, and robust keyring management.
@@ -81,7 +81,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
     /**
      * Creates a new KeyringControllerDerivated instance
-     * 
+     *
      * @param {KeyringControllerProps} opts - Configuration options for the controller
      */
     constructor(opts: KeyringControllerProps) {
@@ -103,7 +103,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
     /**
      * Get the mutex lock for this controller
-     * 
+     *
      * Returns the mutex used to prevent concurrent access to the keyring
      * operations, ensuring thread safety.
      *
@@ -427,7 +427,7 @@ export default class KeyringControllerDerivated extends KeyringController {
 
     /**
      * Determines the appropriate HD path for a given device type
-     * 
+     *
      * @param {Devices} device - The hardware wallet device type
      * @returns {string} The default HD derivation path for the device
      * @private
@@ -435,13 +435,17 @@ export default class KeyringControllerDerivated extends KeyringController {
     private _HDPathForDevice(device: Devices): string {
         const hdPaths = HDPaths[device];
         if (!hdPaths || hdPaths.length === 0) {
-            log.warn(`No HD paths defined for device ${device}, using BIP44 path as fallback`);
+            log.warn(
+                `No HD paths defined for device ${device}, using BIP44 path as fallback`
+            );
             return BIP44_PATH;
         }
 
         const defaultPath = hdPaths.find((data) => data.default)?.path;
         if (!defaultPath) {
-            log.warn(`No default HD path found for device ${device}, using BIP44 path as fallback`);
+            log.warn(
+                `No default HD path found for device ${device}, using BIP44 path as fallback`
+            );
             return BIP44_PATH;
         }
 
@@ -476,7 +480,9 @@ export default class KeyringControllerDerivated extends KeyringController {
             }
 
             if (!keyring.setHdPath) {
-                throw new Error(`Device ${device} does not support HD path configuration`);
+                throw new Error(
+                    `Device ${device} does not support HD path configuration`
+                );
             }
 
             const hdPaths = HDPaths[device];
@@ -521,9 +527,10 @@ export default class KeyringControllerDerivated extends KeyringController {
             }
 
             const keyring = await this.getKeyringFromDevice(device);
-            const hdPath = keyring && keyring.hdPath !== ''
-                ? keyring.hdPath
-                : this._HDPathForDevice(device);
+            const hdPath =
+                keyring && keyring.hdPath !== ''
+                    ? keyring.hdPath
+                    : this._HDPathForDevice(device);
 
             log.debug(`Retrieved HD path for ${device}: ${hdPath}`);
             return hdPath;
@@ -534,9 +541,9 @@ export default class KeyringControllerDerivated extends KeyringController {
     }
 
     /**
-     * Connects to a hardware wallet device
+     * connectHardwareKeyring
      *
-     * Establishes a connection to the specified hardware wallet type,
+     * Connects to a hardware wallet by either finding an existing keyring or
      * creating a new keyring if one doesn't exist. Handles device-specific
      * configuration such as Ledger transport method and Trezor timing.
      *
@@ -544,7 +551,9 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @returns {Promise<boolean>} True if the connection was successful
      * @throws {Error} If connection fails or device type is invalid
      */
-    public async connectHardwareKeyring(device: Devices): Promise<boolean> {
+    public async connectHardwareKeyring(
+        device: Devices
+    ): Promise<boolean | { needsUserGesture: boolean; deviceName: string }> {
         try {
             log.debug(`Connecting to hardware keyring for ${device}`);
 
@@ -552,18 +561,34 @@ export default class KeyringControllerDerivated extends KeyringController {
                 throw new Error('Device type must be specified');
             }
 
+            // For Ledger devices in MV3, we need to request user gesture from UI
+            if (device === Devices.LEDGER && isManifestV3()) {
+                log.debug(
+                    'Ledger device detected in MV3, sending request for UI connection'
+                );
+                // Return special response that UI needs to handle WebHID connection
+                return {
+                    needsUserGesture: true,
+                    deviceName: device,
+                };
+            }
+
             const keyringType = this._getKeyringTypeFromDevice(device);
             let keyring = await this.getKeyringFromDevice(device);
 
             // If the keyring doesn't exist, create it
             if (!keyring) {
-                log.debug(`No existing keyring found for ${device}, creating new keyring`);
+                log.debug(
+                    `No existing keyring found for ${device}, creating new keyring`
+                );
 
                 if (device === Devices.KEYSTONE) {
                     keyring = await this.addNewKeyring(keyringType);
                 } else {
                     const hdPath = this._HDPathForDevice(device);
-                    log.debug(`Using HD path ${hdPath} for new ${device} keyring`);
+                    log.debug(
+                        `Using HD path ${hdPath} for new ${device} keyring`
+                    );
 
                     keyring = await this.addNewKeyring(keyringType, {
                         hdPath: hdPath,
@@ -572,48 +597,133 @@ export default class KeyringControllerDerivated extends KeyringController {
 
                 // Prevents manifest error, research if we can avoid this
                 if (device === Devices.TREZOR) {
-                    log.debug('Trezor device detected, adding delay for proper initialization');
+                    log.debug(
+                        'Trezor device detected, adding delay for proper initialization'
+                    );
                     await new Promise((resolve) => setTimeout(resolve, 5000));
                 }
             } else {
                 log.debug(`Using existing keyring for ${device}`);
             }
 
-            if (device === Devices.LEDGER) {
-                log.debug('Ledger device detected, setting transport method to webhid');
-                // If it is a Ledger device, we set the transport method to 'webhid' by default.
-                // This requires HID API (not supported directly from the extension) which requests for device connection.
+            // Note: For Ledger in Manifest V3, transport is set by completeHardwareConnection
+            if (device === Devices.LEDGER && !isManifestV3()) {
+                log.debug(
+                    'Ledger device detected, setting transport method to webhid'
+                );
+                // Only try to set transport method in MV2 or non-extension context
                 await keyring.updateTransportMethod('webhid');
             }
 
             // Unlock the keyring. If it's already unlocked it will resolve.
             // For Trezor devices, we force the unlock to prevent displaying
-            // old accounts or accounts from a different device
-            if (keyring.unlock) {
+            // the trezor popup twice. First time for connection, second time
+            // for unlocking, when opening the wallet.
+            if (device === Devices.TREZOR) {
+                log.debug('Forcing Trezor unlock');
+                // Cast to any to access forceUnlock method
+                await (keyring as any).forceUnlock();
+                log.debug('Trezor force unlock completed');
+            } else if (device !== Devices.LEDGER || !isManifestV3()) {
+                // For non-Ledger devices or Ledger in MV2
                 log.debug(`Unlocking keyring for ${device}`);
-                await keyring.unlock(device === Devices.TREZOR);
+                await keyring.unlock();
+                log.debug('Keyring unlock completed');
             }
 
-            // Return whether we connected and unlocked the keyring successfully
-            let connected = false;
-            if (device === Devices.KEYSTONE) {
-                connected = keyring.initialized;
-                log.debug(`Keystone keyring initialized: ${connected}`);
-            } else {
-                connected = keyring.isUnlocked();
-                log.debug(`Keyring unlocked successfully: ${connected}`);
+            return true;
+        } catch (e: any) {
+            log.error(`Failed to connect hardware keyring for ${device}:`, e);
+            throw e;
+        }
+    }
+
+    /**
+     * completeHardwareConnection
+     *
+     * Completes the hardware wallet connection process after user has granted
+     * permission in the UI. This is specifically for Ledger in MV3.
+     *
+     * @param {Devices} device - The hardware wallet device type to connect
+     * @returns {Promise<boolean>} True if the connection was successful
+     */
+    public async completeHardwareConnection(device: Devices): Promise<boolean> {
+        try {
+            log.debug(`Completing hardware connection for ${device}`);
+
+            if (device !== Devices.LEDGER) {
+                log.debug(
+                    `Device ${device} doesn't need special connection handling`
+                );
+                return true;
             }
 
-            if (!connected) {
-                log.warn(`Failed to complete connection to ${device} hardware wallet`);
-            } else {
-                log.debug(`Successfully connected to hardware keyring for ${device}`);
+            const keyringType = this._getKeyringTypeFromDevice(device);
+            let keyring = await this.getKeyringFromDevice(device);
+
+            // If the keyring doesn't exist yet, create it now
+            if (!keyring) {
+                log.debug(
+                    `No existing keyring found for ${device}, creating new keyring during connection completion`
+                );
+                
+                const hdPath = this._HDPathForDevice(device);
+                log.debug(
+                    `Using HD path ${hdPath} for new ${device} keyring`
+                );
+                
+                keyring = await this.addNewKeyring(keyringType, {
+                    hdPath: hdPath,
+                });
             }
 
-            return connected;
-        } catch (error) {
-            log.error(`Failed to connect hardware keyring for ${device}:`, error);
-            throw error;
+            // Set the transport method for MV3 after user has granted permission in UI
+            log.debug(
+                'Setting Ledger transport method to webhid after UI permission'
+            );
+            
+            try {
+                // If updateTransportMethod fails, it might be due to permission issues
+                await keyring.updateTransportMethod('webhid');
+            } catch (error) {
+                log.error('Failed to update transport method:', error);
+                // Try an alternative approach if available
+                if (keyring.setTransportMethod) {
+                    await keyring.setTransportMethod('webhid');
+                } else {
+                    throw error;
+                }
+            }
+
+            // Try to unlock the keyring
+            try {
+                log.debug(`Unlocking keyring for ${device}`);
+                await keyring.unlock();
+                log.debug('Keyring unlock completed');
+            } catch (error) {
+                log.error('Failed to unlock keyring:', error);
+                
+                // Check for specific error types and provide better error handling
+                const errorMsg = String(error).toLowerCase();
+                
+                if (errorMsg.includes('permission') || errorMsg.includes('access denied')) {
+                    throw new Error('Permission denied. Please reconnect your Ledger and try again.');
+                } else if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
+                    throw new Error('Connection timed out. Make sure your Ledger is unlocked with the Ethereum app open.');
+                } else if (errorMsg.includes('locked')) {
+                    throw new Error('Ledger device is locked. Please unlock your device and open the Ethereum app.');
+                } else {
+                    throw error;
+                }
+            }
+
+            return true;
+        } catch (e: any) {
+            log.error(
+                `Failed to complete hardware connection for ${device}:`,
+                e
+            );
+            throw e;
         }
     }
 
@@ -635,59 +745,89 @@ export default class KeyringControllerDerivated extends KeyringController {
     ): Promise<string[]> {
         return this._mutex.runExclusive(async (): Promise<string[]> => {
             try {
-                log.debug(`Importing hardware wallet accounts for ${device} at indexes: ${accountIndexes.join(', ')}`);
+                log.debug(
+                    `Importing hardware wallet accounts for ${device} at indexes: ${accountIndexes.join(
+                        ', '
+                    )}`
+                );
 
                 if (!device) {
                     throw new Error('Device type must be specified');
                 }
 
                 if (!accountIndexes || accountIndexes.length === 0) {
-                    throw new Error('At least one account index must be specified');
+                    throw new Error(
+                        'At least one account index must be specified'
+                    );
                 }
 
                 // Validate all indexes are non-negative
-                if (accountIndexes.some(index => index < 0)) {
-                    throw new Error('Account indexes must be non-negative values');
+                if (accountIndexes.some((index) => index < 0)) {
+                    throw new Error(
+                        'Account indexes must be non-negative values'
+                    );
                 }
 
                 const keyring = await this.getKeyringFromDevice(device);
                 if (!keyring) {
-                    throw new Error(`No keyring found for device ${device}. Make sure the device is connected.`);
+                    throw new Error(
+                        `No keyring found for device ${device}. Make sure the device is connected.`
+                    );
                 }
 
                 if (!keyring.isUnlocked && !keyring.isUnlocked()) {
-                    log.debug(`Keyring for ${device} is locked, attempting to unlock`);
+                    log.debug(
+                        `Keyring for ${device} is locked, attempting to unlock`
+                    );
                     if (keyring.unlock) {
                         await keyring.unlock();
                     } else {
-                        throw new Error(`Unable to unlock keyring for ${device}`);
+                        throw new Error(
+                            `Unable to unlock keyring for ${device}`
+                        );
                     }
                 }
 
                 // Iterate over the list of added indexes and add each
                 // selected account to the keyring
                 const originalAccounts = await keyring.getAccounts();
-                log.debug(`Original accounts before import: ${originalAccounts.length}`);
+                log.debug(
+                    `Original accounts before import: ${originalAccounts.length}`
+                );
 
                 for (const index of accountIndexes) {
-                    log.debug(`Importing account at index ${index} from ${device}`);
+                    log.debug(
+                        `Importing account at index ${index} from ${device}`
+                    );
                     try {
                         keyring.setAccountToUnlock(index);
                         await super.addNewAccount(keyring);
                     } catch (error) {
-                        log.error(`Failed to import account at index ${index} from ${device}:`, error);
-                        throw new Error(`Failed to import account at index ${index}: ${error.message}`);
+                        log.error(
+                            `Failed to import account at index ${index} from ${device}:`,
+                            error
+                        );
+                        throw new Error(
+                            `Failed to import account at index ${index}: ${error.message}`
+                        );
                     }
                 }
 
                 // Return the list of all new added accounts
                 const finalAccounts = await keyring.getAccounts();
-                const importedAccounts = finalAccounts.slice(originalAccounts.length);
+                const importedAccounts = finalAccounts.slice(
+                    originalAccounts.length
+                );
 
-                log.debug(`Successfully imported ${importedAccounts.length} accounts from ${device}`);
+                log.debug(
+                    `Successfully imported ${importedAccounts.length} accounts from ${device}`
+                );
                 return finalAccounts;
             } catch (error) {
-                log.error(`Hardware wallet account import failed for ${device}:`, error);
+                log.error(
+                    `Hardware wallet account import failed for ${device}:`,
+                    error
+                );
                 throw error;
             }
         });
@@ -716,7 +856,9 @@ export default class KeyringControllerDerivated extends KeyringController {
             case Devices.KEYSTONE:
                 return KeyringTypes.QR;
             default:
-                throw new Error(`Invalid or unsupported device type: ${device}`);
+                throw new Error(
+                    `Invalid or unsupported device type: ${device}`
+                );
         }
     }
 
@@ -743,7 +885,9 @@ export default class KeyringControllerDerivated extends KeyringController {
 
             // Get all keyrings of this type
             const keyrings = super.getKeyringsByType(keyringType);
-            log.debug(`Found ${keyrings.length} keyrings of type ${keyringType}`);
+            log.debug(
+                `Found ${keyrings.length} keyrings of type ${keyringType}`
+            );
 
             // Return the first one found, or null if none
             return keyrings.length > 0 ? keyrings[0] : null;
@@ -782,14 +926,19 @@ export default class KeyringControllerDerivated extends KeyringController {
 
             // If keyring has accounts, we need to remove them
             if (accounts.length > 0) {
-                log.debug(`Removing ${accounts.length} accounts associated with ${device} keyring`);
+                log.debug(
+                    `Removing ${accounts.length} accounts associated with ${device} keyring`
+                );
 
                 // Iterate over accounts and remove them
                 for (const account of accounts) {
                     try {
                         await super.removeAccount(account);
                     } catch (error) {
-                        log.error(`Failed to remove account ${account} during keyring removal:`, error);
+                        log.error(
+                            `Failed to remove account ${account} during keyring removal:`,
+                            error
+                        );
                         // Continue with other accounts rather than failing completely
                     }
                 }
@@ -798,7 +947,11 @@ export default class KeyringControllerDerivated extends KeyringController {
             // Get an updated keyring after account removal
             const updatedKeyring = await this.getKeyringFromDevice(device);
             if (updatedKeyring) {
-                log.debug(`Removing keyring type ${this._getKeyringTypeFromDevice(device)}`);
+                log.debug(
+                    `Removing keyring type ${this._getKeyringTypeFromDevice(
+                        device
+                    )}`
+                );
                 // Remove the keyring
                 await super.removeEmptyKeyrings();
                 log.debug(`Successfully removed keyring for ${device}`);

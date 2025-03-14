@@ -1362,8 +1362,18 @@ export const openHardwareReconnect = async (address: string): Promise<void> => {
  */
 export const connectHardwareWallet = async (
     device: Devices
+): Promise<boolean | { needsUserGesture: boolean; deviceName: string }> => {
+    return sendMessage(Messages.WALLET.HARDWARE_CONNECT, { device });
+}
+
+/**
+ * It completes the hardware wallet connection process after user interaction
+ * This is particularly needed for Ledger in MV3
+ */
+export const completeHardwareConnection = async (
+    device: Devices
 ): Promise<boolean> => {
-    return sendMessage(Messages.WALLET.HARDWARE_CONNECT, { device })
+    return sendMessage(Messages.WALLET.HARDWARE_COMPLETE_CONNECTION, { device });
 }
 
 /**

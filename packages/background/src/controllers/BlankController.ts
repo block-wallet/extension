@@ -123,6 +123,7 @@ import {
     RequestTokensOrder,
     RequestOrderAccounts,
     RequestSetHideSmallBalances,
+    RequestCompleteHardwareConnection,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -1217,6 +1218,10 @@ export default class BlankController extends EventEmitter {
             case Messages.WALLET.SET_HIDESMALLBALANCES:
                 return this.setHideSmallBalances(
                     request as RequestSetHideSmallBalances
+                );
+            case Messages.WALLET.HARDWARE_COMPLETE_CONNECTION:
+                return this.completeHardwareConnection(
+                    request as RequestCompleteHardwareConnection
                 );
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
@@ -3357,8 +3362,22 @@ export default class BlankController extends EventEmitter {
      */
     private async connectHardwareWallet({
         device,
-    }: RequestConnectHardwareWallet): Promise<boolean> {
+    }: RequestConnectHardwareWallet): Promise<
+        boolean | { needsUserGesture: boolean; deviceName: string }
+    > {
         return this.keyringController.connectHardwareKeyring(device);
+    }
+
+    /**
+     * Completes the hardware wallet connection process after user interaction.
+     * This is needed specifically for Ledger with Manifest V3.
+     *
+     * @param device device type to complete connection for
+     */
+    private async completeHardwareConnection({
+        device,
+    }: RequestCompleteHardwareConnection): Promise<boolean> {
+        return this.keyringController.completeHardwareConnection(device);
     }
 
     /**

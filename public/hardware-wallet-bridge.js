@@ -66,24 +66,102 @@ async function connectLedger() {
         }
 
         updateStatus('Please connect your Ledger device and unlock it...');
+        
+        // First check if we already have permission to any HID devices
+        const existingDevices = await navigator.hid.getDevices();
+        const ledgerDevices = existingDevices.filter(d => d.vendorId === 0x2c97);
+        
+        if (ledgerDevices.length > 0) {
+            updateStatus('Using previously authorized Ledger device...');
+            
+            const device = ledgerDevices[0];
+            
+            // Open connection
+            if (!device.opened) {
+                try {
+                    await device.open();
+                } catch (e) {
+                    console.error('Failed to open device:', e);
+                    throw new Error('Failed to open connection to Ledger. Please disconnect and reconnect your device.');
+                }
+            }
+            
+            // Verify the device name just to make sure
+            const deviceName = device.productName || 'Ledger device';
+            updateStatus(`${deviceName} connected. Please open the Ethereum app on your device.`);
+            
+            // Store the successful connection info in session storage for the extension
+            try {
+                sessionStorage.setItem('ledger_connection', JSON.stringify({
+                    timestamp: Date.now(),
+                    success: true,
+                    vendorId: device.vendorId,
+                    productId: device.productId,
+                    productName: device.productName
+                }));
+            } catch (e) {
+                console.warn('Failed to store connection info in session storage:', e);
+            }
+            
+            return true;
+        }
 
-        // Request device access
-        const devices = await navigator.hid.requestDevice({
-            filters: [{ vendorId: 0x2c97 }] // Ledger vendor ID
-        });
-
-        if (devices.length === 0) {
-            throw new Error('No Ledger device selected');
+        // Request device access with improved error handling
+        let devices;
+        try {
+            // Add a more explicit user-friendly message
+            updateStatus('Select your Ledger device when the browser prompt appears...');
+            
+            // Wait briefly to ensure the UI updates
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Request device with explicit Ledger vendor ID
+            devices = await navigator.hid.requestDevice({
+                filters: [{ vendorId: 0x2c97 }] // Ledger vendor ID
+            });
+            
+            if (devices.length === 0) {
+                throw new Error('No Ledger device selected');
+            }
+        } catch (e) {
+            if (e.name === 'SecurityError') {
+                throw new Error('Permission denied. Please allow access to your Ledger device.');
+            } else if (e.name === 'NotFoundError') {
+                throw new Error('No Ledger device found. Please ensure your device is connected.');
+            } else {
+                throw e;
+            }
         }
 
         const device = devices[0];
 
         // Open connection
         if (!device.opened) {
-            await device.open();
+            try {
+                await device.open();
+            } catch (e) {
+                console.error('Failed to open device:', e);
+                throw new Error('Failed to open connection to Ledger. Please disconnect and reconnect your device.');
+            }
         }
 
-        updateStatus('Ledger device connected. Please open the Ethereum app on your device.');
+        // Verify the device name just to make sure
+        const deviceName = device.productName || 'Ledger device';
+        updateStatus(`${deviceName} connected. Please open the Ethereum app on your device.`);
+        
+        // Store the successful connection info in session storage for the extension
+        try {
+            sessionStorage.setItem('ledger_connection', JSON.stringify({
+                timestamp: Date.now(),
+                success: true,
+                vendorId: device.vendorId,
+                productId: device.productId,
+                productName: device.productName
+            }));
+        } catch (e) {
+            console.warn('Failed to store connection info in session storage:', e);
+        }
+        
         return true;
     } catch (error) {
         console.error('Ledger connection error:', error);
@@ -141,10 +219,14 @@ function notifyExtension(data) {
         console.log('Failed to send message to extension directly. Using localStorage fallback.');
 
         // Fallback: use localStorage to pass data back to extension
-        localStorage.setItem('hw_bridge_result', JSON.stringify({
-            timestamp: Date.now(),
-            ...data
-        }));
+        try {
+            localStorage.setItem('hw_bridge_result', JSON.stringify({
+                timestamp: Date.now(),
+                ...data
+            }));
+        } catch (storageError) {
+            console.error('Failed to store result in localStorage:', storageError);
+        }
 
         // If origin is specified in URL, try to send a message to parent window
         const params = getUrlParams();
@@ -164,12 +246,35 @@ function notifyExtension(data) {
 // Handle messages from the extension
 function setupMessaging() {
     // Listen for messages from the extension
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        if (message.type === 'HW_BRIDGE_PING') {
-            sendResponse({ status: 'ready' });
-            return false;
+    try {
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            if (message.type === 'HW_BRIDGE_PING') {
+                sendResponse({ status: 'ready' });
+                return false;
+            }
+        });
+    } catch (e) {
+        console.log('Not running in extension context, messaging not set up:', e);
+    }
+}
+
+// Check if there's a stored connection from previous attempt
+function checkPreviousConnection() {
+    try {
+        const storedConnection = sessionStorage.getItem('ledger_connection');
+        if (storedConnection) {
+            const connectionData = JSON.parse(storedConnection);
+            // Only consider recent connections (within last 5 minutes)
+            if (connectionData && connectionData.success && 
+                (Date.now() - connectionData.timestamp < 300000)) {
+                updateStatus(`Using previously connected device: ${connectionData.productName || 'Ledger'}`);
+                return true;
+            }
         }
-    });
+    } catch (e) {
+        console.warn('Failed to check previous connection:', e);
+    }
+    return false;
 }
 
 // Initialize the page
@@ -179,10 +284,16 @@ function init() {
     if (params.device) {
         updateStatus(`Initializing connection to ${params.device}...`);
 
-        // Give the page a moment to render before starting connection
-        setTimeout(() => {
-            connectHardwareWallet(params.device);
-        }, 500);
+        // Check for previous connection first (useful for MV3 reconnection)
+        if (params.device.toUpperCase() === 'LEDGER' && checkPreviousConnection()) {
+            // If we have a recent connection, just notify success
+            notifyExtension({ success: true, device: params.device });
+        } else {
+            // Give the page a moment to render before starting connection
+            setTimeout(() => {
+                connectHardwareWallet(params.device);
+            }, 500);
+        }
     } else {
         updateStatus('No device specified. Please specify a device type in the URL.', true);
     }

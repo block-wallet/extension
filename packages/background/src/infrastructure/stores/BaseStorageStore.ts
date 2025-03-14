@@ -36,7 +36,11 @@ const waitForStorage = (maxAttempts = 5, interval = 200): Promise<void> => {
 
             attempts++;
             if (attempts >= maxAttempts) {
-                reject(new Error('Chrome storage API not available after multiple attempts'));
+                reject(
+                    new Error(
+                        'Chrome storage API not available after multiple attempts'
+                    )
+                );
                 return;
             }
 
@@ -66,15 +70,18 @@ export default abstract class BaseStorageStore<T> {
                 return;
             }
 
-            chrome.storage.local.get([key]).then((result: StoreValue): void => {
-                lastError('getVersion');
-                key in result
-                    ? resolve(result[key] as string)
-                    : resolve(undefined);
-            }).catch((error) => {
-                log.error('Error in getVersion:', error);
-                resolve(undefined);
-            });
+            chrome.storage.local
+                .get([key])
+                .then((result: StoreValue): void => {
+                    lastError('getVersion');
+                    key in result
+                        ? resolve(result[key] as string)
+                        : resolve(undefined);
+                })
+                .catch((error) => {
+                    log.error('Error in getVersion:', error);
+                    resolve(undefined);
+                });
         });
     }
 
@@ -86,19 +93,24 @@ export default abstract class BaseStorageStore<T> {
 
         return new Promise((resolve, reject) => {
             if (!isStorageAvailable()) {
-                const error = new Error('Storage API not available for setVersion');
+                const error = new Error(
+                    'Storage API not available for setVersion'
+                );
                 log.warn(error);
                 reject(error);
                 return;
             }
 
-            chrome.storage.local.set({ [key]: value }).then((): void => {
-                lastError('setVersion');
-                resolve();
-            }).catch((error) => {
-                log.error('Error in setVersion:', error);
-                reject(error);
-            });
+            chrome.storage.local
+                .set({ [key]: value })
+                .then((): void => {
+                    lastError('setVersion');
+                    resolve();
+                })
+                .catch((error) => {
+                    log.error('Error in setVersion:', error);
+                    reject(error);
+                });
         });
     }
 
@@ -108,17 +120,20 @@ export default abstract class BaseStorageStore<T> {
             return;
         }
 
-        chrome.storage.local.get(null).then((result: StoreValue): void => {
-            lastError('all');
+        chrome.storage.local
+            .get(null)
+            .then((result: StoreValue): void => {
+                lastError('all');
 
-            Object.entries(result)
-                .filter(([key]) => key.startsWith(this.prefix))
-                .forEach(([key, value]): void => {
-                    update(key.replace(this.prefix, ''), value as T);
-                });
-        }).catch((error) => {
-            log.error('Error in all:', error);
-        });
+                Object.entries(result)
+                    .filter(([key]) => key.startsWith(this.prefix))
+                    .forEach(([key, value]): void => {
+                        update(key.replace(this.prefix, ''), value as T);
+                    });
+            })
+            .catch((error) => {
+                log.error('Error in all:', error);
+            });
     }
 
     public get(_key: string, update: (value: T) => void): void {
@@ -130,13 +145,16 @@ export default abstract class BaseStorageStore<T> {
             return;
         }
 
-        chrome.storage.local.get([key]).then((result: StoreValue): void => {
-            lastError('get');
-            update(result[key] as T);
-        }).catch((error) => {
-            log.error('Error in get:', error);
-            update(undefined as unknown as T);
-        });
+        chrome.storage.local
+            .get([key])
+            .then((result: StoreValue): void => {
+                lastError('get');
+                update(result[key] as T);
+            })
+            .catch((error) => {
+                log.error('Error in get:', error);
+                update(undefined as unknown as T);
+            });
     }
 
     public remove(_key: string, update?: () => void): void {
@@ -148,13 +166,16 @@ export default abstract class BaseStorageStore<T> {
             return;
         }
 
-        chrome.storage.local.remove(key).then((): void => {
-            lastError('remove');
-            update && update();
-        }).catch((error) => {
-            log.error('Error in remove:', error);
-            update && update();
-        });
+        chrome.storage.local
+            .remove(key)
+            .then((): void => {
+                lastError('remove');
+                update && update();
+            })
+            .catch((error) => {
+                log.error('Error in remove:', error);
+                update && update();
+            });
     }
 
     public set(_key: string, value: T, update?: () => void): void {
@@ -166,13 +187,16 @@ export default abstract class BaseStorageStore<T> {
             return;
         }
 
-        chrome.storage.local.set({ [key]: value }).then((): void => {
-            lastError('set');
-            update && update();
-        }).catch((error) => {
-            log.error('Error in set:', error);
-            update && update();
-        });
+        chrome.storage.local
+            .set({ [key]: value })
+            .then((): void => {
+                lastError('set');
+                update && update();
+            })
+            .catch((error) => {
+                log.error('Error in set:', error);
+                update && update();
+            });
     }
 
     /**

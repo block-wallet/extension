@@ -1,5 +1,6 @@
 import {
     connectHardwareWallet,
+    completeHardwareConnection,
     hardwareQrSubmitCryptoHdKeyOrAccount,
 } from "../../context/commActions"
 import { Devices } from "../../context/commTypes"
@@ -53,16 +54,26 @@ const executeConnect = async (
     }
 
     try {
-        // Handle Ledger specific connection
-        if (vendor === Devices.LEDGER) {
+        // First try the initial connection - this may return a special response for Ledger in MV3
+        const connectionResult = await connectHardwareWallet(vendor);
+
+        // Handle the special case for Ledger in MV3 where we need user gesture
+        if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
+            log.debug('Ledger device needs user gesture for WebHID permission');
+
+            // Handle Ledger specific connection - this requires user gesture
             const connectionOk = await requestConnectDevice();
             if (!connectionOk) {
                 log.error('Ledger device connection request failed');
                 throw new Error(HardwareWalletError.CONNECTION_FAILED);
             }
+
+            // Now complete the connection process after user has granted permission
+            return await completeHardwareConnection(vendor);
         }
+
         // Handle Keystone specific connection (QR-based)
-        else if (vendor === Devices.KEYSTONE) {
+        if (vendor === Devices.KEYSTONE) {
             if (!ur || !ur.cbor) {
                 log.error('Invalid QR code data for Keystone connection');
                 throw new Error(HardwareWalletError.QR_SUBMISSION_FAILED);
@@ -76,10 +87,14 @@ const executeConnect = async (
                 log.error('QR submission for Keystone failed');
                 throw new Error(HardwareWalletError.QR_SUBMISSION_FAILED);
             }
+
+            // For Keystone we need to call connect again after QR submission
+            return await connectHardwareWallet(vendor) as boolean;
         }
 
-        // Execute the actual connection to the hardware wallet
-        return await connectHardwareWallet(vendor);
+        // For non-Ledger and non-Keystone devices, or for Ledger in MV2
+        // we can just return the result directly
+        return connectionResult as boolean;
     } catch (e) {
         // Log detailed error
         log.error(`Hardware wallet connection error (attempt ${attemptNumber}/${maxAttempts}):`, e);

@@ -1,0 +1,329 @@
+/**
+ * Browser-based WebHID Ledger Connection Test
+ * 
+ * This script tests Ledger connection using WebHID (browser-only)
+ * Save this as an HTML file and open it in Chrome
+ */
+
+// Ledger USB Vendor ID
+const LEDGER_USB_VENDOR_ID = 0x2c97;
+
+// Log element
+let logElement;
+
+// Helper to append logs
+function log(message, isError = false) {
+    const line = document.createElement('div');
+    line.textContent = message;
+    if (isError) {
+        line.style.color = 'red';
+        line.style.fontWeight = 'bold';
+    }
+    logElement.appendChild(line);
+    console.log(message);
+}
+
+// Check if WebHID is supported
+function checkWebHIDSupport() {
+    const isSupported = 'hid' in navigator;
+    log(`WebHID API ${isSupported ? 'is' : 'is NOT'} supported in this browser`);
+    return isSupported;
+}
+
+// Connect to a Ledger device using WebHID
+async function connectWithWebHID() {
+    try {
+        log('Requesting Ledger device...');
+
+        // Request device
+        const devices = await navigator.hid.requestDevice({
+            filters: [{ vendorId: LEDGER_USB_VENDOR_ID }]
+        });
+
+        if (devices.length === 0) {
+            log('No device selected or no Ledger device found', true);
+            return null;
+        }
+
+        const device = devices[0];
+        log(`Device selected: ${device.productName}`);
+
+        // Open connection
+        if (!device.opened) {
+            log('Opening connection to device...');
+            await device.open();
+        }
+
+        log('🎉 Connection successful!');
+        return device;
+    } catch (error) {
+        log(`Error connecting to device: ${error.message}`, true);
+        return null;
+    }
+}
+
+// Check device information
+function displayDeviceInfo(device) {
+    log('\nDevice Information:');
+    log(`• Product Name: ${device.productName}`);
+    log(`• Manufacturer: ${device.manufacturerName || 'Unknown'}`);
+    log(`• Serial Number: ${device.serialNumber || 'Not available'}`);
+    log(`• Version: ${device.version || 'Unknown'}`);
+
+    // Display collections and reports
+    log('\nDevice Reports:');
+    device.collections.forEach((collection, i) => {
+        log(`Collection ${i}:`);
+        log(`  • Usage: ${collection.usage}`);
+        log(`  • Input Reports: ${collection.inputReports.length}`);
+        log(`  • Output Reports: ${collection.outputReports.length}`);
+    });
+}
+
+// Initialize the test
+async function initTest() {
+    logElement = document.getElementById('log');
+
+    // Reset log
+    logElement.innerHTML = '';
+
+    log('🧪 LEDGER WebHID CONNECTION TEST');
+    log('================================');
+
+    // Check if WebHID is supported
+    if (!checkWebHIDSupport()) {
+        log('WebHID is not supported in this browser - test cannot continue', true);
+        return;
+    }
+
+    // Connect to device
+    const device = await connectWithWebHID();
+
+    if (!device) {
+        log('Failed to connect to Ledger device', true);
+        log('\nTroubleshooting tips:');
+        log('1. Make sure your Ledger is connected and unlocked');
+        log('2. Make sure the Ethereum application is open on your device');
+        log('3. Close other applications that might be using your Ledger (like Ledger Live)');
+        log('4. Try using a different USB port');
+        return;
+    }
+
+    // Display device info
+    displayDeviceInfo(device);
+
+    // Set up listener for reports
+    device.addEventListener('inputreport', event => {
+        log(`\nReceived report from device:`);
+        log(`• Report ID: ${event.reportId}`);
+        log(`• Data: ${new Uint8Array(event.data.buffer).join(', ')}`);
+    });
+
+    log('\nTest Summary:');
+    log('✅ Browser supports WebHID API');
+    log('✅ Successfully connected to Ledger device');
+    log('✅ Device details retrieved');
+
+    log('\nIf this test passes but your extension still has issues:');
+    log('1. Confirm permissions in your extension manifest');
+    log('2. Check error handling in your extension code');
+    log('3. Verify transport method configuration');
+}
+
+// HTML for the test page
+const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ledger WebHID Connection Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 20px 0;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    #log {
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 15px;
+      height: 400px;
+      overflow-y: auto;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    .note {
+      background: #fffde7;
+      padding: 10px;
+      border-left: 4px solid #ffd600;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ledger WebHID Connection Test</h1>
+  
+  <div class="note">
+    <strong>Note:</strong> This test must be run in a browser that supports WebHID (like Chrome or Edge).
+    Firefox does not support WebHID.
+  </div>
+  
+  <p>
+    This page tests your browser's ability to connect to a Ledger hardware wallet using WebHID.
+    Click the button below, then select your Ledger device when prompted.
+  </p>
+  
+  <button onclick="initTest()">Start Test</button>
+  
+  <div id="log"></div>
+  
+  <script>
+    // Define constants
+    const LEDGER_USB_VENDOR_ID = 0x2c97;
+    
+    // Log element
+    let logElement;
+    
+    // Helper to append logs
+    function log(message, isError = false) {
+      const line = document.createElement('div');
+      line.textContent = message;
+      if (isError) {
+        line.style.color = 'red';
+        line.style.fontWeight = 'bold';
+      }
+      logElement.appendChild(line);
+      console.log(message);
+    }
+    
+    // Check if WebHID is supported
+    function checkWebHIDSupport() {
+      const isSupported = 'hid' in navigator;
+      log(\`WebHID API \${isSupported ? 'is' : 'is NOT'} supported in this browser\`);
+      return isSupported;
+    }
+    
+    // Connect to a Ledger device using WebHID
+    async function connectWithWebHID() {
+      try {
+        log('Requesting Ledger device...');
+        
+        // Request device
+        const devices = await navigator.hid.requestDevice({
+          filters: [{ vendorId: LEDGER_USB_VENDOR_ID }]
+        });
+        
+        if (devices.length === 0) {
+          log('No device selected or no Ledger device found', true);
+          return null;
+        }
+        
+        const device = devices[0];
+        log(\`Device selected: \${device.productName}\`);
+        
+        // Open connection
+        if (!device.opened) {
+          log('Opening connection to device...');
+          await device.open();
+        }
+        
+        log('🎉 Connection successful!');
+        return device;
+      } catch (error) {
+        log(\`Error connecting to device: \${error.message}\`, true);
+        return null;
+      }
+    }
+    
+    // Check device information
+    function displayDeviceInfo(device) {
+      log('\\nDevice Information:');
+      log(\`• Product Name: \${device.productName}\`);
+      log(\`• Manufacturer: \${device.manufacturerName || 'Unknown'}\`);
+      log(\`• Serial Number: \${device.serialNumber || 'Not available'}\`);
+      log(\`• Version: \${device.version || 'Unknown'}\`);
+      
+      // Display collections and reports
+      log('\\nDevice Reports:');
+      device.collections.forEach((collection, i) => {
+        log(\`Collection \${i}:\`);
+        log(\`  • Usage: \${collection.usage}\`);
+        log(\`  • Input Reports: \${collection.inputReports.length}\`);
+        log(\`  • Output Reports: \${collection.outputReports.length}\`);
+      });
+    }
+    
+    // Initialize the test
+    async function initTest() {
+      logElement = document.getElementById('log');
+      
+      // Reset log
+      logElement.innerHTML = '';
+      
+      log('🧪 LEDGER WebHID CONNECTION TEST');
+      log('================================');
+      
+      // Check if WebHID is supported
+      if (!checkWebHIDSupport()) {
+        log('WebHID is not supported in this browser - test cannot continue', true);
+        return;
+      }
+      
+      // Connect to device
+      const device = await connectWithWebHID();
+      
+      if (!device) {
+        log('Failed to connect to Ledger device', true);
+        log('\\nTroubleshooting tips:');
+        log('1. Make sure your Ledger is connected and unlocked');
+        log('2. Make sure the Ethereum application is open on your device');
+        log('3. Close other applications that might be using your Ledger (like Ledger Live)');
+        log('4. Try using a different USB port');
+        return;
+      }
+      
+      // Display device info
+      displayDeviceInfo(device);
+      
+      // Set up listener for reports
+      device.addEventListener('inputreport', event => {
+        log(\`\\nReceived report from device:\`);
+        log(\`• Report ID: \${event.reportId}\`);
+        log(\`• Data: \${new Uint8Array(event.data.buffer).join(', ')}\`);
+      });
+      
+      log('\\nTest Summary:');
+      log('✅ Browser supports WebHID API');
+      log('✅ Successfully connected to Ledger device');
+      log('✅ Device details retrieved');
+      
+      log('\\nIf this test passes but your extension still has issues:');
+      log('1. Confirm permissions in your extension manifest');
+      log('2. Check error handling in your extension code');
+      log('3. Verify transport method configuration');
+    }
+  </script>
+</body>
+</html>
+`;
+
+// Export the HTML
+module.exports = html; 

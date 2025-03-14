@@ -1,0 +1,16 @@
+{
+    "name": "ledger-connection-test",
+    "version": "1.0.0",
+    "description": "Test script for Ledger hardware wallet connection",
+    "main": "index.js",
+    "scripts": {
+        "test": "node index.js",
+        "test:node": "node index.js",
+        "test:browser": "node generate-browser-test.js && echo 'HTML file generated: ledger-webhid-test.html'"
+    },
+    "dependencies": {
+        "@ledgerhq/hw-app-eth": "^6.32.1",
+        "@ledgerhq/hw-transport-node-hid": "^6.27.12",
+        "@ledgerhq/logs": "^6.10.1"
+    }
+}

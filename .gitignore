@@ -8,6 +8,7 @@ eslint-report.html
 
 # dependencies
 /node_modules
+/ledger-test/node_modules
 /.pnp
 .pnp.js
 

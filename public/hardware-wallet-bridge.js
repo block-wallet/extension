@@ -277,9 +277,38 @@ function checkPreviousConnection() {
     return false;
 }
 
-// Initialize the page
+// Add an event listener for the beforeunload event to ensure clean termination
+window.addEventListener('beforeunload', function(event) {
+    // Notify that the user intentionally closed the window
+    try {
+        notifyExtension({ 
+            success: false, 
+            device: getUrlParams().device || 'unknown',
+            error: 'user_closed', 
+            userCancelled: true 
+        });
+    } catch (e) {
+        console.error('Failed to notify extension of window close:', e);
+    }
+});
+
+// Modify the init function to handle close/cancel button properly
 function init() {
     const params = getUrlParams();
+
+    // Add event listeners to any cancel buttons
+    const cancelButtons = document.querySelectorAll('.cancel-button, .close-button');
+    cancelButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            notifyExtension({ 
+                success: false, 
+                device: params.device || 'unknown',
+                error: 'user_cancelled',
+                userCancelled: true
+            });
+            window.close();
+        });
+    });
 
     if (params.device) {
         updateStatus(`Initializing connection to ${params.device}...`);

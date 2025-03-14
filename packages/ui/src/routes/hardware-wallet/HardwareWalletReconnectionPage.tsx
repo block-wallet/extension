@@ -35,14 +35,9 @@ const ConnectionErrorDialog: React.FC<ErrorDialogProps> = ({
             title={getConnectionErrorMessage(errorType)}
             message={
                 <div>
-                    <p className="pb-3">
+                    <p>
                         We encountered an issue while trying to connect your hardware wallet.
                     </p>
-                    {recommendations.map((recommendation, index) => (
-                        <p key={index} className="pb-2">
-                            {recommendation}
-                        </p>
-                    ))}
                 </div>
             }
             onDone={onRetry || onClose}
@@ -116,26 +111,17 @@ const HardwareWalletReconnectionPage = () => {
 
             // Determine error type based on error message
             let errorType = ConnectionErrorType.UNKNOWN_ERROR
-            let recommendations = [
-                "Please ensure your device is connected properly and unlocked.",
-                "Try disconnecting and reconnecting your device."
-            ]
+            let recommendations = [`Please ensure your ${vendor} device is connected properly and unlocked.`]
 
             if (error instanceof Error) {
                 const errorMessage = error.message.toLowerCase()
 
                 if (errorMessage.includes("permission") || errorMessage.includes("denied")) {
                     errorType = ConnectionErrorType.PERMISSION_DENIED
-                    recommendations = [
-                        "You denied permission to access the hardware wallet.",
-                        "Please try again and allow access when prompted."
-                    ]
+                    recommendations = ["You denied permission to access the hardware wallet."]
                 } else if (errorMessage.includes("timeout")) {
                     errorType = ConnectionErrorType.CONNECTION_TIMEOUT
-                    recommendations = [
-                        "The connection to your device timed out.",
-                        "Please ensure your device is unlocked and try again."
-                    ]
+                    recommendations = ["The connection to your device timed out."]
                 }
             }
 

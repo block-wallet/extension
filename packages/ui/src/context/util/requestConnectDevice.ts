@@ -39,9 +39,15 @@ export const openHardwareWalletBridge = async (deviceType: string): Promise<bool
                         
                         if (isRecent && result.device && result.device.toUpperCase() === deviceType) {
                             window.removeEventListener('storage', storageListener);
+                            clearTimeout(timeoutId);
+                            clearInterval(checkClosed);
                             
                             if (result.success) {
                                 resolve(true);
+                            } else if (result.userCancelled) {
+                                // If user explicitly cancelled or closed the window, don't show an error
+                                log.debug(`HARDWARE WALLET > User cancelled or closed ${deviceType} connection window`);
+                                resolve(false);  // Resolve with false instead of rejecting
                             } else {
                                 reject(new Error(result.error || 'Connection failed'));
                             }

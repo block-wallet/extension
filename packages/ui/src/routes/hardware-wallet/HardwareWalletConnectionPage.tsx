@@ -2,7 +2,7 @@ import { Devices } from "../../context/commTypes"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
 import ConnectDeviceStepsLayout from "./ConnectDeviceStepsLayout"
 import { DEVICE_CONNECTION_STEPS } from "../../util/connectionStepUtils"
-import useHardwareWalletConnect from "../../util/hooks/useHardwareWalletConnect"
+import useHardwareWalletConnect, { HardwareWalletError } from "../../util/hooks/useHardwareWalletConnect"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
 import { useEffect, useState } from "react"
 import {
@@ -35,14 +35,9 @@ const ConnectionErrorDialog: React.FC<ErrorDialogProps> = ({
             title={getConnectionErrorMessage(errorType)}
             message={
                 <div>
-                    <p className="pb-3">
+                    <p>
                         We encountered an issue while trying to connect your hardware wallet.
                     </p>
-                    {recommendations.map((recommendation, index) => (
-                        <p key={index} className="pb-2">
-                            {recommendation}
-                        </p>
-                    ))}
                 </div>
             }
             onDone={onRetry || onClose}
@@ -57,7 +52,7 @@ const ConnectionErrorDialog: React.FC<ErrorDialogProps> = ({
 
 const HardwareWalletConnectionPage = () => {
     const history = useOnMountHistory()
-    const { connect, isLoading } = useHardwareWalletConnect()
+    const { connect, isLoading, getHardwareWalletErrorMessage, getHardwareWalletErrorRecommendations } = useHardwareWalletConnect()
     const [deviceNotReady, setDeviceNotReady] = useState(false)
     const [browserCompatibility, setBrowserCompatibility] = useState(
         checkHardwareWalletCompatibility()
@@ -83,12 +78,25 @@ const HardwareWalletConnectionPage = () => {
         }
     }, [])
 
+    // Map hardware wallet errors to connection error types
+    const mapToConnectionErrorType = (errorMessage: string): ConnectionErrorType => {
+        if (errorMessage === HardwareWalletError.PERMISSION_DENIED) {
+            return ConnectionErrorType.PERMISSION_DENIED;
+        } else if (errorMessage === HardwareWalletError.CONNECTION_FAILED) {
+            return ConnectionErrorType.DEVICE_NOT_READY;
+        } else if (errorMessage === HardwareWalletError.BROWSER_INCOMPATIBLE || 
+                  errorMessage === HardwareWalletError.UNSUPPORTED_BROWSER) {
+            return ConnectionErrorType.BROWSER_INCOMPATIBLE;
+        }
+        return ConnectionErrorType.UNKNOWN_ERROR;
+    };
+
     const onConnect = async () => {
         // If browser is not compatible, show error dialog
         if (!browserCompatibility.isCompatible) {
             setConnectionError({
                 type: browserCompatibility.errorType || ConnectionErrorType.BROWSER_INCOMPATIBLE,
-                recommendations: browserCompatibility.recommendations
+                recommendations: browserCompatibility.recommendations.slice(0, 1)
             })
             return
         }
@@ -107,28 +115,35 @@ const HardwareWalletConnectionPage = () => {
         } catch (error) {
             log.error("Hardware wallet connection error:", error)
 
-            // Determine error type based on error message
-            let errorType = ConnectionErrorType.UNKNOWN_ERROR
-            let recommendations = [
-                "Please ensure your device is connected properly and unlocked.",
-                "Try disconnecting and reconnecting your device."
-            ]
+            let errorType = ConnectionErrorType.UNKNOWN_ERROR;
+            let recommendations: string[] = [];
 
+            // Use our enhanced error handling helpers
             if (error instanceof Error) {
-                const errorMessage = error.message.toLowerCase()
-
-                if (errorMessage.includes("permission") || errorMessage.includes("denied")) {
-                    errorType = ConnectionErrorType.PERMISSION_DENIED
-                    recommendations = [
-                        "You denied permission to access the hardware wallet.",
-                        "Please try again and allow access when prompted."
-                    ]
-                } else if (errorMessage.includes("timeout")) {
-                    errorType = ConnectionErrorType.CONNECTION_TIMEOUT
-                    recommendations = [
-                        "The connection to your device timed out.",
-                        "Please ensure your device is unlocked and try again."
-                    ]
+                const errorMessage = error.message;
+                
+                // Use the error specific recommendations - limit to one
+                if (Object.values(HardwareWalletError).includes(errorMessage as HardwareWalletError)) {
+                    const hwError = errorMessage as HardwareWalletError;
+                    
+                    // Map hardware wallet error to connection error type
+                    errorType = mapToConnectionErrorType(hwError);
+                    
+                    // Get specific recommendations based on error type and device - only the first one
+                    const allRecommendations = getHardwareWalletErrorRecommendations(hwError, vendor);
+                    recommendations = allRecommendations.slice(0, 1);
+                } else if (errorMessage.toLowerCase().includes("permission") || 
+                           errorMessage.toLowerCase().includes("denied")) {
+                    errorType = ConnectionErrorType.PERMISSION_DENIED;
+                    recommendations = ["You denied permission to access the hardware wallet."];
+                } else if (errorMessage.toLowerCase().includes("timeout") || 
+                          errorMessage.toLowerCase().includes("attempts")) {
+                    errorType = ConnectionErrorType.CONNECTION_TIMEOUT;
+                    recommendations = ["The connection to your device timed out."];
+                } else {
+                    // Default error handling with device-specific recommendations
+                    errorType = ConnectionErrorType.UNKNOWN_ERROR;
+                    recommendations = [`Please ensure your ${vendor} device is connected properly and unlocked.`];
                 }
             }
 

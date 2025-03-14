@@ -19,9 +19,59 @@ export enum HardwareWalletError {
     PERMISSION_DENIED = "PERMISSION_DENIED",
     UNSUPPORTED_BROWSER = "UNSUPPORTED_BROWSER",
     QR_SUBMISSION_FAILED = "QR_SUBMISSION_FAILED",
-    MAX_ATTEMPTS_REACHED = "MAX_ATTEMPTS_REACHED",
     UNKNOWN_ERROR = "UNKNOWN_ERROR"
 }
+
+/**
+ * Maps hardware wallet errors to user-friendly messages
+ */
+export const getHardwareWalletErrorMessage = (error: HardwareWalletError): string => {
+    switch (error) {
+        case HardwareWalletError.BROWSER_INCOMPATIBLE:
+            return "Your browser is not compatible with hardware wallets";
+        case HardwareWalletError.CONNECTION_FAILED:
+            return "Failed to connect to your hardware wallet";
+        case HardwareWalletError.PERMISSION_DENIED:
+            return "Permission to access hardware wallet was denied";
+        case HardwareWalletError.UNSUPPORTED_BROWSER:
+            return "Your browser doesn't support hardware wallet connections";
+        case HardwareWalletError.QR_SUBMISSION_FAILED:
+            return "Failed to process QR code data";
+        case HardwareWalletError.UNKNOWN_ERROR:
+        default:
+            return "An unknown error occurred during hardware wallet connection";
+    }
+};
+
+/**
+ * Returns recommendation steps based on error type
+ */
+export const getHardwareWalletErrorRecommendations = (error: HardwareWalletError, device: Devices): string[] => {
+    const baseRecommendations = [
+        "Make sure your device is connected properly and unlocked",
+        "Ensure the appropriate app is open on your device",
+        "Try disconnecting and reconnecting your device"
+    ];
+    
+    switch (error) {
+        case HardwareWalletError.PERMISSION_DENIED:
+            return [
+                "You denied permission to access the hardware wallet",
+                "Please try again and allow access when prompted"
+            ];
+        case HardwareWalletError.CONNECTION_FAILED:
+            if (device === Devices.LEDGER) {
+                return [
+                    "Make sure your Ledger is connected, unlocked, and the Ethereum app is open",
+                    "Browser support for USB devices can be limited. Try using Chrome",
+                    "Ensure no other applications are using your Ledger (like Ledger Live)"
+                ];
+            }
+            return baseRecommendations;
+        default:
+            return baseRecommendations;
+    }
+};
 
 /**
  * Checks if the browser environment is compatible with our hardware wallet connection approach
@@ -37,22 +87,12 @@ const isBrowserCompatible = (): boolean => {
  * Executes the hardware wallet connection process with enhanced error handling
  * @param vendor The hardware wallet vendor (e.g., Ledger, Keystone)
  * @param ur Optional UR parameter for QR-based connections
- * @param attemptNumber Current attempt number (for retry mechanism)
- * @param maxAttempts Maximum number of connection attempts allowed
  * @returns Promise resolving to a boolean indicating connection success
  */
 const executeConnect = async (
     vendor: Devices,
     ur?: URParameter,
-    attemptNumber: number = 1,
-    maxAttempts: number = 3
 ): Promise<boolean> => {
-    // Track connection attempts
-    if (attemptNumber > maxAttempts) {
-        log.error(`Maximum connection attempts (${maxAttempts}) reached`);
-        throw new Error(HardwareWalletError.MAX_ATTEMPTS_REACHED);
-    }
-
     try {
         // First try the initial connection - this may return a special response for Ledger in MV3
         const connectionResult = await connectHardwareWallet(vendor);
@@ -65,7 +105,9 @@ const executeConnect = async (
             const connectionOk = await requestConnectDevice();
             if (!connectionOk) {
                 log.error('Ledger device connection request failed');
-                throw new Error(HardwareWalletError.CONNECTION_FAILED);
+                const error = new Error(HardwareWalletError.CONNECTION_FAILED);
+                (error as any).vendor = vendor;
+                throw error;
             }
 
             // Now complete the connection process after user has granted permission
@@ -97,25 +139,31 @@ const executeConnect = async (
         return connectionResult as boolean;
     } catch (e) {
         // Log detailed error
-        log.error(`Hardware wallet connection error (attempt ${attemptNumber}/${maxAttempts}):`, e);
-
-        // If we haven't reached max attempts, try again recursively
-        if (attemptNumber < maxAttempts) {
-            log.info(`Retrying connection, attempt ${attemptNumber + 1}/${maxAttempts}`);
-            return executeConnect(vendor, ur, attemptNumber + 1, maxAttempts);
-        }
+        log.error(`Hardware wallet connection error:`, e);
 
         // Categorize error for better user feedback
-        if (e.message && e.message.includes('permission')) {
-            throw new Error(HardwareWalletError.PERMISSION_DENIED);
-        } else if (e.message === HardwareWalletError.MAX_ATTEMPTS_REACHED) {
-            throw new Error(HardwareWalletError.MAX_ATTEMPTS_REACHED);
-        } else if (e.message === HardwareWalletError.QR_SUBMISSION_FAILED) {
-            throw new Error(HardwareWalletError.QR_SUBMISSION_FAILED);
+        if (e.message && typeof e.message === 'string') {
+            if (e.message.includes('permission')) {
+                const error = new Error(HardwareWalletError.PERMISSION_DENIED);
+                (error as any).vendor = vendor;
+                throw error;
+            } else if (e.message === HardwareWalletError.QR_SUBMISSION_FAILED) {
+                // Pass through QR_SUBMISSION_FAILED
+                (e as any).vendor = vendor;
+                throw e;
+            } else if (e.message === HardwareWalletError.CONNECTION_FAILED) {
+                // Pass through CONNECTION_FAILED
+                const error = new Error(HardwareWalletError.CONNECTION_FAILED);
+                (error as any).vendor = vendor;
+                throw error;
+            }
         }
 
-        // Default error
-        throw new Error(HardwareWalletError.UNKNOWN_ERROR);
+        // Default error with additional context
+        const error = new Error(HardwareWalletError.UNKNOWN_ERROR);
+        (error as any).vendor = vendor;
+        (error as any).originalError = e;
+        throw error;
     }
 };
 
@@ -137,7 +185,7 @@ const useHardwareWalletConnect = (isReconnecting = false) => {
                 clearStickyStorage()
             }
 
-            // Execute connection with retry mechanism
+            // Execute connection (without automatic retries)
             return run(executeConnect(vendor, ur))
         },
         isLoading,
@@ -145,6 +193,8 @@ const useHardwareWalletConnect = (isReconnecting = false) => {
         isSuccess,
         error,
         isBrowserCompatible,
+        getHardwareWalletErrorMessage,
+        getHardwareWalletErrorRecommendations,
     }
 }
 

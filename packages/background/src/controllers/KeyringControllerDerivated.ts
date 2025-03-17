@@ -666,63 +666,64 @@ export default class KeyringControllerDerivated extends KeyringController {
                 log.debug(
                     `No existing keyring found for ${device}, creating new keyring during connection completion`
                 );
-                
+
                 const hdPath = this._HDPathForDevice(device);
                 log.debug(
                     `Using HD path ${hdPath} for new ${device} keyring`
                 );
-                
+
                 keyring = await this.addNewKeyring(keyringType, {
                     hdPath: hdPath,
                 });
             }
 
-            // Set the transport method for MV3 after user has granted permission in UI
             log.debug(
                 'Setting Ledger transport method to webhid after UI permission'
             );
-            
-            try {
-                // If updateTransportMethod fails, it might be due to permission issues
-                await keyring.updateTransportMethod('webhid');
-            } catch (error) {
-                log.error('Failed to update transport method:', error);
-                // Try an alternative approach if available
-                if (keyring.setTransportMethod) {
-                    await keyring.setTransportMethod('webhid');
-                } else {
-                    throw error;
+
+            // Set transport method to WebHID with retry logic
+            let success = false;
+            let retries = 0;
+            const maxRetries = 3;
+
+            while (!success && retries < maxRetries) {
+                try {
+                    await keyring.updateTransportMethod('webhid');
+                    success = true;
+                    log.debug('Successfully updated Ledger transport method');
+                } catch (e) {
+                    retries++;
+                    log.warn(`Failed to update transport method (attempt ${retries}/${maxRetries}):`, e);
+
+                    if (retries >= maxRetries) {
+                        throw e;
+                    }
+
+                    // Wait before retrying
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
 
-            // Try to unlock the keyring
             try {
-                log.debug(`Unlocking keyring for ${device}`);
+                // Unlock the keyring to complete the connection
                 await keyring.unlock();
-                log.debug('Keyring unlock completed');
-            } catch (error) {
-                log.error('Failed to unlock keyring:', error);
-                
-                // Check for specific error types and provide better error handling
-                const errorMsg = String(error).toLowerCase();
-                
-                if (errorMsg.includes('permission') || errorMsg.includes('access denied')) {
+                log.debug('Successfully unlocked Ledger keyring');
+                return true;
+            } catch (e: any) {
+                // Handle common Ledger errors with better messages
+                if (e.message && e.message.includes('Ledger device: UNKNOWN_ERROR')) {
                     throw new Error('Permission denied. Please reconnect your Ledger and try again.');
-                } else if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
-                    throw new Error('Connection timed out. Make sure your Ledger is unlocked with the Ethereum app open.');
-                } else if (errorMsg.includes('locked')) {
-                    throw new Error('Ledger device is locked. Please unlock your device and open the Ethereum app.');
-                } else {
-                    throw error;
                 }
+                if (e.message && e.message.includes('Timeout')) {
+                    throw new Error('Connection timed out. Make sure your Ledger is unlocked with the Ethereum app open.');
+                }
+                if (e.message && e.message.includes('Ledger device: CONDITIONS_OF_USE_NOT_SATISFIED')) {
+                    throw new Error('Ledger device is locked. Please unlock your device and open the Ethereum app.');
+                }
+                throw e;
             }
-
-            return true;
         } catch (e: any) {
-            log.error(
-                `Failed to complete hardware connection for ${device}:`,
-                e
-            );
+            log.error(`Failed to complete hardware connection for ${device}:`, e);
             throw e;
         }
     }
@@ -1245,14 +1246,38 @@ export default class KeyringControllerDerivated extends KeyringController {
      * setLedgerWebHIDTransportType
      *
      * Sets the transport method to WebHID for Ledger devices.
+     * Also implements retry logic for increased reliability.
      */
     public async setLedgerWebHIDTransportType(): Promise<void> {
         const keyring = await this.getKeyringFromDevice(Devices.LEDGER);
-        if (keyring) {
-            // Set the transport method to 'webhid' by default in an asynchronously manner to avoid blocking the UI
-            keyring.updateTransportMethod('webhid').catch((e: Error) => {
-                log.error('setLedgerWebHIDTransportType', e.message);
-            });
+        try {
+            if (keyring) {
+                // Add retry logic for transport method update
+                let success = false;
+                let retries = 0;
+                const maxRetries = 3;
+
+                while (!success && retries < maxRetries) {
+                    try {
+                        await keyring.updateTransportMethod('webhid');
+                        success = true;
+                        log.debug('Successfully updated Ledger transport method');
+                    } catch (e) {
+                        retries++;
+                        log.warn(`Failed to update transport method (attempt ${retries}/${maxRetries}):`, e);
+
+                        if (retries >= maxRetries) {
+                            throw e;
+                        }
+
+                        // Wait before retrying
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+            }
+        } catch (e) {
+            log.error('setLedgerWebHIDTransportType failed:', e.message);
+            throw e;
         }
     }
 

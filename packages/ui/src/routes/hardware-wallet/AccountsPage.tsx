@@ -136,8 +136,8 @@ const HardwareWalletAccountsPage = () => {
             (a) => a.address === account.address
         )
             ? state.selectedAccounts.filter(
-                  (a) => a.address !== account.address
-              )
+                (a) => a.address !== account.address
+            )
             : [...state.selectedAccounts, account]
 
         setState({ selectedAccounts: selected })
@@ -155,6 +155,20 @@ const HardwareWalletAccountsPage = () => {
                         await selectAccount(state.selectedAccounts[0].address)
                         resolve(true)
                     } catch (e) {
+                        // Enhanced error handling for Ledger devices
+                        if (vendor === Devices.LEDGER) {
+                            if (e.message && typeof e.message === 'string') {
+                                if (e.message.includes('timeout') || e.message.includes('Timeout')) {
+                                    reject(new Error('Connection timed out. Make sure your Ledger is unlocked with the Ethereum app open.'));
+                                } else if (e.message.includes('locked')) {
+                                    reject(new Error('Ledger device is locked. Please unlock your device.'));
+                                } else if (e.message.includes('denied') || e.message.includes('permission')) {
+                                    reject(new Error('Permission denied. Please reconnect your Ledger and try again.'));
+                                }
+                            }
+                        }
+
+                        // If no specific error was handled, pass the original error
                         reject(e)
                     }
                 })
@@ -165,6 +179,7 @@ const HardwareWalletAccountsPage = () => {
             })
         } catch (e) {
             log.error(e)
+            setState({ deviceNotReady: true }) // Show device not ready dialog on error
         }
     }
 
@@ -182,7 +197,7 @@ const HardwareWalletAccountsPage = () => {
             // Clear the state after the HD path is updated
             setState({ selectedAccounts: [], currentPage: 1 })
             setHDPath(hdPath)
-        } catch (e) {}
+        } catch (e) { }
     }
 
     const onUpdatePageSize = (pageSize: number) => {
@@ -238,7 +253,7 @@ const HardwareWalletAccountsPage = () => {
             <div className="flex flex-col space-y-2 text-sm text-primary-grey-dark p-8">
                 <div style={{ minHeight: "280px" }}>
                     {state.deviceAccounts.length > 0 &&
-                    !state.gettingAccounts ? (
+                        !state.gettingAccounts ? (
                         state.deviceAccounts.map((account) => (
                             <HardwareWalletAccount
                                 account={account}
@@ -250,17 +265,34 @@ const HardwareWalletAccountsPage = () => {
                                 key={account.index}
                             />
                         ))
+                    ) : state.gettingAccounts ? (
+                        <div className="flex flex-col items-center justify-center h-64">
+                            <Spinner color="blue" size="32" />
+                            <p className="mt-4 text-primary-grey-dark text-center">
+                                {vendor === Devices.LEDGER ? (
+                                    <>
+                                        Loading accounts from your Ledger device.<br />
+                                        Please make sure the Ethereum app is open.<br />
+                                        This may take a few moments...
+                                    </>
+                                ) : (
+                                    <>Loading accounts, please wait...</>
+                                )}
+                            </p>
+                        </div>
                     ) : (
-                        <div className="flex items-center justify-center w-full h-full">
-                            {state.gettingAccounts ? (
-                                <Spinner size="48" color="black" />
-                            ) : (
-                                <span>
-                                    Cannot fetch accounts because the device is
-                                    disconnected or locked, please go back and
-                                    connect it again.
-                                </span>
-                            )}
+                        <div className="flex flex-col items-center justify-center h-64">
+                            <p className="text-primary-grey-dark text-center">
+                                {vendor === Devices.LEDGER ? (
+                                    <>
+                                        No accounts found with current HD path.<br />
+                                        Try changing the HD path in Advanced Settings<br />
+                                        or make sure your Ledger has the Ethereum app open.
+                                    </>
+                                ) : (
+                                    <>No accounts found. Try changing the HD path in Advanced Settings.</>
+                                )}
+                            </p>
                         </div>
                     )}
                 </div>
@@ -309,14 +341,11 @@ const HardwareWalletAccountsPage = () => {
                 )}
                 {vendor !== Devices.KEYSTONE && (
                     <AccountsPageAdvancedSettings
-                        currentHDPath={
-                            hdPath ||
-                            HDPaths[vendor].find((p) => p.default)?.path ||
-                            BIP44_PATH
-                        }
-                        disabled={state.gettingAccounts}
+                        currentHDPath={hdPath || ""}
                         vendor={vendor}
+                        disabled={isImportingAccounts}
                         setHDPath={updateHDPath}
+                        isLoadingHDPath={isLoadingHDPath}
                     />
                 )}
                 {vendor === Devices.KEYSTONE && isKeystoneConnected && (

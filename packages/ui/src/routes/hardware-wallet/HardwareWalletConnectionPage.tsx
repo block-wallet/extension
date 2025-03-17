@@ -20,6 +20,7 @@ interface ErrorDialogProps {
     recommendations: string[];
     onClose: () => void;
     onRetry?: () => void;
+    vendor: Devices;
 }
 
 const ConnectionErrorDialog: React.FC<ErrorDialogProps> = ({
@@ -27,7 +28,8 @@ const ConnectionErrorDialog: React.FC<ErrorDialogProps> = ({
     errorType,
     recommendations,
     onClose,
-    onRetry
+    onRetry,
+    vendor
 }) => {
     return (
         <WarningDialog
@@ -36,8 +38,24 @@ const ConnectionErrorDialog: React.FC<ErrorDialogProps> = ({
             message={
                 <div>
                     <p>
-                        We encountered an issue while trying to connect your hardware wallet.
+                        We encountered an issue while trying to connect your {vendor} hardware wallet.
                     </p>
+                    {recommendations.length > 0 && (
+                        <div className="mt-4">
+                            <p className="font-semibold mb-2">Try the following:</p>
+                            <ul className="list-disc pl-5">
+                                {recommendations.map((rec, index) => (
+                                    <li key={index} className="mb-1">{rec}</li>
+                                ))}
+                            </ul>
+
+                            {vendor === Devices.LEDGER && (
+                                <p className="mt-3 text-xs italic">
+                                    Note: Ledger connections work best in Chrome-based browsers using WebHID.
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </div>
             }
             onDone={onRetry || onClose}
@@ -52,7 +70,7 @@ const ConnectionErrorDialog: React.FC<ErrorDialogProps> = ({
 
 const HardwareWalletConnectionPage = () => {
     const history = useOnMountHistory()
-    const { connect, isLoading, getHardwareWalletErrorMessage, getHardwareWalletErrorRecommendations } = useHardwareWalletConnect()
+    const { connect, isLoading: isConnectLoading, getHardwareWalletErrorMessage, getHardwareWalletErrorRecommendations } = useHardwareWalletConnect()
     const [deviceNotReady, setDeviceNotReady] = useState(false)
     const [browserCompatibility, setBrowserCompatibility] = useState(
         checkHardwareWalletCompatibility()
@@ -61,6 +79,7 @@ const HardwareWalletConnectionPage = () => {
         type: ConnectionErrorType;
         recommendations: string[];
     } | null>(null)
+    const [isLoading, setIsLoading] = useState(false)
 
     const vendor = history.location.state.vendor as Devices
     const deviceSteps = DEVICE_CONNECTION_STEPS[vendor]
@@ -84,8 +103,8 @@ const HardwareWalletConnectionPage = () => {
             return ConnectionErrorType.PERMISSION_DENIED;
         } else if (errorMessage === HardwareWalletError.CONNECTION_FAILED) {
             return ConnectionErrorType.DEVICE_NOT_READY;
-        } else if (errorMessage === HardwareWalletError.BROWSER_INCOMPATIBLE || 
-                  errorMessage === HardwareWalletError.UNSUPPORTED_BROWSER) {
+        } else if (errorMessage === HardwareWalletError.BROWSER_INCOMPATIBLE ||
+            errorMessage === HardwareWalletError.UNSUPPORTED_BROWSER) {
             return ConnectionErrorType.BROWSER_INCOMPATIBLE;
         }
         return ConnectionErrorType.UNKNOWN_ERROR;
@@ -102,6 +121,12 @@ const HardwareWalletConnectionPage = () => {
         }
 
         try {
+            // Add loading state feedback for user
+            if (vendor === Devices.LEDGER) {
+                setIsLoading(true)
+                log.debug("Connecting to Ledger device...")
+            }
+
             const resultOk = await connect(vendor)
             if (resultOk) {
                 history.push({
@@ -121,29 +146,45 @@ const HardwareWalletConnectionPage = () => {
             // Use our enhanced error handling helpers
             if (error instanceof Error) {
                 const errorMessage = error.message;
-                
+
                 // Use the error specific recommendations - limit to one
                 if (Object.values(HardwareWalletError).includes(errorMessage as HardwareWalletError)) {
                     const hwError = errorMessage as HardwareWalletError;
-                    
+
                     // Map hardware wallet error to connection error type
                     errorType = mapToConnectionErrorType(hwError);
-                    
-                    // Get specific recommendations based on error type and device - only the first one
+
+                    // Get specific recommendations based on error type and device
                     const allRecommendations = getHardwareWalletErrorRecommendations(hwError, vendor);
-                    recommendations = allRecommendations.slice(0, 1);
-                } else if (errorMessage.toLowerCase().includes("permission") || 
-                           errorMessage.toLowerCase().includes("denied")) {
+
+                    // Get up to 3 recommendations for Ledger, 1 for other devices
+                    recommendations = vendor === Devices.LEDGER
+                        ? allRecommendations.slice(0, 3)
+                        : allRecommendations.slice(0, 1);
+                } else if (errorMessage.toLowerCase().includes("permission") ||
+                    errorMessage.toLowerCase().includes("denied")) {
                     errorType = ConnectionErrorType.PERMISSION_DENIED;
                     recommendations = ["You denied permission to access the hardware wallet."];
-                } else if (errorMessage.toLowerCase().includes("timeout") || 
-                          errorMessage.toLowerCase().includes("attempts")) {
+                } else if (errorMessage.toLowerCase().includes("timeout") ||
+                    errorMessage.toLowerCase().includes("attempts")) {
                     errorType = ConnectionErrorType.CONNECTION_TIMEOUT;
-                    recommendations = ["The connection to your device timed out."];
+                    recommendations = [
+                        "The connection to your device timed out.",
+                        ...(vendor === Devices.LEDGER ? [
+                            "Make sure the Ethereum app is open on your Ledger",
+                            "Ensure your device is not being used by another application"
+                        ] : [])
+                    ];
                 } else {
                     // Default error handling with device-specific recommendations
                     errorType = ConnectionErrorType.UNKNOWN_ERROR;
-                    recommendations = [`Please ensure your ${vendor} device is connected properly and unlocked.`];
+                    recommendations = [
+                        `Please ensure your ${vendor} device is connected properly and unlocked`,
+                        ...(vendor === Devices.LEDGER ? [
+                            "Make sure the Ethereum app is open on your Ledger",
+                            "Try using a different USB cable or port"
+                        ] : [])
+                    ];
                 }
             }
 
@@ -151,6 +192,8 @@ const HardwareWalletConnectionPage = () => {
                 type: errorType,
                 recommendations
             })
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -169,7 +212,7 @@ const HardwareWalletConnectionPage = () => {
             <ConnectDeviceStepsLayout
                 title="Before We Get Started"
                 subtitle={`Make sure you complete these ${deviceSteps.length} steps before you continue.`}
-                isLoading={isLoading}
+                isLoading={isLoading || isConnectLoading}
                 onConnect={onConnect}
                 steps={deviceSteps}
             />
@@ -196,6 +239,7 @@ const HardwareWalletConnectionPage = () => {
                     errorType={connectionError.type}
                     recommendations={connectionError.recommendations}
                     onClose={handleErrorDialogClose}
+                    vendor={vendor}
                     onRetry={
                         connectionError.type !== ConnectionErrorType.BROWSER_INCOMPATIBLE &&
                             connectionError.type !== ConnectionErrorType.USB_NOT_SUPPORTED

@@ -66,44 +66,51 @@ async function connectLedger() {
         }
 
         updateStatus('Please connect your Ledger device and unlock it...');
-        
+
         // First check if we already have permission to any HID devices
         const existingDevices = await navigator.hid.getDevices();
         const ledgerDevices = existingDevices.filter(d => d.vendorId === 0x2c97);
-        
+
         if (ledgerDevices.length > 0) {
             updateStatus('Using previously authorized Ledger device...');
-            
+
             const device = ledgerDevices[0];
-            
-            // Open connection
-            if (!device.opened) {
-                try {
-                    await device.open();
-                } catch (e) {
-                    console.error('Failed to open device:', e);
-                    throw new Error('Failed to open connection to Ledger. Please disconnect and reconnect your device.');
-                }
-            }
-            
-            // Verify the device name just to make sure
-            const deviceName = device.productName || 'Ledger device';
-            updateStatus(`${deviceName} connected. Please open the Ethereum app on your device.`);
-            
-            // Store the successful connection info in session storage for the extension
+
             try {
-                sessionStorage.setItem('ledger_connection', JSON.stringify({
-                    timestamp: Date.now(),
-                    success: true,
-                    vendorId: device.vendorId,
-                    productId: device.productId,
-                    productName: device.productName
-                }));
+                // Attempt to open connection with retry logic
+                if (!device.opened) {
+                    try {
+                        await device.open();
+                    } catch (e) {
+                        console.error('Failed to open device on first attempt, retrying...', e);
+                        // Short delay before retry
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        await device.open();
+                    }
+                }
+
+                // Verify the device name just to make sure
+                const deviceName = device.productName || 'Ledger device';
+                updateStatus(`${deviceName} connected. Please open the Ethereum app on your device.`);
+
+                // Store the successful connection info in session storage for the extension
+                try {
+                    sessionStorage.setItem('ledger_connection', JSON.stringify({
+                        timestamp: Date.now(),
+                        success: true,
+                        vendorId: device.vendorId,
+                        productId: device.productId,
+                        productName: device.productName
+                    }));
+                } catch (e) {
+                    console.warn('Failed to store connection info in session storage:', e);
+                }
+
+                return true;
             } catch (e) {
-                console.warn('Failed to store connection info in session storage:', e);
+                console.error('Error using existing device, will try requesting a new device', e);
+                // Continue to request a new device
             }
-            
-            return true;
         }
 
         // Request device access with improved error handling
@@ -111,15 +118,15 @@ async function connectLedger() {
         try {
             // Add a more explicit user-friendly message
             updateStatus('Select your Ledger device when the browser prompt appears...');
-            
+
             // Wait briefly to ensure the UI updates
             await new Promise(resolve => setTimeout(resolve, 300));
-            
+
             // Request device with explicit Ledger vendor ID
             devices = await navigator.hid.requestDevice({
                 filters: [{ vendorId: 0x2c97 }] // Ledger vendor ID
             });
-            
+
             if (devices.length === 0) {
                 throw new Error('No Ledger device selected');
             }
@@ -135,21 +142,28 @@ async function connectLedger() {
 
         const device = devices[0];
 
-        // Open connection
+        // Open connection with retry logic
         if (!device.opened) {
             try {
                 await device.open();
             } catch (e) {
-                console.error('Failed to open device:', e);
-                throw new Error('Failed to open connection to Ledger. Please disconnect and reconnect your device.');
+                console.error('Failed to open device on first attempt, retrying...', e);
+                // Short delay before retry
+                await new Promise(resolve => setTimeout(resolve, 500));
+                try {
+                    await device.open();
+                } catch (error) {
+                    console.error('Failed to open connection on retry:', error);
+                    throw new Error('Failed to open connection to Ledger. Please disconnect and reconnect your device.');
+                }
             }
         }
 
         // Verify the device name just to make sure
         const deviceName = device.productName || 'Ledger device';
         updateStatus(`${deviceName} connected. Please open the Ethereum app on your device.`);
-        
-        // Store the successful connection info in session storage for the extension
+
+        // Store the successful connection info in session storage
         try {
             sessionStorage.setItem('ledger_connection', JSON.stringify({
                 timestamp: Date.now(),
@@ -161,10 +175,20 @@ async function connectLedger() {
         } catch (e) {
             console.warn('Failed to store connection info in session storage:', e);
         }
-        
+
         return true;
     } catch (error) {
         console.error('Ledger connection error:', error);
+
+        // Provide more specific error messages based on common error patterns
+        if (error.message && error.message.includes('failed to open')) {
+            throw new Error('Failed to open connection to Ledger. Please ensure the device is not being used by another application.');
+        } else if (error.message && error.message.includes('device disconnected')) {
+            throw new Error('Ledger device was disconnected. Please reconnect your device and try again.');
+        } else if (error.message && error.message.includes('Unable to claim interface')) {
+            throw new Error('Cannot access Ledger device. Please close any other applications using your Ledger (like Ledger Live).');
+        }
+
         throw error;
     }
 }
@@ -265,7 +289,7 @@ function checkPreviousConnection() {
         if (storedConnection) {
             const connectionData = JSON.parse(storedConnection);
             // Only consider recent connections (within last 5 minutes)
-            if (connectionData && connectionData.success && 
+            if (connectionData && connectionData.success &&
                 (Date.now() - connectionData.timestamp < 300000)) {
                 updateStatus(`Using previously connected device: ${connectionData.productName || 'Ledger'}`);
                 return true;
@@ -278,14 +302,14 @@ function checkPreviousConnection() {
 }
 
 // Add an event listener for the beforeunload event to ensure clean termination
-window.addEventListener('beforeunload', function(event) {
+window.addEventListener('beforeunload', function (event) {
     // Notify that the user intentionally closed the window
     try {
-        notifyExtension({ 
-            success: false, 
+        notifyExtension({
+            success: false,
             device: getUrlParams().device || 'unknown',
-            error: 'user_closed', 
-            userCancelled: true 
+            error: 'user_closed',
+            userCancelled: true
         });
     } catch (e) {
         console.error('Failed to notify extension of window close:', e);
@@ -300,8 +324,8 @@ function init() {
     const cancelButtons = document.querySelectorAll('.cancel-button, .close-button');
     cancelButtons.forEach(button => {
         button.addEventListener('click', () => {
-            notifyExtension({ 
-                success: false, 
+            notifyExtension({
+                success: false,
                 device: params.device || 'unknown',
                 error: 'user_cancelled',
                 userCancelled: true

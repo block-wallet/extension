@@ -19,6 +19,9 @@ export enum HardwareWalletError {
     PERMISSION_DENIED = "PERMISSION_DENIED",
     UNSUPPORTED_BROWSER = "UNSUPPORTED_BROWSER",
     QR_SUBMISSION_FAILED = "QR_SUBMISSION_FAILED",
+    APP_NOT_OPEN = "APP_NOT_OPEN",
+    DEVICE_LOCKED = "DEVICE_LOCKED",
+    DEVICE_BUSY = "DEVICE_BUSY",
     UNKNOWN_ERROR = "UNKNOWN_ERROR"
 }
 
@@ -37,6 +40,12 @@ export const getHardwareWalletErrorMessage = (error: HardwareWalletError): strin
             return "Your browser doesn't support hardware wallet connections";
         case HardwareWalletError.QR_SUBMISSION_FAILED:
             return "Failed to process QR code data";
+        case HardwareWalletError.APP_NOT_OPEN:
+            return "Ethereum app not open on device";
+        case HardwareWalletError.DEVICE_LOCKED:
+            return "Hardware wallet is locked";
+        case HardwareWalletError.DEVICE_BUSY:
+            return "Hardware wallet is currently busy";
         case HardwareWalletError.UNKNOWN_ERROR:
         default:
             return "An unknown error occurred during hardware wallet connection";
@@ -52,19 +61,43 @@ export const getHardwareWalletErrorRecommendations = (error: HardwareWalletError
         "Ensure the appropriate app is open on your device",
         "Try disconnecting and reconnecting your device"
     ];
-    
+
     switch (error) {
         case HardwareWalletError.PERMISSION_DENIED:
             return [
                 "You denied permission to access the hardware wallet",
                 "Please try again and allow access when prompted"
             ];
+        case HardwareWalletError.APP_NOT_OPEN:
+            if (device === Devices.LEDGER) {
+                return [
+                    "Make sure the Ethereum app is open on your Ledger",
+                    "Navigate to the Ethereum app on your device and select it",
+                    "If you don't have the Ethereum app installed, install it through Ledger Live"
+                ];
+            }
+            return [
+                "Make sure the appropriate app is open on your device",
+                "Check device screen for any pending confirmations"
+            ];
+        case HardwareWalletError.DEVICE_LOCKED:
+            return [
+                "Unlock your device by entering your PIN",
+                "Make sure the device is awake and not in sleep mode"
+            ];
+        case HardwareWalletError.DEVICE_BUSY:
+            return [
+                "Your device is being used by another application",
+                "Close other applications that might be using your device (like Ledger Live)",
+                "Disconnect and reconnect your device"
+            ];
         case HardwareWalletError.CONNECTION_FAILED:
             if (device === Devices.LEDGER) {
                 return [
                     "Make sure your Ledger is connected, unlocked, and the Ethereum app is open",
                     "Browser support for USB devices can be limited. Try using Chrome",
-                    "Ensure no other applications are using your Ledger (like Ledger Live)"
+                    "Ensure no other applications are using your Ledger (like Ledger Live)",
+                    "Try using a different USB cable or port"
                 ];
             }
             return baseRecommendations;
@@ -81,6 +114,42 @@ const isBrowserCompatible = (): boolean => {
     // Extensions cannot directly use WebHID/WebUSB APIs
     // But we'll return true and handle connections through our offscreen page approach
     return true;
+}
+
+/**
+ * Analyzes error messages to determine specific Ledger error types
+ * @param error The error object or message
+ * @returns A specific HardwareWalletError type
+ */
+const determineLedgerErrorType = (error: Error | string): HardwareWalletError => {
+    const errorMsg = typeof error === 'string' ? error : (error.message || '');
+
+    if (errorMsg.includes('CONDITIONS_OF_USE_NOT_SATISFIED') ||
+        errorMsg.includes('locked') ||
+        errorMsg.includes('Ledger device is locked')) {
+        return HardwareWalletError.DEVICE_LOCKED;
+    }
+
+    if (errorMsg.includes('Timeout') ||
+        errorMsg.includes('timed out') ||
+        errorMsg.includes('Make sure your Ledger is unlocked with the Ethereum app open')) {
+        return HardwareWalletError.APP_NOT_OPEN;
+    }
+
+    if (errorMsg.includes('busy') ||
+        errorMsg.includes('in use') ||
+        errorMsg.includes('Cannot access Ledger device') ||
+        errorMsg.includes('close any other applications')) {
+        return HardwareWalletError.DEVICE_BUSY;
+    }
+
+    if (errorMsg.includes('permission') ||
+        errorMsg.includes('denied') ||
+        errorMsg.includes('UNKNOWN_ERROR')) {
+        return HardwareWalletError.PERMISSION_DENIED;
+    }
+
+    return HardwareWalletError.CONNECTION_FAILED;
 }
 
 /**
@@ -110,8 +179,19 @@ const executeConnect = async (
                 throw error;
             }
 
-            // Now complete the connection process after user has granted permission
-            return await completeHardwareConnection(vendor);
+            try {
+                // Now complete the connection process after user has granted permission
+                return await completeHardwareConnection(vendor);
+            } catch (error) {
+                log.error('Failed to complete Ledger connection after user gesture:', error);
+
+                // Determine the specific type of Ledger error
+                const specificErrorType = determineLedgerErrorType(error);
+                const specificError = new Error(specificErrorType);
+                (specificError as any).vendor = vendor;
+                (specificError as any).originalError = error;
+                throw specificError;
+            }
         }
 
         // Handle Keystone specific connection (QR-based)
@@ -143,7 +223,22 @@ const executeConnect = async (
 
         // Categorize error for better user feedback
         if (e.message && typeof e.message === 'string') {
-            if (e.message.includes('permission')) {
+            // If the error is already one of our custom errors, pass it through
+            if (Object.values(HardwareWalletError).includes(e.message as HardwareWalletError)) {
+                const error = new Error(e.message);
+                (error as any).vendor = vendor;
+                (error as any).originalError = e;
+                throw error;
+            }
+
+            // For Ledger devices, do more detailed error analysis
+            if (vendor === Devices.LEDGER) {
+                const specificErrorType = determineLedgerErrorType(e);
+                const error = new Error(specificErrorType);
+                (error as any).vendor = vendor;
+                (error as any).originalError = e;
+                throw error;
+            } else if (e.message.includes('permission')) {
                 const error = new Error(HardwareWalletError.PERMISSION_DENIED);
                 (error as any).vendor = vendor;
                 throw error;
@@ -195,6 +290,7 @@ const useHardwareWalletConnect = (isReconnecting = false) => {
         isBrowserCompatible,
         getHardwareWalletErrorMessage,
         getHardwareWalletErrorRecommendations,
+        determineLedgerErrorType
     }
 }
 

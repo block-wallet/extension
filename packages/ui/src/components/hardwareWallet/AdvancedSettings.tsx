@@ -11,21 +11,30 @@ import CloseIcon from "../icons/CloseIcon"
 import Select from "../input/Select"
 import Tooltip from "../label/Tooltip"
 import Icon, { IconName } from "../ui/Icon"
+import Spinner from "../spinner/Spinner"
 
-export const AccountsPageAdvancedSettings = ({
-    currentHDPath,
-    vendor,
-    disabled,
-    setHDPath,
-}: {
+interface AccountsPageAdvancedSettingsProps {
     currentHDPath: string
     vendor: Devices
     disabled?: boolean
     setHDPath: (hdPath: string) => void
-}) => {
+    isLoadingHDPath?: boolean
+}
+
+/**
+ * Enhanced component for displaying and managing hardware wallet advanced settings
+ */
+export const AccountsPageAdvancedSettings = ({
+    currentHDPath,
+    vendor,
+    disabled = false,
+    setHDPath,
+    isLoadingHDPath = false,
+}: AccountsPageAdvancedSettingsProps) => {
     const [openModal, setOpenModal] = useState(false)
     const hdPaths = HDPaths[vendor]
     const [selectedHDPath, setSelectedHDPath] = useState<string>(currentHDPath)
+    const [isUpdating, setIsUpdating] = useState(false)
 
     useEffect(() => {
         setSelectedHDPath(currentHDPath)
@@ -35,6 +44,41 @@ export const AccountsPageAdvancedSettings = ({
     useOnClickOutside(ref, () => {
         setOpenModal(false)
     })
+
+    // Get description for the current HD path
+    const getHDPathDescription = () => {
+        if (vendor === Devices.LEDGER) {
+            if (currentHDPath === "m/44'/60'/0'/0") {
+                return "Ledger Legacy"
+            } else if (currentHDPath === "m/44'/60'/0'/0/0") {
+                return "Ledger Live"
+            }
+        }
+        return "Standard BIP44"
+    }
+
+    // Handle HD path update with loading state
+    const handleUpdateHDPath = async () => {
+        try {
+            setIsUpdating(true)
+            setHDPath(selectedHDPath)
+            // Simulate waiting for backend update
+            await new Promise(resolve => setTimeout(resolve, 500))
+        } finally {
+            setIsUpdating(false)
+            setOpenModal(false)
+        }
+    }
+
+    // If loading the HD path, show a spinner
+    if (isLoadingHDPath) {
+        return (
+            <div className="flex justify-center items-center p-4">
+                <Spinner color="blue" size="24" />
+            </div>
+        )
+    }
+
     return (
         <>
             <div
@@ -46,9 +90,14 @@ export const AccountsPageAdvancedSettings = ({
                         : "hover:underline"
                 )}
             >
-                <span className="font-semibold text-base text-black">
-                    Advanced Settings
-                </span>
+                <div className="flex flex-col">
+                    <span className="font-semibold text-base text-black">
+                        Advanced Settings
+                    </span>
+                    <span className="text-xs text-primary-grey-dark">
+                        Current Path: {currentHDPath} ({getHDPathDescription()})
+                    </span>
+                </div>
                 <div>
                     <Icon
                         name={IconName.RIGHT_CHEVRON}
@@ -90,10 +139,25 @@ export const AccountsPageAdvancedSettings = ({
                 </div>
                 <Divider />
                 <div className="flex flex-col w-full space-y-6 p-6">
-                    <span>
-                        If you don't see the accounts you're expecting, try
-                        switching the HD path.
-                    </span>
+                    <div className="text-sm space-y-2">
+                        <p>
+                            If you don't see the accounts you're expecting, try
+                            switching the HD path.
+                        </p>
+                        {vendor === Devices.LEDGER && (
+                            <div className="bg-gray-50 p-3 rounded text-xs">
+                                <p className="font-bold">Ledger HD Paths:</p>
+                                <ul className="list-disc pl-5 mt-1 space-y-1">
+                                    <li>Ledger Live path: m/44'/60'/0'/0/x</li>
+                                    <li>Ledger Legacy path: m/44'/60'/0'/x</li>
+                                </ul>
+                                <p className="mt-2 italic">
+                                    Use the Ledger Live path if you created accounts in Ledger Live.
+                                    Use Legacy if you've used your Ledger with older applications.
+                                </p>
+                            </div>
+                        )}
+                    </div>
                     <div className="flex flex-col space-y-2">
                         <label>HD Path</label>
                         <Select
@@ -122,13 +186,18 @@ export const AccountsPageAdvancedSettings = ({
                             Cancel
                         </button>
                         <button
-                            onClick={() => {
-                                setHDPath(selectedHDPath)
-                                setOpenModal(false)
-                            }}
+                            onClick={handleUpdateHDPath}
+                            disabled={isUpdating}
                             className={classnames(Classes.button)}
                         >
-                            Save
+                            {isUpdating ? (
+                                <div className="flex items-center">
+                                    <Spinner color="white" size="16" />
+                                    <span className="ml-2">Updating...</span>
+                                </div>
+                            ) : (
+                                "Save"
+                            )}
                         </button>
                     </div>
                 </div>

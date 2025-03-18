@@ -153,6 +153,13 @@ const initBlockWallet = async () => {
         devTools,
     });
 
+    // After initializing blankController, restore hardware wallet connections if needed
+    if (isManifestV3()) {
+        restoreHardwareWalletConnections(blankController).catch(error => {
+            log.error('Failed to restore hardware wallet connections:', error);
+        });
+    }
+
     // Clear badge on init
     updateExtensionBadge('');
 
@@ -391,16 +398,44 @@ if (isManifestV3()) {
         console.log('Session storage changes detected', changes);
     });
 
-    // Listen for messages from client pages or potential push events
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        // Check if this is a push-like notification message
-        if (message && message.type === 'PUSH_NOTIFICATION') {
-            console.log('Push-like notification received', message);
-            // Process notification even when service worker was inactive
-            sendResponse({ received: true });
-            return true; // Keep the message channel open for async response
-        }
-    });
-
     registerBlankProviderContentScript();
+}
+
+/**
+ * Restores hardware wallet connections from session storage after service worker restarts.
+ */
+async function restoreHardwareWalletConnections(blankController: BlankController): Promise<void> {
+    try {
+        if (!chrome.storage?.session) return;
+
+        // Get all hardware wallet states from session storage
+        const result = await chrome.storage.session.get(null);
+        const hwKeyringKeys = Object.keys(result).filter(key =>
+            key.startsWith('hw_keyring_'));
+
+        if (hwKeyringKeys.length === 0) {
+            log.debug('No hardware wallet states to restore');
+            return;
+        }
+
+        log.info(`Found ${hwKeyringKeys.length} hardware wallet states to restore`);
+
+        // Restore each hardware wallet connection
+        for (const key of hwKeyringKeys) {
+            const hwState = result[key];
+            const deviceName = key.replace('hw_keyring_', '').toUpperCase();
+
+            try {
+                await blankController.restoreHardwareWalletState({
+                    device: deviceName,
+                    state: hwState
+                });
+                log.info(`Successfully restored ${deviceName} hardware wallet state`);
+            } catch (error) {
+                log.error(`Failed to restore ${deviceName} hardware wallet state:`, error);
+            }
+        }
+    } catch (error) {
+        log.error('Error in restoreHardwareWalletConnections:', error);
+    }
 }

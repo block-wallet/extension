@@ -97,6 +97,43 @@ const HardwareWalletConnectionPage = () => {
         }
     }, [])
 
+    // Add this effect to check for existing connection status
+    useEffect(() => {
+        // Only run for Ledger devices
+        if (vendor !== Devices.LEDGER) return;
+
+        // Check if we have a connection status stored
+        const checkConnectionStatus = async () => {
+            try {
+                // Try to access chrome.storage.session (MV3)
+                if (chrome.storage && chrome.storage.session) {
+                    const result = await chrome.storage.session.get('ledger_connection_status');
+                    
+                    if (result.ledger_connection_status && 
+                        result.ledger_connection_status.connected &&
+                        // Check if the connection is recent (last 5 minutes)
+                        Date.now() - result.ledger_connection_status.timestamp < 5 * 60 * 1000) {
+                        
+                        log.debug("Found valid Ledger connection status, navigating to accounts page");
+                        
+                        // Navigate to accounts page
+                        history.push({
+                            pathname: "/hardware-wallet/accounts",
+                            state: { vendor },
+                        });
+                        
+                        // Clear the status to prevent multiple redirects
+                        await chrome.storage.session.remove('ledger_connection_status');
+                    }
+                }
+            } catch (e) {
+                log.error("Error checking Ledger connection status:", e);
+            }
+        };
+        
+        checkConnectionStatus();
+    }, [vendor, history]);
+
     // Map hardware wallet errors to connection error types
     const mapToConnectionErrorType = (errorMessage: string): ConnectionErrorType => {
         if (errorMessage === HardwareWalletError.PERMISSION_DENIED) {

@@ -1981,6 +1981,19 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             // Check if the keyring exists
             if (!keyring) {
                 log.error(`No keyring found for ${device}`);
+
+                // Attempt to restore the keyring from session storage
+                try {
+                    const restored = await this._keyringController.tryRestoreHardwareWalletFromStorage(device);
+                    if (restored) {
+                        log.info(`Successfully restored keyring for ${device}, retrying account retrieval`);
+                        // Retry with the restored keyring
+                        return this.getHardwareWalletAccounts(device, pageIndex, pageSize);
+                    }
+                } catch (restoreError) {
+                    log.error(`Failed to restore keyring for ${device}:`, restoreError);
+                }
+
                 throw new Error('No keyring found');
             }
 

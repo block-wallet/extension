@@ -766,8 +766,8 @@ export interface RequestApproveAllowance {
     customNonce?: number;
 }
 
-export interface RequestGetBridgeTokens {}
-export interface RequestGetBridgeAvailableChains {}
+export interface RequestGetBridgeTokens { }
+export interface RequestGetBridgeAvailableChains { }
 export interface RequestGetBridgeQuote {
     checkAllowance: boolean;
     quoteRequest: BridgeQuoteRequest;
@@ -1075,7 +1075,7 @@ export interface RequestSetNativeCurrency {
     currencyCode: string;
 }
 
-export interface RequestGetValidCurrencies {}
+export interface RequestGetValidCurrencies { }
 
 export interface RequestToggleReleaseNotesSubscription {
     releaseNotesSubscriptionEnabled: boolean;
@@ -1098,7 +1098,7 @@ export interface RequestUpdateTransactionStatus {
     status: TransactionStatus;
 }
 
-export interface RequestAddressBookClear {}
+export interface RequestAddressBookClear { }
 
 export interface RequestAddressBookDelete {
     address: string;
@@ -1110,7 +1110,7 @@ export interface RequestAddressBookSet {
     note?: string;
 }
 
-export interface RequestAddressBookGet {}
+export interface RequestAddressBookGet { }
 export interface RequestAddressBookGetByAddress {
     address: string;
 }
@@ -1220,9 +1220,9 @@ export interface SubmitQRHardwareSignatureMessage {
     requestId: string;
     ur: URParameter;
 }
-export interface CancelQRHardwareSignRequestMessage {}
+export interface CancelQRHardwareSignRequestMessage { }
 
-export interface DismissMessage {}
+export interface DismissMessage { }
 
 export interface GetQRHardwareETHSignRequestMessage {
     ethTx: TypedTransaction;

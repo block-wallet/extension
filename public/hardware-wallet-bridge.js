@@ -11,6 +11,62 @@ function updateStatus(message, isError = false) {
         statusElement.style.background = isError ? '#ffebee' : '#e8f4fd';
         statusElement.style.color = isError ? '#c62828' : '#0277bd';
         console.log(message);
+
+        // If we detect a successful connection message, enhance it
+        if (message && message.includes('Successfully connected to LEDGER')) {
+            // Trigger a custom event that our page script can listen for
+            try {
+                const event = new CustomEvent('ledgerConnected', {
+                    detail: {
+                        success: true,
+                        device: 'LEDGER',
+                        timestamp: Date.now()
+                    }
+                });
+                window.dispatchEvent(event);
+                console.log('Dispatched ledgerConnected event');
+
+                // Create a navigation button
+                setTimeout(() => {
+                    try {
+                        // Add navigation button if it doesn't exist yet
+                        if (!document.getElementById('continue-button')) {
+                            const container = document.querySelector('.container');
+                            const navDiv = document.createElement('div');
+                            navDiv.style = 'text-align: center; margin-top: 20px;';
+
+                            const btn = document.createElement('button');
+                            btn.id = 'continue-button';
+                            btn.innerText = 'Continue to Account Selection';
+                            btn.style = 'padding: 12px 24px; background: #1E88E5; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;';
+                            btn.onclick = () => {
+                                // Navigate to the accounts page directly
+                                window.location.href = `${window.location.origin}/tab.html#/hardware-wallet/accounts`;
+                            };
+
+                            navDiv.appendChild(btn);
+                            container.appendChild(navDiv);
+
+                            // Add a note about automatic navigation
+                            const note = document.createElement('p');
+                            note.innerText = 'If you are not automatically redirected, click the button above.';
+                            note.style = 'text-align: center; color: #666; margin-top: 8px; font-size: 12px;';
+                            container.appendChild(note);
+
+                            // Try automatic navigation after 3 seconds
+                            setTimeout(() => {
+                                console.log('Attempting automatic navigation...');
+                                window.location.href = `${window.location.origin}/tab.html#/hardware-wallet/accounts`;
+                            }, 3000);
+                        }
+                    } catch (buttonError) {
+                        console.error('Error creating navigation button:', buttonError);
+                    }
+                }, 500);
+            } catch (eventError) {
+                console.error('Error dispatching custom event:', eventError);
+            }
+        }
     }
 }
 

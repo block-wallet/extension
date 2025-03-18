@@ -52,11 +52,12 @@
     "manifest_version": 3,
     "name": "BlockWallet",
     "permissions": [
-        "activeTab",
         "storage",
         "unlimitedStorage",
-        "notifications",
-        "alarms"
+        "activeTab",
+        "tabs",
+        "scripting",
+        "notifications"
     ],
     "optional_permissions": [],
     "host_permissions": [

@@ -14,6 +14,9 @@
         "styled-components": "^6.1.15"
     },
     "devDependencies": {
+        "@ledgerhq/hw-app-eth": "^6.43.0",
+        "@ledgerhq/hw-transport-node-hid": "^6.29.5",
+        "@ledgerhq/logs": "^6.12.0",
         "@types/webextension-polyfill": "^0.12.3",
         "babel-plugin-styled-components": "^2.1.4"
     }

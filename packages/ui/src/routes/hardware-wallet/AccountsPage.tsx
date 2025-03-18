@@ -7,6 +7,7 @@ import {
     getHardwareWalletHDPath,
     setHardwareWalletHDPath,
     selectAccount,
+    connectHardwareWallet,
 } from "../../context/commActions"
 import {
     AccountInfo,
@@ -53,11 +54,101 @@ const initialState: State = {
     deviceNotReady: false,
 }
 
+async function ensureKeyringInitialized(vendor: Devices): Promise<boolean> {
+    if (vendor !== Devices.LEDGER) return true; // Only needed for Ledger
+
+    log.debug("Ensuring Ledger keyring is properly initialized");
+
+    // Try multiple initialization approaches with retry logic
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    while (attempts < maxAttempts) {
+        try {
+            attempts++;
+            log.debug(`Initialization attempt ${attempts}/${maxAttempts}`);
+
+            // Try to initialize the keyring in the UI context where DOM is available
+            await connectHardwareWallet(vendor);
+            log.debug("Ledger keyring initialization successful");
+            return true;
+        } catch (e) {
+            log.error(`Failed to initialize Ledger keyring (attempt ${attempts}/${maxAttempts}):`, e);
+
+            if (attempts >= maxAttempts) {
+                // Last attempt - check if we have a connection status that indicates success
+                try {
+                    if (chrome.storage && chrome.storage.session) {
+                        const result = await chrome.storage.session.get('ledger_connection_status');
+                        if (result.ledger_connection_status && result.ledger_connection_status.connected) {
+                            // We have a connection status, so we can proceed even without a proper keyring
+                            log.debug("Proceeding with minimal keyring connection based on status");
+                            return true;
+                        }
+                    }
+                } catch (storageError) {
+                    log.error("Failed to check connection status:", storageError);
+                }
+                return false;
+            }
+
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+
+    return false;
+}
+
 const HardwareWalletAccountsPage = () => {
     const history = useOnMountHistory()!
     const [enabledPagination, setEnabledPagination] = useState(true)
-    const vendor = history.location.state.vendor as Devices
-    const isKeystoneConnected = history.location.state.isKeystoneConnected
+
+    // Get vendor from history state or URL params as fallback
+    const getVendorFromUrlOrHistory = () => {
+        // First try from history state
+        if (history.location.state && history.location.state.vendor) {
+            return history.location.state.vendor;
+        }
+
+        // Try from URL search params as fallback
+        try {
+            const searchParams = new URLSearchParams(window.location.search);
+            const vendorParam = searchParams.get('vendor');
+            if (vendorParam && Object.values(Devices).includes(vendorParam as Devices)) {
+                return vendorParam as Devices;
+            }
+
+            // Last resort - check URL hash for vendor
+            const hash = window.location.hash;
+            if (hash && hash.includes('vendor=')) {
+                const vendorMatch = hash.match(/vendor=([A-Z]+)/);
+                if (vendorMatch && Object.values(Devices).includes(vendorMatch[1] as Devices)) {
+                    return vendorMatch[1] as Devices;
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing URL params:', e);
+        }
+
+        // Default to LEDGER if we can't determine the vendor
+        console.warn('Could not determine vendor from history or URL, defaulting to LEDGER');
+        return Devices.LEDGER;
+    };
+
+    const vendor = getVendorFromUrlOrHistory();
+
+    // If vendor wasn't in history state, update it for future navigation
+    useEffect(() => {
+        if (!history.location.state || !history.location.state.vendor) {
+            history.replace({
+                ...history.location,
+                state: { ...(history.location.state || {}), vendor }
+            });
+        }
+    }, [history, vendor]);
+
+    const isKeystoneConnected = history.location.state?.isKeystoneConnected
 
     // Added error state to track and display specific errors
     const [fetchError, setFetchError] = useState<string | null>(null);
@@ -92,8 +183,25 @@ const HardwareWalletAccountsPage = () => {
     )
 
     useEffect(() => {
-        run(getHardwareWalletHDPath(vendor))
-    }, [vendor, run])
+        // Check for direct navigation state from service worker
+        const checkNavigationState = async () => {
+            try {
+                if (chrome.storage && chrome.storage.session) {
+                    const result = await chrome.storage.session.get('navigation_state');
+                    if (result.navigation_state) {
+                        // Clear the state to prevent using it again
+                        await chrome.storage.session.remove('navigation_state');
+                        log.debug("Retrieved navigation state from session storage");
+                    }
+                }
+            } catch (e) {
+                log.error("Error checking navigation state:", e);
+            }
+        };
+
+        checkNavigationState();
+        run(getHardwareWalletHDPath(vendor));
+    }, [vendor, run]);
 
     const [accountsBalances, setAccountBalances] = useState<{
         [address in string]: BigNumber
@@ -237,10 +345,28 @@ const HardwareWalletAccountsPage = () => {
 
     useEffect(() => {
         if (hdPath) {
-            if (vendor === Devices.KEYSTONE) checkKeystoneAccounts()
-            getAccounts()
+            // First ensure keyring is initialized if needed
+            const initAndGetAccounts = async () => {
+                if (vendor === Devices.LEDGER) {
+                    // Initialize keyring in UI context first
+                    const initialized = await ensureKeyringInitialized(vendor);
+                    if (!initialized) {
+                        setFetchError("Failed to initialize Ledger connection. Please try reconnecting your device.");
+                        setState({
+                            gettingAccounts: false,
+                            deviceAccounts: []
+                        });
+                        return;
+                    }
+                }
+
+                if (vendor === Devices.KEYSTONE) checkKeystoneAccounts();
+                getAccounts();
+            };
+
+            initAndGetAccounts();
         }
-    }, [checkKeystoneAccounts, getAccounts, hdPath, vendor])
+    }, [checkKeystoneAccounts, getAccounts, hdPath, vendor]);
 
     const toggleAccount = (account: DeviceAccountInfo) => {
         const selected = state.selectedAccounts.some(

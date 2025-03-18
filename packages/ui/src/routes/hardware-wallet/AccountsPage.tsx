@@ -58,6 +58,13 @@ const HardwareWalletAccountsPage = () => {
     const [enabledPagination, setEnabledPagination] = useState(true)
     const vendor = history.location.state.vendor as Devices
     const isKeystoneConnected = history.location.state.isKeystoneConnected
+
+    // Added error state to track and display specific errors
+    const [fetchError, setFetchError] = useState<string | null>(null);
+    // Add state to track alternative path attempts
+    const [isSearchingAlternativePaths, setIsSearchingAlternativePaths] = useState(false);
+    const [hdPathsChecked, setHdPathsChecked] = useState<string[]>([]);
+
     const {
         run,
         data: hdPath,
@@ -106,23 +113,127 @@ const HardwareWalletAccountsPage = () => {
         }
     }, [vendor])
 
+    // Function to try alternative HD paths for Ledger
+    const tryAlternativeHDPaths = async () => {
+        if (vendor !== Devices.LEDGER || !hdPath) return;
+
+        // Set searching state
+        setIsSearchingAlternativePaths(true);
+        setState({ gettingAccounts: true });
+
+        // Define alternative paths to try
+        const alternativePaths = [
+            "m/44'/60'/0'/0",     // Ledger Legacy
+            "m/44'/60'/0'/0/0",   // Ledger Live
+            "m/44'/60'/0'"        // Alternative
+        ].filter(path => path !== hdPath);
+
+        log.debug(`Trying ${alternativePaths.length} alternative HD paths: ${alternativePaths.join(', ')}`);
+
+        // Add current path to checked paths
+        setHdPathsChecked(prev => [...prev, hdPath]);
+
+        // Try each path
+        for (const path of alternativePaths) {
+            try {
+                log.debug(`Attempting HD path: ${path}`);
+
+                // Set the HD path
+                await setHardwareWalletHDPath(vendor, path);
+                setHDPath(path);
+
+                // Add to checked paths
+                setHdPathsChecked(prev => [...prev, path]);
+
+                // Fetch accounts with this path
+                const accounts = await getHardwareWalletAccounts(
+                    vendor,
+                    state.currentPage,
+                    state.pageSize
+                );
+
+                if (accounts && accounts.length > 0) {
+                    log.info(`Found ${accounts.length} accounts with HD path: ${path}`);
+                    setState({
+                        deviceAccounts: accounts,
+                        gettingAccounts: false,
+                    });
+
+                    // Success! No need to try more paths
+                    setIsSearchingAlternativePaths(false);
+                    return;
+                }
+
+                log.debug(`No accounts found with HD path: ${path}`);
+            } catch (e) {
+                log.error(`Error trying HD path ${path}:`, e);
+                // Continue to next path
+            }
+        }
+
+        // If we got here, we tried all paths with no success
+        log.warn("Tried all HD paths, none returned accounts");
+        setIsSearchingAlternativePaths(false);
+        setState({
+            deviceAccounts: [],
+            gettingAccounts: false,
+        });
+    };
+
     const getAccounts = useCallback(async () => {
-        setState({ gettingAccounts: true })
+        setState({ gettingAccounts: true });
+        setFetchError(null); // Reset error state before new fetch
+
         try {
+            log.debug(`Fetching accounts for ${vendor}, page ${state.currentPage}, size ${state.pageSize}`);
             const accounts = await getHardwareWalletAccounts(
                 vendor,
                 state.currentPage,
                 state.pageSize
-            )
-            setState({
-                deviceAccounts: accounts,
-                gettingAccounts: false,
-            })
+            );
+
+            if (accounts && accounts.length > 0) {
+                log.debug(`Retrieved ${accounts.length} accounts for ${vendor}`);
+                setState({
+                    deviceAccounts: accounts,
+                    gettingAccounts: false,
+                });
+            } else {
+                log.warn(`No accounts found for ${vendor} with current HD path: ${hdPath}`);
+                setState({
+                    deviceAccounts: [],
+                    gettingAccounts: false,
+                });
+            }
         } catch (e) {
-            log.error(e)
-            setState({ deviceNotReady: true })
+            log.error(`Failed to get accounts for ${vendor}:`, e);
+
+            // Set appropriate error message based on error
+            let errorMessage = 'Failed to fetch accounts';
+
+            if (e.message) {
+                if (vendor === Devices.LEDGER) {
+                    if (e.message.includes('Ethereum app') || e.message.includes('Application')) {
+                        errorMessage = 'Ethereum app not open on Ledger. Please open it and try again.';
+                    } else if (e.message.includes('locked') || e.message.includes('CONDITIONS_OF_USE_NOT_SATISFIED')) {
+                        errorMessage = 'Ledger device is locked. Please unlock your device.';
+                    } else if (e.message.includes('Timeout') || e.message.includes('timed out')) {
+                        errorMessage = 'Connection timed out. Please check your Ledger device.';
+                    } else if (e.message.includes('U2F')) {
+                        errorMessage = 'Browser compatibility issue. Try using Chrome.';
+                    } else if (e.message.includes('disconnected')) {
+                        errorMessage = 'Ledger disconnected. Please reconnect your device.';
+                    }
+                }
+            }
+
+            setFetchError(errorMessage);
+            setState({
+                gettingAccounts: false,
+                deviceAccounts: []
+            });
         }
-    }, [state.currentPage, state.pageSize, vendor])
+    }, [state.currentPage, state.pageSize, vendor, hdPath]);
 
     useEffect(() => {
         if (hdPath) {
@@ -207,6 +318,65 @@ const HardwareWalletAccountsPage = () => {
         })
     }
 
+    // Add a retry button handler
+    const handleRetryFetch = async () => {
+        setFetchError(null);
+        await getAccounts();
+    };
+
+    // If searching alternative paths, show a special loading message
+    const renderLoadingState = () => {
+        return (
+            <div className="flex flex-col items-center justify-center h-64">
+                <Spinner color="blue" size="32" />
+                <p className="mt-4 text-primary-grey-dark text-center">
+                    {vendor === Devices.LEDGER ? (
+                        isSearchingAlternativePaths ? (
+                            <>
+                                Searching for accounts across different HD paths...<br />
+                                Please wait...
+                            </>
+                        ) : (
+                            <>
+                                Loading accounts from your Ledger device.<br />
+                                Please make sure the Ethereum app is open.<br />
+                                This may take a few moments...
+                            </>
+                        )
+                    ) : (
+                        <>Loading accounts, please wait...</>
+                    )}
+                </p>
+            </div>
+        );
+    };
+
+    const renderNoAccountsState = () => {
+        return (
+            <div className="flex flex-col items-center justify-center h-64">
+                <p className="text-primary-grey-dark text-center">
+                    {vendor === Devices.LEDGER ? (
+                        <>
+                            No accounts found with current HD path.<br />
+                            Try changing the HD path in Advanced Settings<br />
+                            or make sure your Ledger has the Ethereum app open.
+                        </>
+                    ) : (
+                        <>No accounts found. Try changing the HD path in Advanced Settings.</>
+                    )}
+                </p>
+                {vendor === Devices.LEDGER && hdPath && (
+                    <button
+                        onClick={tryAlternativeHDPaths}
+                        className="mt-4 bg-primary-blue-default hover:bg-primary-blue-hover text-white font-medium py-2 px-4 rounded-md"
+                    >
+                        Try Different HD Paths
+                    </button>
+                )}
+            </div>
+        );
+    };
+
     return (
         <HardwareWalletSetupLayout
             title="Select Accounts"
@@ -266,34 +436,33 @@ const HardwareWalletAccountsPage = () => {
                             />
                         ))
                     ) : state.gettingAccounts ? (
+                        renderLoadingState()
+                    ) : fetchError ? (
                         <div className="flex flex-col items-center justify-center h-64">
-                            <Spinner color="blue" size="32" />
-                            <p className="mt-4 text-primary-grey-dark text-center">
-                                {vendor === Devices.LEDGER ? (
-                                    <>
-                                        Loading accounts from your Ledger device.<br />
-                                        Please make sure the Ethereum app is open.<br />
-                                        This may take a few moments...
-                                    </>
-                                ) : (
-                                    <>Loading accounts, please wait...</>
-                                )}
-                            </p>
+                            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4 max-w-md">
+                                <p className="text-red-700 text-center font-medium">Error fetching accounts</p>
+                                <p className="text-red-600 text-center mt-2">{fetchError}</p>
+                            </div>
+                            <button
+                                onClick={handleRetryFetch}
+                                className="bg-primary-blue-default hover:bg-primary-blue-hover text-white font-medium py-2 px-4 rounded-md"
+                            >
+                                Retry
+                            </button>
+                            {vendor === Devices.LEDGER && (
+                                <div className="mt-4 text-xs text-gray-500 max-w-md text-center">
+                                    <p className="font-medium mb-1">Troubleshooting Tips:</p>
+                                    <ul className="list-disc pl-5 text-left">
+                                        <li>Make sure the Ethereum app is open on your Ledger</li>
+                                        <li>Check that your Ledger is unlocked</li>
+                                        <li>Try changing the HD path in Advanced Settings below</li>
+                                        <li>Ensure your Ledger firmware is up to date</li>
+                                    </ul>
+                                </div>
+                            )}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-64">
-                            <p className="text-primary-grey-dark text-center">
-                                {vendor === Devices.LEDGER ? (
-                                    <>
-                                        No accounts found with current HD path.<br />
-                                        Try changing the HD path in Advanced Settings<br />
-                                        or make sure your Ledger has the Ethereum app open.
-                                    </>
-                                ) : (
-                                    <>No accounts found. Try changing the HD path in Advanced Settings.</>
-                                )}
-                            </p>
-                        </div>
+                        renderNoAccountsState()
                     )}
                 </div>
 

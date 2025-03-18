@@ -1799,3 +1799,29 @@ export const setHideSmallBalances = async (enabled: boolean): Promise<void> => {
         enabled,
     })
 }
+
+/**
+ * Gets hardware wallet accounts with fallback to different HD paths if the default doesn't return accounts
+ * This is especially useful for Ledger devices where users may be using different HD paths
+ * 
+ * @param device Device type
+ * @param page Page index
+ * @param pageSize Number of accounts per page  
+ * @returns Promise resolving to an array of device accounts
+ */
+export const getHardwareWalletAccountsWithFallback = async (
+    device: Devices,
+    page: number = 0,
+    pageSize: number = 5
+): Promise<DeviceAccountInfo[]> => {
+    // Try with the current HD path first
+    const accounts = await getHardwareWalletAccounts(device, page, pageSize)
+
+    // If accounts are found, return them
+    if (accounts && accounts.length > 0) {
+        return accounts
+    }
+
+    // Return empty accounts array for now - the UI will handle retrying with different HD paths
+    return accounts
+}

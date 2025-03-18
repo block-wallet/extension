@@ -65,105 +65,76 @@ async function connectLedger() {
             throw new Error('WebHID API not available in your browser');
         }
 
-        updateStatus('Please connect your Ledger device and unlock it...');
+        updateStatus('Initializing connection to LEDGER...');
 
         // First check if we already have permission to any HID devices
         const existingDevices = await navigator.hid.getDevices();
         const ledgerDevices = existingDevices.filter(d => d.vendorId === 0x2c97);
 
+        let device;
+
         if (ledgerDevices.length > 0) {
             updateStatus('Using previously authorized Ledger device...');
-
-            const device = ledgerDevices[0];
-
+            device = ledgerDevices[0];
+        } else {
+            // Request device access with improved error handling
             try {
-                // Attempt to open connection with retry logic
+                // Add a more explicit user-friendly message
+                updateStatus('Please connect your Ledger device and unlock it...');
+
+                // Wait briefly to ensure the UI updates
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // Request device with explicit Ledger vendor ID
+                const devices = await navigator.hid.requestDevice({
+                    filters: [{ vendorId: 0x2c97 }] // Ledger vendor ID
+                });
+
+                if (devices.length === 0) {
+                    throw new Error('No Ledger device selected');
+                }
+
+                device = devices[0];
+            } catch (e) {
+                if (e.name === 'SecurityError') {
+                    throw new Error('Permission denied. Please allow access to your Ledger device.');
+                } else if (e.name === 'NotFoundError') {
+                    throw new Error('No Ledger device found. Please ensure your device is connected.');
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        // Open connection with retry logic - try up to 3 times
+        let connected = false;
+        let attempts = 0;
+        const maxAttempts = 3;
+
+        while (!connected && attempts < maxAttempts) {
+            try {
+                attempts++;
                 if (!device.opened) {
-                    try {
-                        await device.open();
-                    } catch (e) {
-                        console.error('Failed to open device on first attempt, retrying...', e);
-                        // Short delay before retry
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                        await device.open();
-                    }
-                }
-
-                // Verify the device name just to make sure
-                const deviceName = device.productName || 'Ledger device';
-                updateStatus(`${deviceName} connected. Please open the Ethereum app on your device.`);
-
-                // Store the successful connection info in session storage for the extension
-                try {
-                    sessionStorage.setItem('ledger_connection', JSON.stringify({
-                        timestamp: Date.now(),
-                        success: true,
-                        vendorId: device.vendorId,
-                        productId: device.productId,
-                        productName: device.productName
-                    }));
-                } catch (e) {
-                    console.warn('Failed to store connection info in session storage:', e);
-                }
-
-                return true;
-            } catch (e) {
-                console.error('Error using existing device, will try requesting a new device', e);
-                // Continue to request a new device
-            }
-        }
-
-        // Request device access with improved error handling
-        let devices;
-        try {
-            // Add a more explicit user-friendly message
-            updateStatus('Select your Ledger device when the browser prompt appears...');
-
-            // Wait briefly to ensure the UI updates
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            // Request device with explicit Ledger vendor ID
-            devices = await navigator.hid.requestDevice({
-                filters: [{ vendorId: 0x2c97 }] // Ledger vendor ID
-            });
-
-            if (devices.length === 0) {
-                throw new Error('No Ledger device selected');
-            }
-        } catch (e) {
-            if (e.name === 'SecurityError') {
-                throw new Error('Permission denied. Please allow access to your Ledger device.');
-            } else if (e.name === 'NotFoundError') {
-                throw new Error('No Ledger device found. Please ensure your device is connected.');
-            } else {
-                throw e;
-            }
-        }
-
-        const device = devices[0];
-
-        // Open connection with retry logic
-        if (!device.opened) {
-            try {
-                await device.open();
-            } catch (e) {
-                console.error('Failed to open device on first attempt, retrying...', e);
-                // Short delay before retry
-                await new Promise(resolve => setTimeout(resolve, 500));
-                try {
                     await device.open();
-                } catch (error) {
-                    console.error('Failed to open connection on retry:', error);
-                    throw new Error('Failed to open connection to Ledger. Please disconnect and reconnect your device.');
                 }
+                connected = true;
+            } catch (e) {
+                console.error(`Failed to open device on attempt ${attempts}/${maxAttempts}:`, e);
+
+                if (attempts >= maxAttempts) {
+                    throw new Error('Unable to open connection to Ledger after multiple attempts. Please disconnect and reconnect your device.');
+                }
+
+                // Wait longer between each retry
+                await new Promise(resolve => setTimeout(resolve, 500 * attempts));
             }
         }
 
-        // Verify the device name just to make sure
-        const deviceName = device.productName || 'Ledger device';
+        // Verify the device name and inform user
+        const deviceName = device.productName || 'Nano X';
         updateStatus(`${deviceName} connected. Please open the Ethereum app on your device.`);
 
-        // Store the successful connection info in session storage
+        // Store connection info in session storage for the extension to access
         try {
             sessionStorage.setItem('ledger_connection', JSON.stringify({
                 timestamp: Date.now(),
@@ -179,17 +150,20 @@ async function connectLedger() {
         return true;
     } catch (error) {
         console.error('Ledger connection error:', error);
+        updateStatus(`Error connecting to Ledger: ${error.message}`, true);
 
-        // Provide more specific error messages based on common error patterns
-        if (error.message && error.message.includes('failed to open')) {
-            throw new Error('Failed to open connection to Ledger. Please ensure the device is not being used by another application.');
-        } else if (error.message && error.message.includes('device disconnected')) {
-            throw new Error('Ledger device was disconnected. Please reconnect your device and try again.');
-        } else if (error.message && error.message.includes('Unable to claim interface')) {
-            throw new Error('Cannot access Ledger device. Please close any other applications using your Ledger (like Ledger Live).');
+        // Store the failed connection in session storage
+        try {
+            sessionStorage.setItem('ledger_connection', JSON.stringify({
+                timestamp: Date.now(),
+                success: false,
+                error: error.message
+            }));
+        } catch (e) {
+            console.warn('Failed to store error info in session storage:', e);
         }
 
-        throw error;
+        return false;
     }
 }
 

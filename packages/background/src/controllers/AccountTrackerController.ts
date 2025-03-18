@@ -64,6 +64,7 @@ import { ContractDetails, fetchContractDetails } from '../utils/contractsInfo';
 import { getMaxBlockBatchSize } from '../utils/rpc/rpcConfigBuilder';
 import TransactionController from './transactions/TransactionController';
 import { resolveAllownaceParamsFromTransaction } from './transactions/utils/utils';
+import { HDPaths, HDPathDescription } from "../utils/constants/devices";
 
 export enum AccountStatus {
     ACTIVE = 'ACTIVE',
@@ -483,18 +484,18 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             });
         } else if (transactionMeta.transactionParams.hash) {
             const event: NewTokenAllowanceSpendersEventParametersSignature['2'] =
-                {
-                    [tokenAddress]: [
-                        {
-                            spender: spenderAddress,
-                            txHash: transactionMeta.transactionParams.hash,
-                            txTime:
-                                transactionMeta.confirmationTime ||
-                                transactionMeta.submittedTime ||
-                                new Date().getTime(),
-                        },
-                    ],
-                };
+            {
+                [tokenAddress]: [
+                    {
+                        spender: spenderAddress,
+                        txHash: transactionMeta.transactionParams.hash,
+                        txTime:
+                            transactionMeta.confirmationTime ||
+                            transactionMeta.submittedTime ||
+                            new Date().getTime(),
+                    },
+                ],
+            };
             this._handleNewTokenAllowanceSpendersEvents(
                 chainId,
                 accountAddress,
@@ -674,7 +675,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     tokenAllowances &&
                     tokenAllowances[spender] &&
                     (tokenAllowances[spender].txHash || '').toLowerCase() ===
-                        txHash.toLowerCase()
+                    txHash.toLowerCase()
                 ) {
                     continue;
                 }
@@ -999,9 +1000,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 //Query only one batch in case we don't have the queryFromBlock
                 queryFromBlock = Math.max(
                     this._blockUpdatesController.getBlockNumber() -
-                        getMaxBlockBatchSize(
-                            this._networkController.network.chainId
-                        ),
+                    getMaxBlockBatchSize(
+                        this._networkController.network.chainId
+                    ),
                     0
                 );
             }
@@ -1450,8 +1451,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         const release = !addresses
             ? await this._mutex.acquire()
             : () => {
-                  return;
-              };
+                return;
+            };
 
         try {
             // Get addresses from state
@@ -1611,10 +1612,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                 knownTokens.includes(tokenAddress)
                             ) {
                                 account.balances[chainId].tokens[tokenAddress] =
-                                    {
-                                        token,
-                                        balance,
-                                    };
+                                {
+                                    token,
+                                    balance,
+                                };
                             }
                         }
                     }
@@ -1658,9 +1659,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         )
             ? account.balances[chainId].nativeTokenBalance
             : accountAddress in stateAccounts &&
-              chainId in stateAccounts[accountAddress].balances
-            ? stateAccounts[accountAddress].balances[chainId].nativeTokenBalance
-            : Zero;
+                chainId in stateAccounts[accountAddress].balances
+                ? stateAccounts[accountAddress].balances[chainId].nativeTokenBalance
+                : Zero;
 
         let finalTokens: AccountBalanceTokens = {};
         if (
@@ -1887,7 +1888,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             if (
                 this.store.getState().accounts[accountAddress].balances &&
                 chainId in
-                    this.store.getState().accounts[accountAddress].balances
+                this.store.getState().accounts[accountAddress].balances
             ) {
                 return this.store.getState().accounts[accountAddress].balances[
                     chainId
@@ -1911,7 +1912,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             if (
                 this.store.getState().accounts[accountAddress].balances &&
                 chainId in
-                    this.store.getState().accounts[accountAddress].balances
+                this.store.getState().accounts[accountAddress].balances
             ) {
                 return this.store.getState().accounts[accountAddress].balances[
                     chainId
@@ -1971,63 +1972,93 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         pageSize: number
     ): Promise<DeviceAccountInfo[]> {
         return this._keyringController.getMutex().runExclusive(async () => {
+            log.debug(`Fetching accounts for ${device}, page ${pageIndex}, size ${pageSize}`);
+
             const keyring = await this._keyringController.getKeyringFromDevice(
                 device
             );
 
             // Check if the keyring exists
             if (!keyring) {
+                log.error(`No keyring found for ${device}`);
                 throw new Error('No keyring found');
+            }
+
+            // Log current HD path to help troubleshoot
+            try {
+                const hdPath = await this._keyringController.getHDPathForDevice(device);
+                log.debug(`Using HD path: ${hdPath} for ${device}`);
+            } catch (e) {
+                log.error('Failed to get HD path:', e);
             }
 
             // Check if the keyring is unlocked, if not unlock it
             if (device !== Devices.KEYSTONE) {
-                if (!keyring.isUnlocked()) {
-                    await keyring.unlock();
+                try {
+                    if (!keyring.isUnlocked()) {
+                        log.debug(`${device} keyring is locked, attempting to unlock`);
+                        await keyring.unlock();
+                        log.debug(`${device} keyring unlocked successfully`);
+                    } else {
+                        log.debug(`${device} keyring is already unlocked`);
+                    }
+                } catch (error) {
+                    log.error(`Failed to unlock ${device} keyring:`, error);
+                    throw error;
                 }
             }
 
             keyring.perPage = pageSize;
+            log.debug(`Set perPage to ${pageSize} for ${device} keyring`);
 
-            const deviceAccounts: [] = await this._keyringController.getPage(
-                device,
-                keyring,
-                pageIndex
-            );
-            if (deviceAccounts) {
-                const checkIfAccountNameExists = (
-                    name: string,
-                    address: string
-                ) =>
-                    !!Object.values(this.store.getState().accounts).find(
-                        (t) => t.name === name && t.address !== address
-                    );
+            try {
+                log.debug(`Calling getPage for ${device}, page ${pageIndex}`);
+                const deviceAccounts: [] = await this._keyringController.getPage(
+                    device,
+                    keyring,
+                    pageIndex
+                );
 
-                return deviceAccounts.map((a: any) => {
-                    const baseName = `${
-                        device.charAt(0).toUpperCase() +
-                        device.slice(1).toLowerCase()
-                    } ${a.index + 1}`;
+                if (deviceAccounts && deviceAccounts.length > 0) {
+                    log.debug(`Retrieved ${deviceAccounts.length} accounts for ${device}`);
 
-                    let name = baseName;
-                    // Check if the account name is already used by another account
-                    let nameExists = checkIfAccountNameExists(name, a.address);
-                    let idx = 1;
-                    while (nameExists) {
-                        name = `${baseName} (${idx})`;
-                        nameExists = checkIfAccountNameExists(name, a.address);
-                        idx++;
-                    }
+                    const checkIfAccountNameExists = (
+                        name: string,
+                        address: string
+                    ) =>
+                        !!Object.values(this.store.getState().accounts).find(
+                            (t) => t.name === name && t.address !== address
+                        );
 
-                    return {
-                        index: a.index,
-                        address: a.address,
-                        name,
-                    } as DeviceAccountInfo;
-                });
+                    return deviceAccounts.map((a: any) => {
+                        const baseName = `${device.charAt(0).toUpperCase() +
+                            device.slice(1).toLowerCase()
+                            } ${a.index + 1}`;
+
+                        let name = baseName;
+                        // Check if the account name is already used by another account
+                        let nameExists = checkIfAccountNameExists(name, a.address);
+                        let idx = 1;
+                        while (nameExists) {
+                            name = `${baseName} (${idx})`;
+                            nameExists = checkIfAccountNameExists(name, a.address);
+                            idx++;
+                        }
+
+                        return {
+                            index: a.index,
+                            address: a.address,
+                            name,
+                        } as DeviceAccountInfo;
+                    });
+                } else {
+                    log.warn(`No accounts found for ${device} at page ${pageIndex}`);
+                    return [];
+                }
+            } catch (error) {
+                log.error(`Error getting page for ${device}:`, error);
+                throw error;
             }
-
-            return [];
         });
     }
 
@@ -2113,5 +2144,88 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             accounts: accounts,
             hiddenAccounts: hiddenAccounts,
         });
+    }
+
+    /**
+     * Attempts to fetch hardware wallet accounts with fallback to different HD paths if needed
+     * 
+     * @param device Hardware wallet device type
+     * @param pageIndex Page index to fetch
+     * @param pageSize Number of accounts per page
+     * @returns Array of device accounts
+     */
+    public async getHardwareWalletAccountsWithFallback(
+        device: Devices,
+        pageIndex: number,
+        pageSize: number
+    ): Promise<DeviceAccountInfo[]> {
+        try {
+            // Try with current HD path first
+            const accounts = await this.getHardwareWalletAccounts(
+                device,
+                pageIndex,
+                pageSize
+            );
+
+            // If we found accounts, return them
+            if (accounts && accounts.length > 0) {
+                return accounts;
+            }
+
+            // If no accounts found and this is a Ledger device, try alternative paths
+            if (device === Devices.LEDGER) {
+                log.info("No accounts found with current HD path, trying alternatives");
+
+                // Get the current HD path
+                const currentPath = await this._keyringController.getHDPathForDevice(device);
+                log.debug(`Current HD path: ${currentPath}`);
+
+                // Get available HD paths for Ledger
+                const ledgerPaths = HDPaths[Devices.LEDGER]
+                    .filter((p: HDPathDescription) => p.path !== currentPath) // Exclude current path
+                    .map((p: HDPathDescription) => p.path);
+
+                log.debug(`Trying ${ledgerPaths.length} alternative paths: ${ledgerPaths.join(', ')}`);
+
+                // Try each alternative path
+                for (const path of ledgerPaths) {
+                    try {
+                        log.debug(`Trying alternative HD path: ${path}`);
+
+                        // Set the alternative HD path
+                        await this._keyringController.setHDPath(device, path);
+
+                        // Try to fetch accounts with this path
+                        const alternativeAccounts = await this.getHardwareWalletAccounts(
+                            device,
+                            pageIndex,
+                            pageSize
+                        );
+
+                        if (alternativeAccounts && alternativeAccounts.length > 0) {
+                            log.info(`Found ${alternativeAccounts.length} accounts using alternative path: ${path}`);
+                            return alternativeAccounts;
+                        }
+
+                        log.debug(`No accounts found with alternative path: ${path}`);
+                    } catch (e) {
+                        log.error(`Error trying alternative HD path ${path}:`, e);
+                        // Continue to next path
+                    }
+                }
+
+                log.warn("No accounts found with any HD path");
+
+                // Restore original HD path
+                log.debug(`Restoring original HD path: ${currentPath}`);
+                await this._keyringController.setHDPath(device, currentPath);
+            }
+
+            // Return empty array if no accounts found with any path
+            return [];
+        } catch (e) {
+            log.error("Error in getHardwareWalletAccountsWithFallback:", e);
+            throw e;
+        }
     }
 }

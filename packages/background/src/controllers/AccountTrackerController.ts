@@ -1974,26 +1974,56 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         return this._keyringController.getMutex().runExclusive(async () => {
             log.debug(`Fetching accounts for ${device}, page ${pageIndex}, size ${pageSize}`);
 
-            const keyring = await this._keyringController.getKeyringFromDevice(
-                device
-            );
+            // First, try to get the keyring
+            let keyring = await this._keyringController.getKeyringFromDevice(device);
 
-            // Check if the keyring exists
+            // If keyring doesn't exist, try to restore it
             if (!keyring) {
-                log.error(`No keyring found for ${device}`);
+                log.warn(`No keyring found for ${device}, attempting to restore from session storage`);
 
-                // Attempt to restore the keyring from session storage
                 try {
                     const restored = await this._keyringController.tryRestoreHardwareWalletFromStorage(device);
                     if (restored) {
-                        log.info(`Successfully restored keyring for ${device}, retrying account retrieval`);
-                        // Retry with the restored keyring
-                        return this.getHardwareWalletAccounts(device, pageIndex, pageSize);
+                        log.info(`Successfully restored ${device} keyring from session storage`);
+
+                        // Get the keyring again after restoration
+                        keyring = await this._keyringController.getKeyringFromDevice(device);
+
+                        if (!keyring) {
+                            log.error(`Keyring restoration for ${device} reported success but keyring still not found`);
+                        }
+                    } else {
+                        log.error(`Failed to restore keyring for ${device} from session storage`);
                     }
                 } catch (restoreError) {
-                    log.error(`Failed to restore keyring for ${device}:`, restoreError);
+                    log.error(`Error during keyring restoration for ${device}:`, restoreError);
                 }
+            }
 
+            // Final check if keyring exists
+            if (!keyring) {
+                // Before giving up, try one last approach - recreate the keyring from scratch
+                try {
+                    log.debug(`Last resort: trying to create a new keyring for ${device}`);
+
+                    // Try to connect to the hardware wallet directly
+                    const connectionResult = await this._keyringController.connectHardwareKeyring(device);
+
+                    if (connectionResult === true) {
+                        log.info(`Successfully created new keyring for ${device}`);
+                        keyring = await this._keyringController.getKeyringFromDevice(device);
+                    } else {
+                        // This case likely means we need user interaction
+                        log.debug(`Hardware wallet connection requires user interaction`);
+                    }
+                } catch (e) {
+                    log.error(`Failed to create new keyring for ${device}:`, e);
+                }
+            }
+
+            // If we still don't have a keyring, throw an error
+            if (!keyring) {
+                log.error(`No keyring found for ${device} after all recovery attempts`);
                 throw new Error('No keyring found');
             }
 
@@ -2011,67 +2041,35 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     if (!keyring.isUnlocked()) {
                         log.debug(`${device} keyring is locked, attempting to unlock`);
                         await keyring.unlock();
-                        log.debug(`${device} keyring unlocked successfully`);
-                    } else {
-                        log.debug(`${device} keyring is already unlocked`);
                     }
-                } catch (error) {
-                    log.error(`Failed to unlock ${device} keyring:`, error);
-                    throw error;
+                } catch (e) {
+                    log.error(`Failed to unlock keyring for ${device}:`, e);
+                    throw e;
                 }
             }
 
-            keyring.perPage = pageSize;
-            log.debug(`Set perPage to ${pageSize} for ${device} keyring`);
+            // Get accounts from the keyring
+            const accounts = await this._keyringController.getPage(
+                device,
+                keyring,
+                pageIndex
+            );
 
+            log.debug(`Retrieved ${accounts.length} accounts from ${device}`);
+
+            // After successfully getting accounts, persist the keyring state
+            // This ensures we have the latest state stored for future service worker restarts
             try {
-                log.debug(`Calling getPage for ${device}, page ${pageIndex}`);
-                const deviceAccounts: [] = await this._keyringController.getPage(
-                    device,
-                    keyring,
-                    pageIndex
-                );
-
-                if (deviceAccounts && deviceAccounts.length > 0) {
-                    log.debug(`Retrieved ${deviceAccounts.length} accounts for ${device}`);
-
-                    const checkIfAccountNameExists = (
-                        name: string,
-                        address: string
-                    ) =>
-                        !!Object.values(this.store.getState().accounts).find(
-                            (t) => t.name === name && t.address !== address
-                        );
-
-                    return deviceAccounts.map((a: any) => {
-                        const baseName = `${device.charAt(0).toUpperCase() +
-                            device.slice(1).toLowerCase()
-                            } ${a.index + 1}`;
-
-                        let name = baseName;
-                        // Check if the account name is already used by another account
-                        let nameExists = checkIfAccountNameExists(name, a.address);
-                        let idx = 1;
-                        while (nameExists) {
-                            name = `${baseName} (${idx})`;
-                            nameExists = checkIfAccountNameExists(name, a.address);
-                            idx++;
-                        }
-
-                        return {
-                            index: a.index,
-                            address: a.address,
-                            name,
-                        } as DeviceAccountInfo;
-                    });
-                } else {
-                    log.warn(`No accounts found for ${device} at page ${pageIndex}`);
-                    return [];
-                }
-            } catch (error) {
-                log.error(`Error getting page for ${device}:`, error);
-                throw error;
+                await this._keyringController['persistHardwareKeyringState'](device);
+            } catch (e) {
+                log.error(`Failed to persist keyring state after getting accounts:`, e);
             }
+
+            return accounts.map((account, i) => ({
+                index: pageIndex * pageSize + i,
+                address: account,
+                name: `${device} ${pageIndex * pageSize + i + 1}`,
+            }));
         });
     }
 

@@ -614,12 +614,14 @@ export default class KeyringControllerDerivated extends KeyringController {
                             for (const existingKeyring of existingKeyrings) {
                                 const accounts = await existingKeyring.getAccounts();
                                 if (accounts && accounts.length > 0) {
-                                    await this.removeAccount(accounts);
+                                    try {
+                                        await this.removeAccount(accounts);
+                                    } catch (e) {
+                                        log.warn(`Error removing account during cleanup: ${e.message}`);
+                                    }
                                 }
                             }
                         }
-
-                        // The rest of the existing code for adding keyring...
 
                         // Add the new keyring
                         const newKeyring = await this.addNewKeyring(this._getKeyringTypeFromDevice(device), {
@@ -637,8 +639,11 @@ export default class KeyringControllerDerivated extends KeyringController {
                             await newKeyring.unlock();
 
                             log.debug('Ledger keyring successfully initialized');
-                            // After successful connection, persist the state
+
+                            // Immediately persist the keyring state to ensure it survives service worker restarts
+                            log.debug('Persisting Ledger keyring state...');
                             await this.persistHardwareKeyringState(device);
+
                             return true;
                         } catch (e) {
                             log.warn('Initial connection failed, may need user gesture:', e);
@@ -664,8 +669,23 @@ export default class KeyringControllerDerivated extends KeyringController {
                 }
             } else if (device === Devices.TREZOR) {
                 // Existing Trezor code...
+
+                // After successful connection, persist the keyring state
+                log.debug('Persisting Trezor keyring state...');
+                await this.persistHardwareKeyringState(device);
+
+                return true;
             } else if (device === Devices.KEYSTONE) {
-                // Existing Keystone code...
+                // For Keystone device, we get the keyring and persist the state
+                const keystoneKeyring = await this.getKeyringFromDevice(device);
+                if (keystoneKeyring) {
+                    await keystoneKeyring.unlock();
+                }
+
+                log.debug('Persisting Keystone keyring state...');
+                await this.persistHardwareKeyringState(device);
+
+                return true;
             }
 
             // This line should be unreachable
@@ -1740,6 +1760,8 @@ export default class KeyringControllerDerivated extends KeyringController {
      */
     private async persistHardwareKeyringState(device: Devices): Promise<void> {
         try {
+            log.debug(`Persisting ${device} keyring state to session storage`);
+
             const keyring = await this.getKeyringFromDevice(device);
             if (!keyring) {
                 log.debug(`No keyring to persist for ${device}`);
@@ -1748,18 +1770,49 @@ export default class KeyringControllerDerivated extends KeyringController {
 
             // Serialize the keyring state
             const serializedKeyring = await keyring.serialize();
+            log.debug(`Successfully serialized ${device} keyring`);
+
+            // Additional safety check to ensure we have a valid serialized state
+            if (!serializedKeyring) {
+                log.error(`Failed to serialize ${device} keyring - serialized result is empty`);
+                return;
+            }
+
+            // Get the current HD path
+            let hdPath;
+            try {
+                hdPath = await this.getHDPathForDevice(device);
+                log.debug(`Using HD path ${hdPath} for ${device}`);
+            } catch (e) {
+                log.error(`Failed to get HD path for ${device}:`, e);
+                // Use default HD path as fallback
+                hdPath = this._HDPathForDevice(device);
+                log.debug(`Falling back to default HD path ${hdPath} for ${device}`);
+            }
 
             // Store in session storage with metadata
             if (chrome.storage?.session) {
+                const stateToStore = {
+                    type: this._getKeyringTypeFromDevice(device),
+                    state: serializedKeyring,
+                    timestamp: Date.now(),
+                    hdPath: hdPath
+                };
+
+                const storageKey = `hw_keyring_${device.toLowerCase()}`;
                 await chrome.storage.session.set({
-                    [`hw_keyring_${device.toLowerCase()}`]: {
-                        type: this._getKeyringTypeFromDevice(device),
-                        state: serializedKeyring,
-                        timestamp: Date.now(),
-                        hdPath: await this.getHDPathForDevice(device)
-                    }
+                    [storageKey]: stateToStore
                 });
-                log.debug(`Persisted ${device} keyring state to session storage`);
+
+                // Verify the storage succeeded
+                const verification = await chrome.storage.session.get(storageKey);
+                if (verification && verification[storageKey]) {
+                    log.debug(`Successfully persisted ${device} keyring state to session storage`);
+                } else {
+                    log.error(`Failed to verify ${device} keyring state persistence`);
+                }
+            } else {
+                log.error(`Chrome session storage not available, can't persist ${device} keyring state`);
             }
         } catch (error) {
             log.error(`Failed to persist ${device} keyring state:`, error);
@@ -1826,16 +1879,24 @@ export default class KeyringControllerDerivated extends KeyringController {
      */
     public async tryRestoreHardwareWalletFromStorage(device: Devices): Promise<boolean> {
         try {
-            if (!chrome.storage?.session) return false;
+            log.debug(`Attempting to restore ${device} keyring from session storage`);
 
-            const result = await chrome.storage.session.get(`hw_keyring_${device.toLowerCase()}`);
-            const hwState = result[`hw_keyring_${device.toLowerCase()}`];
-
-            if (!hwState) {
-                log.debug(`No persisted state found for ${device}`);
+            if (!chrome.storage?.session) {
+                log.error(`Chrome session storage not available, can't restore ${device} keyring`);
                 return false;
             }
 
+            const result = await chrome.storage.session.get(`hw_keyring_${device.toLowerCase()}`);
+            log.debug(`Session storage lookup result for ${device}: ${JSON.stringify(result)}`);
+
+            const hwState = result[`hw_keyring_${device.toLowerCase()}`];
+
+            if (!hwState) {
+                log.debug(`No persisted state found for ${device} in session storage`);
+                return false;
+            }
+
+            log.info(`Found persisted state for ${device}, attempting restoration`);
             return await this.restoreHardwareWalletState(device, hwState);
         } catch (error) {
             log.error(`Failed to restore ${device} from storage:`, error);

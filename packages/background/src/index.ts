@@ -16,6 +16,7 @@ import log, { LogLevelDesc } from 'loglevel';
 import { resolvePreferencesAfterWalletUpdate } from './utils/userPreferences';
 import { CONTENT } from './utils/types/communication';
 import { isManifestV3 } from './utils/manifest';
+import { Devices } from './utils/types/hardware';
 
 // Set log level
 log.setLevel(process.env.NODE_ENV === 'production' ? 'warn' : 'debug');
@@ -155,9 +156,14 @@ const initBlockWallet = async () => {
 
     // After initializing blankController, restore hardware wallet connections if needed
     if (isManifestV3()) {
-        restoreHardwareWalletConnections(blankController).catch(error => {
-            log.error('Failed to restore hardware wallet connections:', error);
-        });
+        // Run immediately and don't wait for promises to complete
+        // This ensures restoration happens as early as possible
+        log.info('Starting hardware wallet state restoration...');
+        setTimeout(() => {
+            restoreHardwareWalletConnections(blankController).catch(error => {
+                log.error('Failed to restore hardware wallet connections:', error);
+            });
+        }, 0);
     }
 
     // Clear badge on init
@@ -431,6 +437,21 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                     state: hwState
                 });
                 log.info(`Successfully restored ${deviceName} hardware wallet state`);
+
+                // After restoration, make sure the keyring is unlocked and ready to use
+                try {
+                    const keyringController = blankController['keyringController'];
+                    if (keyringController) {
+                        const keyring = await keyringController.getKeyringFromDevice(deviceName as Devices);
+                        if (keyring && typeof keyring.unlock === 'function') {
+                            log.debug(`Unlocking restored ${deviceName} keyring`);
+                            await keyring.unlock();
+                        }
+                    }
+                } catch (unlockError) {
+                    log.warn(`Failed to unlock restored ${deviceName} keyring:`, unlockError);
+                    // Continue even if unlock fails - we'll retry later
+                }
             } catch (error) {
                 log.error(`Failed to restore ${deviceName} hardware wallet state:`, error);
             }

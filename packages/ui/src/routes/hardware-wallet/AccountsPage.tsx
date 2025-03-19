@@ -8,6 +8,7 @@ import {
     setHardwareWalletHDPath,
     selectAccount,
     connectHardwareWallet,
+    completeHardwareConnection,
 } from "../../context/commActions"
 import {
     AccountInfo,
@@ -43,6 +44,7 @@ interface State {
 
     // HW state
     deviceNotReady: boolean
+    reconnecting: boolean
 }
 
 const initialState: State = {
@@ -52,6 +54,7 @@ const initialState: State = {
     pageSize: 5,
     currentPage: 1,
     deviceNotReady: false,
+    reconnecting: false,
 }
 
 async function ensureKeyringInitialized(vendor: Devices): Promise<boolean> {
@@ -333,6 +336,50 @@ const HardwareWalletAccountsPage = () => {
                         errorMessage = 'Ledger disconnected. Please reconnect your device.';
                     }
                 }
+            }
+
+            if (e.message && e.message.includes('No keyring found')) {
+                log.warn('Keyring not found, attempting automatic reconnection for', vendor);
+
+                // Add a little state to track reconnection attempts
+                setState({ reconnecting: true });
+
+                try {
+                    // First, try connecting the hardware wallet again
+                    let connectionSuccess = false;
+                    const connectionResult = await connectHardwareWallet(vendor);
+
+                    if (connectionResult === true) {
+                        log.debug('Successfully reconnected to', vendor);
+                        connectionSuccess = true;
+                    } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
+                        // Need user gesture - try to complete connection
+                        const completed = await completeHardwareConnection(vendor);
+                        if (completed) {
+                            log.debug('Successfully completed reconnection to', vendor);
+                            connectionSuccess = true;
+                        }
+                    }
+
+                    // If reconnection worked, try fetching accounts again
+                    if (connectionSuccess) {
+                        log.debug('Retrying account fetch after reconnection');
+                        setState({ reconnecting: false });
+
+                        // Small delay to ensure connection is fully established
+                        setTimeout(() => {
+                            getAccounts();
+                        }, 500);
+                        return;
+                    }
+                } catch (reconnectError) {
+                    log.error('Failed to automatically reconnect:', reconnectError);
+                }
+
+                setState({ reconnecting: false });
+
+                // Customize error message for keyring not found
+                errorMessage = `Hardware wallet connection lost. You may need to reconnect your ${vendor} device.`;
             }
 
             setFetchError(errorMessage);

@@ -408,55 +408,129 @@ if (isManifestV3()) {
 }
 
 /**
- * Restores hardware wallet connections from session storage after service worker restarts.
+ * Restores hardware wallet connections from storage after service worker restarts.
  */
 async function restoreHardwareWalletConnections(blankController: BlankController): Promise<void> {
     try {
-        if (!chrome.storage?.session) return;
+        log.info('Starting hardware wallet state restoration...');
 
-        // Get all hardware wallet states from session storage
-        const result = await chrome.storage.session.get(null);
-        const hwKeyringKeys = Object.keys(result).filter(key =>
-            key.startsWith('hw_keyring_'));
+        // Create a map to store the most recent state for each device
+        const deviceStates: Record<string, { state: any, source: string, timestamp: number }> = {};
 
-        if (hwKeyringKeys.length === 0) {
-            log.debug('No hardware wallet states to restore');
-            return;
+        // Check session storage first
+        if (chrome.storage?.session) {
+            try {
+                const sessionResult = await chrome.storage.session.get(null);
+                const hwSessionKeys = Object.keys(sessionResult).filter(key =>
+                    key.startsWith('hw_keyring_'));
+
+                for (const key of hwSessionKeys) {
+                    const state = sessionResult[key];
+                    if (state && state.timestamp) {
+                        const deviceName = key.replace('hw_keyring_', '').toUpperCase();
+                        deviceStates[deviceName] = {
+                            state,
+                            source: 'session',
+                            timestamp: state.timestamp
+                        };
+                        log.debug(`Found ${deviceName} in session storage with timestamp ${state.timestamp}`);
+                    }
+                }
+            } catch (e) {
+                log.error('Failed to get hardware wallet state from session storage:', e);
+            }
         }
 
-        log.info(`Found ${hwKeyringKeys.length} hardware wallet states to restore`);
-
-        // Restore each hardware wallet connection
-        for (const key of hwKeyringKeys) {
-            const hwState = result[key];
-            const deviceName = key.replace('hw_keyring_', '').toUpperCase();
-
+        // Then check local storage
+        if (chrome.storage?.local) {
             try {
-                await blankController.restoreHardwareWalletState({
-                    device: deviceName,
-                    state: hwState
-                });
-                log.info(`Successfully restored ${deviceName} hardware wallet state`);
+                const localResult = await chrome.storage.local.get(null);
+                const hwLocalKeys = Object.keys(localResult).filter(key =>
+                    key.startsWith('hw_keyring_'));
 
-                // After restoration, make sure the keyring is unlocked and ready to use
-                try {
-                    const keyringController = blankController['keyringController'];
-                    if (keyringController) {
-                        const keyring = await keyringController.getKeyringFromDevice(deviceName as Devices);
-                        if (keyring && typeof keyring.unlock === 'function') {
-                            log.debug(`Unlocking restored ${deviceName} keyring`);
-                            await keyring.unlock();
+                for (const key of hwLocalKeys) {
+                    const state = localResult[key];
+                    if (state && state.timestamp) {
+                        const deviceName = key.replace('hw_keyring_', '').toUpperCase();
+
+                        // Only use local storage if it's more recent than session storage or no session storage exists
+                        if (!deviceStates[deviceName] || state.timestamp > deviceStates[deviceName].timestamp) {
+                            deviceStates[deviceName] = {
+                                state,
+                                source: 'local',
+                                timestamp: state.timestamp
+                            };
+                            log.debug(`Found ${deviceName} in local storage with timestamp ${state.timestamp}`);
                         }
                     }
-                } catch (unlockError) {
-                    log.warn(`Failed to unlock restored ${deviceName} keyring:`, unlockError);
-                    // Continue even if unlock fails - we'll retry later
                 }
-            } catch (error) {
-                log.error(`Failed to restore ${deviceName} hardware wallet state:`, error);
+            } catch (e) {
+                log.error('Failed to get hardware wallet state from local storage:', e);
+            }
+        }
+
+        // Restore each device state
+        const devices = Object.keys(deviceStates);
+        if (devices.length > 0) {
+            log.info(`Found ${devices.length} hardware wallet states to restore: ${devices.join(', ')}`);
+
+            const keyringController = blankController['keyringController'];
+            if (!keyringController) {
+                throw new Error('Keyring controller not available');
+            }
+
+            for (const device of devices) {
+                try {
+                    const { state, source } = deviceStates[device];
+                    log.info(`Restoring ${device} from ${source} storage`);
+
+                    // Validate the state has required properties
+                    if (!state.state || !state.type) {
+                        log.error(`Invalid state structure for ${device}, missing required properties`);
+                        continue;
+                    }
+
+                    const restored = await keyringController.restoreHardwareWalletState({
+                        device: device,
+                        state: state
+                    });
+
+                    if (restored) {
+                        log.info(`Successfully restored ${device} hardware wallet connection`);
+                    } else {
+                        log.warn(`Failed to restore ${device} hardware wallet connection`);
+                    }
+                } catch (e) {
+                    log.error(`Error restoring ${device} hardware wallet connection:`, e);
+                }
+            }
+        } else {
+            log.info('No hardware wallet states found for restoration');
+
+            // Initialize ledger keyring proactively if on hardware wallet pages
+            try {
+                const tabs = await chrome.tabs.query({ active: true, url: '*://*/tab.html*' });
+
+                for (const tab of tabs) {
+                    if (tab.url?.includes('hardware-wallet')) {
+                        log.info('On hardware wallet page, proactively initializing Ledger keyring');
+                        const keyringController = blankController['keyringController'];
+                        if (keyringController) {
+                            try {
+                                await keyringController.connectHardwareKeyring(Devices.LEDGER);
+                                log.info('Proactively initialized Ledger keyring');
+                            } catch (e) {
+                                log.debug('Ledger proactive initialization may need user gesture:', e);
+                            }
+                        }
+                        break;
+                    }
+                }
+            } catch (e) {
+                log.error('Error during proactive Ledger initialization:', e);
             }
         }
     } catch (error) {
-        log.error('Error in restoreHardwareWalletConnections:', error);
+        log.error('Hardware wallet restoration failed:', error);
     }
 }

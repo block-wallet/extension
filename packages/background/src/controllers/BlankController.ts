@@ -247,6 +247,7 @@ import { ApproveTransaction } from './erc-20/transactions/ApproveTransaction';
 import CampaignsController from './CampaignsController';
 import { NotificationController } from './NotificationController';
 import OnrampController from './OnrampController';
+import { Devices } from '../utils/types/hardware';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -3387,10 +3388,11 @@ export default class BlankController extends EventEmitter {
      * @returns True if restoration was successful
      */
     public async restoreHardwareWalletState(params: {
-        device: any,
-        state: any
+        device: Devices,
+        state: { hdPath: string; accounts: string[] }
     }): Promise<boolean> {
-        return this.keyringController.restoreHardwareWalletState(params.device, params.state);
+        // Pass the entire params object instead of individual parameters
+        return this.keyringController.restoreHardwareWalletState(params);
     }
 
     /**

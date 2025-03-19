@@ -95,6 +95,18 @@ const hasDomAccess = (): boolean => {
 export default class KeyringControllerDerivated extends KeyringController {
     private readonly _mutex: Mutex;
     // private readonly _qrHardwareKeyring: QRHardwareKeyring;
+    private restorePromise: Promise<boolean> | null = null;
+    private restoreCompleted = false;
+
+    /**
+     * The default hdPath to use for new hardware wallets
+     */
+    private DEFAULT_HD_PATH = "m/44'/60'/0'/0/0";
+
+    /**
+     * Name of the controller for logging purposes
+     */
+    controllerName = 'KeyringControllerDerivated';
 
     /**
      * Creates a new KeyringControllerDerivated instance
@@ -1754,13 +1766,13 @@ export default class KeyringControllerDerivated extends KeyringController {
     }
 
     /**
-     * Persists the hardware wallet keyring state to session storage
-     * to survive service worker terminations.
+     * Persists the hardware wallet keyring state to storage
+     * to survive service worker terminations and browser restarts.
      * @param device The hardware wallet device type
      */
     private async persistHardwareKeyringState(device: Devices): Promise<void> {
         try {
-            log.debug(`Persisting ${device} keyring state to session storage`);
+            log.debug(`Persisting ${device} keyring state to storage`);
 
             const keyring = await this.getKeyringFromDevice(device);
             if (!keyring) {
@@ -1790,29 +1802,51 @@ export default class KeyringControllerDerivated extends KeyringController {
                 log.debug(`Falling back to default HD path ${hdPath} for ${device}`);
             }
 
-            // Store in session storage with metadata
+            const stateToStore = {
+                type: this._getKeyringTypeFromDevice(device),
+                state: serializedKeyring,
+                timestamp: Date.now(),
+                hdPath: hdPath
+            };
+
+            const storageKey = `hw_keyring_${device.toLowerCase()}`;
+
+            // Store in both session and local storage for redundancy
+            let sessionStorageSuccess = false;
+            let localStorageSuccess = false;
+
+            // Save to session storage
             if (chrome.storage?.session) {
-                const stateToStore = {
-                    type: this._getKeyringTypeFromDevice(device),
-                    state: serializedKeyring,
-                    timestamp: Date.now(),
-                    hdPath: hdPath
-                };
-
-                const storageKey = `hw_keyring_${device.toLowerCase()}`;
-                await chrome.storage.session.set({
-                    [storageKey]: stateToStore
-                });
-
-                // Verify the storage succeeded
-                const verification = await chrome.storage.session.get(storageKey);
-                if (verification && verification[storageKey]) {
-                    log.debug(`Successfully persisted ${device} keyring state to session storage`);
-                } else {
-                    log.error(`Failed to verify ${device} keyring state persistence`);
+                try {
+                    await chrome.storage.session.set({
+                        [storageKey]: stateToStore
+                    });
+                    sessionStorageSuccess = true;
+                    log.debug(`Saved ${device} keyring to session storage`);
+                } catch (e) {
+                    log.error(`Failed to persist ${device} keyring to session storage:`, e);
                 }
             } else {
-                log.error(`Chrome session storage not available, can't persist ${device} keyring state`);
+                log.warn(`Chrome session storage not available for ${device} keyring`);
+            }
+
+            // Also save to local storage as a fallback
+            if (chrome.storage?.local) {
+                try {
+                    await chrome.storage.local.set({
+                        [storageKey]: stateToStore
+                    });
+                    localStorageSuccess = true;
+                    log.debug(`Saved ${device} keyring to local storage`);
+                } catch (e) {
+                    log.error(`Failed to persist ${device} keyring to local storage:`, e);
+                }
+            }
+
+            if (sessionStorageSuccess || localStorageSuccess) {
+                log.info(`Successfully persisted ${device} keyring state to storage`);
+            } else {
+                log.error(`Failed to persist ${device} keyring state to any storage`);
             }
         } catch (error) {
             log.error(`Failed to persist ${device} keyring state:`, error);
@@ -1820,84 +1854,192 @@ export default class KeyringControllerDerivated extends KeyringController {
     }
 
     /**
-     * Restores a hardware wallet keyring from persisted state
-     * @param device The hardware wallet device type
-     * @param state The persisted state
-     * @returns True if restoration was successful
+     * Restores a hardware wallet state after restart
+     * @param params - Parameters including device name and state
      */
     public async restoreHardwareWalletState(
-        device: Devices,
-        state: {
-            type: string,
-            state: any,
-            timestamp: number,
-            hdPath: string
-        }
+        params: { device: string; state: { hdPath: string; accounts: string[] } }
     ): Promise<boolean> {
-        return this._mutex.runExclusive(async () => {
-            log.debug(`Restoring ${device} keyring from persisted state`);
+        try {
+            log.info(
+                `Attempting to restore hardware wallet connection for device: ${params.device}`
+            );
 
-            try {
-                // Check if keyring already exists
-                const existingKeyring = await this.getKeyringFromDevice(device);
-                if (existingKeyring) {
-                    log.debug(`Keyring for ${device} already exists, no need to restore`);
-                    return true;
-                }
-
-                // Create new keyring of the specified type
-                const keyringType = this._getKeyringTypeFromDevice(device);
-                if (keyringType !== state.type) {
-                    log.warn(`Type mismatch for ${device}: expected ${keyringType}, got ${state.type}`);
-                }
-
-                // Add the keyring
-                const newKeyring = await this.addNewKeyring(keyringType, {
-                    hdPath: state.hdPath,
-                });
-
-                // Deserialize the stored state
-                await newKeyring.deserialize(state.state);
-
-                // Set the HD path
-                await this.setHDPath(device, state.hdPath);
-
-                log.debug(`Successfully restored ${device} keyring state`);
-                return true;
-            } catch (error) {
-                log.error(`Failed to restore ${device} keyring:`, error);
-                return false;
+            // Cancel any existing restores
+            if (this.restorePromise) {
+                this.restoreCompleted = true;
             }
-        });
+
+            // Start a new restore process
+            this.restorePromise = new Promise<boolean>((resolve) => {
+                const attemptRestore = async () => {
+                    this.restoreCompleted = false;
+                    let restored = false;
+                    const maxAttempts = 3;
+
+                    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                        if (this.restoreCompleted) {
+                            log.debug('Restore cancelled');
+                            resolve(false);
+                            return;
+                        }
+
+                        try {
+                            // Step 1: Connect to the hardware keyring
+                            log.debug(`Restore attempt ${attempt}/${maxAttempts}: connecting to ${params.device}`);
+                            await this.connectHardwareKeyring(params.device as Devices);
+
+                            // Step 2: Get the keyring from the device
+                            const keyring = await this.getKeyringFromDevice(params.device as Devices);
+                            if (!keyring) {
+                                log.error(`Failed to get keyring for ${params.device} on attempt ${attempt}`);
+                                continue; // Try again
+                            }
+
+                            // Step 3: Set the HD path if provided
+                            if (params.state.hdPath && typeof keyring.setHdPath === 'function') {
+                                log.debug(`Setting HD path to ${params.state.hdPath}`);
+                                await keyring.setHdPath(params.state.hdPath);
+                            }
+
+                            // Step 4: Unlock the keyring if needed
+                            if (typeof keyring.unlock === 'function') {
+                                log.debug(`Unlocking keyring for ${params.device}`);
+                                await keyring.unlock();
+                            }
+
+                            // Step 5: Force serialization and update
+                            if (typeof keyring.serialize === 'function') {
+                                const serializedKeyring = await keyring.serialize();
+                                const accountsToUnlock = params.state.accounts || [];
+
+                                if (accountsToUnlock.length > 0) {
+                                    // Step 6: Set the accounts (this may require communicating with the device)
+                                    log.debug(`Restoring ${accountsToUnlock.length} accounts for ${params.device}`);
+
+                                    if (typeof keyring.setAccountToUnlock === 'function') {
+                                        for (const account of accountsToUnlock) {
+                                            await keyring.setAccountToUnlock(account);
+                                        }
+                                    } else if (typeof keyring.forgetAccounts === 'function' &&
+                                        typeof keyring.addAccounts === 'function') {
+                                        // Alternative approach if setAccountToUnlock is not available
+                                        await keyring.forgetAccounts();
+                                        await keyring.addAccounts(accountsToUnlock.length);
+                                    }
+                                }
+                            }
+
+                            // Step 7: Get accounts from the keyring to verify restoration
+                            const accounts = await this.getAccounts();
+                            log.info(`Restored ${params.device} with ${accounts.length} accounts`);
+
+                            // Step 8: Re-persist state to ensure it's up-to-date
+                            await this.persistHardwareKeyringState(params.device as Devices);
+
+                            restored = true;
+                            break; // Success!
+                        } catch (error) {
+                            log.error(`Error during restore attempt ${attempt}:`, error);
+
+                            // If last attempt, don't wait
+                            if (attempt < maxAttempts) {
+                                await new Promise(r => setTimeout(r, 1000)); // Wait before retry
+                            }
+                        }
+                    }
+
+                    this.restoreCompleted = true;
+                    this.restorePromise = null;
+                    resolve(restored);
+                    return restored;
+                };
+
+                // Execute the async function
+                attemptRestore();
+            });
+
+            return await this.restorePromise;
+        } catch (error) {
+            log.error(`Failed to restore hardware wallet state for ${params.device}:`, error);
+            this.restoreCompleted = true;
+            this.restorePromise = null;
+            return false;
+        }
     }
 
     /**
-     * Attempts to restore a hardware wallet keyring from session storage on demand
+     * Attempts to restore a hardware wallet keyring from storage on demand
      * Used when a keyring is not found but should exist
      * @param device The hardware wallet device type
      * @returns True if restoration was successful
      */
-    public async tryRestoreHardwareWalletFromStorage(device: Devices): Promise<boolean> {
+    public async tryRestoreHardwareWalletFromStorage(
+        device: Devices
+    ): Promise<boolean> {
         try {
-            log.debug(`Attempting to restore ${device} keyring from session storage`);
+            log.debug(`Attempting to restore ${device} from storage`);
 
-            if (!chrome.storage?.session) {
-                log.error(`Chrome session storage not available, can't restore ${device} keyring`);
-                return false;
+            // Check both session and local storage simultaneously
+            let hwStateSession = null;
+            let hwStateLocal = null;
+            const storageKey = `hw_keyring_${device.toLowerCase()}`;
+
+            // Try session storage
+            try {
+                if (chrome.storage?.session) {
+                    const sessionState = await chrome.storage.session.get(storageKey);
+                    hwStateSession = sessionState[storageKey];
+                    if (hwStateSession) {
+                        log.debug(`Found ${device} keyring state in session storage with timestamp: ${hwStateSession.timestamp}`);
+                    }
+                }
+            } catch (e) {
+                log.error('Failed to access session storage:', e);
             }
 
-            const result = await chrome.storage.session.get(`hw_keyring_${device.toLowerCase()}`);
-            log.debug(`Session storage lookup result for ${device}: ${JSON.stringify(result)}`);
+            // Try local storage
+            try {
+                if (chrome.storage?.local) {
+                    const localState = await chrome.storage.local.get(storageKey);
+                    hwStateLocal = localState[storageKey];
+                    if (hwStateLocal) {
+                        log.debug(`Found ${device} keyring state in local storage with timestamp: ${hwStateLocal.timestamp}`);
+                    }
+                }
+            } catch (e) {
+                log.error('Failed to access local storage:', e);
+            }
 
-            const hwState = result[`hw_keyring_${device.toLowerCase()}`];
+            // Determine which state to use (prefer the one with the most recent timestamp)
+            let hwState = null;
+
+            if (hwStateSession && hwStateLocal) {
+                // Use the most recent state if both exist
+                hwState = hwStateSession.timestamp > hwStateLocal.timestamp ? hwStateSession : hwStateLocal;
+                log.debug(`Using ${hwState === hwStateSession ? 'session' : 'local'} storage state (more recent)`);
+            } else {
+                // Use whichever one exists
+                hwState = hwStateSession || hwStateLocal;
+            }
 
             if (!hwState) {
-                log.debug(`No persisted state found for ${device} in session storage`);
+                log.debug(`No persisted state found for ${device}`);
                 return false;
             }
 
-            log.info(`Found persisted state for ${device}, attempting restoration`);
-            return await this.restoreHardwareWalletState(device, hwState);
+            log.info(`Found persisted state for ${device} (timestamp: ${hwState.timestamp}), attempting restoration`);
+
+            // Validate the state has required properties before attempting restoration
+            if (!hwState.state || !hwState.type) {
+                log.error(`Invalid state structure for ${device}, missing required properties`);
+                return false;
+            }
+
+            return await this.restoreHardwareWalletState({
+                device: device,
+                state: hwState
+            });
         } catch (error) {
             log.error(`Failed to restore ${device} from storage:`, error);
             return false;

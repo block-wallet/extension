@@ -107,35 +107,56 @@ const HardwareWalletAccountsPage = () => {
     const history = useOnMountHistory()!
     const [enabledPagination, setEnabledPagination] = useState(true)
 
-    // Get vendor from history state or URL params as fallback
-    const getVendorFromUrlOrHistory = () => {
-        // First try from history state
-        if (history.location.state && history.location.state.vendor) {
-            return history.location.state.vendor;
-        }
-
-        // Try from URL search params as fallback
+    const getVendorFromUrlOrHistory = (): Devices => {
         try {
-            const searchParams = new URLSearchParams(window.location.search);
-            const vendorParam = searchParams.get('vendor');
-            if (vendorParam && Object.values(Devices).includes(vendorParam as Devices)) {
-                return vendorParam as Devices;
+            // First check if vendor is in history state
+            if (history.location.state && history.location.state.vendor) {
+                const vendor = history.location.state.vendor;
+                log.debug(`Found vendor in history state: ${vendor}`);
+                return vendor as Devices;
             }
 
-            // Last resort - check URL hash for vendor
-            const hash = window.location.hash;
-            if (hash && hash.includes('vendor=')) {
-                const vendorMatch = hash.match(/vendor=([A-Z]+)/);
-                if (vendorMatch && Object.values(Devices).includes(vendorMatch[1] as Devices)) {
-                    return vendorMatch[1] as Devices;
+            // Then check URL hash for vendor parameter
+            const hash = history.location.hash || window.location.hash;
+            if (hash) {
+                // Try to extract vendor from URL patterns like #/hardware-wallet/connect/ledger or #/hardware-wallet/accounts?vendor=ledger
+                const vendorPattern1 = /\/hardware-wallet\/connect\/([a-zA-Z0-9_]+)/i;
+                const vendorMatch1 = vendorPattern1.exec(hash);
+                if (vendorMatch1 && vendorMatch1[1]) {
+                    const vendor = vendorMatch1[1].toUpperCase() as Devices;
+                    log.debug(`Found vendor in URL path: ${vendor}`);
+                    return vendor;
+                }
+
+                // Check for URL query parameter
+                const vendorPattern2 = /[?&]vendor=([a-zA-Z0-9_]+)/i;
+                const vendorMatch2 = vendorPattern2.exec(hash);
+                if (vendorMatch2 && vendorMatch2[1]) {
+                    const vendor = vendorMatch2[1].toUpperCase() as Devices;
+                    log.debug(`Found vendor in URL query parameter: ${vendor}`);
+                    return vendor;
+                }
+            }
+
+            // Check session storage as fallback
+            if (chrome.storage?.session) {
+                const vendorFromStorage = sessionStorage.getItem('hw_vendor');
+                if (vendorFromStorage) {
+                    try {
+                        const vendor = vendorFromStorage.toUpperCase() as Devices;
+                        log.debug(`Found vendor in session storage: ${vendor}`);
+                        return vendor;
+                    } catch (e) {
+                        log.error('Error parsing vendor from session storage:', e);
+                    }
                 }
             }
         } catch (e) {
-            console.error('Error parsing URL params:', e);
+            log.error('Error parsing URL params:', e);
         }
 
         // Default to LEDGER if we can't determine the vendor
-        console.warn('Could not determine vendor from history or URL, defaulting to LEDGER');
+        log.warn('Could not determine vendor from history or URL, defaulting to LEDGER');
         return Devices.LEDGER;
     };
 
@@ -143,10 +164,30 @@ const HardwareWalletAccountsPage = () => {
 
     // If vendor wasn't in history state, update it for future navigation
     useEffect(() => {
+        // Update history state
         if (!history.location.state || !history.location.state.vendor) {
             history.replace({
                 ...history.location,
                 state: { ...(history.location.state || {}), vendor }
+            });
+        }
+
+        // Also store in session storage for redundancy
+        try {
+            if (chrome.storage?.session) {
+                sessionStorage.setItem('hw_vendor', vendor);
+            }
+        } catch (e) {
+            log.error('Failed to store vendor in session storage:', e);
+        }
+
+        // Add vendor as URL parameter if not already present
+        if (!history.location.search.includes('vendor=')) {
+            const separator = history.location.search ? '&' : '?';
+            const newSearch = `${history.location.search}${separator}vendor=${vendor.toLowerCase()}`;
+            history.replace({
+                ...history.location,
+                search: newSearch
             });
         }
     }, [history, vendor]);

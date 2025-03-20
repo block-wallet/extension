@@ -88,7 +88,9 @@
             "resources": [
                 "blankProvider.js",
                 "keep-alive",
-                "background.js"
+                "background.js",
+                "hardware-wallet-bridge.js",
+                "hardware-wallet-bridge-navigation.js"
             ],
             "matches": [
                 "https://*/*"

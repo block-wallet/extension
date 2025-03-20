@@ -20,11 +20,6 @@ import { Classes } from "../../styles"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
 import HardwareWalletSetupLayout from "./SetupLayout"
 import Select from "../../components/input/Select"
-
-// Assets & icons
-import { mergeReducer } from "../../util/reducerUtils"
-import { useBlankState } from "../../context/background/backgroundHooks"
-import { BIP44_PATH, Devices, HDPaths } from "../../context/commTypes"
 import Spinner from "../../components/spinner/Spinner"
 import log from "loglevel"
 import useAsyncInvoke, { Status } from "../../util/hooks/useAsyncInvoke"
@@ -33,6 +28,11 @@ import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDevic
 import { BigNumber } from "@ethersproject/bignumber"
 import { AccountsPageAdvancedSettings } from "../../components/hardwareWallet/AdvancedSettings"
 import { HardwareWalletAccount } from "../../components/hardwareWallet/HardwareWalletAccount"
+
+// Assets & icons
+import { mergeReducer } from "../../util/reducerUtils"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import { BIP44_PATH, Devices, HDPaths } from "../../context/commTypes"
 
 interface State {
     gettingAccounts: boolean
@@ -247,12 +247,13 @@ const HardwareWalletAccountsPage = () => {
     // Add state to track alternative path attempts
     const [isSearchingAlternativePaths, setIsSearchingAlternativePaths] = useState(false);
     const [hdPathsChecked, setHdPathsChecked] = useState<string[]>([]);
+    const [needsUserInteraction, setNeedsUserInteraction] = useState<boolean>(false);
 
     const {
         run,
         data: hdPath,
         isLoading: isLoadingHDPath,
-        setData: setHDPath,
+        setData: setHdPath,
     } = useAsyncInvoke<string>({
         status: Status.PENDING,
     })
@@ -340,7 +341,7 @@ const HardwareWalletAccountsPage = () => {
 
                 // Set the HD path
                 await setHardwareWalletHDPath(vendor, path);
-                setHDPath(path);
+                setHdPath(path);
 
                 // Add to checked paths
                 setHdPathsChecked(prev => [...prev, path]);
@@ -479,74 +480,49 @@ const HardwareWalletAccountsPage = () => {
         }
     }, [state.currentPage, state.pageSize, vendor, hdPath]);
 
+    // Add this new function to check for pending user interaction requests
+    const checkForPendingUserInteraction = useCallback(async () => {
+        if (typeof chrome !== 'undefined' && chrome.storage?.session) {
+            try {
+                const result = await chrome.storage.session.get(`${vendor.toLowerCase()}_needs_user_interaction`);
+                const interactionStatus = result[`${vendor.toLowerCase()}_needs_user_interaction`];
+
+                if (interactionStatus && interactionStatus.status === 'pending') {
+                    log.debug(`Found pending user interaction for ${vendor}`);
+                    setNeedsUserInteraction(true);
+                    // Clear any previous errors to show the new message
+                    setFetchError('');
+                    return true;
+                }
+            } catch (e) {
+                log.error('Failed to check for pending user interaction:', e);
+            }
+
+            setNeedsUserInteraction(false);
+            return false;
+        }
+        return false;
+    }, [vendor]);
+
+    // Add this to the initialization effect
     useEffect(() => {
         if (hdPath) {
-            // First ensure keyring is initialized if needed
             const initAndGetAccounts = async () => {
+                setState({ gettingAccounts: true });
+                setFetchError('');
+
+                // First check if we need user interaction (from a previous attempt)
+                const needsInteraction = await checkForPendingUserInteraction();
+                if (needsInteraction) {
+                    setState({ gettingAccounts: false });
+                    return;
+                }
+
+                // Rest of the existing code
                 if (vendor === Devices.LEDGER) {
                     try {
-                        setState({ gettingAccounts: true });
-
-                        // Show a more detailed connection message
-                        setFetchError("Connecting to Ledger device. Please ensure your device is connected, unlocked, and has the Ethereum app open.");
-
-                        // Try multiple connection attempts with retry logic
-                        let connectionSuccess = false;
-                        let connectionAttempts = 0;
-                        const maxConnectionAttempts = 3;
-
-                        while (!connectionSuccess && connectionAttempts < maxConnectionAttempts) {
-                            connectionAttempts++;
-                            try {
-                                log.debug(`Explicitly connecting to ${vendor}, attempt ${connectionAttempts}/${maxConnectionAttempts}`);
-
-                                const connectionResult = await connectHardwareWallet(vendor);
-                                if (connectionResult === true) {
-                                    log.debug(`Successfully connected to ${vendor}`);
-                                    connectionSuccess = true;
-                                } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
-                                    log.debug(`${vendor} needs user gesture, attempting to complete connection`);
-                                    try {
-                                        const completed = await completeHardwareConnection(vendor);
-                                        if (completed) {
-                                            log.debug(`Successfully completed connection to ${vendor}`);
-                                            connectionSuccess = true;
-                                        } else {
-                                            log.warn(`Failed to complete connection to ${vendor}`);
-                                        }
-                                    } catch (completeError) {
-                                        log.error(`Failed to complete ${vendor} connection:`, completeError);
-                                        // Continue to next attempt
-                                    }
-                                }
-
-                                if (connectionSuccess) {
-                                    break;
-                                }
-
-                                // If not successful and not last attempt, wait before retry
-                                if (connectionAttempts < maxConnectionAttempts) {
-                                    await new Promise(resolve => setTimeout(resolve, 1000));
-                                }
-                            } catch (connectionError) {
-                                log.error(`Connection attempt ${connectionAttempts} failed:`, connectionError);
-
-                                // If last attempt, don't wait
-                                if (connectionAttempts < maxConnectionAttempts) {
-                                    await new Promise(resolve => setTimeout(resolve, 1000));
-                                }
-                            }
-                        }
-
-                        if (!connectionSuccess) {
-                            log.error(`Failed to connect to ${vendor} after ${maxConnectionAttempts} attempts`);
-                            setFetchError(`Could not connect to your ${vendor} device. Please ensure it's connected, unlocked, and has the Ethereum app open.`);
-                            setState({ gettingAccounts: false });
-                            return;
-                        }
-
-                        // Clear connection error since we succeeded
-                        setFetchError(null);
+                        log.debug(`Initializing ${vendor} connection before getting accounts...`);
+                        await ensureKeyringInitialized(vendor);
 
                         // After successful connection, set the HD path explicitly
                         log.debug(`Setting HD path for ${vendor} to ${hdPath}`);
@@ -554,7 +530,16 @@ const HardwareWalletAccountsPage = () => {
                             await setHardwareWalletHDPath(vendor, hdPath);
                         } catch (hdPathError) {
                             log.error(`Failed to set HD path for ${vendor}:`, hdPathError);
-                            setFetchError(`Connected to device but failed to set HD path. Please try again or select a different HD path.`);
+
+                            // Check if this is a user interaction error
+                            if (hdPathError instanceof Error &&
+                                (hdPathError.message.includes('user interaction') ||
+                                    hdPathError.message.includes('user gesture'))) {
+                                setNeedsUserInteraction(true);
+                                setFetchError('');
+                            } else {
+                                setFetchError(`Connected to device but failed to set HD path. Please try again or select a different HD path.`);
+                            }
                             setState({ gettingAccounts: false });
                             return;
                         }
@@ -565,11 +550,30 @@ const HardwareWalletAccountsPage = () => {
                             await getAccounts();
                         } catch (accountError) {
                             log.error(`Failed to get accounts after explicit connection:`, accountError);
-                            setFetchError(`Connection established but could not fetch accounts. Please ensure your ${vendor} device has the Ethereum app open and try again.`);
+
+                            // Check if this is a user interaction error
+                            if (accountError instanceof Error &&
+                                (accountError.message.includes('user interaction') ||
+                                    accountError.message.includes('user gesture'))) {
+                                setNeedsUserInteraction(true);
+                                setFetchError('');
+                            } else {
+                                setFetchError(`Connection established but could not fetch accounts. Please ensure your ${vendor} device has the Ethereum app open and try again.`);
+                            }
                             setState({ gettingAccounts: false });
                         }
                     } catch (e) {
                         log.error(`Failed to initialize ${vendor} connection:`, e);
+
+                        // Check if this is a user interaction error
+                        if (e instanceof Error &&
+                            (e.message.includes('user interaction') ||
+                                e.message.includes('user gesture'))) {
+                            setNeedsUserInteraction(true);
+                            setFetchError('');
+                            setState({ gettingAccounts: false });
+                            return;
+                        }
 
                         // Initialize keyring in UI context as fallback
                         const initialized = await ensureKeyringInitialized(vendor);
@@ -595,7 +599,7 @@ const HardwareWalletAccountsPage = () => {
 
             initAndGetAccounts();
         }
-    }, [checkKeystoneAccounts, getAccounts, hdPath, vendor]);
+    }, [checkKeystoneAccounts, getAccounts, hdPath, vendor, checkForPendingUserInteraction]);
 
     const toggleAccount = (account: DeviceAccountInfo) => {
         const selected = state.selectedAccounts.some(
@@ -659,11 +663,49 @@ const HardwareWalletAccountsPage = () => {
 
     const updateHDPath = async (hdPath: string) => {
         try {
-            await setHardwareWalletHDPath(vendor, hdPath)
+            log.debug(`Attempting to update HD path to ${hdPath}`);
+            await setHardwareWalletHDPath(vendor, hdPath);
+
             // Clear the state after the HD path is updated
-            setState({ selectedAccounts: [], currentPage: 1 })
-            setHDPath(hdPath)
-        } catch (e) { }
+            setState({ selectedAccounts: [], currentPage: 1 });
+            setHdPath(hdPath);
+            log.debug(`HD path successfully updated to ${hdPath}`);
+        } catch (e) {
+            log.warn(`Error setting HD path: ${e.message}`);
+
+            // If the error is because user interaction is required, we should handle it gracefully
+            if (e.message && e.message.includes('user interaction')) {
+                log.debug("User interaction required for HD path change, updating UI state only");
+
+                // Still update the UI with the new path
+                setState({ selectedAccounts: [], currentPage: 1 });
+                setHdPath(hdPath);
+
+                // Update our device connection status
+                setState({ reconnecting: true });
+
+                try {
+                    // Attempt to reconnect the device
+                    const isReconnected = await ensureKeyringInitialized(vendor);
+                    if (isReconnected) {
+                        log.debug("Successfully reconnected after HD path change");
+                        // After reconnection, fetch accounts with the new HD path
+                        await getAccounts();
+                    } else {
+                        log.debug("Reconnection failed, will use new HD path on next successful connection");
+                        setState({ deviceNotReady: true });
+                    }
+                } catch (reconnectError) {
+                    log.error("Failed to reconnect after HD path change:", reconnectError);
+                    setState({ deviceNotReady: true });
+                } finally {
+                    setState({ reconnecting: false });
+                }
+            } else {
+                // For other errors, show an error message
+                setFetchError(`Failed to set HD path: ${e.message}`);
+            }
+        }
     }
 
     const onUpdatePageSize = (pageSize: number) => {
@@ -728,6 +770,234 @@ const HardwareWalletAccountsPage = () => {
                         Try Different HD Paths
                     </button>
                 )}
+            </div>
+        );
+    };
+
+    // Helper function to directly request WebHID permissions
+    const triggerWebHIDDirectly = async (): Promise<boolean> => {
+        try {
+            log.debug('Attempting to directly trigger WebHID requestDevice API');
+
+            // Check if navigator.hid is available
+            if (!navigator.hid) {
+                log.error('WebHID API is not available in this browser');
+                return false;
+            }
+
+            // Clear any pending flags in session storage first
+            try {
+                if (chrome.storage?.session) {
+                    await chrome.storage.session.remove('ledger_needs_user_interaction');
+                    log.debug('Cleared ledger_needs_user_interaction flag before WebHID request');
+                }
+            } catch (e) {
+                log.warn('Failed to clear ledger_needs_user_interaction flag', e);
+            }
+
+            // Request device access - this API requires a user gesture
+            const devices = await navigator.hid.requestDevice({
+                filters: [
+                    // Ledger Nano S/X filters
+                    { vendorId: 0x2c97 }, // Ledger vendor ID
+                    { vendorId: 0x2581 }  // Older Ledger vendor ID
+                ]
+            });
+
+            log.debug(`WebHID requestDevice returned ${devices.length} devices`);
+
+            // Check if we got any devices
+            if (devices.length > 0) {
+                log.debug('Successfully obtained WebHID permissions');
+
+                // Store successful connection status in session storage
+                try {
+                    if (chrome.storage?.session) {
+                        await chrome.storage.session.set({
+                            'ledger_connection_status': {
+                                connected: true,
+                                timestamp: Date.now(),
+                                deviceCount: devices.length
+                            }
+                        });
+                        log.debug('Stored successful WebHID connection status');
+                    }
+                } catch (e) {
+                    log.warn('Failed to store Ledger connection status', e);
+                }
+
+                return true;
+            } else {
+                log.debug('User did not select any devices in the WebHID dialog');
+                return false;
+            }
+        } catch (e) {
+            log.error('Error requesting WebHID permission:', e);
+
+            // If we have a SecurityError, it means the user denied permission
+            if (e instanceof DOMException && e.name === 'SecurityError') {
+                log.warn('User denied WebHID permission');
+
+                // Store this information so we don't keep asking immediately
+                try {
+                    if (chrome.storage?.session) {
+                        await chrome.storage.session.set({
+                            'ledger_permission_denied': {
+                                timestamp: Date.now()
+                            }
+                        });
+                    }
+                } catch (storageErr) {
+                    // Just log, don't throw
+                    log.warn('Failed to store permission denied state', storageErr);
+                }
+            }
+
+            return false;
+        }
+    };
+
+    // Update the handleUserInitiatedConnection function to use triggerWebHIDDirectly for Ledger
+    const handleUserInitiatedConnection = async () => {
+        try {
+            setState({ gettingAccounts: true });
+            setFetchError('');
+
+            // For Ledger devices, directly trigger WebHID permission first
+            if (vendor === Devices.LEDGER) {
+                log.debug('Ledger device detected, triggering WebHID permission request');
+                const permissionGranted = await triggerWebHIDDirectly();
+
+                if (!permissionGranted) {
+                    log.warn('Failed to get WebHID permission, user may have cancelled');
+                    setFetchError('WebHID permission was not granted. Please try again and select your Ledger device when prompted.');
+                    setState({ gettingAccounts: false });
+                    return;
+                }
+
+                log.debug('WebHID permission granted, proceeding with connection');
+
+                // Check if we have a pending HD path operation
+                try {
+                    if (chrome.storage?.session) {
+                        const result = await chrome.storage.session.get('ledger_needs_user_interaction');
+
+                        if (result.ledger_needs_user_interaction &&
+                            result.ledger_needs_user_interaction.operation === 'setHdPath' &&
+                            result.ledger_needs_user_interaction.pendingHdPath) {
+
+                            const pendingPath = result.ledger_needs_user_interaction.pendingHdPath;
+                            log.debug(`Found pending HD path change to ${pendingPath}, applying now`);
+
+                            // Try to apply the pending HD path change now that we have permission
+                            try {
+                                await setHdPath(pendingPath);
+                                log.debug(`Successfully applied pending HD path change to ${pendingPath}`);
+
+                                // Clear the pending operation
+                                await chrome.storage.session.remove('ledger_needs_user_interaction');
+                            } catch (hdPathError) {
+                                log.error('Failed to apply pending HD path change:', hdPathError);
+                                setFetchError(`Failed to set HD path: ${hdPathError instanceof Error ? hdPathError.message : 'Unknown error'}`);
+                                setState({ gettingAccounts: false });
+                                return;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    log.warn('Error checking for pending HD path operations:', e);
+                    // Continue with normal flow
+                }
+            }
+
+            // Now proceed with the regular connection flow
+            const connectionResult = await connectHardwareWallet(vendor);
+
+            if (connectionResult === true) {
+                log.debug('Successfully connected hardware keyring');
+
+                // For Ledger, update the connection status again
+                if (vendor === Devices.LEDGER && chrome.storage?.session) {
+                    try {
+                        await chrome.storage.session.set({
+                            'ledger_connection_status': {
+                                connected: true,
+                                timestamp: Date.now()
+                            }
+                        });
+                    } catch (e) {
+                        log.warn('Failed to update Ledger connection status', e);
+                    }
+                }
+
+                // Connection successful, proceed with getting accounts
+                await getAccounts();
+            } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
+                // This shouldn't happen since we already got WebHID permission, but handle it anyway
+                log.warn('Still getting user gesture needed after WebHID permission granted');
+
+                // Try one more direct approach for Ledger
+                if (vendor === Devices.LEDGER) {
+                    try {
+                        log.debug('Attempting direct connection approach for Ledger');
+                        await triggerWebHIDDirectly();
+
+                        // Try connecting again
+                        const retryResult = await connectHardwareWallet(vendor);
+
+                        if (retryResult === true) {
+                            log.debug('Direct connection approach succeeded');
+                            await getAccounts();
+                            return;
+                        }
+                    } catch (retryError) {
+                        log.error('Direct connection approach failed:', retryError);
+                    }
+                }
+
+                setFetchError('Still requiring user interaction after permission granted. Please try disconnecting and reconnecting your device.');
+                setState({ gettingAccounts: false });
+            } else {
+                // Some other error occurred
+                log.error('Failed to connect hardware keyring', connectionResult);
+                setFetchError('Failed to connect hardware wallet. Please check device connection and try again.');
+                setState({ gettingAccounts: false });
+            }
+        } catch (e) {
+            log.error('Error in handleUserInitiatedConnection', e);
+            setFetchError(e instanceof Error ? e.message : 'Unknown error connecting to hardware wallet');
+            setState({ gettingAccounts: false });
+        }
+    };
+
+    // Add this content to render the user interaction prompt
+    const renderUserInteractionPrompt = () => {
+        if (!needsUserInteraction) {
+            return null;
+        }
+
+        // Use safe string for vendor to avoid undefined
+        const vendorName = vendor || 'hardware wallet';
+
+        return (
+            <div className="py-4 flex flex-col items-center justify-center">
+                <span className="text-center mb-4 font-semibold">
+                    Your {vendorName} device requires interaction
+                </span>
+                <span className="text-center mb-4">
+                    Please make sure your device is:
+                </span>
+                <ul className="list-disc pl-6 mb-4">
+                    <li>Connected to your computer</li>
+                    <li>Unlocked</li>
+                    <li>Has the Ethereum application open</li>
+                </ul>
+                <ButtonWithLoading
+                    onClick={handleUserInitiatedConnection}
+                    disabled={state.gettingAccounts}
+                    type="button"
+                    label={`Connect to ${vendorName}`}
+                />
             </div>
         );
     };
@@ -893,6 +1163,14 @@ const HardwareWalletAccountsPage = () => {
                     </>
                 )}
             </div>
+            {needsUserInteraction && renderUserInteractionPrompt()}
+
+            {/* Only show the error message if we're not showing the user interaction prompt */}
+            {fetchError && !needsUserInteraction && (
+                <div className="text-red-500 text-center mb-4">
+                    {fetchError}
+                </div>
+            )}
         </HardwareWalletSetupLayout>
     )
 }

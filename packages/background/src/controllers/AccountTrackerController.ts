@@ -2007,8 +2007,8 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
                     // If direct connection didn't work, try restoration from storage
                     if (!keyring) {
-                        const restored = await this._keyringController.tryRestoreHardwareWalletFromStorage(device);
-                        if (restored) {
+                        const restorationResult = await this._keyringController.tryRestoreHardwareWalletFromStorage(device);
+                        if (restorationResult === true) {
                             log.info(`Successfully restored ${device} keyring from session storage`);
 
                             // Get the keyring again after restoration
@@ -2017,6 +2017,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             if (!keyring) {
                                 log.error(`Keyring restoration for ${device} reported success but keyring still not found`);
                             }
+                        } else if (typeof restorationResult === 'object' && restorationResult.needsUserGesture) {
+                            log.info(`${device} restoration requires user interaction`);
+                            throw new Error(`Hardware wallet connection requires user interaction`);
                         } else {
                             log.error(`Failed to restore keyring for ${device} from session storage`);
                         }
@@ -2043,9 +2046,12 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         if (keyring) {
                             await this._keyringController['persistHardwareKeyringState'](device);
                         }
-                    } else {
-                        // This case likely means we need user interaction
+                    } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
+                        // This case means we need user interaction
                         log.debug(`Hardware wallet connection requires user interaction`);
+                        throw new Error(`Hardware wallet connection requires user interaction`);
+                    } else {
+                        log.error(`Failed to establish connection with ${device}`);
                     }
                 } catch (e) {
                     log.error(`Failed to create new keyring for ${device}:`, e);
@@ -2220,14 +2226,18 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             // First fallback: Try to reconnect the hardware wallet
             log.debug(`Attempting to reconnect ${device} before retrieving accounts`);
             try {
-                const connected = await this._keyringController.connectHardwareKeyring(device);
-                if (connected) {
+                const connectionResult = await this._keyringController.connectHardwareKeyring(device);
+                if (connectionResult === true) {
                     log.debug(`Successfully reconnected to ${device}, retrying account retrieval`);
                     const accounts = await this.getHardwareWalletAccounts(device, pageIndex, pageSize);
                     if (accounts && accounts.length > 0) {
                         log.debug(`Successfully retrieved ${accounts.length} accounts after reconnection`);
                         return accounts;
                     }
+                } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
+                    log.debug(`${device} connection requires user interaction`);
+                    // For user interaction, we can't proceed with automatic account retrieval
+                    throw new Error(`Hardware wallet connection requires user interaction`);
                 }
             } catch (reconnectError) {
                 log.error(`Failed to reconnect to ${device}:`, reconnectError);

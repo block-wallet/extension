@@ -3385,12 +3385,12 @@ export default class BlankController extends EventEmitter {
      * Restores a hardware wallet state after service worker restart
      * 
      * @param params Object containing device and state information
-     * @returns True if restoration was successful
+     * @returns True if restoration was successful, or object indicating user gesture is needed
      */
     public async restoreHardwareWalletState(params: {
         device: Devices,
         state: { hdPath: string; accounts: string[] }
-    }): Promise<boolean> {
+    }): Promise<boolean | { needsUserGesture: boolean; deviceName: string }> {
         // Pass the entire params object instead of individual parameters
         return this.keyringController.restoreHardwareWalletState(params);
     }

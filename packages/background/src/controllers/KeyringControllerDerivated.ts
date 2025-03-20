@@ -95,7 +95,7 @@ const hasDomAccess = (): boolean => {
 export default class KeyringControllerDerivated extends KeyringController {
     private readonly _mutex: Mutex;
     // private readonly _qrHardwareKeyring: QRHardwareKeyring;
-    private restorePromise: Promise<boolean> | null = null;
+    private restorePromise: Promise<boolean | { needsUserGesture: boolean; deviceName: string }> | null = null;
     private restoreCompleted = false;
 
     /**
@@ -482,11 +482,7 @@ export default class KeyringControllerDerivated extends KeyringController {
     }
 
     /**
-     * Sets the HD derivation path for a hardware wallet keyring
-     *
-     * Configures the specified hardware wallet to use a particular HD path
-     * for deriving addresses. Validates that the path is recognized for the device.
-     *
+     * Sets the HD path for a hardware wallet device
      * @param {Devices} device - The hardware wallet device type
      * @param {string} hdPath - The HD derivation path to set
      * @throws {Error} If the HD path is invalid or the keyring cannot be configured
@@ -503,45 +499,7 @@ export default class KeyringControllerDerivated extends KeyringController {
                 throw new Error('HD path cannot be empty');
             }
 
-            // Get keyring for the device
-            let keyring = await this.getKeyringFromDevice(device);
-
-            // If no keyring exists, try to create one
-            if (!keyring) {
-                log.debug(`No keyring found for ${device}, attempting to create one before setting HD path`);
-
-                try {
-                    // Try connecting to hardware wallet first
-                    const connectionResult = await this.connectHardwareKeyring(device);
-
-                    if (connectionResult === true) {
-                        log.info(`Successfully connected to ${device} for HD path setting`);
-                        // Get the keyring after connection
-                        keyring = await this.getKeyringFromDevice(device);
-                    } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
-                        // If we're here, we need user interaction to proceed
-                        log.warn(`${device} connection requires user gesture for HD path setting`);
-                        throw new Error(`Hardware wallet connection requires user interaction`);
-                    }
-                } catch (connectionError) {
-                    log.error(`Failed to create keyring for ${device} during HD path setting:`, connectionError);
-                    throw new Error(`Could not connect to ${device} hardware wallet: ${connectionError.message}`);
-                }
-
-                // Check again if we got a keyring
-                keyring = await this.getKeyringFromDevice(device);
-
-                if (!keyring) {
-                    throw new Error(`No keyring found for device ${device}`);
-                }
-            }
-
-            if (!keyring.setHdPath) {
-                throw new Error(
-                    `Device ${device} does not support HD path configuration`
-                );
-            }
-
+            // First validate the HD path before attempting any device connection
             const hdPaths = HDPaths[device];
             if (!hdPaths) {
                 throw new Error(`No HD paths defined for device ${device}`);
@@ -553,10 +511,8 @@ export default class KeyringControllerDerivated extends KeyringController {
                 );
             }
 
-            keyring.setHdPath(hdPath);
-            log.debug(`HD path set successfully for ${device}`);
-
-            // Persist this HD path in storage
+            // Persist this HD path in storage even before trying to connect
+            // This allows the UI to know which path was selected even if connection requires user interaction
             try {
                 if (chrome.storage?.session) {
                     await chrome.storage.session.set({
@@ -567,15 +523,114 @@ export default class KeyringControllerDerivated extends KeyringController {
                     });
                     log.debug(`HD path for ${device} saved to session storage: ${hdPath}`);
                 }
+
+                // Also try to store in local storage for persistence across sessions
+                if (chrome.storage?.local) {
+                    await chrome.storage.local.set({
+                        [`${device.toLowerCase()}_last_hd_path`]: hdPath
+                    });
+                    log.debug(`HD path for ${device} saved to local storage: ${hdPath}`);
+                }
             } catch (storageError) {
-                log.error(`Failed to save HD path to storage for ${device}:`, storageError);
+                log.warn(`Could not save HD path to storage for ${device}:`, storageError);
                 // Continue anyway
             }
 
+            // Get keyring for the device - but don't error out if no keyring exists yet
+            const keyring = await this.getKeyringFromDevice(device);
+
+            // For Ledger specifically, check if we have an active connection status stored
+            let connectionStatus = false;
+            if (device === Devices.LEDGER && chrome.storage?.session) {
+                try {
+                    const result = await chrome.storage.session.get('ledger_connection_status');
+                    if (result.ledger_connection_status &&
+                        result.ledger_connection_status.connected &&
+                        Date.now() - result.ledger_connection_status.timestamp < 300000) { // If connected in last 5 minutes
+                        log.debug("Found valid Ledger connection status in session storage");
+                        connectionStatus = true;
+                    }
+                } catch (e) {
+                    log.warn("Error checking Ledger connection status:", e);
+                }
+            }
+
+            // If no keyring exists, or we don't have a valid connection status, we can't proceed
+            // without user interaction
+            if (!keyring || (device === Devices.LEDGER && !connectionStatus)) {
+                // For Ledger without connection status, store more detailed information
+                if (device === Devices.LEDGER) {
+                    log.debug("No keyring or valid connection for Ledger - user interaction required");
+
+                    // Store pending HD path change with more details in session storage
+                    try {
+                        if (chrome.storage?.session) {
+                            await chrome.storage.session.set({
+                                'ledger_needs_user_interaction': {
+                                    timestamp: Date.now(),
+                                    status: 'pending',
+                                    requiresWebHID: true,
+                                    operation: 'setHdPath',
+                                    pendingHdPath: hdPath
+                                }
+                            });
+                            log.debug("Stored Ledger HD path operation details in session storage");
+                        }
+                    } catch (storageErr) {
+                        log.warn("Failed to store Ledger HD path operation details:", storageErr);
+                    }
+
+                    throw new Error(`Hardware wallet connection requires user interaction`);
+                }
+
+                // For other devices, try connecting
+                log.debug(`No keyring found for ${device}, attempting to create one before setting HD path`);
+                const connectionResult = await this.connectHardwareKeyring(device);
+
+                if (connectionResult !== true) {
+                    // If connection was not successful, throw error
+                    log.warn(`${device} connection requires user gesture for HD path setting`);
+                    throw new Error(`Hardware wallet connection requires user interaction`);
+                }
+            }
+
+            // At this point, we should have a keyring or have thrown if user interaction is required
+            // Try to get the keyring again in case we just created it
+            const updatedKeyring = await this.getKeyringFromDevice(device);
+
+            if (!updatedKeyring) {
+                throw new Error(`No keyring found for device ${device} after connection attempt`);
+            }
+
+            if (!updatedKeyring.setHdPath) {
+                throw new Error(
+                    `Device ${device} does not support HD path configuration`
+                );
+            }
+
+            // Set the HD path on the keyring
+            updatedKeyring.setHdPath(hdPath);
+            log.debug(`HD path set successfully for ${device}`);
+
             if (device !== Devices.KEYSTONE) {
-                if (!keyring.isUnlocked()) {
+                if (!updatedKeyring.isUnlocked()) {
                     log.debug(`Unlocking keyring for ${device}`);
-                    await keyring.unlock();
+                    await updatedKeyring.unlock();
+                }
+            }
+
+            // Update connection status for Ledger after successful HD path setting
+            if (device === Devices.LEDGER && chrome.storage?.session) {
+                try {
+                    await chrome.storage.session.set({
+                        'ledger_connection_status': {
+                            connected: true,
+                            timestamp: Date.now()
+                        }
+                    });
+                    log.debug("Updated Ledger connection status after HD path setting");
+                } catch (e) {
+                    log.warn("Failed to update Ledger connection status:", e);
                 }
             }
 
@@ -714,119 +769,132 @@ export default class KeyringControllerDerivated extends KeyringController {
                                     return true;
                                 }
                             } catch (e) {
+                                // Check if this is specifically about user interaction
+                                if (e instanceof Error &&
+                                    (e.message.includes('user interaction') ||
+                                        e.message.includes('user gesture'))) {
+                                    log.info("Ledger connection requires user interaction via WebHID");
+
+                                    // Store this state in session storage for UI to detect
+                                    try {
+                                        if (chrome.storage?.session) {
+                                            await chrome.storage.session.set({
+                                                'ledger_needs_user_interaction': {
+                                                    timestamp: Date.now(),
+                                                    status: 'pending',
+                                                    requiresWebHID: true
+                                                }
+                                            });
+                                            log.debug("Stored user interaction requirement in session storage");
+                                        }
+                                    } catch (storageErr) {
+                                        log.warn("Failed to store Ledger interaction state:", storageErr);
+                                    }
+
+                                    // Return specific object indicating user gesture needed
+                                    return {
+                                        needsUserGesture: true,
+                                        deviceName: 'Ledger'
+                                    };
+                                }
+
                                 log.warn("Failed to use existing Ledger keyring:", e);
                                 // Continue to signal user gesture needed
                             }
                         }
 
-                        // In MV3, we need to handle the connection differently and let the UI handle some steps
-                        // Just signal that user gesture is needed to connect
+                        // If still here, we need to indicate that user gesture is needed
+                        log.debug("Ledger connection requires user interaction");
                         return {
                             needsUserGesture: true,
-                            deviceName: 'Ledger',
+                            deviceName: 'Ledger'
                         };
                     }
 
-                    // For environments with DOM access, proceed with standard approach
+                    // We're in an environment with DOM access, so we can try to connect directly
                     try {
-                        // Check if the keyring already exists
-                        const existingKeyrings = this.getKeyringsByType(
-                            this._getKeyringTypeFromDevice(device)
-                        );
+                        log.debug("Attempting to add new Ledger keyring in DOM context");
 
-                        const hdPath = this._HDPathForDevice(device);
-                        log.debug(
-                            `Using HD path ${hdPath} for ${device} keyring`
-                        );
+                        // Even in a DOM context, we want to warn about needing WebHID permission
+                        log.info("Ledger connection requires WebHID permission from the user");
+                        return {
+                            needsUserGesture: true,
+                            deviceName: 'Ledger'
+                        };
 
-                        // If there are any existing keyrings for this device, remove them 
-                        // to ensure a clean state
-                        if (existingKeyrings && existingKeyrings.length > 0) {
-                            log.debug(
-                                `Found existing keyrings for ${device}, cleaning up...`
-                            );
+                    } catch (e) {
+                        log.error("Failed to add Ledger keyring:", e);
 
-                            // Iterate over accounts and remove them
-                            for (const existingKeyring of existingKeyrings) {
-                                const accounts = await existingKeyring.getAccounts();
-                                if (accounts && accounts.length > 0) {
-                                    try {
-                                        await this.removeAccount(accounts);
-                                    } catch (e) {
-                                        log.warn(`Error removing account during cleanup: ${e.message}`);
-                                    }
-                                }
-                            }
-                        }
-
-                        // Add the new keyring
-                        const newKeyring = await this.addNewKeyring(this._getKeyringTypeFromDevice(device), {
-                            hdPath: hdPath,
-                        });
-
-                        // Attempt to connect right away - this may or may not need a user gesture
-                        try {
-                            log.debug('Attempting to connect to Ledger device...');
-                            await newKeyring.connect();
-                            log.debug('Successfully connected to Ledger');
-
-                            // Since we're going to access accounts, unlock it
-                            log.debug('Unlocking new Ledger keyring');
-                            await newKeyring.unlock();
-
-                            log.debug('Ledger keyring successfully initialized');
-
-                            // Immediately persist the keyring state to ensure it survives service worker restarts
-                            log.debug('Persisting Ledger keyring state...');
-                            await this.persistHardwareKeyringState(device);
-
-                            return true;
-                        } catch (e) {
-                            log.warn('Initial connection failed, may need user gesture:', e);
-
+                        // Check if this was due to needing user interaction
+                        if (e instanceof Error &&
+                            (e.message.includes('user interaction') ||
+                                e.message.includes('user gesture'))) {
+                            log.debug("Ledger connection requires WebHID permission");
                             return {
                                 needsUserGesture: true,
-                                deviceName: 'Ledger',
+                                deviceName: 'Ledger'
                             };
                         }
-                    } catch (e) {
-                        log.error('Failed to create new Ledger keyring:', e);
 
-                        // Return the user gesture needed response regardless of error
-                        // to allow the UI to try with user interaction
-                        return {
-                            needsUserGesture: true,
-                            deviceName: 'Ledger',
-                        };
+                        throw e;
                     }
-                } catch (e) {
-                    log.error('Failed to initialize Ledger keyring:', e);
-                    throw e;
+                } catch (error) {
+                    log.error("Ledger connection error:", error);
+                    throw error;
                 }
             } else if (device === Devices.TREZOR) {
-                // Existing Trezor code...
+                try {
+                    // Get existing keyrings
+                    const existingKeyrings = this.getKeyringsByType(
+                        this._getKeyringTypeFromDevice(device)
+                    );
 
-                // After successful connection, persist the keyring state
-                log.debug('Persisting Trezor keyring state...');
-                await this.persistHardwareKeyringState(device);
+                    // If we already have a keyring, just unlock it
+                    if (existingKeyrings && existingKeyrings.length > 0) {
+                        try {
+                            await existingKeyrings[0].unlock();
+                            return true;
+                        } catch (e) {
+                            log.error("Failed to unlock existing Trezor keyring:", e);
+                        }
+                    }
 
-                return true;
-            } else if (device === Devices.KEYSTONE) {
-                // For Keystone device, we get the keyring and persist the state
-                const keystoneKeyring = await this.getKeyringFromDevice(device);
-                if (keystoneKeyring) {
-                    await keystoneKeyring.unlock();
+                    // We don't have an existing keyring, so let's try to create one
+                    log.debug("Adding new Trezor keyring...");
+                    await this.addNewKeyring('Trezor Hardware', {});
+                    return true;
+                } catch (error) {
+                    log.error("Trezor connection error:", error);
+                    throw error;
                 }
+            } else if (device === Devices.KEYSTONE) {
+                try {
+                    // Get existing keyrings
+                    const existingKeyrings = this.getKeyringsByType(
+                        this._getKeyringTypeFromDevice(device)
+                    );
 
-                log.debug('Persisting Keystone keyring state...');
-                await this.persistHardwareKeyringState(device);
+                    // If we already have a keyring, just unlock it
+                    if (existingKeyrings && existingKeyrings.length > 0) {
+                        try {
+                            await existingKeyrings[0].unlock();
+                            return true;
+                        } catch (e) {
+                            log.error("Failed to unlock existing Keystone keyring:", e);
+                        }
+                    }
 
-                return true;
+                    // We don't have an existing keyring, so let's try to create one
+                    log.debug("Adding new Keystone keyring...");
+                    await this.addNewKeyring('QR Hardware', {});
+                    return true;
+                } catch (error) {
+                    log.error("Keystone connection error:", error);
+                    throw error;
+                }
+            } else {
+                throw new Error(`Unsupported device: ${device}`);
             }
-
-            // This line should be unreachable
-            log.warn(`Unknown device type: ${device}`);
-            return false;
         });
     }
 
@@ -1789,90 +1857,105 @@ export default class KeyringControllerDerivated extends KeyringController {
     }
 
     /**
-     * Persists the hardware wallet keyring state to storage
-     * to survive service worker terminations and browser restarts.
-     * @param device The hardware wallet device type
+     * persistHardwareKeyringState
+     *
+     * Saves the hardware wallet keyring state for a specific device
+     * Ensures the state is saved to both session and local storage for reliability
+     *
+     * @param {Devices} device - The hardware wallet device type
+     * @returns {Promise<boolean>} True if the keyring state was successfully persisted
      */
-    private async persistHardwareKeyringState(device: Devices): Promise<void> {
+    public async persistHardwareKeyringState(device: Devices): Promise<boolean> {
         try {
-            log.debug(`Persisting ${device} keyring state to storage`);
+            log.debug(`Persisting hardware wallet keyring state for ${device}`);
 
+            if (!device) {
+                throw new Error('Device type must be specified');
+            }
+
+            // Get the keyring for the device
             const keyring = await this.getKeyringFromDevice(device);
             if (!keyring) {
-                log.debug(`No keyring to persist for ${device}`);
-                return;
+                log.warn(`No keyring found for ${device}, nothing to persist`);
+                return false;
             }
 
-            // Serialize the keyring state
-            const serializedKeyring = await keyring.serialize();
-            log.debug(`Successfully serialized ${device} keyring`);
-
-            // Additional safety check to ensure we have a valid serialized state
-            if (!serializedKeyring) {
-                log.error(`Failed to serialize ${device} keyring - serialized result is empty`);
-                return;
-            }
-
-            // Get the current HD path
-            let hdPath;
+            // Attempt to serialize the keyring state
+            let serializedState;
             try {
-                hdPath = await this.getHDPathForDevice(device);
-                log.debug(`Using HD path ${hdPath} for ${device}`);
+                // Cast to any to access serialize method
+                const serializableKeyring = keyring as any;
+                if (typeof serializableKeyring.serialize !== 'function') {
+                    throw new Error(`${device} keyring does not support serialization`);
+                }
+                serializedState = await serializableKeyring.serialize();
             } catch (e) {
-                log.error(`Failed to get HD path for ${device}:`, e);
-                // Use default HD path as fallback
-                hdPath = this._HDPathForDevice(device);
-                log.debug(`Falling back to default HD path ${hdPath} for ${device}`);
+                log.error(`Failed to serialize ${device} keyring state:`, e);
+                return false;
             }
 
-            const stateToStore = {
+            if (!serializedState) {
+                log.warn(`Serialized state for ${device} is empty`);
+                return false;
+            }
+
+            // Create a storage object with metadata
+            const storageObject = {
+                state: serializedState,
                 type: this._getKeyringTypeFromDevice(device),
-                state: serializedKeyring,
                 timestamp: Date.now(),
-                hdPath: hdPath
+                accounts: await keyring.getAccounts()
             };
 
-            const storageKey = `hw_keyring_${device.toLowerCase()}`;
+            // Save to session storage (primary storage for active session)
+            try {
+                if (chrome.storage?.session) {
+                    await chrome.storage.session.set({
+                        [`hw_keyring_${device.toLowerCase()}`]: storageObject
+                    });
+                    log.debug(`${device} keyring state saved to session storage`);
+                }
+            } catch (sessionError) {
+                log.error(`Failed to save ${device} keyring state to session storage:`, sessionError);
+                // Continue trying to save to local storage
+            }
 
-            // Store in both session and local storage for redundancy
-            let sessionStorageSuccess = false;
-            let localStorageSuccess = false;
+            // Also save to local storage for persistence across browser restarts
+            try {
+                if (chrome.storage?.local) {
+                    await chrome.storage.local.set({
+                        [`hw_keyring_${device.toLowerCase()}`]: storageObject
+                    });
+                    log.debug(`${device} keyring state saved to local storage`);
+                }
+            } catch (localError) {
+                log.error(`Failed to save ${device} keyring state to local storage:`, localError);
+                // If we failed to save to both session and local storage, return false
+                if (!chrome.storage?.session) {
+                    return false;
+                }
+            }
 
-            // Save to session storage
-            if (chrome.storage?.session) {
+            // For Ledger specifically, also update the connection status
+            if (device === Devices.LEDGER && chrome.storage?.session) {
                 try {
                     await chrome.storage.session.set({
-                        [storageKey]: stateToStore
+                        'ledger_connection_status': {
+                            connected: true,
+                            timestamp: Date.now()
+                        }
                     });
-                    sessionStorageSuccess = true;
-                    log.debug(`Saved ${device} keyring to session storage`);
-                } catch (e) {
-                    log.error(`Failed to persist ${device} keyring to session storage:`, e);
-                }
-            } else {
-                log.warn(`Chrome session storage not available for ${device} keyring`);
-            }
-
-            // Also save to local storage as a fallback
-            if (chrome.storage?.local) {
-                try {
-                    await chrome.storage.local.set({
-                        [storageKey]: stateToStore
-                    });
-                    localStorageSuccess = true;
-                    log.debug(`Saved ${device} keyring to local storage`);
-                } catch (e) {
-                    log.error(`Failed to persist ${device} keyring to local storage:`, e);
+                    log.debug("Updated Ledger connection status on state persistence");
+                } catch (connectionError) {
+                    log.warn("Failed to update Ledger connection status:", connectionError);
+                    // Continue anyway, this is just an auxiliary state
                 }
             }
 
-            if (sessionStorageSuccess || localStorageSuccess) {
-                log.info(`Successfully persisted ${device} keyring state to storage`);
-            } else {
-                log.error(`Failed to persist ${device} keyring state to any storage`);
-            }
+            return true;
         } catch (error) {
-            log.error(`Failed to persist ${device} keyring state:`, error);
+            log.error(`Failed to persist ${device} hardware wallet state:`, error);
+            return false;
         }
     }
 
@@ -1882,7 +1965,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      */
     public async restoreHardwareWalletState(
         params: { device: string; state: { hdPath: string; accounts: string[], state?: any, type?: string } }
-    ): Promise<boolean> {
+    ): Promise<boolean | { needsUserGesture: boolean; deviceName: string }> {
         try {
             log.info(
                 `Attempting to restore hardware wallet connection for device: ${params.device}`
@@ -1894,122 +1977,157 @@ export default class KeyringControllerDerivated extends KeyringController {
             }
 
             // Start a new restore process
-            this.restorePromise = new Promise<boolean>((resolve) => {
+            this.restorePromise = new Promise<boolean | { needsUserGesture: boolean; deviceName: string }>((resolve) => {
                 const attemptRestore = async () => {
                     this.restoreCompleted = false;
                     let restored = false;
-                    const maxAttempts = 3;
 
-                    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-                        if (this.restoreCompleted) {
-                            log.debug('Restore cancelled');
+                    try {
+                        // For Ledger, we need to check for WebHID transport first to avoid errors
+                        if (params.device.toUpperCase() === 'LEDGER') {
+                            try {
+                                await this.setLedgerTransportType('webhid');
+                                log.debug('WebHID transport set for Ledger');
+                            } catch (transportError) {
+                                log.warn('WebHID transport setting failed for Ledger:', transportError);
+                                // Continue anyway as it might work with the default transport
+                            }
+                        }
+
+                        // Step 1: Connect to the hardware keyring
+                        log.debug(`Restore: connecting to ${params.device}`);
+                        const connectionResult = await this.connectHardwareKeyring(params.device as Devices);
+
+                        // If connection requires user gesture, capture that and return appropriate result
+                        if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
+                            log.info(`${params.device} connection requires user interaction`);
+                            this.restoreCompleted = true;
+                            this.restorePromise = null;
+                            resolve(connectionResult);
+                            return;
+                        }
+
+                        // Step 2: Get the keyring from the device
+                        const keyring = await this.getKeyringFromDevice(params.device as Devices);
+                        if (!keyring) {
+                            log.error(`Failed to get keyring for ${params.device}`);
+                            this.restoreCompleted = true;
+                            this.restorePromise = null;
                             resolve(false);
                             return;
                         }
 
-                        try {
-                            // For Ledger, we need to check for WebHID transport first to avoid errors
-                            if (params.device.toUpperCase() === 'LEDGER') {
-                                try {
-                                    await this.setLedgerTransportType('webhid');
-                                    log.debug('WebHID transport set for Ledger');
-                                } catch (transportError) {
-                                    log.warn('WebHID transport setting failed for Ledger:', transportError);
-                                    // Continue anyway as it might work with the default transport
-                                }
-                            }
-
-                            // Step 1: Connect to the hardware keyring
-                            log.debug(`Restore attempt ${attempt}/${maxAttempts}: connecting to ${params.device}`);
-                            await this.connectHardwareKeyring(params.device as Devices);
-
-                            // Step 2: Get the keyring from the device
-                            const keyring = await this.getKeyringFromDevice(params.device as Devices);
-                            if (!keyring) {
-                                log.error(`Failed to get keyring for ${params.device} on attempt ${attempt}`);
-                                continue; // Try again
-                            }
-
-                            // Step 3: Set the HD path if provided
-                            if (params.state.hdPath && typeof keyring.setHdPath === 'function') {
+                        // Step 3: Set the HD path if provided
+                        if (params.state.hdPath && typeof keyring.setHdPath === 'function') {
+                            try {
                                 log.debug(`Setting HD path to ${params.state.hdPath}`);
                                 await keyring.setHdPath(params.state.hdPath);
-                            }
+                            } catch (hdPathError) {
+                                // Check if this is a user interaction error
+                                if (hdPathError instanceof Error &&
+                                    (hdPathError.message.includes('user interaction') ||
+                                        hdPathError.message.includes('user gesture'))) {
 
-                            // Step 4: Deserialize the state if available
-                            if (params.state.state && typeof keyring.deserialize === 'function') {
-                                try {
-                                    log.debug(`Deserializing keyring state for ${params.device}`);
-                                    await keyring.deserialize(params.state.state);
-                                } catch (deserializeError) {
-                                    log.error(`Failed to deserialize keyring state for ${params.device}:`, deserializeError);
-                                    // Continue anyway, we'll try to add accounts manually
-                                }
-                            }
+                                    log.info(`${params.device} HD path setting requires user interaction`);
 
-                            // Step 5: Unlock the keyring if needed
-                            if (typeof keyring.unlock === 'function') {
-                                log.debug(`Unlocking keyring for ${params.device}`);
-                                await keyring.unlock();
-                            }
-
-                            // Step 6: Set up accounts
-                            const accountsToUnlock = params.state.accounts || [];
-
-                            if (accountsToUnlock.length > 0) {
-                                // Step 6: Set the accounts (this may require communicating with the device)
-                                log.debug(`Restoring ${accountsToUnlock.length} accounts for ${params.device}`);
-
-                                if (typeof keyring.setAccountToUnlock === 'function') {
-                                    for (const account of accountsToUnlock) {
-                                        await keyring.setAccountToUnlock(account);
-                                    }
-                                } else if (typeof keyring.forgetAccounts === 'function' &&
-                                    typeof keyring.addAccounts === 'function') {
-                                    // Alternative approach if setAccountToUnlock is not available
-                                    await keyring.forgetAccounts();
-                                    await keyring.addAccounts(accountsToUnlock.length);
-                                }
-                            }
-
-                            // Step 7: Get accounts from the keyring to verify restoration
-                            const accounts = await this.getAccounts();
-                            log.info(`Restored ${params.device} with ${accounts.length} accounts`);
-
-                            // Step 8: Re-persist state to ensure it's up-to-date
-                            await this.persistHardwareKeyringState(params.device as Devices);
-
-                            // Record successful restoration in session storage
-                            if (chrome.storage?.session) {
-                                try {
-                                    await chrome.storage.session.set({
-                                        [`${params.device.toLowerCase()}_restoration_status`]: {
-                                            restored: true,
-                                            timestamp: Date.now(),
-                                            accountCount: accounts.length
+                                    // Store the pending HD path operation in session storage
+                                    try {
+                                        if (chrome.storage?.session) {
+                                            await chrome.storage.session.set({
+                                                [`${params.device.toLowerCase()}_needs_user_interaction`]: {
+                                                    timestamp: Date.now(),
+                                                    status: 'pending',
+                                                    operation: 'setHdPath',
+                                                    hdPath: params.state.hdPath
+                                                }
+                                            });
+                                            log.debug(`Stored ${params.device} HD path interaction requirement in session storage`);
                                         }
-                                    });
-                                } catch (storageError) {
-                                    log.error(`Failed to record restoration status for ${params.device}:`, storageError);
+                                    } catch (storageErr) {
+                                        log.warn(`Failed to store ${params.device} interaction state:`, storageErr);
+                                    }
+
+                                    this.restoreCompleted = true;
+                                    this.restorePromise = null;
+                                    const result = {
+                                        needsUserGesture: true,
+                                        deviceName: params.device
+                                    };
+                                    resolve(result);
+                                    return;
                                 }
-                            }
 
-                            restored = true;
-                            break; // Success!
-                        } catch (error) {
-                            log.error(`Error during restore attempt ${attempt}:`, error);
-
-                            // If last attempt, don't wait
-                            if (attempt < maxAttempts) {
-                                await new Promise(r => setTimeout(r, 1000)); // Wait before retry
+                                log.error(`Failed to set HD path for ${params.device}:`, hdPathError);
+                                // Continue anyway with other steps
                             }
                         }
+
+                        // Step 4: Deserialize the state if available
+                        if (params.state.state && typeof keyring.deserialize === 'function') {
+                            try {
+                                log.debug(`Deserializing keyring state for ${params.device}`);
+                                await keyring.deserialize(params.state.state);
+                            } catch (deserializeError) {
+                                log.error(`Failed to deserialize keyring state for ${params.device}:`, deserializeError);
+                                // Continue anyway, we'll try to add accounts manually
+                            }
+                        }
+
+                        // Step 5: Unlock the keyring if needed
+                        if (typeof keyring.unlock === 'function') {
+                            log.debug(`Unlocking keyring for ${params.device}`);
+                            await keyring.unlock();
+                        }
+
+                        // Step 6: Set up accounts
+                        const accountsToUnlock = params.state.accounts || [];
+
+                        if (accountsToUnlock.length > 0) {
+                            // Step 6: Set the accounts (this may require communicating with the device)
+                            log.debug(`Restoring ${accountsToUnlock.length} accounts for ${params.device}`);
+
+                            if (typeof keyring.setAccountToUnlock === 'function') {
+                                for (const account of accountsToUnlock) {
+                                    await keyring.setAccountToUnlock(account);
+                                }
+                            } else if (typeof keyring.forgetAccounts === 'function' &&
+                                typeof keyring.addAccounts === 'function') {
+                                // Alternative approach if setAccountToUnlock is not available
+                                await keyring.forgetAccounts();
+                                await keyring.addAccounts(accountsToUnlock.length);
+                            }
+                        }
+
+                        // Step 7: Get accounts from the keyring to verify restoration
+                        const accounts = await this.getAccounts();
+                        log.info(`Restored ${params.device} with ${accounts.length} accounts`);
+
+                        // Step 8: Re-persist state to ensure it's up-to-date
+                        await this.persistHardwareKeyringState(params.device as Devices);
+
+                        // Record successful restoration in session storage
+                        if (chrome.storage?.session) {
+                            try {
+                                await chrome.storage.session.set({
+                                    [`${params.device.toLowerCase()}_restoration_status`]: {
+                                        restored: true,
+                                        timestamp: Date.now(),
+                                        accountCount: accounts.length
+                                    }
+                                });
+                            } catch (storageError) {
+                                log.error(`Failed to record restoration status for ${params.device}:`, storageError);
+                            }
+                        }
+
+                        restored = true;
+                    } catch (error) {
+                        log.error(`Error during restore attempt:`, error);
                     }
 
                     this.restoreCompleted = true;
                     this.restorePromise = null;
                     resolve(restored);
-                    return restored;
                 };
 
                 // Execute the async function
@@ -2029,11 +2147,11 @@ export default class KeyringControllerDerivated extends KeyringController {
      * Attempts to restore a hardware wallet keyring from storage on demand
      * Used when a keyring is not found but should exist
      * @param device The hardware wallet device type
-     * @returns True if restoration was successful
+     * @returns True if restoration was successful, or an object indicating user gesture is needed
      */
     public async tryRestoreHardwareWalletFromStorage(
         device: Devices
-    ): Promise<boolean> {
+    ): Promise<boolean | { needsUserGesture: boolean; deviceName: string }> {
         try {
             log.debug(`Attempting to restore ${device} from storage`);
 
@@ -2209,5 +2327,71 @@ export default class KeyringControllerDerivated extends KeyringController {
 
         // For other device types, just call the connect function
         return await this.connectHardwareKeyring(device);
+    }
+
+    /**
+     * Sets the HD path for a hardware wallet device
+     *
+     * @param {Devices} device - The hardware wallet device type
+     * @param {string} hdPath - The HD path to set
+     * @throws {Error} If the device type is invalid or the connection fails
+     */
+    public async setHdPathForDevice(device: Devices, hdPath: string): Promise<void> {
+        try {
+            log.debug(`Setting HD path for ${device}: ${hdPath}`);
+
+            if (!device) {
+                throw new Error('Device type must be specified');
+            }
+
+            // Get the keyring for the device
+            const updatedKeyring = await this.getKeyringFromDevice(device);
+            if (!updatedKeyring) {
+                throw new Error(`No keyring found for ${device}`);
+            }
+
+            // Set the HD path on the keyring
+            try {
+                updatedKeyring.setHdPath(hdPath);
+                log.debug(`HD path set successfully for ${device}`);
+            } catch (error) {
+                // Check if this is a user interaction error
+                if (error instanceof Error &&
+                    (error.message.includes('user interaction') ||
+                        error.message.includes('user gesture'))) {
+
+                    // Store this state in session storage for UI to detect
+                    try {
+                        if (chrome.storage?.session) {
+                            await chrome.storage.session.set({
+                                'ledger_needs_user_interaction': {
+                                    timestamp: Date.now(),
+                                    status: 'pending',
+                                    operation: 'setHdPath',
+                                    hdPath: hdPath
+                                }
+                            });
+                            log.debug("Stored HD path interaction requirement in session storage");
+                        }
+                    } catch (storageErr) {
+                        log.warn("Failed to store Ledger interaction state:", storageErr);
+                    }
+                }
+                throw error;
+            }
+
+            if (device !== Devices.KEYSTONE) {
+                if (!updatedKeyring.isUnlocked()) {
+                    log.debug(`Unlocking keyring for ${device}`);
+                    await updatedKeyring.unlock();
+                }
+            }
+
+            // Persist the hardware wallet state after setting HD path
+            await this.persistHardwareKeyringState(device);
+        } catch (error) {
+            log.error(`Failed to set HD path for ${device}:`, error);
+            throw error;
+        }
     }
 }

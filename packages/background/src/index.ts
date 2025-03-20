@@ -409,6 +409,10 @@ if (isManifestV3()) {
 
 /**
  * Restores hardware wallet connections from storage after service worker restarts.
+ * This improved implementation will:
+ * 1. Check for recent successful connections in storage
+ * 2. Avoid automatic restore attempts that will fail without user interaction
+ * 3. Mark states that require user interaction for the UI to handle
  */
 async function restoreHardwareWalletConnections(blankController: BlankController): Promise<void> {
     try {
@@ -423,6 +427,15 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                 const sessionResult = await chrome.storage.session.get(null);
                 const hwSessionKeys = Object.keys(sessionResult).filter(key =>
                     key.startsWith('hw_keyring_'));
+
+                // First check if we have a valid connection status for Ledger
+                let ledgerConnectionStatus = false;
+                if (sessionResult.ledger_connection_status &&
+                    sessionResult.ledger_connection_status.connected &&
+                    Date.now() - sessionResult.ledger_connection_status.timestamp < 300000) { // Valid in last 5 minutes
+                    ledgerConnectionStatus = true;
+                    log.debug("Found valid Ledger connection status in session storage");
+                }
 
                 for (const key of hwSessionKeys) {
                     const state = sessionResult[key];
@@ -490,47 +503,120 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                         continue;
                     }
 
+                    // For Ledger devices, check if we have a valid connection status
+                    // If not, mark as requiring user interaction instead of attempting restore
+                    if (device === 'LEDGER') {
+                        let hasValidConnection = false;
+
+                        try {
+                            if (chrome.storage?.session) {
+                                const result = await chrome.storage.session.get('ledger_connection_status');
+                                if (result.ledger_connection_status &&
+                                    result.ledger_connection_status.connected &&
+                                    Date.now() - result.ledger_connection_status.timestamp < 300000) { // If connected in last 5 minutes
+                                    log.debug("Found valid Ledger connection status in session storage");
+                                    hasValidConnection = true;
+                                }
+                            }
+                        } catch (e) {
+                            log.warn("Error checking Ledger connection status:", e);
+                        }
+
+                        if (!hasValidConnection) {
+                            log.info("Ledger device requires user interaction for restoration");
+
+                            // Don't attempt restore, just mark as needing interaction
+                            try {
+                                if (chrome.storage?.session) {
+                                    await chrome.storage.session.set({
+                                        'ledger_needs_user_interaction': {
+                                            timestamp: Date.now(),
+                                            status: 'pending',
+                                            requiresWebHID: true,
+                                            hasSavedState: true,
+                                            savedState: state
+                                        }
+                                    });
+                                    log.debug("Marked Ledger as requiring user interaction with saved state");
+                                }
+                            } catch (storageErr) {
+                                log.error("Failed to store Ledger interaction state:", storageErr);
+                            }
+
+                            continue; // Skip restore attempt
+                        }
+                    }
+
                     const restored = await keyringController.restoreHardwareWalletState({
                         device: device,
                         state: state
                     });
 
-                    if (restored) {
+                    if (restored === true) {
                         log.info(`Successfully restored ${device} hardware wallet connection`);
+
+                        // Update connection status for Ledger
+                        if (device === 'LEDGER' && chrome.storage?.session) {
+                            await chrome.storage.session.set({
+                                'ledger_connection_status': {
+                                    connected: true,
+                                    timestamp: Date.now()
+                                }
+                            });
+                        }
+                    } else if (typeof restored === 'object' && restored.needsUserGesture) {
+                        log.info(`${device} hardware wallet connection requires user interaction`);
+
+                        // Store this information in session storage for the UI to detect
+                        try {
+                            if (chrome.storage?.session) {
+                                await chrome.storage.session.set({
+                                    [`${device.toLowerCase()}_needs_user_interaction`]: {
+                                        timestamp: Date.now(),
+                                        status: 'pending',
+                                        requiresWebHID: device === 'LEDGER',
+                                        hasSavedState: true,
+                                        savedState: state
+                                    }
+                                });
+                            }
+                        } catch (storageError) {
+                            log.error(`Failed to store interaction state for ${device}:`, storageError);
+                        }
                     } else {
                         log.warn(`Failed to restore ${device} hardware wallet connection`);
                     }
                 } catch (e) {
                     log.error(`Error restoring ${device} hardware wallet connection:`, e);
+
+                    // If we get a user interaction error, mark it accordingly
+                    if (e instanceof Error &&
+                        (e.message.includes('user interaction') ||
+                            e.message.includes('user gesture'))) {
+
+                        const deviceLower = device.toLowerCase();
+                        try {
+                            if (chrome.storage?.session) {
+                                await chrome.storage.session.set({
+                                    [`${deviceLower}_needs_user_interaction`]: {
+                                        timestamp: Date.now(),
+                                        status: 'pending',
+                                        requiresWebHID: device === 'LEDGER',
+                                        error: e.message
+                                    }
+                                });
+                                log.debug(`Marked ${device} as requiring user interaction due to error`);
+                            }
+                        } catch (storageErr) {
+                            log.error(`Failed to store interaction state for ${device}:`, storageErr);
+                        }
+                    }
                 }
             }
         } else {
             log.info('No hardware wallet states found for restoration');
-
-            // Initialize ledger keyring proactively if on hardware wallet pages
-            try {
-                const tabs = await chrome.tabs.query({ active: true, url: '*://*/tab.html*' });
-
-                for (const tab of tabs) {
-                    if (tab.url?.includes('hardware-wallet')) {
-                        log.info('On hardware wallet page, proactively initializing Ledger keyring');
-                        const keyringController = blankController['keyringController'];
-                        if (keyringController) {
-                            try {
-                                await keyringController.connectHardwareKeyring(Devices.LEDGER);
-                                log.info('Proactively initialized Ledger keyring');
-                            } catch (e) {
-                                log.debug('Ledger proactive initialization may need user gesture:', e);
-                            }
-                        }
-                        break;
-                    }
-                }
-            } catch (e) {
-                log.error('Error during proactive Ledger initialization:', e);
-            }
         }
-    } catch (error) {
-        log.error('Hardware wallet restoration failed:', error);
+    } catch (e) {
+        log.error('Error in hardware wallet restoration process:', e);
     }
 }

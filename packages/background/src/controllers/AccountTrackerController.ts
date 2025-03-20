@@ -1982,18 +1982,44 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 log.warn(`No keyring found for ${device}, attempting to restore from session storage`);
 
                 try {
-                    const restored = await this._keyringController.tryRestoreHardwareWalletFromStorage(device);
-                    if (restored) {
-                        log.info(`Successfully restored ${device} keyring from session storage`);
+                    // First, try to connect the hardware wallet directly
+                    // This is important for MV3 where service worker might restart
+                    try {
+                        log.debug(`Attempting to directly connect to ${device} before restoration`);
+                        const connectionResult = await this._keyringController.connectHardwareKeyring(device);
 
-                        // Get the keyring again after restoration
-                        keyring = await this._keyringController.getKeyringFromDevice(device);
+                        if (connectionResult === true) {
+                            log.info(`Successfully connected to ${device}`);
+                            // Get the keyring after connection
+                            keyring = await this._keyringController.getKeyringFromDevice(device);
 
-                        if (!keyring) {
-                            log.error(`Keyring restoration for ${device} reported success but keyring still not found`);
+                            if (keyring) {
+                                log.info(`Successfully initialized ${device} keyring through direct connection`);
+                                // Persist this newly created keyring for future restoration
+                                await this._keyringController['persistHardwareKeyringState'](device);
+                            }
+                        } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
+                            log.debug(`${device} connection requires user gesture for full initialization`);
                         }
-                    } else {
-                        log.error(`Failed to restore keyring for ${device} from session storage`);
+                    } catch (connectionError) {
+                        log.error(`Failed to directly connect to ${device}:`, connectionError);
+                    }
+
+                    // If direct connection didn't work, try restoration from storage
+                    if (!keyring) {
+                        const restored = await this._keyringController.tryRestoreHardwareWalletFromStorage(device);
+                        if (restored) {
+                            log.info(`Successfully restored ${device} keyring from session storage`);
+
+                            // Get the keyring again after restoration
+                            keyring = await this._keyringController.getKeyringFromDevice(device);
+
+                            if (!keyring) {
+                                log.error(`Keyring restoration for ${device} reported success but keyring still not found`);
+                            }
+                        } else {
+                            log.error(`Failed to restore keyring for ${device} from session storage`);
+                        }
                     }
                 } catch (restoreError) {
                     log.error(`Error during keyring restoration for ${device}:`, restoreError);
@@ -2012,6 +2038,11 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     if (connectionResult === true) {
                         log.info(`Successfully created new keyring for ${device}`);
                         keyring = await this._keyringController.getKeyringFromDevice(device);
+
+                        // Ensure we persist this new keyring state for future restorations
+                        if (keyring) {
+                            await this._keyringController['persistHardwareKeyringState'](device);
+                        }
                     } else {
                         // This case likely means we need user interaction
                         log.debug(`Hardware wallet connection requires user interaction`);
@@ -2158,12 +2189,13 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
     }
 
     /**
-     * Attempts to fetch hardware wallet accounts with fallback to different HD paths if needed
-     * 
+     * Gets hardware wallet accounts with fallback mechanisms if the primary method fails.
+     * This is especially useful in Manifest V3 where service workers can restart.
+     *
      * @param device Hardware wallet device type
-     * @param pageIndex Page index to fetch
+     * @param pageIndex Account page index
      * @param pageSize Number of accounts per page
-     * @returns Array of device accounts
+     * @returns Array of device account info objects
      */
     public async getHardwareWalletAccountsWithFallback(
         device: Devices,
@@ -2171,72 +2203,74 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         pageSize: number
     ): Promise<DeviceAccountInfo[]> {
         try {
-            // Try with current HD path first
-            const accounts = await this.getHardwareWalletAccounts(
-                device,
-                pageIndex,
-                pageSize
-            );
+            log.debug(`Attempting to get hardware wallet accounts for ${device} (page ${pageIndex}, size ${pageSize})`);
 
-            // If we found accounts, return them
-            if (accounts && accounts.length > 0) {
-                return accounts;
+            // First try the standard method
+            try {
+                const accounts = await this.getHardwareWalletAccounts(device, pageIndex, pageSize);
+                if (accounts && accounts.length > 0) {
+                    log.debug(`Successfully retrieved ${accounts.length} accounts for ${device}`);
+                    return accounts;
+                }
+            } catch (e) {
+                log.warn(`Standard account retrieval failed for ${device}:`, e);
+                // Continue to fallbacks
             }
 
-            // If no accounts found and this is a Ledger device, try alternative paths
-            if (device === Devices.LEDGER) {
-                log.info("No accounts found with current HD path, trying alternatives");
-
-                // Get the current HD path
-                const currentPath = await this._keyringController.getHDPathForDevice(device);
-                log.debug(`Current HD path: ${currentPath}`);
-
-                // Get available HD paths for Ledger
-                const ledgerPaths = HDPaths[Devices.LEDGER]
-                    .filter((p: HDPathDescription) => p.path !== currentPath) // Exclude current path
-                    .map((p: HDPathDescription) => p.path);
-
-                log.debug(`Trying ${ledgerPaths.length} alternative paths: ${ledgerPaths.join(', ')}`);
-
-                // Try each alternative path
-                for (const path of ledgerPaths) {
-                    try {
-                        log.debug(`Trying alternative HD path: ${path}`);
-
-                        // Set the alternative HD path
-                        await this._keyringController.setHDPath(device, path);
-
-                        // Try to fetch accounts with this path
-                        const alternativeAccounts = await this.getHardwareWalletAccounts(
-                            device,
-                            pageIndex,
-                            pageSize
-                        );
-
-                        if (alternativeAccounts && alternativeAccounts.length > 0) {
-                            log.info(`Found ${alternativeAccounts.length} accounts using alternative path: ${path}`);
-                            return alternativeAccounts;
-                        }
-
-                        log.debug(`No accounts found with alternative path: ${path}`);
-                    } catch (e) {
-                        log.error(`Error trying alternative HD path ${path}:`, e);
-                        // Continue to next path
+            // First fallback: Try to reconnect the hardware wallet
+            log.debug(`Attempting to reconnect ${device} before retrieving accounts`);
+            try {
+                const connected = await this._keyringController.connectHardwareKeyring(device);
+                if (connected) {
+                    log.debug(`Successfully reconnected to ${device}, retrying account retrieval`);
+                    const accounts = await this.getHardwareWalletAccounts(device, pageIndex, pageSize);
+                    if (accounts && accounts.length > 0) {
+                        log.debug(`Successfully retrieved ${accounts.length} accounts after reconnection`);
+                        return accounts;
                     }
                 }
-
-                log.warn("No accounts found with any HD path");
-
-                // Restore original HD path
-                log.debug(`Restoring original HD path: ${currentPath}`);
-                await this._keyringController.setHDPath(device, currentPath);
+            } catch (reconnectError) {
+                log.error(`Failed to reconnect to ${device}:`, reconnectError);
+                // Continue to next fallback
             }
 
-            // Return empty array if no accounts found with any path
-            return [];
-        } catch (e) {
-            log.error("Error in getHardwareWalletAccountsWithFallback:", e);
-            throw e;
+            // Second fallback: Try to restore from storage
+            log.debug(`Attempting to restore ${device} from storage`);
+            try {
+                const restored = await this._keyringController.tryRestoreHardwareWalletFromStorage(device);
+                if (restored) {
+                    log.debug(`Successfully restored ${device} from storage, retrying account retrieval`);
+                    const accounts = await this.getHardwareWalletAccounts(device, pageIndex, pageSize);
+                    if (accounts && accounts.length > 0) {
+                        log.debug(`Successfully retrieved ${accounts.length} accounts after restoration`);
+                        return accounts;
+                    }
+                }
+            } catch (restoreError) {
+                log.error(`Failed to restore ${device} from storage:`, restoreError);
+                // Continue to last resort
+            }
+
+            // Last resort: Try with a fixed pageIndex and pageSize
+            if (pageIndex !== 0 || pageSize !== 5) {
+                log.debug(`Trying with default pagination (page 0, size 5) for ${device}`);
+                try {
+                    const accounts = await this.getHardwareWalletAccounts(device, 0, 5);
+                    if (accounts && accounts.length > 0) {
+                        log.debug(`Successfully retrieved ${accounts.length} accounts with default pagination`);
+                        return accounts;
+                    }
+                } catch (e) {
+                    log.error(`Failed to get accounts with default pagination:`, e);
+                }
+            }
+
+            // If we got here, all attempts failed
+            log.error(`Failed to retrieve accounts for ${device} after all fallback attempts`);
+            throw new Error(`Could not retrieve accounts from ${device}`);
+        } catch (error) {
+            log.error(`Error in getHardwareWalletAccountsWithFallback:`, error);
+            throw error;
         }
     }
 }

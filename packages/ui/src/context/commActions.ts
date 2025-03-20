@@ -1379,11 +1379,11 @@ export const completeHardwareConnection = async (
 /**
  * It gets a paginated list of a connected hardware wallet device accounts
  */
-export const getHardwareWalletAccounts = async (
+export const getHardwareWalletAccounts = (
     device: Devices,
-    pageIndex: number = 0,
-    pageSize: number = 5
-): Promise<AccountInfo[]> => {
+    pageIndex: number,
+    pageSize: number
+): Promise<DeviceAccountInfo[]> => {
     return sendMessage(Messages.WALLET.HARDWARE_GET_ACCOUNTS, {
         device,
         pageIndex,
@@ -1811,11 +1811,11 @@ export const setHideSmallBalances = async (enabled: boolean): Promise<void> => {
  */
 export const getHardwareWalletAccountsWithFallback = async (
     device: Devices,
-    page: number = 0,
+    pageIndex: number = 0,
     pageSize: number = 5
 ): Promise<DeviceAccountInfo[]> => {
     // Try with the current HD path first
-    const accounts = await getHardwareWalletAccounts(device, page, pageSize)
+    const accounts = await getHardwareWalletAccounts(device, pageIndex, pageSize)
 
     // If accounts are found, return them
     if (accounts && accounts.length > 0) {

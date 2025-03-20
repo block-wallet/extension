@@ -12,13 +12,20 @@ import Select from "../input/Select"
 import Tooltip from "../label/Tooltip"
 import Icon, { IconName } from "../ui/Icon"
 import Spinner from "../spinner/Spinner"
+import log from 'loglevel'
 
 interface AccountsPageAdvancedSettingsProps {
     currentHDPath: string
     vendor: Devices
     disabled?: boolean
-    setHDPath: (hdPath: string) => void
+    setHDPath: (hdPath: string) => Promise<void>
     isLoadingHDPath?: boolean
+}
+
+// Define HDPathType interface if not already imported
+interface HDPathType {
+    name: string;
+    path: string;
 }
 
 /**
@@ -35,6 +42,8 @@ export const AccountsPageAdvancedSettings = ({
     const hdPaths = HDPaths[vendor]
     const [selectedHDPath, setSelectedHDPath] = useState<string>(currentHDPath)
     const [isUpdating, setIsUpdating] = useState(false)
+    const [hdPathError, setHdPathError] = useState<string | null>(null)
+    const [isChangingPath, setIsChangingPath] = useState(false)
 
     useEffect(() => {
         setSelectedHDPath(currentHDPath)
@@ -61,11 +70,30 @@ export const AccountsPageAdvancedSettings = ({
     const handleUpdateHDPath = async () => {
         try {
             setIsUpdating(true)
-            setHDPath(selectedHDPath)
-            // Simulate waiting for backend update
-            await new Promise(resolve => setTimeout(resolve, 500))
+            setHdPathError(null)
+            setIsChangingPath(true)
+            log.debug(`Setting HD path for ${vendor} to ${selectedHDPath}`)
+            await setHDPath(selectedHDPath)
+        } catch (error) {
+            // Set a user-friendly error message based on the specific error
+            let errorMessage = 'Failed to set HD path'
+
+            // Check if the error has a message property
+            if (error.message) {
+                if (error.message.includes('No keyring found')) {
+                    errorMessage = `Could not connect to your ${vendor} device. Please ensure it's connected and try again.`
+                } else if (error.message.includes('requires user interaction')) {
+                    errorMessage = `Your ${vendor} device needs interaction. Please check your device.`
+                } else if (error.message.includes('Timeout') || error.message.includes('timed out')) {
+                    errorMessage = `Connection timed out. Please ensure your ${vendor} is unlocked with the Ethereum app open.`
+                }
+            }
+
+            setHdPathError(errorMessage)
+            log.error(`Failed to set HD path: ${error.message || error}`)
         } finally {
             setIsUpdating(false)
+            setIsChangingPath(false)
             setOpenModal(false)
         }
     }
@@ -77,6 +105,15 @@ export const AccountsPageAdvancedSettings = ({
                 <Spinner color="blue" size="24" />
             </div>
         )
+    }
+
+    function hdPathsToOptions(hdPathsArray: HDPathType[]) {
+        return hdPathsArray.map((hdPath) => {
+            return {
+                value: hdPath.path,
+                label: hdPath.name,
+            }
+        })
     }
 
     return (
@@ -161,19 +198,31 @@ export const AccountsPageAdvancedSettings = ({
                     <div className="flex flex-col space-y-2">
                         <label>HD Path</label>
                         <Select
-                            onChange={setSelectedHDPath}
+                            onChange={(path) => setSelectedHDPath(path)}
                             currentValue={selectedHDPath}
+                            id="hdPath"
+                            disabled={disabled || isChangingPath || isUpdating}
                         >
-                            {hdPaths.map((hdPath) => (
+                            {hdPathsToOptions(hdPaths).map((option) => (
                                 <Select.Option
-                                    value={hdPath.path}
-                                    key={hdPath.path}
+                                    value={option.value}
+                                    key={option.value}
                                 >
-                                    {hdPath.name}
+                                    {option.label}
                                 </Select.Option>
                             ))}
                         </Select>
                     </div>
+                    {hdPathError && (
+                        <div className="mt-2 text-xs text-red-500 bg-red-50 border border-red-100 rounded-md p-2">
+                            {hdPathError}
+                        </div>
+                    )}
+                    {isChangingPath && (
+                        <div className="mt-2 text-xs text-blue-500">
+                            Changing HD path, please wait...
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col px-6">

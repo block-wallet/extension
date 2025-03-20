@@ -62,6 +62,23 @@ async function ensureKeyringInitialized(vendor: Devices): Promise<boolean> {
 
     log.debug("Ensuring Ledger keyring is properly initialized");
 
+    // First check if we've explicitly stored a connection status in storage
+    if (chrome.storage?.session) {
+        try {
+            const connectionStatus = await chrome.storage.session.get('ledger_connection_status');
+            if (connectionStatus.ledger_connection_status?.connected &&
+                Date.now() - connectionStatus.ledger_connection_status.timestamp < 60000) { // If connected in last minute
+
+                log.debug("Found recent Ledger connection status in session storage");
+                // Store vendor in session storage for better restoration
+                sessionStorage.setItem('hw_vendor', vendor);
+                return true;
+            }
+        } catch (e) {
+            log.error("Failed to check Ledger connection status:", e);
+        }
+    }
+
     // Try multiple initialization approaches with retry logic
     let attempts = 0;
     const maxAttempts = 3;
@@ -72,16 +89,46 @@ async function ensureKeyringInitialized(vendor: Devices): Promise<boolean> {
             log.debug(`Initialization attempt ${attempts}/${maxAttempts}`);
 
             // Try to initialize the keyring in the UI context where DOM is available
-            await connectHardwareWallet(vendor);
-            log.debug("Ledger keyring initialization successful");
-            return true;
+            const result = await connectHardwareWallet(vendor);
+
+            // If successful or needs user gesture, consider it a success
+            if (result === true || (typeof result === 'object' && result.needsUserGesture)) {
+                // Store connection status in session storage
+                if (chrome.storage?.session) {
+                    try {
+                        await chrome.storage.session.set({
+                            'ledger_connection_status': {
+                                connected: true,
+                                timestamp: Date.now(),
+                                needsUserGesture: typeof result === 'object' && result.needsUserGesture
+                            }
+                        });
+                    } catch (storageError) {
+                        log.error("Failed to store connection status:", storageError);
+                    }
+                }
+
+                // Store vendor in session storage for better restoration
+                sessionStorage.setItem('hw_vendor', vendor);
+
+                log.debug("Ledger keyring initialization successful");
+                return true;
+            }
+
+            // If we're here, connection wasn't successful
+            log.warn(`Ledger connection attempt ${attempts} did not return success`);
+
+            // Wait before retrying
+            if (attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
         } catch (e) {
             log.error(`Failed to initialize Ledger keyring (attempt ${attempts}/${maxAttempts}):`, e);
 
             if (attempts >= maxAttempts) {
                 // Last attempt - check if we have a connection status that indicates success
                 try {
-                    if (chrome.storage && chrome.storage.session) {
+                    if (chrome.storage?.session) {
                         const result = await chrome.storage.session.get('ledger_connection_status');
                         if (result.ledger_connection_status && result.ledger_connection_status.connected) {
                             // We have a connection status, so we can proceed even without a proper keyring
@@ -92,6 +139,7 @@ async function ensureKeyringInitialized(vendor: Devices): Promise<boolean> {
                 } catch (storageError) {
                     log.error("Failed to check connection status:", storageError);
                 }
+
                 return false;
             }
 
@@ -436,20 +484,113 @@ const HardwareWalletAccountsPage = () => {
             // First ensure keyring is initialized if needed
             const initAndGetAccounts = async () => {
                 if (vendor === Devices.LEDGER) {
-                    // Initialize keyring in UI context first
-                    const initialized = await ensureKeyringInitialized(vendor);
-                    if (!initialized) {
-                        setFetchError("Failed to initialize Ledger connection. Please try reconnecting your device.");
-                        setState({
-                            gettingAccounts: false,
-                            deviceAccounts: []
-                        });
-                        return;
-                    }
-                }
+                    try {
+                        setState({ gettingAccounts: true });
 
-                if (vendor === Devices.KEYSTONE) checkKeystoneAccounts();
-                getAccounts();
+                        // Show a more detailed connection message
+                        setFetchError("Connecting to Ledger device. Please ensure your device is connected, unlocked, and has the Ethereum app open.");
+
+                        // Try multiple connection attempts with retry logic
+                        let connectionSuccess = false;
+                        let connectionAttempts = 0;
+                        const maxConnectionAttempts = 3;
+
+                        while (!connectionSuccess && connectionAttempts < maxConnectionAttempts) {
+                            connectionAttempts++;
+                            try {
+                                log.debug(`Explicitly connecting to ${vendor}, attempt ${connectionAttempts}/${maxConnectionAttempts}`);
+
+                                const connectionResult = await connectHardwareWallet(vendor);
+                                if (connectionResult === true) {
+                                    log.debug(`Successfully connected to ${vendor}`);
+                                    connectionSuccess = true;
+                                } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
+                                    log.debug(`${vendor} needs user gesture, attempting to complete connection`);
+                                    try {
+                                        const completed = await completeHardwareConnection(vendor);
+                                        if (completed) {
+                                            log.debug(`Successfully completed connection to ${vendor}`);
+                                            connectionSuccess = true;
+                                        } else {
+                                            log.warn(`Failed to complete connection to ${vendor}`);
+                                        }
+                                    } catch (completeError) {
+                                        log.error(`Failed to complete ${vendor} connection:`, completeError);
+                                        // Continue to next attempt
+                                    }
+                                }
+
+                                if (connectionSuccess) {
+                                    break;
+                                }
+
+                                // If not successful and not last attempt, wait before retry
+                                if (connectionAttempts < maxConnectionAttempts) {
+                                    await new Promise(resolve => setTimeout(resolve, 1000));
+                                }
+                            } catch (connectionError) {
+                                log.error(`Connection attempt ${connectionAttempts} failed:`, connectionError);
+
+                                // If last attempt, don't wait
+                                if (connectionAttempts < maxConnectionAttempts) {
+                                    await new Promise(resolve => setTimeout(resolve, 1000));
+                                }
+                            }
+                        }
+
+                        if (!connectionSuccess) {
+                            log.error(`Failed to connect to ${vendor} after ${maxConnectionAttempts} attempts`);
+                            setFetchError(`Could not connect to your ${vendor} device. Please ensure it's connected, unlocked, and has the Ethereum app open.`);
+                            setState({ gettingAccounts: false });
+                            return;
+                        }
+
+                        // Clear connection error since we succeeded
+                        setFetchError(null);
+
+                        // After successful connection, set the HD path explicitly
+                        log.debug(`Setting HD path for ${vendor} to ${hdPath}`);
+                        try {
+                            await setHardwareWalletHDPath(vendor, hdPath);
+                        } catch (hdPathError) {
+                            log.error(`Failed to set HD path for ${vendor}:`, hdPathError);
+                            setFetchError(`Connected to device but failed to set HD path. Please try again or select a different HD path.`);
+                            setState({ gettingAccounts: false });
+                            return;
+                        }
+
+                        // Now try to get accounts
+                        try {
+                            log.debug(`Fetching accounts for ${vendor} after explicit connection`);
+                            await getAccounts();
+                        } catch (accountError) {
+                            log.error(`Failed to get accounts after explicit connection:`, accountError);
+                            setFetchError(`Connection established but could not fetch accounts. Please ensure your ${vendor} device has the Ethereum app open and try again.`);
+                            setState({ gettingAccounts: false });
+                        }
+                    } catch (e) {
+                        log.error(`Failed to initialize ${vendor} connection:`, e);
+
+                        // Initialize keyring in UI context as fallback
+                        const initialized = await ensureKeyringInitialized(vendor);
+                        if (!initialized) {
+                            setFetchError(`Failed to initialize ${vendor} connection. Please ensure your device is connected and try again.`);
+                            setState({
+                                gettingAccounts: false,
+                                deviceAccounts: []
+                            });
+                            return;
+                        }
+
+                        // If initialized successfully, proceed with getAccounts
+                        getAccounts();
+                    }
+                } else if (vendor === Devices.KEYSTONE) {
+                    checkKeystoneAccounts();
+                    getAccounts();
+                } else {
+                    getAccounts();
+                }
             };
 
             initAndGetAccounts();

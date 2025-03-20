@@ -217,7 +217,7 @@ export default class AppStateController extends BaseController<AppStateControlle
      */
     private _postLoginAction = async () => {
         // Set Ledger transport method to WebHID
-        await this._keyringController.setLedgerWebHIDTransportType();
+        await this._keyringController.setLedgerTransportType('webhid');
 
         // Update controller state
         this.store.updateState({

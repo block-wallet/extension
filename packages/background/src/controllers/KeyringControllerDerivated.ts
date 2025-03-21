@@ -77,10 +77,12 @@ interface QRSignatureRequest {
  */
 const hasDomAccess = (): boolean => {
     try {
+        // Check for document with element creation capability
         return typeof document !== 'undefined' &&
             document !== null &&
             typeof document.createElement === 'function';
     } catch (e) {
+        // If any error occurs during the check, assume we don't have DOM access
         return false;
     }
 };
@@ -482,88 +484,159 @@ export default class KeyringControllerDerivated extends KeyringController {
     }
 
     /**
-     * Sets the HD path for a hardware wallet device
-     * @param {Devices} device - The hardware wallet device type
-     * @param {string} hdPath - The HD derivation path to set
-     * @throws {Error} If the HD path is invalid or the keyring cannot be configured
+     * Set the HD path for a hardware device
+     * For Ledger, this needs to handle both UI and service worker contexts
+     *
+     * @param device - The hardware device type
+     * @param hdPath - The HD path to set
      */
     public async setHDPath(device: Devices, hdPath: string): Promise<void> {
+        log.debug(`Setting HD path for ${device} to ${hdPath}`);
+
+        // Input validation
+        if (!device) {
+            throw new Error('Device is required');
+        }
+        if (!hdPath) {
+            throw new Error('HD path is required');
+        }
+
+        // Make sure the HD path is one of our predefined paths
+        const devicePaths = HDPaths[device];
+        if (!devicePaths || !devicePaths.some(pathObj => pathObj.path === hdPath)) {
+            log.warn(`Unexpected HD path for ${device}: ${hdPath}`);
+            // Continue anyway as the path might be valid, just not one of our predefined paths
+        }
+
+        // First, get the keyring based on device
         try {
-            log.debug(`Setting HD path for ${device} to ${hdPath}`);
-
-            if (!device) {
-                throw new Error('Device type must be specified');
-            }
-
-            if (!hdPath || hdPath.trim() === '') {
-                throw new Error('HD path cannot be empty');
-            }
-
-            // First validate the HD path before attempting any device connection
-            const hdPaths = HDPaths[device];
-            if (!hdPaths) {
-                throw new Error(`No HD paths defined for device ${device}`);
-            }
-
-            if (hdPaths.findIndex((data) => data.path === hdPath) === -1) {
-                throw new Error(
-                    `The provided HD path "${hdPath}" is not recognized as a valid path for ${device}`
-                );
-            }
-
-            // Persist this HD path in storage even before trying to connect
-            // This allows the UI to know which path was selected even if connection requires user interaction
-            try {
-                if (chrome.storage?.session) {
-                    await chrome.storage.session.set({
-                        [`${device.toLowerCase()}_hd_path`]: {
-                            path: hdPath,
-                            timestamp: Date.now()
-                        }
-                    });
-                    log.debug(`HD path for ${device} saved to session storage: ${hdPath}`);
-                }
-
-                // Also try to store in local storage for persistence across sessions
-                if (chrome.storage?.local) {
-                    await chrome.storage.local.set({
-                        [`${device.toLowerCase()}_last_hd_path`]: hdPath
-                    });
-                    log.debug(`HD path for ${device} saved to local storage: ${hdPath}`);
-                }
-            } catch (storageError) {
-                log.warn(`Could not save HD path to storage for ${device}:`, storageError);
-                // Continue anyway
-            }
-
-            // Get keyring for the device - but don't error out if no keyring exists yet
             const keyring = await this.getKeyringFromDevice(device);
-
-            // For Ledger specifically, check if we have an active connection status stored
-            let connectionStatus = false;
-            if (device === Devices.LEDGER && chrome.storage?.session) {
-                try {
-                    const result = await chrome.storage.session.get('ledger_connection_status');
-                    if (result.ledger_connection_status &&
-                        result.ledger_connection_status.connected &&
-                        Date.now() - result.ledger_connection_status.timestamp < 300000) { // If connected in last 5 minutes
-                        log.debug("Found valid Ledger connection status in session storage");
-                        connectionStatus = true;
-                    }
-                } catch (e) {
-                    log.warn("Error checking Ledger connection status:", e);
-                }
+            if (!keyring) {
+                log.error(`No keyring found for device ${device}`);
+                throw new Error(`No keyring found for device ${device}. Please connect the device first.`);
             }
 
-            // If no keyring exists, or we don't have a valid connection status, we can't proceed
-            // without user interaction
-            if (!keyring || (device === Devices.LEDGER && !connectionStatus)) {
-                // For Ledger without connection status, store more detailed information
-                if (device === Devices.LEDGER) {
-                    log.debug("No keyring or valid connection for Ledger - user interaction required");
+            // Initialize WebHID permission flag
+            let hasExplicitPermission = false;
 
-                    // Store pending HD path change with more details in session storage
+            // For Ledger, we need to check if we're in a service worker context
+            if (device === Devices.LEDGER) {
+                const hasDOM = hasDomAccess();
+                log.debug(`Setting HD path in environment with DOM access: ${hasDOM}`);
+
+                // Store the HD path in session storage for recovery/retry
+                try {
+                    if (chrome.storage?.session) {
+                        await chrome.storage.session.set({
+                            'ledger_hd_path': {
+                                path: hdPath,
+                                timestamp: Date.now()
+                            }
+                        });
+                        log.debug(`Stored HD path ${hdPath} in session storage`);
+                    }
+                } catch (storageError) {
+                    log.error(`Failed to store HD path in session storage:`, storageError);
+                    // Continue anyway, this is just for recovery
+                }
+
+                // Also store in local storage for more permanent record
+                try {
+                    const ledgerPaths = JSON.parse(localStorage.getItem('ledger_hd_paths') || '{}');
+                    ledgerPaths[device] = hdPath;
+                    localStorage.setItem('ledger_hd_paths', JSON.stringify(ledgerPaths));
+                    log.debug(`Stored HD path ${hdPath} in local storage`);
+                } catch (localStorageError) {
+                    log.warn(`Failed to store HD path in local storage:`, localStorageError);
+                    // Continue anyway, this is just for recovery
+                }
+
+                // If we're in a service worker context (no DOM access), check for explicit permission
+                if (!hasDOM) {
+                    log.debug(`No DOM access, checking for explicit WebHID permission`);
+
                     try {
+                        // Check for explicit WebHID permission
+                        if (chrome.storage?.session) {
+                            const result = await chrome.storage.session.get('ledger_explicit_permission');
+
+                            if (result.ledger_explicit_permission &&
+                                result.ledger_explicit_permission.granted) {
+
+                                // Check if permission is fresh enough (10 minutes)
+                                const permTimestamp = result.ledger_explicit_permission.timestamp || 0;
+                                if (Date.now() - permTimestamp < 600000) {
+                                    log.debug(`Found valid explicit WebHID permission granted at ${new Date(permTimestamp).toISOString()}`);
+                                    hasExplicitPermission = true;
+                                } else {
+                                    log.debug(`Found expired explicit WebHID permission from ${new Date(permTimestamp).toISOString()}`);
+                                }
+                            } else {
+                                log.debug(`No explicit WebHID permission found in session storage`);
+                            }
+                        }
+                    } catch (e) {
+                        log.error(`Error checking for explicit WebHID permission:`, e);
+                    }
+
+                    // If no explicit permission, check connection status as fallback
+                    if (!hasExplicitPermission) {
+                        try {
+                            if (chrome.storage?.session) {
+                                const connStatus = await chrome.storage.session.get('ledger_connection_status');
+                                if (connStatus.ledger_connection_status &&
+                                    connStatus.ledger_connection_status.connected) {
+
+                                    // Check if connection status is recent enough (5 minutes)
+                                    const connTimestamp = connStatus.ledger_connection_status.timestamp || 0;
+                                    if (Date.now() - connTimestamp < 300000) {
+                                        log.debug(`Found recent connection status from ${new Date(connTimestamp).toISOString()}`);
+                                        hasExplicitPermission = true;
+                                    } else {
+                                        log.debug(`Found expired connection status from ${new Date(connTimestamp).toISOString()}`);
+                                    }
+                                } else {
+                                    log.debug(`No connection status found in session storage`);
+                                }
+                            }
+                        } catch (e) {
+                            log.error(`Error checking connection status:`, e);
+                        }
+                    }
+
+                    // If no explicit permission or recent connection, store this for UI handling
+                    if (!hasExplicitPermission) {
+                        log.debug(`No valid WebHID permission found, need user interaction for HD path change`);
+
+                        try {
+                            if (chrome.storage?.session) {
+                                await chrome.storage.session.set({
+                                    'ledger_needs_user_interaction': {
+                                        timestamp: Date.now(),
+                                        status: 'pending',
+                                        requiresWebHID: true,
+                                        operation: 'setHdPath',
+                                        pendingHdPath: hdPath,
+                                        reason: 'service_worker_context'
+                                    }
+                                });
+                                log.debug(`Stored pending HD path operation in session storage`);
+                            }
+                        } catch (e) {
+                            log.error(`Error storing pending HD path operation:`, e);
+                        }
+
+                        throw new Error('Hardware wallet connection requires user interaction');
+                    }
+                }
+
+                // Validate keyring functionality
+                try {
+                    const isReady = await this.isKeyringReadyForUse(keyring);
+                    if (!isReady) {
+                        log.warn(`Keyring is not ready for use, cannot set HD path`);
+
+                        // Store this for UI handling
                         if (chrome.storage?.session) {
                             await chrome.storage.session.set({
                                 'ledger_needs_user_interaction': {
@@ -571,74 +644,131 @@ export default class KeyringControllerDerivated extends KeyringController {
                                     status: 'pending',
                                     requiresWebHID: true,
                                     operation: 'setHdPath',
-                                    pendingHdPath: hdPath
+                                    pendingHdPath: hdPath,
+                                    reason: 'keyring_not_ready'
                                 }
                             });
-                            log.debug("Stored Ledger HD path operation details in session storage");
                         }
-                    } catch (storageErr) {
-                        log.warn("Failed to store Ledger HD path operation details:", storageErr);
+
+                        throw new Error('Hardware wallet requires reconnection');
                     }
-
-                    throw new Error(`Hardware wallet connection requires user interaction`);
+                } catch (readyError) {
+                    log.error(`Error checking if keyring is ready:`, readyError);
+                    throw readyError;
                 }
-
-                // For other devices, try connecting
-                log.debug(`No keyring found for ${device}, attempting to create one before setting HD path`);
-                const connectionResult = await this.connectHardwareKeyring(device);
-
-                if (connectionResult !== true) {
-                    // If connection was not successful, throw error
-                    log.warn(`${device} connection requires user gesture for HD path setting`);
-                    throw new Error(`Hardware wallet connection requires user interaction`);
-                }
-            }
-
-            // At this point, we should have a keyring or have thrown if user interaction is required
-            // Try to get the keyring again in case we just created it
-            const updatedKeyring = await this.getKeyringFromDevice(device);
-
-            if (!updatedKeyring) {
-                throw new Error(`No keyring found for device ${device} after connection attempt`);
-            }
-
-            if (!updatedKeyring.setHdPath) {
-                throw new Error(
-                    `Device ${device} does not support HD path configuration`
-                );
             }
 
             // Set the HD path on the keyring
-            updatedKeyring.setHdPath(hdPath);
-            log.debug(`HD path set successfully for ${device}`);
+            log.debug(`Actually setting HD path ${hdPath} on keyring`);
 
-            if (device !== Devices.KEYSTONE) {
-                if (!updatedKeyring.isUnlocked()) {
-                    log.debug(`Unlocking keyring for ${device}`);
-                    await updatedKeyring.unlock();
+            // For LEDGER devices, we use a special method
+            if (device === Devices.LEDGER) {
+                try {
+                    await keyring.setHdPath(hdPath);
+                    log.debug(`Successfully set HD path ${hdPath} on Ledger keyring`);
+                } catch (e) {
+                    log.error(`Error setting HD path on Ledger keyring:`, e);
+
+                    // If this is a document not defined error, store for UI handling
+                    if (e.message && e.message.includes('document is not defined')) {
+                        try {
+                            if (chrome.storage?.session) {
+                                await chrome.storage.session.set({
+                                    'ledger_needs_user_interaction': {
+                                        timestamp: Date.now(),
+                                        status: 'pending',
+                                        requiresWebHID: true,
+                                        operation: 'setHdPath',
+                                        pendingHdPath: hdPath,
+                                        reason: 'document_not_defined_error'
+                                    }
+                                });
+                                log.debug(`Stored pending HD path operation due to document error`);
+                            }
+                        } catch (storageErr) {
+                            log.warn(`Failed to store pending HD path operation:`, storageErr);
+                        }
+                    }
+
+                    throw e;
                 }
+            } else {
+                // For non-Ledger devices, we use standard approach
+                const descriptor = this._HDPathForDevice(device);
+                // Use generic keyring interface to bypass strict type checking
+                const genericKeyring = keyring as any;
+                await genericKeyring.setHdPath(hdPath + descriptor);
+                log.debug(`Successfully set HD path ${hdPath}${descriptor} on ${device} keyring`);
             }
 
-            // Update connection status for Ledger after successful HD path setting
-            if (device === Devices.LEDGER && chrome.storage?.session) {
-                try {
+            // After success, update local and session storage again to ensure we have the latest
+            try {
+                if (chrome.storage?.session) {
                     await chrome.storage.session.set({
-                        'ledger_connection_status': {
-                            connected: true,
-                            timestamp: Date.now()
+                        'ledger_hd_path': {
+                            path: hdPath,
+                            timestamp: Date.now(),
+                            status: 'success'
                         }
                     });
-                    log.debug("Updated Ledger connection status after HD path setting");
-                } catch (e) {
-                    log.warn("Failed to update Ledger connection status:", e);
+
+                    // Also clear any pending operations
+                    await chrome.storage.session.remove('ledger_needs_user_interaction');
                 }
+
+                // Update local storage
+                const ledgerPaths = JSON.parse(localStorage.getItem('ledger_hd_paths') || '{}');
+                ledgerPaths[device] = hdPath;
+                localStorage.setItem('ledger_hd_paths', JSON.stringify(ledgerPaths));
+            } catch (finalStorageError) {
+                log.warn(`Failed to update HD path in storage after success:`, finalStorageError);
+                // Continue anyway, this is just for recovery
             }
 
-            // Persist the hardware wallet state after setting HD path
+            // Persist the state for future use
             await this.persistHardwareKeyringState(device);
+            log.debug(`Completed setting HD path ${hdPath} for ${device}`);
         } catch (error) {
             log.error(`Failed to set HD path for ${device}:`, error);
             throw error;
+        }
+    }
+
+    /**
+     * Helper to check if a keyring is ready for use (unlocked and functional)
+     * @param keyring The hardware wallet keyring to check
+     * @returns true if the keyring is ready for use
+     */
+    private async isKeyringReadyForUse(keyring: any): Promise<boolean> {
+        try {
+            if (!keyring) return false;
+
+            // Check if it has the isUnlocked method
+            if (typeof keyring.isUnlocked !== 'function') {
+                log.debug("Keyring doesn't have isUnlocked method");
+                return false;
+            }
+
+            // Check if it's unlocked
+            const isUnlocked = keyring.isUnlocked();
+            log.debug(`Keyring unlock state: ${isUnlocked}`);
+
+            if (!isUnlocked) {
+                // Try to unlock it
+                try {
+                    await keyring.unlock();
+                    log.debug("Successfully unlocked keyring");
+                    return true;
+                } catch (e) {
+                    log.debug("Failed to unlock keyring:", e);
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (e) {
+            log.debug("Error checking if keyring is ready:", e);
+            return false;
         }
     }
 
@@ -729,173 +859,148 @@ export default class KeyringControllerDerivated extends KeyringController {
     public async connectHardwareKeyring(
         device: Devices
     ): Promise<boolean | { needsUserGesture: boolean; deviceName: string }> {
-        // Add debugging to track the execution flow
-        log.debug(`Connecting to ${device} hardware wallet...`);
+        try {
+            log.debug(`Connecting hardware keyring for device: ${device}`);
 
-        return this._mutex.runExclusive(async () => {
-            if (device === Devices.LEDGER) {
+            // First check if we're in a service worker context
+            const hasDOM = hasDomAccess();
+            log.debug(`Connecting hardware keyring in environment with DOM access: ${hasDOM}`);
+
+            // Handle Ledger in service worker context specially
+            if (!hasDOM && device === Devices.LEDGER) {
+                log.debug("No DOM access in service worker context - checking for existing Ledger keyring or permissions");
+
+                // First check if we have an existing keyring already
+                const existingKeyring = await this.getKeyringFromDevice(device);
+                if (existingKeyring) {
+                    log.debug("Found existing Ledger keyring in service worker context");
+                    return true;
+                }
+
+                // Check if we have explicit WebHID permission
+                let hasExplicitPermission = false;
                 try {
-                    log.debug("Initializing Ledger keyring connection...");
-
-                    // First, try to set the Ledger transport type
-                    try {
-                        await this.setLedgerTransportType('webhid');
-                    } catch (e) {
-                        log.warn("Failed to set Ledger transport type:", e);
-                        // Continue anyway
-                    }
-
-                    // Check if we're in an environment without DOM access
-                    if (!hasDomAccess()) {
-                        log.debug("No DOM access available (likely MV3 service worker). Using alternative connection method.");
-
-                        // Check if we have a keyring already - if so, try to work with it
-                        const existingKeyrings = this.getKeyringsByType(
-                            this._getKeyringTypeFromDevice(device)
-                        );
-
-                        if (existingKeyrings && existingKeyrings.length > 0) {
-                            log.debug("Found existing Ledger keyrings in service worker context, trying to use them");
-                            try {
-                                // Try to unlock the existing keyring
-                                await existingKeyrings[0].unlock();
-
-                                // Check if it has accounts
-                                const accounts = await existingKeyrings[0].getAccounts();
-                                if (accounts && accounts.length > 0) {
-                                    log.debug(`Found ${accounts.length} accounts in existing Ledger keyring`);
-                                    // Persist the state again
-                                    await this.persistHardwareKeyringState(device);
-                                    return true;
-                                }
-                            } catch (e) {
-                                // Check if this is specifically about user interaction
-                                if (e instanceof Error &&
-                                    (e.message.includes('user interaction') ||
-                                        e.message.includes('user gesture'))) {
-                                    log.info("Ledger connection requires user interaction via WebHID");
-
-                                    // Store this state in session storage for UI to detect
-                                    try {
-                                        if (chrome.storage?.session) {
-                                            await chrome.storage.session.set({
-                                                'ledger_needs_user_interaction': {
-                                                    timestamp: Date.now(),
-                                                    status: 'pending',
-                                                    requiresWebHID: true
-                                                }
-                                            });
-                                            log.debug("Stored user interaction requirement in session storage");
-                                        }
-                                    } catch (storageErr) {
-                                        log.warn("Failed to store Ledger interaction state:", storageErr);
-                                    }
-
-                                    // Return specific object indicating user gesture needed
-                                    return {
-                                        needsUserGesture: true,
-                                        deviceName: 'Ledger'
-                                    };
-                                }
-
-                                log.warn("Failed to use existing Ledger keyring:", e);
-                                // Continue to signal user gesture needed
+                    if (chrome.storage?.session) {
+                        const result = await chrome.storage.session.get('ledger_explicit_permission');
+                        if (result.ledger_explicit_permission?.granted) {
+                            // Check if permission is recent (within 10 minutes)
+                            const timestamp = result.ledger_explicit_permission.timestamp;
+                            if (Date.now() - timestamp < 10 * 60 * 1000) {
+                                log.debug(`Found valid explicit WebHID permission in service worker context`);
+                                hasExplicitPermission = true;
                             }
                         }
 
-                        // If still here, we need to indicate that user gesture is needed
-                        log.debug("Ledger connection requires user interaction");
-                        return {
-                            needsUserGesture: true,
-                            deviceName: 'Ledger'
-                        };
-                    }
-
-                    // We're in an environment with DOM access, so we can try to connect directly
-                    try {
-                        log.debug("Attempting to add new Ledger keyring in DOM context");
-
-                        // Even in a DOM context, we want to warn about needing WebHID permission
-                        log.info("Ledger connection requires WebHID permission from the user");
-                        return {
-                            needsUserGesture: true,
-                            deviceName: 'Ledger'
-                        };
-
-                    } catch (e) {
-                        log.error("Failed to add Ledger keyring:", e);
-
-                        // Check if this was due to needing user interaction
-                        if (e instanceof Error &&
-                            (e.message.includes('user interaction') ||
-                                e.message.includes('user gesture'))) {
-                            log.debug("Ledger connection requires WebHID permission");
-                            return {
-                                needsUserGesture: true,
-                                deviceName: 'Ledger'
-                            };
+                        // As a fallback, also check connection status
+                        if (!hasExplicitPermission) {
+                            const connectionResult = await chrome.storage.session.get('ledger_connection_status');
+                            if (connectionResult.ledger_connection_status?.connected) {
+                                // Check if connection is recent (within 5 minutes)
+                                const timestamp = connectionResult.ledger_connection_status.timestamp;
+                                if (Date.now() - timestamp < 5 * 60 * 1000) {
+                                    log.debug(`Found valid connection status in service worker context`);
+                                    hasExplicitPermission = true;
+                                }
+                            }
                         }
-
-                        throw e;
                     }
-                } catch (error) {
-                    log.error("Ledger connection error:", error);
-                    throw error;
+                } catch (e) {
+                    log.warn("Error checking WebHID permission/connection status:", e);
                 }
-            } else if (device === Devices.TREZOR) {
-                try {
-                    // Get existing keyrings
-                    const existingKeyrings = this.getKeyringsByType(
-                        this._getKeyringTypeFromDevice(device)
-                    );
 
-                    // If we already have a keyring, just unlock it
-                    if (existingKeyrings && existingKeyrings.length > 0) {
-                        try {
-                            await existingKeyrings[0].unlock();
-                            return true;
-                        } catch (e) {
-                            log.error("Failed to unlock existing Trezor keyring:", e);
+                // If we have permission, try to return success
+                if (hasExplicitPermission) {
+                    log.debug("Found valid WebHID permission, indicating success for service worker");
+
+                    // Store the need for user interaction to complete the connection in UI
+                    try {
+                        if (chrome.storage?.session) {
+                            await chrome.storage.session.set({
+                                'ledger_needs_user_interaction': {
+                                    timestamp: Date.now(),
+                                    status: 'pending',
+                                    requiresWebHID: true,
+                                    operation: 'connectKeyring',
+                                    reason: 'service_worker_context'
+                                }
+                            });
                         }
+                    } catch (e) {
+                        log.warn("Failed to store interaction need:", e);
                     }
 
-                    // We don't have an existing keyring, so let's try to create one
-                    log.debug("Adding new Trezor keyring...");
+                    return true;
+                }
+
+                // If we don't have permission, indicate user gesture needed
+                log.debug("No valid permission in service worker context, indicating user gesture needed");
+                return {
+                    needsUserGesture: true,
+                    deviceName: device
+                };
+            }
+
+            // In a UI context or for non-Ledger devices, proceed with normal flow
+            log.debug(`Processing ${device} connection in ${hasDOM ? 'UI' : 'service worker'} context`);
+
+            // Check if the keyring for the device already exists
+            const keyring = await this.getKeyringFromDevice(device);
+            if (keyring) {
+                log.debug(`Keyring found for ${device}`);
+
+                // Before returning success for Ledger, check if it's actually usable
+                if (device === Devices.LEDGER) {
+                    try {
+                        const isUsable = await this.isKeyringReadyForUse(keyring);
+                        if (!isUsable) {
+                            log.debug("Ledger keyring exists but is not usable, needs reconnection");
+                            // Continue with the connection process
+                        } else {
+                            log.debug("Existing Ledger keyring is usable, returning success");
+                            return true;
+                        }
+                    } catch (e) {
+                        log.warn("Error checking if Ledger keyring is usable:", e);
+                        // Continue with connection attempt
+                    }
+                } else {
+                    // For non-Ledger devices, just return success
+                    return true;
+                }
+            }
+
+            // If we get here, we need to create a new keyring or we're in UI context
+            // Return requiring user gesture for Ledger in any context since WebHID is needed
+            if (device === Devices.LEDGER) {
+                log.debug("Ledger connection requires WebHID permission from user");
+                return {
+                    needsUserGesture: true,
+                    deviceName: device
+                };
+            }
+
+            // For other devices, try to create keyring if in UI context
+            if (hasDOM) {
+                if (device === Devices.TREZOR) {
+                    log.debug("Creating new Trezor keyring in UI context");
                     await this.addNewKeyring('Trezor Hardware', {});
                     return true;
-                } catch (error) {
-                    log.error("Trezor connection error:", error);
-                    throw error;
-                }
-            } else if (device === Devices.KEYSTONE) {
-                try {
-                    // Get existing keyrings
-                    const existingKeyrings = this.getKeyringsByType(
-                        this._getKeyringTypeFromDevice(device)
-                    );
-
-                    // If we already have a keyring, just unlock it
-                    if (existingKeyrings && existingKeyrings.length > 0) {
-                        try {
-                            await existingKeyrings[0].unlock();
-                            return true;
-                        } catch (e) {
-                            log.error("Failed to unlock existing Keystone keyring:", e);
-                        }
-                    }
-
-                    // We don't have an existing keyring, so let's try to create one
-                    log.debug("Adding new Keystone keyring...");
+                } else if (device === Devices.KEYSTONE) {
+                    log.debug("Creating new Keystone keyring in UI context");
                     await this.addNewKeyring('QR Hardware', {});
                     return true;
-                } catch (error) {
-                    log.error("Keystone connection error:", error);
-                    throw error;
                 }
-            } else {
-                throw new Error(`Unsupported device: ${device}`);
             }
-        });
+
+            // If we reach here, we couldn't create a keyring and need user interaction
+            return {
+                needsUserGesture: true,
+                deviceName: device
+            };
+        } catch (error) {
+            log.error(`Error connecting hardware keyring for ${device}:`, error);
+            throw error;
+        }
     }
 
     /**
@@ -1787,55 +1892,181 @@ export default class KeyringControllerDerivated extends KeyringController {
         try {
             log.debug(`Getting page ${pageIndex} for ${device}`);
 
-            if (device === Devices.LEDGER) {
+            // First check if we're in a service worker context
+            const hasDOM = hasDomAccess();
+            log.debug(`Getting accounts in environment with DOM access: ${hasDOM}`);
+
+            // For Ledger in service worker context, we need to check explicit WebHID permission
+            if (device === Devices.LEDGER && !hasDOM) {
+                log.debug("Checking for explicit WebHID permission in service worker context");
+
+                let hasExplicitPermission = false;
                 try {
-                    // Check if the Ledger is still connected
-                    log.debug(`Checking if Ledger is still connected...`);
-                    const isConnected = keyring.isConnected && await keyring.isConnected();
+                    if (chrome.storage?.session) {
+                        const result = await chrome.storage.session.get('ledger_explicit_permission');
 
-                    if (!isConnected) {
-                        log.warn('Ledger is not connected. Attempting to reconnect...');
+                        if (result.ledger_explicit_permission &&
+                            result.ledger_explicit_permission.granted &&
+                            Date.now() - result.ledger_explicit_permission.timestamp < 600000) { // 10 minutes
 
-                        // Try to reconnect
-                        try {
-                            await keyring.connect();
-                            log.debug('Ledger reconnected successfully');
-                        } catch (e) {
-                            log.error('Failed to reconnect to Ledger:', e);
-                            throw new Error('Ledger disconnected. Please reconnect your device.');
-                        }
-                    } else {
-                        log.debug('Ledger is still connected');
-                    }
-
-                    // Check if the Ethereum app is open
-                    try {
-                        log.debug('Getting Ledger app info...');
-                        const appInfo = keyring.eth && await keyring.eth.getAppConfiguration();
-                        log.debug('Ledger app info:', appInfo);
-                    } catch (e) {
-                        log.error('Failed to get Ledger app info:', e);
-                        if (e.message && (
-                            e.message.includes('Ledger device: UNKNOWN_ERROR') ||
-                            e.message.includes('Timeout') ||
-                            e.message.includes('0x6511')
-                        )) {
-                            throw new Error('Ethereum app not open on Ledger. Please open it and try again.');
+                            log.debug("Found valid explicit WebHID permission", result.ledger_explicit_permission);
+                            hasExplicitPermission = true;
+                        } else {
+                            log.debug("No valid explicit WebHID permission found in session storage");
                         }
                     }
                 } catch (e) {
-                    log.error('Error with Ledger connection check:', e);
+                    log.error("Error checking for explicit WebHID permission:", e);
+                }
+
+                if (!hasExplicitPermission) {
+                    // No explicit permission - need UI interaction
+                    log.debug("Service worker cannot get accounts without explicit WebHID permission");
+
+                    // Store this requirement in session storage
+                    try {
+                        if (chrome.storage?.session) {
+                            await chrome.storage.session.set({
+                                'ledger_needs_user_interaction': {
+                                    timestamp: Date.now(),
+                                    status: 'pending',
+                                    requiresWebHID: true,
+                                    operation: 'getAccounts',
+                                    reason: 'service_worker_context_no_permission'
+                                }
+                            });
+                            log.debug("Stored account operation requirement in session storage");
+                        }
+                    } catch (storageErr) {
+                        log.warn("Failed to store account operation requirement:", storageErr);
+                    }
+
+                    throw new Error('Cannot get accounts for Ledger in service worker context - explicit WebHID permission required');
                 }
             }
 
             // For all devices, try to get the page
             try {
-                log.debug(`Calling keyring.getAccounts(${pageIndex})...`);
+                // Verify the keyring is valid and ready
+                if (!keyring) {
+                    log.error(`No keyring found for device ${device} after connection attempt`);
+                    throw new Error(`No keyring found for device ${device} after connection attempt`);
+                }
+
+                if (device === Devices.LEDGER) {
+                    try {
+                        // For Ledger, check if the keyring is working correctly
+                        log.debug(`Checking if Ledger keyring is ready for use...`);
+                        const isReady = await this.isKeyringReadyForUse(keyring);
+
+                        if (!isReady) {
+                            log.warn("Ledger keyring is not ready for use, cannot fetch accounts");
+                            throw new Error('Ledger keyring not ready for use. Please reconnect your device.');
+                        }
+
+                        // Check if we have a working connection
+                        if (typeof keyring.isConnected === 'function') {
+                            try {
+                                const connected = await keyring.isConnected();
+                                if (!connected) {
+                                    log.warn("Ledger device reports it is not connected");
+                                    throw new Error('Ledger not connected. Please reconnect your device.');
+                                }
+                            } catch (connError) {
+                                log.error("Error checking Ledger connection:", connError);
+                                // Continue anyway, the getAccounts call will reveal more specific errors
+                            }
+                        }
+                    } catch (readyError) {
+                        log.error("Error checking if Ledger keyring is ready:", readyError);
+                        throw readyError;
+                    }
+                }
+
+                // For debugging, log the keyring state
+                log.debug(`Calling keyring.getAccounts(${pageIndex}) on ${device}...`);
+
+                // Actually get the accounts
                 const page = await keyring.getAccounts(pageIndex);
                 log.debug(`Got ${page?.length || 0} accounts from ${device}`);
+
+                // After successful account fetch, update the connection status
+                if (device === Devices.LEDGER && chrome.storage?.session) {
+                    try {
+                        await chrome.storage.session.set({
+                            'ledger_connection_status': {
+                                connected: true,
+                                timestamp: Date.now()
+                            }
+                        });
+
+                        // Also clear any pending interaction requirements
+                        await chrome.storage.session.remove('ledger_needs_user_interaction');
+
+                        log.debug("Updated Ledger connection status after successful account fetch");
+                    } catch (e) {
+                        log.warn("Failed to update Ledger connection status:", e);
+                    }
+                }
+
                 return page;
             } catch (e) {
                 log.error(`Error getting accounts for ${device}:`, e);
+
+                // If this is a WebHID or document not defined error, we need UI intervention
+                if (e.message && (
+                    e.message.includes('document is not defined') ||
+                    e.message.includes('WebHID') ||
+                    e.message.includes('user gesture') ||
+                    e.message.includes('user interaction') ||
+                    e.message.includes('no device selected')
+                )) {
+                    log.debug("Account retrieval requires WebHID access in UI context");
+
+                    try {
+                        if (chrome.storage?.session) {
+                            await chrome.storage.session.set({
+                                'ledger_needs_user_interaction': {
+                                    timestamp: Date.now(),
+                                    status: 'pending',
+                                    requiresWebHID: true,
+                                    operation: 'getAccounts',
+                                    reason: 'hid_access_required',
+                                    error: e.message
+                                }
+                            });
+                            log.debug("Stored account operation requirement in session storage due to WebHID error");
+                        }
+                    } catch (storageErr) {
+                        log.warn("Failed to store account operation requirement:", storageErr);
+                    }
+
+                    throw new Error('Hardware wallet connection requires user interaction in UI context');
+                }
+
+                // For reconnection errors, try to reconnect
+                if (e.message && (
+                    e.message.includes('disconnected') ||
+                    e.message.includes('not connected') ||
+                    e.message.includes('No device selected') ||
+                    e.message.includes('No keyring found')
+                )) {
+                    log.debug("Detected disconnection error, marking for reconnection");
+
+                    try {
+                        if (chrome.storage?.session) {
+                            await chrome.storage.session.set({
+                                'ledger_needs_reconnection': {
+                                    timestamp: Date.now(),
+                                    reason: e.message
+                                }
+                            });
+                            log.debug("Stored reconnection requirement in session storage");
+                        }
+                    } catch (storageErr) {
+                        log.warn("Failed to store reconnection requirement:", storageErr);
+                    }
+                }
 
                 // Provide more detailed error messages for Ledger
                 if (device === Devices.LEDGER) {

@@ -1,29 +1,28 @@
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react"
-
-import LoadingOverlay from "../../components/loading/LoadingOverlay"
+import { useHistory, useParams } from "react-router-dom"
+import HardwareWalletSetupLayout from "./SetupLayout"
+import log from "loglevel"
 import {
-    getHardwareWalletAccounts,
-    importHardwareWalletAccounts,
-    getHardwareWalletHDPath,
-    setHardwareWalletHDPath,
-    selectAccount,
     connectHardwareWallet,
     completeHardwareConnection,
+    getHardwareWalletAccounts,
+    setHardwareWalletHDPath,
+    importHardwareWalletAccounts,
+    getHardwareWalletHDPath,
+    selectAccount,
 } from "../../context/commActions"
+import { useBlankState } from "../../context/background/backgroundHooks"
+import { BIP44_PATH, Devices, HDPaths } from "../../context/commTypes"
+
+import LoadingOverlay from "../../components/loading/LoadingOverlay"
 import {
     AccountInfo,
     DeviceAccountInfo,
 } from "@block-wallet/background/controllers/AccountTrackerController"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
-import classnames from "classnames"
-import { Classes } from "../../styles"
-import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
-import HardwareWalletSetupLayout from "./SetupLayout"
-import Select from "../../components/input/Select"
 import Spinner from "../../components/spinner/Spinner"
-import log from "loglevel"
-import useAsyncInvoke, { Status } from "../../util/hooks/useAsyncInvoke"
-import PaginationControls from "../../components/ui/Pagination/PaginationControls"
+import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
+import Select from "../../components/input/Select"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
 import { BigNumber } from "@ethersproject/bignumber"
 import { AccountsPageAdvancedSettings } from "../../components/hardwareWallet/AdvancedSettings"
@@ -31,8 +30,94 @@ import { HardwareWalletAccount } from "../../components/hardwareWallet/HardwareW
 
 // Assets & icons
 import { mergeReducer } from "../../util/reducerUtils"
-import { useBlankState } from "../../context/background/backgroundHooks"
-import { BIP44_PATH, Devices, HDPaths } from "../../context/commTypes"
+import useAsyncInvoke, { Status } from "../../util/hooks/useAsyncInvoke"
+
+// Define HARDWARE_ROUTE constant 
+const HARDWARE_ROUTE = "/hardware-wallet";
+
+// Helper function to replace classnames as it's causing linter errors
+const combineClasses = (...classes: string[]): string => {
+    return classes.filter(Boolean).join(' ');
+}
+
+// Simple icon component implementations to avoid import issues
+const WarningIcon = (props: any) => (
+    <svg {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 9V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 21.41H5.93999C2.46999 21.41 1.01999 18.93 2.69999 15.9L5.81999 10.28L8.75999 5.00003C10.54 1.79003 13.46 1.79003 15.24 5.00003L18.18 10.29L21.3 15.91C22.98 18.94 21.52 21.42 18.06 21.42H12V21.41Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M11.995 17H12.005" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const CheckIcon = (props: any) => (
+    <svg {...props} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4.5 12.75L10.5 18.75L19.5 5.25" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
+const UsbIcon = (props: any) => (
+    <svg {...props} width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M7.99951 19.166V1.66602" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" />
+        <path d="M5.49951 4.16602L7.99951 1.66602L10.4995 4.16602" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="square" />
+        <path d="M12.9995 11.666V14.166L7.99951 17.4993" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" />
+        <path d="M3 10V13.3333L8 16.6667" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" />
+        <path d="M14.6663 8.33203H11.333V11.6654H14.6663V8.33203Z" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="square" />
+        <path d="M2.99967 9.99935C3.92015 9.99935 4.66634 9.25316 4.66634 8.33268C4.66634 7.41221 3.92015 6.66602 2.99967 6.66602C2.0792 6.66602 1.33301 7.41221 1.33301 8.33268C1.33301 9.25316 2.0792 9.99935 2.99967 9.99935Z" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="square" />
+    </svg>
+);
+
+const LoadingSpinner = (props: any) => (
+    <svg {...props} className={props.className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+);
+
+// Simple Button component to avoid import issues
+const Button = ({ children, className, onClick, disabled, size, type }: any) => (
+    <button
+        type={type || "button"}
+        className={className || "px-4 py-2 bg-blue-500 text-white rounded"}
+        onClick={onClick}
+        disabled={disabled}
+    >
+        {children}
+    </button>
+);
+
+// Simple pagination controls component
+const PaginationControls = ({ currentPage, pages, onChangePage, disabled, stickyFirstPage, showArrows, className }: any) => (
+    <div className={className || "flex items-center space-x-2"}>
+        {showArrows !== false && (
+            <button disabled={disabled || currentPage === 1} onClick={() => onChangePage(currentPage - 1)}>
+                &lt;
+            </button>
+        )}
+
+        {Array.from({ length: pages }, (_, i) => i + 1).map(page => (
+            <button
+                key={page}
+                onClick={() => onChangePage(page)}
+                disabled={disabled || (page === currentPage)}
+                className={page === currentPage ? "font-bold" : ""}
+            >
+                {page}
+            </button>
+        ))}
+
+        {showArrows !== false && (
+            <button disabled={disabled || currentPage === pages} onClick={() => onChangePage(currentPage + 1)}>
+                &gt;
+            </button>
+        )}
+    </div>
+);
+
+// Define any necessary CSS classes
+const Classes = {
+    button: "bg-blue-600 text-white font-medium rounded-md",
+    liteButton: "bg-gray-200 text-gray-800 font-medium rounded-md"
+};
 
 interface State {
     gettingAccounts: boolean
@@ -381,33 +466,180 @@ const HardwareWalletAccountsPage = () => {
         });
     };
 
+    // Add a helper to detect if the current context is a UI context
+    const isUIContext = (): boolean => {
+        return typeof document !== 'undefined';
+    };
+
+    // Add an auto-reconnect effect that runs after initial rendering
+    useEffect(() => {
+        if (hdPath && !state.gettingAccounts && state.deviceAccounts.length === 0 && !needsUserInteraction) {
+            // Add a delay before auto-reconnect to allow the page to render first
+            const timer = setTimeout(() => {
+                log.debug("Auto-reconnect: No accounts found after loading, checking for reconnection needs");
+
+                const checkReconnectionNeeds = async () => {
+                    try {
+                        // First, check if there are any pending reconnection requirements
+                        if (chrome.storage?.session) {
+                            const reconnectResult = await chrome.storage.session.get('ledger_needs_reconnection');
+                            if (reconnectResult.ledger_needs_reconnection) {
+                                const reconnectData = reconnectResult.ledger_needs_reconnection;
+
+                                // Only process recent reconnection requests (last 5 minutes)
+                                if (Date.now() - reconnectData.timestamp < 300000) {
+                                    log.debug("Found pending reconnection requirement", reconnectData);
+
+                                    // Clear the requirement so we don't keep retrying
+                                    await chrome.storage.session.remove('ledger_needs_reconnection');
+
+                                    // Set UI to show interaction required
+                                    setNeedsUserInteraction(true);
+                                    return;
+                                } else {
+                                    // Old request, clear it
+                                    await chrome.storage.session.remove('ledger_needs_reconnection');
+                                }
+                            }
+
+                            // Next, check for user interaction requirements
+                            const interactionResult = await chrome.storage.session.get('ledger_needs_user_interaction');
+                            if (interactionResult.ledger_needs_user_interaction) {
+                                const interactionData = interactionResult.ledger_needs_user_interaction;
+
+                                // Only process recent interaction requests (last 5 minutes)
+                                if (Date.now() - interactionData.timestamp < 300000) {
+                                    log.debug("Found pending user interaction requirement", interactionData);
+
+                                    // Set UI to show interaction required
+                                    setNeedsUserInteraction(true);
+                                    return;
+                                } else {
+                                    // Old request, clear it
+                                    await chrome.storage.session.remove('ledger_needs_user_interaction');
+                                }
+                            }
+                        }
+
+                        // If we reach here and still have no accounts, try WebHID directly for Ledger
+                        if (vendor === Devices.LEDGER && isUIContext()) {
+                            log.debug("Auto-reconnect: Attempting direct WebHID connection for Ledger");
+                            setNeedsUserInteraction(true);
+                        }
+                    } catch (e) {
+                        log.error("Error checking reconnection needs:", e);
+                    }
+                };
+
+                checkReconnectionNeeds();
+            }, 2000); // 2 second delay
+
+            return () => clearTimeout(timer);
+        }
+    }, [hdPath, state.gettingAccounts, state.deviceAccounts.length, needsUserInteraction, vendor]);
+
+    // Improve the getAccounts function to better handle retrieval errors
     const getAccounts = useCallback(async () => {
         setState({ gettingAccounts: true });
         setFetchError(null); // Reset error state before new fetch
+        setNeedsUserInteraction(false); // Reset user interaction requirement
 
         try {
             log.debug(`Fetching accounts for ${vendor}, page ${state.currentPage}, size ${state.pageSize}`);
-            const accounts = await getHardwareWalletAccounts(
-                vendor,
-                state.currentPage,
-                state.pageSize
-            );
 
-            if (accounts && accounts.length > 0) {
-                log.debug(`Retrieved ${accounts.length} accounts for ${vendor}`);
-                setState({
-                    deviceAccounts: accounts,
-                    gettingAccounts: false,
-                });
-            } else {
-                log.warn(`No accounts found for ${vendor} with current HD path: ${hdPath}`);
-                setState({
-                    deviceAccounts: [],
-                    gettingAccounts: false,
-                });
+            // Clear any previous reconnection needs
+            if (chrome.storage?.session) {
+                try {
+                    await chrome.storage.session.remove('ledger_needs_reconnection');
+                } catch (e) {
+                    log.warn("Error clearing reconnection needs:", e);
+                }
+            }
+
+            // First check if we might need WebHID permissions for Ledger
+            if (vendor === Devices.LEDGER) {
+                try {
+                    if (chrome.storage?.session) {
+                        // Check if Ledger needs user interaction
+                        const result = await chrome.storage.session.get('ledger_needs_user_interaction');
+                        if (result.ledger_needs_user_interaction) {
+                            const interactionNeeded = result.ledger_needs_user_interaction;
+
+                            if (Date.now() - interactionNeeded.timestamp < 300000) { // If recent (last 5 minutes)
+                                log.debug("Found pending user interaction requirement", interactionNeeded);
+                                setNeedsUserInteraction(true);
+                                setState({ gettingAccounts: false });
+                                return;
+                            } else {
+                                // Interaction requirement is old, clear it
+                                await chrome.storage.session.remove('ledger_needs_user_interaction');
+                            }
+                        }
+
+                        // Check for explicit WebHID permission before trying
+                        const permResult = await chrome.storage.session.get('ledger_explicit_permission');
+                        if (!permResult.ledger_explicit_permission?.granted) {
+                            log.debug("No explicit WebHID permission found - will need user interaction");
+                            setNeedsUserInteraction(true);
+                            setState({ gettingAccounts: false });
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    log.warn("Error checking for interaction requirements or permissions:", e);
+                }
+            }
+
+            // Try to get accounts
+            try {
+                const accounts = await getHardwareWalletAccounts(
+                    vendor,
+                    state.currentPage,
+                    state.pageSize
+                );
+
+                if (accounts && accounts.length > 0) {
+                    log.debug(`Retrieved ${accounts.length} accounts for ${vendor}`);
+                    setState({
+                        deviceAccounts: accounts,
+                        gettingAccounts: false,
+                    });
+                } else {
+                    log.warn(`No accounts found for ${vendor} with current HD path: ${hdPath}`);
+                    setState({
+                        deviceAccounts: [],
+                        gettingAccounts: false,
+                    });
+
+                    // If we have permission but no accounts, we might need to trigger WebHID directly
+                    if (vendor === Devices.LEDGER && isUIContext()) {
+                        log.debug("No accounts but have permission, may need direct WebHID access");
+                        setNeedsUserInteraction(true);
+                    }
+                }
+            } catch (accountError) {
+                log.error(`Failed to get accounts:`, accountError);
+
+                // If this is a document not defined error, we need UI interaction
+                if (accountError.message && accountError.message.includes('document is not defined')) {
+                    log.debug("Account fetch failed due to service worker context limitation");
+                    setNeedsUserInteraction(true);
+                    setState({ gettingAccounts: false });
+                    return;
+                }
+
+                throw accountError; // Re-throw for the main error handler
             }
         } catch (e) {
             log.error(`Failed to get accounts for ${vendor}:`, e);
+
+            // Check for user interaction requirement first
+            if (e.message && (e.message.includes('user interaction') || e.message.includes('user gesture'))) {
+                log.debug("Account fetch requires user interaction");
+                setNeedsUserInteraction(true);
+                setState({ gettingAccounts: false });
+                return;
+            }
 
             // Set appropriate error message based on error
             let errorMessage = 'Failed to fetch accounts';
@@ -424,6 +656,12 @@ const HardwareWalletAccountsPage = () => {
                         errorMessage = 'Browser compatibility issue. Try using Chrome.';
                     } else if (e.message.includes('disconnected')) {
                         errorMessage = 'Ledger disconnected. Please reconnect your device.';
+                    } else if (e.message.includes('No keyring found')) {
+                        errorMessage = 'Hardware wallet not properly connected. Please connect your device using the Connect button below.';
+                        setNeedsUserInteraction(true);
+                    } else if (e.message.includes('document is not defined')) {
+                        errorMessage = 'Service worker cannot access WebHID. Please use the Connect button below.';
+                        setNeedsUserInteraction(true);
                     }
                 }
             }
@@ -435,7 +673,26 @@ const HardwareWalletAccountsPage = () => {
                 setState({ reconnecting: true });
 
                 try {
-                    // First, try connecting the hardware wallet again
+                    // Try WebHID directly for Ledger in UI context
+                    if (vendor === Devices.LEDGER && isUIContext()) {
+                        log.debug('Attempting direct WebHID connection for Ledger');
+                        try {
+                            const result = await triggerWebHIDDirectly();
+                            if (result) {
+                                log.debug('Successfully triggered WebHID for Ledger');
+                                // Small delay to let connection establish
+                                setTimeout(() => {
+                                    setState({ reconnecting: false });
+                                    getAccounts();
+                                }, 1000);
+                                return;
+                            }
+                        } catch (webHidError) {
+                            log.error('WebHID connection attempt failed:', webHidError);
+                        }
+                    }
+
+                    // If direct WebHID didn't work or isn't applicable, try standard connection
                     let connectionSuccess = false;
                     const connectionResult = await connectHardwareWallet(vendor);
 
@@ -443,12 +700,11 @@ const HardwareWalletAccountsPage = () => {
                         log.debug('Successfully reconnected to', vendor);
                         connectionSuccess = true;
                     } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
-                        // Need user gesture - try to complete connection
-                        const completed = await completeHardwareConnection(vendor);
-                        if (completed) {
-                            log.debug('Successfully completed reconnection to', vendor);
-                            connectionSuccess = true;
-                        }
+                        // Need user gesture - show the user interaction UI
+                        log.debug('Connection requires user gesture');
+                        setNeedsUserInteraction(true);
+                        setState({ reconnecting: false, gettingAccounts: false });
+                        return;
                     }
 
                     // If reconnection worked, try fetching accounts again
@@ -464,142 +720,242 @@ const HardwareWalletAccountsPage = () => {
                     }
                 } catch (reconnectError) {
                     log.error('Failed to automatically reconnect:', reconnectError);
+
+                    // Check if this needs user interaction
+                    if (reconnectError.message &&
+                        (reconnectError.message.includes('user interaction') ||
+                            reconnectError.message.includes('user gesture') ||
+                            reconnectError.message.includes('document is not defined'))) {
+                        setNeedsUserInteraction(true);
+                        setState({ reconnecting: false, gettingAccounts: false });
+                        return;
+                    }
                 }
 
                 setState({ reconnecting: false });
 
-                // Customize error message for keyring not found
-                errorMessage = `Hardware wallet connection lost. You may need to reconnect your ${vendor} device.`;
+                // Only show the error message if we're not showing the user interaction prompt
+                if (!needsUserInteraction) {
+                    setFetchError(errorMessage);
+                }
+            } else {
+                setFetchError(errorMessage);
             }
 
-            setFetchError(errorMessage);
             setState({
                 gettingAccounts: false,
                 deviceAccounts: []
             });
         }
-    }, [state.currentPage, state.pageSize, vendor, hdPath]);
+    }, [state.currentPage, state.pageSize, vendor, hdPath, needsUserInteraction]);
 
-    // Add this new function to check for pending user interaction requests
-    const checkForPendingUserInteraction = useCallback(async () => {
-        if (typeof chrome !== 'undefined' && chrome.storage?.session) {
-            try {
-                const result = await chrome.storage.session.get(`${vendor.toLowerCase()}_needs_user_interaction`);
-                const interactionStatus = result[`${vendor.toLowerCase()}_needs_user_interaction`];
+    // Enhance triggerWebHIDDirectly to provide better feedback and ensure permission is set
+    const triggerWebHIDDirectly = async (): Promise<boolean> => {
+        setState({ reconnecting: true });
 
-                if (interactionStatus && interactionStatus.status === 'pending') {
-                    log.debug(`Found pending user interaction for ${vendor}`);
-                    setNeedsUserInteraction(true);
-                    // Clear any previous errors to show the new message
-                    setFetchError('');
-                    return true;
-                }
-            } catch (e) {
-                log.error('Failed to check for pending user interaction:', e);
+        try {
+            log.debug("Triggering WebHID permission request directly");
+
+            if (!isUIContext()) {
+                log.warn("Cannot trigger WebHID in non-UI context");
+                throw new Error("WebHID requires UI context");
             }
 
-            setNeedsUserInteraction(false);
-            return false;
-        }
-        return false;
-    }, [vendor]);
+            // Clear any pending flags before starting
+            if (chrome.storage?.session) {
+                await chrome.storage.session.remove('ledger_needs_user_interaction');
+                await chrome.storage.session.remove('ledger_needs_reconnection');
+            }
 
-    // Add this to the initialization effect
-    useEffect(() => {
-        if (hdPath) {
-            const initAndGetAccounts = async () => {
-                setState({ gettingAccounts: true });
-                setFetchError('');
+            // Check if navigator.hid is available
+            if (!navigator.hid) {
+                log.error("WebHID API is not available in this browser");
+                throw new Error("WebHID API is not available. Please use a compatible browser like Chrome.");
+            }
 
-                // First check if we need user interaction (from a previous attempt)
-                const needsInteraction = await checkForPendingUserInteraction();
-                if (needsInteraction) {
-                    setState({ gettingAccounts: false });
-                    return;
-                }
+            // First try to get already paired devices
+            try {
+                const pairedDevices = await navigator.hid.getDevices();
+                log.debug(`Found ${pairedDevices.length} already paired HID devices`);
 
-                // Rest of the existing code
-                if (vendor === Devices.LEDGER) {
-                    try {
-                        log.debug(`Initializing ${vendor} connection before getting accounts...`);
-                        await ensureKeyringInitialized(vendor);
+                // Filter for Ledger devices
+                const ledgerDevices = pairedDevices.filter(
+                    device => device.vendorId === 0x2c97 || device.vendorId === 0x2581
+                );
 
-                        // After successful connection, set the HD path explicitly
-                        log.debug(`Setting HD path for ${vendor} to ${hdPath}`);
-                        try {
-                            await setHardwareWalletHDPath(vendor, hdPath);
-                        } catch (hdPathError) {
-                            log.error(`Failed to set HD path for ${vendor}:`, hdPathError);
+                log.debug(`Found ${ledgerDevices.length} already paired Ledger devices`);
 
-                            // Check if this is a user interaction error
-                            if (hdPathError instanceof Error &&
-                                (hdPathError.message.includes('user interaction') ||
-                                    hdPathError.message.includes('user gesture'))) {
-                                setNeedsUserInteraction(true);
-                                setFetchError('');
-                            } else {
-                                setFetchError(`Connected to device but failed to set HD path. Please try again or select a different HD path.`);
+                // If we have paired Ledger devices, try to use them first
+                if (ledgerDevices.length > 0) {
+                    // Store connection status
+                    if (chrome.storage?.session) {
+                        await chrome.storage.session.set({
+                            'ledger_connection_status': {
+                                connected: true,
+                                timestamp: Date.now()
                             }
-                            setState({ gettingAccounts: false });
-                            return;
-                        }
+                        });
 
-                        // Now try to get accounts
-                        try {
-                            log.debug(`Fetching accounts for ${vendor} after explicit connection`);
-                            await getAccounts();
-                        } catch (accountError) {
-                            log.error(`Failed to get accounts after explicit connection:`, accountError);
-
-                            // Check if this is a user interaction error
-                            if (accountError instanceof Error &&
-                                (accountError.message.includes('user interaction') ||
-                                    accountError.message.includes('user gesture'))) {
-                                setNeedsUserInteraction(true);
-                                setFetchError('');
-                            } else {
-                                setFetchError(`Connection established but could not fetch accounts. Please ensure your ${vendor} device has the Ethereum app open and try again.`);
+                        // Also set explicit permission flag
+                        await chrome.storage.session.set({
+                            'ledger_explicit_permission': {
+                                granted: true,
+                                timestamp: Date.now(),
+                                source: 'getDevices'
                             }
-                            setState({ gettingAccounts: false });
-                        }
-                    } catch (e) {
-                        log.error(`Failed to initialize ${vendor} connection:`, e);
+                        });
 
-                        // Check if this is a user interaction error
-                        if (e instanceof Error &&
-                            (e.message.includes('user interaction') ||
-                                e.message.includes('user gesture'))) {
-                            setNeedsUserInteraction(true);
-                            setFetchError('');
-                            setState({ gettingAccounts: false });
-                            return;
-                        }
-
-                        // Initialize keyring in UI context as fallback
-                        const initialized = await ensureKeyringInitialized(vendor);
-                        if (!initialized) {
-                            setFetchError(`Failed to initialize ${vendor} connection. Please ensure your device is connected and try again.`);
-                            setState({
-                                gettingAccounts: false,
-                                deviceAccounts: []
-                            });
-                            return;
-                        }
-
-                        // If initialized successfully, proceed with getAccounts
-                        getAccounts();
+                        log.debug("Stored connection status and explicit permission from paired devices");
                     }
-                } else if (vendor === Devices.KEYSTONE) {
-                    checkKeystoneAccounts();
-                    getAccounts();
-                } else {
-                    getAccounts();
-                }
-            };
 
-            initAndGetAccounts();
+                    // Try to open the first device to make sure it's connectable
+                    try {
+                        const device = ledgerDevices[0];
+                        if (!device.opened) {
+                            await device.open();
+                            log.debug("Successfully opened paired Ledger device");
+                        }
+                    } catch (openError) {
+                        log.warn("Failed to open paired device, will request new permission:", openError);
+                        // Continue to permission request below
+                    }
+                }
+            } catch (getDevicesError) {
+                log.warn("Error checking for paired devices:", getDevicesError);
+                // Continue to permission request
+            }
+
+            // Request device access with Ledger vendor IDs
+            log.debug("Requesting WebHID device access for Ledger");
+            const devices = await navigator.hid.requestDevice({
+                filters: [
+                    { vendorId: 0x2c97 }, // New Ledger vendor ID
+                    { vendorId: 0x2581 }  // Old Ledger vendor ID
+                ]
+            });
+
+            log.debug(`WebHID permission granted, got ${devices.length} devices`);
+
+            if (devices && devices.length > 0) {
+                // Store both connection status and explicit permission flag
+                if (chrome.storage?.session) {
+                    try {
+                        const permissionData = {
+                            granted: true,
+                            timestamp: Date.now(),
+                            source: 'requestDevice'
+                        };
+
+                        log.debug("Storing WebHID permission data:", permissionData);
+
+                        // Store connection status
+                        await chrome.storage.session.set({
+                            'ledger_connection_status': {
+                                connected: true,
+                                timestamp: Date.now()
+                            }
+                        });
+
+                        // Also store explicit permission flag (separate operation for reliability)
+                        await chrome.storage.session.set({
+                            'ledger_explicit_permission': permissionData
+                        });
+
+                        // Verify the permission flag was set correctly
+                        const verification = await chrome.storage.session.get('ledger_explicit_permission');
+                        if (verification.ledger_explicit_permission?.granted) {
+                            log.debug("WebHID permission flag stored successfully", verification.ledger_explicit_permission);
+                        } else {
+                            log.warn("WebHID permission flag not stored correctly");
+                        }
+
+                    } catch (storageError) {
+                        log.error("Failed to store WebHID permission status:", storageError);
+                    }
+                }
+
+                // Try to open the device to ensure we have a valid connection
+                try {
+                    const device = devices[0];
+                    if (!device.opened) {
+                        await device.open();
+                        log.debug("Successfully opened WebHID device");
+                    }
+                } catch (openError) {
+                    log.warn("Failed to open device, but continuing with permission granted:", openError);
+                }
+
+                // Try to connect with the hardware wallet now that we have permission
+                try {
+                    log.debug("Trying to connect hardware wallet with explicit permission");
+                    const result = await connectHardwareWallet(vendor);
+                    log.debug("Connect hardware wallet result:", result);
+
+                    // Small delay to allow connection to establish before continuing
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    // Verify the keyring was created properly - try setting HD path as a test
+                    try {
+                        if (hdPath) {
+                            log.debug(`Verifying connection by setting HD path to ${hdPath}`);
+                            await setHardwareWalletHDPath(vendor, hdPath);
+                            log.debug("Successfully set HD path - connection is working");
+                        }
+                    } catch (verifyError) {
+                        log.warn("Verification of connection failed:", verifyError);
+                        // Continue anyway - the connection might still work
+                    }
+
+                    setState({ reconnecting: false });
+                    // After successful WebHID permission, try getting accounts again
+                    getAccounts();
+
+                    return true;
+                } catch (connectionError) {
+                    log.error("Error connecting hardware wallet after WebHID permission:", connectionError);
+
+                    // Try one more approach - use connectHardwareWallet with a delay
+                    try {
+                        log.debug("Attempting secondary connection approach after 1 second delay");
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+
+                        const secondAttempt = await connectHardwareWallet(vendor);
+                        log.debug("Secondary connection attempt result:", secondAttempt);
+
+                        setState({ reconnecting: false });
+                        getAccounts();
+                        return true;
+                    } catch (secondError) {
+                        log.error("Secondary connection attempt also failed:", secondError);
+                        throw connectionError;
+                    }
+                }
+            } else {
+                log.warn("No devices returned from WebHID requestDevice");
+                throw new Error("No devices selected");
+            }
+        } catch (error) {
+            log.error("WebHID permission request failed:", error);
+
+            // If user denied permission, record this to prevent immediate repeated requests
+            if (error.name === 'NotFoundError' || error.message?.includes('denied')) {
+                try {
+                    if (chrome.storage?.session) {
+                        await chrome.storage.session.set({
+                            'ledger_permission_denied': {
+                                timestamp: Date.now()
+                            }
+                        });
+                    }
+                } catch (e) {
+                    log.warn("Failed to store permission denial:", e);
+                }
+            }
+
+            setState({ reconnecting: false });
+            throw error;
         }
-    }, [checkKeystoneAccounts, getAccounts, hdPath, vendor, checkForPendingUserInteraction]);
+    };
 
     const toggleAccount = (account: DeviceAccountInfo) => {
         const selected = state.selectedAccounts.some(
@@ -774,202 +1130,6 @@ const HardwareWalletAccountsPage = () => {
         );
     };
 
-    // Helper function to directly request WebHID permissions
-    const triggerWebHIDDirectly = async (): Promise<boolean> => {
-        try {
-            log.debug('Attempting to directly trigger WebHID requestDevice API');
-
-            // Check if navigator.hid is available
-            if (!navigator.hid) {
-                log.error('WebHID API is not available in this browser');
-                return false;
-            }
-
-            // Clear any pending flags in session storage first
-            try {
-                if (chrome.storage?.session) {
-                    await chrome.storage.session.remove('ledger_needs_user_interaction');
-                    log.debug('Cleared ledger_needs_user_interaction flag before WebHID request');
-                }
-            } catch (e) {
-                log.warn('Failed to clear ledger_needs_user_interaction flag', e);
-            }
-
-            // Request device access - this API requires a user gesture
-            const devices = await navigator.hid.requestDevice({
-                filters: [
-                    // Ledger Nano S/X filters
-                    { vendorId: 0x2c97 }, // Ledger vendor ID
-                    { vendorId: 0x2581 }  // Older Ledger vendor ID
-                ]
-            });
-
-            log.debug(`WebHID requestDevice returned ${devices.length} devices`);
-
-            // Check if we got any devices
-            if (devices.length > 0) {
-                log.debug('Successfully obtained WebHID permissions');
-
-                // Store successful connection status in session storage
-                try {
-                    if (chrome.storage?.session) {
-                        await chrome.storage.session.set({
-                            'ledger_connection_status': {
-                                connected: true,
-                                timestamp: Date.now(),
-                                deviceCount: devices.length
-                            }
-                        });
-                        log.debug('Stored successful WebHID connection status');
-                    }
-                } catch (e) {
-                    log.warn('Failed to store Ledger connection status', e);
-                }
-
-                return true;
-            } else {
-                log.debug('User did not select any devices in the WebHID dialog');
-                return false;
-            }
-        } catch (e) {
-            log.error('Error requesting WebHID permission:', e);
-
-            // If we have a SecurityError, it means the user denied permission
-            if (e instanceof DOMException && e.name === 'SecurityError') {
-                log.warn('User denied WebHID permission');
-
-                // Store this information so we don't keep asking immediately
-                try {
-                    if (chrome.storage?.session) {
-                        await chrome.storage.session.set({
-                            'ledger_permission_denied': {
-                                timestamp: Date.now()
-                            }
-                        });
-                    }
-                } catch (storageErr) {
-                    // Just log, don't throw
-                    log.warn('Failed to store permission denied state', storageErr);
-                }
-            }
-
-            return false;
-        }
-    };
-
-    // Update the handleUserInitiatedConnection function to use triggerWebHIDDirectly for Ledger
-    const handleUserInitiatedConnection = async () => {
-        try {
-            setState({ gettingAccounts: true });
-            setFetchError('');
-
-            // For Ledger devices, directly trigger WebHID permission first
-            if (vendor === Devices.LEDGER) {
-                log.debug('Ledger device detected, triggering WebHID permission request');
-                const permissionGranted = await triggerWebHIDDirectly();
-
-                if (!permissionGranted) {
-                    log.warn('Failed to get WebHID permission, user may have cancelled');
-                    setFetchError('WebHID permission was not granted. Please try again and select your Ledger device when prompted.');
-                    setState({ gettingAccounts: false });
-                    return;
-                }
-
-                log.debug('WebHID permission granted, proceeding with connection');
-
-                // Check if we have a pending HD path operation
-                try {
-                    if (chrome.storage?.session) {
-                        const result = await chrome.storage.session.get('ledger_needs_user_interaction');
-
-                        if (result.ledger_needs_user_interaction &&
-                            result.ledger_needs_user_interaction.operation === 'setHdPath' &&
-                            result.ledger_needs_user_interaction.pendingHdPath) {
-
-                            const pendingPath = result.ledger_needs_user_interaction.pendingHdPath;
-                            log.debug(`Found pending HD path change to ${pendingPath}, applying now`);
-
-                            // Try to apply the pending HD path change now that we have permission
-                            try {
-                                await setHdPath(pendingPath);
-                                log.debug(`Successfully applied pending HD path change to ${pendingPath}`);
-
-                                // Clear the pending operation
-                                await chrome.storage.session.remove('ledger_needs_user_interaction');
-                            } catch (hdPathError) {
-                                log.error('Failed to apply pending HD path change:', hdPathError);
-                                setFetchError(`Failed to set HD path: ${hdPathError instanceof Error ? hdPathError.message : 'Unknown error'}`);
-                                setState({ gettingAccounts: false });
-                                return;
-                            }
-                        }
-                    }
-                } catch (e) {
-                    log.warn('Error checking for pending HD path operations:', e);
-                    // Continue with normal flow
-                }
-            }
-
-            // Now proceed with the regular connection flow
-            const connectionResult = await connectHardwareWallet(vendor);
-
-            if (connectionResult === true) {
-                log.debug('Successfully connected hardware keyring');
-
-                // For Ledger, update the connection status again
-                if (vendor === Devices.LEDGER && chrome.storage?.session) {
-                    try {
-                        await chrome.storage.session.set({
-                            'ledger_connection_status': {
-                                connected: true,
-                                timestamp: Date.now()
-                            }
-                        });
-                    } catch (e) {
-                        log.warn('Failed to update Ledger connection status', e);
-                    }
-                }
-
-                // Connection successful, proceed with getting accounts
-                await getAccounts();
-            } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
-                // This shouldn't happen since we already got WebHID permission, but handle it anyway
-                log.warn('Still getting user gesture needed after WebHID permission granted');
-
-                // Try one more direct approach for Ledger
-                if (vendor === Devices.LEDGER) {
-                    try {
-                        log.debug('Attempting direct connection approach for Ledger');
-                        await triggerWebHIDDirectly();
-
-                        // Try connecting again
-                        const retryResult = await connectHardwareWallet(vendor);
-
-                        if (retryResult === true) {
-                            log.debug('Direct connection approach succeeded');
-                            await getAccounts();
-                            return;
-                        }
-                    } catch (retryError) {
-                        log.error('Direct connection approach failed:', retryError);
-                    }
-                }
-
-                setFetchError('Still requiring user interaction after permission granted. Please try disconnecting and reconnecting your device.');
-                setState({ gettingAccounts: false });
-            } else {
-                // Some other error occurred
-                log.error('Failed to connect hardware keyring', connectionResult);
-                setFetchError('Failed to connect hardware wallet. Please check device connection and try again.');
-                setState({ gettingAccounts: false });
-            }
-        } catch (e) {
-            log.error('Error in handleUserInitiatedConnection', e);
-            setFetchError(e instanceof Error ? e.message : 'Unknown error connecting to hardware wallet');
-            setState({ gettingAccounts: false });
-        }
-    };
-
     // Add this content to render the user interaction prompt
     const renderUserInteractionPrompt = () => {
         if (!needsUserInteraction) {
@@ -1002,6 +1162,53 @@ const HardwareWalletAccountsPage = () => {
         );
     };
 
+    // Add a handleUserInitiatedConnection function that uses triggerWebHIDDirectly
+    const handleUserInitiatedConnection = async () => {
+        try {
+            setState({ gettingAccounts: true });
+            setFetchError('');
+
+            // For Ledger devices, directly trigger WebHID permission first
+            if (vendor === Devices.LEDGER) {
+                log.debug('Ledger device detected, triggering WebHID permission request');
+                try {
+                    const permissionGranted = await triggerWebHIDDirectly();
+                    if (!permissionGranted) {
+                        log.warn('Failed to get WebHID permission, user may have cancelled');
+                        setFetchError('WebHID permission was not granted. Please try again and select your Ledger device when prompted.');
+                        setState({ gettingAccounts: false });
+                    }
+                    return; // triggerWebHIDDirectly will call getAccounts after success
+                } catch (error) {
+                    log.error('Error requesting WebHID permission:', error);
+                    setFetchError('Failed to request device access. Please try again.');
+                    setState({ gettingAccounts: false });
+                    return;
+                }
+            }
+
+            // For non-Ledger devices, use standard connection flow
+            const connectionResult = await connectHardwareWallet(vendor);
+
+            if (connectionResult === true) {
+                log.debug('Successfully connected hardware keyring');
+                await getAccounts();
+            } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
+                log.warn('Device connection requires user gesture');
+                setNeedsUserInteraction(true);
+                setState({ gettingAccounts: false });
+            } else {
+                log.error('Failed to connect hardware keyring', connectionResult);
+                setFetchError('Failed to connect hardware wallet. Please check device connection and try again.');
+                setState({ gettingAccounts: false });
+            }
+        } catch (e) {
+            log.error('Error in handleUserInitiatedConnection', e);
+            setFetchError(e instanceof Error ? e.message : 'Unknown error connecting to hardware wallet');
+            setState({ gettingAccounts: false });
+        }
+    };
+
     return (
         <HardwareWalletSetupLayout
             title="Select Accounts"
@@ -1010,7 +1217,7 @@ const HardwareWalletAccountsPage = () => {
                 <>
                     <ButtonWithLoading
                         label="Back"
-                        buttonClass={classnames(Classes.liteButton, "h-14")}
+                        buttonClass={combineClasses(Classes.liteButton, "h-14")}
                         disabled={isImportingAccounts}
                         onClick={() =>
                             history.push({
@@ -1027,7 +1234,7 @@ const HardwareWalletAccountsPage = () => {
 
                     <ButtonWithLoading
                         label="Import"
-                        buttonClass={classnames(Classes.button, "h-14")}
+                        buttonClass={combineClasses(Classes.button, "h-14")}
                         isLoading={isImportingAccounts}
                         disabled={state.selectedAccounts.length === 0}
                         onClick={importAccounts}
@@ -1068,23 +1275,42 @@ const HardwareWalletAccountsPage = () => {
                                 <p className="text-red-700 text-center font-medium">Error fetching accounts</p>
                                 <p className="text-red-600 text-center mt-2">{fetchError}</p>
                             </div>
-                            <button
-                                onClick={handleRetryFetch}
-                                className="bg-primary-blue-default hover:bg-primary-blue-hover text-white font-medium py-2 px-4 rounded-md"
-                            >
-                                Retry
-                            </button>
-                            {vendor === Devices.LEDGER && (
-                                <div className="mt-4 text-xs text-gray-500 max-w-md text-center">
-                                    <p className="font-medium mb-1">Troubleshooting Tips:</p>
-                                    <ul className="list-disc pl-5 text-left">
-                                        <li>Make sure the Ethereum app is open on your Ledger</li>
-                                        <li>Check that your Ledger is unlocked</li>
-                                        <li>Try changing the HD path in Advanced Settings below</li>
-                                        <li>Ensure your Ledger firmware is up to date</li>
-                                    </ul>
-                                </div>
-                            )}
+                            <div className="flex space-x-4 mt-2">
+                                {vendor === Devices.LEDGER && (
+                                    <Button
+                                        type="button"
+                                        onClick={triggerWebHIDDirectly}
+                                        disabled={state.reconnecting}
+                                        className={combineClasses(
+                                            "bg-primary-700 hover:bg-primary-800 text-white font-medium py-2 px-4 rounded flex items-center",
+                                            state.reconnecting ? "opacity-50 cursor-not-allowed" : ""
+                                        )}
+                                    >
+                                        {state.reconnecting ? (
+                                            <>
+                                                <LoadingSpinner className="w-4 h-4 mr-2" />
+                                                Connecting...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="mr-2">Connect Device</span>
+                                                <UsbIcon className="w-4 h-4" />
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
+                                <Button
+                                    type="button"
+                                    onClick={handleRetryFetch}
+                                    disabled={state.gettingAccounts || state.reconnecting}
+                                    className={combineClasses(
+                                        "bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded",
+                                        state.reconnecting ? "opacity-50 cursor-not-allowed" : ""
+                                    )}
+                                >
+                                    Retry
+                                </Button>
+                            </div>
                         </div>
                     ) : (
                         renderNoAccountsState()
@@ -1112,7 +1338,7 @@ const HardwareWalletAccountsPage = () => {
                             disabled={state.gettingAccounts}
                             stickyFirstPage
                             currentPage={state.currentPage}
-                            onChangePage={(page) =>
+                            onChangePage={(page: number) =>
                                 setState({ currentPage: page })
                             }
                             pages={6}
@@ -1124,7 +1350,7 @@ const HardwareWalletAccountsPage = () => {
                             disabled={state.gettingAccounts}
                             stickyFirstPage
                             currentPage={state.currentPage}
-                            onChangePage={(page) =>
+                            onChangePage={(page: number) =>
                                 setState({ currentPage: page })
                             }
                             pages={2}
@@ -1151,7 +1377,7 @@ const HardwareWalletAccountsPage = () => {
                                     state: { isFromAccountsPage: true },
                                 })
                             }
-                            className={classnames(
+                            className={combineClasses(
                                 "w-full px-40 !mt-6 !-mb-5 bg-white rounded-md cursor-pointer underline-offset-1",
                                 "flex hover:underline"
                             )}
@@ -1171,6 +1397,55 @@ const HardwareWalletAccountsPage = () => {
                     {fetchError}
                 </div>
             )}
+
+            {/* Improve the HD path selector to show reconnect option when needed */}
+            <div className="mt-3 mb-5">
+                <div className="flex flex-wrap items-center justify-between mb-2">
+                    <p className="text-base font-medium text-gray-700">HD Path</p>
+                    <div className="flex items-center">
+                        {/* Only show status indicators if we have a valid vendor */}
+                        {vendor && (
+                            <div className="flex items-center mr-3">
+                                {state.reconnecting ? (
+                                    <div className="flex items-center text-yellow-700">
+                                        <LoadingSpinner className="w-4 h-4 mr-1" />
+                                        <span className="text-xs">Connecting...</span>
+                                    </div>
+                                ) : needsUserInteraction ? (
+                                    <div className="flex items-center text-yellow-700">
+                                        <WarningIcon className="w-4 h-4 mr-1" />
+                                        <span className="text-xs">Connection required</span>
+                                    </div>
+                                ) : state.gettingAccounts ? (
+                                    <div className="flex items-center text-blue-700">
+                                        <LoadingSpinner className="w-4 h-4 mr-1" />
+                                        <span className="text-xs">Loading accounts</span>
+                                    </div>
+                                ) : state.deviceAccounts.length > 0 ? (
+                                    <div className="flex items-center text-green-700">
+                                        <CheckIcon className="w-4 h-4 mr-1" />
+                                        <span className="text-xs">Connected</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center text-gray-500">
+                                        <span className="text-xs">Not connected</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        <div className="flex items-center">
+                            <Button
+                                onClick={getAccounts}
+                                disabled={state.gettingAccounts || state.reconnecting}
+                                size="small"
+                                className="py-1 px-2 text-xs font-medium"
+                            >
+                                {state.gettingAccounts ? "Loading..." : "Refresh"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </HardwareWalletSetupLayout>
     )
 }

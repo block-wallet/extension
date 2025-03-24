@@ -634,7 +634,11 @@ const HardwareWalletAccountsPage = () => {
             log.error(`Failed to get accounts for ${vendor}:`, e);
 
             // Check for user interaction requirement first
-            if (e.message && (e.message.includes('user interaction') || e.message.includes('user gesture'))) {
+            if (e.message && (
+                e.message.includes('user interaction') ||
+                e.message.includes('user gesture') ||
+                e.message === 'LEDGER_USER_GESTURE_REQUIRED'
+            )) {
                 log.debug("Account fetch requires user interaction");
                 setNeedsUserInteraction(true);
                 setState({ gettingAccounts: false });
@@ -650,8 +654,8 @@ const HardwareWalletAccountsPage = () => {
                         errorMessage = 'Ethereum app not open on Ledger. Please open it and try again.';
                     } else if (e.message.includes('locked') || e.message.includes('CONDITIONS_OF_USE_NOT_SATISFIED')) {
                         errorMessage = 'Ledger device is locked. Please unlock your device.';
-                    } else if (e.message.includes('Timeout') || e.message.includes('timed out')) {
-                        errorMessage = 'Connection timed out. Please check your Ledger device.';
+                    } else if (e.message.includes('Timeout') || e.message.includes('timed out') || e.message === 'LEDGER_ACCOUNT_FETCH_TIMEOUT') {
+                        errorMessage = 'Connection timed out. Please check your Ledger device is still connected, has the Ethereum app open, and is not asleep.';
                     } else if (e.message.includes('U2F')) {
                         errorMessage = 'Browser compatibility issue. Try using Chrome.';
                     } else if (e.message.includes('disconnected')) {
@@ -661,6 +665,9 @@ const HardwareWalletAccountsPage = () => {
                         setNeedsUserInteraction(true);
                     } else if (e.message.includes('document is not defined')) {
                         errorMessage = 'Service worker cannot access WebHID. Please use the Connect button below.';
+                        setNeedsUserInteraction(true);
+                    } else if (e.message.includes('WebHID cannot be accessed')) {
+                        errorMessage = 'WebHID access required. Please use the Connect button below.';
                         setNeedsUserInteraction(true);
                     }
                 }
@@ -1132,32 +1139,45 @@ const HardwareWalletAccountsPage = () => {
 
     // Add this content to render the user interaction prompt
     const renderUserInteractionPrompt = () => {
-        if (!needsUserInteraction) {
-            return null;
-        }
-
-        // Use safe string for vendor to avoid undefined
-        const vendorName = vendor || 'hardware wallet';
-
         return (
-            <div className="py-4 flex flex-col items-center justify-center">
-                <span className="text-center mb-4 font-semibold">
-                    Your {vendorName} device requires interaction
-                </span>
-                <span className="text-center mb-4">
-                    Please make sure your device is:
-                </span>
-                <ul className="list-disc pl-6 mb-4">
-                    <li>Connected to your computer</li>
-                    <li>Unlocked</li>
-                    <li>Has the Ethereum application open</li>
-                </ul>
-                <ButtonWithLoading
-                    onClick={handleUserInitiatedConnection}
-                    disabled={state.gettingAccounts}
-                    type="button"
-                    label={`Connect to ${vendorName}`}
-                />
+            <div className="text-center p-4">
+                <div className="mb-6">
+                    <UsbIcon className="w-10 h-10 mx-auto text-blue-500 mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">User Interaction Required</h3>
+                    <p className="text-gray-600 mb-4">
+                        Your Ledger device requires direct access. The browser needs your permission to communicate with the device.
+                    </p>
+                    <div className="text-sm text-left bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+                        <ul className="list-disc pl-5 space-y-1">
+                            <li>Ensure your Ledger is connected and unlocked</li>
+                            <li>The Ethereum app should be open on your device</li>
+                            <li>Click the button below to grant access permission</li>
+                        </ul>
+                    </div>
+                </div>
+                <div className="flex justify-center">
+                    <ButtonWithLoading
+                        onClick={async () => {
+                            setNeedsUserInteraction(false);
+                            try {
+                                // Use connectHardwareWallet to trigger a fresh connection with user gesture
+                                const result = await connectHardwareWallet(vendor);
+                                if (result === true) {
+                                    // If connection succeeds, get accounts
+                                    getAccounts();
+                                } else {
+                                    setFetchError('Connection failed. Please try again.');
+                                }
+                            } catch (error) {
+                                log.error('Failed to connect in user interaction mode:', error);
+                                setFetchError('Failed to connect to Ledger. Please try again.');
+                            }
+                        }}
+                        isLoading={false}
+                        type="button"
+                        label="Connect to Ledger"
+                    />
+                </div>
             </div>
         );
     };

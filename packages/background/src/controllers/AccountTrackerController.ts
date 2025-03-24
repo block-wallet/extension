@@ -1998,8 +1998,31 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                 // Persist this newly created keyring for future restoration
                                 await this._keyringController['persistHardwareKeyringState'](device);
                             }
-                        } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
-                            log.debug(`${device} connection requires user gesture for full initialization`);
+                        } else if (
+                            typeof connectionResult === 'object' &&
+                            connectionResult.needsUserGesture
+                        ) {
+                            log.debug(
+                                `${device} connection requires user gesture for full initialization`
+                            );
+                            // Throw a specific error to signal the UI about the need for user interaction
+                            if (chrome.storage?.session) {
+                                try {
+                                    // Store the need for interaction in session storage
+                                    await chrome.storage.session.set({
+                                        'ledger_needs_user_interaction': {
+                                            timestamp: Date.now(),
+                                            deviceName: connectionResult.deviceName
+                                        }
+                                    });
+                                    log.debug("Stored user interaction requirement in session storage");
+                                } catch (e) {
+                                    log.error("Failed to store user interaction requirement:", e);
+                                }
+                            }
+                            throw new Error('LEDGER_USER_GESTURE_REQUIRED');
+                        } else {
+                            log.error(`Failed to connect to ${device}`);
                         }
                     } catch (connectionError) {
                         log.error(`Failed to directly connect to ${device}:`, connectionError);
@@ -2046,10 +2069,29 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         if (keyring) {
                             await this._keyringController['persistHardwareKeyringState'](device);
                         }
-                    } else if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
-                        // This case means we need user interaction
-                        log.debug(`Hardware wallet connection requires user interaction`);
-                        throw new Error(`Hardware wallet connection requires user interaction`);
+                    } else if (
+                        typeof connectionResult === 'object' &&
+                        connectionResult.needsUserGesture
+                    ) {
+                        log.debug(
+                            `${device} connection requires user gesture for full initialization`
+                        );
+                        // Throw a specific error to signal the UI about the need for user interaction
+                        if (chrome.storage?.session) {
+                            try {
+                                // Store the need for interaction in session storage
+                                await chrome.storage.session.set({
+                                    'ledger_needs_user_interaction': {
+                                        timestamp: Date.now(),
+                                        deviceName: connectionResult.deviceName
+                                    }
+                                });
+                                log.debug("Stored user interaction requirement in session storage");
+                            } catch (e) {
+                                log.error("Failed to store user interaction requirement:", e);
+                            }
+                        }
+                        throw new Error('LEDGER_USER_GESTURE_REQUIRED');
                     } else {
                         log.error(`Failed to establish connection with ${device}`);
                     }
@@ -2086,27 +2128,45 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
 
             // Get accounts from the keyring
-            const accounts = await this._keyringController.getPage(
-                device,
-                keyring,
-                pageIndex
-            );
-
-            log.debug(`Retrieved ${accounts.length} accounts from ${device}`);
-
-            // After successfully getting accounts, persist the keyring state
-            // This ensures we have the latest state stored for future service worker restarts
             try {
-                await this._keyringController['persistHardwareKeyringState'](device);
-            } catch (e) {
-                log.error(`Failed to persist keyring state after getting accounts:`, e);
-            }
+                log.debug(`Using keyring for ${device} to fetch accounts...`);
 
-            return accounts.map((account, i) => ({
-                index: pageIndex * pageSize + i,
-                address: account,
-                name: `${device} ${pageIndex * pageSize + i + 1}`,
-            }));
+                // Add timeout handling to prevent indefinite hanging
+                const ACCOUNT_FETCH_TIMEOUT = 45000; // 45 seconds timeout
+
+                const deviceAccounts = await Promise.race([
+                    keyring.getAccounts(
+                        pageSize,
+                        pageIndex * pageSize // offset = pageIndex * pageSize
+                    ),
+                    new Promise<never>((_, reject) => {
+                        setTimeout(() => {
+                            reject(new Error('LEDGER_ACCOUNT_FETCH_TIMEOUT'));
+                        }, ACCOUNT_FETCH_TIMEOUT);
+                    })
+                ]);
+
+                log.debug(
+                    `Received ${deviceAccounts.length} accounts from ${device} keyring`
+                );
+
+                // After successfully getting accounts, persist the keyring state
+                // This ensures we have the latest state stored for future service worker restarts
+                try {
+                    await this._keyringController['persistHardwareKeyringState'](device);
+                } catch (e) {
+                    log.error(`Failed to persist keyring state after getting accounts:`, e);
+                }
+
+                return deviceAccounts.map((address: string, index: number) => ({
+                    index: pageIndex * pageSize + index,
+                    address: address,
+                    name: `${device} ${pageIndex * pageSize + index + 1}`,
+                }));
+            } catch (e) {
+                log.error(`Failed to get accounts from keyring:`, e);
+                throw e;
+            }
         });
     }
 

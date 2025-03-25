@@ -18,6 +18,7 @@ export class LedgerBridge {
         // Get the bridge URL from the extension
         this.bridgeUrl = browser.runtime.getURL('hardware-wallet-bridge.html?device=LEDGER');
         log.debug(`Initialized LedgerBridge with URL: ${this.bridgeUrl}`);
+        console.log('[LEDGER] LedgerBridge initialized with URL:', this.bridgeUrl);
     }
 
     /**
@@ -27,10 +28,12 @@ export class LedgerBridge {
     async openBridgeWindow(): Promise<Window> {
         if (this.bridgeWindow && !this.bridgeWindow.closed) {
             log.debug('Bridge window already open, reusing');
+            console.log('[LEDGER] Bridge window already open, reusing existing window');
             return this.bridgeWindow;
         }
 
         log.debug('Opening bridge window');
+        console.log('[LEDGER] Opening bridge window for Ledger connection');
         this.connectionPending = true;
 
         // Open a new window
@@ -42,13 +45,16 @@ export class LedgerBridge {
             );
 
             if (!this.bridgeWindow) {
+                console.error('[LEDGER] Failed to open bridge window - popup might be blocked');
                 throw new Error('Failed to open Ledger connection window. Please check your popup blocker settings.');
             }
 
             log.debug('Bridge window opened successfully');
+            console.log('[LEDGER] Bridge window opened successfully');
             return this.bridgeWindow;
         } catch (error) {
             log.error('Error opening bridge window:', error);
+            console.error('[LEDGER] Error opening bridge window:', error);
             this.connectionPending = false;
             throw error;
         }
@@ -59,7 +65,9 @@ export class LedgerBridge {
      * @returns True if the window is open
      */
     isBridgeWindowOpen(): boolean {
-        return !!this.bridgeWindow && !this.bridgeWindow.closed;
+        const isOpen = !!this.bridgeWindow && !this.bridgeWindow.closed;
+        console.log('[LEDGER] Bridge window open status:', isOpen);
+        return isOpen;
     }
 
     /**
@@ -70,8 +78,10 @@ export class LedgerBridge {
             try {
                 this.bridgeWindow.close();
                 log.debug('Bridge window closed');
+                console.log('[LEDGER] Bridge window closed');
             } catch (e) {
                 log.error('Error closing bridge window:', e);
+                console.error('[LEDGER] Error closing bridge window:', e);
             }
         }
 
@@ -84,14 +94,18 @@ export class LedgerBridge {
      * @returns Promise resolving to true if connection is active
      */
     async checkBridgeConnection(): Promise<boolean> {
+        console.log('[LEDGER] Checking bridge connection status');
+
         // If no window is open and we're not trying to connect, return false
         if (!this.bridgeWindow && !this.connectionPending) {
+            console.log('[LEDGER] No bridge window and not connecting - connection inactive');
             return false;
         }
 
         // If window is closed but we thought it was open, reset state
         if (this.bridgeWindow && this.bridgeWindow.closed) {
             log.debug('Bridge window was closed unexpectedly');
+            console.log('[LEDGER] Bridge window was closed unexpectedly');
             this.bridgeWindow = null;
             this.connectionPending = false;
             return false;
@@ -102,27 +116,32 @@ export class LedgerBridge {
             const storedResult = localStorage.getItem('hw_bridge_result');
             if (storedResult) {
                 const result = JSON.parse(storedResult);
+                console.log('[LEDGER] Found stored bridge result:', result);
 
                 // Only consider recent results (within last 5 minutes)
                 if (result && (Date.now() - result.timestamp < 300000)) {
                     if (result.success && result.device === 'LEDGER') {
                         log.debug('Found successful Ledger connection in localStorage');
+                        console.log('[LEDGER] Found valid successful connection in localStorage');
                         return true;
                     }
                 }
             }
         } catch (e) {
             log.error('Error checking localStorage for bridge status:', e);
+            console.error('[LEDGER] Error checking localStorage for bridge status:', e);
         }
 
         // If we have a window open, check session storage
         if (this.bridgeWindow && !this.bridgeWindow.closed) {
             try {
                 // Try to ping the bridge
+                console.log('[LEDGER] Attempting to ping bridge window');
                 return new Promise((resolve) => {
                     // Set a timeout to fail after 2 seconds
                     const timeout = setTimeout(() => {
                         log.debug('Bridge connection check timed out');
+                        console.log('[LEDGER] Bridge connection check timed out');
                         resolve(false);
                     }, 2000);
 
@@ -134,23 +153,28 @@ export class LedgerBridge {
                         const typedResponse = response as { status?: string };
                         if (typedResponse && typedResponse.status === 'ready') {
                             log.debug('Bridge responded to ping');
+                            console.log('[LEDGER] Bridge responded to ping successfully');
                             resolve(true);
                         } else {
                             log.debug('Bridge ping response invalid:', response);
+                            console.log('[LEDGER] Bridge ping response invalid:', response);
                             resolve(false);
                         }
                     }).catch((error: Error) => {
                         clearTimeout(timeout);
                         log.error('Error pinging bridge:', error);
+                        console.error('[LEDGER] Error pinging bridge:', error);
                         resolve(false);
                     });
                 });
             } catch (e) {
                 log.error('Error checking bridge connection:', e);
+                console.error('[LEDGER] Error checking bridge connection:', e);
                 return false;
             }
         }
 
+        console.log('[LEDGER] No valid bridge connection found');
         return false;
     }
 }

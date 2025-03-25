@@ -1180,7 +1180,7 @@ export default class BlankProviderController extends BaseController<BlankProvide
                 unexpectedError = e;
                 const nextStatus =
                     this._isDappRequestRejected(reqId) ||
-                    e.name === 'SignTimeoutError'
+                        e.name === 'SignTimeoutError'
                         ? DappRequestSigningStatus.REJECTED
                         : DappRequestSigningStatus.FAILED;
                 const parsedError = parseHardwareWalletError(
@@ -1537,64 +1537,64 @@ export default class BlankProviderController extends BaseController<BlankProvide
     private _stateWatcher: {
         [req in WindowRequest]: (args: WindowRequestArguments[req]) => void;
     } = {
-        DAPP: ({ dappRequests }: BlankProviderControllerState) => {
-            if (!isEmpty(dappRequests)) {
-                openPopup();
-                this._closeImmediately = false;
-                this._checkLastRequest(dappRequests);
-            } else {
-                this._checkWindows();
-            }
-        },
-        LOCK: (appState: AppStateControllerState) => {
-            // Resolve unlock handlers if app is unlocked
-            if (
-                appState.isAppUnlocked === true &&
-                this._unlockHandlers.length > 0
-            ) {
-                this._closeImmediately = true;
-                let portId: string | undefined;
-                this._unlockHandlers.forEach((handler) => {
-                    handler.resolve(true);
-                    //store last port to return
-                    portId = handler.portId;
-                });
+            DAPP: ({ dappRequests }: BlankProviderControllerState) => {
+                if (!isEmpty(dappRequests)) {
+                    openPopup();
+                    this._closeImmediately = false;
+                    this._checkLastRequest(dappRequests);
+                } else {
+                    this._checkWindows();
+                }
+            },
+            LOCK: (appState: AppStateControllerState) => {
+                // Resolve unlock handlers if app is unlocked
+                if (
+                    appState.isAppUnlocked === true &&
+                    this._unlockHandlers.length > 0
+                ) {
+                    this._closeImmediately = true;
+                    let portId: string | undefined;
+                    this._unlockHandlers.forEach((handler) => {
+                        handler.resolve(true);
+                        //store last port to return
+                        portId = handler.portId;
+                    });
 
-                this._unlockHandlers = [];
+                    this._unlockHandlers = [];
 
-                // Close open windows
-                this._checkWindows(portId);
-            }
+                    // Close open windows
+                    this._checkWindows(portId);
+                }
 
-            // Update accounts on provider
-            this._emitAccountsChanged();
-        },
-        PERMISSIONS: ({ permissionRequests }: PermissionsControllerState) => {
-            if (!isEmpty(permissionRequests)) {
-                openPopup();
-                this._closeImmediately = false;
-                this._checkLastRequest(permissionRequests);
-            } else {
-                this._checkWindows();
-            }
+                // Update accounts on provider
+                this._emitAccountsChanged();
+            },
+            PERMISSIONS: ({ permissionRequests }: PermissionsControllerState) => {
+                if (!isEmpty(permissionRequests)) {
+                    openPopup();
+                    this._closeImmediately = false;
+                    this._checkLastRequest(permissionRequests);
+                } else {
+                    this._checkWindows();
+                }
 
-            // Update accounts on provider
-            this._emitAccountsChanged();
-        },
-        TRANSACTIONS: (
-            transactionsState: TransactionVolatileControllerState
-        ) => {
-            if (!isEmpty(transactionsState.unapprovedTransactions)) {
-                openPopup();
-                this._closeImmediately = false;
-                this._checkLastRequest(
-                    transactionsState.unapprovedTransactions
-                );
-            } else {
-                this._checkWindows();
-            }
-        },
-    };
+                // Update accounts on provider
+                this._emitAccountsChanged();
+            },
+            TRANSACTIONS: (
+                transactionsState: TransactionVolatileControllerState
+            ) => {
+                if (!isEmpty(transactionsState.unapprovedTransactions)) {
+                    openPopup();
+                    this._closeImmediately = false;
+                    this._checkLastRequest(
+                        transactionsState.unapprovedTransactions
+                    );
+                } else {
+                    this._checkWindows();
+                }
+            },
+        };
 
     /**
      * It closes any open window if there are no pending requests and focuses

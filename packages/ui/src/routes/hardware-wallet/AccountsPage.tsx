@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react"
+import { useCallback, useEffect, useMemo, useReducer, useState, useRef } from "react"
 import { useHistory, useParams } from "react-router-dom"
 import HardwareWalletSetupLayout from "./SetupLayout"
 import log from "loglevel"
@@ -146,21 +146,25 @@ async function ensureKeyringInitialized(vendor: Devices): Promise<boolean> {
     if (vendor !== Devices.LEDGER) return true; // Only needed for Ledger
 
     log.debug("Ensuring Ledger keyring is properly initialized");
+    console.log("[LEDGER] Ensuring Ledger keyring is properly initialized");
 
     // First check if we've explicitly stored a connection status in storage
     if (chrome.storage?.session) {
         try {
             const connectionStatus = await chrome.storage.session.get('ledger_connection_status');
+            console.log("[LEDGER] Checking session storage connection status:", connectionStatus);
             if (connectionStatus.ledger_connection_status?.connected &&
                 Date.now() - connectionStatus.ledger_connection_status.timestamp < 60000) { // If connected in last minute
 
                 log.debug("Found recent Ledger connection status in session storage");
+                console.log("[LEDGER] Found recent valid connection status in session storage");
                 // Store vendor in session storage for better restoration
                 sessionStorage.setItem('hw_vendor', vendor);
                 return true;
             }
         } catch (e) {
             log.error("Failed to check Ledger connection status:", e);
+            console.error("[LEDGER] Failed to check connection status:", e);
         }
     }
 
@@ -172,9 +176,11 @@ async function ensureKeyringInitialized(vendor: Devices): Promise<boolean> {
         try {
             attempts++;
             log.debug(`Initialization attempt ${attempts}/${maxAttempts}`);
+            console.log(`[LEDGER] Initialization attempt ${attempts}/${maxAttempts}`);
 
             // Try to initialize the keyring in the UI context where DOM is available
             const result = await connectHardwareWallet(vendor);
+            console.log(`[LEDGER] Initialization attempt ${attempts} result:`, result);
 
             // If successful or needs user gesture, consider it a success
             if (result === true || (typeof result === 'object' && result.needsUserGesture)) {
@@ -188,8 +194,10 @@ async function ensureKeyringInitialized(vendor: Devices): Promise<boolean> {
                                 needsUserGesture: typeof result === 'object' && result.needsUserGesture
                             }
                         });
+                        console.log("[LEDGER] Stored connection status in session storage");
                     } catch (storageError) {
                         log.error("Failed to store connection status:", storageError);
+                        console.error("[LEDGER] Failed to store connection status:", storageError);
                     }
                 }
 
@@ -197,38 +205,46 @@ async function ensureKeyringInitialized(vendor: Devices): Promise<boolean> {
                 sessionStorage.setItem('hw_vendor', vendor);
 
                 log.debug("Ledger keyring initialization successful");
+                console.log("[LEDGER] Keyring initialization successful");
                 return true;
             }
 
             // If we're here, connection wasn't successful
             log.warn(`Ledger connection attempt ${attempts} did not return success`);
+            console.warn(`[LEDGER] Connection attempt ${attempts} did not return success`);
 
             // Wait before retrying
             if (attempts < maxAttempts) {
+                console.log(`[LEDGER] Waiting before retry attempt ${attempts + 1}...`);
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
         } catch (e) {
             log.error(`Failed to initialize Ledger keyring (attempt ${attempts}/${maxAttempts}):`, e);
+            console.error(`[LEDGER] Failed to initialize keyring (attempt ${attempts}/${maxAttempts}):`, e);
 
             if (attempts >= maxAttempts) {
                 // Last attempt - check if we have a connection status that indicates success
                 try {
                     if (chrome.storage?.session) {
                         const result = await chrome.storage.session.get('ledger_connection_status');
+                        console.log("[LEDGER] Checking connection status after failed attempts:", result);
                         if (result.ledger_connection_status && result.ledger_connection_status.connected) {
                             // We have a connection status, so we can proceed even without a proper keyring
                             log.debug("Proceeding with minimal keyring connection based on status");
+                            console.log("[LEDGER] Proceeding with minimal keyring connection based on status");
                             return true;
                         }
                     }
                 } catch (storageError) {
                     log.error("Failed to check connection status:", storageError);
+                    console.error("[LEDGER] Failed to check connection status:", storageError);
                 }
 
                 return false;
             }
 
             // Wait before retrying
+            console.log(`[LEDGER] Waiting before retry after error in attempt ${attempts}...`);
             await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
@@ -239,6 +255,7 @@ async function ensureKeyringInitialized(vendor: Devices): Promise<boolean> {
 const HardwareWalletAccountsPage = () => {
     const history = useOnMountHistory()!
     const [enabledPagination, setEnabledPagination] = useState(true)
+    const params = useParams<{ device: string }>();
 
     const getVendorFromUrlOrHistory = (): Devices => {
         try {
@@ -246,52 +263,35 @@ const HardwareWalletAccountsPage = () => {
             if (history.location.state && history.location.state.vendor) {
                 const vendor = history.location.state.vendor;
                 log.debug(`Found vendor in history state: ${vendor}`);
+                console.log(`[LEDGER] Found vendor in history state: ${vendor}`);
                 return vendor as Devices;
             }
 
-            // Then check URL hash for vendor parameter
-            const hash = history.location.hash || window.location.hash;
-            if (hash) {
-                // Try to extract vendor from URL patterns like #/hardware-wallet/connect/ledger or #/hardware-wallet/accounts?vendor=ledger
-                const vendorPattern1 = /\/hardware-wallet\/connect\/([a-zA-Z0-9_]+)/i;
-                const vendorMatch1 = vendorPattern1.exec(hash);
-                if (vendorMatch1 && vendorMatch1[1]) {
-                    const vendor = vendorMatch1[1].toUpperCase() as Devices;
-                    log.debug(`Found vendor in URL path: ${vendor}`);
-                    return vendor;
-                }
-
-                // Check for URL query parameter
-                const vendorPattern2 = /[?&]vendor=([a-zA-Z0-9_]+)/i;
-                const vendorMatch2 = vendorPattern2.exec(hash);
-                if (vendorMatch2 && vendorMatch2[1]) {
-                    const vendor = vendorMatch2[1].toUpperCase() as Devices;
-                    log.debug(`Found vendor in URL query parameter: ${vendor}`);
-                    return vendor;
-                }
+            // Then check if it's in sessionStorage (for page refreshes)
+            const storedVendor = sessionStorage.getItem('hw_vendor');
+            if (storedVendor) {
+                console.log(`[LEDGER] Found vendor in session storage: ${storedVendor}`);
+                return storedVendor as Devices;
             }
 
-            // Check session storage as fallback
-            if (chrome.storage?.session) {
-                const vendorFromStorage = sessionStorage.getItem('hw_vendor');
-                if (vendorFromStorage) {
-                    try {
-                        const vendor = vendorFromStorage.toUpperCase() as Devices;
-                        log.debug(`Found vendor in session storage: ${vendor}`);
-                        return vendor;
-                    } catch (e) {
-                        log.error('Error parsing vendor from session storage:', e);
-                    }
-                }
+            // Finally, check URL params - use params from component scope
+            const device = params.device;
+
+            if (device) {
+                console.log(`[LEDGER] Using device from URL params: ${device}`);
+                return device.toUpperCase() as Devices;
             }
+
+            // Default to LEDGER if all else fails
+            console.log(`[LEDGER] No vendor found, defaulting to LEDGER`);
+            return Devices.LEDGER;
         } catch (e) {
-            log.error('Error parsing URL params:', e);
+            // If any error occurs, default to LEDGER
+            log.error("Error getting vendor, defaulting to LEDGER:", e);
+            console.error("[LEDGER] Error getting vendor, defaulting to LEDGER:", e);
+            return Devices.LEDGER;
         }
-
-        // Default to LEDGER if we can't determine the vendor
-        log.warn('Could not determine vendor from history or URL, defaulting to LEDGER');
-        return Devices.LEDGER;
-    };
+    }
 
     const vendor = getVendorFromUrlOrHistory();
 
@@ -360,20 +360,64 @@ const HardwareWalletAccountsPage = () => {
         initialState
     )
 
+    const allPathsAttempted = useRef(false);
+
     useEffect(() => {
         // Check for direct navigation state from service worker
         const checkNavigationState = async () => {
             try {
-                if (chrome.storage && chrome.storage.session) {
-                    const result = await chrome.storage.session.get('navigation_state');
-                    if (result.navigation_state) {
-                        // Clear the state to prevent using it again
-                        await chrome.storage.session.remove('navigation_state');
-                        log.debug("Retrieved navigation state from session storage");
+                if (!vendor) {
+                    log.error("No vendor found for hardware wallet");
+                    console.error("[LEDGER] No vendor found for hardware wallet");
+                    setState({
+                        gettingAccounts: false,
+                        deviceNotReady: true
+                    });
+                    return false;
+                }
+
+                console.log(`[LEDGER] Checking navigation state for vendor: ${vendor}`);
+
+                // Check for explicit stored device info
+                let hasDeviceInfo = false;
+
+                if (vendor === Devices.LEDGER && chrome.storage?.session) {
+                    try {
+                        const result = await chrome.storage.session.get('ledger_connection_status');
+                        console.log("[LEDGER] Checking connection status:", result);
+                        if (result.ledger_connection_status?.connected) {
+                            hasDeviceInfo = true;
+                            console.log("[LEDGER] Found valid connection status");
+                        }
+                    } catch (e) {
+                        console.warn("[LEDGER] Error checking connection status:", e);
                     }
                 }
+
+                // If no explicit device info, ensure keyring is initialized
+                if (!hasDeviceInfo) {
+                    const initialized = await ensureKeyringInitialized(vendor);
+                    console.log(`[LEDGER] Keyring initialization result: ${initialized}`);
+                    if (!initialized) {
+                        console.error("[LEDGER] Failed to initialize keyring");
+                        setState({
+                            gettingAccounts: false,
+                            deviceNotReady: true
+                        });
+                        return false;
+                    }
+                }
+
+                console.log("[LEDGER] Navigation state check passed");
+                return true;
             } catch (e) {
-                log.error("Error checking navigation state:", e);
+                log.error("Error in checkNavigationState:", e);
+                console.error("[LEDGER] Error in checkNavigationState:", e);
+                setState({
+                    gettingAccounts: false,
+                    deviceNotReady: true
+                });
+                return false;
             }
         };
 
@@ -401,69 +445,52 @@ const HardwareWalletAccountsPage = () => {
 
     // Function to try alternative HD paths for Ledger
     const tryAlternativeHDPaths = async () => {
-        if (vendor !== Devices.LEDGER || !hdPath) return;
-
-        // Set searching state
-        setIsSearchingAlternativePaths(true);
-        setState({ gettingAccounts: true });
-
-        // Define alternative paths to try
-        const alternativePaths = [
-            "m/44'/60'/0'/0",     // Ledger Legacy
-            "m/44'/60'/0'/0/0",   // Ledger Live
-            "m/44'/60'/0'"        // Alternative
-        ].filter(path => path !== hdPath);
-
-        log.debug(`Trying ${alternativePaths.length} alternative HD paths: ${alternativePaths.join(', ')}`);
-
-        // Add current path to checked paths
-        setHdPathsChecked(prev => [...prev, hdPath]);
-
-        // Try each path
-        for (const path of alternativePaths) {
-            try {
-                log.debug(`Attempting HD path: ${path}`);
-
-                // Set the HD path
-                await setHardwareWalletHDPath(vendor, path);
-                setHdPath(path);
-
-                // Add to checked paths
-                setHdPathsChecked(prev => [...prev, path]);
-
-                // Fetch accounts with this path
-                const accounts = await getHardwareWalletAccounts(
-                    vendor,
-                    state.currentPage,
-                    state.pageSize
-                );
-
-                if (accounts && accounts.length > 0) {
-                    log.info(`Found ${accounts.length} accounts with HD path: ${path}`);
-                    setState({
-                        deviceAccounts: accounts,
-                        gettingAccounts: false,
-                    });
-
-                    // Success! No need to try more paths
-                    setIsSearchingAlternativePaths(false);
-                    return;
-                }
-
-                log.debug(`No accounts found with HD path: ${path}`);
-            } catch (e) {
-                log.error(`Error trying HD path ${path}:`, e);
-                // Continue to next path
+        try {
+            if (allPathsAttempted.current) {
+                console.log("[LEDGER] All HD paths already attempted");
+                return;
             }
-        }
 
-        // If we got here, we tried all paths with no success
-        log.warn("Tried all HD paths, none returned accounts");
-        setIsSearchingAlternativePaths(false);
-        setState({
-            deviceAccounts: [],
-            gettingAccounts: false,
-        });
+            // Use the existing setState pattern to update state
+            setState({
+                gettingAccounts: true,
+            });
+
+            log.debug("Trying alternative HD paths");
+            console.log(`[LEDGER] Trying alternative HD paths for vendor: ${vendor}`);
+
+            // Verify that the HD path is not already Ledger Live
+            const currentHdPath = await getHardwareWalletHDPath(vendor);
+            console.log(`[LEDGER] Current HD path: ${currentHdPath}`);
+
+            // Use the correct HDPath constants based on your project's definition
+            if (currentHdPath !== BIP44_PATH) {
+                // If not using BIP44, first try that
+                console.log("[LEDGER] Trying BIP44 HD path");
+                await setHardwareWalletHDPath(vendor, BIP44_PATH);
+            } else {
+                // If already using BIP44, try Ledger Live
+                console.log("[LEDGER] Trying Ledger Live HD path");
+                await setHardwareWalletHDPath(vendor, "m/44'/60'/0'/0"); // Ledger Live path
+            }
+
+            // Get accounts with new HD path
+            const hdPath = await getHardwareWalletHDPath(vendor);
+            console.log(`[LEDGER] New HD path set: ${hdPath}`);
+
+            // Mark as attempted so we don't repeat
+            allPathsAttempted.current = true;
+
+            // Get accounts with new path - use the existing function pattern
+            await getAccounts(true);
+        } catch (e) {
+            log.error("Error trying alternative HD paths:", e);
+            console.error("[LEDGER] Error trying alternative HD paths:", e);
+        } finally {
+            setState({
+                gettingAccounts: false,
+            });
+        }
     };
 
     // Add a helper to detect if the current context is a UI context
@@ -539,7 +566,7 @@ const HardwareWalletAccountsPage = () => {
     }, [hdPath, state.gettingAccounts, state.deviceAccounts.length, needsUserInteraction, vendor]);
 
     // Improve the getAccounts function to better handle retrieval errors
-    const getAccounts = useCallback(async () => {
+    const getAccounts = useCallback(async (isRetry: boolean = false) => {
         setState({ gettingAccounts: true });
         setFetchError(null); // Reset error state before new fetch
         setNeedsUserInteraction(false); // Reset user interaction requirement

@@ -13,6 +13,7 @@ export class SignTimeoutError extends Error {
         super();
         this.message = 'Timeout waiting for user signing';
         this.name = 'SignTimeoutError';
+        console.error('[LEDGER ERROR] Sign timeout error');
     }
 }
 
@@ -22,6 +23,7 @@ class DeviceNotReadyError extends Error {
         this.message =
             'An unknown error occurred.\nMake sure your device is unlocked and the Ethereum app is opened.';
         this.name = 'DeviceNotReadyError';
+        console.error('[LEDGER ERROR] Device not ready error - device may be locked or Ethereum app not open');
     }
 }
 
@@ -31,6 +33,7 @@ class DeviceNotPluggedError extends Error {
         this.message =
             'Hardware Device Disconnected.\nThe hardware device may be disconnected from your computer. Make sure your hardware device is plugged in and try again. ';
         this.name = 'DeviceNotPluggedError';
+        console.error('[LEDGER ERROR] Device not plugged in error - check connection');
     }
 }
 
@@ -40,6 +43,7 @@ class EnableBlindSigningOrContractDataError extends Error {
         this.message =
             'Please enable Blind signing or Contract data in the Ethereum app Settings';
         this.name = 'EnableBlindSigningOrContractDataError';
+        console.error('[LEDGER ERROR] Contract data not enabled in Ethereum app settings');
     }
 }
 
@@ -49,25 +53,31 @@ class RejectedByUserError extends Error {
         switch (opType) {
             case HardwareWalletOpTypes.SIGN_TRANSACTION:
                 this.message = 'The transaction was rejected in the device.';
+                console.error('[LEDGER ERROR] Transaction rejected by user');
                 break;
             case HardwareWalletOpTypes.SIGN_MESSAGE:
                 this.message =
                     'The signing request was rejected in the device.';
+                console.error('[LEDGER ERROR] Message signing rejected by user');
                 break;
             case HardwareWalletOpTypes.APPROVE_ALLOWANCE:
                 this.message =
                     'The allowance approval transaction was rejected in the device.';
+                console.error('[LEDGER ERROR] Allowance approval rejected by user');
                 break;
             case HardwareWalletOpTypes.SIGN_SPEEDUP:
                 this.message =
                     'The speedup transaction was rejected in the device.';
+                console.error('[LEDGER ERROR] Speedup transaction rejected by user');
                 break;
             case HardwareWalletOpTypes.SIGN_CANCEL:
                 this.message =
                     'The cancel transaction was rejected in the device.';
+                console.error('[LEDGER ERROR] Cancel transaction rejected by user');
                 break;
             default:
                 this.message = 'The operation was rejected in the device.';
+                console.error('[LEDGER ERROR] Operation rejected by user');
                 break;
         }
         this.name = 'RejectedByUserError';
@@ -81,15 +91,22 @@ const parseLedgerError = (
     opType: HardwareWalletOpTypes
 ): LedgerError => {
     const safeError = toError(error);
+    console.log('[LEDGER ERROR] Parsing Ledger error:', safeError.message);
+
     if (safeError.message.includes("Failed to execute 'requestDevice'")) {
+        console.log('[LEDGER ERROR] Failed to request device - device not plugged');
         return new DeviceNotPluggedError();
     } else if (safeError.message.includes('UNKNOWN_ERROR')) {
+        console.log('[LEDGER ERROR] Unknown error - device likely not ready');
         return new DeviceNotReadyError();
     } else if (safeError.message.includes('Condition of use not satisfied')) {
+        console.log('[LEDGER ERROR] Condition of use not satisfied - user rejected operation');
         return new RejectedByUserError(opType);
     } else if (safeError.message.includes('enable Blind')) {
+        console.log('[LEDGER ERROR] Contract data not enabled in Ethereum app');
         return new EnableBlindSigningOrContractDataError();
     } else {
+        console.log('[LEDGER ERROR] Unhandled error:', safeError.message);
         return safeError;
     }
 };
@@ -108,5 +125,6 @@ export const parseHardwareWalletError = (
     error: Error,
     opType: HardwareWalletOpTypes = HardwareWalletOpTypes.SIGN_TRANSACTION
 ): HardwareWalletError => {
+    console.log('[LEDGER ERROR] Hardware wallet error received:', error.message);
     return parseLedgerError(error, opType);
 };

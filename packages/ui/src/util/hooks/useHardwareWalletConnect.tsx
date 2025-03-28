@@ -170,27 +170,51 @@ const executeConnect = async (
         if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
             log.debug('Ledger device needs user gesture for WebHID permission');
 
-            // Handle Ledger specific connection - this requires user gesture
-            const connectionOk = await requestConnectDevice();
-            if (!connectionOk) {
-                log.error('Ledger device connection request failed');
-                const error = new Error(HardwareWalletError.CONNECTION_FAILED);
-                (error as any).vendor = vendor;
-                throw error;
-            }
+            // We're now handling the requestConnectDevice properly within a user gesture event handler
+            // from the UI component that called this hook, which ensures the browser recognizes it as 
+            // a direct user interaction
+
+            // Adding a small delay to ensure we're within the user gesture event handling window
+            await new Promise(resolve => setTimeout(resolve, 10));
 
             try {
-                // Now complete the connection process after user has granted permission
-                return await completeHardwareConnection(vendor);
-            } catch (error) {
-                log.error('Failed to complete Ledger connection after user gesture:', error);
+                // The requestConnectDevice function will be called within a user event handler
+                // which is crucial for WebHID permissions to work correctly
+                const connectionOk = await requestConnectDevice();
+                if (!connectionOk) {
+                    log.error('Ledger device connection request failed');
+                    const error = new Error(HardwareWalletError.CONNECTION_FAILED);
+                    (error as any).vendor = vendor;
+                    throw error;
+                }
 
-                // Determine the specific type of Ledger error
-                const specificErrorType = determineLedgerErrorType(error);
-                const specificError = new Error(specificErrorType);
-                (specificError as any).vendor = vendor;
-                (specificError as any).originalError = error;
-                throw specificError;
+                try {
+                    // Now complete the connection process after user has granted permission
+                    return await completeHardwareConnection(vendor);
+                } catch (error) {
+                    log.error('Failed to complete Ledger connection after user gesture:', error);
+
+                    // Determine the specific type of Ledger error
+                    const specificErrorType = determineLedgerErrorType(error);
+                    const specificError = new Error(specificErrorType);
+                    (specificError as any).vendor = vendor;
+                    (specificError as any).originalError = error;
+                    throw specificError;
+                }
+            } catch (error) {
+                // Handle specific WebHID permission errors
+                log.error('WebHID permission error:', error);
+
+                if (error.message && error.message.includes('user gesture')) {
+                    log.error('WebHID permission requires user gesture');
+                    const gestureError = new Error(HardwareWalletError.PERMISSION_DENIED);
+                    (gestureError as any).vendor = vendor;
+                    (gestureError as any).originalError = error;
+                    (gestureError as any).requiresUserGesture = true;
+                    throw gestureError;
+                }
+
+                throw error;
             }
         }
 
@@ -248,9 +272,8 @@ const executeConnect = async (
                 throw e;
             } else if (e.message === HardwareWalletError.CONNECTION_FAILED) {
                 // Pass through CONNECTION_FAILED
-                const error = new Error(HardwareWalletError.CONNECTION_FAILED);
-                (error as any).vendor = vendor;
-                throw error;
+                (e as any).vendor = vendor;
+                throw e;
             }
         }
 

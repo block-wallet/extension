@@ -57,7 +57,8 @@
         "activeTab",
         "tabs",
         "scripting",
-        "notifications"
+        "notifications",
+        "offscreen"
     ],
     "optional_permissions": [],
     "host_permissions": [
@@ -90,7 +91,9 @@
                 "keep-alive",
                 "background.js",
                 "hardware-wallet-bridge.js",
-                "hardware-wallet-bridge-navigation.js"
+                "hardware-wallet-bridge-navigation.js",
+                "offscreen-bridge.js",
+                "offscreen.html"
             ],
             "matches": [
                 "https://*/*"

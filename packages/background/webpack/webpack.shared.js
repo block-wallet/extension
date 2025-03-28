@@ -53,6 +53,8 @@ module.exports = (entry) => ({
         path: path.resolve(__dirname, '../../../dist'),
         // Ensure we're not using ES modules in the output
         module: false,
+        // Disable code splitting for service worker context
+        chunkLoading: false,
     },
     module: {
         rules: [
@@ -85,6 +87,10 @@ module.exports = (entry) => ({
     experiments: {
         asyncWebAssembly: true,
         syncWebAssembly: true,
+    },
+    optimization: {
+        // Ensure all modules are included in the main bundle for service worker context
+        splitChunks: false,
     },
     plugins,
 });

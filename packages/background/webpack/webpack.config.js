@@ -6,4 +6,5 @@ module.exports = createConfig({
         './src/infrastructure/hardware/trezor/trezor-content.ts',
     'vendor/trezor/trezor-usb-permissions':
         './src/infrastructure/hardware/trezor/trezor-usb-permissions.ts',
+    'offscreen-bridge': './src/utils/ledgerBridge.ts',
 });

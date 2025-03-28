@@ -19,6 +19,11 @@ export const isWebUSBSupported = (): boolean => {
 }
 
 /**
+ * Maximum number of retries for WebHID connection
+ */
+const MAX_CONNECTION_RETRIES = 3;
+
+/**
  * Opens the hardware wallet bridge page in a new tab
  * @param deviceType The type of device (e.g., 'LEDGER')
  * @returns Promise that resolves when connection succeeds or rejects on failure
@@ -94,6 +99,157 @@ export const openHardwareWalletBridge = async (deviceType: string): Promise<bool
 }
 
 /**
+ * User gesture to request access to connected LEDGER devices
+ * using WebHID with fallback to WebUSB if WebHID is not supported
+ * @returns boolean if user granted permissions to a device
+ */
+export const requestConnectDevice = async (): Promise<boolean> => {
+    // First check if we're in a Manifest V3 extension context
+    const isExtensionContext = !!(window.chrome && chrome.runtime && chrome.runtime.id);
+    const isManifestV3 = isExtensionContext && (chrome.runtime.getManifest().manifest_version === 3);
+
+    log.debug(`LEDGER > Connection context: Extension=${isExtensionContext}, MV3=${isManifestV3}`);
+
+    let connectionSuccess = false;
+    let lastError: Error | null = null;
+    let attemptCount = 0;
+
+    // Try multiple times with exponential backoff
+    while (!connectionSuccess && attemptCount < MAX_CONNECTION_RETRIES) {
+        attemptCount++;
+
+        try {
+            log.debug(`LEDGER > Connection attempt ${attemptCount}/${MAX_CONNECTION_RETRIES}`);
+
+            // Attempt connection with WebHID first if supported
+            if (isWebHIDSupported()) {
+                try {
+                    log.debug(`LEDGER > Attempting WebHID connection`);
+                    connectionSuccess = await connectWithWebHID();
+
+                    if (connectionSuccess) {
+                        log.debug(`LEDGER > WebHID connection successful`);
+
+                        // Update connection status in session storage
+                        if (chrome.storage?.session) {
+                            try {
+                                await chrome.storage.session.set({
+                                    'ledger_connection_status': {
+                                        connected: true,
+                                        timestamp: Date.now(),
+                                        method: 'webhid'
+                                    }
+                                });
+
+                                // Also set explicit permission flag
+                                await chrome.storage.session.set({
+                                    'ledger_explicit_permission': {
+                                        granted: true,
+                                        timestamp: Date.now(),
+                                        source: 'requestDevice'
+                                    }
+                                });
+
+                                log.debug(`LEDGER > Updated connection status in session storage`);
+                            } catch (storageError) {
+                                log.error(`LEDGER > Failed to update connection status:`, storageError);
+                            }
+                        }
+
+                        break;
+                    }
+                } catch (error) {
+                    lastError = error;
+                    log.warn(`LEDGER > WebHID connection failed:`, error);
+
+                    // Don't fallback to WebUSB right away, we'll retry WebHID first
+                    if (error.name === 'SecurityError') {
+                        log.debug(`LEDGER > WebHID permission denied, cannot retry automatically`);
+                        // Don't retry if permission denied - user needs to try again
+                        break;
+                    }
+                }
+            } else if (isWebUSBSupported()) {
+                // Fall back to WebUSB if WebHID is not supported
+                try {
+                    log.debug(`LEDGER > Attempting WebUSB connection (fallback)`);
+                    connectionSuccess = await connectWithWebUSB();
+
+                    if (connectionSuccess) {
+                        log.debug(`LEDGER > WebUSB connection successful`);
+
+                        // Update connection status in session storage
+                        if (chrome.storage?.session) {
+                            try {
+                                await chrome.storage.session.set({
+                                    'ledger_connection_status': {
+                                        connected: true,
+                                        timestamp: Date.now(),
+                                        method: 'webusb'
+                                    }
+                                });
+
+                                log.debug(`LEDGER > Updated connection status in session storage`);
+                            } catch (storageError) {
+                                log.error(`LEDGER > Failed to update connection status:`, storageError);
+                            }
+                        }
+
+                        break;
+                    }
+                } catch (error) {
+                    lastError = error;
+                    log.warn(`LEDGER > WebUSB connection failed:`, error);
+                }
+            } else {
+                // Neither WebHID nor WebUSB is supported
+                log.error(`LEDGER > Neither WebHID nor WebUSB is supported in this browser`);
+                lastError = new Error('Your browser does not support hardware wallet connections');
+                break;
+            }
+
+            // If we've failed, wait before trying again (exponential backoff)
+            if (!connectionSuccess && attemptCount < MAX_CONNECTION_RETRIES) {
+                const delayMs = 500 * Math.pow(2, attemptCount - 1);
+                log.debug(`LEDGER > Retrying in ${delayMs}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+            }
+        } catch (error) {
+            lastError = error;
+            log.error(`LEDGER > Unexpected error during connection attempt:`, error);
+
+            // Wait before retrying
+            if (attemptCount < MAX_CONNECTION_RETRIES) {
+                const delayMs = 500 * Math.pow(2, attemptCount - 1);
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+            }
+        }
+    }
+
+    // If we failed after all retries, log the detailed error and update storage
+    if (!connectionSuccess && lastError) {
+        log.error(`LEDGER > All connection attempts failed:`, lastError);
+
+        // Store error in session storage for the service worker to detect
+        if (chrome.storage?.session) {
+            try {
+                await chrome.storage.session.set({
+                    'ledger_connection_error': {
+                        error: lastError.message,
+                        timestamp: Date.now(),
+                        attemptsMade: attemptCount
+                    }
+                });
+            } catch (storageError) {
+                log.error(`LEDGER > Failed to store error in session storage:`, storageError);
+            }
+        }
+    }
+
+    return connectionSuccess;
+};
+
+/**
  * Attempts to connect to a LEDGER device using WebHID API
  * @returns boolean indicating if connection was successful
  */
@@ -127,6 +283,9 @@ export const connectWithWebHID = async (): Promise<boolean> => {
                         } else {
                             log.debug(`LEDGER > Device ${device.productName || 'Unknown'} is already open`);
                         }
+
+                        // If we've successfully opened a device, return true
+                        return true;
                     } catch (openError) {
                         log.warn(`LEDGER > Could not open existing device:`, openError);
 
@@ -136,85 +295,145 @@ export const connectWithWebHID = async (): Promise<boolean> => {
                             await device.close().catch(e => log.warn(`LEDGER > Error closing device:`, e));
                             await device.open();
                             log.debug(`LEDGER > Successfully reopened device after close`);
+                            return true;
                         } catch (reopenError) {
                             log.warn(`LEDGER > Failed to reopen device after close:`, reopenError);
+                            // Continue trying with other devices or request new ones
                         }
                     }
                 }
-
-                return true;
             } else {
                 log.debug("LEDGER > No approved Ledger devices found among existing devices");
             }
         } catch (e) {
             log.warn("LEDGER > Could not check for existing approved devices:", e);
+
+            // Check if this is a user gesture error
+            if (e instanceof DOMException && e.name === 'SecurityError' && e.message.includes('user gesture')) {
+                log.error("LEDGER > User gesture required for WebHID operation:", e);
+                throw e; // Preserve the original error
+            }
+
             // Continue with requesting new devices
         }
 
         // Request permission for new devices with more detailed filter
         log.debug("LEDGER > Showing device selection dialog to user");
-        const connectedDevices = await navigator.hid.requestDevice({
-            filters: [
-                { vendorId: LEDGER_USB_VENDOR_ID },
-                // Add specific product IDs for known Ledger devices
-                { vendorId: LEDGER_USB_VENDOR_ID, productId: 0x0001 }, // Nano S
-                { vendorId: LEDGER_USB_VENDOR_ID, productId: 0x4001 }, // Nano X
-                { vendorId: LEDGER_USB_VENDOR_ID, productId: 0x8000 }  // Nano S Plus
-            ],
-        });
 
-        log.debug(`LEDGER > User selected ${connectedDevices.length} devices from dialog`);
+        try {
+            const connectedDevices = await navigator.hid.requestDevice({
+                filters: [
+                    { vendorId: LEDGER_USB_VENDOR_ID },
+                    // Add specific product IDs for known Ledger devices
+                    { vendorId: LEDGER_USB_VENDOR_ID, productId: 0x0001 }, // Nano S
+                    { vendorId: LEDGER_USB_VENDOR_ID, productId: 0x4001 }, // Nano X
+                    { vendorId: LEDGER_USB_VENDOR_ID, productId: 0x8000 }  // Nano S Plus
+                ],
+            });
 
-        // Log details of selected devices
-        connectedDevices.forEach((device, index) => {
-            log.debug(`LEDGER > Selected device ${index + 1}: vendorId=0x${device.vendorId.toString(16)}, productId=0x${device.productId.toString(16)}, productName=${device.productName || 'Unknown'}`);
-        });
+            log.debug(`LEDGER > User selected ${connectedDevices.length} devices from dialog`);
 
-        const approvedDevices = connectedDevices.filter(
-            (device) => device.vendorId === LEDGER_USB_VENDOR_ID
-        );
+            // Log details of selected devices
+            connectedDevices.forEach((device, index) => {
+                log.debug(`LEDGER > Selected device ${index + 1}: vendorId=0x${device.vendorId.toString(16)}, productId=0x${device.productId.toString(16)}, productName=${device.productName || 'Unknown'}`);
+            });
 
-        if (approvedDevices.length === 0) {
-            log.error("LEDGER > No device selected with WebHID");
-            return false;
-        }
+            const approvedDevices = connectedDevices.filter(
+                (device) => device.vendorId === LEDGER_USB_VENDOR_ID
+            );
 
-        log.info(`LEDGER > Successfully connected to ${approvedDevices.length} devices using WebHID`);
+            if (approvedDevices.length === 0) {
+                log.error("LEDGER > No device selected with WebHID");
+                return false;
+            }
 
-        // Try to open the device to ensure it's accessible
-        for (const device of approvedDevices) {
-            try {
-                if (!device.opened) {
-                    log.debug(`LEDGER > Opening device ${device.productName || 'Unknown'}`);
-                    await device.open();
-                    log.debug(`LEDGER > Successfully opened device ${device.productName || 'Unknown'}`);
-                } else {
-                    log.debug(`LEDGER > Device ${device.productName || 'Unknown'} is already open`);
-                }
-            } catch (openError) {
-                log.warn(`LEDGER > Could not open device:`, openError);
-                // Try alternative approach - close and reopen
+            log.info(`LEDGER > Successfully connected to ${approvedDevices.length} devices using WebHID`);
+
+            // Try to open the device to ensure it's accessible
+            for (const device of approvedDevices) {
                 try {
-                    log.debug("LEDGER > Attempting to close and reopen device");
-                    await device.close().catch(e => log.warn("LEDGER > Error closing device:", e));
-                    await device.open();
-                    log.debug("LEDGER > Successfully reopened device after close");
-                } catch (reopenError) {
-                    log.warn("LEDGER > Failed to reopen device after close:", reopenError);
-                    // Continue anyway - the transport layer will handle opening
+                    if (!device.opened) {
+                        log.debug(`LEDGER > Opening device ${device.productName || 'Unknown'}`);
+                        await device.open();
+                        log.debug(`LEDGER > Successfully opened device ${device.productName || 'Unknown'}`);
+                    } else {
+                        log.debug(`LEDGER > Device ${device.productName || 'Unknown'} is already open`);
+                    }
+
+                    // If we've successfully opened at least one device, update connection status
+                    try {
+                        if (chrome.storage?.session) {
+                            await chrome.storage.session.set({
+                                'ledger_connection_status': {
+                                    connected: true,
+                                    timestamp: Date.now(),
+                                    method: 'webhid',
+                                    vendorId: device.vendorId,
+                                    productId: device.productId,
+                                    productName: device.productName || 'Unknown Ledger'
+                                }
+                            });
+
+                            // Also set explicit permission flag
+                            await chrome.storage.session.set({
+                                'ledger_explicit_permission': {
+                                    granted: true,
+                                    timestamp: Date.now(),
+                                    source: 'requestDevice'
+                                }
+                            });
+
+                            log.debug(`LEDGER > Updated connection status in session storage`);
+                        }
+                    } catch (storageError) {
+                        log.error(`LEDGER > Failed to update connection status:`, storageError);
+                    }
+
+                    return true;
+                } catch (openError) {
+                    log.warn(`LEDGER > Could not open device:`, openError);
+
+                    // Try alternative approach - close and reopen
+                    try {
+                        log.debug("LEDGER > Attempting to close and reopen device");
+                        await device.close().catch(e => log.warn("LEDGER > Error closing device:", e));
+                        await device.open();
+                        log.debug("LEDGER > Successfully reopened device after close");
+                        return true;
+                    } catch (reopenError) {
+                        log.warn("LEDGER > Failed to reopen device after close:", reopenError);
+                        // Continue trying with other devices
+                    }
                 }
             }
+        } catch (requestError) {
+            // Handle specific error for user gesture requirement
+            if (requestError instanceof DOMException &&
+                requestError.name === 'SecurityError' &&
+                requestError.message.includes('user gesture')) {
+                log.error("LEDGER > User gesture required for WebHID permission:", requestError);
+                throw requestError; // Preserve the original error with the specific message
+            }
+
+            throw requestError; // Re-throw other errors
         }
 
-        return true;
+        // If we get here, we were unable to open any devices
+        log.error("LEDGER > Could not open any of the selected devices");
+        return false;
     } catch (error) {
         log.error("LEDGER > WebHID connection error:", error);
 
         // Provide more specific error messages
         if (error instanceof DOMException) {
             if (error.name === 'SecurityError') {
-                log.error("LEDGER > Permission denied for WebHID");
-                throw new Error("Permission denied. Please allow access to your Ledger device.");
+                if (error.message.includes('user gesture')) {
+                    log.error("LEDGER > Permission denied - user gesture required for WebHID");
+                    throw error; // Preserve the original error with the specific message
+                } else {
+                    log.error("LEDGER > Permission denied for WebHID");
+                    throw new Error("Permission denied. Please allow access to your Ledger device.");
+                }
             } else if (error.name === 'NotFoundError') {
                 log.error("LEDGER > No device selected");
                 throw new Error("No Ledger device selected. Please make sure your device is connected and unlocked.");
@@ -262,105 +481,5 @@ export const connectWithWebUSB = async (): Promise<boolean> => {
         }
 
         throw error
-    }
-}
-
-/**
- * User gesture to request access to connected LEDGER devices
- * using WebHID with fallback to WebUSB if WebHID is not supported
- * @returns boolean if user granted permissions to a device
- */
-export const requestConnectDevice = async (): Promise<boolean> => {
-    // First check if we're in a Manifest V3 extension context
-    const isExtensionContext = !!(window.chrome && chrome.runtime && chrome.runtime.id);
-    const isManifestV3 = isExtensionContext && (chrome.runtime.getManifest().manifest_version === 3);
-
-    log.debug(`LEDGER > Connection context: Extension=${isExtensionContext}, MV3=${isManifestV3}`);
-
-    // For Manifest V3 extension, try direct connection first to trigger Chrome's permission dialog
-    if (isManifestV3) {
-        try {
-            // First try to check for already approved devices before showing any UI
-            if (isWebHIDSupported()) {
-                try {
-                    const existingDevices = await navigator.hid.getDevices();
-                    const approvedExistingDevices = existingDevices.filter(device => device.vendorId === LEDGER_USB_VENDOR_ID);
-
-                    if (approvedExistingDevices.length > 0) {
-                        log.info(`LEDGER > Found ${approvedExistingDevices.length} already approved Ledger devices, skipping permission dialog`);
-                        // We already have permissions, proceed with bridge for the connection logic
-                        return await openHardwareWalletBridge("LEDGER");
-                    }
-                } catch (e) {
-                    log.warn("LEDGER > Could not check for existing approved devices:", e);
-                    // Continue with requesting new devices
-                }
-
-                log.debug("LEDGER > Requesting initial WebHID permission to trigger Chrome dialog");
-                try {
-                    // This will show the Chrome device selection dialog
-                    const directResult = await navigator.hid.requestDevice({
-                        filters: [{ vendorId: LEDGER_USB_VENDOR_ID }],
-                    });
-
-                    // If we got here, the user approved a device in Chrome's dialog
-                    if (directResult && directResult.length > 0) {
-                        log.debug("LEDGER > User approved device in Chrome dialog, proceeding with bridge");
-
-                        // Now open the bridge page for the full connection flow
-                        // The bridge page will now be able to access the already-approved device
-                        return await openHardwareWalletBridge("LEDGER");
-                    } else {
-                        log.warn("LEDGER > No devices selected in Chrome dialog");
-                        return false;
-                    }
-                } catch (error) {
-                    if (error instanceof DOMException && error.name === "SecurityError") {
-                        log.error("LEDGER > Permission denied in Chrome dialog");
-                        throw new Error("Permission denied. Please allow access to your Ledger device.");
-                    }
-
-                    log.warn("LEDGER > Initial WebHID request failed, trying bridge approach", error);
-                    // If the direct approach failed for any other reason, try the bridge as fallback
-                    return await openHardwareWalletBridge("LEDGER");
-                }
-            } else {
-                // If WebHID is not supported, use the bridge directly
-                log.debug("LEDGER > WebHID not supported, using hardware wallet bridge directly");
-                return await openHardwareWalletBridge("LEDGER");
-            }
-        } catch (error) {
-            log.warn("LEDGER > Bridge connection failed, falling back to direct approach", error);
-            // Continue to direct connection methods as fallback
-        }
-    }
-
-    // Direct WebHID/WebUSB connection for non-MV3 or as fallback
-
-    // First try WebHID if supported
-    if (isWebHIDSupported()) {
-        try {
-            return await connectWithWebHID();
-        } catch (error) {
-            log.warn("LEDGER > WebHID connection failed, trying WebUSB if available", error);
-
-            // If specific errors, don't try fallbacks
-            if (error instanceof DOMException && (error.name === "SecurityError" || error.name === "NotFoundError")) {
-                throw error; // Rethrow specific errors that wouldn't be solved by fallbacks
-            }
-
-            // Try WebUSB as fallback if supported
-            if (isWebUSBSupported()) {
-                return await connectWithWebUSB();
-            } else {
-                throw new Error("No compatible connection method available for Ledger. Please use Chrome or Edge browser.");
-            }
-        }
-    } else if (isWebUSBSupported()) {
-        // If WebHID is not available but WebUSB is, try it
-        return await connectWithWebUSB();
-    } else {
-        // Neither WebHID nor WebUSB is supported
-        throw new Error("Your browser does not support WebHID or WebUSB. Please use Chrome or Edge.");
     }
 }

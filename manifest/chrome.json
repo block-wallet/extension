@@ -29,9 +29,7 @@
     "permissions": [
         "storage",
         "alarms",
-        "scripting"
-    ],
-    "optional_permissions": [
+        "scripting",
         "offscreen"
     ],
     "web_accessible_resources": [

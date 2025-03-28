@@ -1,181 +1,296 @@
 import log from 'loglevel';
-// Use a type-only import for browser
-import type { Browser } from 'webextension-polyfill';
 
-// Declare the global browser variable
-declare const browser: Browser;
+// Define a type for connection result
+interface ConnectionResult {
+    success: boolean;
+    needsUserGesture?: boolean;
+}
 
 /**
- * Utility class to manage the Ledger bridge window
- * This handles communication with the hardware-wallet-bridge.js page
+ * Utility class to manage the Ledger connection via WebHID
+ * This handles communication through the offscreen document for hardware wallet access
  */
 export class LedgerBridge {
-    private bridgeUrl: string;
-    private bridgeWindow: Window | null = null;
-    private connectionPending = false;
+    private offscreenCreated = false;
+    private connectionTimeout: NodeJS.Timeout | null = null;
 
     constructor() {
-        // Get the bridge URL from the extension
-        this.bridgeUrl = browser.runtime.getURL('hardware-wallet-bridge.html?device=LEDGER');
-        log.debug(`Initialized LedgerBridge with URL: ${this.bridgeUrl}`);
-        console.log('[LEDGER] LedgerBridge initialized with URL:', this.bridgeUrl);
+        log.debug('Initialized LedgerBridge for WebHID communication');
+        console.log('[LEDGER] LedgerBridge initialized for WebHID communication');
     }
 
     /**
-     * Opens the bridge window if not already open
-     * @returns A promise that resolves when the window is open
+     * Ensures an offscreen document is available for hardware wallet communication
+     * @returns Promise resolving to true if offscreen document is available
+     * @throws Error if offscreen API is not available or document creation fails
      */
-    async openBridgeWindow(): Promise<Window> {
-        if (this.bridgeWindow && !this.bridgeWindow.closed) {
-            log.debug('Bridge window already open, reusing');
-            console.log('[LEDGER] Bridge window already open, reusing existing window');
-            return this.bridgeWindow;
-        }
+    async ensureOffscreenDocument(): Promise<boolean> {
+        // Check if we already have an offscreen document
+        if (this.offscreenCreated) return true;
 
-        log.debug('Opening bridge window');
-        console.log('[LEDGER] Opening bridge window for Ledger connection');
-        this.connectionPending = true;
-
-        // Open a new window
         try {
-            this.bridgeWindow = window.open(
-                this.bridgeUrl,
-                'BlockWallet_LedgerConnect',
-                'width=360,height=520,resizable=0,location=0,menubar=0,status=0,toolbar=0'
-            );
-
-            if (!this.bridgeWindow) {
-                console.error('[LEDGER] Failed to open bridge window - popup might be blocked');
-                throw new Error('Failed to open Ledger connection window. Please check your popup blocker settings.');
+            // Require chrome.offscreen to be available (no fallback)
+            if (!chrome.offscreen) {
+                const error = new Error('Offscreen document API not available. WebHID access requires Chrome with offscreen API support.');
+                log.error(error.message);
+                console.error('[LEDGER] ' + error.message);
+                throw error;
             }
 
-            log.debug('Bridge window opened successfully');
-            console.log('[LEDGER] Bridge window opened successfully');
-            return this.bridgeWindow;
+            // Check if document already exists
+            const hasDocument = await chrome.offscreen.hasDocument();
+
+            if (!hasDocument) {
+                log.debug('Creating offscreen document for WebHID communication');
+                console.log('[LEDGER] Creating offscreen document for WebHID communication');
+
+                // Create the offscreen document - use type assertion to handle the fact that
+                // TypeScript definitions may not be up to date with Chrome's implementation
+                await chrome.offscreen.createDocument({
+                    url: 'offscreen.html',
+                    reasons: ['USER_MEDIA'], // Using USER_MEDIA for hardware access
+                    justification: 'Hardware wallet connection requires access to WebHID APIs'
+                });
+
+                // Wait for it to initialize
+                await new Promise<void>((resolve) => {
+                    const listener = (message: any) => {
+                        if (message.type === 'BRIDGE_READY') {
+                            chrome.runtime.onMessage.removeListener(listener);
+                            resolve();
+                        }
+                    };
+
+                    // Set a timeout in case the document doesn't initialize
+                    const timeout = setTimeout(() => {
+                        chrome.runtime.onMessage.removeListener(listener);
+                        resolve();
+                    }, 3000);
+
+                    chrome.runtime.onMessage.addListener(listener);
+                });
+
+                log.debug('Offscreen document created and initialized');
+                console.log('[LEDGER] Offscreen document created and initialized');
+            } else {
+                log.debug('Offscreen document already exists');
+                console.log('[LEDGER] Offscreen document already exists');
+            }
+
+            this.offscreenCreated = true;
+            return true;
         } catch (error) {
-            log.error('Error opening bridge window:', error);
-            console.error('[LEDGER] Error opening bridge window:', error);
-            this.connectionPending = false;
+            log.error('Failed to create offscreen document:', error);
+            console.error('[LEDGER] Failed to create offscreen document:', error);
+            throw error; // Rethrow as we don't have fallbacks
+        }
+    }
+
+    /**
+     * Communicates with the offscreen document to connect to a Ledger device via WebHID
+     * @returns Promise resolving to the connection result
+     */
+    async connectUsingWebHID(): Promise<ConnectionResult> {
+        try {
+            // Ensure offscreen document is available (throws if not possible)
+            await this.ensureOffscreenDocument();
+
+            // Set a timeout to avoid hanging indefinitely
+            return new Promise<ConnectionResult>((resolve, reject) => {
+                // Clear any existing timeout
+                if (this.connectionTimeout) {
+                    clearTimeout(this.connectionTimeout);
+                }
+
+                // Set a new timeout
+                this.connectionTimeout = setTimeout(() => {
+                    log.debug('WebHID connection attempt timed out');
+                    console.log('[LEDGER] WebHID connection attempt timed out');
+                    reject(new Error('WebHID connection attempt timed out'));
+                }, 30000);
+
+                // Send connection request to offscreen document
+                chrome.runtime.sendMessage({
+                    type: 'HW_CONNECT_REQUEST',
+                    device: 'LEDGER',
+                    transportType: 'webhid' // Explicitly specify WebHID
+                }).then((response) => {
+                    // Clear the timeout
+                    if (this.connectionTimeout) {
+                        clearTimeout(this.connectionTimeout);
+                        this.connectionTimeout = null;
+                    }
+
+                    if (response && response.success) {
+                        log.debug('Successful connection via WebHID');
+                        console.log('[LEDGER] Successfully connected via WebHID');
+
+                        // Store connection info in session storage
+                        try {
+                            if (chrome.storage?.session) {
+                                chrome.storage.session.set({
+                                    'ledger_connection_status': {
+                                        connected: true,
+                                        timestamp: Date.now(),
+                                        source: 'webhid',
+                                        transportType: 'webhid'
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.error('[LEDGER] Failed to store connection status in session storage:', e);
+                        }
+
+                        resolve({ success: true });
+                    } else {
+                        log.debug('WebHID connection failed:', response?.error || 'Unknown error');
+                        console.log('[LEDGER] WebHID connection failed:', response?.error || 'Unknown error');
+
+                        // Store error information in session storage
+                        try {
+                            if (chrome.storage?.session && response?.errorCode) {
+                                chrome.storage.session.set({
+                                    'ledger_connection_error': {
+                                        error: response.error,
+                                        timestamp: Date.now(),
+                                        errorCode: response.errorCode,
+                                        transportType: 'webhid'
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.error('[LEDGER] Failed to store error in session storage:', e);
+                        }
+
+                        if (response?.errorCode === 'PERMISSION_DENIED') {
+                            // For permission denied, we need user gesture
+                            resolve({ success: false, needsUserGesture: true });
+                        } else {
+                            reject(new Error(response?.error || 'WebHID connection failed for unknown reason'));
+                        }
+                    }
+                }).catch((error) => {
+                    // Clear the timeout
+                    if (this.connectionTimeout) {
+                        clearTimeout(this.connectionTimeout);
+                        this.connectionTimeout = null;
+                    }
+
+                    log.error('Error sending WebHID connection message:', error);
+                    console.error('[LEDGER] Error sending WebHID connection message:', error);
+                    reject(error);
+                });
+            });
+        } catch (error) {
+            log.error('Error in WebHID connection process:', error);
+            console.error('[LEDGER] Error in WebHID connection process:', error);
             throw error;
         }
     }
 
     /**
-     * Checks if the bridge window is still open
-     * @returns True if the window is open
+     * Communicates with the offscreen document to check Ledger device status
+     * @returns Promise resolving to true if a Ledger device is connected via WebHID
      */
-    isBridgeWindowOpen(): boolean {
-        const isOpen = !!this.bridgeWindow && !this.bridgeWindow.closed;
-        console.log('[LEDGER] Bridge window open status:', isOpen);
-        return isOpen;
-    }
+    async checkWebHIDStatus(): Promise<boolean> {
+        try {
+            await this.ensureOffscreenDocument();
 
-    /**
-     * Closes the bridge window if open
-     */
-    closeBridgeWindow(): void {
-        if (this.bridgeWindow && !this.bridgeWindow.closed) {
-            try {
-                this.bridgeWindow.close();
-                log.debug('Bridge window closed');
-                console.log('[LEDGER] Bridge window closed');
-            } catch (e) {
-                log.error('Error closing bridge window:', e);
-                console.error('[LEDGER] Error closing bridge window:', e);
-            }
+            return new Promise<boolean>((resolve, reject) => {
+                // Set a timeout to avoid hanging
+                const timeout = setTimeout(() => {
+                    log.debug('WebHID status check timed out');
+                    console.log('[LEDGER] WebHID status check timed out');
+                    resolve(false);
+                }, 3000);
+
+                // Send status request to offscreen document
+                chrome.runtime.sendMessage({
+                    type: 'HW_STATUS',
+                    device: 'LEDGER',
+                    transportType: 'webhid'
+                }).then((response) => {
+                    clearTimeout(timeout);
+
+                    if (response && response.status === 'ready' && response.hasActiveDevice) {
+                        log.debug('Offscreen document has active Ledger device via WebHID');
+                        console.log('[LEDGER] Offscreen document has active Ledger device via WebHID');
+                        resolve(true);
+                    } else {
+                        log.debug('Offscreen document has no active Ledger device via WebHID');
+                        console.log('[LEDGER] Offscreen document has no active Ledger device via WebHID');
+                        resolve(false);
+                    }
+                }).catch((error) => {
+                    clearTimeout(timeout);
+                    log.error('Error checking WebHID status:', error);
+                    console.error('[LEDGER] Error checking WebHID status:', error);
+                    reject(error);
+                });
+            });
+        } catch (error) {
+            log.error('Error in checkWebHIDStatus:', error);
+            console.error('[LEDGER] Error in checkWebHIDStatus:', error);
+            throw error;
         }
-
-        this.bridgeWindow = null;
-        this.connectionPending = false;
     }
 
     /**
-     * Checks the connection status with the bridge
+     * Checks the connection status with Ledger via WebHID
      * @returns Promise resolving to true if connection is active
      */
-    async checkBridgeConnection(): Promise<boolean> {
-        console.log('[LEDGER] Checking bridge connection status');
+    async checkConnectionStatus(): Promise<boolean> {
+        console.log('[LEDGER] Checking WebHID connection status');
 
-        // If no window is open and we're not trying to connect, return false
-        if (!this.bridgeWindow && !this.connectionPending) {
-            console.log('[LEDGER] No bridge window and not connecting - connection inactive');
-            return false;
-        }
-
-        // If window is closed but we thought it was open, reset state
-        if (this.bridgeWindow && this.bridgeWindow.closed) {
-            log.debug('Bridge window was closed unexpectedly');
-            console.log('[LEDGER] Bridge window was closed unexpectedly');
-            this.bridgeWindow = null;
-            this.connectionPending = false;
-            return false;
-        }
-
-        // Check local storage for connection status
         try {
-            const storedResult = localStorage.getItem('hw_bridge_result');
-            if (storedResult) {
-                const result = JSON.parse(storedResult);
-                console.log('[LEDGER] Found stored bridge result:', result);
+            // First check if we have a valid connection in session storage
+            if (chrome.storage?.session) {
+                const result = await chrome.storage.session.get('ledger_connection_status');
 
-                // Only consider recent results (within last 5 minutes)
-                if (result && (Date.now() - result.timestamp < 300000)) {
-                    if (result.success && result.device === 'LEDGER') {
-                        log.debug('Found successful Ledger connection in localStorage');
-                        console.log('[LEDGER] Found valid successful connection in localStorage');
-                        return true;
-                    }
+                if (result.ledger_connection_status &&
+                    result.ledger_connection_status.connected &&
+                    result.ledger_connection_status.source === 'webhid' &&
+                    Date.now() - result.ledger_connection_status.timestamp < 300000) { // Valid within last 5 minutes
+                    log.debug('Found valid WebHID connection status in session storage');
+                    console.log('[LEDGER] Found valid WebHID connection status in session storage');
+                    return true;
                 }
             }
         } catch (e) {
-            log.error('Error checking localStorage for bridge status:', e);
-            console.error('[LEDGER] Error checking localStorage for bridge status:', e);
+            log.error('Error checking session storage for WebHID status:', e);
         }
 
-        // If we have a window open, check session storage
-        if (this.bridgeWindow && !this.bridgeWindow.closed) {
-            try {
-                // Try to ping the bridge
-                console.log('[LEDGER] Attempting to ping bridge window');
-                return new Promise((resolve) => {
-                    // Set a timeout to fail after 2 seconds
-                    const timeout = setTimeout(() => {
-                        log.debug('Bridge connection check timed out');
-                        console.log('[LEDGER] Bridge connection check timed out');
-                        resolve(false);
-                    }, 2000);
+        // Check offscreen document status
+        try {
+            const webhidStatus = await this.checkWebHIDStatus();
+            if (webhidStatus) {
+                log.debug('Found active Ledger connection via WebHID');
+                console.log('[LEDGER] Found active Ledger connection via WebHID');
+                return true;
+            }
+        } catch (e) {
+            log.error('Error checking WebHID status:', e);
+        }
 
-                    // Try to send a message to check status
-                    browser.runtime.sendMessage({
-                        type: 'HW_BRIDGE_PING'
-                    }).then((response: unknown) => {
-                        clearTimeout(timeout);
-                        const typedResponse = response as { status?: string };
-                        if (typedResponse && typedResponse.status === 'ready') {
-                            log.debug('Bridge responded to ping');
-                            console.log('[LEDGER] Bridge responded to ping successfully');
-                            resolve(true);
-                        } else {
-                            log.debug('Bridge ping response invalid:', response);
-                            console.log('[LEDGER] Bridge ping response invalid:', response);
-                            resolve(false);
-                        }
-                    }).catch((error: Error) => {
-                        clearTimeout(timeout);
-                        log.error('Error pinging bridge:', error);
-                        console.error('[LEDGER] Error pinging bridge:', error);
-                        resolve(false);
-                    });
-                });
+        console.log('[LEDGER] No valid WebHID connection found');
+        return false;
+    }
+
+    /**
+     * Closes the offscreen document if it exists
+     */
+    async closeOffscreenDocument(): Promise<void> {
+        if (this.offscreenCreated && chrome.offscreen) {
+            try {
+                await chrome.offscreen.closeDocument();
+                this.offscreenCreated = false;
+                log.debug('Offscreen document closed');
+                console.log('[LEDGER] Offscreen document closed');
             } catch (e) {
-                log.error('Error checking bridge connection:', e);
-                console.error('[LEDGER] Error checking bridge connection:', e);
-                return false;
+                log.error('Error closing offscreen document:', e);
+                console.error('[LEDGER] Error closing offscreen document:', e);
             }
         }
-
-        console.log('[LEDGER] No valid bridge connection found');
-        return false;
     }
 }
 

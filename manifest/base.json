@@ -51,12 +51,13 @@
     ],
     "permissions": [
         "storage",
+        "unlimitedStorage",
         "alarms",
-        "scripting"
+        "scripting",
+        "offscreen"
     ],
     "optional_permissions": [
         "activeTab",
-        "unlimitedStorage",
         "notifications"
     ],
     "host_permissions": [

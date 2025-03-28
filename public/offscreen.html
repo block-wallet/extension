@@ -5,11 +5,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BlockWallet Hardware Wallet Bridge</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        #status {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-family: monospace;
+            background-color: #f5f5f5;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        h1 {
+            font-size: 18px;
+            margin-bottom: 16px;
+        }
+
+        .log {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            background-color: #f5f5f5;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="status">Hardware Wallet Connection Bridge</div>
+    <h1>BlockWallet Hardware Wallet Offscreen Bridge</h1>
+    <div id="status">Initializing hardware wallet bridge...</div>
+    <div id="log-container">
+        <h3>Connection Log</h3>
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        // Initialize logging
+        const logElement = document.getElementById('log');
+        function logMessage(message, isError = false) {
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            if (isError) {
+                entry.style.color = '#d32f2f';
+            }
+            logElement.appendChild(entry);
+            logElement.scrollTop = logElement.scrollHeight;
+
+            // Also log to console
+            if (isError) {
+                console.error(message);
+            } else {
+                console.log(message);
+            }
+        }
+
+        // Log initialization
+        logMessage('Offscreen document initialized');
+
+        // Load the main script
+        window.addEventListener('error', (event) => {
+            logMessage(`Error: ${event.message}`, true);
+        });
+    </script>
     <script src="offscreen.js"></script>
+    <script src="offscreen-bridge.js"></script>
 </body>
 
 </html>

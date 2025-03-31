@@ -1,5 +1,6 @@
 const createConfig = require('./webpack.shared.js');
 
+// Back to single config export
 module.exports = createConfig({
     background: './src/index.ts',
     'vendor/trezor/trezor-content':

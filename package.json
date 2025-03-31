@@ -10,15 +10,19 @@
         "test": "make test"
     },
     "dependencies": {
+        "@ledgerhq/hw-transport-webhid": "^6.30.0",
         "build": "^0.1.4",
         "styled-components": "^6.1.15"
     },
     "devDependencies": {
+        "@babel/preset-env": "^7.26.9",
         "@ledgerhq/hw-app-eth": "^6.43.0",
         "@ledgerhq/hw-transport-node-hid": "^6.29.5",
         "@ledgerhq/logs": "^6.12.0",
         "@types/webextension-polyfill": "^0.12.3",
+        "babel-loader": "^10.0.0",
         "babel-plugin-styled-components": "^2.1.4",
+        "copy-webpack-plugin": "^13.0.0",
         "typescript": "^5.8.2"
     }
 }

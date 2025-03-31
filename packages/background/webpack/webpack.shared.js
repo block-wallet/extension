@@ -2,6 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 const Dotenv = require('dotenv-webpack');
 const ESLintWebpackPlugin = require('eslint-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 /*
 const BundleAnalyzerPlugin =
     require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -39,58 +40,73 @@ const plugins = [
     new webpack.ProvidePlugin({
         Buffer: ['buffer', 'Buffer'],
     }),
-];
-
-module.exports = (entry) => ({
-    mode: 'production',
-    entry,
-    // Explicitly set target to webworker to ensure compatibility with service worker
-    target: 'webworker',
-    output: {
-        filename: '[name].js',
-        globalObject: 'this',
-        // Remove chunkLoading comment as it's not needed and could cause issues
-        path: path.resolve(__dirname, '../../../dist'),
-        // Ensure we're not using ES modules in the output
-        module: false,
-        // Disable code splitting for service worker context
-        chunkLoading: false,
-    },
-    module: {
-        rules: [
+    // Copy browser bundle files to the dist directory
+    new CopyPlugin({
+        patterns: [
             {
-                test: /\.tsx?$/,
-                exclude: /(node_modules)/,
-                use: {
-                    loader: 'ts-loader',
-                    options: {
-                        configFile: path.resolve(__dirname, '../tsconfig.json'),
-                    },
+                from: path.resolve(__dirname, '../../../public'),
+                to: path.resolve(__dirname, '../../../dist'),
+                filter: (resourcePath) => {
+                    return !resourcePath.endsWith('/offscreen.js');
                 },
             },
         ],
-    },
-    resolve: {
-        alias: {
-            ['@block-wallet/provider']: path.resolve(
-                __dirname,
-                '../../provider/src'
-            ),
+    }),
+];
+
+module.exports = (entry) => {
+    // No dynamic target logic here
+    return {
+        mode: 'production',
+        entry,
+        // Explicitly set target to webworker, suitable for the main background build
+        target: 'webworker',
+        output: {
+            filename: '[name].js',
+            globalObject: 'this',
+            // Remove chunkLoading comment as it's not needed and could cause issues
+            path: path.resolve(__dirname, '../../../dist'),
+            // Ensure we're not using ES modules in the output
+            module: false,
+            // Disable code splitting for service worker context
+            chunkLoading: false,
         },
-        extensions: ['.tsx', '.ts', '.js'],
-        fallback: {
-            crypto: require.resolve('crypto-browserify'),
-            stream: require.resolve('stream-browserify'),
-            buffer: require.resolve('buffer/'),
+        module: {
+            rules: [
+                {
+                    test: /\.tsx?$/,
+                    exclude: /(node_modules)/,
+                    use: {
+                        loader: 'ts-loader',
+                        options: {
+                            configFile: path.resolve(__dirname, '../tsconfig.json'),
+                        },
+                    },
+                },
+            ],
         },
-    },
-    experiments: {
-        asyncWebAssembly: true,
-        syncWebAssembly: true,
-    },
-    optimization: {
-        // Ensure all modules are included in the main bundle for service worker context
-        splitChunks: false,
-    },
-    plugins,
-});
+        resolve: {
+            alias: {
+                ['@block-wallet/provider']: path.resolve(
+                    __dirname,
+                    '../../provider/src'
+                ),
+            },
+            extensions: ['.tsx', '.ts', '.js'],
+            fallback: {
+                crypto: require.resolve('crypto-browserify'),
+                stream: require.resolve('stream-browserify'),
+                buffer: require.resolve('buffer/'),
+            },
+        },
+        experiments: {
+            asyncWebAssembly: true,
+            syncWebAssembly: true,
+        },
+        optimization: {
+            // Ensure all modules are included in the main bundle for service worker context
+            splitChunks: false,
+        },
+        plugins,
+    };
+};

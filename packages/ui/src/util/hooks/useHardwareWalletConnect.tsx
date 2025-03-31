@@ -208,6 +208,14 @@ const executeConnect = async (
                 (appError as any).vendor = vendor;
                 throw appError;
             }
+            // Handle the case where background connected but needs UI interaction for keyring
+            if (connectionResult.needsUserGesture) {
+                log.debug('Background Ledger connection successful, UI interaction needed for keyring.');
+                // Return true as the device connection part succeeded.
+                // The UI flow will proceed, and subsequent actions (like getting accounts)
+                // will handle the necessary UI context.
+                return true;
+            }
             // Potentially handle other object responses if added later
         }
 

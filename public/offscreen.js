@@ -1,5 +1,21 @@
 // This script runs in the offscreen document and handles hardware wallet connections
 
+// --- RE-ADD IMPORTS --- 
+import TransportWebHID from "@ledgerhq/hw-transport-webhid";
+import Eth from "@ledgerhq/hw-app-eth";
+
+// --- REMOVE ACCESS VIA GLOBAL BUNDLE --- 
+// const TransportWebHID = window.OffscreenLedgerBundle?.TransportWebHID;
+// const Eth = window.OffscreenLedgerBundle?.Eth;
+// // Add checks to ensure they loaded
+// if (!TransportWebHID || !Eth) {
+//     console.error("Offscreen script failed to load Ledger libraries from bundle.");
+//     // Potentially notify background script of failure
+//     chrome.runtime.sendMessage({ type: 'OFFSCREEN_INIT_ERROR', error: 'Ledger libs not found' });
+//     // Throw error to stop execution
+//     throw new Error("Offscreen Ledger libraries not loaded.");
+// }
+
 // Initialize status element for debugging
 const statusElement = document.getElementById('status');
 
@@ -12,9 +28,8 @@ function updateStatus(message) {
 }
 
 // Store active transport instances
-let activeTransports = {
-    LEDGER: null
-};
+let activeTransport = null; // Changed from activeTransports.LEDGER
+let ledgerDevice = null; // Store the device reference separately
 
 // Initialize bridge
 function initHardwareWalletBridge() {
@@ -34,7 +49,7 @@ function initHardwareWalletBridge() {
 
         if (message.type === 'HW_STATUS') {
             // Check if we have a cached device and return its status
-            const hasActiveDevice = message.device && activeTransports[message.device] !== null;
+            const hasActiveDevice = message.device && activeTransport !== null;
             sendResponse({
                 status: 'ready',
                 hasActiveDevice: hasActiveDevice,
@@ -49,7 +64,17 @@ function initHardwareWalletBridge() {
         }
 
         if (message.type === 'HW_LEDGER_OPERATION') {
-            handleLedgerOperation(message.operation, message.params, sendResponse);
+            handleLedgerOperation(message.operation, message.params, sendResponse)
+                .catch(error => {
+                    console.error("[LEDGER OFFSCREEN] Unhandled error in handleLedgerOperation:", error);
+                    // Ensure a response is sent even on unexpected errors
+                    sendResponse({
+                        success: false,
+                        error: error.message || 'Unknown error during operation',
+                        operation: message.operation,
+                        params: message.params
+                    });
+                });
             return true; // Keep the message channel open for async response
         }
     });
@@ -94,7 +119,8 @@ function initHardwareWalletBridge() {
                 });
 
                 // Clear the active transport
-                activeTransports.LEDGER = null;
+                activeTransport = null;
+                ledgerDevice = null;
             }
         });
     }
@@ -106,18 +132,16 @@ async function handleHardwareWalletDisconnection(deviceType, sendResponse) {
         updateStatus(`Disconnecting ${deviceType} device...`);
 
         if (deviceType === 'LEDGER') {
-            // If we have a cached device, close it
-            if (window.ledgerDevice && window.ledgerDevice.opened) {
+            // Close the transport if it exists
+            if (activeTransport) {
                 try {
-                    await window.ledgerDevice.close();
-                    window.ledgerDevice = null;
-                } catch (error) {
-                    console.warn('Error closing Ledger device:', error);
+                    await activeTransport.close();
+                } catch (closeError) {
+                    console.warn('[LEDGER OFFSCREEN] Error closing transport:', closeError);
                 }
+                activeTransport = null;
             }
-
-            // Clear the active transport
-            activeTransports.LEDGER = null;
+            ledgerDevice = null;
         }
 
         sendResponse({
@@ -169,10 +193,10 @@ async function handleHardwareWalletConnection(deviceType, transportType, sendRes
                 device: deviceType,
                 transportType: deviceType === 'LEDGER' ? 'webhid' : transportType,
                 source: deviceType === 'LEDGER' ? 'webhid' : 'offscreen',
-                deviceInfo: window[`${deviceType.toLowerCase()}Device`] ? {
-                    productName: window[`${deviceType.toLowerCase()}Device`].productName,
-                    vendorId: window[`${deviceType.toLowerCase()}Device`].vendorId,
-                    productId: window[`${deviceType.toLowerCase()}Device`].productId
+                deviceInfo: ledgerDevice ? {
+                    productName: ledgerDevice.productName,
+                    vendorId: ledgerDevice.vendorId,
+                    productId: ledgerDevice.productId
                 } : null
             };
 
@@ -324,7 +348,19 @@ async function connectLedger() {
         }
 
         // Store the device connection globally in the offscreen context for other operations
-        window.ledgerDevice = device;
+        ledgerDevice = device;
+        if (!activeTransport) {
+            // Assuming TransportWebHID.create() doesn't need the device object
+            // If it does, pass `device`
+            try {
+                console.log('[LEDGER OFFSCREEN] Creating WebHID transport...');
+                activeTransport = await TransportWebHID.create();
+                console.log('[LEDGER OFFSCREEN] WebHID transport created.');
+            } catch (transportError) {
+                console.error('[LEDGER OFFSCREEN] Failed to create WebHID transport:', transportError);
+                throw transportError; // Propagate error
+            }
+        }
 
         console.log('[LEDGER OFFSCREEN] Successfully connected to Ledger device via WebHID');
         updateStatus('Successfully connected to Ledger device via WebHID');
@@ -401,9 +437,13 @@ async function verifyEthereumApp(deviceType, sendResponse, bypassCache = false) 
             responseSent = true;
 
             // Clean up any listeners and timers
-            if (inputListener && window.ledgerDevice) {
-                window.ledgerDevice.removeEventListener('inputreport', inputListener);
-                console.log('[LEDGER OFFSCREEN] Removed input listener');
+            // Transport is persistent, listeners are temporary for this check
+            if (inputListener && activeTransport) { // Check activeTransport
+                // Transport doesn't directly expose removeEventListener in the same way HIDDevice did
+                // The listener is implicitly handled by the transport's exchange method
+                console.log('[LEDGER OFFSCREEN] Listener cleanup (handled by transport.exchange)');
+                // window.ledgerDevice.removeEventListener('inputreport', inputListener);
+                // console.log('[LEDGER OFFSCREEN] Removed input listener');
             }
 
             if (timeoutId) {
@@ -428,10 +468,10 @@ async function verifyEthereumApp(deviceType, sendResponse, bypassCache = false) 
         updateStatus('Verifying Ethereum app is open...');
 
         // Check if we have an active transport
-        if (!window.ledgerTransport && !window.ledgerDevice) {
-            // Try to reconnect if we don't have an active device
+        if (!activeTransport) { // Check activeTransport
+            // Try to reconnect if we don't have an active device/transport
             try {
-                await connectLedger();
+                await connectLedger(); // This should set activeTransport
             } catch (error) {
                 logMessage(`Failed to reconnect to Ledger: ${error.message}`, true);
                 safeResponse({
@@ -446,133 +486,38 @@ async function verifyEthereumApp(deviceType, sendResponse, bypassCache = false) 
         // Create a promise that represents the actual verification logic
         const verificationPromise = new Promise(async (resolve, reject) => {
             try {
-                // Get the device
-                let hidDevice = window.ledgerDevice;
-
-                if (!hidDevice) {
-                    const devices = await navigator.hid.getDevices();
-                    const ledgerDevices = devices.filter(d => d.vendorId === 0x2c97);
-
-                    if (ledgerDevices.length === 0) {
-                        reject(new Error('No Ledger device found'));
-                        return;
-                    }
-
-                    hidDevice = ledgerDevices[0];
-                    window.ledgerDevice = hidDevice;
+                // Ensure transport is available
+                if (!activeTransport) {
+                    reject(new Error('Ledger transport not available'));
+                    return;
                 }
 
-                if (!hidDevice.opened) {
-                    await hidDevice.open();
-                }
+                // Use the Eth app class with the transport
+                const eth = new Eth(activeTransport);
+                console.log('[LEDGER OFFSCREEN] Eth app instance created, calling getAppConfiguration');
 
-                console.log('[LEDGER OFFSCREEN] Device ready, sending APDU command to verify Ethereum app');
+                // The getAppConfiguration method directly verifies the app
+                const appConfig = await eth.getAppConfiguration();
+                console.log('[LEDGER OFFSCREEN] getAppConfiguration successful:', appConfig);
 
-                // APDU command for Ethereum getAppConfig: CLA=0xe0, INS=0x06, P1=0x00, P2=0x00
-                const commandData = new Uint8Array([0xe0, 0x06, 0x00, 0x00]);
+                // If getAppConfiguration succeeds, the app is open
+                resolve(true);
 
-                // Prepare the HID report
-                const channel = 0x0101; // Default channel
-                const tag = 0x05;       // APDU tag
-
-                // Format the command as per Ledger WebHID protocol
-                // 64-byte buffer: 5-byte header + 2-byte length + data (padded to 64 bytes)
-                const buffer = new Uint8Array(64);
-
-                // Standard 5-byte header
-                buffer[0] = channel >> 8;   // Channel ID high byte
-                buffer[1] = channel & 0xff; // Channel ID low byte
-                buffer[2] = tag;            // Command tag (0x05 for APDU)
-                buffer[3] = 0x00;           // Sequence index high byte (0 for first packet)
-                buffer[4] = 0x00;           // Sequence index low byte (0 for first packet)
-
-                // 2-byte data length (big endian)
-                buffer[5] = 0x00;              // APDU length high byte (0 for short commands)
-                buffer[6] = commandData.length; // APDU length low byte
-
-                // Copy APDU command data
-                for (let i = 0; i < commandData.length; i++) {
-                    buffer[7 + i] = commandData[i];
-                }
-
-                // Listen for response
-                const responsePromise = new Promise((resolveResponse, rejectResponse) => {
-                    inputListener = (event) => {
-                        const data = new Uint8Array(event.data.buffer);
-                        // Enhanced logging to show full response
-                        console.log(`[LEDGER OFFSCREEN] Received raw response data (${data.length} bytes):`, Array.from(data).map(b => b.toString(16).padStart(2, '0')).join(' '));
-                        console.log('[LEDGER OFFSCREEN] Received response from device');
-
-                        // Parse Ledger WebHID protocol structure:
-                        // - First 5 bytes: Channel ID (2), Tag (1), Sequence (2)
-                        // - Next 2 bytes: Length of APDU response
-                        // - Remaining: APDU response data (including status code at the end)
-
-                        if (data.length < 7) {
-                            console.error('[LEDGER OFFSCREEN] Response too short to parse');
-                            rejectResponse(new Error('Invalid response format'));
-                            return;
-                        }
-
-                        // Extract APDU response length from bytes 5-6
-                        const apduLength = (data[5] << 8) | data[6];
-                        console.log(`[LEDGER OFFSCREEN] APDU response length: ${apduLength} bytes`);
-
-                        // Calculate position of status code (last 2 bytes of APDU data)
-                        // APDU data starts at offset 7
-                        if (apduLength < 2 || 7 + apduLength > data.length) {
-                            console.error('[LEDGER OFFSCREEN] Invalid APDU length in response');
-                            rejectResponse(new Error('Invalid APDU data length'));
-                            return;
-                        }
-
-                        // Status code is at the end of the APDU data
-                        const statusCodePos = 7 + apduLength - 2;
-                        const statusCode = (data[statusCodePos] << 8) | data[statusCodePos + 1];
-                        console.log(`[LEDGER OFFSCREEN] Extracted status code from position ${statusCodePos}: 0x${statusCode.toString(16).padStart(4, '0')}`);
-
-                        if (statusCode === 0x9000) {
-                            console.log('[LEDGER OFFSCREEN] Status 0x9000 confirms Ethereum app is open');
-                            resolveResponse(true);
-                        } else {
-                            // Enhanced error reporting for non-9000 status words
-                            const knownErrors = {
-                                '6700': 'Incorrect length',
-                                '6982': 'Security status not satisfied (device locked?)',
-                                '6985': 'Conditions not satisfied (Ethereum app not open?)',
-                                '6a80': 'Invalid data',
-                                '6a82': 'File not found',
-                                '6a86': 'Incorrect P1/P2 parameters',
-                                '6d00': 'INS not supported (wrong app open?)',
-                                '6e00': 'CLA not supported (wrong app open?)'
-                            };
-
-                            const hexStatus = statusCode.toString(16).padStart(4, '0');
-                            const errorDesc = knownErrors[hexStatus] || 'Unknown error';
-                            console.error(`[LEDGER OFFSCREEN] Verification failed with status 0x${hexStatus}: ${errorDesc}`);
-
-                            rejectResponse(new Error(`Unexpected response from device: 0x${hexStatus} - ${errorDesc}`));
-                        }
-                    };
-
-                    hidDevice.addEventListener('inputreport', inputListener);
-                    console.log('[LEDGER OFFSCREEN] Added input listener, sending command to device');
-
-                    // Send the command
-                    hidDevice.sendReport(0, buffer)
-                        .then(() => console.log('[LEDGER OFFSCREEN] Command sent successfully'))
-                        .catch(error => {
-                            console.error('[LEDGER OFFSCREEN] Failed to send command:', error);
-                            rejectResponse(error);
-                        });
-                });
-
-                // Wait for response or error
-                const result = await responsePromise;
-                resolve(result);
             } catch (error) {
-                console.error('[LEDGER OFFSCREEN] Verification error:', error);
-                reject(error);
+                console.error('[LEDGER OFFSCREEN] Verification error via getAppConfiguration:', error);
+                // Map specific Ledger errors if needed
+                if (error && error.statusCode) {
+                    const knownErrors = {
+                        0x6985: 'Conditions not satisfied (Ethereum app not open?)',
+                        0x6d00: 'INS not supported (wrong app open?)',
+                        0x6e00: 'CLA not supported (wrong app open?)'
+                        // Add other relevant status codes
+                    };
+                    const errorDesc = knownErrors[error.statusCode] || `Unknown Ledger error ${error.statusCode.toString(16)}`;
+                    reject(new Error(`Verification failed: ${errorDesc}`));
+                } else {
+                    reject(error); // Re-throw other errors
+                }
             }
         });
 
@@ -608,8 +553,8 @@ async function verifyEthereumApp(deviceType, sendResponse, bypassCache = false) 
                 console.log('[LEDGER OFFSCREEN] Failure cause: No response received within timeout period. Device might be unresponsive or disconnected.');
 
                 // Log device state for diagnostics
-                if (window.ledgerDevice) {
-                    const device = window.ledgerDevice;
+                if (ledgerDevice) {
+                    const device = ledgerDevice;
                     console.log(
                         `[LEDGER OFFSCREEN] Device diagnostic info:
                         - Vendor ID: 0x${device.vendorId.toString(16)}
@@ -668,256 +613,126 @@ async function verifyEthereumApp(deviceType, sendResponse, bypassCache = false) 
     }
 }
 
-// LedgerBridgeKeyring instance cache
-let ledgerKeyring = null;
-
 // Handle Ledger operations
 async function handleLedgerOperation(operation, params, sendResponse) {
+    let transport = activeTransport;
     try {
         updateStatus(`Executing Ledger operation: ${operation}`);
         console.log(`[LEDGER OFFSCREEN] Executing operation: ${operation}`, params);
 
-        // Ensure we have a connected device
-        if (!window.ledgerDevice || !window.ledgerDevice.opened) {
-            updateStatus('No Ledger device connected - attempting to reconnect');
-            console.log('[LEDGER OFFSCREEN] No device connected - attempting to reconnect');
-
-            // Try to reconnect
-            const connected = await connectLedger();
-            if (!connected) {
-                throw new Error('Failed to connect to Ledger device');
-            }
-        }
-
-        // Verify Ethereum app is open
-        const ethAppOpen = await verifyEthereumAppInternal();
-        if (!ethAppOpen) {
-            throw new Error('Ethereum app is not open on Ledger device');
-        }
-
-        // Create or get the LedgerBridgeKeyring
-        if (!ledgerKeyring) {
-            updateStatus('Creating Ledger keyring...');
-            console.log('[LEDGER OFFSCREEN] Creating new LedgerBridgeKeyring instance');
-
+        // Ensure transport is available, try creating if not
+        if (!transport) {
+            updateStatus('No Ledger transport - attempting to create...');
+            console.log('[LEDGER OFFSCREEN] No transport, attempting to create...');
             try {
-                // Import the LedgerBridgeKeyring from the npm package
-                if (typeof LedgerBridgeKeyring !== 'function') {
-                    // If not already available globally, you'd need to use a dynamic import or include it in your HTML
-                    throw new Error('LedgerBridgeKeyring class not available');
-                }
-
-                // Create new instance
-                ledgerKeyring = new LedgerBridgeKeyring();
-
-                // Set transport type to WebHID
-                if (typeof ledgerKeyring._setTransportType === 'function') {
-                    await ledgerKeyring._setTransportType('webhid');
-                    console.log('[LEDGER OFFSCREEN] Set transport type to webhid');
-                }
-
-                console.log('[LEDGER OFFSCREEN] Successfully created LedgerBridgeKeyring');
-            } catch (error) {
-                console.error('[LEDGER OFFSCREEN] Error creating keyring:', error);
-
-                // If keyring creation fails, try to use direct Ethereum app approach
-                console.log('[LEDGER OFFSCREEN] Falling back to direct Ethereum app approach');
-                return handleLedgerOperationDirectly(operation, params, sendResponse);
+                transport = await TransportWebHID.create();
+                activeTransport = transport; // Store globally
+                console.log('[LEDGER OFFSCREEN] Transport created successfully.');
+            } catch (transportError) {
+                console.error('[LEDGER OFFSCREEN] Failed to create transport for operation:', transportError);
+                throw new Error('Failed to establish Ledger transport');
             }
         }
 
-        // Execute the requested operation
+        // Create Eth app instance using the transport
+        const eth = new Eth(transport);
+        console.log('[LEDGER OFFSCREEN] Eth app instance created for operation');
+
+        // Execute the requested operation using eth instance
         let result;
         switch (operation) {
-            case 'getPage':
+            case 'getPage': { // Use block scope for clarity
                 updateStatus(`Getting page ${params.pageIndex} from Ledger...`);
                 console.log(`[LEDGER OFFSCREEN] Getting page ${params.pageIndex}`);
+                const pageSize = 5; // Standard page size
+                const startIndex = params.pageIndex * pageSize;
+                const hdPath = params.hdPath || "44'/60'/0'/0"; // Default path if needed
 
-                // Call getAccounts on the keyring with the page index
-                result = await ledgerKeyring.getAccounts(params.pageIndex, params.hdPath);
-                console.log(`[LEDGER OFFSCREEN] Successfully retrieved ${result.length} accounts from page ${params.pageIndex}`);
-
+                const accountsResult = [];
+                for (let i = 0; i < pageSize; i++) {
+                    const fullPath = `${hdPath}/${startIndex + i}`;
+                    try {
+                        console.log(`[LEDGER OFFSCREEN] Getting address for path: ${fullPath}`);
+                        const accountData = await eth.getAddress(fullPath, false, false); // address, display=false, chainCode=false
+                        console.log(`[LEDGER OFFSCREEN] Received address: ${accountData.address}`);
+                        accountsResult.push(accountData.address);
+                    } catch (addrError) {
+                        console.error(`[LEDGER OFFSCREEN] Error getting address for path ${fullPath}:`, addrError);
+                        // Decide how to handle errors - stop, continue, return partial?
+                        // For now, let's throw to indicate failure on this page
+                        throw new Error(`Failed to get address for path ${fullPath}: ${addrError.message}`);
+                    }
+                }
+                result = accountsResult;
+                console.log(`[LEDGER OFFSCREEN] Successfully retrieved ${result.length} accounts for page ${params.pageIndex}`);
                 sendResponse({
                     success: true,
                     accounts: result,
-                    message: `Retrieved ${result.length} accounts from page ${params.pageIndex}`
+                    message: `Retrieved ${result.length} accounts for page ${params.pageIndex}`
                 });
                 break;
-
-            case 'getAccounts':
+            }
+            case 'getAccounts': { // Use block scope
                 updateStatus(`Getting accounts from Ledger...`);
                 console.log(`[LEDGER OFFSCREEN] Getting accounts (page ${params.pageIndex}, size ${params.pageSize})`);
+                const pageSize = params.pageSize || 5;
+                const startIndex = params.pageIndex * pageSize;
+                const hdPath = params.hdPath || "44'/60'/0'/0"; // Default path
 
-                // Get accounts with page index and size
-                const accounts = await ledgerKeyring.getAccounts(params.pageIndex, params.hdPath);
-
-                // Format the accounts to match the expected interface
-                const formattedAccounts = accounts.map((address, i) => ({
-                    address,
-                    index: (params.pageIndex * params.pageSize) + i,
-                    balance: null,
-                    name: null
-                }));
-
-                console.log(`[LEDGER OFFSCREEN] Successfully retrieved ${formattedAccounts.length} accounts`);
+                const accountsResult = [];
+                for (let i = 0; i < pageSize; i++) {
+                    const fullPath = `${hdPath}/${startIndex + i}`;
+                    try {
+                        console.log(`[LEDGER OFFSCREEN] Getting address for path: ${fullPath}`);
+                        const accountData = await eth.getAddress(fullPath, false, false);
+                        console.log(`[LEDGER OFFSCREEN] Received address: ${accountData.address}`);
+                        // Format the accounts to match the expected interface
+                        accountsResult.push({
+                            address: accountData.address,
+                            index: startIndex + i,
+                            balance: null, // Balance is not typically fetched here
+                            name: null // Name is not typically fetched here
+                        });
+                    } catch (addrError) {
+                        console.error(`[LEDGER OFFSCREEN] Error getting address for path ${fullPath}:`, addrError);
+                        throw new Error(`Failed to get address for path ${fullPath}: ${addrError.message}`);
+                    }
+                }
+                result = accountsResult;
+                console.log(`[LEDGER OFFSCREEN] Successfully retrieved ${result.length} accounts details`);
 
                 sendResponse({
                     success: true,
-                    accounts: formattedAccounts,
-                    message: `Retrieved ${formattedAccounts.length} accounts`
+                    accounts: result, // Already formatted
+                    message: `Retrieved ${result.length} accounts details`
                 });
                 break;
-
+            }
             // Add additional operations (signing, etc.) as needed
+            // case 'signTransaction': { ... }
+            // case 'signPersonalMessage': { ... }
 
             default:
+                console.error(`[LEDGER OFFSCREEN] Unsupported Ledger operation requested: ${operation}`);
                 throw new Error(`Unsupported Ledger operation: ${operation}`);
         }
     } catch (error) {
         console.error(`[LEDGER OFFSCREEN] Error executing ${operation}:`, error);
         updateStatus(`Error: ${error.message}`);
 
+        // Try to close transport on error to potentially reset state
+        if (activeTransport) {
+            try { await activeTransport.close(); } catch { /* ignore */ }
+            activeTransport = null;
+        }
+
         sendResponse({
             success: false,
             error: error.message,
             operation: operation,
             params: params,
-            stack: error.stack
+            stack: error.stack // Include stack for better debugging
         });
-    }
-}
-
-// Alternative approach using hw-app-eth directly if LedgerBridgeKeyring isn't available
-async function handleLedgerOperationDirectly(operation, params, sendResponse) {
-    try {
-        updateStatus(`Executing Ledger operation directly: ${operation}`);
-        console.log(`[LEDGER OFFSCREEN] Executing operation directly: ${operation}`, params);
-
-        // For direct operations, we need a WebHID transport
-        if (!window.ledgerDevice || !window.ledgerDevice.opened) {
-            throw new Error('No Ledger device connected');
-        }
-
-        // This would require the hw-app-eth library to be available
-        // The implementation would depend on how the hw-app-eth is included in your project
-        if (typeof Eth !== 'function') {
-            throw new Error('Ethereum app interface not available - requires hw-app-eth library');
-        }
-
-        // Create Ethereum app instance
-        const eth = new Eth(window.ledgerDevice);
-
-        // Execute specific operations
-        switch (operation) {
-            case 'getPage':
-            case 'getAccounts':
-                const pageSize = params.pageSize || 5;
-                const startIndex = (params.pageIndex || 0) * pageSize;
-                const hdPath = params.hdPath || "44'/60'/0'/0";
-
-                const accounts = [];
-                for (let i = 0; i < pageSize; i++) {
-                    const fullPath = `${hdPath}/${startIndex + i}`;
-                    const result = await eth.getAddress(fullPath);
-                    accounts.push(result.address);
-                }
-
-                console.log(`[LEDGER OFFSCREEN] Retrieved ${accounts.length} accounts directly`);
-
-                if (operation === 'getPage') {
-                    sendResponse({
-                        success: true,
-                        accounts: accounts
-                    });
-                } else {
-                    // Format for getAccounts
-                    const formattedAccounts = accounts.map((address, i) => ({
-                        address,
-                        index: startIndex + i,
-                        balance: null,
-                        name: null
-                    }));
-
-                    sendResponse({
-                        success: true,
-                        accounts: formattedAccounts
-                    });
-                }
-                break;
-
-            default:
-                throw new Error(`Unsupported direct Ledger operation: ${operation}`);
-        }
-    } catch (error) {
-        console.error(`[LEDGER OFFSCREEN] Error in direct operation:`, error);
-        sendResponse({
-            success: false,
-            error: error.message,
-            directOperation: true
-        });
-    }
-}
-
-// Helper to verify Ethereum app is open
-async function verifyEthereumAppInternal() {
-    // Implementation based on your existing verifyEthereumApp function
-    // This is a simplified version - in production you'd want proper error handling
-    try {
-        // Create a timeout promise
-        const timeout = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Verification timed out')), 5000);
-        });
-
-        // Create the verification promise
-        const verification = new Promise(async (resolve) => {
-            try {
-                if (!window.ledgerDevice || !window.ledgerDevice.opened) {
-                    resolve(false);
-                    return;
-                }
-
-                // Simple APDU to check if Ethereum app is open
-                // GET_APP_CONFIGURATION command for Ethereum app
-                const apduCommand = Buffer.from('e001000000', 'hex');
-
-                // Prepare for HID command
-                const data = Buffer.concat([
-                    Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00]), // Channel ID
-                    Buffer.from([0x01, 0x01, 0x05, 0x00, 0x00]), // TAG, PACKET_INDEX, PACKET_COUNT
-                    apduCommand
-                ]);
-
-                console.log('[LEDGER OFFSCREEN] Sending APDU command to verify Ethereum app');
-
-                // Send the command
-                await window.ledgerDevice.sendReport(0, new Uint8Array(data));
-
-                // Listen for the response once
-                const response = await new Promise((resolve) => {
-                    const listener = (event) => {
-                        window.ledgerDevice.removeInputListener(listener);
-                        resolve(event.data);
-                    };
-
-                    window.ledgerDevice.addEventListener('inputreport', listener);
-                });
-
-                // Parse the response
-                const statusCode = (response[11] << 8) | response[12];
-
-                // 0x9000 means success
-                resolve(statusCode === 0x9000);
-            } catch (error) {
-                console.error('[LEDGER OFFSCREEN] Error verifying Ethereum app:', error);
-                resolve(false);
-            }
-        });
-
-        // Race the timeout and verification
-        return await Promise.race([verification, timeout]);
-    } catch (error) {
-        console.error('[LEDGER OFFSCREEN] Verification error:', error);
-        return false;
     }
 }
 

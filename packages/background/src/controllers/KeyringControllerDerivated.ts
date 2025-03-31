@@ -1134,51 +1134,51 @@ export default class KeyringControllerDerivated extends KeyringController {
                         }
 
                         // Create and initialize a LedgerKeyring if not present
-                        try {
-                            // Check if we already have a keyring for this device type
-                            const existingKeyring = await this.getKeyringFromDevice(device);
+                        // try {
+                        //     // Check if we already have a keyring for this device type
+                        //     const existingKeyring = await this.getKeyringFromDevice(device);
 
-                            if (!existingKeyring) {
-                                log.debug(`No keyring instance found for ${device}, creating one based on explicit permission`);
-                                console.log(`[LEDGER] Creating new keyring instance based on explicit permission`);
+                        //     if (!existingKeyring) {
+                        //         log.debug(`No keyring instance found for ${device}, creating one based on explicit permission`);
+                        //         console.log(`[LEDGER] Creating new keyring instance based on explicit permission`);
 
-                                // Add a new keyring for Ledger
-                                await this.addNewKeyring('Ledger Hardware', {});
+                        //         // Add a new keyring for Ledger
+                        //         await this.addNewKeyring('Ledger Hardware', {});
 
-                                // Get the newly created keyring
-                                const newKeyring = await this.getKeyringFromDevice(device);
+                        //         // Get the newly created keyring
+                        //         const newKeyring = await this.getKeyringFromDevice(device);
 
-                                if (newKeyring) {
-                                    log.info(`Successfully created keyring for ${device} in service worker context`);
-                                    console.log(`[LEDGER] Successfully created keyring in service worker context`);
+                        //         if (newKeyring) {
+                        //             log.info(`Successfully created keyring for ${device} in service worker context`);
+                        //             console.log(`[LEDGER] Successfully created keyring in service worker context`);
 
-                                    // Set WebHID transport on the new keyring
-                                    const keyringWithTransport = newKeyring as unknown as {
-                                        _setTransportType?: (type: string) => Promise<void>;
-                                    };
+                        //             // Set WebHID transport on the new keyring
+                        //             const keyringWithTransport = newKeyring as unknown as {
+                        //                 _setTransportType?: (type: string) => Promise<void>;
+                        //             };
 
-                                    if (keyringWithTransport._setTransportType) {
-                                        await keyringWithTransport._setTransportType('webhid');
-                                        log.debug('Set Ledger transport type to webhid');
-                                    }
+                        //             if (keyringWithTransport._setTransportType) {
+                        //                 await keyringWithTransport._setTransportType('webhid');
+                        //                 log.debug('Set Ledger transport type to webhid');
+                        //             }
 
-                                    // Persist this newly created keyring for future restoration
-                                    await this.persistHardwareKeyringState(device);
-                                    log.info(`Persisted initial state for ${device} keyring`);
-                                    console.log(`[LEDGER] Persisted initial keyring state`);
-                                }
-                            } else {
-                                log.debug(`Existing keyring found for ${device}, no need to create a new one`);
-                                console.log(`[LEDGER] Using existing keyring instance with explicit permission`);
+                        //             // Persist this newly created keyring for future restoration
+                        //             await this.persistHardwareKeyringState(device);
+                        //             log.info(`Persisted initial state for ${device} keyring`);
+                        //             console.log(`[LEDGER] Persisted initial keyring state`);
+                        //         }
+                        //     } else {
+                        //         log.debug(`Existing keyring found for ${device}, no need to create a new one`);
+                        //         console.log(`[LEDGER] Using existing keyring instance with explicit permission`);
 
-                                // Refresh the persisted state to ensure it's up-to-date
-                                await this.persistHardwareKeyringState(device);
-                            }
-                        } catch (keyringError) {
-                            log.error(`Failed to create or update keyring for ${device}:`, keyringError);
-                            console.error(`[LEDGER] Failed to create or update keyring:`, keyringError);
-                            // Continue anyway
-                        }
+                        //         // Refresh the persisted state to ensure it's up-to-date
+                        //         await this.persistHardwareKeyringState(device);
+                        //     }
+                        // } catch (keyringError) {
+                        //     log.error(`Failed to create or update keyring for ${device}:`, keyringError);
+                        //     console.error(`[LEDGER] Failed to create or update keyring:`, keyringError);
+                        //     // Continue anyway
+                        // }
 
                         return true;
                     }

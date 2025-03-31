@@ -65,6 +65,26 @@ import { getMaxBlockBatchSize } from '../utils/rpc/rpcConfigBuilder';
 import TransactionController from './transactions/TransactionController';
 import { resolveAllownaceParamsFromTransaction } from './transactions/utils/utils';
 import { HDPaths, HDPathDescription } from "../utils/constants/devices";
+import { LedgerBridge, ledgerBridge } from "../utils/ledgerBridge";
+
+/**
+ * Checks if the current environment has DOM access
+ * This is needed to work around the fact that LedgerBridgeKeyring tries to create DOM elements
+ * which fails in MV3 service workers
+ * 
+ * @returns {boolean} True if the environment has a document with createElement
+ */
+const hasDomAccess = (): boolean => {
+    try {
+        // Check for document with element creation capability
+        return typeof document !== 'undefined' &&
+            document !== null &&
+            typeof document.createElement === 'function';
+    } catch (e) {
+        // If any error occurs during the check, assume we don't have DOM access
+        return false;
+    }
+};
 
 export enum AccountStatus {
     ACTIVE = 'ACTIVE',
@@ -1974,10 +1994,61 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         return this._keyringController.getMutex().runExclusive(async () => {
             log.debug(`Fetching accounts for ${device}, page ${pageIndex}, size ${pageSize}`);
 
-            // First, try to get the keyring
+            const hasDOM = hasDomAccess();
+
+            // Special handling for Ledger in Service Worker context
+            if (device === Devices.LEDGER && !hasDOM) {
+                log.debug(`[ATC] Handling Ledger account fetch in Service Worker context.`);
+
+                // Step 1: Verify connection and app status via offscreen document
+                try {
+                    const connectionStatus = await this._keyringController.connectHardwareKeyring(device);
+                    if (typeof connectionStatus === 'object') {
+                        if (connectionStatus.needsEthereumApp) {
+                            log.warn('[ATC] Ledger Ethereum app needs to be opened.');
+                            throw new Error('LEDGER_ETHEREUM_APP_CLOSED');
+                        }
+                        // Ignore needsUserGesture here, it just confirms SW context after permission grant
+                        log.debug('[ATC] Ledger connection via offscreen confirmed.');
+                    } else if (connectionStatus !== true) {
+                        log.error('[ATC] Ledger connection check failed.');
+                        throw new Error('Failed to verify Ledger connection');
+                    }
+                } catch (connectionError) {
+                    log.error('[ATC] Error during Ledger connection verification:', connectionError);
+                    throw connectionError; // Propagate specific errors like APP_CLOSED
+                }
+
+                // Step 2: Fetch accounts using the ledgerBridge proxy
+                try {
+                    log.debug(`[ATC] Calling ledgerBridge.getAccounts proxy (page: ${pageIndex}, size: ${pageSize})`);
+                    // Note: Assuming default HD path logic is handled elsewhere or standard path is okay
+                    // If specific HD path needed, it must be passed from UI -> ATC -> ledgerBridge
+                    const accountsFromBridge = await ledgerBridge.getAccounts(pageIndex, pageSize);
+
+                    log.debug(`[ATC] Received ${accountsFromBridge?.length || 0} accounts from bridge.`);
+
+                    // Step 3: Format accounts into DeviceAccountInfo[]
+                    const formattedAccounts: DeviceAccountInfo[] = accountsFromBridge.map((acc: { address: string; index: number; balance?: string }) => ({
+                        address: acc.address,
+                        index: acc.index,
+                        balance: acc.balance || null, // Assuming balance isn't fetched here
+                        name: `Ledger ${acc.index + 1}` // Standard naming
+                    }));
+
+                    return formattedAccounts;
+
+                } catch (proxyError) {
+                    log.error('[ATC] Error fetching Ledger accounts via bridge proxy:', proxyError);
+                    throw new Error(`Failed to get accounts from Ledger: ${proxyError.message}`);
+                }
+            }
+
+            // --- Existing Logic for UI context or non-Ledger devices --- 
+            log.debug(`[ATC] Handling account fetch in UI context or for non-Ledger device.`);
             let keyring = await this._keyringController.getKeyringFromDevice(device);
 
-            // If keyring doesn't exist, try to restore it
+            // If no keyring exists, try to connect/restore/create
             if (!keyring) {
                 log.warn(`No keyring found for ${device}, attempting to restore from session storage`);
 

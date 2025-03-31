@@ -93,7 +93,9 @@
                 "hardware-wallet-bridge.js",
                 "hardware-wallet-bridge-navigation.js",
                 "offscreen-bridge.js",
-                "offscreen.html"
+                "offscreen.html",
+                "offscreen.js",
+                "offscreen-logger.js"
             ],
             "matches": [
                 "https://*/*"

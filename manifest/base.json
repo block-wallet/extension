@@ -158,7 +158,10 @@
             "resources": [
                 "keep-alive",
                 "background.js",
-                "sw-wrapper.js"
+                "sw-wrapper.js",
+                "offscreen.html",
+                "offscreen.js",
+                "offscreen-logger.js"
             ],
             "matches": [
                 "https://*/*"

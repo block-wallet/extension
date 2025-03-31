@@ -51,36 +51,9 @@
         <div class="log" id="log"></div>
     </div>
 
-    <script>
-        // Initialize logging
-        const logElement = document.getElementById('log');
-        function logMessage(message, isError = false) {
-            const entry = document.createElement('div');
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-            if (isError) {
-                entry.style.color = '#d32f2f';
-            }
-            logElement.appendChild(entry);
-            logElement.scrollTop = logElement.scrollHeight;
-
-            // Also log to console
-            if (isError) {
-                console.error(message);
-            } else {
-                console.log(message);
-            }
-        }
-
-        // Log initialization
-        logMessage('Offscreen document initialized');
-
-        // Load the main script
-        window.addEventListener('error', (event) => {
-            logMessage(`Error: ${event.message}`, true);
-        });
-    </script>
+    <!-- Load external scripts instead of inline script -->
+    <script src="offscreen-logger.js"></script>
     <script src="offscreen.js"></script>
-    <script src="offscreen-bridge.js"></script>
 </body>
 
 </html>

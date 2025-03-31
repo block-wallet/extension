@@ -96,7 +96,6 @@ export class LedgerBridge {
      */
     async verifyEthereumAppOpen(bypassCache = false): Promise<boolean> {
         try {
-            // Don't check too frequently (throttle to once every 5 seconds)
             const now = Date.now();
             if (!bypassCache && now - this.lastEthAppCheck < 5000 && this.ethAppOpenStatus) {
                 log.debug('Using cached Ethereum app status (open)');
@@ -109,7 +108,7 @@ export class LedgerBridge {
                 // Set a timeout to avoid hanging
                 const timeout = setTimeout(() => {
                     log.debug('Ethereum app verification timed out');
-                    console.log('[LEDGER] Ethereum app verification timed out');
+                    console.log('[LEDGER] Ethereum app verification timed out in ledgerBridge.ts');
 
                     // Store the timeout status in session storage
                     try {
@@ -118,7 +117,7 @@ export class LedgerBridge {
                                 'ledger_eth_app_status': {
                                     open: false,
                                     timestamp: Date.now(),
-                                    reason: 'verification_timeout'
+                                    reason: 'ledgerbridge_verification_timeout'
                                 }
                             });
                         }
@@ -128,8 +127,9 @@ export class LedgerBridge {
 
                     this.ethAppOpenStatus = false;
                     resolve(false);
-                }, 5000);
+                }, 20000);
 
+                console.log('[LEDGER] Sending verification request to offscreen document');
                 // Send verification request to offscreen document
                 chrome.runtime.sendMessage({
                     type: 'HW_VERIFY_ETH_APP',
@@ -139,18 +139,56 @@ export class LedgerBridge {
                     requestId: Date.now().toString() // Add unique ID to track this request
                 }).then((response) => {
                     clearTimeout(timeout);
+                    console.log('[LEDGER] Received verification response:', response);
 
                     if (response && response.success && response.appOpen) {
                         log.debug('Ethereum app is open on Ledger device');
                         console.log('[LEDGER] Ethereum app is open on Ledger device');
                         this.lastEthAppCheck = now;
                         this.ethAppOpenStatus = true;
+
+                        // Store the app status in session storage from the service worker
+                        try {
+                            if (chrome.storage?.session && response.ethAppStatus) {
+                                chrome.storage.session.set({
+                                    'ledger_eth_app_status': {
+                                        ...response.ethAppStatus,
+                                        device: 'LEDGER',
+                                        message: 'Ethereum app is open and ready',
+                                        timestamp: Date.now()
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.error('[LEDGER] Failed to store eth app status:', e);
+                        }
+
                         resolve(true);
                     } else {
                         const errorMessage = response?.error || 'Ethereum app is not open on Ledger device';
-                        log.debug(`Ethereum app verification failed: ${errorMessage}`);
-                        console.log(`[LEDGER] Ethereum app verification failed: ${errorMessage}`);
+                        const errorSource = response?.source || response?.ethAppStatus?.source || 'unknown';
+                        log.debug(`Ethereum app verification failed: ${errorMessage} (source: ${errorSource})`);
+                        console.log(`[LEDGER] Ethereum app verification failed: ${errorMessage} (source: ${errorSource})`);
                         this.ethAppOpenStatus = false;
+
+                        // Store the error in session storage from the service worker
+                        try {
+                            if (chrome.storage?.session) {
+                                chrome.storage.session.set({
+                                    'ledger_eth_app_status': {
+                                        open: false,
+                                        device: 'LEDGER',
+                                        timestamp: Date.now(),
+                                        error: errorMessage,
+                                        source: errorSource,
+                                        message: 'Please open the Ethereum app on your Ledger device'
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.error('[LEDGER] Failed to store error status:', e);
+                        }
+
                         resolve(false);
                     }
                 }).catch((error) => {
@@ -165,7 +203,10 @@ export class LedgerBridge {
                                 'ledger_eth_app_status': {
                                     open: false,
                                     timestamp: Date.now(),
-                                    error: error.message
+                                    device: 'LEDGER',
+                                    error: error.message,
+                                    source: 'ledgerbridge_verification_error',
+                                    message: 'Error checking Ethereum app status'
                                 }
                             });
                         }
@@ -188,8 +229,10 @@ export class LedgerBridge {
                         'ledger_eth_app_status': {
                             open: false,
                             timestamp: Date.now(),
+                            device: 'LEDGER',
                             error: error.message,
-                            source: 'verifyEthereumAppOpen'
+                            source: 'verifyEthereumAppOpen',
+                            message: 'Error checking Ethereum app status'
                         }
                     });
                 }
@@ -241,63 +284,96 @@ export class LedgerBridge {
                         log.debug('Successful connection via WebHID');
                         console.log('[LEDGER] Successfully connected via WebHID');
 
+                        // Store connection info in session storage
+                        try {
+                            if (chrome.storage?.session && response.connectionInfo) {
+                                await chrome.storage.session.set({
+                                    'ledger_connection_status': response.connectionInfo
+                                });
+                                console.log('[LEDGER] Stored connection status in session storage');
+                            }
+
+                            // If we have explicit permission info, store that too
+                            if (chrome.storage?.session && response.explicitPermission) {
+                                await chrome.storage.session.set({
+                                    'ledger_explicit_permission': response.explicitPermission
+                                });
+                                console.log('[LEDGER] Stored explicit permission in session storage');
+                            }
+                        } catch (e) {
+                            console.error('[LEDGER] Error storing connection status:', e);
+                        }
+
                         // After connecting, verify that Ethereum app is open
                         const isEthAppOpen = await this.verifyEthereumAppOpen();
 
-                        // Store connection info in session storage
-                        try {
-                            if (chrome.storage?.session) {
-                                chrome.storage.session.set({
-                                    'ledger_connection_status': {
-                                        connected: true,
-                                        timestamp: Date.now(),
-                                        source: 'webhid',
-                                        transportType: 'webhid',
-                                        ethAppOpen: isEthAppOpen
-                                    }
-                                });
-                            }
-                        } catch (e) {
-                            console.error('[LEDGER] Failed to store connection status in session storage:', e);
-                        }
-
                         if (!isEthAppOpen) {
-                            // Connection successful but app not open
-                            console.warn('[LEDGER] Connected to device but Ethereum app is not open');
-                            resolve({
+                            log.debug('Connected to Ledger device but Ethereum app is not open');
+                            console.log('[LEDGER] Connected to device but Ethereum app is not open');
+                            return resolve({
                                 success: true,
                                 needsEthereumApp: true,
                                 message: 'Please open the Ethereum app on your Ledger device'
                             });
-                        } else {
-                            resolve({ success: true });
                         }
-                    } else {
-                        log.debug('WebHID connection failed:', response?.error || 'Unknown error');
-                        console.log('[LEDGER] WebHID connection failed:', response?.error || 'Unknown error');
 
-                        // Store error information in session storage
+                        return resolve({ success: true });
+                    } else if (response && response.requiresUserGesture) {
+                        log.debug('WebHID connection requires user gesture');
+                        console.log('[LEDGER] WebHID connection requires user gesture');
+
+                        // Store the error status in session storage
                         try {
-                            if (chrome.storage?.session && response?.errorCode) {
-                                chrome.storage.session.set({
+                            if (chrome.storage?.session) {
+                                await chrome.storage.session.set({
                                     'ledger_connection_error': {
-                                        error: response.error,
+                                        error: response.error || 'User gesture required',
+                                        errorCode: response.errorCode || 'PERMISSION_DENIED',
+                                        requiresUserGesture: true,
+                                        timestamp: Date.now()
+                                    }
+                                });
+
+                                await chrome.storage.session.set({
+                                    'ledger_needs_user_interaction': {
                                         timestamp: Date.now(),
-                                        errorCode: response.errorCode,
-                                        transportType: 'webhid'
+                                        reason: 'permission_required'
                                     }
                                 });
                             }
                         } catch (e) {
-                            console.error('[LEDGER] Failed to store error in session storage:', e);
+                            console.error('[LEDGER] Failed to store user gesture requirement:', e);
                         }
 
-                        if (response?.errorCode === 'PERMISSION_DENIED') {
-                            // For permission denied, we need user gesture
-                            resolve({ success: false, needsUserGesture: true });
-                        } else {
-                            reject(new Error(response?.error || 'WebHID connection failed for unknown reason'));
+                        return resolve({
+                            success: false,
+                            needsUserGesture: true,
+                            message: response.error || 'WebHID access requires user interaction'
+                        });
+                    } else {
+                        const errorMessage = response?.error || 'Unknown connection error';
+                        log.debug(`WebHID connection failed: ${errorMessage}`);
+                        console.log(`[LEDGER] WebHID connection failed: ${errorMessage}`);
+
+                        // Store the error in session storage
+                        try {
+                            if (chrome.storage?.session) {
+                                await chrome.storage.session.set({
+                                    'ledger_connection_error': {
+                                        error: errorMessage,
+                                        errorCode: response?.errorCode || 'CONNECTION_FAILED',
+                                        timestamp: Date.now()
+                                    }
+                                });
+                            }
+                        } catch (e) {
+                            console.error('[LEDGER] Failed to store connection error:', e);
                         }
+
+                        return resolve({
+                            success: false,
+                            message: errorMessage
+                        });
                     }
                 }).catch((error) => {
                     // Clear the timeout
@@ -306,14 +382,46 @@ export class LedgerBridge {
                         this.connectionTimeout = null;
                     }
 
-                    log.error('Error sending WebHID connection message:', error);
-                    console.error('[LEDGER] Error sending WebHID connection message:', error);
+                    log.error('Error connecting via WebHID:', error);
+                    console.error('[LEDGER] Error connecting via WebHID:', error);
+
+                    // Store the error in session storage
+                    try {
+                        if (chrome.storage?.session) {
+                            chrome.storage.session.set({
+                                'ledger_connection_error': {
+                                    error: error.message,
+                                    timestamp: Date.now(),
+                                    errorCode: 'CONNECTION_ERROR'
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.error('[LEDGER] Failed to store connection error:', e);
+                    }
+
                     reject(error);
                 });
             });
         } catch (error) {
-            log.error('Error in WebHID connection process:', error);
-            console.error('[LEDGER] Error in WebHID connection process:', error);
+            log.error('Error setting up WebHID connection:', error);
+            console.error('[LEDGER] Error setting up WebHID connection:', error);
+
+            // Store the error in session storage
+            try {
+                if (chrome.storage?.session) {
+                    chrome.storage.session.set({
+                        'ledger_connection_error': {
+                            error: error.message,
+                            timestamp: Date.now(),
+                            errorCode: 'SETUP_ERROR'
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('[LEDGER] Failed to store connection error:', e);
+            }
+
             throw error;
         }
     }

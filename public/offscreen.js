@@ -498,12 +498,35 @@ async function verifyEthereumApp(deviceType, sendResponse, bypassCache = false) 
                         console.log(`[LEDGER OFFSCREEN] Received raw response data (${data.length} bytes):`, Array.from(data).map(b => b.toString(16).padStart(2, '0')).join(' '));
                         console.log('[LEDGER OFFSCREEN] Received response from device');
 
-                        // Simple check - if we got a response with status words 0x9000 (success),
-                        // we know the Ethereum app is open
-                        const lastTwoBytes = (data[data.length - 2] << 8) | data[data.length - 1];
-                        console.log(`[LEDGER OFFSCREEN] Response status: 0x${lastTwoBytes.toString(16)}`);
+                        // Parse Ledger WebHID protocol structure:
+                        // - First 5 bytes: Channel ID (2), Tag (1), Sequence (2)
+                        // - Next 2 bytes: Length of APDU response
+                        // - Remaining: APDU response data (including status code at the end)
 
-                        if (lastTwoBytes === 0x9000) {
+                        if (data.length < 7) {
+                            console.error('[LEDGER OFFSCREEN] Response too short to parse');
+                            rejectResponse(new Error('Invalid response format'));
+                            return;
+                        }
+
+                        // Extract APDU response length from bytes 5-6
+                        const apduLength = (data[5] << 8) | data[6];
+                        console.log(`[LEDGER OFFSCREEN] APDU response length: ${apduLength} bytes`);
+
+                        // Calculate position of status code (last 2 bytes of APDU data)
+                        // APDU data starts at offset 7
+                        if (apduLength < 2 || 7 + apduLength > data.length) {
+                            console.error('[LEDGER OFFSCREEN] Invalid APDU length in response');
+                            rejectResponse(new Error('Invalid APDU data length'));
+                            return;
+                        }
+
+                        // Status code is at the end of the APDU data
+                        const statusCodePos = 7 + apduLength - 2;
+                        const statusCode = (data[statusCodePos] << 8) | data[statusCodePos + 1];
+                        console.log(`[LEDGER OFFSCREEN] Extracted status code from position ${statusCodePos}: 0x${statusCode.toString(16).padStart(4, '0')}`);
+
+                        if (statusCode === 0x9000) {
                             console.log('[LEDGER OFFSCREEN] Status 0x9000 confirms Ethereum app is open');
                             resolveResponse(true);
                         } else {
@@ -519,7 +542,7 @@ async function verifyEthereumApp(deviceType, sendResponse, bypassCache = false) 
                                 '6e00': 'CLA not supported (wrong app open?)'
                             };
 
-                            const hexStatus = lastTwoBytes.toString(16).padStart(4, '0');
+                            const hexStatus = statusCode.toString(16).padStart(4, '0');
                             const errorDesc = knownErrors[hexStatus] || 'Unknown error';
                             console.error(`[LEDGER OFFSCREEN] Verification failed with status 0x${hexStatus}: ${errorDesc}`);
 

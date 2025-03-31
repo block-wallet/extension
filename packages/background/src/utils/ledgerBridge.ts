@@ -530,6 +530,168 @@ export class LedgerBridge {
             }
         }
     }
+
+    /**
+     * Proxy method to get accounts from Ledger device via the offscreen document
+     * @param pageIndex The index of the page to get accounts from
+     * @param pageSize The number of accounts to get per page
+     * @param hdPath The HD path to use (optional)
+     * @returns Promise resolving to the accounts
+     */
+    async getAccounts(pageIndex: number, pageSize: number, hdPath?: string): Promise<Array<{ address: string, index: number, balance?: string, name?: string }>> {
+        try {
+            log.debug(`Proxying getAccounts to offscreen document (page ${pageIndex}, size ${pageSize})`);
+            console.log(`[LEDGER] Proxying getAccounts to offscreen document (page ${pageIndex}, size ${pageSize})`);
+
+            await this.ensureOffscreenDocument();
+
+            return new Promise((resolve, reject) => {
+                // Set a timeout to avoid hanging
+                const timeout = setTimeout(() => {
+                    reject(new Error('Timeout waiting for Ledger accounts'));
+                }, 30000);
+
+                chrome.runtime.sendMessage({
+                    type: 'HW_LEDGER_OPERATION',
+                    operation: 'getAccounts',
+                    params: {
+                        pageIndex,
+                        pageSize,
+                        hdPath
+                    },
+                    requestId: Date.now().toString()
+                }).then((response) => {
+                    clearTimeout(timeout);
+
+                    if (response && response.success) {
+                        log.debug(`Successfully received ${response.accounts?.length || 0} accounts from offscreen document`);
+                        console.log(`[LEDGER] Successfully received ${response.accounts?.length || 0} accounts from offscreen document`);
+                        resolve(response.accounts || []);
+                    } else {
+                        const error = new Error(response?.error || 'Failed to get accounts from Ledger device');
+                        log.error('Error getting accounts from offscreen document:', error);
+                        console.error('[LEDGER] Error getting accounts from offscreen document:', error);
+                        reject(error);
+                    }
+                }).catch((error) => {
+                    clearTimeout(timeout);
+                    log.error('Error in getAccounts message:', error);
+                    console.error('[LEDGER] Error in getAccounts message:', error);
+                    reject(error);
+                });
+            });
+        } catch (error) {
+            log.error('Error in getAccounts:', error);
+            console.error('[LEDGER] Error in getAccounts:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Proxy method to get a page of accounts from Ledger device via the offscreen document
+     * This is an alternative interface to getAccounts that matches the KeyringController interface
+     * @param pageIndex The index of the page to get
+     * @param hdPath The HD path to use (optional) 
+     * @returns Promise resolving to the page of accounts
+     */
+    async getPage(pageIndex: number, hdPath?: string): Promise<string[]> {
+        try {
+            log.debug(`Proxying getPage to offscreen document (page ${pageIndex})`);
+            console.log(`[LEDGER] Proxying getPage to offscreen document (page ${pageIndex})`);
+
+            await this.ensureOffscreenDocument();
+
+            return new Promise((resolve, reject) => {
+                // Set a timeout to avoid hanging
+                const timeout = setTimeout(() => {
+                    reject(new Error('Timeout waiting for Ledger page'));
+                }, 30000);
+
+                chrome.runtime.sendMessage({
+                    type: 'HW_LEDGER_OPERATION',
+                    operation: 'getPage',
+                    params: {
+                        pageIndex,
+                        hdPath
+                    },
+                    requestId: Date.now().toString()
+                }).then((response) => {
+                    clearTimeout(timeout);
+
+                    if (response && response.success) {
+                        log.debug(`Successfully received page from offscreen document`);
+                        console.log(`[LEDGER] Successfully received page from offscreen document`);
+                        resolve(response.accounts || []);
+                    } else {
+                        const error = new Error(response?.error || 'Failed to get page from Ledger device');
+                        log.error('Error getting page from offscreen document:', error);
+                        console.error('[LEDGER] Error getting page from offscreen document:', error);
+                        reject(error);
+                    }
+                }).catch((error) => {
+                    clearTimeout(timeout);
+                    log.error('Error in getPage message:', error);
+                    console.error('[LEDGER] Error in getPage message:', error);
+                    reject(error);
+                });
+            });
+        } catch (error) {
+            log.error('Error in getPage:', error);
+            console.error('[LEDGER] Error in getPage:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * General purpose proxy method to execute any Ledger operation via the offscreen document
+     * @param operation The name of the operation to execute
+     * @param params The parameters to pass to the operation
+     * @returns Promise resolving to the operation result
+     */
+    async proxyLedgerOperation(operation: string, params: any): Promise<any> {
+        try {
+            log.debug(`Proxying ${operation} to offscreen document`);
+            console.log(`[LEDGER] Proxying ${operation} to offscreen document`);
+
+            await this.ensureOffscreenDocument();
+
+            return new Promise((resolve, reject) => {
+                // Set a timeout to avoid hanging
+                const timeout = setTimeout(() => {
+                    reject(new Error(`Timeout waiting for Ledger operation: ${operation}`));
+                }, 30000);
+
+                chrome.runtime.sendMessage({
+                    type: 'HW_LEDGER_OPERATION',
+                    operation,
+                    params,
+                    requestId: Date.now().toString()
+                }).then((response) => {
+                    clearTimeout(timeout);
+
+                    if (response && response.success) {
+                        log.debug(`Successfully executed ${operation} via offscreen document`);
+                        console.log(`[LEDGER] Successfully executed ${operation} via offscreen document`);
+                        resolve(response.result);
+                    } else {
+                        const error = new Error(response?.error || `Failed to execute ${operation} on Ledger device`);
+                        log.error(`Error executing ${operation} via offscreen document:`, error);
+                        console.error(`[LEDGER] Error executing ${operation} via offscreen document:`, error);
+                        reject(error);
+                    }
+                }).catch((error) => {
+                    clearTimeout(timeout);
+                    log.error(`Error in ${operation} message:`, error);
+                    console.error(`[LEDGER] Error in ${operation} message:`, error);
+                    reject(error);
+                });
+            });
+        } catch (error) {
+            log.error(`Error in ${operation}:`, error);
+            console.error(`[LEDGER] Error in ${operation}:`, error);
+            throw error;
+        }
+    }
 }
 
 // Export a singleton instance

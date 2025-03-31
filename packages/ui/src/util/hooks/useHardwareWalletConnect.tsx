@@ -3,8 +3,8 @@ import {
     completeHardwareConnection,
     hardwareQrSubmitCryptoHdKeyOrAccount,
 } from "../../context/commActions"
-import { Devices } from "../../context/commTypes"
-import { requestConnectDevice } from "../../context/util/requestConnectDevice"
+import { Devices, HardwareWalletConnectionResult } from "../../context/commTypes"
+import { requestLedgerDevicePermission } from "../../context/util/requestConnectDevice"
 import useAsyncInvoke from "./useAsyncInvoke"
 import log from "loglevel"
 import useClearStickyStorage from "../../context/hooks/useClearStickyStorage"
@@ -163,84 +163,58 @@ const executeConnect = async (
     ur?: URParameter,
 ): Promise<boolean> => {
     try {
-        // First try the initial connection - this may return a special response for Ledger in MV3
-        const connectionResult = await connectHardwareWallet(vendor);
-
-        // Handle the special case for Ledger in MV3 where we need user gesture
-        if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
-            log.debug('Ledger device needs user gesture for WebHID permission');
-
-            // We're now handling the requestConnectDevice properly within a user gesture event handler
-            // from the UI component that called this hook, which ensures the browser recognizes it as 
-            // a direct user interaction
-
-            // Adding a small delay to ensure we're within the user gesture event handling window
-            await new Promise(resolve => setTimeout(resolve, 10));
-
+        // For Ledger, request permission FIRST within the user gesture
+        if (vendor === Devices.LEDGER) {
+            log.debug('Requesting Ledger device permission first...');
+            let permissionGranted = false;
             try {
-                // The requestConnectDevice function will be called within a user event handler
-                // which is crucial for WebHID permissions to work correctly
-                const connectionOk = await requestConnectDevice();
-                if (!connectionOk) {
-                    log.error('Ledger device connection request failed');
-                    const error = new Error(HardwareWalletError.CONNECTION_FAILED);
-                    (error as any).vendor = vendor;
-                    throw error;
+                permissionGranted = await requestLedgerDevicePermission();
+            } catch (permError) {
+                log.error('Error during Ledger permission request:', permError);
+                // Map specific errors if needed, otherwise throw a generic permission error
+                if (permError.message.includes('SecurityError')) {
+                    throw new Error(HardwareWalletError.PERMISSION_DENIED);
+                } else {
+                    throw new Error(HardwareWalletError.CONNECTION_FAILED);
                 }
-
-                try {
-                    // Now complete the connection process after user has granted permission
-                    return await completeHardwareConnection(vendor);
-                } catch (error) {
-                    log.error('Failed to complete Ledger connection after user gesture:', error);
-
-                    // Determine the specific type of Ledger error
-                    const specificErrorType = determineLedgerErrorType(error);
-                    const specificError = new Error(specificErrorType);
-                    (specificError as any).vendor = vendor;
-                    (specificError as any).originalError = error;
-                    throw specificError;
-                }
-            } catch (error) {
-                // Handle specific WebHID permission errors
-                log.error('WebHID permission error:', error);
-
-                if (error.message && error.message.includes('user gesture')) {
-                    log.error('WebHID permission requires user gesture');
-                    const gestureError = new Error(HardwareWalletError.PERMISSION_DENIED);
-                    (gestureError as any).vendor = vendor;
-                    (gestureError as any).originalError = error;
-                    (gestureError as any).requiresUserGesture = true;
-                    throw gestureError;
-                }
-
-                throw error;
             }
+
+            if (!permissionGranted) {
+                log.warn('Ledger permission not granted by user.');
+                // Return false to indicate cancellation/denial without throwing an error
+                return false;
+            }
+            log.debug('Ledger permission granted. Proceeding with background connection...');
         }
 
-        // Handle Keystone specific connection (QR-based)
-        if (vendor === Devices.KEYSTONE) {
-            if (!ur || !ur.cbor) {
-                log.error('Invalid QR code data for Keystone connection');
-                throw new Error(HardwareWalletError.QR_SUBMISSION_FAILED);
+        // Now, contact the background script to connect/initialize the keyring
+        // The background script should now assume permission is granted for Ledger
+        const connectionResult: HardwareWalletConnectionResult = await connectHardwareWallet(vendor);
+
+        // Check the result from the background script
+        if (typeof connectionResult === 'boolean') {
+            if (!connectionResult) {
+                log.error(`Background connection failed for ${vendor}`);
+                // Determine specific error if possible (e.g., check session storage for errors)
+                throw new Error(HardwareWalletError.CONNECTION_FAILED);
             }
-
-            const submissionOk = await hardwareQrSubmitCryptoHdKeyOrAccount(
-                ur || { type: "", cbor: "" }
-            );
-
-            if (!submissionOk) {
-                log.error('QR submission for Keystone failed');
-                throw new Error(HardwareWalletError.QR_SUBMISSION_FAILED);
+            // Simple boolean true means success for non-Ledger or cases where background handled everything
+            return true;
+        } else if (typeof connectionResult === 'object') {
+            // Handle object responses (e.g., needsEthereumApp for Ledger)
+            if (connectionResult.needsEthereumApp) {
+                log.warn('Ledger connected but Ethereum app needs to be opened.');
+                const appError = new Error(HardwareWalletError.APP_NOT_OPEN);
+                (appError as any).vendor = vendor;
+                throw appError;
             }
-
-            // For Keystone we need to call connect again after QR submission
-            return await connectHardwareWallet(vendor) as boolean;
+            // Potentially handle other object responses if added later
         }
 
-        // For non-Ledger and non-Keystone devices, or for Ledger in MV2
-        // we can just return the result directly
-        return connectionResult as boolean;
+        // If we reach here, something unexpected happened with the connection result
+        log.error(`Unexpected connection result from background for ${vendor}:`, connectionResult);
+        throw new Error(HardwareWalletError.UNKNOWN_ERROR);
+
     } catch (e) {
         // Log detailed error
         log.error(`Hardware wallet connection error:`, e);

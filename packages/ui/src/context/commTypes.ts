@@ -340,12 +340,23 @@ export enum BridgeAllowanceCheck {
 }
 
 /**
- * Hardware Wallet Devices Vendors
+ * Hardware wallet device types
  */
 export enum Devices {
     LEDGER = "LEDGER",
     TREZOR = "TREZOR",
-    KEYSTONE = "KEYSTONE",
+    KEYSTONE = "KEYSTONE"
+}
+
+/**
+ * Hardware wallet connection result type
+ * Can be boolean for simple success/failure or an object with more details
+ */
+export type HardwareWalletConnectionResult = boolean | {
+    needsUserGesture: boolean;
+    deviceName: string;
+    needsEthereumApp?: boolean;
+    message?: string;
 }
 
 /**

@@ -2021,6 +2021,15 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                                 }
                             }
                             throw new Error('LEDGER_USER_GESTURE_REQUIRED');
+                        } else if (
+                            typeof connectionResult === 'object' &&
+                            connectionResult.needsEthereumApp
+                        ) {
+                            log.debug(
+                                `${device} connected but Ethereum app is not open`
+                            );
+                            // Throw a specific error to signal the UI about the need to open Ethereum app
+                            throw new Error('LEDGER_ETHEREUM_APP_CLOSED');
                         } else {
                             log.error(`Failed to connect to ${device}`);
                         }
@@ -2107,9 +2116,10 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
 
             // Log current HD path to help troubleshoot
+            let currentHDPath = '';
             try {
-                const hdPath = await this._keyringController.getHDPathForDevice(device);
-                log.debug(`Using HD path: ${hdPath} for ${device}`);
+                currentHDPath = await this._keyringController.getHDPathForDevice(device);
+                log.debug(`Using HD path: ${currentHDPath} for ${device}`);
             } catch (e) {
                 log.error('Failed to get HD path:', e);
             }
@@ -2134,24 +2144,157 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 // Add timeout handling to prevent indefinite hanging
                 const ACCOUNT_FETCH_TIMEOUT = 45000; // 45 seconds timeout
 
-                const deviceAccounts = await Promise.race([
-                    keyring.getAccounts(
-                        pageSize,
-                        pageIndex * pageSize // offset = pageIndex * pageSize
-                    ),
-                    new Promise<never>((_, reject) => {
-                        setTimeout(() => {
-                            reject(new Error('LEDGER_ACCOUNT_FETCH_TIMEOUT'));
-                        }, ACCOUNT_FETCH_TIMEOUT);
-                    })
-                ]);
+                let deviceAccounts = [];
+                let fetchError = null;
+
+                // First try with the current HD path
+                try {
+                    deviceAccounts = await Promise.race([
+                        keyring.getAccounts(
+                            pageSize,
+                            pageIndex * pageSize // offset = pageIndex * pageSize
+                        ),
+                        new Promise<never>((_, reject) => {
+                            setTimeout(() => {
+                                reject(new Error('LEDGER_ACCOUNT_FETCH_TIMEOUT'));
+                            }, ACCOUNT_FETCH_TIMEOUT);
+                        })
+                    ]);
+
+                    log.debug(
+                        `Received ${deviceAccounts.length} accounts from ${device} keyring using path ${currentHDPath}`
+                    );
+
+                    // If we successfully got accounts, no need to try alternatives
+                    if (deviceAccounts.length > 0) {
+                        // After successfully getting accounts, persist the keyring state
+                        try {
+                            await this._keyringController['persistHardwareKeyringState'](device);
+                        } catch (e) {
+                            log.error(`Failed to persist keyring state after getting accounts:`, e);
+                        }
+
+                        return deviceAccounts.map((address: string, index: number) => ({
+                            index: pageIndex * pageSize + index,
+                            address: address,
+                            name: `${device} ${pageIndex * pageSize + index + 1}`,
+                        }));
+                    }
+                } catch (e) {
+                    fetchError = e;
+                    log.warn(`Failed to get accounts with primary HD path ${currentHDPath}:`, e);
+                    console.warn(`[LEDGER] Failed to get accounts with primary HD path ${currentHDPath}:`, e);
+                }
+
+                // If we failed to get accounts or got empty results, try alternative HD paths
+                if (device === Devices.LEDGER && (deviceAccounts.length === 0 || fetchError)) {
+                    log.debug(`Trying alternative HD paths for ${device}...`);
+                    console.log(`[LEDGER] Trying alternative HD paths...`);
+
+                    // Common alternative paths for Ledger
+                    const alternativePaths = [
+                        `m/44'/60'/0'`,         // Ledger Live legacy
+                        `m/44'/60'/0'/0`,       // MEW, MetaMask
+                        `m/44'/60'/0'/0/0`,     // Default with all components
+                        `m/44'/1'/0'/0`,        // Testnet
+                        `m/44'/60'/1'/0/0`,     // Alternative account
+                    ];
+
+                    // Filter out the current path if it's in our list
+                    const pathsToTry = alternativePaths.filter(path => path !== currentHDPath);
+
+                    // Try each alternative path
+                    for (const path of pathsToTry) {
+                        try {
+                            log.debug(`Trying alternative HD path: ${path}`);
+                            console.log(`[LEDGER] Trying alternative HD path: ${path}`);
+
+                            // Try to set the alternative path
+                            await this._keyringController.setHdPathForDevice(device, path);
+
+                            // Try to get accounts with this path
+                            deviceAccounts = await Promise.race([
+                                keyring.getAccounts(
+                                    pageSize,
+                                    pageIndex * pageSize
+                                ),
+                                new Promise<never>((_, reject) => {
+                                    setTimeout(() => {
+                                        reject(new Error('LEDGER_ACCOUNT_FETCH_TIMEOUT'));
+                                    }, ACCOUNT_FETCH_TIMEOUT / 2); // Use shorter timeout for alternatives
+                                })
+                            ]);
+
+                            log.debug(
+                                `Received ${deviceAccounts.length} accounts from ${device} using alternative path ${path}`
+                            );
+                            console.log(
+                                `[LEDGER] Received ${deviceAccounts.length} accounts using path ${path}`
+                            );
+
+                            // If we got accounts, use them
+                            if (deviceAccounts.length > 0) {
+                                // Persist this working path and keyring state
+                                try {
+                                    await this._keyringController['persistHardwareKeyringState'](device);
+
+                                    // Store the successful path in session storage for future reference
+                                    if (chrome.storage?.session) {
+                                        await chrome.storage.session.set({
+                                            'ledger_successful_hd_path': {
+                                                path: path,
+                                                timestamp: Date.now(),
+                                                accountCount: deviceAccounts.length
+                                            }
+                                        });
+                                        log.debug(`Stored successful HD path ${path} in session storage`);
+                                    }
+                                } catch (e) {
+                                    log.error(`Failed to persist working HD path state:`, e);
+                                }
+
+                                return deviceAccounts.map((address: string, index: number) => ({
+                                    index: pageIndex * pageSize + index,
+                                    address: address,
+                                    name: `${device} ${pageIndex * pageSize + index + 1}`,
+                                }));
+                            }
+                        } catch (e) {
+                            log.warn(`Failed to get accounts with alternative HD path ${path}:`, e);
+                            console.warn(`[LEDGER] Failed with path ${path}:`, e.message);
+                            // Continue to the next path
+                        }
+                    }
+
+                    // If we exhausted all paths and still don't have accounts, revert to original path
+                    if (deviceAccounts.length === 0) {
+                        log.warn(`No accounts found with any HD path, reverting to original: ${currentHDPath}`);
+                        console.warn(`[LEDGER] No accounts found with any HD path, reverting to original`);
+                        try {
+                            await this._keyringController.setHdPathForDevice(device, currentHDPath);
+                        } catch (e) {
+                            log.error(`Failed to revert to original HD path:`, e);
+                        }
+
+                        // If we had an original error, throw it now
+                        if (fetchError) {
+                            throw fetchError;
+                        }
+                    }
+                }
+
+                // If we still have no accounts, throw an error
+                if (deviceAccounts.length === 0) {
+                    log.error(`No accounts found for ${device} with any HD path`);
+                    console.error(`[LEDGER] No accounts found with any HD path`);
+                    throw new Error('No accounts found. Please ensure the Ethereum app is open on your device.');
+                }
 
                 log.debug(
                     `Received ${deviceAccounts.length} accounts from ${device} keyring`
                 );
 
                 // After successfully getting accounts, persist the keyring state
-                // This ensures we have the latest state stored for future service worker restarts
                 try {
                     await this._keyringController['persistHardwareKeyringState'](device);
                 } catch (e) {
@@ -2165,6 +2308,16 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 }));
             } catch (e) {
                 log.error(`Failed to get accounts from keyring:`, e);
+
+                // Enhance error message for specific errors
+                if (e.message.includes('LEDGER_ACCOUNT_FETCH_TIMEOUT')) {
+                    throw new Error('Ledger communication timed out. Please ensure your device is unlocked and the Ethereum app is open.');
+                } else if (e.message.includes('Ledger') && e.message.includes('timeout')) {
+                    throw new Error('Ledger communication timed out. Please ensure your device is unlocked and the Ethereum app is open.');
+                } else if (e.message.includes('app')) {
+                    throw new Error('Error getting accounts. Please ensure the Ethereum app is open on your Ledger device.');
+                }
+
                 throw e;
             }
         });

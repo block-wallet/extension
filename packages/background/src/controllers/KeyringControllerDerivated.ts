@@ -860,7 +860,7 @@ export default class KeyringControllerDerivated extends KeyringController {
      */
     public async connectHardwareKeyring(
         device: Devices
-    ): Promise<boolean | { needsUserGesture: boolean; deviceName: string }> {
+    ): Promise<boolean | { needsUserGesture: boolean; deviceName: string; needsEthereumApp?: boolean; message?: string }> {
         try {
             log.debug(`Connecting hardware keyring for device: ${device}`);
 
@@ -882,6 +882,56 @@ export default class KeyringControllerDerivated extends KeyringController {
                             if (isUsable) {
                                 log.debug("Existing Ledger keyring is usable, returning success");
                                 console.log("[LEDGER] Existing keyring is usable, returning success");
+
+                                // Even if keyring is usable, verify Ethereum app is open
+                                try {
+                                    const appOpenStatus = await ledgerBridge.verifyEthereumAppOpen();
+                                    if (!appOpenStatus) {
+                                        log.debug("Ethereum app is not open on Ledger device");
+                                        console.log("[LEDGER] Ethereum app is not open on Ledger device");
+
+                                        // Store the verification result
+                                        try {
+                                            if (chrome.storage?.session) {
+                                                await chrome.storage.session.set({
+                                                    'ledger_eth_app_status': {
+                                                        open: false,
+                                                        timestamp: Date.now(),
+                                                        device: device
+                                                    }
+                                                });
+                                            }
+                                        } catch (e) {
+                                            log.error("Failed to store Ethereum app status:", e);
+                                        }
+
+                                        return {
+                                            needsUserGesture: false,
+                                            deviceName: device,
+                                            needsEthereumApp: true,
+                                            message: "Please open the Ethereum app on your Ledger device"
+                                        };
+                                    }
+
+                                    // Store successful verification
+                                    try {
+                                        if (chrome.storage?.session) {
+                                            await chrome.storage.session.set({
+                                                'ledger_eth_app_status': {
+                                                    open: true,
+                                                    timestamp: Date.now(),
+                                                    device: device
+                                                }
+                                            });
+                                        }
+                                    } catch (e) {
+                                        log.error("Failed to store Ethereum app status:", e);
+                                    }
+                                } catch (e) {
+                                    log.warn("Error verifying Ethereum app state:", e);
+                                    console.warn("[LEDGER] Error verifying Ethereum app state:", e);
+                                }
+
                                 return true;
                             }
                             log.debug("Existing Ledger keyring is not usable, needs reconnection");
@@ -909,6 +959,55 @@ export default class KeyringControllerDerivated extends KeyringController {
                         if (result.success) {
                             log.debug("Successfully connected to Ledger via WebHID");
                             console.log("[LEDGER] Successfully connected via WebHID");
+
+                            // Check if Ethereum app is open
+                            if (result.needsEthereumApp) {
+                                log.debug("Ledger connected but Ethereum app not open");
+                                console.log("[LEDGER] Ledger connected but Ethereum app not open");
+
+                                // Store app status
+                                try {
+                                    if (chrome.storage?.session) {
+                                        await chrome.storage.session.set({
+                                            'ledger_eth_app_status': {
+                                                open: false,
+                                                timestamp: Date.now(),
+                                                device: device,
+                                                message: result.message || "Please open the Ethereum app on your Ledger device"
+                                            }
+                                        });
+                                    }
+                                } catch (e) {
+                                    log.error("Failed to store app status:", e);
+                                }
+
+                                // Store the need for UI to complete the connection when ready
+                                try {
+                                    if (chrome.storage?.session) {
+                                        await chrome.storage.session.set({
+                                            'ledger_needs_user_interaction': {
+                                                timestamp: Date.now(),
+                                                status: 'pending',
+                                                requiresWebHID: true,
+                                                operation: 'openEthereumApp',
+                                                reason: 'ethereum_app_closed',
+                                                message: result.message || "Please open the Ethereum app on your Ledger device"
+                                            }
+                                        });
+                                        console.log("[LEDGER] Stored user interaction requirement in session storage");
+                                    }
+                                } catch (e) {
+                                    log.warn("Failed to store interaction need:", e);
+                                    console.warn("[LEDGER] Failed to store interaction need:", e);
+                                }
+
+                                return {
+                                    needsUserGesture: false,
+                                    deviceName: device,
+                                    needsEthereumApp: true,
+                                    message: result.message || "Please open the Ethereum app on your Ledger device"
+                                };
+                            }
 
                             // Store the need for UI to complete the connection when ready
                             try {

@@ -130,6 +130,8 @@ interface State {
     // HW state
     deviceNotReady: boolean
     reconnecting: boolean
+    ethAppStatus: 'unknown' | 'open' | 'closed'
+    errorMessage: string
 }
 
 const initialState: State = {
@@ -140,6 +142,8 @@ const initialState: State = {
     currentPage: 1,
     deviceNotReady: false,
     reconnecting: false,
+    ethAppStatus: 'unknown',
+    errorMessage: ''
 }
 
 async function ensureKeyringInitialized(vendor: Devices): Promise<boolean> {
@@ -250,6 +254,193 @@ async function ensureKeyringInitialized(vendor: Devices): Promise<boolean> {
     }
 
     return false;
+}
+
+// Add this new function before fetchAccountsWithRetry
+const forceVerifyEthereumApp = async (): Promise<boolean> => {
+    try {
+        // Send a direct message to force verification bypassing cache
+        const response = await chrome.runtime.sendMessage({
+            type: 'HW_VERIFY_ETH_APP',
+            device: 'LEDGER',
+            transportType: 'webhid',
+            bypassCache: true, // Add flag to bypass cache
+            requestId: Date.now().toString() // Add unique ID to track this request
+        }).catch(error => {
+            console.error('[LEDGER] Error in verification message send:', error);
+            // If message channel closed error, return null to handle gracefully
+            if (error.message && error.message.includes('message channel closed')) {
+                return null;
+            }
+            throw error;
+        });
+
+        // Handle case where message channel closed or response is null
+        if (!response) {
+            log.debug('Ethereum app verification failed - no response received');
+            console.log('[LEDGER] Ethereum app verification failed - no response received');
+
+            // Check session storage as fallback
+            if (chrome.storage?.session) {
+                const status = await chrome.storage.session.get('ledger_eth_app_status');
+                if (status.ledger_eth_app_status && Date.now() - status.ledger_eth_app_status.timestamp < 30000) {
+                    return status.ledger_eth_app_status.open === true;
+                }
+            }
+
+            return false;
+        }
+
+        if (response && response.success && response.appOpen) {
+            // Update the status in session storage
+            if (chrome.storage?.session) {
+                await chrome.storage.session.set({
+                    'ledger_eth_app_status': {
+                        open: true,
+                        timestamp: Date.now()
+                    }
+                });
+            }
+            return true;
+        }
+        return false;
+    } catch (error) {
+        log.error('Error in forceVerifyEthereumApp:', error);
+        console.error('[LEDGER] Error in forceVerifyEthereumApp:', error);
+
+        // Check if there's an issue with the message channel
+        if (error.message && (
+            error.message.includes('message channel closed') ||
+            error.message.includes('asynchronous response')
+        )) {
+            // Check session storage as fallback
+            if (chrome.storage?.session) {
+                try {
+                    const status = await chrome.storage.session.get('ledger_eth_app_status');
+                    if (status.ledger_eth_app_status && Date.now() - status.ledger_eth_app_status.timestamp < 30000) {
+                        return status.ledger_eth_app_status.open === true;
+                    }
+                } catch (e) {
+                    console.error('[LEDGER] Error checking session storage:', e);
+                }
+            }
+        }
+
+        return false;
+    }
+};
+
+/**
+ * Fetches hardware wallet accounts with retry logic
+ * @param vendor The hardware wallet vendor
+ * @param retryCount Current retry count
+ * @param pageIndex Page index for pagination
+ * @param pageSize Number of accounts per page
+ * @returns Array of device accounts
+ */
+async function fetchAccountsWithRetry(vendor: Devices, retryCount = 1, pageIndex = 0, pageSize = 5): Promise<DeviceAccountInfo[]> {
+    log.debug(`Fetching accounts attempt ${retryCount} for ${vendor}`);
+
+    try {
+        // First check if we're dealing with Ledger and need to verify Ethereum app
+        if (vendor === Devices.LEDGER) {
+            try {
+                // Attempt to check connection status from session storage
+                if (chrome.storage?.session) {
+                    const ethAppStatus = await chrome.storage.session.get('ledger_eth_app_status');
+                    if (ethAppStatus.ledger_eth_app_status) {
+                        const status = ethAppStatus.ledger_eth_app_status;
+                        // Only use status if it's recent (within last 2 minutes)
+                        if (Date.now() - status.timestamp < 120000) {
+                            if (!status.open) {
+                                log.debug("Ethereum app not open according to recent status check");
+                                console.log("[LEDGER] Ethereum app not open according to recent status check");
+
+                                // Force verify before throwing error
+                                const isNowOpen = await forceVerifyEthereumApp();
+                                if (isNowOpen) {
+                                    log.debug("Ethereum app is now open after direct verification");
+                                    console.log("[LEDGER] Ethereum app is now open after direct verification");
+                                } else {
+                                    throw new Error('LEDGER_ETHEREUM_APP_CLOSED');
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                // Handle message channel closed errors specifically
+                if (e.message && e.message.includes('message channel closed')) {
+                    console.error('[LEDGER] Message channel closed error during app verification:', e);
+
+                    // Try one more time with a delay before giving up
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    const isAppOpen = await forceVerifyEthereumApp().catch(err => {
+                        console.error('[LEDGER] Retry verification failed:', err);
+                        return false;
+                    });
+
+                    if (!isAppOpen) {
+                        throw new Error('LEDGER_ETHEREUM_APP_CLOSED');
+                    }
+                } else if (e.message === 'LEDGER_ETHEREUM_APP_CLOSED') {
+                    throw e;
+                }
+                // Ignore other errors here, we'll try to get accounts anyway
+            }
+        }
+
+        // Now try to fetch accounts
+        const accounts = await getHardwareWalletAccounts(vendor, pageIndex, pageSize);
+
+        if (accounts && accounts.length > 0) {
+            return accounts;
+        } else if (retryCount < 3) {
+            // If we get an empty result but haven't exceeded retries, wait and try again
+            log.debug(`No accounts returned, retrying (${retryCount}/3)...`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return fetchAccountsWithRetry(vendor, retryCount + 1, pageIndex, pageSize);
+        } else {
+            // If we've exhausted retries and still have no accounts, throw an error
+            log.error(`No accounts returned after ${retryCount} attempts`);
+            throw new Error('No accounts found. Please ensure the Ethereum app is open on your device.');
+        }
+    } catch (error) {
+        log.error(`Error fetching accounts (attempt ${retryCount}):`, error);
+
+        if (error.message === 'LEDGER_ETHEREUM_APP_CLOSED') {
+            // Try to force verify Ethereum app before giving up
+            const isNowOpen = await forceVerifyEthereumApp();
+            if (isNowOpen) {
+                log.debug("Ethereum app is now open after direct verification, retrying...");
+                console.log("[LEDGER] Ethereum app is now open after direct verification, retrying...");
+                return fetchAccountsWithRetry(vendor, retryCount, pageIndex, pageSize);
+            }
+            throw error;
+        }
+
+        // Special handling for message channel closed errors
+        if (error.message && error.message.includes('message channel closed')) {
+            console.error('[LEDGER] Message channel closed error during account fetch:', error);
+
+            // If this is the first or second attempt, try again with a longer delay
+            if (retryCount < 3) {
+                console.log(`[LEDGER] Retrying after message channel error (${retryCount}/3)...`);
+                await new Promise(resolve => setTimeout(resolve, 1500)); // Longer delay for channel issues
+                return fetchAccountsWithRetry(vendor, retryCount + 1, pageIndex, pageSize);
+            }
+        }
+
+        // If we haven't exceeded retries, wait and try again
+        if (retryCount < 3) {
+            log.debug(`Error fetching accounts, retrying (${retryCount}/3)...`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return fetchAccountsWithRetry(vendor, retryCount + 1, pageIndex, pageSize);
+        }
+
+        // If we've exhausted retries, rethrow the error
+        throw error;
+    }
 }
 
 const HardwareWalletAccountsPage = () => {
@@ -1256,6 +1447,54 @@ const HardwareWalletAccountsPage = () => {
         }
     };
 
+    // Add this to the useEffect that fetches accounts
+    useEffect(() => {
+        if (!state.gettingAccounts) return;
+
+        (async () => {
+            try {
+                setState({ gettingAccounts: true, errorMessage: '' });
+
+                // Try to get accounts with retry logic
+                const accounts = await fetchAccountsWithRetry(vendor, 1);
+
+                // Update ethAppStatus on successful fetch
+                setState({
+                    deviceAccounts: accounts,
+                    gettingAccounts: false,
+                    ethAppStatus: 'open',
+                    errorMessage: ''
+                });
+            } catch (error) {
+                log.error("Error getting accounts:", error);
+
+                // Handle specific errors
+                if (error.message === 'LEDGER_ETHEREUM_APP_CLOSED' ||
+                    error.message.includes('Ethereum app') ||
+                    error.message.includes('app is not open')) {
+                    setState({
+                        gettingAccounts: false,
+                        deviceNotReady: true,
+                        ethAppStatus: 'closed',
+                        errorMessage: 'Please open the Ethereum app on your Ledger device and try again.'
+                    });
+                } else if (error.message.includes('timeout')) {
+                    setState({
+                        gettingAccounts: false,
+                        deviceNotReady: true,
+                        errorMessage: 'Communication with Ledger timed out. Please make sure your device is unlocked and the Ethereum app is open.'
+                    });
+                } else {
+                    setState({
+                        gettingAccounts: false,
+                        deviceNotReady: true,
+                        errorMessage: error.message || 'Failed to get accounts from your device.'
+                    });
+                }
+            }
+        })();
+    }, [state.gettingAccounts, vendor]);
+
     return (
         <HardwareWalletSetupLayout
             title="Select Accounts"
@@ -1493,6 +1732,42 @@ const HardwareWalletAccountsPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Add error message display */}
+            {state.errorMessage && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <div className="flex items-center">
+                        <WarningIcon className="w-5 h-5 mr-2" />
+                        <span>{state.errorMessage}</span>
+                    </div>
+                    {state.ethAppStatus === 'closed' && (
+                        <div className="mt-2">
+                            <Button
+                                className="bg-blue-600 text-white py-2 px-4 rounded"
+                                onClick={() => setState({ gettingAccounts: true, deviceNotReady: false, errorMessage: '' })}
+                            >
+                                Retry
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Add Ethereum app status indicator when on Ledger */}
+            {vendor === Devices.LEDGER && state.ethAppStatus !== 'unknown' && (
+                <div className={`flex items-center mb-4 ${state.ethAppStatus === 'open' ? 'text-green-600' : 'text-red-600'}`}>
+                    {state.ethAppStatus === 'open' ? (
+                        <CheckIcon className="w-5 h-5 mr-2" />
+                    ) : (
+                        <WarningIcon className="w-5 h-5 mr-2" />
+                    )}
+                    <span>
+                        {state.ethAppStatus === 'open'
+                            ? 'Ethereum app is open'
+                            : 'Ethereum app is not open on your Ledger device'}
+                    </span>
+                </div>
+            )}
         </HardwareWalletSetupLayout>
     )
 }

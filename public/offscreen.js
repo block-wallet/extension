@@ -42,6 +42,11 @@ function initHardwareWalletBridge() {
             });
             return false;
         }
+
+        if (message.type === 'HW_VERIFY_ETH_APP') {
+            verifyEthereumApp(message.device, sendResponse, message.bypassCache);
+            return true; // Keep the message channel open for async response
+        }
     });
 
     // Let the extension know the bridge is ready
@@ -424,6 +429,252 @@ async function connectTrezor() {
     } catch (error) {
         console.error('Trezor connection error:', error);
         return false;
+    }
+}
+
+// Verify if the Ethereum app is open on the Ledger device
+async function verifyEthereumApp(deviceType, sendResponse, bypassCache = false) {
+    if (deviceType !== 'LEDGER') {
+        sendResponse({ success: false, error: 'Device type not supported for app verification' });
+        return;
+    }
+
+    try {
+        updateStatus('Verifying Ethereum app is open on Ledger device...');
+        logMessage('Verifying Ethereum app is open...');
+
+        // Check for cached status if we're not bypassing cache
+        if (!bypassCache && chrome.storage?.session) {
+            try {
+                const cachedStatus = await chrome.storage.session.get('ledger_eth_app_status');
+                if (cachedStatus.ledger_eth_app_status) {
+                    const status = cachedStatus.ledger_eth_app_status;
+                    // Only use status if it's very recent (within last 30 seconds)
+                    if (Date.now() - status.timestamp < 30000) {
+                        logMessage(`Using cached app status: ${status.open ? 'open' : 'closed'}`);
+                        sendResponse({
+                            success: true,
+                            appOpen: status.open,
+                            fromCache: true
+                        });
+                        return;
+                    }
+                }
+            } catch (e) {
+                logMessage(`Error checking cached status: ${e.message}`);
+                // Continue with direct verification
+            }
+        }
+
+        // Check if we have an active transport
+        if (!window.ledgerTransport && !window.ledgerDevice) {
+            // Try to reconnect if we don't have an active device
+            try {
+                await connectLedger();
+            } catch (error) {
+                logMessage(`Failed to reconnect to Ledger: ${error.message}`, true);
+                sendResponse({
+                    success: false,
+                    appOpen: false,
+                    error: 'No active Ledger connection available'
+                });
+                return;
+            }
+        }
+
+        try {
+            // Attempt to call an Ethereum-app specific command
+            // The Ethereum app implements getAppConfiguration that returns info
+            // about the app version when it's open
+
+            // Use WebHID direct commands to check if app is open
+            // This simulates a simple APDU command to the Ethereum app
+
+            // Get the device
+            let hidDevice = window.ledgerDevice;
+
+            if (!hidDevice) {
+                const devices = await navigator.hid.getDevices();
+                const ledgerDevices = devices.filter(d => d.vendorId === 0x2c97);
+
+                if (ledgerDevices.length === 0) {
+                    sendResponse({
+                        success: false,
+                        appOpen: false,
+                        error: 'No Ledger device found'
+                    });
+                    return;
+                }
+
+                hidDevice = ledgerDevices[0];
+                window.ledgerDevice = hidDevice;
+            }
+
+            if (!hidDevice.opened) {
+                await hidDevice.open();
+            }
+
+            // APDU command for Ethereum getAppConfig: CLA=0xe0, INS=0x06, P1=0x00, P2=0x00
+            const commandData = new Uint8Array([0xe0, 0x06, 0x00, 0x00]);
+
+            // Prepare the HID report
+            const channel = 0x0101; // Default channel
+            const tag = 0x05; // APDU tag
+
+            // Command header (channel + tag + sequence + command length)
+            const header = new Uint8Array([
+                channel >> 8, channel & 0xff, // Channel
+                tag, // Tag
+                0x00, // Sequence index
+                commandData.length, // Command length
+            ]);
+
+            // Full command with header + data
+            const fullCommand = new Uint8Array(header.length + commandData.length);
+            fullCommand.set(header);
+            fullCommand.set(commandData, header.length);
+
+            // Create a cleanup function to ensure the listener is removed
+            let listenerCleanedUp = false;
+            let listener = null;
+
+            const cleanup = () => {
+                if (!listenerCleanedUp && hidDevice && listener) {
+                    try {
+                        hidDevice.removeEventListener('inputreport', listener);
+                        listenerCleanedUp = true;
+                    } catch (e) {
+                        logMessage(`Error cleaning up listener: ${e.message}`, true);
+                    }
+                }
+            };
+
+            // Send the command and listen for response with proper cleanup
+            const verificationPromise = new Promise(async (resolve) => {
+                try {
+                    // Send the command
+                    await hidDevice.sendReport(0, fullCommand);
+
+                    // Set up listener for the response
+                    listener = (event) => {
+                        try {
+                            const { data, device } = event;
+
+                            if (device !== hidDevice) return;
+
+                            const dataArray = new Uint8Array(data.buffer);
+
+                            // Process HID report if it has enough data
+                            if (dataArray.length > 5) {
+                                // Always clean up the listener first
+                                cleanup();
+
+                                // Check response status
+                                if (dataArray[4] === 0x90 && dataArray[5] === 0x00) {
+                                    resolve(true);
+                                } else {
+                                    resolve(false);
+                                }
+                            }
+                        } catch (listenerError) {
+                            logMessage(`Error in inputreport listener: ${listenerError.message}`, true);
+                            cleanup();
+                            resolve(false);
+                        }
+                    };
+
+                    hidDevice.addEventListener('inputreport', listener);
+                } catch (sendError) {
+                    logMessage(`Error sending command: ${sendError.message}`, true);
+                    cleanup();
+                    resolve(false);
+                }
+            });
+
+            // Set a timeout that will execute regardless of message channel status
+            const timeoutPromise = new Promise(resolve => {
+                setTimeout(() => {
+                    logMessage('Ethereum app verification timed out');
+                    cleanup();
+                    resolve(false);
+                }, 5000);
+            });
+
+            // Race the verification against the timeout
+            const result = await Promise.race([verificationPromise, timeoutPromise]);
+
+            // Ensure cleanup happens if the race resolves through the verification promise
+            cleanup();
+
+            if (result === true) {
+                updateStatus('Ethereum app is open on Ledger device');
+                logMessage('Ethereum app is open on Ledger device');
+
+                // Store successful status in session storage
+                try {
+                    if (chrome.storage?.session) {
+                        await chrome.storage.session.set({
+                            'ledger_eth_app_status': {
+                                open: true,
+                                timestamp: Date.now()
+                            }
+                        });
+                    }
+                } catch (storageError) {
+                    logMessage(`Failed to store app status: ${storageError.message}`, true);
+                }
+
+                sendResponse({ success: true, appOpen: true });
+            } else {
+                updateStatus('Ethereum app is not open on Ledger device');
+                logMessage('Ethereum app is not open on Ledger device');
+
+                // Store negative status in session storage
+                try {
+                    if (chrome.storage?.session) {
+                        await chrome.storage.session.set({
+                            'ledger_eth_app_status': {
+                                open: false,
+                                timestamp: Date.now()
+                            }
+                        });
+                    }
+                } catch (storageError) {
+                    logMessage(`Failed to store app status: ${storageError.message}`, true);
+                }
+
+                sendResponse({
+                    success: true,
+                    appOpen: false,
+                    error: 'Ethereum app is not open on the device'
+                });
+            }
+        } catch (error) {
+            updateStatus(`Error verifying Ethereum app: ${error.message}`);
+            logMessage(`Error verifying Ethereum app: ${error.message}`, true);
+
+            let errorCode = 'UNKNOWN_ERROR';
+            if (error.message.includes('timeout')) {
+                errorCode = 'APP_VERIFICATION_TIMEOUT';
+            } else if (error.message.includes('CLA_NOT_SUPPORTED')) {
+                errorCode = 'WRONG_APP_OPEN';
+            }
+
+            sendResponse({
+                success: false,
+                appOpen: false,
+                error: error.message,
+                errorCode: errorCode
+            });
+        }
+    } catch (error) {
+        updateStatus(`Failed to verify Ethereum app: ${error.message}`);
+        logMessage(`Failed to verify Ethereum app: ${error.message}`, true);
+        sendResponse({
+            success: false,
+            appOpen: false,
+            error: error.message
+        });
     }
 }
 

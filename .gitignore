@@ -49,3 +49,6 @@ rates-ids-list.json
 asset-platforms-ids-list.json
 
 .npmrc
+
+# archives
+*.zip

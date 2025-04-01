@@ -27,6 +27,16 @@ class DeviceNotReadyError extends Error {
     }
 }
 
+class EthAppNotOpenError extends Error {
+    constructor() {
+        super();
+        this.message =
+            'Please open the Ethereum app on your Ledger device';
+        this.name = 'EthAppNotOpenError';
+        console.error('[LEDGER ERROR] Ethereum app not open on the device');
+    }
+}
+
 class DeviceNotPluggedError extends Error {
     constructor() {
         super();
@@ -93,6 +103,25 @@ const parseLedgerError = (
     const safeError = toError(error);
     console.log('[LEDGER ERROR] Parsing Ledger error:', safeError.message);
 
+    // Check for transport-specific errors
+    if (safeError.message.includes('TRANSACTION_REJECTED')) {
+        console.log('[LEDGER ERROR] Transaction rejected by user');
+        return new RejectedByUserError(opType);
+    } else if (safeError.message.includes('APP_NOT_OPEN')) {
+        console.log('[LEDGER ERROR] Ethereum app not open');
+        return new EthAppNotOpenError();
+    } else if (safeError.message.includes('TRANSPORT_ERROR')) {
+        console.log('[LEDGER ERROR] Transport error - device likely disconnected');
+        return new DeviceNotPluggedError();
+    } else if (safeError.message.includes('USER_CANCELED')) {
+        console.log('[LEDGER ERROR] User canceled the operation');
+        return new RejectedByUserError(opType);
+    } else if (safeError.message.includes('DEVICE_MEMORY_LIMIT')) {
+        console.log('[LEDGER ERROR] Device memory limit reached');
+        return new Error('Transaction too complex for your Ledger device');
+    }
+
+    // Original error parsing
     if (safeError.message.includes("Failed to execute 'requestDevice'")) {
         console.log('[LEDGER ERROR] Failed to request device - device not plugged');
         return new DeviceNotPluggedError();

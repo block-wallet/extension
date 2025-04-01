@@ -51,10 +51,14 @@
         <div class="log" id="log"></div>
     </div>
 
+    <!-- Load Ledger dependencies first -->
+    <script src="ledger-bundle.js"></script>
+
     <!-- Logger is separate -->
     <script src="offscreen-logger.js"></script>
-    <!-- Main offscreen logic, now bundled by Webpack -->
-    <script type="module" src="offscreen.js"></script>
+
+    <!-- Main offscreen logic -->
+    <script src="offscreen.js"></script>
 </body>
 
 </html>

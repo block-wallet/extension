@@ -59,6 +59,8 @@ endif
 build:
 	@rm -Rf dist-firefox
 	@rm -Rf dist
+	@mkdir -p dist
+	@yarn build-ledger-bundle
 	@$(MAKE) ENVIRONMENT=$(ENVIRONMENT) build/background --no-print-directory
 	@$(MAKE) ENVIRONMENT=$(ENVIRONMENT) build/provider --no-print-directory
 	@$(MAKE) build/ui --no-print-directory
@@ -72,6 +74,8 @@ endif
 build/prod:
 	@rm -Rf dist/
 	@rm -Rf dist-firefox/
+	@mkdir -p dist
+	@yarn build-ledger-bundle
 	@$(MAKE) ENVIRONMENT=prod build/background --no-print-directory
 	@$(MAKE) ENVIRONMENT=prod build/provider --no-print-directory
 	@$(MAKE) GENERATE_SOURCEMAP=false build/ui --no-print-directory
@@ -83,13 +87,14 @@ build/prod:
 
 build/v3:
 	@rm -Rf dist/
+	@mkdir -p dist
+	@yarn build-ledger-bundle
 	@$(MAKE) ENVIRONMENT=prod build/background --no-print-directory
 	@$(MAKE) ENVIRONMENT=prod build/provider --no-print-directory
 	@$(MAKE) GENERATE_SOURCEMAP=false build/ui --no-print-directory
 	@$(MAKE) BROWSER=chrome build/manifest --no-print-directory
 	@cp release-notes.json dist
 	@zip -r -D block-extension-chrome.zip dist/
-
 
 build/manifest:
 	@cd packages/ui && BROWSER=$(BROWSER) $(MAKE) build/manifest --no-print-directory

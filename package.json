@@ -7,22 +7,34 @@
         "install-fresh": "make install",
         "build": "make build",
         "build-prod": "make build/prod",
-        "test": "make test"
+        "test": "make test",
+        "build-ledger-bundle": "webpack --config webpack/ledger-bundle.config.js"
     },
     "dependencies": {
+        "@ledgerhq/errors": "^6.19.1",
+        "@ledgerhq/hw-app-eth": "^6.43.0",
         "@ledgerhq/hw-transport-webhid": "^6.30.0",
+        "@ledgerhq/logs": "^6.12.0",
+        "@types/loglevel": "^1.5.4",
         "build": "^0.1.4",
+        "loglevel": "^1.9.2",
         "styled-components": "^6.1.15"
     },
     "devDependencies": {
+        "@babel/core": "^7.26.10",
         "@babel/preset-env": "^7.26.9",
-        "@ledgerhq/hw-app-eth": "^6.43.0",
         "@ledgerhq/hw-transport-node-hid": "^6.29.5",
-        "@ledgerhq/logs": "^6.12.0",
         "@types/webextension-polyfill": "^0.12.3",
         "babel-loader": "^10.0.0",
         "babel-plugin-styled-components": "^2.1.4",
+        "buffer": "^6.0.3",
         "copy-webpack-plugin": "^13.0.0",
-        "typescript": "^5.8.2"
+        "crypto-browserify": "^3.12.0",
+        "events": "^3.3.0",
+        "process": "^0.11.10",
+        "stream-browserify": "^3.0.0",
+        "typescript": "^5.8.2",
+        "webpack": "^5.98.0",
+        "webpack-cli": "^6.0.1"
     }
 }

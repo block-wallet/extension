@@ -1,20 +1,22 @@
 // This script runs in the offscreen document and handles hardware wallet connections
 
-// --- RE-ADD IMPORTS --- 
-import TransportWebHID from "@ledgerhq/hw-transport-webhid";
-import Eth from "@ledgerhq/hw-app-eth";
+// --- REMOVE DIRECT IMPORTS --- 
+// import TransportWebHID from "@ledgerhq/hw-transport-webhid";
+// import Eth from "@ledgerhq/hw-app-eth";
 
-// --- REMOVE ACCESS VIA GLOBAL BUNDLE --- 
-// const TransportWebHID = window.OffscreenLedgerBundle?.TransportWebHID;
-// const Eth = window.OffscreenLedgerBundle?.Eth;
-// // Add checks to ensure they loaded
-// if (!TransportWebHID || !Eth) {
-//     console.error("Offscreen script failed to load Ledger libraries from bundle.");
-//     // Potentially notify background script of failure
-//     chrome.runtime.sendMessage({ type: 'OFFSCREEN_INIT_ERROR', error: 'Ledger libs not found' });
-//     // Throw error to stop execution
-//     throw new Error("Offscreen Ledger libraries not loaded.");
-// }
+// --- ACCESS VIA GLOBAL BUNDLE --- 
+// Access Ledger libraries from the global bundle
+const TransportWebHID = window.LedgerBundle?.TransportWebHID;
+const Eth = window.LedgerBundle?.Eth;
+
+// Add checks to ensure they loaded
+if (!TransportWebHID || !Eth) {
+    console.error("Offscreen script failed to load Ledger libraries from bundle.");
+    // Notify background script of failure
+    chrome.runtime.sendMessage({ type: 'OFFSCREEN_INIT_ERROR', error: 'Ledger libs not found' });
+    // Log error for debugging
+    logMessage("Failed to load Ledger libraries. Check ledger-bundle.js is properly included.", true);
+}
 
 // Initialize status element for debugging
 const statusElement = document.getElementById('status');

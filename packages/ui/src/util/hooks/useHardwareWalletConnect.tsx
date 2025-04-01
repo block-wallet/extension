@@ -22,7 +22,13 @@ export enum HardwareWalletError {
     APP_NOT_OPEN = "APP_NOT_OPEN",
     DEVICE_LOCKED = "DEVICE_LOCKED",
     DEVICE_BUSY = "DEVICE_BUSY",
-    UNKNOWN_ERROR = "UNKNOWN_ERROR"
+    UNKNOWN_ERROR = "UNKNOWN_ERROR",
+    TRANSACTION_REJECTED = "TRANSACTION_REJECTED",
+    INCORRECT_DATA = "INCORRECT_DATA",
+    DEVICE_MEMORY_LIMIT = "DEVICE_MEMORY_LIMIT",
+    USER_CANCELED = "USER_CANCELED",
+    INVALID_DATA = "INVALID_DATA",
+    TRANSPORT_ERROR = "TRANSPORT_ERROR"
 }
 
 /**
@@ -46,6 +52,18 @@ export const getHardwareWalletErrorMessage = (error: HardwareWalletError): strin
             return "Hardware wallet is locked";
         case HardwareWalletError.DEVICE_BUSY:
             return "Hardware wallet is currently busy";
+        case HardwareWalletError.TRANSACTION_REJECTED:
+            return "Transaction was rejected on your Ledger device";
+        case HardwareWalletError.INCORRECT_DATA:
+            return "Incorrect data format sent to your Ledger device";
+        case HardwareWalletError.DEVICE_MEMORY_LIMIT:
+            return "Transaction too complex for your Ledger device";
+        case HardwareWalletError.USER_CANCELED:
+            return "Operation was canceled on your Ledger device";
+        case HardwareWalletError.INVALID_DATA:
+            return "Invalid data sent to your Ledger device";
+        case HardwareWalletError.TRANSPORT_ERROR:
+            return "Connection to your Ledger device failed";
         case HardwareWalletError.UNKNOWN_ERROR:
         default:
             return "An unknown error occurred during hardware wallet connection";
@@ -117,11 +135,44 @@ const isBrowserCompatible = (): boolean => {
 }
 
 /**
+ * Maps Ledger transport error codes to our HardwareWalletError types
+ * @param errorCode The error code from the Ledger transport layer
+ * @returns A corresponding HardwareWalletError type
+ */
+export const mapLedgerTransportError = (errorCode: string): HardwareWalletError => {
+    switch (errorCode) {
+        case 'TRANSACTION_REJECTED':
+            return HardwareWalletError.TRANSACTION_REJECTED;
+        case 'INCORRECT_DATA':
+            return HardwareWalletError.INCORRECT_DATA;
+        case 'DEVICE_MEMORY_LIMIT':
+            return HardwareWalletError.DEVICE_MEMORY_LIMIT;
+        case 'USER_CANCELED':
+            return HardwareWalletError.USER_CANCELED;
+        case 'INVALID_DATA':
+            return HardwareWalletError.INVALID_DATA;
+        case 'APP_NOT_OPEN':
+            return HardwareWalletError.APP_NOT_OPEN;
+        case 'TRANSPORT_ERROR':
+            return HardwareWalletError.TRANSPORT_ERROR;
+        case 'UNKNOWN_DEVICE_ERROR':
+        case 'UNKNOWN_ERROR':
+        default:
+            return HardwareWalletError.UNKNOWN_ERROR;
+    }
+};
+
+/**
  * Analyzes error messages to determine specific Ledger error types
  * @param error The error object or message
  * @returns A specific HardwareWalletError type
  */
 const determineLedgerErrorType = (error: Error | string): HardwareWalletError => {
+    // Check if this is a transport error with code
+    if (typeof error === 'object' && error !== null && 'code' in error) {
+        return mapLedgerTransportError(error.code as string);
+    }
+
     const errorMsg = typeof error === 'string' ? error : (error.message || '');
 
     if (errorMsg.includes('CONDITIONS_OF_USE_NOT_SATISFIED') ||

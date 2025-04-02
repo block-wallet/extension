@@ -728,6 +728,39 @@ async function handleLedgerOperation(operation, params, sendResponse) {
                 });
                 break;
             }
+            case 'getMultipleAccounts': { // Get accounts for specific indexes
+                updateStatus(`Getting multiple accounts from Ledger...`);
+                console.log(`[LEDGER OFFSCREEN] Getting multiple accounts by index: ${params.indexes.join(', ')}`);
+
+                const hdPath = params.hdPath || "44'/60'/0'/0"; // Default path
+                const indexesToGet = params.indexes || [];
+
+                if (indexesToGet.length === 0) {
+                    throw new Error('No account indexes provided');
+                }
+
+                const accountsResult = [];
+                for (const index of indexesToGet) {
+                    const fullPath = `${hdPath}/${index}`;
+                    try {
+                        console.log(`[LEDGER OFFSCREEN] Getting address for path: ${fullPath}`);
+                        const accountData = await eth.getAddress(fullPath, false, false);
+                        console.log(`[LEDGER OFFSCREEN] Received address: ${accountData.address}`);
+                        accountsResult.push(accountData.address);
+                    } catch (addrError) {
+                        console.error(`[LEDGER OFFSCREEN] Error getting address for path ${fullPath}:`, addrError);
+                        throw new Error(`Failed to get address for path ${fullPath}: ${addrError.message}`);
+                    }
+                }
+
+                console.log(`[LEDGER OFFSCREEN] Successfully retrieved ${accountsResult.length} accounts`);
+                sendResponse({
+                    success: true,
+                    accounts: accountsResult,
+                    message: `Retrieved ${accountsResult.length} accounts`
+                });
+                break;
+            }
             // Add additional operations (signing, etc.) as needed
             // case 'signTransaction': { ... }
             // case 'signPersonalMessage': { ... }

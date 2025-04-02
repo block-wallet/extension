@@ -548,7 +548,7 @@ async function restoreHardwareWalletConnections(blankController: BlankController
                     }
 
                     const restored = await keyringController.restoreHardwareWalletState({
-                        device: device,
+                        device: device as Devices,
                         state: state
                     });
 

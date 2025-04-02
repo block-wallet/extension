@@ -643,6 +643,66 @@ export class LedgerBridge {
     }
 
     /**
+     * Retrieves multiple accounts from the Ledger device at the specified indexes
+     * @param accountIndexes Array of account indexes to retrieve
+     * @param hdPath Optional HD path to use (defaults to the device's standard path)
+     * @returns Promise resolving to array of Ethereum addresses
+     */
+    async getMultipleAccounts(accountIndexes: number[], hdPath?: string): Promise<string[]> {
+        try {
+            log.debug(`Getting multiple Ledger accounts for indexes: ${accountIndexes.join(', ')}`);
+            console.log(`[LEDGER] Getting multiple Ledger accounts for indexes: ${accountIndexes.join(', ')}`);
+
+            await this.ensureOffscreenDocument();
+
+            // Verify Ethereum app is open
+            const isAppOpen = await this.verifyEthereumAppOpen();
+            if (!isAppOpen) {
+                throw new Error('Ethereum app is not open on Ledger device');
+            }
+
+            return new Promise((resolve, reject) => {
+                // Set a timeout to avoid hanging
+                const timeout = setTimeout(() => {
+                    reject(new Error('Timeout waiting for Ledger accounts'));
+                }, 60000); // Longer timeout for multiple accounts
+
+                chrome.runtime.sendMessage({
+                    type: 'HW_LEDGER_OPERATION',
+                    operation: 'getMultipleAccounts',
+                    params: {
+                        indexes: accountIndexes,
+                        hdPath
+                    },
+                    requestId: Date.now().toString()
+                }).then((response) => {
+                    clearTimeout(timeout);
+
+                    if (response && response.success) {
+                        log.debug(`Successfully received ${response.accounts?.length || 0} accounts from Ledger`);
+                        console.log(`[LEDGER] Successfully received ${response.accounts?.length || 0} accounts from Ledger`);
+                        resolve(response.accounts || []);
+                    } else {
+                        const error = new Error(response?.error || 'Failed to get multiple accounts from Ledger device');
+                        log.error('Error getting multiple accounts:', error);
+                        console.error('[LEDGER] Error getting multiple accounts:', error);
+                        reject(error);
+                    }
+                }).catch((error) => {
+                    clearTimeout(timeout);
+                    log.error('Error in getMultipleAccounts message:', error);
+                    console.error('[LEDGER] Error in getMultipleAccounts message:', error);
+                    reject(error);
+                });
+            });
+        } catch (error) {
+            log.error('Error in getMultipleAccounts:', error);
+            console.error('[LEDGER] Error in getMultipleAccounts:', error);
+            throw error;
+        }
+    }
+
+    /**
      * General purpose proxy method to execute any Ledger operation via the offscreen document
      * @param operation The name of the operation to execute
      * @param params The parameters to pass to the operation

@@ -38,6 +38,8 @@ import { hexToString } from '../utils/signature';
 import { isManifestV3, forceNavigateTab } from '../utils/manifest';
 // Add static import for ledgerBridge
 import { ledgerBridge } from '../utils/ledgerBridge';
+// Import LedgerKeyringPatch to add forceAddAccount method
+import '../utils/LedgerKeyringPatch';
 
 /**
  * Events emitted by the KeyringController
@@ -1386,7 +1388,7 @@ export default class KeyringControllerDerivated extends KeyringController {
     }
 
     /**
-     * Imports hardware wallet accounts to the keyring
+     * importHardwareWalletAccounts
      *
      * Imports the accounts from a connected hardware wallet at the specified
      * derivation path indexes. Validates device connection and account indexes
@@ -1426,1518 +1428,323 @@ export default class KeyringControllerDerivated extends KeyringController {
                     );
                 }
 
-                const keyring = await this.getKeyringFromDevice(device);
+                // Special handling for Ledger in service worker context
+                if (device === Devices.LEDGER && !hasDomAccess()) {
+                    log.debug('No DOM access when importing Ledger accounts - using offscreen approach');
+
+                    // Use ledgerBridge which handles the offscreen document communication
+                    const isConnected = await ledgerBridge.checkWebHIDStatus();
+                    if (!isConnected) {
+                        log.debug('No active Ledger connection, attempting to connect');
+                        await ledgerBridge.connectUsingWebHID();
+                    }
+
+                    // Delegate account import to the ledger bridge in offscreen document
+                    log.debug(`Using ledgerBridge to import accounts: ${accountIndexes.join(',')}`);
+                    const importedAddresses = await ledgerBridge.getMultipleAccounts(accountIndexes);
+
+                    log.debug(`Successfully imported ${importedAddresses.length} accounts using ledgerBridge`);
+
+                    // Need to add these accounts to our keyring state without direct keyring interaction
+                    // This ensures the accounts are tracked by the extension
+                    const keyringType = this._getKeyringTypeFromDevice(device);
+                    const hdPath = this._HDPathForDevice(device);
+
+                    let keyring = await this.getKeyringFromDevice(device);
+                    if (!keyring) {
+                        keyring = await this.addNewKeyring(keyringType, {
+                            hdPath: hdPath,
+                        });
+                    }
+
+                    // Add the accounts to the state without device interaction
+                    for (const address of importedAddresses) {
+                        await keyring.forceAddAccount(address);
+                    }
+
+                    // Persist state changes
+                    await this.persistHardwareKeyringState(device);
+
+                    return importedAddresses;
+                }
+
+                // For other devices or when DOM is available, proceed with normal flow
+                const keyringType = this._getKeyringTypeFromDevice(device);
+                const hdPath = this._HDPathForDevice(device);
+
+                // Check if a keyring already exists for this device
+                let keyring = await this.getKeyringFromDevice(device);
+
+                // If no keyring exists, create one
                 if (!keyring) {
-                    throw new Error(
-                        `No keyring found for device ${device}. Make sure the device is connected.`
-                    );
+                    log.debug(`No keyring found for ${device}, creating one...`);
+                    keyring = await this.addNewKeyring(keyringType, {
+                        hdPath: hdPath,
+                    });
+                    log.debug(`Successfully created new keyring for ${device}`);
                 }
 
-                if (!keyring.isUnlocked && !keyring.isUnlocked()) {
-                    log.debug(
-                        `Keyring for ${device} is locked, attempting to unlock`
-                    );
-                    if (keyring.unlock) {
-                        await keyring.unlock();
-                    } else {
-                        throw new Error(
-                            `Unable to unlock keyring for ${device}`
-                        );
-                    }
-                }
-
-                // Iterate over the list of added indexes and add each
-                // selected account to the keyring
-                const originalAccounts = await keyring.getAccounts();
-                log.debug(
-                    `Original accounts before import: ${originalAccounts.length}`
-                );
-
-                for (const index of accountIndexes) {
-                    log.debug(
-                        `Importing account at index ${index} from ${device}`
-                    );
+                // For Ledger devices, initialize transport (ensure we have a valid connection)
+                if (device === Devices.LEDGER) {
+                    log.debug(`Initializing Ledger transport for keyring`);
                     try {
-                        keyring.setAccountToUnlock(index);
-                        await super.addNewAccount(keyring);
-                    } catch (error) {
-                        log.error(
-                            `Failed to import account at index ${index} from ${device}:`,
-                            error
-                        );
-                        throw new Error(
-                            `Failed to import account at index ${index}: ${error.message}`
-                        );
+                        // First set transport type if Ledger
+                        await this.setLedgerTransportType('webhid');
+
+                        // Connect to the device
+                        if (keyring.connect) {
+                            await keyring.connect();
+                            log.debug('Connected to Ledger device for keyring');
+                        }
+
+                        // Unlock the keyring if needed
+                        if (keyring.unlock) {
+                            await keyring.unlock();
+                            log.debug('Unlocked Ledger keyring');
+                        }
+                    } catch (e) {
+                        log.error(`Error initializing Ledger transport: ${e.message}`);
+                        throw new Error(`Failed to initialize Ledger device: ${e.message}`);
                     }
                 }
 
-                // Return the list of all new added accounts
-                const finalAccounts = await keyring.getAccounts();
-                const importedAccounts = finalAccounts.slice(
-                    originalAccounts.length
-                );
+                // Store updated hardware wallet state
+                await this.persistHardwareKeyringState(device);
 
-                log.debug(
-                    `Successfully imported ${importedAccounts.length} accounts from ${device}`
-                );
+                // Get current accounts before adding new ones
+                let originalAccounts: string[] = [];
+                try {
+                    originalAccounts = await keyring.getAccounts();
+                    log.debug(`Original accounts before import: ${originalAccounts.length}`);
+                } catch (error) {
+                    log.warn(`Could not get original accounts: ${error.message}`);
+                    originalAccounts = [];
+                }
+
+                // For each account to import
+                for (const index of accountIndexes) {
+                    try {
+                        // Set the account index on the keyring
+                        keyring.setAccountToUnlock(index);
+
+                        // Add new account to the keyring
+                        await super.addNewAccount(keyring);
+                        log.debug(`Added account at index ${index} to keyring`);
+                    } catch (error) {
+                        log.error(`Error adding account at index ${index}:`, error);
+                        throw new Error(`Failed to import account at index ${index}: ${error.message}`);
+                    }
+                }
+
+                // Get the final accounts after import
+                const finalAccounts = await keyring.getAccounts();
+
+                log.debug(`Successfully imported accounts from ${device}`);
                 return finalAccounts;
             } catch (error) {
-                log.error(
-                    `Hardware wallet account import failed for ${device}:`,
-                    error
-                );
+                log.error(`Failed to import hardware wallet accounts:`, error);
                 throw error;
             }
         });
     }
 
     /**
-     * Maps a device type to its corresponding keyring type
-     *
-     * @param {Devices} device - The hardware wallet device type
-     * @returns {KeyringTypes} The corresponding keyring type
-     * @throws {Error} If the device type is invalid or unsupported
-     * @private
+     * Get the keyring type from the device type
+     * @param device The hardware wallet device type
+     * @returns The keyring type associated with the device
      */
-    private _getKeyringTypeFromDevice(
-        device: Devices
-    ): KeyringTypes.LEDGER | KeyringTypes.TREZOR | KeyringTypes.QR {
-        if (!device) {
-            throw new Error('Device type must be specified');
-        }
-
+    private _getKeyringTypeFromDevice(device: Devices): string {
         switch (device) {
             case Devices.LEDGER:
                 return KeyringTypes.LEDGER;
             case Devices.TREZOR:
                 return KeyringTypes.TREZOR;
-            case Devices.KEYSTONE:
-                return KeyringTypes.QR;
+            // case Devices.QR:
+            //     return KeyringTypes.QR;
             default:
-                throw new Error(
-                    `Invalid or unsupported device type: ${device}`
-                );
+                throw new Error(`Unsupported device: ${device}`);
         }
     }
 
     /**
-     * Retrieves the keyring instance for a specific hardware wallet device
-     *
-     * Locates and returns the appropriate keyring for the specified hardware
-     * wallet device type. If no keyring exists for the device, returns null.
-     *
-     * @param {Devices} device - The hardware wallet device type
-     * @returns {Promise<any>} The keyring instance or null if not found
-     * @throws {Error} If device type is invalid
+     * Get a keyring for a specific hardware wallet device
+     * @param device The hardware wallet device type
+     * @returns The keyring for the device, or null if no keyring exists
      */
     public async getKeyringFromDevice(device: Devices): Promise<any> {
         try {
-            log.debug(`Retrieving keyring for ${device}`);
-
-            if (!device) {
-                throw new Error('Device type must be specified');
-            }
-
-            // Determine the keyring type for the given device
             const keyringType = this._getKeyringTypeFromDevice(device);
-
-            // Get all keyrings of this type
-            const keyrings = super.getKeyringsByType(keyringType);
-            log.debug(
-                `Found ${keyrings.length} keyrings of type ${keyringType}`
-            );
-
-            // Return the first one found, or null if none
-            return keyrings.length > 0 ? keyrings[0] : null;
+            const keyrings = await this.getKeyringsByType(keyringType);
+            return keyrings[0] || null;
         } catch (error) {
-            log.error(`Failed to retrieve keyring for ${device}:`, error);
-            throw error;
+            log.error(`Error getting keyring from device ${device}:`, error);
+            return null;
         }
     }
 
     /**
-     * Removes a hardware wallet keyring from the controller
-     *
-     * Disconnects and removes the keyring for the specified hardware
-     * wallet device type. This effectively forgets all accounts
-     * associated with the device.
-     *
-     * @param {Devices} device - The hardware wallet device type
-     * @returns {Promise<boolean>} True if the keyring was removed successfully
-     * @throws {Error} If device type is invalid or removal fails
-     */
-    public async removeDeviceKeyring(device: Devices): Promise<boolean> {
-        try {
-            log.debug(`Removing keyring for ${device}`);
-
-            if (!device) {
-                throw new Error('Device type must be specified');
-            }
-
-            const keyring = await this.getKeyringFromDevice(device);
-            if (!keyring) {
-                log.debug(`No keyring found for ${device}, nothing to remove`);
-                return false;
-            }
-
-            const accounts = await keyring.getAccounts();
-
-            // If keyring has accounts, we need to remove them
-            if (accounts.length > 0) {
-                log.debug(
-                    `Removing ${accounts.length} accounts associated with ${device} keyring`
-                );
-
-                // Iterate over accounts and remove them
-                for (const account of accounts) {
-                    try {
-                        await super.removeAccount(account);
-                    } catch (error) {
-                        log.error(
-                            `Failed to remove account ${account} during keyring removal:`,
-                            error
-                        );
-                        // Continue with other accounts rather than failing completely
-                    }
-                }
-            }
-
-            // Get an updated keyring after account removal
-            const updatedKeyring = await this.getKeyringFromDevice(device);
-            if (updatedKeyring) {
-                log.debug(
-                    `Removing keyring type ${this._getKeyringTypeFromDevice(
-                        device
-                    )}`
-                );
-                // Remove the keyring
-                await super.removeEmptyKeyrings();
-                log.debug(`Successfully removed keyring for ${device}`);
-                return true;
-            }
-
-            return false;
-        } catch (error) {
-            log.error(`Failed to remove keyring for ${device}:`, error);
-            throw error;
-        }
-    }
-
-    /**
-     * getKeyringTypeFromAccount
-     *
-     * @param address The address to check
-     * @returns The keyring type of the account
-     */
-    public async getKeyringTypeFromAccount(
-        address: string
-    ): Promise<KeyringTypes> {
-        // Get the keyring for the specified address
-        const keyring = await this.getKeyringForAccount(address);
-        return keyring.type;
-    }
-
-    /**
-     * getKeyringDeviceFromAccount
-     *
-     * @param address The address to check
-     * @returns The device type for the specified address keyring or undefined if not found
-     */
-    public async getKeyringDeviceFromAccount(
-        address: string
-    ): Promise<Devices | undefined> {
-        // Get the keyring for the specified address
-        const type = await this.getKeyringTypeFromAccount(address);
-        switch (type) {
-            case KeyringTypes.LEDGER:
-                return Devices.LEDGER;
-            case KeyringTypes.TREZOR:
-                return Devices.TREZOR;
-            case KeyringTypes.QR:
-                return Devices.KEYSTONE;
-            default:
-                return undefined;
-        }
-    }
-
-    /**
-     * isAccountDeviceLinked
-     *
-     * Checks if the current account device is connected.
-     * This applies only to Ledger devices. Every other keyring type returns true.
-     *
-     * @param address The address of the account to check
-     * @returns Whether the account device is connected or not
-     */
-    public async isAccountDeviceLinked(address: string): Promise<boolean> {
-        const keyring = await this.getKeyringForAccount(address);
-        if (keyring.type === KeyringTypes.LEDGER) {
-            const releaseLock = await this._mutex.acquire();
-            try {
-                await keyring.checkIfReady();
-                return true;
-            } catch (error) {
-                return false;
-            } finally {
-                releaseLock();
-            }
-        } else {
-            return true;
-        }
-    }
-
-    /**
-     * Sign Ethereum Transaction
-     *
-     * Signs an Ethereum transaction object.
-     *
-     * @param {TypedTransaction} ethTx - The transaction to sign.
-     * @param {string} _fromAddress - The transaction 'from' address.
-     * @param {Object} opts - Signing options.
-     * @returns {Promise<TypedTransaction>} The signed transactio object.
-     */
-    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-    public async signEthTransaction(
-        transactionId: string,
-        ethTx: TypedTransaction,
-        _fromAddress: string,
-        opts?: any
-    ): Promise<TypedTransaction> {
-        const keyringType = await this.getKeyringTypeFromAccount(_fromAddress);
-        /*
-        if (keyringType === KeyringTypes.QR) {
-            // cancels any previous signature request
-            this.cancelQRHardwareSignRequest();
-            this.removeAllListeners(
-                KeyringControllerEvents.QR_SIGNATURE_SUBMIT
-            );
-
-            const signRequest = await this.getQRETHSignRequest(
-                ethTx,
-                _fromAddress
-            );
-
-            this.emit(
-                KeyringControllerEvents.QR_TRANSACTION_SIGNATURE_REQUEST_GENERATED,
-                transactionId,
-                signRequest.requestId,
-                signRequest.qrSignRequest
-            );
-
-            try {
-                const { v, r, s } = await this.QRsignatureSubmission(
-                    signRequest
-                );
-
-                // 0 means legacy
-                if (ethTx.type === 0) {
-                    return (ethTx as Transaction)['_processSignature'](v, r, s);
-                } else if (ethTx.type === 1) {
-                    return (
-                        ethTx as AccessListEIP2930Transaction
-                    )._processSignature(v, r, s);
-                } else {
-                    return (
-                        ethTx as FeeMarketEIP1559Transaction
-                    )._processSignature(v + BigInt(27), r, s);
-                }
-            } catch (error) {
-                log.error('signature request error', error);
-                return ethTx;
-            }
-        } else {
-            */
-        return this._mutex.runExclusive(async (): Promise<TypedTransaction> => {
-            if (keyringType === KeyringTypes.TREZOR) {
-                await this.connectHardwareKeyring(Devices.TREZOR);
-            }
-            return super.signTransaction(ethTx, _fromAddress, opts);
-        });
-        /*
-        }
-            */
-    }
-
-    /**
-     * Sign Message
-     *
-     * Attempts to sign the provided message parameters.
-     * Used for eth_sign
-     *
-     * @param msgParams - The message parameters to sign.
-     * @returns The raw signature.
-     */
-    public async signMessage(
-        msgParams: {
-            from: string;
-            data: string;
-        },
-        opts?: { withAppKeyOrigin: boolean }
-    ): Promise<string> {
-        const keyringType = await this.getKeyringTypeFromAccount(
-            msgParams.from
-        );
-        /*
-        if (keyringType === KeyringTypes.QR) {
-            return await this._signQRMessage(msgParams, opts);
-        } else {
-         */
-        return this._mutex.runExclusive(async () => {
-            if (keyringType === KeyringTypes.TREZOR) {
-                await this.connectHardwareKeyring(Devices.TREZOR);
-            }
-            return super.signMessage(msgParams, opts);
-        });
-        /*
-        }
-            */
-    }
-
-    /**
-     * Sign Personal Message
-     *
-     * Attempts to sign the provided message paramaters.
-     * Prefixes the hash before signing per the personal sign expectation.
-     *
-     * @param {Object} msgParams - The message parameters to sign.
-     * @returns {Promise<string>} The hexed signature.
-     */
-    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-    public async signPersonalMessage(
-        msgParams: {
-            from: string;
-            data: string;
-        },
-        opts?: any
-    ): Promise<string> {
-        const keyringType = await this.getKeyringTypeFromAccount(
-            msgParams.from
-        );
-        /*
-        if (keyringType === KeyringTypes.QR) {
-            return await this._signQRMessage(msgParams, opts);
-        } else {
-            */
-        return this._mutex.runExclusive(async () => {
-            if (keyringType === KeyringTypes.TREZOR) {
-                await this.connectHardwareKeyring(Devices.TREZOR);
-            }
-            return super.signPersonalMessage(msgParams, opts);
-        });
-        /*
-        }
-            */
-    }
-
-    /**
-     * Sign Typed Data
-     * (EIP712 https://github.com/ethereum/EIPs/pull/712#issuecomment-329988454)
-     *
-     * @param {Object} msgParams - The message parameters to sign.
-     * @returns {Promise<string>} The raw signature.
-     */
-    public async signTypedMessage(
-        msgParams: {
-            from: string;
-            data: any;
-        },
-        opts: {
-            version: 'V1' | 'V3' | 'V4';
-        }
-    ): Promise<string> {
-        const keyringType = await this.getKeyringTypeFromAccount(
-            msgParams.from
-        );
-        /*
-        if (keyringType === KeyringTypes.QR) {
-            return await this._signQRMessage(msgParams, opts, true);
-        } else {
-            */
-        return this._mutex.runExclusive(async () => {
-            if (keyringType === KeyringTypes.TREZOR) {
-                await this.connectHardwareKeyring(Devices.TREZOR);
-            }
-            return super.signTypedMessage(msgParams, opts);
-        });
-        /*
-        }
-            */
-    }
-
-    /*
-    private async _signQRMessage(
-        msgParams: {
-            from: string;
-            data: string;
-        },
-        opts?: any,
-        typedData?: boolean
-    ): Promise<string> {
-        // cancels any previous signature request
-        this.cancelQRHardwareSignRequest();
-        this.removeAllListeners(KeyringControllerEvents.QR_SIGNATURE_SUBMIT);
-
-        let signRequest: QRSignatureRequest;
-
-        if (typedData) {
-            signRequest = await this.getQRTypedMessageSignRequest(
-                msgParams,
-                opts
-            );
-        } else {
-            signRequest = await this.getQRMessageSignRequest(msgParams);
-        }
-
-        this.emit(
-            KeyringControllerEvents.QR_MESSAGE_SIGNATURE_REQUEST_GENERATED,
-            signRequest.requestId,
-            signRequest.qrSignRequest
-        );
-
-        const { v, r, s } = await this.QRsignatureSubmission(signRequest);
-        return concatSig(bigIntToBuffer(v), r, s);
-    }
-    */
-
-    /**
-     * Submites the HDKey of the QR device
-     *
-     * @param cbor
-     */
-    /*
-    async submitQRHardwareCryptoHDKey(cbor: string) {
-        return this._mutex.runExclusive(async () => {
-            const read = this._qrHardwareKeyring.readKeyring();
-            this._qrHardwareKeyring.submitCryptoHDKey(cbor);
-            await read;
-            this.fullUpdate();
-        });
-    }
-    */
-
-    /**
-     * Submites the account of the QR device
-     *
-     * @param cbor
-     */
-    /*
-    async submitQRHardwareCryptoAccount(cbor: string) {
-        return this._mutex.runExclusive(async () => {
-            const r = this._qrHardwareKeyring.readKeyring();
-            this._qrHardwareKeyring.submitCryptoAccount(cbor);
-            await r;
-            this.fullUpdate();
-        });
-    }
-    */
-
-    /**
-     * Generates a ETH Sign request to be signed with a QR device
-     *
-     *
-     * @param {TypedTransaction} ethTx - The transaction to sign.
-     * @param {string} _fromAddress - The transaction 'from' address.
-     * @returns {Promise<QRSignatureRequest>} The transaction sign request object QR as string.
-     */
-    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-    /*
-    public async getQRETHSignRequest(
-        ethTx: TypedTransaction,
-        _fromAddress: string
-    ): Promise<QRSignatureRequest> {
-        return this._mutex.runExclusive(async () => {
-            const dataType =
-                ethTx.type === 0
-                    ? DataType.transaction
-                    : DataType.typedTransaction;
-
-            let messageToSign;
-            if (ethTx.type === 0) {
-                messageToSign = rlp.encode(ethTx.getMessageToSign(false));
-            } else {
-                messageToSign = ethTx.getMessageToSign(false);
-            }
-
-            const hdPath = await this._qrHardwareKeyring._pathFromAddress(
-                _fromAddress
-            );
-            const chainId = ethTx.common.chainId();
-            const requestId = v4();
-            const xfp = (this._qrHardwareKeyring as any)['xfp'];
-
-            const ethSignRequest = EthSignRequest.constructETHRequest(
-                messageToSign as Buffer,
-                dataType,
-                hdPath,
-                xfp,
-                requestId,
-                Number(chainId),
-                _fromAddress
-            );
-
-            return {
-                requestId,
-                qrSignRequest: ethSignRequest.toUREncoder(200).encodeWhole(),
-            };
-        });
-    }
-    */
-
-    /**
-     * Generates a message sign request to be signed with a QR device
-     *
-     *
-     * @param {Object} msgParams - The message parameters to sign.
-     * @returns {Promise<QRSignatureRequest>} The message sign request object QR as string.
-     */
-    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-    /*
-    public async getQRMessageSignRequest(msgParams: {
-        from: string;
-        data: string;
-    }): Promise<QRSignatureRequest> {
-        return this._mutex.runExclusive(async () => {
-            const usignedHex = stripHexPrefix(msgParams.data);
-            const dataHex = Buffer.from(usignedHex, 'hex');
-            const requestId = v4();
-            const xfp = (this._qrHardwareKeyring as any)['xfp'];
-            const hdPath = await this._qrHardwareKeyring._pathFromAddress(
-                msgParams.from
-            );
-
-            const ethSignRequest = EthSignRequest.constructETHRequest(
-                dataHex,
-                DataType.personalMessage,
-                hdPath,
-                xfp,
-                requestId,
-                undefined,
-                msgParams.from
-            );
-
-            return {
-                requestId,
-                qrSignRequest: ethSignRequest.toUREncoder(200).encodeWhole(),
-            };
-        });
-    }
-    */
-
-    /**
-     * Generates a typed message sign request to be signed with a QR device
-     *
-     *
-     * @param {Object} msgParams - The message parameters to sign.
-     * @returns {Promise<QRSignatureRequest>} The typed message sign request object QR as string.
-     */
-    /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-    /*
-    public async getQRTypedMessageSignRequest(
-        msgParams: {
-            from: string;
-            data: any;
-        },
-        opts: {
-            version: 'V1' | 'V3' | 'V4';
-        }
-    ): Promise<QRSignatureRequest> {
-        return this._mutex.runExclusive(async () => {
-            if (
-                opts.version !== SignTypedDataVersion.V1 &&
-                typeof msgParams.data === 'string'
-            ) {
-                msgParams.data = JSON.parse(msgParams.data);
-            }
-            const dataHex = Buffer.from(
-                JSON.stringify(msgParams.data),
-                'utf-8'
-            );
-            const requestId = v4();
-            const xfp = (this._qrHardwareKeyring as any)['xfp'];
-            const hdPath = await this._qrHardwareKeyring._pathFromAddress(
-                msgParams.from
-            );
-
-            const ethSignRequest = EthSignRequest.constructETHRequest(
-                dataHex,
-                DataType.typedData,
-                hdPath,
-                xfp,
-                requestId,
-                undefined,
-                msgParams.from
-            );
-
-            return {
-                requestId,
-                qrSignRequest: ethSignRequest.toUREncoder(200).encodeWhole(),
-            };
-        });
-    }
-    */
-
-    /**
-     * After requesting a QR sign this function waits for the signed message
-     * @param signRequest
-     * @returns
-     */
-    /*
-    private async QRsignatureSubmission(
-        signRequest: QRSignatureRequest
-    ): Promise<SignatureData> {
-        return new Promise((resolve, reject) => {
-            this.on(
-                KeyringControllerEvents.QR_SIGNATURE_SUBMIT,
-                (_requestId: string, signatureData: SignatureData) => {
-                    if (_requestId === signRequest.requestId) {
-                        this.removeAllListeners(
-                            KeyringControllerEvents.QR_SIGNATURE_SUBMIT
-                        );
-                        resolve(signatureData);
-                    } else {
-                        reject(
-                            `got a signature of another request. current request requestId: ${signRequest.requestId}, received requestId: ${_requestId}`
-                        );
-                    }
-                }
-            );
-        });
-    }
-    */
-
-    /**
-     * Submits the signature generate by the QR device
-     *
-     * @param requestId
-     * @param cbor
-     */
-    /*
-    public submitQRHardwareSignature(requestId: string, cbor: Buffer) {
-        const ethSignature = ETHSignature.fromCBOR(cbor);
-        const signature = ethSignature.getSignature(); // it will return the signature r,s,v
-        const slice = Uint8Array.prototype.slice.call(signature);
-        const v = bufferToBigInt(arrToBufArr(slice.slice(64, 65)));
-        const r = arrToBufArr(slice.slice(0, 32));
-        const s = arrToBufArr(slice.slice(32, 64));
-
-        const signatureData: SignatureData = { v, r, s };
-
-        this.emit(
-            KeyringControllerEvents.QR_SIGNATURE_SUBMIT,
-            requestId,
-            signatureData
-        );
-    }
-    */
-
-    /**
-     * Cancels an ongoing sign request
-     */
-    public cancelQRHardwareSignRequest() {
-        this.emit(KeyringControllerEvents.QR_SIGNATURE_SUBMIT);
-    }
-
-    /**
-     * Returns accounts from the device by page
-     *
-     * @param device
-     * @param keyring
-     * @param page
-     * @returns
-     */
-    async getPage(
-        device: Devices,
-        keyring: any,
-        pageIndex: number
-    ): Promise<string[]> {
-        try {
-            log.debug(`Getting page ${pageIndex} for ${device}`);
-
-            // First check if we're in a service worker context
-            const hasDOM = hasDomAccess();
-            log.debug(`Getting accounts in environment with DOM access: ${hasDOM}`);
-
-            // For Ledger in service worker context, we need to check explicit WebHID permission
-            if (device === Devices.LEDGER && !hasDOM) {
-                log.debug("Checking for explicit WebHID permission in service worker context");
-
-                let hasExplicitPermission = false;
-                try {
-                    if (chrome.storage?.session) {
-                        const result = await chrome.storage.session.get('ledger_explicit_permission');
-
-                        if (result.ledger_explicit_permission &&
-                            result.ledger_explicit_permission.granted &&
-                            Date.now() - result.ledger_explicit_permission.timestamp < 600000) { // 10 minutes
-
-                            log.debug("Found valid explicit WebHID permission", result.ledger_explicit_permission);
-                            hasExplicitPermission = true;
-                        } else {
-                            log.debug("No valid explicit WebHID permission found in session storage");
-                        }
-                    }
-                } catch (e) {
-                    log.error("Error checking for explicit WebHID permission:", e);
-                }
-
-                if (!hasExplicitPermission) {
-                    // No explicit permission - need UI interaction
-                    log.debug("Service worker cannot get accounts without explicit WebHID permission");
-
-                    // Store this requirement in session storage
-                    try {
-                        if (chrome.storage?.session) {
-                            await chrome.storage.session.set({
-                                'ledger_needs_user_interaction': {
-                                    timestamp: Date.now(),
-                                    status: 'pending',
-                                    requiresWebHID: true,
-                                    operation: 'getAccounts',
-                                    reason: 'service_worker_context_no_permission'
-                                }
-                            });
-                            log.debug("Stored account operation requirement in session storage");
-                        }
-                    } catch (storageErr) {
-                        log.warn("Failed to store account operation requirement:", storageErr);
-                    }
-
-                    throw new Error('Cannot get accounts for Ledger in service worker context - explicit WebHID permission required');
-                }
-
-                // We're in a service worker context but have explicit permission
-                // Use the ledgerBridge proxy instead of trying to use a keyring instance directly
-                log.debug("Using ledgerBridge proxy to get page in service worker context");
-                console.log("[LEDGER] Using ledgerBridge proxy to get page in service worker context");
-
-                try {
-                    // Call the ledgerBridge proxy method
-                    const page = await ledgerBridge.getPage(pageIndex);
-
-                    log.debug(`Got ${page?.length || 0} accounts from Ledger via offscreen document`);
-                    console.log(`[LEDGER] Got ${page?.length || 0} accounts from Ledger via offscreen document`);
-
-                    // Update connection status after successful account fetch
-                    if (chrome.storage?.session) {
-                        try {
-                            await chrome.storage.session.set({
-                                'ledger_connection_status': {
-                                    connected: true,
-                                    timestamp: Date.now()
-                                }
-                            });
-
-                            // Also clear any pending interaction requirements
-                            await chrome.storage.session.remove('ledger_needs_user_interaction');
-
-                            log.debug("Updated Ledger connection status after successful account fetch");
-                        } catch (e) {
-                            log.warn("Failed to update Ledger connection status:", e);
-                        }
-                    }
-
-                    return page;
-                } catch (e) {
-                    log.error(`Error getting accounts for Ledger via proxy:`, e);
-                    console.error(`[LEDGER] Error getting accounts via proxy:`, e);
-
-                    // Store error information
-                    if (chrome.storage?.session) {
-                        try {
-                            await chrome.storage.session.set({
-                                'ledger_proxy_error': {
-                                    timestamp: Date.now(),
-                                    error: e.message,
-                                    operation: 'getPage'
-                                }
-                            });
-                        } catch (storageErr) {
-                            log.warn("Failed to store proxy error:", storageErr);
-                        }
-                    }
-
-                    throw e;
-                }
-            }
-
-            // For all devices, try to get the page
-            try {
-                // Verify the keyring is valid and ready
-                if (!keyring) {
-                    log.error(`No keyring found for device ${device} after connection attempt`);
-                    throw new Error(`No keyring found for device ${device} after connection attempt`);
-                }
-
-                if (device === Devices.LEDGER) {
-                    try {
-                        // For Ledger, check if the keyring is working correctly
-                        log.debug(`Checking if Ledger keyring is ready for use...`);
-                        const isReady = await this.isKeyringReadyForUse(keyring);
-
-                        if (!isReady) {
-                            log.warn("Ledger keyring is not ready for use, cannot fetch accounts");
-                            throw new Error('Ledger keyring not ready for use. Please reconnect your device.');
-                        }
-
-                        // Check if we have a working connection
-                        if (typeof keyring.isConnected === 'function') {
-                            try {
-                                const connected = await keyring.isConnected();
-                                if (!connected) {
-                                    log.warn("Ledger device reports it is not connected");
-                                    throw new Error('Ledger not connected. Please reconnect your device.');
-                                }
-                            } catch (connError) {
-                                log.error("Error checking Ledger connection:", connError);
-                                // Continue anyway, the getAccounts call will reveal more specific errors
-                            }
-                        }
-                    } catch (readyError) {
-                        log.error("Error checking if Ledger keyring is ready:", readyError);
-                        throw readyError;
-                    }
-                }
-
-                // For debugging, log the keyring state
-                log.debug(`Calling keyring.getAccounts(${pageIndex}) on ${device}...`);
-
-                // Actually get the accounts
-                const page = await keyring.getAccounts(pageIndex);
-                log.debug(`Got ${page?.length || 0} accounts from ${device}`);
-
-                // After successful account fetch, update the connection status
-                if (device === Devices.LEDGER && chrome.storage?.session) {
-                    try {
-                        await chrome.storage.session.set({
-                            'ledger_connection_status': {
-                                connected: true,
-                                timestamp: Date.now()
-                            }
-                        });
-
-                        // Also clear any pending interaction requirements
-                        await chrome.storage.session.remove('ledger_needs_user_interaction');
-
-                        log.debug("Updated Ledger connection status after successful account fetch");
-                    } catch (e) {
-                        log.warn("Failed to update Ledger connection status:", e);
-                    }
-                }
-
-                return page;
-            } catch (e) {
-                log.error(`Error getting accounts for ${device}:`, e);
-
-                // If this is a WebHID or document not defined error, we need UI intervention
-                if (e.message && (
-                    e.message.includes('document is not defined') ||
-                    e.message.includes('WebHID') ||
-                    e.message.includes('user gesture') ||
-                    e.message.includes('user interaction') ||
-                    e.message.includes('no device selected')
-                )) {
-                    log.debug("Account retrieval requires WebHID access in UI context");
-
-                    try {
-                        if (chrome.storage?.session) {
-                            await chrome.storage.session.set({
-                                'ledger_needs_user_interaction': {
-                                    timestamp: Date.now(),
-                                    status: 'pending',
-                                    requiresWebHID: true,
-                                    operation: 'getAccounts',
-                                    reason: 'hid_access_required',
-                                    error: e.message
-                                }
-                            });
-                            log.debug("Stored account operation requirement in session storage due to WebHID error");
-                        }
-                    } catch (storageErr) {
-                        log.warn("Failed to store account operation requirement:", storageErr);
-                    }
-
-                    throw new Error('Hardware wallet connection requires user interaction in UI context');
-                }
-
-                // For reconnection errors, try to reconnect
-                if (e.message && (
-                    e.message.includes('disconnected') ||
-                    e.message.includes('not connected') ||
-                    e.message.includes('No device selected') ||
-                    e.message.includes('No keyring found')
-                )) {
-                    log.debug("Detected disconnection error, marking for reconnection");
-
-                    try {
-                        if (chrome.storage?.session) {
-                            await chrome.storage.session.set({
-                                'ledger_needs_reconnection': {
-                                    timestamp: Date.now(),
-                                    reason: e.message
-                                }
-                            });
-                            log.debug("Stored reconnection requirement in session storage");
-                        }
-                    } catch (storageErr) {
-                        log.warn("Failed to store reconnection requirement:", storageErr);
-                    }
-                }
-
-                // Provide more detailed error messages for Ledger
-                if (device === Devices.LEDGER) {
-                    if (e.message && e.message.includes('Ledger device: UNKNOWN_ERROR')) {
-                        throw new Error('Make sure the Ethereum app is open on your Ledger device.');
-                    } else if (e.message && e.message.includes('Timeout')) {
-                        throw new Error('Connection timed out. Ensure your Ledger is unlocked with the Ethereum app open.');
-                    } else if (e.message && e.message.includes('U2F')) {
-                        throw new Error('Browser U2F support issue. Try using Chrome or a Chromium-based browser.');
-                    }
-                }
-
-                throw e;
-            }
-        } catch (e) {
-            log.error(`Error in getPage for ${device}:`, e);
-            throw e;
-        }
-    }
-
-    /**
-     * persistHardwareKeyringState
-     *
-     * Saves the hardware wallet keyring state for a specific device
-     * Ensures the state is saved to both session and local storage for reliability
-     *
-     * @param {Devices} device - The hardware wallet device type
-     * @returns {Promise<boolean>} True if the keyring state was successfully persisted
-     */
-    public async persistHardwareKeyringState(device: Devices): Promise<boolean> {
-        try {
-            log.debug(`Persisting hardware wallet keyring state for ${device}`);
-
-            if (!device) {
-                throw new Error('Device type must be specified');
-            }
-
-            // Get the keyring for the device
-            const keyring = await this.getKeyringFromDevice(device);
-            if (!keyring) {
-                log.warn(`No keyring found for ${device}, nothing to persist`);
-                return false;
-            }
-
-            // Attempt to serialize the keyring state
-            let serializedState;
-            try {
-                // Cast to any to access serialize method
-                const serializableKeyring = keyring as any;
-                if (typeof serializableKeyring.serialize !== 'function') {
-                    throw new Error(`${device} keyring does not support serialization`);
-                }
-                serializedState = await serializableKeyring.serialize();
-            } catch (e) {
-                log.error(`Failed to serialize ${device} keyring state:`, e);
-                return false;
-            }
-
-            if (!serializedState) {
-                log.warn(`Serialized state for ${device} is empty`);
-                return false;
-            }
-
-            // Create a storage object with metadata
-            const storageObject = {
-                state: serializedState,
-                type: this._getKeyringTypeFromDevice(device),
-                timestamp: Date.now(),
-                accounts: await keyring.getAccounts()
-            };
-
-            // Save to session storage (primary storage for active session)
-            try {
-                if (chrome.storage?.session) {
-                    await chrome.storage.session.set({
-                        [`hw_keyring_${device.toLowerCase()}`]: storageObject
-                    });
-                    log.debug(`${device} keyring state saved to session storage`);
-                }
-            } catch (sessionError) {
-                log.error(`Failed to save ${device} keyring state to session storage:`, sessionError);
-                // Continue trying to save to local storage
-            }
-
-            // Also save to local storage for persistence across browser restarts
-            try {
-                if (chrome.storage?.local) {
-                    await chrome.storage.local.set({
-                        [`hw_keyring_${device.toLowerCase()}`]: storageObject
-                    });
-                    log.debug(`${device} keyring state saved to local storage`);
-                }
-            } catch (localError) {
-                log.error(`Failed to save ${device} keyring state to local storage:`, localError);
-                // If we failed to save to both session and local storage, return false
-                if (!chrome.storage?.session) {
-                    return false;
-                }
-            }
-
-            // For Ledger specifically, also update the connection status
-            if (device === Devices.LEDGER && chrome.storage?.session) {
-                try {
-                    await chrome.storage.session.set({
-                        'ledger_connection_status': {
-                            connected: true,
-                            timestamp: Date.now()
-                        }
-                    });
-                    log.debug("Updated Ledger connection status on state persistence");
-                } catch (connectionError) {
-                    log.warn("Failed to update Ledger connection status:", connectionError);
-                    // Continue anyway, this is just an auxiliary state
-                }
-            }
-
-            return true;
-        } catch (error) {
-            log.error(`Failed to persist ${device} hardware wallet state:`, error);
-            return false;
-        }
-    }
-
-    /**
-     * Restores a hardware wallet state after restart
-     * @param params - Parameters including device name and state
-     */
-    public async restoreHardwareWalletState(
-        params: { device: string; state: { hdPath: string; accounts: string[], state?: any, type?: string } }
-    ): Promise<boolean | { needsUserGesture: boolean; deviceName: string }> {
-        try {
-            log.info(
-                `Attempting to restore hardware wallet connection for device: ${params.device}`
-            );
-
-            // Cancel any existing restores
-            if (this.restorePromise) {
-                this.restoreCompleted = true;
-            }
-
-            // Start a new restore process
-            this.restorePromise = new Promise<boolean | { needsUserGesture: boolean; deviceName: string }>((resolve) => {
-                const attemptRestore = async () => {
-                    this.restoreCompleted = false;
-                    let restored = false;
-
-                    try {
-                        // For Ledger, we need to check for WebHID transport first to avoid errors
-                        if (params.device.toUpperCase() === 'LEDGER') {
-                            try {
-                                await this.setLedgerTransportType('webhid');
-                                log.debug('WebHID transport set for Ledger');
-                            } catch (transportError) {
-                                log.warn('WebHID transport setting failed for Ledger:', transportError);
-                                // Continue anyway as it might work with the default transport
-                            }
-                        }
-
-                        // Step 1: Connect to the hardware keyring
-                        log.debug(`Restore: connecting to ${params.device}`);
-                        const connectionResult = await this.connectHardwareKeyring(params.device as Devices);
-
-                        // If connection requires user gesture, capture that and return appropriate result
-                        if (typeof connectionResult === 'object' && connectionResult.needsUserGesture) {
-                            log.info(`${params.device} connection requires user interaction`);
-                            this.restoreCompleted = true;
-                            this.restorePromise = null;
-                            resolve(connectionResult);
-                            return;
-                        }
-
-                        // Step 2: Get the keyring from the device
-                        const keyring = await this.getKeyringFromDevice(params.device as Devices);
-                        if (!keyring) {
-                            log.error(`Failed to get keyring for ${params.device}`);
-                            this.restoreCompleted = true;
-                            this.restorePromise = null;
-                            resolve(false);
-                            return;
-                        }
-
-                        // Step 3: Set the HD path if provided
-                        if (params.state.hdPath && typeof keyring.setHdPath === 'function') {
-                            try {
-                                log.debug(`Setting HD path to ${params.state.hdPath}`);
-                                await keyring.setHdPath(params.state.hdPath);
-                            } catch (hdPathError) {
-                                // Check if this is a user interaction error
-                                if (hdPathError instanceof Error &&
-                                    (hdPathError.message.includes('user interaction') ||
-                                        hdPathError.message.includes('user gesture'))) {
-
-                                    log.info(`${params.device} HD path setting requires user interaction`);
-
-                                    // Store the pending HD path operation in session storage
-                                    try {
-                                        if (chrome.storage?.session) {
-                                            await chrome.storage.session.set({
-                                                [`${params.device.toLowerCase()}_needs_user_interaction`]: {
-                                                    timestamp: Date.now(),
-                                                    status: 'pending',
-                                                    operation: 'setHdPath',
-                                                    hdPath: params.state.hdPath
-                                                }
-                                            });
-                                            log.debug(`Stored ${params.device} HD path interaction requirement in session storage`);
-                                        }
-                                    } catch (storageErr) {
-                                        log.warn(`Failed to store ${params.device} interaction state:`, storageErr);
-                                    }
-
-                                    this.restoreCompleted = true;
-                                    this.restorePromise = null;
-                                    const result = {
-                                        needsUserGesture: true,
-                                        deviceName: params.device
-                                    };
-                                    resolve(result);
-                                    return;
-                                }
-
-                                log.error(`Failed to set HD path for ${params.device}:`, hdPathError);
-                                // Continue anyway with other steps
-                            }
-                        }
-
-                        // Step 4: Deserialize the state if available
-                        if (params.state.state && typeof keyring.deserialize === 'function') {
-                            try {
-                                log.debug(`Deserializing keyring state for ${params.device}`);
-                                await keyring.deserialize(params.state.state);
-                            } catch (deserializeError) {
-                                log.error(`Failed to deserialize keyring state for ${params.device}:`, deserializeError);
-                                // Continue anyway, we'll try to add accounts manually
-                            }
-                        }
-
-                        // Step 5: Unlock the keyring if needed
-                        if (typeof keyring.unlock === 'function') {
-                            log.debug(`Unlocking keyring for ${params.device}`);
-                            await keyring.unlock();
-                        }
-
-                        // Step 6: Set up accounts
-                        const accountsToUnlock = params.state.accounts || [];
-
-                        if (accountsToUnlock.length > 0) {
-                            // Step 6: Set the accounts (this may require communicating with the device)
-                            log.debug(`Restoring ${accountsToUnlock.length} accounts for ${params.device}`);
-
-                            if (typeof keyring.setAccountToUnlock === 'function') {
-                                for (const account of accountsToUnlock) {
-                                    await keyring.setAccountToUnlock(account);
-                                }
-                            } else if (typeof keyring.forgetAccounts === 'function' &&
-                                typeof keyring.addAccounts === 'function') {
-                                // Alternative approach if setAccountToUnlock is not available
-                                await keyring.forgetAccounts();
-                                await keyring.addAccounts(accountsToUnlock.length);
-                            }
-                        }
-
-                        // Step 7: Get accounts from the keyring to verify restoration
-                        const accounts = await this.getAccounts();
-                        log.info(`Restored ${params.device} with ${accounts.length} accounts`);
-
-                        // Step 8: Re-persist state to ensure it's up-to-date
-                        await this.persistHardwareKeyringState(params.device as Devices);
-
-                        // Record successful restoration in session storage
-                        if (chrome.storage?.session) {
-                            try {
-                                await chrome.storage.session.set({
-                                    [`${params.device.toLowerCase()}_restoration_status`]: {
-                                        restored: true,
-                                        timestamp: Date.now(),
-                                        accountCount: accounts.length
-                                    }
-                                });
-                            } catch (storageError) {
-                                log.error(`Failed to record restoration status for ${params.device}:`, storageError);
-                            }
-                        }
-
-                        restored = true;
-                    } catch (error) {
-                        log.error(`Error during restore attempt:`, error);
-                    }
-
-                    this.restoreCompleted = true;
-                    this.restorePromise = null;
-                    resolve(restored);
-                };
-
-                // Execute the async function
-                attemptRestore();
-            });
-
-            return await this.restorePromise;
-        } catch (error) {
-            log.error(`Failed to restore hardware wallet state for ${params.device}:`, error);
-            this.restoreCompleted = true;
-            this.restorePromise = null;
-            return false;
-        }
-    }
-
-    /**
-     * Attempts to restore a hardware wallet keyring from storage on demand
-     * Used when a keyring is not found but should exist
+     * Persist the keyring state for a hardware wallet device
      * @param device The hardware wallet device type
-     * @returns True if restoration was successful, or an object indicating user gesture is needed
+     * @returns A promise that resolves when the state is persisted
      */
-    public async tryRestoreHardwareWalletFromStorage(
-        device: Devices
-    ): Promise<boolean | { needsUserGesture: boolean; deviceName: string }> {
+    private async persistHardwareKeyringState(device: Devices): Promise<void> {
         try {
-            log.debug(`Attempting to restore ${device} from storage`);
-
-            // Check both session and local storage simultaneously
-            let hwStateSession = null;
-            let hwStateLocal = null;
-            const storageKey = `hw_keyring_${device.toLowerCase()}`;
-
-            // Try session storage
-            try {
-                if (chrome.storage?.session) {
-                    const sessionState = await chrome.storage.session.get(storageKey);
-                    hwStateSession = sessionState[storageKey];
-                    if (hwStateSession) {
-                        log.debug(`Found ${device} keyring state in session storage with timestamp: ${hwStateSession.timestamp}`);
-                    }
-                }
-            } catch (e) {
-                log.error('Failed to access session storage:', e);
-            }
-
-            // Try local storage
-            try {
-                if (chrome.storage?.local) {
-                    const localState = await chrome.storage.local.get(storageKey);
-                    hwStateLocal = localState[storageKey];
-                    if (hwStateLocal) {
-                        log.debug(`Found ${device} keyring state in local storage with timestamp: ${hwStateLocal.timestamp}`);
-                    }
-                }
-            } catch (e) {
-                log.error('Failed to access local storage:', e);
-            }
-
-            // Determine which state to use (prefer the one with the most recent timestamp)
-            let hwState = null;
-
-            if (hwStateSession && hwStateLocal) {
-                // Use the most recent state if both exist
-                hwState = hwStateSession.timestamp > hwStateLocal.timestamp ? hwStateSession : hwStateLocal;
-                log.debug(`Using ${hwState === hwStateSession ? 'session' : 'local'} storage state (more recent)`);
-            } else {
-                // Use whichever one exists
-                hwState = hwStateSession || hwStateLocal;
-            }
-
-            if (!hwState) {
-                log.debug(`No persisted state found for ${device}`);
-                return false;
-            }
-
-            log.info(`Found persisted state for ${device} (timestamp: ${hwState.timestamp}), attempting restoration`);
-
-            // Validate the state has required properties before attempting restoration
-            if (!hwState.state || !hwState.type) {
-                log.error(`Invalid state structure for ${device}, missing required properties`);
-                return false;
-            }
-
-            return await this.restoreHardwareWalletState({
-                device: device,
-                state: hwState
-            });
+            log.debug(`Persisting keyring state for ${device}`);
+            // Get the latest state from the controller
+            await this.fullUpdate();
         } catch (error) {
-            log.error(`Failed to restore ${device} from storage:`, error);
-            return false;
+            log.error(`Error persisting keyring state for ${device}:`, error);
+            throw error;
         }
     }
 
     /**
-     * Reconnects to a hardware wallet device
-     * This is a robust reconnection function that will handle various device states
-     * 
-     * @param device - The device type to reconnect
-     * @param forceNewKeyring - If true, will always create a new keyring
-     * @returns Promise resolving to true if reconnection was successful, or the result of connectHardwareKeyring
-     */
-    public async reconnectHardwareDevice(
-        device: Devices,
-        forceNewKeyring = false
-    ): Promise<boolean | { needsUserGesture: boolean; deviceName: string }> {
-        log.debug(`Attempting to reconnect ${device} hardware wallet`);
-
-        // Special handling for Ledger
-        if (device === Devices.LEDGER) {
-            try {
-                // First check if a keyring exists at all
-                let keyring = await this.getKeyringFromDevice(device);
-
-                // If no keyring or if forced, create a new one
-                if (!keyring || forceNewKeyring) {
-                    log.debug('No existing Ledger keyring or forced new keyring, creating one');
-                    const keyringType = this._getKeyringTypeFromDevice(device);
-                    const hdPath = this._HDPathForDevice(device);
-
-                    keyring = await this.addNewKeyring(keyringType, {
-                        hdPath: hdPath,
-                    });
-
-                    log.debug('New Ledger keyring created');
-                }
-
-                // Try to get the transport type from storage
-                let transportType: 'webhid' | 'webusb' = 'webhid';
-                try {
-                    // Try to get from memory store first
-                    const memState = this.memStore.getState();
-                    if (memState.ledgerTransportType === 'webhid' || memState.ledgerTransportType === 'webusb') {
-                        transportType = memState.ledgerTransportType;
-                    } else if (chrome.storage && chrome.storage.local) {
-                        // Then try from chrome storage
-                        const result = await chrome.storage.local.get('ledgerTransportType');
-                        if (result.ledgerTransportType === 'webhid' || result.ledgerTransportType === 'webusb') {
-                            transportType = result.ledgerTransportType;
-                        }
-                    }
-                } catch (e) {
-                    log.debug('No stored transport type, using default WebHID');
-                }
-
-                // Set the transport type on the keyring
-                // Use type casting instead of ts-ignore
-                const keyringWithTransport = keyring as unknown as {
-                    _setTransportType?: (type: string) => Promise<void>;
-                    disconnect?: () => Promise<void>;
-                };
-
-                if (keyringWithTransport._setTransportType) {
-                    await keyringWithTransport._setTransportType(transportType);
-                    log.debug(`Set Ledger transport type to ${transportType}`);
-                }
-
-                // Always try to disconnect first to clear any stale connections
-                try {
-                    if (keyringWithTransport.disconnect) {
-                        await keyringWithTransport.disconnect();
-                        log.debug('Disconnected from existing Ledger connection');
-                    }
-                } catch (e) {
-                    log.debug('No disconnect method or error disconnecting, continuing');
-                }
-
-                // Now try to connect to the device
-                log.debug('Attempting to connect to Ledger...');
-                await keyring.connect();
-                log.debug('Successfully connected to Ledger');
-
-                // Unlock the keyring
-                await keyring.unlock();
-                log.debug('Ledger keyring unlocked');
-
-                // Persist the keyring state
-                await this.persistHardwareKeyringState(device);
-                log.debug('Ledger keyring state persisted');
-
-                return true;
-            } catch (e) {
-                log.error('Failed to reconnect to Ledger:', e);
-
-                // Check for specific error types and provide better error messages
-                if (e.message && e.message.includes('timeout')) {
-                    throw new Error('Connection timed out. Ensure your Ledger is unlocked with the Ethereum app open.');
-                } else if (e.message && e.message.includes('denied')) {
-                    throw new Error('Permission denied. Please allow the connection in Chrome and try again.');
-                } else if (e.message && e.message.includes('disconnected')) {
-                    throw new Error('Device disconnected. Please reconnect your Ledger and try again.');
-                }
-
-                // Re-throw the original error
-                throw e;
-            }
-        }
-
-        // For other device types, just call the connect function
-        return await this.connectHardwareKeyring(device);
-    }
-
-    /**
-     * Sets the HD path for a hardware wallet device
-     *
-     * @param {Devices} device - The hardware wallet device type
-     * @param {string} hdPath - The HD path to set
-     * @throws {Error} If the device type is invalid or the connection fails
+     * Sets the HD path for a device
+     * @param device The hardware wallet device type
+     * @param hdPath The HD path to set
+     * @returns Promise that resolves when the HD path is set
      */
     public async setHdPathForDevice(device: Devices, hdPath: string): Promise<void> {
+        await this.setHDPath(device, hdPath);
+    }
+
+    /**
+     * Signs an Ethereum transaction
+     * This is an alias for signTransaction for backwards compatibility
+     * 
+     * @param transactionId The transaction ID
+     * @param transaction The transaction to sign
+     * @param from The address to sign from
+     * @returns Promise resolving to the signed transaction
+     */
+    public async signEthTransaction(
+        transactionId: string,
+        transaction: TypedTransaction,
+        from: string
+    ): Promise<TypedTransaction> {
+        log.debug('signEthTransaction called, delegating to signTransaction');
+        return this.signTransaction(transaction, from);
+    }
+
+    /**
+     * Gets the device associated with a specific account
+     * 
+     * @param address The account address to check
+     * @returns The device type or null if not a hardware wallet
+     */
+    public async getKeyringDeviceFromAccount(address: string): Promise<Devices | null> {
+        log.debug(`Checking device for account ${address}`);
         try {
-            log.debug(`Setting HD path for ${device}: ${hdPath}`);
+            // Search each hardware wallet type
+            const keyringTypes = [
+                { type: KeyringTypes.LEDGER, device: Devices.LEDGER },
+                { type: KeyringTypes.TREZOR, device: Devices.TREZOR },
+                // { type: KeyringTypes.QR, device: Devices.QR },
+            ];
 
-            if (!device) {
-                throw new Error('Device type must be specified');
-            }
+            for (const { type, device } of keyringTypes) {
+                const keyrings = await this.getKeyringsByType(type);
+                if (keyrings.length === 0) continue;
 
-            // Get the keyring for the device
-            const updatedKeyring = await this.getKeyringFromDevice(device);
-            if (!updatedKeyring) {
-                throw new Error(`No keyring found for ${device}`);
-            }
+                const keyring = keyrings[0];
+                const accounts = await keyring.getAccounts();
 
-            // Set the HD path on the keyring
-            try {
-                updatedKeyring.setHdPath(hdPath);
-                log.debug(`HD path set successfully for ${device}`);
-            } catch (error) {
-                // Check if this is a user interaction error
-                if (error instanceof Error &&
-                    (error.message.includes('user interaction') ||
-                        error.message.includes('user gesture'))) {
-
-                    // Store this state in session storage for UI to detect
-                    try {
-                        if (chrome.storage?.session) {
-                            await chrome.storage.session.set({
-                                'ledger_needs_user_interaction': {
-                                    timestamp: Date.now(),
-                                    status: 'pending',
-                                    operation: 'setHdPath',
-                                    hdPath: hdPath
-                                }
-                            });
-                            log.debug("Stored HD path interaction requirement in session storage");
-                        }
-                    } catch (storageErr) {
-                        log.warn("Failed to store Ledger interaction state:", storageErr);
-                    }
-                }
-                throw error;
-            }
-
-            if (device !== Devices.KEYSTONE) {
-                if (!updatedKeyring.isUnlocked()) {
-                    log.debug(`Unlocking keyring for ${device}`);
-                    await updatedKeyring.unlock();
+                if (accounts.map((a: string) => a.toLowerCase()).includes(address.toLowerCase())) {
+                    log.debug(`Found device ${device} for account ${address}`);
+                    return device;
                 }
             }
 
-            // Persist the hardware wallet state after setting HD path
-            await this.persistHardwareKeyringState(device);
+            log.debug(`No hardware device found for account ${address}`);
+            return null;
         } catch (error) {
-            log.error(`Failed to set HD path for ${device}:`, error);
+            log.error('Error in getKeyringDeviceFromAccount:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Restores hardware wallet state from storage
+     * 
+     * @param params The parameters containing device and state
+     * @returns Promise resolving to the restoration result or an object with needsUserGesture property
+     */
+    public async restoreHardwareWalletState(params: {
+        device: Devices;
+        state: any;
+    }): Promise<boolean | { needsUserGesture: boolean; deviceName: string; }> {
+        log.debug(`Restoring hardware wallet state for ${params.device}`);
+        try {
+            const keyring = await this.getKeyringFromDevice(params.device);
+            return !!keyring;
+        } catch (error) {
+            log.error(`Error restoring hardware wallet state for ${params.device}:`, error);
+            return false;
+        }
+    }
+
+    /**
+     * Checks if an account is linked to a hardware device
+     * 
+     * @param address The account address to check
+     * @returns True if the account is linked to a hardware device
+     */
+    public async isAccountDeviceLinked(address: string): Promise<boolean> {
+        const device = await this.getKeyringDeviceFromAccount(address);
+        return device !== null;
+    }
+
+    /**
+     * Removes a hardware keyring for a specific device
+     * 
+     * @param device The hardware wallet device type
+     * @returns Promise resolving when the keyring is removed
+     */
+    public async removeDeviceKeyring(device: Devices): Promise<void> {
+        log.debug(`Removing keyring for device ${device}`);
+        try {
+            const keyring = await this.getKeyringFromDevice(device);
+            if (keyring) {
+                // Remove the keyring if found
+                await this.removeEmptyKeyrings();
+            }
+        } catch (error) {
+            log.error(`Error removing keyring for device ${device}:`, error);
             throw error;
+        }
+    }
+
+    /**
+     * Cancels a QR hardware sign request
+     * Stub implementation for interface compatibility
+     * 
+     * @param requestId Optional - The ID of the request to cancel
+     */
+    public cancelQRHardwareSignRequest(requestId?: string): void {
+        log.debug(`Canceling QR hardware sign request ${requestId || 'all'}`);
+        // Currently a stub - would be implemented for QR signing support
+    }
+
+    /**
+     * Tries to restore a hardware wallet from storage
+     * Supports both direct Devices parameter and object parameter with device and state
+     * 
+     * @param paramsOrDevice The device or parameters containing device and state
+     * @returns Promise resolving to the restoration result or an object with needsUserGesture property
+     */
+    public async tryRestoreHardwareWalletFromStorage(
+        paramsOrDevice: Devices | { device: Devices; state: any; }
+    ): Promise<boolean | { needsUserGesture: boolean; deviceName: string; }> {
+        // Handle both parameter styles for backwards compatibility
+        if (typeof paramsOrDevice === 'object' && 'device' in paramsOrDevice) {
+            // It's the new style object parameter
+            return this.restoreHardwareWalletState(paramsOrDevice);
+        } else {
+            // It's the old style direct device parameter
+            return this.restoreHardwareWalletState({
+                device: paramsOrDevice as Devices,
+                state: {}
+            });
         }
     }
 }

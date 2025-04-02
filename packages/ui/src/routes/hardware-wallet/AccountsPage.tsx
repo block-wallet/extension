@@ -13,6 +13,7 @@ import {
 } from "../../context/commActions"
 import { useBlankState } from "../../context/background/backgroundHooks"
 import { BIP44_PATH, Devices, HDPaths } from "../../context/commTypes"
+import { ledgerBridge } from "../../utils/ledgerBridge"
 
 import LoadingOverlay from "../../components/loading/LoadingOverlay"
 import {
@@ -614,6 +615,60 @@ const HardwareWalletAccountsPage = () => {
 
         checkNavigationState();
         run(getHardwareWalletHDPath(vendor));
+
+        // Check for pending accounts stored during service worker context
+        const checkForPendingAccounts = async () => {
+            if (vendor === Devices.LEDGER && chrome.storage?.session) {
+                try {
+                    console.log("[LEDGER] Checking for pending accounts in session storage");
+                    const result = await chrome.storage.session.get(['ledger_pending_accounts', 'ledger_needs_user_interaction']);
+
+                    if (result.ledger_pending_accounts && Array.isArray(result.ledger_pending_accounts) && result.ledger_pending_accounts.length > 0) {
+                        console.log(`[LEDGER] Found ${result.ledger_pending_accounts.length} pending accounts:`, result.ledger_pending_accounts);
+
+                        // Convert pending addresses to DeviceAccountInfo format
+                        const pendingAddresses = result.ledger_pending_accounts;
+                        const deviceAccounts: DeviceAccountInfo[] = pendingAddresses.map((address: string, i: number) => {
+                            // If we have account indexes from the original request, use those
+                            const indexes = result.ledger_needs_user_interaction?.accountIndexes || [];
+                            const index = indexes[i] !== undefined ? indexes[i] : i;
+
+                            return {
+                                address,
+                                index,
+                                name: `Ledger ${index + 1}`,
+                                balance: "0" // Balance will be fetched separately
+                            };
+                        });
+
+                        if (deviceAccounts.length > 0) {
+                            setNeedsUserInteraction(true);
+                            setState({
+                                deviceAccounts,
+                                gettingAccounts: false,
+                                ethAppStatus: 'open'
+                            });
+
+                            // Pre-select these accounts since they're pending import
+                            setState({ selectedAccounts: deviceAccounts });
+
+                            console.log("[LEDGER] Pre-selected pending accounts for import");
+                            return true;
+                        }
+                    }
+
+                    if (result.ledger_needs_user_interaction) {
+                        console.log("[LEDGER] User interaction needed:", result.ledger_needs_user_interaction);
+                        setNeedsUserInteraction(true);
+                    }
+                } catch (e) {
+                    console.warn("[LEDGER] Error checking pending accounts:", e);
+                }
+            }
+            return false;
+        };
+
+        checkForPendingAccounts();
     }, [vendor, run]);
 
     const [accountsBalances, setAccountBalances] = useState<{
@@ -1199,12 +1254,44 @@ const HardwareWalletAccountsPage = () => {
             await runImportAccounts(
                 new Promise(async (resolve, reject) => {
                     try {
-                        await importHardwareWalletAccounts(
-                            state.selectedAccounts,
-                            vendor
-                        )
-                        await selectAccount(state.selectedAccounts[0].address)
-                        resolve(true)
+                        // If this is handling accounts that need user interaction, handle differently
+                        if (needsUserInteraction && vendor === Devices.LEDGER && chrome.storage?.session) {
+                            console.log("[LEDGER] Importing accounts that need user interaction");
+
+                            // Check if we need WebHID permission
+                            const result = await chrome.storage.session.get(['ledger_needs_user_interaction']);
+                            const interactionInfo = result.ledger_needs_user_interaction;
+
+                            // Ensure we have a WebHID connection first
+                            try {
+                                console.log("[LEDGER] Ensuring WebHID connection before completing import");
+                                await ledgerBridge.connectUsingWebHID();
+
+                                // If we successfully connected, proceed with the import
+                                await importHardwareWalletAccounts(
+                                    state.selectedAccounts,
+                                    vendor
+                                );
+
+                                // Clear the pending accounts from session storage
+                                await chrome.storage.session.remove(['ledger_pending_accounts', 'ledger_needs_user_interaction']);
+                                console.log("[LEDGER] Cleared pending accounts after successful import");
+
+                                await selectAccount(state.selectedAccounts[0].address);
+                                resolve(true);
+                            } catch (connectError) {
+                                console.error("[LEDGER] Error connecting to Ledger device:", connectError);
+                                reject(new Error("Failed to connect to Ledger device. Please make sure your device is connected and unlocked with the Ethereum app open."));
+                            }
+                        } else {
+                            // Normal flow for direct imports
+                            await importHardwareWalletAccounts(
+                                state.selectedAccounts,
+                                vendor
+                            );
+                            await selectAccount(state.selectedAccounts[0].address);
+                            resolve(true);
+                        }
                     } catch (e) {
                         // Enhanced error handling for Ledger devices
                         if (vendor === Devices.LEDGER) {
@@ -1215,22 +1302,26 @@ const HardwareWalletAccountsPage = () => {
                                     reject(new Error('Ledger device is locked. Please unlock your device.'));
                                 } else if (e.message.includes('denied') || e.message.includes('permission')) {
                                     reject(new Error('Permission denied. Please reconnect your Ledger and try again.'));
+                                } else if (e.message.includes('document is not defined')) {
+                                    // If we get a document error in the UI, something is very wrong
+                                    console.error("[LEDGER] Unexpected document error in UI context:", e);
+                                    reject(new Error('Internal error communicating with the Ledger device. Please try again.'));
                                 }
                             }
                         }
 
                         // If no specific error was handled, pass the original error
-                        reject(e)
+                        reject(e);
                     }
                 })
-            )
+            );
             history.push({
                 pathname: "/hardware-wallet/success",
                 state: { vendor },
-            })
+            });
         } catch (e) {
-            log.error(e)
-            setState({ deviceNotReady: true }) // Show device not ready dialog on error
+            log.error(e);
+            setState({ deviceNotReady: true }); // Show device not ready dialog on error
         }
     }
 

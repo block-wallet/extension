@@ -1459,7 +1459,37 @@ export default class KeyringControllerDerivated extends KeyringController {
 
                     // Add the accounts to the state without device interaction
                     for (const address of importedAddresses) {
-                        await keyring.forceAddAccount(address);
+                        try {
+                            await keyring.forceAddAccount(address);
+                        } catch (e) {
+                            // Check if this is a DOM access error
+                            if (e.message && e.message.includes('document is not defined')) {
+                                log.debug(`DOM access error during forceAddAccount, storing account for later UI processing`);
+
+                                // Store the pending account in session storage for UI to handle
+                                if (chrome.storage?.session) {
+                                    const pendingAccounts = (await chrome.storage.session.get('ledger_pending_accounts')).ledger_pending_accounts || [];
+                                    pendingAccounts.push(address);
+
+                                    await chrome.storage.session.set({
+                                        'ledger_pending_accounts': pendingAccounts,
+                                        'ledger_needs_user_interaction': {
+                                            timestamp: Date.now(),
+                                            status: 'pending',
+                                            requiresWebHID: true,
+                                            operation: 'importAccounts',
+                                            reason: 'document_not_defined_error',
+                                            accountIndexes: accountIndexes
+                                        }
+                                    });
+
+                                    log.debug(`Stored pending account ${address} in session storage`);
+                                }
+                            } else {
+                                // Rethrow other errors
+                                throw e;
+                            }
+                        }
                     }
 
                     // Persist state changes
@@ -1542,6 +1572,47 @@ export default class KeyringControllerDerivated extends KeyringController {
                 log.debug(`Successfully imported accounts from ${device}`);
                 return finalAccounts;
             } catch (error) {
+                // Check if this is a document is not defined error
+                if (error.message && error.message.includes('document is not defined')) {
+                    log.debug('Document is not defined error during hardware wallet import process');
+
+                    // Use offscreen document to get the requested accounts
+                    try {
+                        if (device === Devices.LEDGER) {
+                            // Make sure the bridge is connected
+                            const isConnected = await ledgerBridge.checkWebHIDStatus();
+                            if (!isConnected) {
+                                await ledgerBridge.connectUsingWebHID();
+                            }
+
+                            // Get accounts directly through the offscreen document
+                            log.debug(`Attempting fallback account retrieval for indexes: ${accountIndexes.join(',')}`);
+                            const importedAddresses = await ledgerBridge.getMultipleAccounts(accountIndexes);
+
+                            // Store accounts for later UI handling
+                            if (chrome.storage?.session) {
+                                await chrome.storage.session.set({
+                                    'ledger_pending_accounts': importedAddresses,
+                                    'ledger_needs_user_interaction': {
+                                        timestamp: Date.now(),
+                                        status: 'pending',
+                                        requiresWebHID: true,
+                                        operation: 'importAccounts',
+                                        reason: 'document_not_defined_error',
+                                        accountIndexes: accountIndexes
+                                    }
+                                });
+                                log.debug(`Stored ${importedAddresses.length} pending accounts in session storage`);
+                            }
+
+                            // Return the addresses even though they aren't fully imported yet
+                            return importedAddresses;
+                        }
+                    } catch (fallbackError) {
+                        log.error('Fallback account retrieval failed:', fallbackError);
+                    }
+                }
+
                 log.error(`Failed to import hardware wallet accounts:`, error);
                 throw error;
             }

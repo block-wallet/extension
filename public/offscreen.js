@@ -37,6 +37,22 @@ let ledgerDevice = null; // Store the device reference separately
 function initHardwareWalletBridge() {
     updateStatus('Hardware wallet bridge initialized');
 
+    // Close any existing transport on page load to ensure clean state
+    async function closeExistingTransports() {
+        if (activeTransport) {
+            try {
+                console.log('[LEDGER OFFSCREEN] Closing existing transport on page load');
+                await activeTransport.close();
+                activeTransport = null;
+            } catch (error) {
+                console.warn('[LEDGER OFFSCREEN] Error closing existing transport:', error);
+            }
+        }
+    }
+
+    // Call immediately to ensure clean state
+    closeExistingTransports();
+
     // Listen for messages from the extension
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.type === 'HW_CONNECT_REQUEST') {
@@ -137,13 +153,26 @@ async function handleHardwareWalletDisconnection(deviceType, sendResponse) {
             // Close the transport if it exists
             if (activeTransport) {
                 try {
+                    console.log('[LEDGER OFFSCREEN] Closing transport during disconnection');
                     await activeTransport.close();
                 } catch (closeError) {
                     console.warn('[LEDGER OFFSCREEN] Error closing transport:', closeError);
+                    // Continue anyway - we want to clean up as much as possible
                 }
                 activeTransport = null;
             }
+
+            // Clean up device reference too
             ledgerDevice = null;
+
+            // Force garbage collection of any remaining references (if possible)
+            if (global.gc) {
+                try {
+                    global.gc();
+                } catch (e) {
+                    // Ignore if not available
+                }
+            }
         }
 
         sendResponse({
@@ -277,6 +306,18 @@ async function connectLedger() {
             throw new Error('WebHID API not available');
         }
 
+        // Close any existing transport to ensure clean state
+        if (activeTransport) {
+            try {
+                console.log('[LEDGER OFFSCREEN] Closing existing transport before reconnecting');
+                await activeTransport.close();
+                activeTransport = null;
+            } catch (closeError) {
+                console.warn('[LEDGER OFFSCREEN] Error closing existing transport:', closeError);
+                // Continue anyway - we'll try to create a new transport
+            }
+        }
+
         // ** PRIORITY: Use getDevices() first, assuming UI granted permission **
         let device;
         try {
@@ -324,36 +365,13 @@ async function connectLedger() {
             throw getDevicesError;
         }
 
-        // Try to open the selected device
-        try {
-            if (!device.opened) {
-                await device.open();
-                console.log('[LEDGER OFFSCREEN] Successfully opened Ledger device');
-            } else {
-                console.log('[LEDGER OFFSCREEN] Device is already open');
-            }
-        } catch (openError) {
-            console.error('[LEDGER OFFSCREEN] Error opening device:', openError);
-            if (openError.message && openError.message.includes('already open')) {
-                try {
-                    console.log('[LEDGER OFFSCREEN] Attempting to close and reopen device');
-                    await device.close();
-                    await device.open();
-                    console.log('[LEDGER OFFSCREEN] Successfully reopened device');
-                } catch (reopenError) {
-                    console.error('[LEDGER OFFSCREEN] Error reopening device:', reopenError);
-                    throw new Error('Device is in use by another application. Please close other applications using your Ledger (like Ledger Live) and try again.');
-                }
-            } else {
-                throw openError;
-            }
-        }
-
         // Store the device connection globally in the offscreen context for other operations
         ledgerDevice = device;
+
+        // Don't manually open the device - let TransportWebHID.create handle that
+        // TransportWebHID.create will detect and use any permitted HID devices
+
         if (!activeTransport) {
-            // Assuming TransportWebHID.create() doesn't need the device object
-            // If it does, pass `device`
             try {
                 console.log('[LEDGER OFFSCREEN] Creating WebHID transport...');
                 activeTransport = await TransportWebHID.create();

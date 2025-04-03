@@ -1197,6 +1197,48 @@ export default class KeyringControllerDerivated extends KeyringController {
                 // For Ledger in UI context, we still require user gesture for WebHID
                 log.debug("Ledger connection requires user gesture for WebHID access");
                 console.log("[LEDGER] Ledger connection requires user gesture for WebHID access");
+
+                // First check if we have an existing permission in session storage that's valid
+                if (chrome.storage?.session) {
+                    try {
+                        const explicitPermission = await chrome.storage.session.get('ledger_explicit_permission');
+                        if (explicitPermission.ledger_explicit_permission?.granted) {
+                            const timestamp = explicitPermission.ledger_explicit_permission.timestamp;
+                            // Check if permission is recent (within last 10 minutes)
+                            if (Date.now() - timestamp < 10 * 60 * 1000) {
+                                log.debug("Found recent explicit WebHID permission, attempting connection without user gesture");
+                                console.log("[LEDGER] Using recent explicit WebHID permission, bypassing user gesture requirement");
+
+                                // Also check connection status as additional confirmation
+                                const connectionStatus = await chrome.storage.session.get('ledger_connection_status');
+                                if (connectionStatus.ledger_connection_status?.connected) {
+                                    // Permission is valid, try to create keyring if in UI context
+                                    if (hasDOM) {
+                                        try {
+                                            // Check if we already have a keyring
+                                            const existingKeyring = await this.getKeyringFromDevice(device);
+                                            if (!existingKeyring) {
+                                                log.debug("Creating new Ledger keyring based on explicit permission");
+                                                await this.addNewKeyring('Ledger Hardware', {});
+                                                return true;
+                                            } else {
+                                                log.debug("Using existing Ledger keyring with explicit permission");
+                                                return true;
+                                            }
+                                        } catch (e) {
+                                            log.error("Error creating/accessing Ledger keyring with explicit permission:", e);
+                                            // Fall through to normal user gesture flow if this fails
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        log.error("Error checking explicit permission:", e);
+                        // Continue with normal flow
+                    }
+                }
+
                 return {
                     needsUserGesture: true,
                     deviceName: device

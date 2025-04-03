@@ -866,36 +866,15 @@ const HardwareWalletAccountsPage = () => {
     // Add an auto-reconnect effect that runs after initial rendering
     useEffect(() => {
         if (hdPath && !state.gettingAccounts && state.deviceAccounts.length === 0 && !needsUserInteraction) {
-            // Add a delay before auto-reconnect to allow the page to render first
             const timer = setTimeout(() => {
                 log.debug("Auto-reconnect: No accounts found after loading, checking for reconnection needs");
 
                 const checkReconnectionNeeds = async () => {
                     try {
-                        // First, check if there are any pending reconnection requirements
+                        // Check if we have a stored interaction requirement first
                         if (chrome.storage?.session) {
-                            const reconnectResult = await chrome.storage.session.get('ledger_needs_reconnection');
-                            if (reconnectResult.ledger_needs_reconnection) {
-                                const reconnectData = reconnectResult.ledger_needs_reconnection;
-
-                                // Only process recent reconnection requests (last 5 minutes)
-                                if (Date.now() - reconnectData.timestamp < 300000) {
-                                    log.debug("Found pending reconnection requirement", reconnectData);
-
-                                    // Clear the requirement so we don't keep retrying
-                                    await chrome.storage.session.remove('ledger_needs_reconnection');
-
-                                    // Set UI to show interaction required
-                                    setNeedsUserInteraction(true);
-                                    return;
-                                } else {
-                                    // Old request, clear it
-                                    await chrome.storage.session.remove('ledger_needs_reconnection');
-                                }
-                            }
-
-                            // Next, check for user interaction requirements
                             const interactionResult = await chrome.storage.session.get('ledger_needs_user_interaction');
+
                             if (interactionResult.ledger_needs_user_interaction) {
                                 const interactionData = interactionResult.ledger_needs_user_interaction;
 
@@ -903,9 +882,24 @@ const HardwareWalletAccountsPage = () => {
                                 if (Date.now() - interactionData.timestamp < 300000) {
                                     log.debug("Found pending user interaction requirement", interactionData);
 
-                                    // Set UI to show interaction required
-                                    setNeedsUserInteraction(true);
-                                    return;
+                                    // Attempt to automatically connect instead of requiring user interaction
+                                    if (vendor === Devices.LEDGER && isUIContext()) {
+                                        log.debug("Auto-reconnect: Attempting automatic WebHID connection");
+                                        try {
+                                            // Try automatic connection first
+                                            await triggerWebHIDDirectly();
+                                            return; // If successful, we're done
+                                        } catch (e) {
+                                            // Only show the user interaction prompt if auto-connect fails
+                                            log.warn("Auto WebHID connection failed, falling back to user interaction", e);
+                                            setNeedsUserInteraction(true);
+                                            return;
+                                        }
+                                    } else {
+                                        // For non-Ledger devices or non-UI contexts
+                                        setNeedsUserInteraction(true);
+                                        return;
+                                    }
                                 } else {
                                     // Old request, clear it
                                     await chrome.storage.session.remove('ledger_needs_user_interaction');
@@ -916,7 +910,12 @@ const HardwareWalletAccountsPage = () => {
                         // If we reach here and still have no accounts, try WebHID directly for Ledger
                         if (vendor === Devices.LEDGER && isUIContext()) {
                             log.debug("Auto-reconnect: Attempting direct WebHID connection for Ledger");
-                            setNeedsUserInteraction(true);
+                            try {
+                                await triggerWebHIDDirectly();
+                            } catch (e) {
+                                log.warn("Auto WebHID connection failed, showing user interaction prompt", e);
+                                setNeedsUserInteraction(true);
+                            }
                         }
                     } catch (e) {
                         log.error("Error checking reconnection needs:", e);
@@ -1267,10 +1266,11 @@ const HardwareWalletAccountsPage = () => {
                         Your Ledger device requires direct access. The browser needs your permission to communicate with the device.
                     </p>
                     <div className="text-sm text-left bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+                        <p className="mb-2 font-medium">Automatic connection was attempted but requires your confirmation for security reasons.</p>
                         <ul className="list-disc pl-5 space-y-1">
                             <li>Ensure your Ledger is connected and unlocked</li>
                             <li>The Ethereum app should be open on your device</li>
-                            <li>Click the button below to grant access permission</li>
+                            <li>When prompted, select your Ledger device from the list</li>
                         </ul>
                     </div>
                 </div>
@@ -1314,7 +1314,7 @@ const HardwareWalletAccountsPage = () => {
                         }}
                         isLoading={state.reconnecting}
                         type="button"
-                        label="Connect to Ledger"
+                        label="Grant Permission"
                     />
                 </div>
             </div>
@@ -1440,14 +1440,82 @@ const HardwareWalletAccountsPage = () => {
                 throw new Error("WebHID API is not available. Please use a compatible browser like Chrome.");
             }
 
+            // First check if we already have permission to any Ledger devices
+            const existingDevices = await navigator.hid.getDevices();
+            const ledgerDevices = existingDevices.filter(d =>
+                d.vendorId === 0x2c97 || d.vendorId === 0x2581
+            );
+
+            // If we already have permission to at least one Ledger device, use it
+            if (ledgerDevices.length > 0) {
+                log.debug(`Found ${ledgerDevices.length} Ledger devices we already have permission for`);
+
+                // Store connection status
+                if (chrome.storage?.session) {
+                    await chrome.storage.session.set({
+                        'ledger_connection_status': {
+                            connected: true,
+                            timestamp: Date.now(),
+                            deviceCount: ledgerDevices.length
+                        }
+                    });
+
+                    // Also store explicit permission flag to help background
+                    await chrome.storage.session.set({
+                        'ledger_explicit_permission': {
+                            granted: true,
+                            timestamp: Date.now(),
+                            source: 'existing_device_permissions'
+                        }
+                    });
+                }
+
+                // Try to connect with the hardware wallet using existing permissions
+                try {
+                    const result = await connectHardwareWallet(vendor);
+                    log.debug("Connect hardware wallet result using existing permissions:", result);
+
+                    setState({
+                        reconnecting: false,
+                        errorMessage: '',
+                        deviceNotReady: false
+                    });
+
+                    // Clear any fetch errors
+                    setFetchError(null);
+
+                    // After successful connection using existing permissions, try getting accounts
+                    getAccounts();
+                    return true;
+                } catch (connectionError) {
+                    log.warn("Error connecting using existing permissions, will attempt requesting new permissions:", connectionError);
+                    // Fall through to requestDevice below
+                }
+            } else {
+                log.debug("No existing Ledger device permissions found, will request new permissions");
+            }
+
             // Request device access with Ledger vendor IDs
             log.debug("Requesting WebHID device access for Ledger");
-            const devices = await navigator.hid.requestDevice({
-                filters: [
-                    { vendorId: 0x2c97 }, // New Ledger vendor ID
-                    { vendorId: 0x2581 }  // Old Ledger vendor ID
-                ]
-            });
+            let devices;
+            try {
+                devices = await navigator.hid.requestDevice({
+                    filters: [
+                        { vendorId: 0x2c97 }, // New Ledger vendor ID
+                        { vendorId: 0x2581 }  // Old Ledger vendor ID
+                    ]
+                });
+            } catch (requestError) {
+                // The user might have cancelled the permission request
+                if (requestError.name === 'NotFoundError' ||
+                    (requestError.message && requestError.message.includes('user gesture'))) {
+                    log.warn("User cancelled the WebHID permission request");
+                    setState({ reconnecting: false });
+                    throw new Error("Permission request cancelled. Please try again and select your Ledger device when prompted.");
+                }
+                // Other errors should be rethrown
+                throw requestError;
+            }
 
             log.debug(`WebHID permission granted, got ${devices.length} devices`);
 
@@ -1458,6 +1526,15 @@ const HardwareWalletAccountsPage = () => {
                         'ledger_connection_status': {
                             connected: true,
                             timestamp: Date.now()
+                        }
+                    });
+
+                    // Also store explicit permission flag to help background
+                    await chrome.storage.session.set({
+                        'ledger_explicit_permission': {
+                            granted: true,
+                            timestamp: Date.now(),
+                            source: 'triggerWebHIDDirectly'
                         }
                     });
                 }

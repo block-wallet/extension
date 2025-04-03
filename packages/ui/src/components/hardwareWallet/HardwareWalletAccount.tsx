@@ -1,8 +1,8 @@
 import { DeviceAccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
 import classnames from "classnames"
 import { BigNumber } from "@ethersproject/bignumber"
-import { formatUnits } from "ethers/lib/utils"
-import { useState } from "react"
+import { formatUnits } from "@ethersproject/units"
+import { useState, useMemo } from "react"
 import { getAccountBalance } from "../../context/commActions"
 import { useTokensList } from "../../context/hooks/useTokensList"
 import { Classes } from "../../styles"
@@ -13,35 +13,52 @@ import { ViewOnExplorerButton } from "../button/ViewOnExplorerButtons"
 import AccountIcon from "../icons/AccountIcon"
 import EyeRevealIcon from "../icons/EyeRevealIcon"
 import Spinner from "../spinner/Spinner"
+import Checkbox from "../input/Checkbox"
 
-export const HardwareWalletAccount = ({
-    account,
-    accountsBalances,
-    selected = false,
-    disabled = false,
-    onChange,
-    onBalanceFetched,
-}: {
+interface HardwareWalletAccountProps {
     account: DeviceAccountInfo
-    accountsBalances: { [address in string]: BigNumber }
+    accountsBalances: { [address: string]: BigNumber }
     selected: boolean
     disabled: boolean
     onChange: () => void
     onBalanceFetched: (address: string, balance: BigNumber) => void
-}) => {
+}
+
+export const HardwareWalletAccount = ({
+    account,
+    selected,
+    disabled,
+    onChange,
+    accountsBalances,
+    onBalanceFetched,
+}: HardwareWalletAccountProps) => {
     const { nativeToken } = useTokensList()
     const [isLoading, setIsLoading] = useState(false)
     const [balance, setBalance] = useState<string>(
         account.address in accountsBalances
             ? formatRounded(
-                  formatUnits(
-                      accountsBalances[account.address] || "0",
-                      nativeToken.token.decimals
-                  ),
-                  5
-              ) + ` ${nativeToken.token.symbol}`
+                formatUnits(
+                    accountsBalances[account.address] || "0",
+                    nativeToken.token.decimals
+                ),
+                5
+            ) + ` ${nativeToken.token.symbol}`
             : "*******"
     )
+
+    const formatAddress = (address: string): string => {
+        return `${address.slice(0, 6)}...${address.slice(-4)}`
+    }
+
+    const formatBalance = (balance: BigNumber | null): string => {
+        if (!balance) return '*******'
+        return formatUnits(balance, 18)
+    }
+
+    const formattedBalance = useMemo(() => {
+        const balance = accountsBalances[account.address]
+        return formatBalance(balance || null)
+    }, [account.address, accountsBalances])
 
     const fetchBalance = async () => {
         try {
@@ -63,68 +80,64 @@ export const HardwareWalletAccount = ({
             setIsLoading(false)
         }
     }
+
     return (
-        <label
+        <div
             className={classnames(
-                "flex flex-row items-center space-x-4 rounded-md pl-2 py-2",
-                disabled
-                    ? "bg-gray-50"
-                    : "cursor-pointer hover:bg-primary-grey-default"
+                "flex items-center justify-between py-4 px-6 transition-colors duration-200 hover:bg-gray-50",
+                {
+                    "cursor-pointer": !disabled,
+                    "cursor-not-allowed opacity-60": disabled,
+                    "border-b border-gray-200": true
+                }
             )}
-            key={account.index}
-            htmlFor={`account-${account.index}`}
+            onClick={() => !disabled && onChange()}
         >
-            <input
-                type="checkbox"
-                className={classnames(
-                    Classes.checkboxAlt,
-                    disabled && "text-gray-200 pointer-events-none"
-                )}
-                defaultChecked={selected || disabled}
-                id={`account-${account.index}`}
-                onChange={onChange}
-                disabled={disabled}
-            />
-            <AccountIcon
-                className="w-10 h-10"
-                fill={getAccountColor(account.address)}
-            />
-            <div className="flex flex-col">
-                <span className="font-semibold">{account.name}</span>
-                <div className="flex space-x-2 w-full text-primary-grey-dark text-xs">
-                    <span className="w-20" title={account.address}>
-                        {formatHash(account.address)}
-                    </span>
-                    <span className="text-gray-200">|</span>
-                    <div className="inline w-40">Balance: {balance}</div>
-                </div>
-            </div>
-            <div className="flex space-x-3 items-center">
-                <div
-                    className={classnames(
-                        "text-primary-black-default hover:text-primary-blue-default",
-                        !isLoading && "cursor-pointer"
-                    )}
-                    title="Fetch Balance"
-                    onClick={(e) => {
-                        if (!isLoading) {
-                            fetchBalance()
-                        }
-                        e.preventDefault()
-                    }}
-                >
-                    {isLoading ? (
-                        <Spinner color="black" size="16" />
-                    ) : (
-                        <EyeRevealIcon />
-                    )}
-                </div>
-                <ViewOnExplorerButton
-                    mode="icon"
-                    hash={account.address}
-                    type="address"
+            <div className="flex items-center space-x-4">
+                <Checkbox
+                    checked={selected}
+                    disabled={disabled}
+                    onChange={() => onChange()}
+                    label={<span className="sr-only">{`Select ${account.name}`}</span>}
                 />
+                <div className="flex flex-col">
+                    <div className="flex items-center space-x-2">
+                        <span className="font-medium text-gray-900">{account.name}</span>
+                        {disabled && (
+                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                Imported
+                            </span>
+                        )}
+                    </div>
+                    <span className="text-sm text-gray-600">{formatAddress(account.address)}</span>
+                </div>
             </div>
-        </label>
+            <div className="flex items-center">
+                <div className="text-right">
+                    <span className="text-sm font-medium text-gray-900">Balance: {formattedBalance}</span>
+                </div>
+                <div className="ml-5 flex space-x-2">
+                    <button
+                        type="button"
+                        className="inline-flex items-center rounded-full p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            fetchBalance()
+                        }}
+                    >
+                        {isLoading ? (
+                            <Spinner color="black" size="16" />
+                        ) : (
+                            <EyeRevealIcon />
+                        )}
+                    </button>
+                    <ViewOnExplorerButton
+                        mode="icon"
+                        hash={account.address}
+                        type="address"
+                    />
+                </div>
+            </div>
+        </div>
     )
 }

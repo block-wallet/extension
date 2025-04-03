@@ -36,6 +36,9 @@ import useAsyncInvoke, { Status } from "../../util/hooks/useAsyncInvoke"
 // Define HARDWARE_ROUTE constant 
 const HARDWARE_ROUTE = "/hardware-wallet";
 
+// Add this constant near the top of the file, with other constants
+const MAX_ACCOUNTS = 50; // Maximum number of accounts that can be displayed from hardware wallet
+
 // Helper function to replace classnames as it's causing linter errors
 const combineClasses = (...classes: string[]): string => {
     return classes.filter(Boolean).join(' ');
@@ -1258,16 +1261,18 @@ const HardwareWalletAccountsPage = () => {
     // Add this content to render the user interaction prompt
     const renderUserInteractionPrompt = () => {
         return (
-            <div className="text-center p-4">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 text-center">
                 <div className="mb-6">
-                    <UsbIcon className="w-10 h-10 mx-auto text-blue-500 mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">User Interaction Required</h3>
-                    <p className="text-gray-600 mb-4">
+                    <div className="flex justify-center">
+                        <UsbIcon className="w-14 h-14 text-blue-500 mb-4" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-3 text-gray-900">User Interaction Required</h3>
+                    <p className="text-gray-600 mb-5 max-w-md mx-auto">
                         Your Ledger device requires direct access. The browser needs your permission to communicate with the device.
                     </p>
-                    <div className="text-sm text-left bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
-                        <p className="mb-2 font-medium">Automatic connection was attempted but requires your confirmation for security reasons.</p>
-                        <ul className="list-disc pl-5 space-y-1">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6 text-left max-w-md mx-auto">
+                        <p className="mb-3 font-medium text-yellow-800">Automatic connection was attempted but requires your confirmation for security reasons.</p>
+                        <ul className="list-disc pl-5 space-y-2 text-yellow-700">
                             <li>Ensure your Ledger is connected and unlocked</li>
                             <li>The Ethereum app should be open on your device</li>
                             <li>When prompted, select your Ledger device from the list</li>
@@ -1315,6 +1320,7 @@ const HardwareWalletAccountsPage = () => {
                         isLoading={state.reconnecting}
                         type="button"
                         label="Grant Permission"
+                        buttonClass="w-full sm:w-auto px-5 py-2.5 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm"
                     />
                 </div>
             </div>
@@ -1632,234 +1638,150 @@ const HardwareWalletAccountsPage = () => {
                     });
                 }}
             />
-            <div className="flex flex-col space-y-2 text-sm text-primary-grey-dark p-8">
-                <div style={{ minHeight: "280px" }}>
-                    {state.deviceAccounts.length > 0 &&
-                        !state.gettingAccounts ? (
-                        state.deviceAccounts.map((account) => (
-                            <HardwareWalletAccount
-                                account={account}
-                                accountsBalances={accountsBalances}
-                                selected={isSelected(account.address)}
-                                disabled={isDisabled(account.address)}
-                                onChange={() => toggleAccount(account)}
-                                onBalanceFetched={addAccountBalance}
-                                key={account.index}
-                            />
-                        ))
-                    ) : state.gettingAccounts ? (
-                        renderLoadingState()
-                    ) : fetchError ? (
-                        <div className="flex flex-col items-center justify-center h-64">
-                            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4 max-w-md">
-                                <p className="text-red-700 text-center font-medium">Error fetching accounts</p>
-                                <p className="text-red-600 text-center mt-2">{fetchError}</p>
+            <div className="flex flex-col space-y-4 p-6">
+                {needsUserInteraction ? (
+                    // Show user interaction prompt if permission is needed
+                    renderUserInteractionPrompt()
+                ) : (
+                    // Only show accounts section if we don't need user interaction
+                    <div>
+                        {state.deviceAccounts.length > 0 &&
+                            !state.gettingAccounts ? (
+                            <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+                                {state.deviceAccounts.map((account) => (
+                                    <HardwareWalletAccount
+                                        account={account}
+                                        accountsBalances={accountsBalances}
+                                        selected={isSelected(account.address)}
+                                        disabled={isDisabled(account.address)}
+                                        onChange={() => toggleAccount(account)}
+                                        onBalanceFetched={addAccountBalance}
+                                        key={account.index}
+                                    />
+                                ))}
                             </div>
-                            <div className="flex space-x-4 mt-2">
-                                {vendor === Devices.LEDGER && (
+                        ) : state.gettingAccounts ? (
+                            renderLoadingState()
+                        ) : fetchError ? (
+                            <div className="flex flex-col items-center justify-center h-64">
+                                <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4 max-w-md">
+                                    <p className="text-red-700 text-center font-medium">Error fetching accounts</p>
+                                    <p className="text-red-600 text-center mt-2">{fetchError}</p>
+                                </div>
+                                <div className="flex space-x-4 mt-2">
+                                    {vendor === Devices.LEDGER && (
+                                        <Button
+                                            type="button"
+                                            onClick={triggerWebHIDDirectly}
+                                            disabled={state.reconnecting}
+                                            className={combineClasses(
+                                                "bg-primary-700 hover:bg-primary-800 text-white font-medium py-2 px-4 rounded flex items-center",
+                                                state.reconnecting ? "opacity-50 cursor-not-allowed" : ""
+                                            )}
+                                        >
+                                            {state.reconnecting ? (
+                                                <>
+                                                    <LoadingSpinner className="w-4 h-4 mr-2" />
+                                                    Connecting...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="mr-2">Connect Device</span>
+                                                </>
+                                            )}
+                                        </Button>
+                                    )}
                                     <Button
                                         type="button"
-                                        onClick={triggerWebHIDDirectly}
-                                        disabled={state.reconnecting}
-                                        className={combineClasses(
-                                            "bg-primary-700 hover:bg-primary-800 text-white font-medium py-2 px-4 rounded flex items-center",
-                                            state.reconnecting ? "opacity-50 cursor-not-allowed" : ""
-                                        )}
+                                        onClick={handleRetryFetch}
+                                        disabled={state.gettingAccounts}
+                                        className="border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded flex items-center"
                                     >
-                                        {state.reconnecting ? (
-                                            <>
-                                                <LoadingSpinner className="w-4 h-4 mr-2" />
-                                                Connecting...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span className="mr-2">Connect Device</span>
-                                                <UsbIcon className="w-4 h-4" />
-                                            </>
-                                        )}
+                                        Retry
                                     </Button>
-                                )}
-                                <Button
-                                    type="button"
-                                    onClick={handleRetryFetch}
-                                    disabled={state.gettingAccounts || state.reconnecting}
-                                    className={combineClasses(
-                                        "bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded",
-                                        state.reconnecting ? "opacity-50 cursor-not-allowed" : ""
-                                    )}
-                                >
-                                    Retry
-                                </Button>
+                                </div>
                             </div>
-                        </div>
-                    ) : (
-                        renderNoAccountsState()
-                    )}
-                </div>
-
-                {enabledPagination ? (
-                    <div className="flex w-full justify-between pt-6 items-center pl-2 space-x-2">
-                        <div className="space-x-4 flex items-center max-h-10">
-                            <span className="text-primary-grey-dark">
-                                Show:
-                            </span>
-                            <Select
-                                onChange={onUpdatePageSize}
-                                currentValue={state.pageSize}
-                                id="pageSize"
-                                disabled={state.gettingAccounts}
-                            >
-                                <Select.Option value={5}>5</Select.Option>
-                                <Select.Option value={8}>8</Select.Option>
-                                <Select.Option value={10}>10</Select.Option>
-                            </Select>
-                        </div>
-                        <PaginationControls
-                            disabled={state.gettingAccounts}
-                            stickyFirstPage
-                            currentPage={state.currentPage}
-                            onChangePage={(page: number) =>
-                                setState({ currentPage: page })
-                            }
-                            pages={6}
-                        />
-                    </div>
-                ) : (
-                    <div className="flex w-full justify-between pt-6 items-center pl-2 space-x-2">
-                        <PaginationControls
-                            disabled={state.gettingAccounts}
-                            stickyFirstPage
-                            currentPage={state.currentPage}
-                            onChangePage={(page: number) =>
-                                setState({ currentPage: page })
-                            }
-                            pages={2}
-                            className="!w-full"
-                            showArrows={false}
-                        />
-                    </div>
-                )}
-                {vendor !== Devices.KEYSTONE && (
-                    <AccountsPageAdvancedSettings
-                        currentHDPath={hdPath || ""}
-                        vendor={vendor}
-                        disabled={isImportingAccounts}
-                        setHDPath={updateHDPath}
-                        isLoadingHDPath={isLoadingHDPath}
-                    />
-                )}
-                {vendor === Devices.KEYSTONE && isKeystoneConnected && (
-                    <>
-                        <div
-                            onClick={() =>
-                                history.push({
-                                    pathname: "/hardware-wallet/remove-device",
-                                    state: { isFromAccountsPage: true },
-                                })
-                            }
-                            className={combineClasses(
-                                "w-full px-40 !mt-6 !-mb-5 bg-white rounded-md cursor-pointer underline-offset-1",
-                                "flex hover:underline"
-                            )}
-                        >
-                            <span className="font-normal text-xs text-blue-700 text-center">
-                                Remove this device
-                            </span>
-                        </div>
-                    </>
-                )}
-            </div>
-            {needsUserInteraction && renderUserInteractionPrompt()}
-
-            {/* Only show the error message if we're not showing the user interaction prompt */}
-            {fetchError && !needsUserInteraction && !state.deviceAccounts.length && (
-                <div className="text-red-500 text-center mb-4">
-                    {fetchError}
-                </div>
-            )}
-
-            {/* Improve the HD path selector to show reconnect option when needed */}
-            <div className="mt-3 mb-5">
-                <div className="flex flex-wrap items-center justify-between mb-2">
-                    <p className="text-base font-medium text-gray-700">HD Path</p>
-                    <div className="flex items-center">
-                        {/* Only show status indicators if we have a valid vendor */}
-                        {vendor && (
-                            <div className="flex items-center mr-3">
-                                {state.reconnecting ? (
-                                    <div className="flex items-center text-yellow-700">
-                                        <LoadingSpinner className="w-4 h-4 mr-1" />
-                                        <span className="text-xs">Connecting...</span>
-                                    </div>
-                                ) : needsUserInteraction ? (
-                                    <div className="flex items-center text-yellow-700">
-                                        <WarningIcon className="w-4 h-4 mr-1" />
-                                        <span className="text-xs">Connection required</span>
-                                    </div>
-                                ) : state.gettingAccounts ? (
-                                    <div className="flex items-center text-blue-700">
-                                        <LoadingSpinner className="w-4 h-4 mr-1" />
-                                        <span className="text-xs">Loading accounts</span>
-                                    </div>
-                                ) : state.deviceAccounts.length > 0 ? (
-                                    <div className="flex items-center text-green-700">
-                                        <CheckIcon className="w-4 h-4 mr-1" />
-                                        <span className="text-xs">Connected</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center text-gray-500">
-                                        <span className="text-xs">Not connected</span>
-                                    </div>
-                                )}
-                            </div>
+                        ) : (
+                            renderNoAccountsState()
                         )}
-                        <div className="flex items-center">
-                            <Button
-                                onClick={getAccounts}
-                                disabled={state.gettingAccounts || state.reconnecting}
-                                size="small"
-                                className="py-1 px-2 text-xs font-medium"
+                    </div>
+                )}
+
+                {/* Don't show pagination controls when we need user interaction */}
+                {!needsUserInteraction && state.deviceAccounts.length > 0 && (
+                    <div className="flex items-center justify-center mt-4">
+                        <div className="inline-flex rounded-md shadow-sm" role="group">
+                            <button
+                                onClick={() => setState({ currentPage: Math.max(1, state.currentPage - 1) })}
+                                disabled={state.currentPage === 1 || isImportingAccounts}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                             >
-                                {state.gettingAccounts ? "Loading..." : "Refresh"}
-                            </Button>
+                                &lt;
+                            </button>
+                            {Array.from({ length: Math.min(5, Math.ceil(MAX_ACCOUNTS / state.pageSize)) }, (_, i) => i + 1).map(page => (
+                                <button
+                                    key={page}
+                                    onClick={() => setState({ currentPage: page })}
+                                    disabled={page === state.currentPage || isImportingAccounts}
+                                    className={`px-4 py-2 text-sm font-medium border ${page === state.currentPage
+                                        ? 'text-white bg-blue-600 border-blue-600 hover:bg-blue-700'
+                                        : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => setState({ currentPage: Math.min(Math.ceil(MAX_ACCOUNTS / state.pageSize), state.currentPage + 1) })}
+                                disabled={state.currentPage >= Math.ceil(MAX_ACCOUNTS / state.pageSize) || isImportingAccounts}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                            >
+                                &gt;
+                            </button>
                         </div>
                     </div>
-                </div>
+                )}
+
+                {/* Improved HD Path selector and accounts per page UI */}
+                {!needsUserInteraction && vendor === Devices.LEDGER && state.deviceAccounts.length > 0 && (
+                    <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                <span className="text-sm font-medium text-gray-700">HD Derivation Path:</span>
+                                <div className="relative">
+                                    <select
+                                        value={hdPath}
+                                        onChange={(e) => updateHDPath(e.target.value)}
+                                        className="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100"
+                                        disabled={isImportingAccounts || state.reconnecting}
+                                    >
+                                        {HDPaths[vendor].map((pathData) => (
+                                            <option key={pathData.path} value={pathData.path}>
+                                                {pathData.name} - {pathData.path}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                <span className="text-sm font-medium text-gray-700">Accounts per page:</span>
+                                <div className="relative">
+                                    <select
+                                        value={state.pageSize}
+                                        onChange={(e) => onUpdatePageSize(Number(e.target.value))}
+                                        className="block w-24 rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100"
+                                        disabled={isImportingAccounts}
+                                    >
+                                        <option value="5">5</option>
+                                        <option value="10">10</option>
+                                        <option value="20">20</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
-
-            {/* Add error message display */}
-            {state.errorMessage && !state.deviceAccounts.length && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                    <div className="flex items-center">
-                        <WarningIcon className="w-5 h-5 mr-2" />
-                        <span>{state.errorMessage}</span>
-                    </div>
-                    {state.ethAppStatus === 'closed' && (
-                        <div className="mt-2">
-                            <Button
-                                className="bg-blue-600 text-white py-2 px-4 rounded"
-                                onClick={() => setState({ gettingAccounts: true, deviceNotReady: false, errorMessage: '' })}
-                            >
-                                Retry
-                            </Button>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Add Ethereum app status indicator when on Ledger */}
-            {vendor === Devices.LEDGER && state.deviceAccounts.length > 0 && (
-                <div className="flex items-center mb-4 text-green-600">
-                    <CheckIcon className="w-5 h-5 mr-2" />
-                    <span>Ethereum app is open</span>
-                </div>
-            )}
-            {vendor === Devices.LEDGER && state.ethAppStatus === 'closed' && !state.deviceAccounts.length && (
-                <div className="flex items-center mb-4 text-red-600">
-                    <WarningIcon className="w-5 h-5 mr-2" />
-                    <span>Ethereum app is not open on your Ledger device</span>
-                </div>
-            )}
         </HardwareWalletSetupLayout>
     )
 }

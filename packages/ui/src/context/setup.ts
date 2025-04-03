@@ -52,7 +52,7 @@ const messageListener = (data: TransportResponseMessage<MessageTypes>) => {
     }
 
     if (data.subscription) {
-        ;(handler.subscriber as Function)(data.subscription)
+        ; (handler.subscriber as Function)(data.subscription)
     } else if ("error" in data) {
         // Deserialze error object
         const parsedError = JSON.parse(data.error!)

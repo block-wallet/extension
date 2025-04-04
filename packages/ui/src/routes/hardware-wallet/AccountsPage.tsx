@@ -975,7 +975,7 @@ const HardwareWalletAccountsPage = () => {
                 vendor,
                 2, // retryCount
                 state.currentPage - 1,
-                state.pageSize
+                5 // always use 5 accounts per page
             );
 
             // Check if we have accounts
@@ -1047,7 +1047,7 @@ const HardwareWalletAccountsPage = () => {
                 errorMessage
             });
         }
-    }, [state.gettingAccounts, state.currentPage, state.pageSize, vendor]);
+    }, [state.gettingAccounts, state.currentPage, vendor]);
 
     const toggleAccount = (account: DeviceAccountInfo) => {
         const selected = state.selectedAccounts.some(
@@ -1190,13 +1190,6 @@ const HardwareWalletAccountsPage = () => {
                 setFetchError(`Failed to set HD path: ${e.message}`);
             }
         }
-    }
-
-    const onUpdatePageSize = (pageSize: number) => {
-        setState({
-            pageSize,
-            currentPage: 1,
-        })
     }
 
     // Add a retry button handler
@@ -1577,6 +1570,17 @@ const HardwareWalletAccountsPage = () => {
         }
     };
 
+    // Auto-set Ledger Live HD path for Ledger devices
+    useEffect(() => {
+        if (vendor === Devices.LEDGER) {
+            // Find the Ledger Live path from HDPaths
+            const ledgerLivePath = HDPaths[vendor].find(path => path.name === 'Ledger Live')?.path;
+            if (ledgerLivePath && hdPath !== ledgerLivePath) {
+                updateHDPath(ledgerLivePath);
+            }
+        }
+    }, [vendor, hdPath]);
+
     return (
         <HardwareWalletSetupLayout
             title="Select Accounts"
@@ -1707,8 +1711,8 @@ const HardwareWalletAccountsPage = () => {
                     </div>
                 )}
 
-                {/* Don't show pagination controls when we need user interaction */}
-                {!needsUserInteraction && state.deviceAccounts.length > 0 && (
+                {/* Pagination controls - only show if there are more than 5 total accounts */}
+                {!needsUserInteraction && state.deviceAccounts.length > 5 && (
                     <div className="flex items-center justify-center mt-4">
                         <div className="inline-flex rounded-md shadow-sm" role="group">
                             <button
@@ -1718,7 +1722,7 @@ const HardwareWalletAccountsPage = () => {
                             >
                                 &lt;
                             </button>
-                            {Array.from({ length: Math.min(5, Math.ceil(MAX_ACCOUNTS / state.pageSize)) }, (_, i) => i + 1).map(page => (
+                            {Array.from({ length: Math.min(5, Math.ceil(state.deviceAccounts.length / 5)) }, (_, i) => i + 1).map(page => (
                                 <button
                                     key={page}
                                     onClick={() => setState({ currentPage: page })}
@@ -1732,52 +1736,12 @@ const HardwareWalletAccountsPage = () => {
                                 </button>
                             ))}
                             <button
-                                onClick={() => setState({ currentPage: Math.min(Math.ceil(MAX_ACCOUNTS / state.pageSize), state.currentPage + 1) })}
-                                disabled={state.currentPage >= Math.ceil(MAX_ACCOUNTS / state.pageSize) || isImportingAccounts}
+                                onClick={() => setState({ currentPage: Math.min(Math.ceil(state.deviceAccounts.length / 5), state.currentPage + 1) })}
+                                disabled={state.currentPage >= Math.ceil(state.deviceAccounts.length / 5) || isImportingAccounts}
                                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                             >
                                 &gt;
                             </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Improved HD Path selector and accounts per page UI */}
-                {!needsUserInteraction && vendor === Devices.LEDGER && state.deviceAccounts.length > 0 && (
-                    <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                <span className="text-sm font-medium text-gray-700">HD Derivation Path:</span>
-                                <div className="relative">
-                                    <select
-                                        value={hdPath}
-                                        onChange={(e) => updateHDPath(e.target.value)}
-                                        className="block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100"
-                                        disabled={isImportingAccounts || state.reconnecting}
-                                    >
-                                        {HDPaths[vendor].map((pathData) => (
-                                            <option key={pathData.path} value={pathData.path}>
-                                                {pathData.name} - {pathData.path}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                <span className="text-sm font-medium text-gray-700">Accounts per page:</span>
-                                <div className="relative">
-                                    <select
-                                        value={state.pageSize}
-                                        onChange={(e) => onUpdatePageSize(Number(e.target.value))}
-                                        className="block w-24 rounded-md border-gray-300 py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100"
-                                        disabled={isImportingAccounts}
-                                    >
-                                        <option value="5">5</option>
-                                        <option value="10">10</option>
-                                        <option value="20">20</option>
-                                    </select>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 )}

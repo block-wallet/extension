@@ -64,17 +64,32 @@ export const HardwareWalletAccount = ({
         try {
             setIsLoading(true)
             const balanceFetched = await getAccountBalance(account.address)
+
+            // Store the balance in the parent component
             onBalanceFetched(account.address, balanceFetched)
-            setBalance(
-                formatRounded(
-                    formatUnits(
-                        balanceFetched || "0",
-                        nativeToken.token.decimals
-                    ),
-                    5
-                ) + ` ${nativeToken.token.symbol}`
-            )
+
+            // Format the balance for display
+            const formattedValue = formatRounded(
+                formatUnits(
+                    balanceFetched || "0",
+                    nativeToken.token.decimals
+                ),
+                5
+            ) + ` ${nativeToken.token.symbol}`
+
+            // Update the local state
+            setBalance(formattedValue)
+
+            // Add a quick flash effect to show the balance was updated
+            const balanceElement = document.getElementById(`balance-${account.address}`)
+            if (balanceElement) {
+                balanceElement.classList.add('text-green-600')
+                setTimeout(() => {
+                    balanceElement.classList.remove('text-green-600')
+                }, 1000)
+            }
         } catch (error) {
+            console.error("Error fetching balance:", error)
             setBalance("<Error fetching>")
         } finally {
             setIsLoading(false)
@@ -114,16 +129,22 @@ export const HardwareWalletAccount = ({
             </div>
             <div className="flex items-center">
                 <div className="text-right">
-                    <span className="text-sm font-medium text-gray-900">Balance: {formattedBalance}</span>
+                    <span
+                        id={`balance-${account.address}`}
+                        className="text-sm font-medium text-gray-900 transition-colors duration-300"
+                    >
+                        Balance: {balance}
+                    </span>
                 </div>
                 <div className="ml-5 flex space-x-2">
                     <button
                         type="button"
                         className="inline-flex items-center rounded-full p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         onClick={(e) => {
-                            e.stopPropagation()
-                            fetchBalance()
+                            e.stopPropagation();
+                            fetchBalance();
                         }}
+                        title="Fetch Balance"
                     >
                         {isLoading ? (
                             <Spinner color="black" size="16" />

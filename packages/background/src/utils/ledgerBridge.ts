@@ -532,18 +532,43 @@ export class LedgerBridge {
     }
 
     /**
-     * Proxy method to get accounts from Ledger device via the offscreen document
-     * @param pageIndex The index of the page to get accounts from
+     * Proxy method to get a page of accounts from Ledger device via the offscreen document
+     * @param pageIndex The index of the page to get
      * @param pageSize The number of accounts to get per page
-     * @param hdPath The HD path to use (optional)
-     * @returns Promise resolving to the accounts
+     * @param hdPath The HD path to use (optional) 
+     * @returns Promise resolving to the page of accounts
      */
     async getAccounts(pageIndex: number, pageSize: number, hdPath?: string): Promise<Array<{ address: string, index: number, balance?: string, name?: string }>> {
         try {
             log.debug(`Proxying getAccounts to offscreen document (page ${pageIndex}, size ${pageSize})`);
             console.log(`[LEDGER] Proxying getAccounts to offscreen document (page ${pageIndex}, size ${pageSize})`);
 
+            // Ensure offscreen document is created
             await this.ensureOffscreenDocument();
+
+            // Verify transport connection before trying to get accounts
+            const isConnected = await this.checkWebHIDStatus();
+            if (!isConnected) {
+                log.debug(`WebHID connection not established, attempting reconnection`);
+                console.log(`[LEDGER] WebHID connection not established, attempting reconnection`);
+
+                // Try to reconnect first
+                const connectionResult = await this.connectUsingWebHID();
+                if (!connectionResult.success) {
+                    throw new Error("Failed to establish WebHID connection before getting accounts");
+                }
+
+                // Add a short delay after successful connection to ensure device is ready
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                console.log(`[LEDGER] Reconnection successful, proceeding to get accounts`);
+            }
+
+            // Ensure Ethereum app is open
+            const isEthAppOpen = await this.verifyEthereumAppOpen();
+            if (!isEthAppOpen) {
+                throw new Error("Ethereum app is not open on Ledger device");
+            }
 
             return new Promise((resolve, reject) => {
                 // Set a timeout to avoid hanging
@@ -551,6 +576,27 @@ export class LedgerBridge {
                     reject(new Error('Timeout waiting for Ledger accounts'));
                 }, 30000);
 
+                // Set up error handling for message channel closed
+                const handleErrorResponse = (error: Error | any) => {
+                    clearTimeout(timeout);
+                    log.error('Error in getAccounts message:', error);
+                    console.error('[LEDGER] Error in getAccounts message:', error);
+
+                    // Special handling for device not opened
+                    if (error.message && error.message.includes('device must be opened')) {
+                        console.error('[LEDGER] Device not opened error detected, attempting recovery');
+
+                        // Force reconnection next time
+                        this.sendDeviceReconnectionRequest()
+                            .then(() => reject(error))
+                            .catch(() => reject(error));
+                        return;
+                    }
+
+                    reject(error);
+                };
+
+                // Send message to offscreen document
                 chrome.runtime.sendMessage({
                     type: 'HW_LEDGER_OPERATION',
                     operation: 'getAccounts',
@@ -571,19 +617,42 @@ export class LedgerBridge {
                         const error = new Error(response?.error || 'Failed to get accounts from Ledger device');
                         log.error('Error getting accounts from offscreen document:', error);
                         console.error('[LEDGER] Error getting accounts from offscreen document:', error);
-                        reject(error);
+                        handleErrorResponse(error);
                     }
-                }).catch((error) => {
-                    clearTimeout(timeout);
-                    log.error('Error in getAccounts message:', error);
-                    console.error('[LEDGER] Error in getAccounts message:', error);
-                    reject(error);
-                });
+                }).catch(handleErrorResponse);
             });
         } catch (error) {
             log.error('Error in getAccounts:', error);
             console.error('[LEDGER] Error in getAccounts:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Helper method to send a device reconnection request to the offscreen document
+     * This force-closes and reopens the device connection to recover from errors
+     */
+    private async sendDeviceReconnectionRequest(): Promise<void> {
+        console.log('[LEDGER] Sending device reconnection request');
+        try {
+            // First disconnect the device
+            await chrome.runtime.sendMessage({
+                type: 'HW_DISCONNECT_REQUEST',
+                device: 'LEDGER'
+            });
+
+            // Wait a bit before reconnecting
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Then try to connect again
+            await this.connectUsingWebHID();
+
+            // Add additional delay to ensure device is ready
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            console.log('[LEDGER] Device reconnection request completed');
+        } catch (e) {
+            console.error('[LEDGER] Error during device reconnection:', e);
         }
     }
 

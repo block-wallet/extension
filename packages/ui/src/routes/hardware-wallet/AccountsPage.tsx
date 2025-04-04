@@ -349,6 +349,28 @@ async function fetchAccountsWithRetry(vendor: Devices, retryCount = 1, pageIndex
         // First check if we're dealing with Ledger and need to verify Ethereum app
         if (vendor === Devices.LEDGER) {
             try {
+                // Ensure WebHID connection is fully established before proceeding
+                if (chrome.storage?.session) {
+                    const connectionStatus = await chrome.storage.session.get('ledger_connection_status');
+                    if (!connectionStatus.ledger_connection_status?.connected) {
+                        log.debug("Connection not established, attempting to reconnect");
+                        console.log("[LEDGER] Connection not established, attempting to reconnect");
+
+                        // Try to explicitly reconnect before proceeding
+                        try {
+                            await connectHardwareWallet(vendor);
+
+                            // Wait a moment for the connection to stabilize
+                            await new Promise(resolve => setTimeout(resolve, 500));
+
+                            console.log("[LEDGER] Reconnection attempt completed");
+                        } catch (reconnectError) {
+                            console.warn("[LEDGER] Reconnection attempt failed:", reconnectError);
+                            // Continue anyway, we'll retry if needed
+                        }
+                    }
+                }
+
                 // Attempt to check connection status from session storage
                 if (chrome.storage?.session) {
                     const ethAppStatus = await chrome.storage.session.get('ledger_eth_app_status');
@@ -395,12 +417,41 @@ async function fetchAccountsWithRetry(vendor: Devices, retryCount = 1, pageIndex
         }
 
         // Now try to fetch accounts
-        const accounts = await getHardwareWalletAccounts(vendor, pageIndex, pageSize);
+        try {
+            const accounts = await getHardwareWalletAccounts(vendor, pageIndex, pageSize);
 
-        if (accounts && accounts.length > 0) {
-            return accounts;
-        } else if (retryCount < 3) {
-            // If we get an empty result but haven't exceeded retries, wait and try again
+            if (accounts && accounts.length > 0) {
+                return accounts;
+            }
+        } catch (error) {
+            // Handle specific device opening errors
+            if (error && error.message && error.message.includes('device must be opened first')) {
+                console.warn('[LEDGER] Device not opened properly, attempting to reconnect');
+
+                // Add a delay to let any in-progress connections complete
+                await new Promise(resolve => setTimeout(resolve, 700));
+
+                // Try to reestablish the connection
+                try {
+                    await connectHardwareWallet(vendor);
+                    console.log('[LEDGER] Reconnection completed after device open error');
+
+                    // If we haven't exceeded retries, try again with a small delay
+                    if (retryCount < 4) {
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        return fetchAccountsWithRetry(vendor, retryCount + 1, pageIndex, pageSize);
+                    }
+                } catch (reconnectError) {
+                    console.error('[LEDGER] Reconnection failed after device open error:', reconnectError);
+                }
+            }
+
+            // Rethrow the error to be handled by the outer catch
+            throw error;
+        }
+
+        // If we got no accounts but haven't exceeded retries, wait and try again
+        if (retryCount < 3) {
             log.debug(`No accounts returned, retrying (${retryCount}/3)...`);
             await new Promise(resolve => setTimeout(resolve, 1000));
             return fetchAccountsWithRetry(vendor, retryCount + 1, pageIndex, pageSize);
@@ -431,6 +482,30 @@ async function fetchAccountsWithRetry(vendor: Devices, retryCount = 1, pageIndex
             if (retryCount < 3) {
                 console.log(`[LEDGER] Retrying after message channel error (${retryCount}/3)...`);
                 await new Promise(resolve => setTimeout(resolve, 1500)); // Longer delay for channel issues
+                return fetchAccountsWithRetry(vendor, retryCount + 1, pageIndex, pageSize);
+            }
+        }
+
+        // Special handling for device open errors
+        if (error.message && error.message.includes('device must be opened')) {
+            console.error('[LEDGER] Device must be opened error:', error);
+
+            // Wait longer and retry with a fresh connection
+            if (retryCount < 4) {
+                console.log(`[LEDGER] Retrying after device open error (${retryCount}/4)...`);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Try to explicitly reconnect
+                try {
+                    await connectHardwareWallet(vendor);
+                    console.log('[LEDGER] Reconnection completed after device open error');
+
+                    // Wait for connection to stabilize
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } catch (e) {
+                    console.warn('[LEDGER] Reconnection failed, will still retry account fetch:', e);
+                }
+
                 return fetchAccountsWithRetry(vendor, retryCount + 1, pageIndex, pageSize);
             }
         }
@@ -944,28 +1019,79 @@ const HardwareWalletAccountsPage = () => {
 
         setFetchError(null);
 
-        // For Ledger, try automatic connection first
+        // For Ledger, ensure a stable connection first
         if (vendor === Devices.LEDGER) {
             // Check if we need to attempt automatic connection
-            const isConnected = await ledgerBridge.checkWebHIDStatus();
+            let isConnected = false;
+            try {
+                isConnected = await ledgerBridge.checkWebHIDStatus();
+                console.log("[LEDGER] Initial connection status:", isConnected);
+            } catch (e) {
+                console.warn("[LEDGER] Error checking WebHID status:", e);
+            }
+
             if (!isConnected) {
-                log.debug("Ledger not connected, attempting automatic connection first");
-                console.log("[LEDGER] Not connected, attempting automatic connection first");
+                log.debug("Ledger not connected, attempting to establish connection");
+                console.log("[LEDGER] Not connected, attempting to establish connection");
 
-                const autoConnected = await attemptAutomaticLedgerConnection();
-                if (!autoConnected) {
-                    log.debug("Automatic connection failed, will need to show manual connection");
-                    console.log("[LEDGER] Automatic connection failed");
+                try {
+                    // First try automatic connection
+                    const autoConnected = await attemptAutomaticLedgerConnection();
 
+                    if (!autoConnected) {
+                        // If auto connection fails, try explicit connection with proper timing
+                        console.log("[LEDGER] Automatic connection failed, trying explicit connection");
+
+                        // Connect using WebHID directly if available
+                        if (isUIContext() && navigator.hid) {
+                            try {
+                                await connectHardwareWallet(vendor);
+                                // Wait for connection to stabilize
+                                await new Promise(resolve => setTimeout(resolve, 800));
+
+                                // Verify connection again after delay
+                                isConnected = await ledgerBridge.checkWebHIDStatus();
+                                console.log("[LEDGER] Connection status after explicit connect:", isConnected);
+
+                                if (!isConnected) {
+                                    console.log("[LEDGER] Connection still not established, showing manual connection dialog");
+                                    setState({
+                                        gettingAccounts: false,
+                                        deviceNotReady: true,
+                                        errorMessage: "Could not connect to Ledger automatically. Please connect your device manually."
+                                    });
+                                    return;
+                                }
+                            } catch (e) {
+                                console.error("[LEDGER] Explicit connection failed:", e);
+                                setState({
+                                    gettingAccounts: false,
+                                    deviceNotReady: true,
+                                    errorMessage: "Could not connect to Ledger automatically. Please connect your device manually."
+                                });
+                                return;
+                            }
+                        } else {
+                            setState({
+                                gettingAccounts: false,
+                                deviceNotReady: true,
+                                errorMessage: "Could not connect to Ledger automatically"
+                            });
+                            return;
+                        }
+                    }
+
+                    log.debug("Connection successfully established, proceeding to get accounts");
+                    console.log("[LEDGER] Connection successfully established");
+                } catch (connError) {
+                    console.error("[LEDGER] Connection error:", connError);
                     setState({
                         gettingAccounts: false,
                         deviceNotReady: true,
-                        errorMessage: "Could not connect to Ledger automatically"
+                        errorMessage: "Error connecting to Ledger: " + (connError.message || "Unknown error")
                     });
                     return;
                 }
-                log.debug("Automatic connection successful, proceeding to get accounts");
-                console.log("[LEDGER] Automatic connection successful");
             }
         }
 
@@ -1038,6 +1164,16 @@ const HardwareWalletAccountsPage = () => {
                     return;
                 } else if (error.message.includes('timeout')) {
                     errorMessage = 'Communication with Ledger timed out. Please make sure your device is unlocked and the Ethereum app is open.';
+                } else if (error.message.includes('device must be opened')) {
+                    errorMessage = 'The device connection was lost. Please ensure your Ledger is connected, unlocked, and try again.';
+
+                    // For device opening errors, show the reconnect dialog
+                    setState({
+                        gettingAccounts: false,
+                        deviceNotReady: true,
+                        errorMessage
+                    });
+                    return;
                 }
             }
 
@@ -1148,6 +1284,15 @@ const HardwareWalletAccountsPage = () => {
     const updateHDPath = async (hdPath: string) => {
         try {
             log.debug(`Attempting to update HD path to ${hdPath}`);
+
+            // Check if we have accounts already (indicating a connected keyring)
+            if (!state.deviceAccounts.length) {
+                log.debug(`Skipping HD path update to ${hdPath} - no device accounts yet`);
+                // Just update local state without making backend call
+                setHdPath(hdPath);
+                return;
+            }
+
             await setHardwareWalletHDPath(vendor, hdPath);
 
             // Clear the state after the HD path is updated
@@ -1185,6 +1330,10 @@ const HardwareWalletAccountsPage = () => {
                 } finally {
                     setState({ reconnecting: false });
                 }
+            } else if (e.message && e.message.includes('No keyring found')) {
+                // Handle "No keyring" errors gracefully without showing errors to user
+                log.debug(`Keyring not ready, storing HD path ${hdPath} for later use`);
+                setHdPath(hdPath);
             } else {
                 // For other errors, show an error message
                 setFetchError(`Failed to set HD path: ${e.message}`);
@@ -1280,34 +1429,179 @@ const HardwareWalletAccountsPage = () => {
                             setFetchError(null);
 
                             try {
-                                // Use connectHardwareWallet to trigger a fresh connection with user gesture
-                                const result = await connectHardwareWallet(vendor);
+                                log.debug("Starting enhanced Ledger connection process");
+                                console.log("[LEDGER] Starting enhanced Ledger connection process");
 
-                                if (result === true || (typeof result === 'object' && result.needsUserGesture)) {
-                                    // Clear any error messages on success
-                                    setFetchError(null);
-                                    setState({
-                                        reconnecting: false,
-                                        errorMessage: '',
-                                        deviceNotReady: false
-                                    });
-
-                                    // If connection succeeds, get accounts
-                                    getAccounts();
-                                } else {
-                                    setState({
-                                        reconnecting: false,
-                                        errorMessage: 'Connection failed. Please try again.'
-                                    });
-                                    setFetchError('Connection failed. Please try again.');
+                                // First ensure we have WebHID permission
+                                if (!navigator.hid) {
+                                    throw new Error("WebHID not supported in this browser");
                                 }
-                            } catch (error) {
-                                log.error('Failed to connect in user interaction mode:', error);
+
+                                // Clear connection status to start fresh
+                                if (chrome.storage?.session) {
+                                    await chrome.storage.session.remove(['ledger_connection_status']);
+                                    console.log("[LEDGER] Cleared previous connection status");
+                                }
+
+                                // Get existing devices with permission
+                                let devices = await navigator.hid.getDevices();
+                                let ledgerDevices = devices.filter(d =>
+                                    d.vendorId === 0x2c97 || d.vendorId === 0x2581
+                                );
+
+                                if (ledgerDevices.length === 0) {
+                                    console.log("[LEDGER] No permitted devices found, requesting permission");
+
+                                    // Request device permission
+                                    const selectedDevices = await navigator.hid.requestDevice({
+                                        filters: [
+                                            { vendorId: 0x2c97 }, // New Ledger vendor ID
+                                            { vendorId: 0x2581 }  // Old Ledger vendor ID
+                                        ]
+                                    });
+
+                                    if (!selectedDevices || selectedDevices.length === 0) {
+                                        throw new Error("No Ledger device selected");
+                                    }
+
+                                    ledgerDevices = selectedDevices;
+                                    console.log(`[LEDGER] User granted permission to ${ledgerDevices.length} devices`);
+                                }
+
+                                // Store permission status
+                                if (chrome.storage?.session) {
+                                    await chrome.storage.session.set({
+                                        'ledger_explicit_permission': {
+                                            granted: true,
+                                            timestamp: Date.now()
+                                        }
+                                    });
+                                    console.log("[LEDGER] Stored explicit permission status");
+                                }
+
+                                // Try to explicitly open the device first to avoid "device must be opened" errors
+                                let deviceOpened = false;
+                                for (const device of ledgerDevices) {
+                                    try {
+                                        if (!device.opened) {
+                                            await device.open();
+                                            console.log("[LEDGER] Explicitly opened device");
+                                            deviceOpened = true;
+                                        } else {
+                                            console.log("[LEDGER] Device already open");
+                                            deviceOpened = true;
+                                        }
+
+                                        // Break after opening the first one successfully
+                                        break;
+                                    } catch (openError) {
+                                        console.warn("[LEDGER] Error opening device:", openError);
+                                        // Continue to next device if there are more
+                                    }
+                                }
+
+                                if (!deviceOpened) {
+                                    console.warn("[LEDGER] Could not explicitly open any devices");
+                                    // We'll continue anyway and let the connectHardwareWallet function try
+                                }
+
+                                // Wait a moment after opening the device
+                                await new Promise(resolve => setTimeout(resolve, 500));
+
+                                // Now establish the connection with the hardware wallet
+                                console.log("[LEDGER] Calling connectHardwareWallet");
+                                const result = await connectHardwareWallet(vendor);
+                                console.log("[LEDGER] connectHardwareWallet result:", result);
+
+                                // Add a delay to allow the connection to fully establish
+                                console.log("[LEDGER] Adding stabilization delay");
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                                // Store successful connection status
+                                if (chrome.storage?.session) {
+                                    await chrome.storage.session.set({
+                                        'ledger_connection_status': {
+                                            connected: true,
+                                            timestamp: Date.now()
+                                        }
+                                    });
+                                    console.log("[LEDGER] Stored connection status");
+                                }
+
+                                // Before getting accounts, verify the device is still connected
+                                const isConnected = await ledgerBridge.checkWebHIDStatus();
+                                console.log("[LEDGER] Verified WebHID status:", isConnected);
+
+                                if (!isConnected) {
+                                    // Try explicit reconnection if the bridge doesn't show connected
+                                    console.log("[LEDGER] Bridge reports not connected, attempting reconnection");
+
+                                    // Refresh device list and try again
+                                    devices = await navigator.hid.getDevices();
+                                    ledgerDevices = devices.filter(d =>
+                                        d.vendorId === 0x2c97 || d.vendorId === 0x2581
+                                    );
+
+                                    if (ledgerDevices.length > 0) {
+                                        for (const device of ledgerDevices) {
+                                            try {
+                                                if (!device.opened) {
+                                                    await device.open();
+                                                    console.log("[LEDGER] Reopened device");
+                                                }
+                                            } catch (e) {
+                                                console.warn("[LEDGER] Error reopening device:", e);
+                                            }
+                                        }
+                                    }
+
+                                    // Try connection again after reopening
+                                    await connectHardwareWallet(vendor);
+                                    await new Promise(resolve => setTimeout(resolve, 500));
+                                }
+
+                                // Update UI to reflect successful connection
+                                console.log("[LEDGER] Connection process complete, updating UI");
                                 setState({
                                     reconnecting: false,
-                                    errorMessage: 'Failed to connect to Ledger. Please try again.'
+                                    errorMessage: '',
+                                    deviceNotReady: false
                                 });
-                                setFetchError('Failed to connect to Ledger. Please try again.');
+
+                                // Finally get accounts, which should now work properly
+                                console.log("[LEDGER] Getting accounts");
+                                await getAccounts();
+                            } catch (error) {
+                                log.error('Failed to connect in user interaction mode:', error);
+                                console.error('[LEDGER] Connection error:', error);
+
+                                // Fall back to the device reconnection handler for specific errors
+                                if (error.message && (
+                                    error.message.includes('device must be opened') ||
+                                    error.message.includes('No device selected')
+                                )) {
+                                    console.log("[LEDGER] Using handleLedgerReconnection as fallback");
+                                    try {
+                                        const success = await handleLedgerReconnection();
+                                        if (success) {
+                                            setState({
+                                                reconnecting: false,
+                                                errorMessage: '',
+                                                deviceNotReady: false
+                                            });
+                                            await getAccounts();
+                                            return;
+                                        }
+                                    } catch (e) {
+                                        console.error("[LEDGER] Fallback reconnection also failed:", e);
+                                    }
+                                }
+
+                                setState({
+                                    reconnecting: false,
+                                    errorMessage: 'Failed to connect to Ledger. Please try again and make sure your device is unlocked with the Ethereum app open.'
+                                });
+                                setFetchError('Failed to connect to Ledger. Please try again and make sure your device is unlocked with the Ethereum app open.');
                             }
                         }}
                         isLoading={state.reconnecting}
@@ -1570,16 +1864,165 @@ const HardwareWalletAccountsPage = () => {
         }
     };
 
-    // Auto-set Ledger Live HD path for Ledger devices
+    // Auto-set Ledger Live HD path for Ledger devices, but only after accounts have been loaded
     useEffect(() => {
-        if (vendor === Devices.LEDGER) {
+        // Only try to set HD path if we already have accounts (which means the keyring is initialized)
+        if (vendor === Devices.LEDGER && state.deviceAccounts.length > 0 && !state.gettingAccounts) {
             // Find the Ledger Live path from HDPaths
             const ledgerLivePath = HDPaths[vendor].find(path => path.name === 'Ledger Live')?.path;
+
+            // Only update if current path differs from Ledger Live path
             if (ledgerLivePath && hdPath !== ledgerLivePath) {
+                log.debug(`Auto-setting HD path to Ledger Live: ${ledgerLivePath}`);
                 updateHDPath(ledgerLivePath);
             }
         }
-    }, [vendor, hdPath]);
+    }, [vendor, hdPath, state.deviceAccounts.length, state.gettingAccounts]);
+
+    // Add a specific function to handle Ledger device reconnection
+    const handleLedgerReconnection = async (): Promise<boolean> => {
+        console.log("[LEDGER] Starting reconnection sequence for Ledger device");
+
+        // First check if WebHID is available
+        if (!navigator.hid) {
+            console.error("[LEDGER] WebHID API not available in this browser");
+            return false;
+        }
+
+        try {
+            // Clear any connection status
+            if (chrome.storage?.session) {
+                await chrome.storage.session.remove('ledger_connection_status');
+            }
+
+            // First try to get already-permitted devices
+            const existingDevices = await navigator.hid.getDevices();
+            const ledgerDevices = existingDevices.filter(d =>
+                d.vendorId === 0x2c97 || d.vendorId === 0x2581
+            );
+
+            if (ledgerDevices.length > 0) {
+                console.log(`[LEDGER] Found ${ledgerDevices.length} permitted Ledger devices`);
+
+                // Try to open the first device
+                for (const device of ledgerDevices) {
+                    try {
+                        if (!device.opened) {
+                            await device.open();
+                            console.log("[LEDGER] Successfully opened device");
+                        } else {
+                            console.log("[LEDGER] Device already open");
+                        }
+
+                        // Store connection status
+                        if (chrome.storage?.session) {
+                            await chrome.storage.session.set({
+                                'ledger_connection_status': {
+                                    connected: true,
+                                    timestamp: Date.now(),
+                                    reconnected: true
+                                }
+                            });
+                        }
+
+                        // Try to connect with hardware wallet
+                        await connectHardwareWallet(vendor);
+
+                        return true;
+                    } catch (deviceError) {
+                        console.warn(`[LEDGER] Error opening device: ${deviceError.message}`);
+                    }
+                }
+            }
+
+            // If we get here, either no devices or couldn't open existing ones
+            // Try requesting new device permissions
+            console.log("[LEDGER] Requesting new device permissions");
+            try {
+                const devices = await navigator.hid.requestDevice({
+                    filters: [
+                        { vendorId: 0x2c97 }, // New Ledger vendor ID
+                        { vendorId: 0x2581 }  // Old Ledger vendor ID
+                    ]
+                });
+
+                if (devices && devices.length > 0) {
+                    console.log(`[LEDGER] User selected ${devices.length} devices`);
+
+                    // Try to open the first selected device
+                    try {
+                        const device = devices[0];
+                        if (!device.opened) {
+                            await device.open();
+                            console.log("[LEDGER] Successfully opened new device");
+                        }
+
+                        // Store connection status
+                        if (chrome.storage?.session) {
+                            await chrome.storage.session.set({
+                                'ledger_connection_status': {
+                                    connected: true,
+                                    timestamp: Date.now(),
+                                    reconnected: true
+                                }
+                            });
+                        }
+
+                        // Try to connect with hardware wallet
+                        await connectHardwareWallet(vendor);
+
+                        return true;
+                    } catch (deviceError) {
+                        console.error(`[LEDGER] Error opening newly selected device: ${deviceError.message}`);
+                    }
+                } else {
+                    console.log("[LEDGER] No devices selected by user");
+                }
+            } catch (requestError) {
+                console.error(`[LEDGER] Error requesting device: ${requestError.message}`);
+                // User may have cancelled the request
+            }
+
+            return false;
+        } catch (e) {
+            console.error("[LEDGER] Error in handleLedgerReconnection:", e);
+            return false;
+        }
+    };
+
+    // Add a button handler specifically for "device must be opened" errors
+    const handleDeviceOpenError = async () => {
+        setState({ reconnecting: true });
+        setFetchError(null);
+
+        try {
+            const success = await handleLedgerReconnection();
+
+            if (success) {
+                // If reconnection was successful, try getting accounts
+                setState({
+                    reconnecting: false,
+                    deviceNotReady: false,
+                    errorMessage: ''
+                });
+                await getAccounts();
+            } else {
+                // If reconnection failed, show a specific error
+                setState({
+                    reconnecting: false,
+                    deviceNotReady: true,
+                    errorMessage: 'Reconnection failed. Please ensure your Ledger is connected, unlocked with the Ethereum app open, and try again.'
+                });
+            }
+        } catch (e) {
+            console.error("[LEDGER] Error handling device open error:", e);
+            setState({
+                reconnecting: false,
+                deviceNotReady: true,
+                errorMessage: 'Error reconnecting to Ledger: ' + (e.message || 'Unknown error')
+            });
+        }
+    };
 
     return (
         <HardwareWalletSetupLayout
@@ -1676,7 +2119,7 @@ const HardwareWalletAccountsPage = () => {
                                     {vendor === Devices.LEDGER && (
                                         <Button
                                             type="button"
-                                            onClick={triggerWebHIDDirectly}
+                                            onClick={handleDeviceOpenError}
                                             disabled={state.reconnecting}
                                             className={combineClasses(
                                                 "bg-primary-700 hover:bg-primary-800 text-white font-medium py-2 px-4 rounded flex items-center",
@@ -1712,7 +2155,7 @@ const HardwareWalletAccountsPage = () => {
                 )}
 
                 {/* Pagination controls - only show if there are more than 5 total accounts */}
-                {!needsUserInteraction && state.deviceAccounts.length > 5 && (
+                {!needsUserInteraction && enabledPagination && state.deviceAccounts.length === 5 && state.currentPage < MAX_ACCOUNTS / 5 && (
                     <div className="flex items-center justify-center mt-4">
                         <div className="inline-flex rounded-md shadow-sm" role="group">
                             <button
@@ -1722,7 +2165,7 @@ const HardwareWalletAccountsPage = () => {
                             >
                                 &lt;
                             </button>
-                            {Array.from({ length: Math.min(5, Math.ceil(state.deviceAccounts.length / 5)) }, (_, i) => i + 1).map(page => (
+                            {Array.from({ length: Math.min(5, Math.ceil(MAX_ACCOUNTS / 5)) }, (_, i) => i + 1).map(page => (
                                 <button
                                     key={page}
                                     onClick={() => setState({ currentPage: page })}
@@ -1736,8 +2179,8 @@ const HardwareWalletAccountsPage = () => {
                                 </button>
                             ))}
                             <button
-                                onClick={() => setState({ currentPage: Math.min(Math.ceil(state.deviceAccounts.length / 5), state.currentPage + 1) })}
-                                disabled={state.currentPage >= Math.ceil(state.deviceAccounts.length / 5) || isImportingAccounts}
+                                onClick={() => setState({ currentPage: Math.min(Math.ceil(MAX_ACCOUNTS / 5), state.currentPage + 1) })}
+                                disabled={state.currentPage >= Math.ceil(MAX_ACCOUNTS / 5) || isImportingAccounts}
                                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                             >
                                 &gt;

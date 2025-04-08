@@ -103,6 +103,8 @@ export default class KeyringControllerDerivated extends KeyringController {
     // private readonly _qrHardwareKeyring: QRHardwareKeyring;
     private restorePromise: Promise<boolean | { needsUserGesture: boolean; deviceName: string }> | null = null;
     private restoreCompleted = false;
+    // Add HD path cache to improve performance
+    private _hdPathCache: Map<Devices, string> = new Map();
 
     /**
      * The default hdPath to use for new hardware wallets
@@ -113,6 +115,9 @@ export default class KeyringControllerDerivated extends KeyringController {
      * Name of the controller for logging purposes
      */
     controllerName = 'KeyringControllerDerivated';
+
+    // Track the last updated timestamp to prevent redundant updates
+    private static lastUpdateTime: Record<string, number> = {};
 
     /**
      * Creates a new KeyringControllerDerivated instance
@@ -165,20 +170,24 @@ export default class KeyringControllerDerivated extends KeyringController {
     public async createNewVaultAndKeychain(
         @Hash password: string
     ): Promise<KeyringControllerState> {
-        const releaseLock = await this._mutex.acquire();
         try {
             log.debug('Creating new vault and keychain');
-            let vault;
-            const currentAccounts = await super.getAccounts();
-            if (currentAccounts.length > 0) {
-                log.debug('Accounts already exist, performing full update');
-                vault = super.fullUpdate();
-            } else {
-                log.debug('No accounts found, creating new vault and keychain');
-                vault = await super.createNewVaultAndKeychain(password);
-            }
 
-            // Verify keyring
+            // Use runExclusive for cleaner mutex handling
+            const vault = await this._mutex.runExclusive(async () => {
+                let vault;
+                const currentAccounts = await super.getAccounts();
+                if (currentAccounts.length > 0) {
+                    log.debug('Accounts already exist, performing full update');
+                    vault = super.fullUpdate();
+                } else {
+                    log.debug('No accounts found, creating new vault and keychain');
+                    vault = await super.createNewVaultAndKeychain(password);
+                }
+                return vault;
+            });
+
+            // Verify keyring outside of the mutex lock
             await this.verifyAccounts();
             log.debug('Vault creation successful, accounts verified');
 
@@ -186,8 +195,6 @@ export default class KeyringControllerDerivated extends KeyringController {
         } catch (error) {
             log.error('Failed to create new vault and keychain:', error);
             throw error;
-        } finally {
-            releaseLock();
         }
     }
 
@@ -209,16 +216,19 @@ export default class KeyringControllerDerivated extends KeyringController {
         @Hash password: string,
         seed: string
     ): Promise<KeyringControllerState> {
-        const releaseLock = await this._mutex.acquire();
         try {
             log.debug('Creating new vault and restoring from seed');
+
             if (!seed || seed.trim() === '') {
                 throw new Error('Seed phrase cannot be empty');
             }
 
-            const vault = await super.createNewVaultAndRestore(password, seed);
+            // Use runExclusive for cleaner mutex handling
+            const vault = await this._mutex.runExclusive(async () => {
+                return await super.createNewVaultAndRestore(password, seed);
+            });
 
-            // Verify keyring
+            // Verify keyring outside of the mutex lock
             await this.verifyAccounts();
             log.debug('Vault restoration successful, accounts verified');
 
@@ -226,8 +236,6 @@ export default class KeyringControllerDerivated extends KeyringController {
         } catch (error) {
             log.error('Failed to create new vault and restore:', error);
             throw error;
-        } finally {
-            releaseLock();
         }
     }
 
@@ -336,35 +344,34 @@ export default class KeyringControllerDerivated extends KeyringController {
      * @throws {Error} If account creation fails
      */
     public async createAccount(): Promise<string> {
-        const releaseLock = await this._mutex.acquire();
-        try {
+        // Get primary keyring outside of mutex lock
+        const primaryKeyring = super.getKeyringsByType(
+            KeyringTypes.HD_KEY_TREE
+        )[0];
+        if (!primaryKeyring) {
+            throw new Error(`No ${KeyringTypes.HD_KEY_TREE} found`);
+        }
+
+        let newAccount: string;
+
+        // Now acquire mutex only for the account creation part
+        await this._mutex.runExclusive(async () => {
             log.debug('Creating new account');
-            // Get primary keyring
-            const primaryKeyring = super.getKeyringsByType(
-                KeyringTypes.HD_KEY_TREE
-            )[0];
-            if (!primaryKeyring) {
-                throw new Error(`No ${KeyringTypes.HD_KEY_TREE} found`);
-            }
 
             // Add new account to the primary keyring
             await super.addNewAccount(primaryKeyring);
 
-            // Check the integrity
-            await this.verifyAccounts();
-
             // Recover the current accounts
             const accounts = await primaryKeyring.getAccounts();
-            const newAccount = accounts[accounts.length - 1];
+            newAccount = accounts[accounts.length - 1];
 
             log.debug(`New account created successfully: ${newAccount}`);
-            return newAccount;
-        } catch (error) {
-            log.error('Failed to create new account:', error);
-            throw error;
-        } finally {
-            releaseLock();
-        }
+        });
+
+        // Verification happens after account creation and outside the mutex
+        await this.verifyAccounts();
+
+        return newAccount!;
     }
 
     /**
@@ -512,6 +519,10 @@ export default class KeyringControllerDerivated extends KeyringController {
             // Continue anyway as the path might be valid, just not one of our predefined paths
         }
 
+        // Update our cache and storage immediately for better UX - even if the operation fails
+        // this ensures we remember what the user wanted
+        await this._updateStoredHDPath(device, hdPath);
+
         // First, get the keyring based on device
         try {
             const keyring = await this.getKeyringFromDevice(device);
@@ -527,33 +538,6 @@ export default class KeyringControllerDerivated extends KeyringController {
             if (device === Devices.LEDGER) {
                 const hasDOM = hasDomAccess();
                 log.debug(`Setting HD path in environment with DOM access: ${hasDOM}`);
-
-                // Store the HD path in session storage for recovery/retry
-                try {
-                    if (chrome.storage?.session) {
-                        await chrome.storage.session.set({
-                            'ledger_hd_path': {
-                                path: hdPath,
-                                timestamp: Date.now()
-                            }
-                        });
-                        log.debug(`Stored HD path ${hdPath} in session storage`);
-                    }
-                } catch (storageError) {
-                    log.error(`Failed to store HD path in session storage:`, storageError);
-                    // Continue anyway, this is just for recovery
-                }
-
-                // Also store in local storage for more permanent record
-                try {
-                    const ledgerPaths = JSON.parse(localStorage.getItem('ledger_hd_paths') || '{}');
-                    ledgerPaths[device] = hdPath;
-                    localStorage.setItem('ledger_hd_paths', JSON.stringify(ledgerPaths));
-                    log.debug(`Stored HD path ${hdPath} in local storage`);
-                } catch (localStorageError) {
-                    log.warn(`Failed to store HD path in local storage:`, localStorageError);
-                    // Continue anyway, this is just for recovery
-                }
 
                 // If we're in a service worker context (no DOM access), check for explicit permission
                 if (!hasDOM) {
@@ -705,7 +689,7 @@ export default class KeyringControllerDerivated extends KeyringController {
                 log.debug(`Successfully set HD path ${hdPath}${descriptor} on ${device} keyring`);
             }
 
-            // After success, update local and session storage again to ensure we have the latest
+            // After success, update local and session storage again to ensure we have the latest status
             try {
                 if (chrome.storage?.session) {
                     await chrome.storage.session.set({
@@ -719,11 +703,6 @@ export default class KeyringControllerDerivated extends KeyringController {
                     // Also clear any pending operations
                     await chrome.storage.session.remove('ledger_needs_user_interaction');
                 }
-
-                // Update local storage
-                const ledgerPaths = JSON.parse(localStorage.getItem('ledger_hd_paths') || '{}');
-                ledgerPaths[device] = hdPath;
-                localStorage.setItem('ledger_hd_paths', JSON.stringify(ledgerPaths));
             } catch (finalStorageError) {
                 log.warn(`Failed to update HD path in storage after success:`, finalStorageError);
                 // Continue anyway, this is just for recovery
@@ -791,14 +770,8 @@ export default class KeyringControllerDerivated extends KeyringController {
                 throw new Error('Device type must be specified');
             }
 
-            const keyring = await this.getKeyringFromDevice(device);
-            const hdPath =
-                keyring && keyring.hdPath !== ''
-                    ? keyring.hdPath
-                    : this._HDPathForDevice(device);
-
-            log.debug(`Retrieved HD path for ${device}: ${hdPath}`);
-            return hdPath;
+            // First check if we have the path in cache
+            return this._getStoredHDPath(device);
         } catch (error) {
             log.error(`Failed to get HD path for ${device}:`, error);
             throw error;
@@ -1695,12 +1668,27 @@ export default class KeyringControllerDerivated extends KeyringController {
 
     /**
      * Persist the keyring state for a hardware wallet device
+     * Cache used to prevent redundant update calls
      * @param device The hardware wallet device type
      * @returns A promise that resolves when the state is persisted
      */
     private async persistHardwareKeyringState(device: Devices): Promise<void> {
+        const now = Date.now();
+        const deviceKey = device.toString();
+
+        // Only update if it's been at least 500ms since the last update for this device
+        // This prevents excessive updates during rapid operations
+        if (KeyringControllerDerivated.lastUpdateTime[deviceKey] &&
+            now - KeyringControllerDerivated.lastUpdateTime[deviceKey] < 500) {
+            log.debug(`Skipping redundant state persistence for ${device}, last update was ${now - KeyringControllerDerivated.lastUpdateTime[deviceKey]}ms ago`);
+            return;
+        }
+
         try {
             log.debug(`Persisting keyring state for ${device}`);
+            // Update the timestamp before doing the work
+            KeyringControllerDerivated.lastUpdateTime[deviceKey] = now;
+
             // Get the latest state from the controller
             await this.fullUpdate();
         } catch (error) {
@@ -1856,6 +1844,204 @@ export default class KeyringControllerDerivated extends KeyringController {
                 device: paramsOrDevice as Devices,
                 state: {}
             });
+        }
+    }
+
+    /**
+     * Gets the stored HD path for a device, either from cache or storage
+     * @param device - The hardware wallet device type
+     * @returns The cached or stored HD path, or the default path if none found
+     */
+    private async _getStoredHDPath(device: Devices): Promise<string> {
+        // Check cache first
+        if (this._hdPathCache.has(device)) {
+            return this._hdPathCache.get(device)!;
+        }
+
+        let hdPath: string | undefined;
+
+        // Try session storage first for more recent values
+        if (chrome.storage?.session) {
+            try {
+                const result = await chrome.storage.session.get('ledger_hd_path');
+                if (result.ledger_hd_path && result.ledger_hd_path.path) {
+                    hdPath = result.ledger_hd_path.path;
+                    log.debug(`Retrieved HD path from session storage: ${hdPath}`);
+                }
+            } catch (e) {
+                log.warn(`Failed to read HD path from session storage:`, e);
+            }
+        }
+
+        // If not in session storage, try local storage
+        if (!hdPath) {
+            try {
+                const ledgerPaths = JSON.parse(localStorage.getItem('ledger_hd_paths') || '{}');
+                hdPath = ledgerPaths[device];
+                if (hdPath) {
+                    log.debug(`Retrieved HD path from local storage: ${hdPath}`);
+                }
+            } catch (e) {
+                log.warn(`Failed to read HD path from local storage:`, e);
+            }
+        }
+
+        // If still not found, use default
+        if (!hdPath) {
+            hdPath = this._HDPathForDevice(device);
+            log.debug(`Using default HD path: ${hdPath}`);
+        }
+
+        // Cache the result
+        this._hdPathCache.set(device, hdPath);
+        return hdPath;
+    }
+
+    /**
+     * Updates the HD path in cache and storage
+     * @param device - The hardware wallet device type
+     * @param hdPath - The HD path to store
+     * @returns Promise resolving when storage operations complete
+     */
+    private async _updateStoredHDPath(device: Devices, hdPath: string): Promise<void> {
+        // Update cache first
+        this._hdPathCache.set(device, hdPath);
+
+        // Prepare batch storage operations
+        const operations: Array<{
+            key: string;
+            value: any;
+            logSuccess?: string;
+            logError?: string;
+        }> = [];
+
+        // Add HD path for session storage
+        operations.push({
+            key: 'ledger_hd_path',
+            value: {
+                path: hdPath,
+                timestamp: Date.now(),
+                device: device
+            },
+            logSuccess: `Stored HD path ${hdPath} in session storage`,
+            logError: `Failed to store HD path in session storage`
+        });
+
+        // Also update the device-specific path in local storage
+        try {
+            const ledgerPaths = JSON.parse(localStorage.getItem('ledger_hd_paths') || '{}');
+            ledgerPaths[device] = hdPath;
+
+            // For device paths, we store a different format
+            operations.push({
+                key: 'ledger_hd_paths',
+                value: ledgerPaths,
+                logSuccess: `Updated device HD paths in storage`,
+                logError: `Failed to update device HD paths in storage`
+            });
+        } catch (e) {
+            log.warn(`Failed to parse ledger_hd_paths from localStorage:`, e);
+            // Add a new entry anyway with the right format
+            const newPaths: Record<string, string> = {};
+            newPaths[device] = hdPath;
+
+            operations.push({
+                key: 'ledger_hd_paths',
+                value: newPaths,
+                logSuccess: `Created new device HD paths in storage`,
+                logError: `Failed to create device HD paths in storage`
+            });
+        }
+
+        // Execute all storage operations
+        await this._batchStorageOperations(operations);
+    }
+
+    /**
+     * Efficiently performs multiple storage operations in a batch for better performance
+     * Handles errors gracefully for each operation
+     * 
+     * @param operations Array of storage operations to perform
+     * @param storageType The type of storage to use ('local', 'session', or 'both')
+     * @returns Promise that resolves when all operations complete (successfully or not)
+     */
+    private async _batchStorageOperations(
+        operations: Array<{
+            key: string;
+            value: any;
+            logSuccess?: string;
+            logError?: string;
+        }>,
+        storageType: 'local' | 'session' | 'both' = 'both'
+    ): Promise<void> {
+        if (operations.length === 0) return;
+
+        const storagePromises: Promise<void>[] = [];
+
+        // Process session storage operations
+        if (storageType === 'session' || storageType === 'both') {
+            if (chrome.storage?.session) {
+                // Group operations for session storage for efficiency
+                const sessionBatch: Record<string, any> = {};
+                operations.forEach(op => {
+                    sessionBatch[op.key] = op.value;
+                });
+
+                const sessionPromise = chrome.storage.session.set(sessionBatch)
+                    .then(() => {
+                        log.debug(`Successfully stored ${Object.keys(sessionBatch).length} items in session storage`);
+                    })
+                    .catch(error => {
+                        log.error(`Failed batch session storage operation:`, error);
+                        // Don't throw so other operations can continue
+                    });
+
+                storagePromises.push(sessionPromise);
+            }
+        }
+
+        // Process local storage operations
+        if (storageType === 'local' || storageType === 'both') {
+            // For chrome.storage.local
+            if (chrome.storage?.local) {
+                // Group operations for local storage for efficiency
+                const localBatch: Record<string, any> = {};
+                operations.forEach(op => {
+                    localBatch[op.key] = op.value;
+                });
+
+                const localPromise = chrome.storage.local.set(localBatch)
+                    .then(() => {
+                        log.debug(`Successfully stored ${Object.keys(localBatch).length} items in local storage`);
+                    })
+                    .catch(error => {
+                        log.error(`Failed batch local storage operation:`, error);
+                        // Don't throw so other operations can continue
+                    });
+
+                storagePromises.push(localPromise);
+            }
+
+            // For localStorage (fallback)
+            operations.forEach(op => {
+                try {
+                    localStorage.setItem(op.key, JSON.stringify(op.value));
+                    if (op.logSuccess) {
+                        log.debug(op.logSuccess);
+                    }
+                } catch (e) {
+                    if (op.logError) {
+                        log.warn(op.logError, e);
+                    } else {
+                        log.warn(`Failed to store ${op.key} in localStorage:`, e);
+                    }
+                }
+            });
+        }
+
+        // Wait for all promises to settle
+        if (storagePromises.length > 0) {
+            await Promise.allSettled(storagePromises);
         }
     }
 }

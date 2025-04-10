@@ -33,3 +33,84 @@ export const HDPaths: DevicesHDPath = {
         { name: 'Ledger Live', path: `m/44'/60'/0'/0/0`, default: true },
     ],
 };
+
+/**
+ * Interface for hardware wallet handler implementations
+ * Provides a consistent API for different hardware wallet types
+ */
+export interface IHardwareWalletHandler {
+    /**
+     * Connects to a hardware wallet device
+     * @returns Promise resolving to connection result
+     */
+    connect(): Promise<
+        | boolean
+        | {
+            needsUserGesture: boolean;
+            deviceName: string;
+            needsEthereumApp?: boolean;
+            message?: string;
+        }
+    >;
+
+    /**
+     * Completes the hardware wallet connection process
+     * @returns Promise resolving to true if connection was successful
+     */
+    completeConnection(): Promise<boolean>;
+
+    /**
+     * Gets the device type associated with this handler
+     */
+    getDevice(): Devices;
+
+    /**
+     * Gets the keyring type associated with this handler
+     */
+    getKeyringType(): string;
+
+    /**
+     * Gets the default HD path for this device type
+     */
+    getDefaultHDPath(): string;
+
+    /**
+     * Sets the HD path for this device
+     * @param hdPath The HD path to set
+     */
+    setHDPath(hdPath: string): Promise<void>;
+
+    /**
+     * Gets the current HD path for this device
+     */
+    getHDPath(): Promise<string>;
+
+    /**
+     * Imports accounts from the hardware wallet
+     * @param accountIndexes Array of account indexes to import
+     * @returns Promise resolving to array of imported account addresses
+     */
+    importAccounts(accountIndexes: number[]): Promise<string[]>;
+
+    /**
+     * Persists the hardware wallet state
+     */
+    persistState(): Promise<void>;
+
+    /**
+     * Cleans up resources when no longer needed
+     */
+    cleanup(): Promise<void>;
+}
+
+/**
+ * Interface for hardware wallet connection results
+ */
+export interface HardwareWalletConnectionResult {
+    success: boolean;
+    needsUserGesture?: boolean;
+    needsEthereumApp?: boolean;
+    device?: Devices;
+    message?: string;
+    error?: Error;
+}

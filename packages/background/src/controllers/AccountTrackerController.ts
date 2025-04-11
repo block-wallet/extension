@@ -2281,7 +2281,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                             console.log(`[LEDGER] Trying alternative HD path: ${path}`);
 
                             // Try to set the alternative path
-                            await this._keyringController.setHdPathForDevice(device, path);
+                            await this._keyringController.setHDPath(device, path);
 
                             // Try to get accounts with this path
                             deviceAccounts = await Promise.race([
@@ -2342,7 +2342,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                         log.warn(`No accounts found with any HD path, reverting to original: ${currentHDPath}`);
                         console.warn(`[LEDGER] No accounts found with any HD path, reverting to original`);
                         try {
-                            await this._keyringController.setHdPathForDevice(device, currentHDPath);
+                            await this._keyringController.setHDPath(device, currentHDPath);
                         } catch (e) {
                             log.error(`Failed to revert to original HD path:`, e);
                         }

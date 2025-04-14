@@ -140,6 +140,8 @@ export class LedgerConnectionManager {
     private mutex: Mutex = new Mutex();
     private retryCount = 0;
     private connectionPromise: Promise<ConnectionResult> | null = null;
+    private pendingOperations = 0;
+    private lastOperationTime = 0;
 
     constructor(config: Partial<LedgerConnectionManagerConfig> = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -752,19 +754,24 @@ export class LedgerConnectionManager {
      * @returns Promise resolving to connection result
      */
     public async connect(): Promise<ConnectionResult> {
-        // If we already have a connection attempt in progress, return that
-        if (this.connectionPromise &&
-            (this.state === LedgerConnectionState.CONNECTING)) {
+        // If we already have a pending connection, return that promise
+        if (this.connectionPromise) {
+            console.log('[LEDGER] Returning existing connection promise');
             return this.connectionPromise;
         }
 
-        // Start new connection attempt
+        // Reset retry counter on new connection attempt
+        this.retryCount = 0;
+
+        // Create a new connection promise
         this.connectionPromise = this._connect();
 
         try {
+            // Wait for the connection to complete
             const result = await this.connectionPromise;
             return result;
         } finally {
+            // Clear the connection promise reference
             this.connectionPromise = null;
         }
     }
@@ -774,155 +781,163 @@ export class LedgerConnectionManager {
      */
     private async _connect(): Promise<ConnectionResult> {
         try {
+            console.log('[LEDGER] Starting connection process');
+            // Check if we're already connected - no need to repeat
+            if (this.state === LedgerConnectionState.APP_OPEN ||
+                this.state === LedgerConnectionState.CONNECTED) {
+                console.log('[LEDGER] Already connected, returning success');
+                return {
+                    success: true,
+                    state: this.state,
+                    transportType: this.connectionInfo.transportType,
+                };
+            }
+
+            if (this.state !== LedgerConnectionState.DISCONNECTED) {
+                console.log(`[LEDGER] Not in DISCONNECTED state (current: ${this.state}). Force transitioning to DISCONNECTED.`);
+                await this.transition(LedgerConnectionEvent.DISCONNECT);
+
+                // Add a small delay to ensure disconnection completes
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            // Transition to connecting state
             await this.transition(LedgerConnectionEvent.CONNECT);
 
-            // Set default transport type
-            this.connectionInfo.transportType = 'webhid';
+            // Attempt to connect
+            let result;
+            try {
+                // Check if there are any pending operations that might interfere
+                if (this.pendingOperations > 0) {
+                    console.log(`[LEDGER] Waiting for ${this.pendingOperations} pending operations to complete`);
 
-            console.log('Attempting to connect to Ledger device...');
+                    // Short wait to allow operations to complete
+                    const timeSinceLastOp = Date.now() - this.lastOperationTime;
+                    if (timeSinceLastOp < 1000) {
+                        await new Promise(resolve => setTimeout(resolve, 1000 - timeSinceLastOp));
+                    }
+                }
 
-            // Use the ledgerBridge to connect to the device and explicitly type the result
-            const result = await ledgerBridge.connectUsingWebHID() as LedgerBridgeConnectionResult;
+                console.log('[LEDGER] Sending connect request to ledgerBridge');
+                result = await ledgerBridge.connectUsingWebHID() as LedgerBridgeConnectionResult;
+                console.log('[LEDGER] Received connect result:', result);
+            } catch (error) {
+                console.error('[LEDGER] Connection error:', error);
+                // Create a structured error object
+                const ledgerError: LedgerError = {
+                    type: this.getErrorTypeFromMessage(error.message),
+                    message: error.message,
+                    originalError: error,
+                    timestamp: Date.now(),
+                };
 
-            console.log(`Connection result received: ${JSON.stringify({
-                success: result.success,
-                needsUserGesture: result.needsUserGesture,
-                needsEthereumApp: result.needsEthereumApp,
-                transportType: result.transportType
-            })}`);
+                // Transition to error state
+                await this.transition(LedgerConnectionEvent.CONNECTION_FAILURE, ledgerError);
 
+                return {
+                    success: false,
+                    state: this.state,
+                    error: ledgerError,
+                    needsUserGesture: ledgerError.type === LedgerErrorType.PERMISSION_DENIED,
+                };
+            }
+
+            // Handle successful connection
             if (result.success) {
-                // Update connection info with result data
+                console.log('[LEDGER] Connection successful');
+                // Update connection info
                 if (result.transportType) {
                     this.connectionInfo.transportType = result.transportType;
                 }
 
-                // IMPORTANT: Ensure we actually transition to the CONNECTION_SUCCESS state
-                console.log('Connection successful, transitioning to CONNECTION_SUCCESS state');
+                // Transition state to connected
                 await this.transition(LedgerConnectionEvent.CONNECTION_SUCCESS);
 
-                if (result.needsEthereumApp) {
-                    // Device connected but Ethereum app not open
-                    this.connectionInfo.appOpen = false;
-                    console.log('Ethereum app not open, returning success with app closed status');
-                    return {
-                        success: true,
-                        state: this.state,
-                        needsUserGesture: false,
-                        transportType: this.connectionInfo.transportType
-                    };
+                // Check if the Ethereum app is open
+                const appOpen = await this.verifyEthereumAppOpen(true);
+                if (appOpen) {
+                    console.log('[LEDGER] Ethereum app is open');
+                    await this.transition(LedgerConnectionEvent.APP_OPEN_DETECTED);
                 }
 
-                // Success - device connected and Ethereum app detected
-                this.connectionInfo.appOpen = true;
-                console.log('Ethereum app is open, transitioning to APP_OPEN_DETECTED state');
-                await this.transition(LedgerConnectionEvent.APP_OPEN_DETECTED);
-
+                // Return success result - use the connection info transportType
                 return {
                     success: true,
                     state: this.state,
-                    transportType: this.connectionInfo.transportType
-                };
-            } else if (result.needsUserGesture) {
-                // Need UI interaction for WebHID permission
-                const error: LedgerError = {
-                    type: LedgerErrorType.PERMISSION_DENIED,
-                    message: result.message || 'User gesture required for Ledger connection',
-                    timestamp: Date.now()
-                };
-
-                console.log('User gesture required, transitioning to USER_REJECTED state');
-                await this.transition(LedgerConnectionEvent.USER_REJECTED, { error });
-
-                return {
-                    success: false,
-                    needsUserGesture: true,
-                    state: this.state,
-                    error,
-                    transportType: this.connectionInfo.transportType
+                    transportType: this.connectionInfo.transportType,
                 };
             } else {
-                // Connection failed for other reasons
-                const errorType = this.getErrorTypeFromMessage(result.message);
-                const error: LedgerError = {
+                console.log('[LEDGER] Connection failed:', result);
+                // Create error object from result
+                const errorType = result.needsUserGesture
+                    ? LedgerErrorType.PERMISSION_DENIED
+                    : (result.needsEthereumApp
+                        ? LedgerErrorType.APP_NOT_OPEN
+                        : LedgerErrorType.CONNECTION_FAILED);
+
+                const ledgerError: LedgerError = {
                     type: errorType,
                     message: result.message || 'Failed to connect to Ledger device',
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
                 };
 
-                console.log(`Connection failed: ${error.message}, transitioning to CONNECTION_FAILURE state`);
-                await this.transition(LedgerConnectionEvent.CONNECTION_FAILURE, { error });
-
-                // If configured, attempt to retry
-                if (this.retryCount < (this.config.maxRetries || 3)) {
-                    this.retryCount++;
-
-                    console.log(`Connection failed, retrying (${this.retryCount}/${this.config.maxRetries})...`);
-
-                    // Wait before retrying
-                    await new Promise(resolve => setTimeout(resolve, this.config.reconnectDelay || 1000));
-
-                    return this._connect();
-                }
+                // Transition to error state
+                await this.transition(LedgerConnectionEvent.CONNECTION_FAILURE, ledgerError);
 
                 return {
                     success: false,
                     state: this.state,
-                    error,
-                    transportType: this.connectionInfo.transportType
+                    error: ledgerError,
+                    needsUserGesture: result.needsUserGesture,
                 };
             }
         } catch (error) {
-            log.error('Error connecting to Ledger device:', error);
+            console.error('[LEDGER] Unexpected error during connection:', error);
 
+            // Create a structured error object for unexpected errors
             const ledgerError: LedgerError = {
                 type: LedgerErrorType.UNKNOWN,
-                message: error.message || 'Unknown error connecting to Ledger device',
+                message: error.message || 'Unexpected error during Ledger connection',
                 originalError: error,
-                timestamp: Date.now()
+                timestamp: Date.now(),
             };
 
-            console.log('Unhandled error occurred, transitioning to ERROR_OCCURRED state');
-            await this.transition(LedgerConnectionEvent.ERROR_OCCURRED, { error: ledgerError });
+            // Transition to error state
+            await this.transition(LedgerConnectionEvent.ERROR_OCCURRED, ledgerError);
 
             return {
                 success: false,
                 state: this.state,
                 error: ledgerError,
-                transportType: this.connectionInfo.transportType
             };
         }
     }
 
     /**
-     * Determines the error type from an error message
+     * Determine the appropriate LedgerErrorType from an error message
+     * @param message The error message to analyze
+     * @returns The corresponding LedgerErrorType
      */
     private getErrorTypeFromMessage(message?: string): LedgerErrorType {
         if (!message) return LedgerErrorType.UNKNOWN;
 
-        if (message.includes('no device selected') ||
-            message.includes('no device found') ||
-            message.includes('device not found')) {
-            return LedgerErrorType.NO_DEVICE_FOUND;
-        }
-
-        if (message.includes('multiple devices')) {
-            return LedgerErrorType.MULTIPLE_DEVICES;
-        }
-
-        if (message.includes('app not open') ||
-            message.includes('ethereum app') ||
-            message.includes('open the app')) {
+        if (message.includes('app') || message.includes('App')) {
             return LedgerErrorType.APP_NOT_OPEN;
         }
 
-        if (message.includes('permission') ||
-            message.includes('user gesture') ||
-            message.includes('cancelled')) {
+        if (message.includes('permission') || message.includes('denied') || message.includes('gesture')) {
             return LedgerErrorType.PERMISSION_DENIED;
         }
 
-        if (message.includes('timeout')) {
+        if (message.includes('found') || message.includes('no device')) {
+            return LedgerErrorType.NO_DEVICE_FOUND;
+        }
+
+        if (message.includes('multiple') || message.includes('more than one')) {
+            return LedgerErrorType.MULTIPLE_DEVICES;
+        }
+
+        if (message.includes('timeout') || message.includes('timed out')) {
             return LedgerErrorType.TIMEOUT;
         }
 
@@ -930,55 +945,93 @@ export class LedgerConnectionManager {
     }
 
     /**
-     * Verifies that the Ethereum app is open
-     * @param bypassCache Whether to bypass the cache check
-     * @returns Promise resolving to true if app is open
+     * Verifies if the Ethereum app is open on the Ledger device
+     * @param bypassCache Whether to bypass cached app status
+     * @returns Promise resolving to true if Ethereum app is open
      */
     public async verifyEthereumAppOpen(bypassCache = false): Promise<boolean> {
-        // If app is already confirmed open and cache check not bypassed
-        if (!bypassCache &&
-            this.state === LedgerConnectionState.APP_OPEN &&
-            this.connectionInfo.appOpen) {
-
-            const now = Date.now();
-            const lastCheck = this.connectionInfo.lastAppCheck || 0;
-
-            // Use cached result if recent (within 30 seconds)
-            if (now - lastCheck < 30000) {
-                return true;
-            }
-        }
-
         try {
-            // If device is not in a connected state, try to connect first
-            if (this.state !== LedgerConnectionState.CONNECTED &&
-                this.state !== LedgerConnectionState.WAITING_FOR_APP &&
-                this.state !== LedgerConnectionState.APP_OPEN) {
+            // Try to grab the mutex to prevent concurrent verification attempts
+            return await this.mutex.runExclusive(async () => {
+                this.pendingOperations++; // Track pending operation
 
-                const connectResult = await this.connect();
-                if (!connectResult.success) {
+                try {
+                    // Check if we have a cached result and bypass is not requested
+                    if (!bypassCache &&
+                        this.connectionInfo.appOpen !== undefined &&
+                        this.connectionInfo.lastAppCheck !== undefined) {
+                        const lastCheckAge = Date.now() - this.connectionInfo.lastAppCheck;
+                        // Use cached result if it's recent (last 30 seconds)
+                        if (lastCheckAge < 30000 && this.connectionInfo.appOpen) {
+                            console.log('[LEDGER] Using cached Ethereum app status');
+                            return this.connectionInfo.appOpen;
+                        }
+                    }
+
+                    if (this.state === LedgerConnectionState.DISCONNECTED) {
+                        console.log('[LEDGER] Not connected, attempting to connect first');
+                        const result = await this.connect();
+                        if (!result.success) {
+                            console.log('[LEDGER] Failed to connect for app verification');
+                            return false;
+                        }
+                    }
+
+                    // Use safe state comparison
+                    const isAlreadyInAppOpenState = this.state === LedgerConnectionState.APP_OPEN;
+                    if (isAlreadyInAppOpenState) {
+                        console.log('[LEDGER] Already in APP_OPEN state, returning true');
+                        return true;
+                    }
+
+                    console.log('[LEDGER] Asking ledgerBridge to verify Ethereum app status');
+                    const isOpen = await ledgerBridge.verifyEthereumAppOpen(bypassCache);
+                    console.log('[LEDGER] Ethereum app status:', isOpen);
+
+                    // Update cache
+                    this.connectionInfo.appOpen = isOpen;
+                    this.connectionInfo.lastAppCheck = Date.now();
+
+                    // Update state if needed
+                    if (isOpen) {
+                        // Use safe state comparison
+                        const shouldTransitionToAppOpen = this.state !== LedgerConnectionState.APP_OPEN;
+                        if (shouldTransitionToAppOpen) {
+                            await this.transition(LedgerConnectionEvent.APP_OPEN_DETECTED);
+                        }
+                    } else {
+                        // Use safe state comparison
+                        const isInAppOpenState = this.state === LedgerConnectionState.APP_OPEN;
+                        if (isInAppOpenState) {
+                            await this.transition(LedgerConnectionEvent.APP_CLOSED_DETECTED);
+                        }
+                    }
+
+                    // Persist app status to storage
+                    await this.persistAppStatus(isOpen);
+
+                    return isOpen;
+                } catch (error) {
+                    console.error('[LEDGER] Error verifying Ethereum app:', error);
+
+                    // Update cache with failure
+                    this.connectionInfo.appOpen = false;
+                    this.connectionInfo.lastAppCheck = Date.now();
+
+                    // Update state if needed - use safe comparison
+                    const isInAppOpenState = this.state === LedgerConnectionState.APP_OPEN;
+                    if (isInAppOpenState) {
+                        await this.transition(LedgerConnectionEvent.APP_CLOSED_DETECTED);
+                    }
+
                     return false;
+                } finally {
+                    this.pendingOperations--; // Remove from pending count
+                    this.lastOperationTime = Date.now(); // Update last operation time
                 }
-            }
-
-            // Verify Ethereum app is open
-            await this.transition(LedgerConnectionEvent.VERIFY_CONNECTION);
-
-            const appOpen = await ledgerBridge.verifyEthereumAppOpen(true);
-            this.connectionInfo.lastAppCheck = Date.now();
-
-            if (appOpen) {
-                this.connectionInfo.appOpen = true;
-                await this.transition(LedgerConnectionEvent.APP_OPEN_DETECTED);
-                return true;
-            } else {
-                this.connectionInfo.appOpen = false;
-                await this.transition(LedgerConnectionEvent.APP_CLOSED_DETECTED);
-                return false;
-            }
+            });
         } catch (error) {
-            log.error('Error verifying Ethereum app:', error);
-            this.connectionInfo.appOpen = false;
+            console.error('[LEDGER] Mutex error during verifyEthereumAppOpen:', error);
             return false;
         }
     }

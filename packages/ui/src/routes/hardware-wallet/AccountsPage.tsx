@@ -522,45 +522,59 @@ async function fetchAccountsWithRetry(vendor: Devices, retryCount = 1, pageIndex
     }
 }
 
-// Add this utility function at the top of the file, after imports and before the component definition
-/**
- * Safely execute a Chrome extension message with proper error handling for message port closed errors
- * @param asyncFn The async function to execute that contains Chrome messaging
- * @param fallbackValue Value to return if message port closes
- * @param timeoutMs Optional timeout in milliseconds
- */
-async function withMessagePortErrorHandling<T>(
-    asyncFn: () => Promise<T>,
-    fallbackValue: T | null = null,
-    timeoutMs = 10000
-): Promise<T> {
-    // Create a timeout promise that resolves with the fallback value
-    const timeoutPromise = new Promise<T>((resolve) => {
-        setTimeout(() => resolve(fallbackValue as T), timeoutMs);
-    });
+// A utility function to execute Chrome extension messages with error handling for message port closure
+const withMessagePortErrorHandling = async <T,>(
+    fn: () => Promise<T>,
+    fallbackValue: T,
+    timeoutMs: number = 15000
+): Promise<T> => {
+    return new Promise<T>((resolve) => {
+        let resolved = false;
 
-    try {
-        // Race the function against the timeout
-        const result = await Promise.race([
-            asyncFn().catch(err => {
-                // Specifically handle message port closed errors
-                if (err && err.message && err.message.includes('message port closed')) {
-                    console.log('[LEDGER] Message port closed, using fallback value');
-                    return fallbackValue;
+        // Set a timeout to prevent hanging
+        const timeoutId = setTimeout(() => {
+            if (!resolved) {
+                console.warn(`[LEDGER] Operation timed out after ${timeoutMs}ms, using fallback value`);
+                resolved = true;
+                resolve(fallbackValue);
+            }
+        }, timeoutMs);
+
+        // Execute the function
+        fn()
+            .then((result) => {
+                if (!resolved) {
+                    clearTimeout(timeoutId);
+                    resolved = true;
+                    resolve(result);
                 }
-                // Rethrow other errors
-                throw err;
-            }),
-            timeoutPromise
-        ]);
+            })
+            .catch((error) => {
+                if (!resolved) {
+                    clearTimeout(timeoutId);
+                    console.log("[LEDGER] Message port closed, using fallback value", error);
+                    resolved = true;
 
-        return result as T;
-    } catch (error) {
-        // For any other errors, log and return fallback
-        console.error('[LEDGER] Error in Chrome messaging:', error);
-        return fallbackValue as T;
-    }
-}
+                    // Check if this is a message port error
+                    const isMessagePortError =
+                        error &&
+                        typeof error === 'object' &&
+                        error.message &&
+                        (error.message.includes('message port closed') ||
+                            error.message.includes('Message port closed') ||
+                            error.message.includes('timeout'));
+
+                    if (isMessagePortError) {
+                        // For message port errors, use the fallback value
+                        resolve(fallbackValue);
+                    } else {
+                        // For other errors, rethrow
+                        throw error;
+                    }
+                }
+            });
+    });
+};
 
 const HardwareWalletAccountsPage = () => {
     const history = useOnMountHistory()!
@@ -1051,9 +1065,13 @@ const HardwareWalletAccountsPage = () => {
     const getAccounts = useCallback(async () => {
         if (state.gettingAccounts) return;
 
+        // If we already have accounts and are just reloading the page, don't show loading state
+        const hasExistingAccounts = state.deviceAccounts && state.deviceAccounts.length > 0;
+
         setState({
             gettingAccounts: true,
-            deviceAccounts: [],
+            // Only clear deviceAccounts if we don't already have them
+            deviceAccounts: hasExistingAccounts ? state.deviceAccounts : [],
             errorMessage: ''
         });
 
@@ -1062,13 +1080,34 @@ const HardwareWalletAccountsPage = () => {
         try {
             // For Ledger, ensure a stable connection first
             if (vendor === Devices.LEDGER) {
+                // Check if we already have accounts loaded - if so, we can skip some checks
+                if (hasExistingAccounts) {
+                    log.debug("Already have accounts loaded, skipping connection checks");
+                    console.log("[LEDGER] Already have accounts loaded, skipping connection checks");
+
+                    // We can proceed with a quicker path since we already have accounts
+                    setState({
+                        gettingAccounts: false,
+                        errorMessage: ''
+                    });
+
+                    // Still verify connection in the background, but don't wait for it
+                    withMessagePortErrorHandling(
+                        () => ledgerBridge.checkWebHIDStatus(),
+                        false,
+                        5000
+                    ).catch(() => {/* ignore errors */ });
+
+                    return;
+                }
+
                 // Check if we need to attempt automatic connection - use wrapped call
                 let isConnected = false;
                 try {
                     isConnected = await withMessagePortErrorHandling(
                         () => ledgerBridge.checkWebHIDStatus(),
                         false,
-                        5000
+                        8000
                     );
                     console.log("[LEDGER] Initial connection status:", isConnected);
                 } catch (e) {
@@ -1094,37 +1133,28 @@ const HardwareWalletAccountsPage = () => {
                             // Connect using WebHID directly if available
                             if (isUIContext() && navigator.hid) {
                                 try {
-                                    // Use wrapped call
+                                    // Use wrapped call with longer timeout
                                     await withMessagePortErrorHandling(
                                         () => connectHardwareWallet(vendor),
                                         null,
-                                        15000
+                                        20000
                                     );
 
                                     // Wait for connection to stabilize
-                                    await new Promise(resolve => setTimeout(resolve, 800));
+                                    await new Promise(resolve => setTimeout(resolve, 1000));
 
                                     // Verify connection again after delay - use wrapped call
                                     isConnected = await withMessagePortErrorHandling(
                                         () => ledgerBridge.checkWebHIDStatus(),
-                                        false,
-                                        5000
+                                        true, // Assume connected to proceed with account fetching
+                                        8000
                                     );
                                     console.log("[LEDGER] Connection status after explicit connect:", isConnected);
-
-                                    if (!isConnected) {
-                                        console.log("[LEDGER] Connection still not established, showing manual connection dialog");
-                                        setState({
-                                            gettingAccounts: false,
-                                            deviceNotReady: true,
-                                            errorMessage: "Could not connect to Ledger automatically. Please connect your device manually."
-                                        });
-                                        return;
-                                    }
                                 } catch (e) {
                                     // Check if this is a message port error
                                     if (e.message && e.message.includes('message port closed')) {
                                         console.log("[LEDGER] Message port closed during connection, will try accounts anyway");
+                                        isConnected = true; // Optimistically proceed
                                     } else {
                                         console.error("[LEDGER] Explicit connection failed:", e);
                                         setState({
@@ -1143,14 +1173,19 @@ const HardwareWalletAccountsPage = () => {
                                 });
                                 return;
                             }
+                        } else {
+                            // Auto-connection successful
+                            isConnected = true;
                         }
 
-                        log.debug("Connection successfully established, proceeding to get accounts");
-                        console.log("[LEDGER] Connection successfully established");
+                        // Try to proceed even if our connection checks fail
+                        log.debug("Connection established or proceeding anyway, fetching accounts");
+                        console.log("[LEDGER] Connection established or proceeding anyway");
                     } catch (connError) {
                         // Check if this is a message port error
                         if (connError.message && connError.message.includes('message port closed')) {
                             console.log("[LEDGER] Message port closed during connection, will try accounts anyway");
+                            isConnected = true; // Optimistically proceed
                         } else {
                             console.error("[LEDGER] Connection error:", connError);
                             setState({
@@ -1166,16 +1201,16 @@ const HardwareWalletAccountsPage = () => {
 
             try {
                 log.debug(`Getting accounts for ${vendor}`);
-                // Use wrapped call for retrying accounts fetch
+                // Use wrapped call for retrying accounts fetch with a longer timeout
                 const accounts = await withMessagePortErrorHandling(
                     () => fetchAccountsWithRetry(
                         vendor,
-                        2, // retryCount
+                        1, // start with lower retry count
                         state.currentPage - 1,
                         5 // always use 5 accounts per page
                     ),
-                    [],
-                    20000
+                    hasExistingAccounts ? state.deviceAccounts : [], // Use existing accounts as fallback
+                    25000 // Longer timeout for fetching accounts
                 );
 
                 // Check if we have accounts
@@ -1205,6 +1240,15 @@ const HardwareWalletAccountsPage = () => {
                         }
                     }
 
+                    // If we still have existing accounts, keep showing them instead of error
+                    if (hasExistingAccounts) {
+                        setState({
+                            gettingAccounts: false,
+                            errorMessage: ''
+                        });
+                        return;
+                    }
+
                     setState({
                         gettingAccounts: false,
                         deviceNotReady: true
@@ -1221,7 +1265,25 @@ const HardwareWalletAccountsPage = () => {
 
                 // Also clear the fetchError state
                 setFetchError(null);
+
+                // Store successful account fetch flag in session storage
+                try {
+                    sessionStorage.setItem('ledger_accounts_fetched', 'true');
+                    sessionStorage.setItem('ledger_accounts_timestamp', Date.now().toString());
+                } catch (e) {
+                    console.warn('[LEDGER] Failed to store accounts fetched flag:', e);
+                }
             } catch (error) {
+                // If we already have accounts, just keep showing them instead of error
+                if (hasExistingAccounts) {
+                    console.warn("[LEDGER] Error fetching accounts but already have some, continuing:", error);
+                    setState({
+                        gettingAccounts: false,
+                        errorMessage: ''
+                    });
+                    return;
+                }
+
                 // Check if this is a message port error
                 if (error.message && error.message.includes('message port closed')) {
                     console.log("[LEDGER] Message port closed during account fetch, showing user interaction dialog");
@@ -1251,18 +1313,6 @@ const HardwareWalletAccountsPage = () => {
                             errorMessage
                         });
                         return;
-                    } else if (error.message.includes('timeout')) {
-                        errorMessage = 'Communication with Ledger timed out. Please make sure your device is unlocked and the Ethereum app is open.';
-                    } else if (error.message.includes('device must be opened')) {
-                        errorMessage = 'The device connection was lost. Please ensure your Ledger is connected, unlocked, and try again.';
-
-                        // For device opening errors, show the reconnect dialog
-                        setState({
-                            gettingAccounts: false,
-                            deviceNotReady: true,
-                            errorMessage
-                        });
-                        return;
                     }
                 }
 
@@ -1273,15 +1323,25 @@ const HardwareWalletAccountsPage = () => {
                 });
             }
         } catch (outerError) {
-            // This catches any errors in the connection phase
-            console.error("[LEDGER] Outer error in getAccounts:", outerError);
+            log.error('Unexpected error in getAccounts:', outerError);
+            console.error('[LEDGER] Unexpected error in getAccounts:', outerError);
+
+            // If we have existing accounts, keep showing them
+            if (hasExistingAccounts) {
+                setState({
+                    gettingAccounts: false,
+                    errorMessage: ''
+                });
+                return;
+            }
+
             setState({
                 gettingAccounts: false,
                 deviceNotReady: true,
-                errorMessage: 'Failed to connect. Please check your device connection and try again.'
+                errorMessage: outerError.message || 'An unexpected error occurred'
             });
         }
-    }, [state.gettingAccounts, state.currentPage, vendor]);
+    }, [state.currentPage, state.gettingAccounts, state.deviceAccounts, vendor]);
 
     const toggleAccount = (account: DeviceAccountInfo) => {
         const selected = state.selectedAccounts.some(

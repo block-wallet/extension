@@ -32,6 +32,8 @@ function updateStatus(message) {
 // Store active transport instances
 let activeTransport = null; // Changed from activeTransports.LEDGER
 let ledgerDevice = null; // Store the device reference separately
+let operationInProgress = false; // Flag to track ongoing operations
+let lastOperationTime = 0; // Track when the last operation completed
 
 // Initialize bridge
 function initHardwareWalletBridge() {
@@ -139,6 +141,7 @@ function initHardwareWalletBridge() {
                 // Clear the active transport
                 activeTransport = null;
                 ledgerDevice = null;
+                operationInProgress = false;
             }
         });
     }
@@ -150,6 +153,17 @@ async function handleHardwareWalletDisconnection(deviceType, sendResponse) {
         updateStatus(`Disconnecting ${deviceType} device...`);
 
         if (deviceType === 'LEDGER') {
+            // Wait for any ongoing operations to complete
+            if (operationInProgress) {
+                updateStatus(`Waiting for ongoing operation to complete before disconnecting...`);
+                // Wait up to 5 seconds for the operation to complete
+                let attempts = 0;
+                while (operationInProgress && attempts < 5) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    attempts++;
+                }
+            }
+
             // Close the transport if it exists
             if (activeTransport) {
                 try {
@@ -164,6 +178,7 @@ async function handleHardwareWalletDisconnection(deviceType, sendResponse) {
 
             // Clean up device reference too
             ledgerDevice = null;
+            operationInProgress = false;
 
             // Force garbage collection of any remaining references (if possible)
             if (global.gc) {
@@ -248,54 +263,57 @@ async function handleHardwareWalletConnection(deviceType, transportType, sendRes
             updateStatus(`Failed to connect to ${deviceType} device`);
             sendResponse({
                 success: false,
-                error: 'Connection failed',
-                timestamp: Date.now(),
-                device: deviceType
+                error: `Failed to connect to ${deviceType} device`,
+                needsUserGesture: deviceType === 'LEDGER', // Ledger always needs user gesture
+                timestamp: Date.now()
             });
         }
     } catch (error) {
-        updateStatus(`Error connecting to hardware wallet: ${error.message}`);
+        console.error('Connection error:', error);
+        updateStatus(`Connection error: ${error.message}`);
 
-        // Create a more detailed error response
+        // Determine if this is a permission issue
         const errorCode = determineErrorCode(error, deviceType);
-        const errorResponse = {
+        const needsUserGesture = errorCode === 'PERMISSION_DENIED';
+
+        sendResponse({
             success: false,
             error: error.message,
-            errorCode: errorCode,
-            timestamp: Date.now(),
-            device: deviceType,
-            requiresUserGesture: error.requiresUserGesture ||
-                (error.message && error.message.includes('user gesture'))
-        };
-
-        sendResponse(errorResponse);
+            errorCode,
+            needsUserGesture,
+            timestamp: Date.now()
+        });
     }
 }
 
-// Helper function to categorize errors
+// Determine error code from error object
 function determineErrorCode(error, deviceType) {
-    if (!error) return 'UNKNOWN_ERROR';
+    const message = error.message || '';
+    const code = error.code || '';
 
-    const msg = error.message || '';
-
-    if (deviceType === 'LEDGER') {
-        if (msg.includes('locked') || msg.includes('CONDITIONS_OF_USE_NOT_SATISFIED')) {
-            return 'DEVICE_LOCKED';
-        } else if (msg.includes('busy') || msg.includes('in use') || msg.includes('already open')) {
-            return 'DEVICE_BUSY';
-        } else if (msg.includes('permission') || msg.includes('denied') || msg.includes('SecurityError')) {
-            return 'PERMISSION_DENIED';
-        } else if (msg.includes('timeout') || msg.includes('Timeout') ||
-            msg.includes('not in the expected state') ||
-            msg.includes('app open')) {
-            return 'APP_NOT_OPEN';
-        }
+    if (code === 'PERMISSION_DENIED' || error.name === 'SecurityError') {
+        return 'PERMISSION_DENIED';
     }
 
-    return 'CONNECTION_FAILED';
+    if (message.includes('user gesture') || message.includes('permission')) {
+        return 'PERMISSION_DENIED';
+    }
+
+    if (message.includes('device was disconnected') || message.includes('device disconnected')) {
+        return 'DEVICE_DISCONNECTED';
+    }
+
+    if (message.includes('Ethereum app') || message.includes('ethereum application')) {
+        return 'APP_NOT_OPEN';
+    }
+
+    if (message.includes('time') || message.includes('timeout')) {
+        return 'TIMEOUT';
+    }
+
+    return 'UNKNOWN_ERROR';
 }
 
-// Connect to Ledger device using WebHID
 async function connectLedger() {
     try {
         updateStatus('Connecting to Ledger device via WebHID...');
@@ -306,15 +324,24 @@ async function connectLedger() {
             throw new Error('WebHID API not available');
         }
 
+        // Check if there's an active operation
+        if (operationInProgress) {
+            console.log('[LEDGER OFFSCREEN] Operation in progress, waiting before connecting...');
+            // Wait a short time to ensure no operation is in progress (device state)
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
         // Close any existing transport to ensure clean state
         if (activeTransport) {
             try {
                 console.log('[LEDGER OFFSCREEN] Closing existing transport before reconnecting');
                 await activeTransport.close();
                 activeTransport = null;
+                await new Promise(resolve => setTimeout(resolve, 500)); // Small delay after closing
             } catch (closeError) {
                 console.warn('[LEDGER OFFSCREEN] Error closing existing transport:', closeError);
                 // Continue anyway - we'll try to create a new transport
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Longer delay on error
             }
         }
 
@@ -374,7 +401,13 @@ async function connectLedger() {
         if (!activeTransport) {
             try {
                 console.log('[LEDGER OFFSCREEN] Creating WebHID transport...');
-                activeTransport = await TransportWebHID.create();
+                // Use a timeout to prevent hanging
+                const transportPromise = TransportWebHID.create();
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('WebHID transport creation timed out')), 10000);
+                });
+
+                activeTransport = await Promise.race([transportPromise, timeoutPromise]);
                 console.log('[LEDGER OFFSCREEN] WebHID transport created.');
             } catch (transportError) {
                 console.error('[LEDGER OFFSCREEN] Failed to create WebHID transport:', transportError);
@@ -487,6 +520,10 @@ async function verifyEthereumApp(deviceType, sendResponse, bypassCache = false) 
     try {
         updateStatus('Verifying Ethereum app is open...');
 
+        // Set operation in progress
+        const wasOperationInProgress = operationInProgress;
+        operationInProgress = true;
+
         // Check if we have an active transport
         if (!activeTransport) { // Check activeTransport
             // Try to reconnect if we don't have an active device/transport
@@ -497,104 +534,111 @@ async function verifyEthereumApp(deviceType, sendResponse, bypassCache = false) 
                 safeResponse({
                     success: false,
                     appOpen: false,
-                    error: 'No active Ledger connection available'
+                    error: `Failed to reconnect to Ledger: ${error.message}`,
+                    ethAppStatus: {
+                        open: false,
+                        timestamp: Date.now(),
+                        error: error.message,
+                        source: 'reconnect_error'
+                    }
                 });
+                operationInProgress = wasOperationInProgress;
                 return;
             }
         }
 
-        // Create a promise that represents the actual verification logic
-        const verificationPromise = new Promise(async (resolve, reject) => {
-            try {
-                // Ensure transport is available
-                if (!activeTransport) {
-                    reject(new Error('Ledger transport not available'));
-                    return;
+        // If we still don't have a transport, report failure
+        if (!activeTransport) {
+            safeResponse({
+                success: false,
+                appOpen: false,
+                error: 'Failed to establish Ledger connection',
+                ethAppStatus: {
+                    open: false,
+                    timestamp: Date.now(),
+                    error: 'No active transport',
+                    source: 'no_transport'
                 }
+            });
+            operationInProgress = wasOperationInProgress;
+            return;
+        }
 
-                // Use the Eth app class with the transport
-                const eth = new Eth(activeTransport);
-                console.log('[LEDGER OFFSCREEN] Eth app instance created, calling getAppConfiguration');
+        // Create an Ethereum app instance
+        const eth = new Eth(activeTransport);
 
-                // The getAppConfiguration method directly verifies the app
-                const appConfig = await eth.getAppConfiguration();
-                console.log('[LEDGER OFFSCREEN] getAppConfiguration successful:', appConfig);
-
-                // If getAppConfiguration succeeds, the app is open
-                resolve(true);
-
-            } catch (error) {
-                console.error('[LEDGER OFFSCREEN] Verification error via getAppConfiguration:', error);
-                // Map specific Ledger errors if needed
-                if (error && error.statusCode) {
-                    const knownErrors = {
-                        0x6985: 'Conditions not satisfied (Ethereum app not open?)',
-                        0x6d00: 'INS not supported (wrong app open?)',
-                        0x6e00: 'CLA not supported (wrong app open?)'
-                        // Add other relevant status codes
-                    };
-                    const errorDesc = knownErrors[error.statusCode] || `Unknown Ledger error ${error.statusCode.toString(16)}`;
-                    reject(new Error(`Verification failed: ${errorDesc}`));
-                } else {
-                    reject(error); // Re-throw other errors
+        // Set a timeout for the app verification (increased from 10 to 15 seconds)
+        // This helps prevent UI freezes when the device is waiting for user input
+        timeoutId = setTimeout(() => {
+            console.log('[LEDGER OFFSCREEN] Ethereum app verification timed out');
+            safeResponse({
+                success: false,
+                appOpen: false,
+                error: 'Ethereum app verification timed out',
+                ethAppStatus: {
+                    open: false,
+                    timestamp: Date.now(),
+                    error: 'Verification timed out',
+                    source: 'timeout'
                 }
-            }
-        });
-
-        // Create a timeout promise
-        const timeoutPromise = new Promise((_, reject) => {
-            timeoutId = setTimeout(() => {
-                console.log('[LEDGER OFFSCREEN] Internal verification timeout (15s) reached');
-                reject(new Error('Ethereum app verification timed out'));
-            }, 15000); // 15 second timeout (increased from 5s)
-        });
+            });
+            operationInProgress = wasOperationInProgress;
+        }, 15000);
 
         try {
-            console.log('[LEDGER OFFSCREEN] Starting Promise.race between verification and timeout');
-            // Race the verification against the timeout
-            const result = await Promise.race([verificationPromise, timeoutPromise]);
+            // Race condition to handle app check
+            const appPromise = eth.getAppConfiguration();
 
-            // Success - Ethereum app is open
-            updateStatus('Ethereum app is open on Ledger device');
+            // Use a race to handle timeout more gracefully
+            const raceResult = await Promise.race([
+                appPromise,
+                new Promise((_, reject) => {
+                    timeoutId = setTimeout(() => {
+                        reject(new Error('Ethereum app verification timed out'));
+                    }, 15000);
+                })
+            ]);
+
+            // Clear timeout since we got a response
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+
+            console.log('[LEDGER OFFSCREEN] Ethereum app verification result:', raceResult);
+
+            // Successfully got app configuration - Ethereum app is open
             safeResponse({
                 success: true,
                 appOpen: true,
+                appConfig: raceResult,
+                // Provide detailed status information for the service worker to store
                 ethAppStatus: {
                     open: true,
                     timestamp: Date.now(),
-                    source: 'offscreen_verification_success'
+                    device: 'LEDGER',
+                    appVersion: raceResult.version || 'unknown',
+                    source: 'offscreen_verification_succeeded'
                 }
             });
         } catch (raceError) {
-            console.error('[LEDGER OFFSCREEN] Race error:', raceError);
+            // Clear any existing timeout
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
 
-            // Enhanced error diagnosis
-            if (raceError.message === 'Ethereum app verification timed out') {
-                console.log('[LEDGER OFFSCREEN] Failure cause: No response received within timeout period. Device might be unresponsive or disconnected.');
+            console.error('[LEDGER OFFSCREEN] Ethereum app verification failed:', raceError);
 
-                // Log device state for diagnostics
-                if (ledgerDevice) {
-                    const device = ledgerDevice;
-                    console.log(
-                        `[LEDGER OFFSCREEN] Device diagnostic info:
-                        - Vendor ID: 0x${device.vendorId.toString(16)}
-                        - Product ID: 0x${device.productId.toString(16)}
-                        - Product Name: ${device.productName || 'Unknown'}
-                        - Opened: ${device.opened}`
-                    );
+            // Determine the specific error
+            const errorMessage = raceError.message || 'Unknown error';
+            let isAppNotOpen = errorMessage.includes('0x6804') ||
+                errorMessage.includes('0x6d00') ||
+                errorMessage.includes('Ethereum app required') ||
+                errorMessage.includes('ethereum application');
 
-                    // Check if device might be in another mode or app
-                    console.log(
-                        `[LEDGER OFFSCREEN] Possible causes: 
-                        - Ethereum app is not actually open (even if unlocked)
-                        - Device is still in the device selection screen
-                        - Device is showing a confirmation dialog
-                        - Device firmware may need updating
-                        - WebHID connection may need to be reestablished`
-                    );
-                }
-            } else if (raceError.message.includes('Unexpected response from device')) {
-                console.log('[LEDGER OFFSCREEN] Failure cause: Device responded but with error status. Ethereum app might not be open or ready.');
+            if (isAppNotOpen) {
+                console.log('[LEDGER OFFSCREEN] Failure cause: Ethereum app not open');
             } else {
                 console.log('[LEDGER OFFSCREEN] Failure cause: Error during communication:', raceError.message);
             }
@@ -614,6 +658,8 @@ async function verifyEthereumApp(deviceType, sendResponse, bypassCache = false) 
                         : 'offscreen_verification_unexpected_response'
                 }
             });
+        } finally {
+            operationInProgress = wasOperationInProgress;
         }
     } catch (error) {
         console.error('[LEDGER OFFSCREEN] Error verifying Ethereum app:', error);
@@ -630,12 +676,40 @@ async function verifyEthereumApp(deviceType, sendResponse, bypassCache = false) 
                 source: 'offscreen_try_catch'
             }
         });
+        operationInProgress = false;
     }
 }
 
 // Handle Ledger operations
 async function handleLedgerOperation(operation, params, sendResponse) {
     let transport = activeTransport;
+
+    // Set flags to prevent concurrent operations
+    if (operationInProgress) {
+        console.log(`[LEDGER OFFSCREEN] Another operation is in progress, delaying ${operation}...`);
+
+        // Check if operation was very recent (less than 500ms ago)
+        const timeSinceLastOperation = Date.now() - lastOperationTime;
+        if (timeSinceLastOperation < 500) {
+            // Add small delay between operations to give device time to reset
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        // Wait for in-progress operation to finish (up to 5 seconds)
+        let waitTime = 0;
+        while (operationInProgress && waitTime < 5000) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            waitTime += 100;
+        }
+
+        // If still in progress after waiting, we'll try to proceed anyway
+        if (operationInProgress) {
+            console.warn(`[LEDGER OFFSCREEN] Previous operation still in progress after wait, proceeding with ${operation}`);
+        }
+    }
+
+    operationInProgress = true;
+
     try {
         updateStatus(`Executing Ledger operation: ${operation}`);
         console.log(`[LEDGER OFFSCREEN] Executing operation: ${operation}`, params);
@@ -660,115 +734,161 @@ async function handleLedgerOperation(operation, params, sendResponse) {
 
         // Execute the requested operation using eth instance
         let result;
-        switch (operation) {
-            case 'getPage': { // Use block scope for clarity
-                updateStatus(`Getting page ${params.pageIndex} from Ledger...`);
-                console.log(`[LEDGER OFFSCREEN] Getting page ${params.pageIndex}`);
-                const pageSize = 5; // Standard page size
-                const startIndex = params.pageIndex * pageSize;
-                const hdPath = params.hdPath || "44'/60'/0'/0"; // Default path if needed
+        let maxRetries = 2; // Allow up to 2 retries for each operation
+        let attempt = 0;
+        let lastError = null;
 
-                const accountsResult = [];
-                for (let i = 0; i < pageSize; i++) {
-                    const fullPath = `${hdPath}/${startIndex + i}`;
-                    try {
-                        console.log(`[LEDGER OFFSCREEN] Getting address for path: ${fullPath}`);
-                        const accountData = await eth.getAddress(fullPath, false, false); // address, display=false, chainCode=false
-                        console.log(`[LEDGER OFFSCREEN] Received address: ${accountData.address}`);
-                        accountsResult.push(accountData.address);
-                    } catch (addrError) {
-                        console.error(`[LEDGER OFFSCREEN] Error getting address for path ${fullPath}:`, addrError);
-                        // Decide how to handle errors - stop, continue, return partial?
-                        // For now, let's throw to indicate failure on this page
-                        throw new Error(`Failed to get address for path ${fullPath}: ${addrError.message}`);
-                    }
-                }
-                result = accountsResult;
-                console.log(`[LEDGER OFFSCREEN] Successfully retrieved ${result.length} accounts for page ${params.pageIndex}`);
-                sendResponse({
-                    success: true,
-                    accounts: result,
-                    message: `Retrieved ${result.length} accounts for page ${params.pageIndex}`
-                });
-                break;
-            }
-            case 'getAccounts': { // Use block scope
-                updateStatus(`Getting accounts from Ledger...`);
-                console.log(`[LEDGER OFFSCREEN] Getting accounts (page ${params.pageIndex}, size ${params.pageSize})`);
-                const pageSize = params.pageSize || 5;
-                const startIndex = params.pageIndex * pageSize;
-                const hdPath = params.hdPath || "44'/60'/0'/0"; // Default path
+        while (attempt <= maxRetries) {
+            try {
+                switch (operation) {
+                    case 'getPage': { // Use block scope for clarity
+                        updateStatus(`Getting page ${params.pageIndex} from Ledger...`);
+                        console.log(`[LEDGER OFFSCREEN] Getting page ${params.pageIndex} (attempt ${attempt + 1}/${maxRetries + 1})`);
+                        const pageSize = 5; // Standard page size
+                        const startIndex = params.pageIndex * pageSize;
+                        const hdPath = params.hdPath || "44'/60'/0'/0"; // Default path if needed
 
-                const accountsResult = [];
-                for (let i = 0; i < pageSize; i++) {
-                    const fullPath = `${hdPath}/${startIndex + i}`;
-                    try {
-                        console.log(`[LEDGER OFFSCREEN] Getting address for path: ${fullPath}`);
-                        const accountData = await eth.getAddress(fullPath, false, false);
-                        console.log(`[LEDGER OFFSCREEN] Received address: ${accountData.address}`);
-                        // Format the accounts to match the expected interface
-                        accountsResult.push({
-                            address: accountData.address,
-                            index: startIndex + i,
-                            balance: null, // Balance is not typically fetched here
-                            name: null // Name is not typically fetched here
+                        const accountsResult = [];
+                        for (let i = 0; i < pageSize; i++) {
+                            const fullPath = `${hdPath}/${startIndex + i}`;
+                            console.log(`[LEDGER OFFSCREEN] Getting address for path: ${fullPath}`);
+                            // Allow short pause between address fetches to avoid device state issues
+                            if (i > 0) await new Promise(resolve => setTimeout(resolve, 100));
+
+                            const accountData = await eth.getAddress(fullPath, false, false);
+                            console.log(`[LEDGER OFFSCREEN] Received address: ${accountData.address}`);
+                            accountsResult.push(accountData.address);
+                        }
+                        result = accountsResult;
+                        console.log(`[LEDGER OFFSCREEN] Successfully retrieved ${result.length} accounts for page ${params.pageIndex}`);
+
+                        sendResponse({
+                            success: true,
+                            accounts: result,
+                            message: `Retrieved ${result.length} accounts for page ${params.pageIndex}`
                         });
-                    } catch (addrError) {
-                        console.error(`[LEDGER OFFSCREEN] Error getting address for path ${fullPath}:`, addrError);
-                        throw new Error(`Failed to get address for path ${fullPath}: ${addrError.message}`);
+                        return; // Exit the function successfully
                     }
-                }
-                result = accountsResult;
-                console.log(`[LEDGER OFFSCREEN] Successfully retrieved ${result.length} accounts details`);
+                    case 'getAccounts': { // Use block scope
+                        updateStatus(`Getting accounts from Ledger...`);
+                        console.log(`[LEDGER OFFSCREEN] Getting accounts (page ${params.pageIndex}, size ${params.pageSize}) (attempt ${attempt + 1}/${maxRetries + 1})`);
+                        const pageSize = params.pageSize || 5;
+                        const startIndex = params.pageIndex * pageSize;
+                        const hdPath = params.hdPath || "44'/60'/0'/0"; // Default path
 
-                sendResponse({
-                    success: true,
-                    accounts: result, // Already formatted
-                    message: `Retrieved ${result.length} accounts details`
-                });
-                break;
-            }
-            case 'getMultipleAccounts': { // Get accounts for specific indexes
-                updateStatus(`Getting multiple accounts from Ledger...`);
-                console.log(`[LEDGER OFFSCREEN] Getting multiple accounts by index: ${params.indexes.join(', ')}`);
+                        const accountsResult = [];
+                        for (let i = 0; i < pageSize; i++) {
+                            const fullPath = `${hdPath}/${startIndex + i}`;
+                            console.log(`[LEDGER OFFSCREEN] Getting address for path: ${fullPath}`);
+                            // Allow short pause between address fetches to avoid device state issues
+                            if (i > 0) await new Promise(resolve => setTimeout(resolve, 100));
 
-                const hdPath = params.hdPath || "44'/60'/0'/0"; // Default path
-                const indexesToGet = params.indexes || [];
+                            const accountData = await eth.getAddress(fullPath, false, false);
+                            console.log(`[LEDGER OFFSCREEN] Received address: ${accountData.address}`);
+                            // Format the accounts to match the expected interface
+                            accountsResult.push({
+                                address: accountData.address,
+                                index: startIndex + i,
+                                balance: null, // Balance is not typically fetched here
+                                name: null // Name is not typically fetched here
+                            });
+                        }
 
-                if (indexesToGet.length === 0) {
-                    throw new Error('No account indexes provided');
-                }
+                        result = accountsResult;
+                        console.log(`[LEDGER OFFSCREEN] Successfully retrieved ${result.length} accounts details`);
 
-                const accountsResult = [];
-                for (const index of indexesToGet) {
-                    const fullPath = `${hdPath}/${index}`;
-                    try {
-                        console.log(`[LEDGER OFFSCREEN] Getting address for path: ${fullPath}`);
-                        const accountData = await eth.getAddress(fullPath, false, false);
-                        console.log(`[LEDGER OFFSCREEN] Received address: ${accountData.address}`);
-                        accountsResult.push(accountData.address);
-                    } catch (addrError) {
-                        console.error(`[LEDGER OFFSCREEN] Error getting address for path ${fullPath}:`, addrError);
-                        throw new Error(`Failed to get address for path ${fullPath}: ${addrError.message}`);
+                        sendResponse({
+                            success: true,
+                            accounts: result, // Already formatted
+                            message: `Retrieved ${result.length} accounts details`
+                        });
+                        return; // Exit the function successfully
                     }
+                    case 'getMultipleAccounts': { // Get accounts for specific indexes
+                        updateStatus(`Getting multiple accounts from Ledger...`);
+                        console.log(`[LEDGER OFFSCREEN] Getting multiple accounts by index: ${params.indexes.join(', ')} (attempt ${attempt + 1}/${maxRetries + 1})`);
+
+                        const hdPath = params.hdPath || "44'/60'/0'/0"; // Default path
+                        const indexesToGet = params.indexes || [];
+
+                        if (indexesToGet.length === 0) {
+                            throw new Error('No account indexes provided');
+                        }
+
+                        const accountsResult = [];
+                        for (let i = 0; i < indexesToGet.length; i++) {
+                            const index = indexesToGet[i];
+                            const fullPath = `${hdPath}/${index}`;
+                            console.log(`[LEDGER OFFSCREEN] Getting address for path: ${fullPath}`);
+                            // Allow short pause between address fetches to avoid device state issues
+                            if (i > 0) await new Promise(resolve => setTimeout(resolve, 100));
+
+                            const accountData = await eth.getAddress(fullPath, false, false);
+                            console.log(`[LEDGER OFFSCREEN] Received address: ${accountData.address}`);
+                            accountsResult.push(accountData.address);
+                        }
+
+                        console.log(`[LEDGER OFFSCREEN] Successfully retrieved ${accountsResult.length} accounts`);
+                        sendResponse({
+                            success: true,
+                            accounts: accountsResult,
+                            message: `Retrieved ${accountsResult.length} accounts`
+                        });
+                        return; // Exit the function successfully
+                    }
+                    // Add additional operations (signing, etc.) as needed
+
+                    default:
+                        console.error(`[LEDGER OFFSCREEN] Unsupported Ledger operation requested: ${operation}`);
+                        throw new Error(`Unsupported Ledger operation: ${operation}`);
                 }
+            } catch (error) {
+                lastError = error;
+                console.error(`[LEDGER OFFSCREEN] Error in ${operation} (attempt ${attempt + 1}/${maxRetries + 1}):`, error);
 
-                console.log(`[LEDGER OFFSCREEN] Successfully retrieved ${accountsResult.length} accounts`);
-                sendResponse({
-                    success: true,
-                    accounts: accountsResult,
-                    message: `Retrieved ${accountsResult.length} accounts`
-                });
-                break;
+                // Check if this is a device state error we should retry
+                const shouldRetry = error.message && (
+                    error.message.includes('busy') ||
+                    error.message.includes('state') ||
+                    error.message.includes('Lock') ||
+                    error.message.includes('already open') ||
+                    error.message.includes('in progress')
+                );
+
+                if (shouldRetry && attempt < maxRetries) {
+                    attempt++;
+                    console.log(`[LEDGER OFFSCREEN] Retrying operation after error (${error.message})...`);
+
+                    // Add increasing delays between retries (500ms, 1000ms)
+                    const delay = 500 * attempt;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+
+                    // On first retry, try to reset the connection
+                    if (attempt === 1 && activeTransport) {
+                        try {
+                            console.log('[LEDGER OFFSCREEN] Resetting transport before retry...');
+                            await activeTransport.close();
+                            activeTransport = null;
+                            // Small delay after closing
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                            // Create new transport
+                            transport = await TransportWebHID.create();
+                            activeTransport = transport;
+                            eth = new Eth(transport);
+                            console.log('[LEDGER OFFSCREEN] Transport reset completed for retry.');
+                        } catch (resetError) {
+                            console.warn('[LEDGER OFFSCREEN] Error resetting transport:', resetError);
+                        }
+                    }
+                } else {
+                    // Either we've exhausted retries or it's not a retryable error
+                    throw error;
+                }
             }
-            // Add additional operations (signing, etc.) as needed
-            // case 'signTransaction': { ... }
-            // case 'signPersonalMessage': { ... }
-
-            default:
-                console.error(`[LEDGER OFFSCREEN] Unsupported Ledger operation requested: ${operation}`);
-                throw new Error(`Unsupported Ledger operation: ${operation}`);
         }
+
+        // If we reach here without returning, we've exhausted retries
+        throw new Error(`Failed to complete operation after ${maxRetries + 1} attempts: ${lastError?.message || 'Unknown error'}`);
     } catch (error) {
         console.error(`[LEDGER OFFSCREEN] Error executing ${operation}:`, error);
         updateStatus(`Error: ${error.message}`);
@@ -786,6 +906,10 @@ async function handleLedgerOperation(operation, params, sendResponse) {
             params: params,
             stack: error.stack // Include stack for better debugging
         });
+    } finally {
+        // Always mark operation as complete and record time
+        operationInProgress = false;
+        lastOperationTime = Date.now();
     }
 }
 

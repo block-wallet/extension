@@ -18,6 +18,100 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
     constructor(keyringController: any) {
         super(Devices.LEDGER, keyringController);
         log.debug('Initialized LedgerHardwareWalletHandler');
+
+        // Add a listener to the connection manager to stay in sync
+        this.connectionCleanup = ledgerConnectionManager.addListener((state, info) => {
+            // Log state changes
+            console.log(`[LEDGER] Connection state changed: ${state}, appOpen: ${info.appOpen}`);
+
+            // Store the connection state for UI references
+            this.storeConnectionState(state, info);
+
+            // Handle state transitions that require UI actions
+            this.handleConnectionStateChange(state, info);
+        });
+    }
+
+    /**
+     * Stores the connection state in session storage for UI components
+     */
+    private async storeConnectionState(state: LedgerConnectionState, info: any): Promise<void> {
+        if (!chrome.storage?.session) return;
+
+        try {
+            await chrome.storage.session.set({
+                'ledger_handler_state': {
+                    state,
+                    appOpen: info.appOpen,
+                    timestamp: Date.now(),
+                    transportType: info.transportType
+                }
+            });
+            console.log(`[LEDGER] Stored handler state: ${state}`);
+        } catch (e) {
+            log.warn(`Failed to store connection state: ${e.message}`);
+        }
+    }
+
+    /**
+     * Cleanup function for connection listener
+     */
+    private connectionCleanup: (() => void) | null = null;
+
+    /**
+     * Handles connection state changes to trigger appropriate UI actions
+     */
+    private async handleConnectionStateChange(state: LedgerConnectionState, info: any): Promise<void> {
+        console.log(`[LEDGER] Handling connection state change: ${state}, appOpen: ${info.appOpen}`);
+
+        // If the Ethereum app is open, navigate to the accounts page
+        if ((state === LedgerConnectionState.APP_OPEN) ||
+            (info.appOpen === true && (state === LedgerConnectionState.CONNECTED || state === LedgerConnectionState.WAITING_FOR_APP))) {
+
+            console.log('[LEDGER] App is open, triggering navigation to accounts page');
+
+            try {
+                // Mark the device as ready for import
+                if (chrome.storage?.session) {
+                    await chrome.storage.session.set({
+                        'ledger_ready_for_import': {
+                            timestamp: Date.now(),
+                            state: state,
+                            appOpen: true
+                        }
+                    });
+                    console.log('[LEDGER] Stored device ready status in session storage');
+                }
+
+                // Add a small delay to ensure storage is updated before navigation
+                setTimeout(async () => {
+                    try {
+                        // Navigate to accounts page
+                        await this.navigateToAccountsPage();
+                    } catch (e) {
+                        console.error('[LEDGER] Delayed navigation failed:', e);
+                    }
+                }, 100);
+
+                // Also trigger immediate navigation in case the timeout doesn't work
+                await this.navigateToAccountsPage();
+            } catch (e) {
+                console.error('[LEDGER] Failed to handle app open state:', e);
+            }
+        }
+    }
+
+    /**
+     * Navigates to the accounts selection page
+     */
+    private async navigateToAccountsPage(): Promise<void> {
+        try {
+            console.log('[LEDGER] Attempting to navigate to accounts page');
+            await forceNavigateTab('/tab.html#/hardware-wallet/accounts', { vendor: this.device });
+            console.log('[LEDGER] Navigation triggered successfully');
+        } catch (e) {
+            console.error('[LEDGER] Failed to navigate to accounts page:', e);
+        }
     }
 
     /**
@@ -41,14 +135,53 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
 
             // Use the connection manager to connect to the device
             const result = await ledgerConnectionManager.connect();
+            console.log("[LEDGER] Connection result:", result);
+
+            // Store the result in session storage for UI access
+            if (chrome.storage?.session) {
+                await chrome.storage.session.set({
+                    'ledger_connection_result': {
+                        ...result,
+                        timestamp: Date.now()
+                    }
+                });
+            }
 
             if (result.success) {
-                // Check if Ethereum app is open
+                // Check if Ethereum app is open based on the result state
                 if (result.state === LedgerConnectionState.APP_OPEN) {
                     log.debug("Ledger connected and Ethereum app is open");
                     console.log("[LEDGER] Connected and Ethereum app is open");
 
+                    // Try to navigate to accounts page automatically
+                    try {
+                        await this.navigateToAccountsPage();
+                    } catch (e) {
+                        console.warn("[LEDGER] Auto-navigation failed:", e);
+                    }
+
                     // Still need to complete the keyring setup in UI context
+                    return {
+                        needsUserGesture: !this.hasDomAccess(),
+                        deviceName: this.device,
+                        message: "Ledger connected successfully with Ethereum app open."
+                    };
+                }
+
+                // Connected but need to explicitly check app status
+                console.log("[LEDGER] Connected, checking if Ethereum app is open...");
+                const appOpen = await ledgerConnectionManager.verifyEthereumAppOpen(true);
+
+                if (appOpen) {
+                    console.log("[LEDGER] Ethereum app is now open");
+
+                    // Try to navigate to accounts page automatically 
+                    try {
+                        await this.navigateToAccountsPage();
+                    } catch (e) {
+                        console.warn("[LEDGER] Auto-navigation failed:", e);
+                    }
+
                     return {
                         needsUserGesture: !this.hasDomAccess(),
                         deviceName: this.device,
@@ -134,12 +267,14 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
     public async completeConnection(): Promise<boolean> {
         try {
             log.debug(`Completing hardware connection for ${this.device}...`);
+            console.log(`[LEDGER] Completing hardware connection...`);
 
             // Verify the connection state using the manager
             const { state, info } = ledgerConnectionManager.getState();
 
             // Get current info about the connection
             log.debug(`Current Ledger connection state: ${state}`);
+            console.log(`[LEDGER] Current connection state: ${state}, appOpen: ${info.appOpen}`);
 
             // If we're not connected, try to connect first
             if (state !== LedgerConnectionState.CONNECTED &&
@@ -147,23 +282,31 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
                 state !== LedgerConnectionState.APP_OPEN) {
 
                 log.debug("Ledger not connected, attempting connection...");
+                console.log("[LEDGER] Not connected, attempting connection...");
+
                 const result = await ledgerConnectionManager.connect();
+                console.log("[LEDGER] Connection result:", result);
 
                 if (!result.success) {
                     log.error("Failed to connect to Ledger:", result.error);
+                    console.error("[LEDGER] Failed to connect:", result.error);
                     return false;
                 }
             }
 
-            // Verify Ethereum app is open
-            const appOpen = await ledgerConnectionManager.verifyEthereumAppOpen();
+            // Verify Ethereum app is open with forced refresh
+            console.log("[LEDGER] Verifying Ethereum app is open...");
+            const appOpen = await ledgerConnectionManager.verifyEthereumAppOpen(true);
+            console.log(`[LEDGER] Ethereum app open status: ${appOpen}`);
 
             // Create keyring if in UI context
             if (this.hasDomAccess()) {
                 log.debug("Creating Ledger keyring in UI context");
+                console.log("[LEDGER] Creating keyring in UI context");
 
                 // Get HD path from connection manager
                 const hdPath = await ledgerConnectionManager.getHDPath();
+                console.log(`[LEDGER] Using HD path: ${hdPath}`);
 
                 // Create a new keyring instance
                 try {
@@ -172,6 +315,7 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
                     });
 
                     log.debug("Successfully created Ledger keyring");
+                    console.log("[LEDGER] Successfully created keyring");
 
                     // Persist keyring state
                     await this.persistState();
@@ -179,25 +323,30 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
                     return true;
                 } catch (error) {
                     log.error("Failed to create Ledger keyring:", error);
+                    console.error("[LEDGER] Failed to create keyring:", error);
                     return false;
                 }
             } else {
                 // In service worker context, we can't create the keyring
                 // but we still consider this successful if we have a connection
                 log.debug("In service worker context, deferring keyring creation to UI");
+                console.log("[LEDGER] In service worker context, deferring keyring creation to UI");
 
                 // Force navigate to accounts page if needed
                 try {
                     await forceNavigateTab('/tab.html#/hardware-wallet/accounts', { vendor: this.device });
                     log.debug("Forced navigation to accounts page");
+                    console.log("[LEDGER] Forced navigation to accounts page");
                 } catch (e) {
                     log.error("Failed to navigate to accounts page:", e);
+                    console.error("[LEDGER] Failed to navigate to accounts page:", e);
                 }
 
                 return true;
             }
         } catch (error) {
             log.error(`Failed to complete hardware connection for ${this.device}:`, error);
+            console.error(`[LEDGER] Failed to complete connection:`, error);
             throw error;
         }
     }
@@ -503,25 +652,56 @@ export class LedgerHardwareWalletHandler extends BaseHardwareWalletHandler {
     }
 
     /**
-     * Additional cleanup specific to Ledger
+     * Cleans up resources when handler is no longer needed
      */
     public async cleanup(): Promise<void> {
-        // Call base cleanup first
-        await super.cleanup();
-
-        // Clean up Ledger-specific resources
         try {
-            // Try to close the offscreen document
-            await ledgerBridge.closeOffscreenDocument();
+            log.debug(`Cleaning up ${this.device} hardware wallet handler`);
 
-            // Clear any stored connection status
-            if (chrome.storage?.session) {
-                await chrome.storage.session.remove('ledger_connection_status');
-                await chrome.storage.session.remove('ledger_eth_app_status');
-                await chrome.storage.session.remove('ledger_needs_user_interaction');
+            // Clean up connection listener if one exists
+            if (this.connectionCleanup) {
+                this.connectionCleanup();
+                this.connectionCleanup = null;
             }
-        } catch (e) {
-            log.warn(`Error during Ledger cleanup: ${e.message}`);
+
+            // Additional cleanup code...
+            await super.cleanup();
+        } catch (error) {
+            log.error(`Error during ${this.device} hardware wallet handler cleanup:`, error);
         }
+    }
+
+    /**
+     * Gets the current hardware wallet connection state
+     * @returns The current connection state
+     */
+    public async getState(): Promise<{ connected: boolean; appOpen: boolean; state: string }> {
+        const { state, info } = ledgerConnectionManager.getState();
+
+        console.log(`[LEDGER] Getting connection state: ${state}, appOpen: ${info.appOpen}`);
+
+        // If app is open, attempt to navigate to accounts page automatically
+        if ((state === LedgerConnectionState.APP_OPEN) ||
+            (info.appOpen === true && (state === LedgerConnectionState.CONNECTED || state === LedgerConnectionState.WAITING_FOR_APP))) {
+
+            console.log('[LEDGER] App is open when checking state, triggering navigation');
+
+            try {
+                // Add a small delay to allow UI to respond to the state first
+                setTimeout(async () => {
+                    await this.navigateToAccountsPage();
+                }, 200);
+            } catch (e) {
+                console.error('[LEDGER] Navigation on getState failed:', e);
+            }
+        }
+
+        return {
+            connected: state === LedgerConnectionState.CONNECTED ||
+                state === LedgerConnectionState.WAITING_FOR_APP ||
+                state === LedgerConnectionState.APP_OPEN,
+            appOpen: state === LedgerConnectionState.APP_OPEN || info.appOpen === true,
+            state: state
+        };
     }
 } 

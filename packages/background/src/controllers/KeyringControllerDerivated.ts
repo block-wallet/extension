@@ -203,6 +203,20 @@ export default class KeyringControllerDerivated extends KeyringController {
         // Clean up Ledger connection manager
         ledgerConnectionManager.cleanup();
 
+        // Clear any in-memory session storage items if possible
+        if (chrome.storage?.session) {
+            try {
+                chrome.storage.session.remove([
+                    'ledger_connection_status',
+                    'ledger_eth_app_status',
+                    'ledger_hd_path',
+                    'trezor_connection_status'
+                ]).catch(e => log.debug('Error cleaning up session storage:', e));
+            } catch (e) {
+                log.debug('Error during session storage cleanup:', e);
+            }
+        }
+
         log.debug('KeyringControllerDerivated cleaned up');
     }
 
@@ -933,11 +947,11 @@ export default class KeyringControllerDerivated extends KeyringController {
         }
 
         // If not in session storage, try local storage
-        if (!hdPath) {
+        if (!hdPath && chrome.storage?.local) {
             try {
-                const ledgerPaths = JSON.parse(localStorage.getItem('ledger_hd_paths') || '{}');
-                hdPath = ledgerPaths[device];
-                if (hdPath) {
+                const result = await chrome.storage.local.get('ledger_hd_paths');
+                if (result.ledger_hd_paths && result.ledger_hd_paths[device]) {
+                    hdPath = result.ledger_hd_paths[device];
                     log.debug(`Retrieved HD path from local storage: ${hdPath}`);
                 }
             } catch (e) {
@@ -974,7 +988,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             logError?: string;
         }> = [];
 
-        // Add HD path for session storage
+        // Add HD path for session storage (temporary)
         operations.push({
             key: 'ledger_hd_path',
             value: {
@@ -986,31 +1000,16 @@ export default class KeyringControllerDerivated extends KeyringController {
             logError: `Failed to store HD path in session storage`
         });
 
-        // Also update the device-specific path in local storage
-        try {
-            const ledgerPaths = JSON.parse(localStorage.getItem('ledger_hd_paths') || '{}');
-            ledgerPaths[device] = hdPath;
+        // Add HD path for persistent storage
+        const devicePaths: Record<string, string> = {};
+        devicePaths[device] = hdPath;
 
-            // For device paths, we store a different format
-            operations.push({
-                key: 'ledger_hd_paths',
-                value: ledgerPaths,
-                logSuccess: `Updated device HD paths in storage`,
-                logError: `Failed to update device HD paths in storage`
-            });
-        } catch (e) {
-            log.warn(`Failed to parse ledger_hd_paths from localStorage:`, e);
-            // Add a new entry anyway with the right format
-            const newPaths: Record<string, string> = {};
-            newPaths[device] = hdPath;
-
-            operations.push({
-                key: 'ledger_hd_paths',
-                value: newPaths,
-                logSuccess: `Created new device HD paths in storage`,
-                logError: `Failed to create device HD paths in storage`
-            });
-        }
+        operations.push({
+            key: 'ledger_hd_paths',
+            value: devicePaths,
+            logSuccess: `Updated device HD paths in storage`,
+            logError: `Failed to update device HD paths in storage`
+        });
 
         // Execute all storage operations
         await this._batchStorageOperations(operations);
@@ -1038,64 +1037,43 @@ export default class KeyringControllerDerivated extends KeyringController {
         const storagePromises: Promise<void>[] = [];
 
         // Process session storage operations
-        if (storageType === 'session' || storageType === 'both') {
-            if (chrome.storage?.session) {
-                // Group operations for session storage for efficiency
-                const sessionBatch: Record<string, any> = {};
-                operations.forEach(op => {
-                    sessionBatch[op.key] = op.value;
+        if ((storageType === 'session' || storageType === 'both') && chrome.storage?.session) {
+            // Group operations for session storage for efficiency
+            const sessionBatch: Record<string, any> = {};
+            operations.forEach(op => {
+                sessionBatch[op.key] = op.value;
+            });
+
+            const sessionPromise = chrome.storage.session.set(sessionBatch)
+                .then(() => {
+                    log.debug(`Successfully stored ${Object.keys(sessionBatch).length} items in session storage`);
+                })
+                .catch(error => {
+                    log.error(`Failed batch session storage operation:`, error);
+                    // Don't throw so other operations can continue
                 });
 
-                const sessionPromise = chrome.storage.session.set(sessionBatch)
-                    .then(() => {
-                        log.debug(`Successfully stored ${Object.keys(sessionBatch).length} items in session storage`);
-                    })
-                    .catch(error => {
-                        log.error(`Failed batch session storage operation:`, error);
-                        // Don't throw so other operations can continue
-                    });
-
-                storagePromises.push(sessionPromise);
-            }
+            storagePromises.push(sessionPromise);
         }
 
         // Process local storage operations
-        if (storageType === 'local' || storageType === 'both') {
-            // For chrome.storage.local
-            if (chrome.storage?.local) {
-                // Group operations for local storage for efficiency
-                const localBatch: Record<string, any> = {};
-                operations.forEach(op => {
-                    localBatch[op.key] = op.value;
+        if ((storageType === 'local' || storageType === 'both') && chrome.storage?.local) {
+            // Group operations for local storage for efficiency
+            const localBatch: Record<string, any> = {};
+            operations.forEach(op => {
+                localBatch[op.key] = op.value;
+            });
+
+            const localPromise = chrome.storage.local.set(localBatch)
+                .then(() => {
+                    log.debug(`Successfully stored ${Object.keys(localBatch).length} items in local storage`);
+                })
+                .catch(error => {
+                    log.error(`Failed batch local storage operation:`, error);
+                    // Don't throw so other operations can continue
                 });
 
-                const localPromise = chrome.storage.local.set(localBatch)
-                    .then(() => {
-                        log.debug(`Successfully stored ${Object.keys(localBatch).length} items in local storage`);
-                    })
-                    .catch(error => {
-                        log.error(`Failed batch local storage operation:`, error);
-                        // Don't throw so other operations can continue
-                    });
-
-                storagePromises.push(localPromise);
-            }
-
-            // For localStorage (fallback)
-            operations.forEach(op => {
-                try {
-                    localStorage.setItem(op.key, JSON.stringify(op.value));
-                    if (op.logSuccess) {
-                        log.debug(op.logSuccess);
-                    }
-                } catch (e) {
-                    if (op.logError) {
-                        log.warn(op.logError, e);
-                    } else {
-                        log.warn(`Failed to store ${op.key} in localStorage:`, e);
-                    }
-                }
-            });
+            storagePromises.push(localPromise);
         }
 
         // Wait for all promises to settle
@@ -1290,7 +1268,7 @@ export default class KeyringControllerDerivated extends KeyringController {
             // Store the transport type in memory state
             this.memStore.updateState({ ledgerTransportType: transportType });
 
-            // Also store in persistent state if we have chrome storage
+            // Also store in persistent state using chrome.storage.local
             if (chrome.storage && chrome.storage.local) {
                 await chrome.storage.local.set({ ledgerTransportType: transportType });
                 log.debug(`Stored Ledger transport type: ${transportType}`);

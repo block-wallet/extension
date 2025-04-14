@@ -155,7 +155,7 @@ export class LedgerConnectionManager {
         // Try to restore state from storage
         this.restoreStateFromStorage();
 
-        log.debug('LedgerConnectionManager initialized');
+        console.log('LedgerConnectionManager initialized');
     }
 
     /**
@@ -227,7 +227,7 @@ export class LedgerConnectionManager {
     ): Promise<void> {
         // Use mutex to prevent concurrent state transitions
         return this.mutex.runExclusive(async () => {
-            log.debug(`LedgerConnectionManager - Event: ${event}, Current State: ${this.state}`);
+            console.log(`LedgerConnectionManager - Event: ${event}, Current State: ${this.state}`);
 
             const prevState = this.state;
             let nextState = prevState;
@@ -237,16 +237,19 @@ export class LedgerConnectionManager {
                 case LedgerConnectionState.DISCONNECTED:
                     if (event === LedgerConnectionEvent.CONNECT) {
                         nextState = LedgerConnectionState.CONNECTING;
+                        console.log('Transitioning from DISCONNECTED to CONNECTING');
                     }
                     break;
 
                 case LedgerConnectionState.CONNECTING:
                     if (event === LedgerConnectionEvent.CONNECTION_SUCCESS) {
                         nextState = LedgerConnectionState.CONNECTED;
+                        console.log('Transitioning from CONNECTING to CONNECTED');
                     } else if (event === LedgerConnectionEvent.CONNECTION_FAILURE ||
                         event === LedgerConnectionEvent.USER_REJECTED ||
                         event === LedgerConnectionEvent.ERROR_OCCURRED) {
                         nextState = LedgerConnectionState.ERROR;
+                        console.log(`Transitioning from CONNECTING to ERROR due to ${event}`);
 
                         // Store error information
                         if (data && data.error) {
@@ -258,38 +261,47 @@ export class LedgerConnectionManager {
                 case LedgerConnectionState.CONNECTED:
                     if (event === LedgerConnectionEvent.APP_OPEN_DETECTED) {
                         nextState = LedgerConnectionState.APP_OPEN;
+                        console.log('Transitioning from CONNECTED to APP_OPEN');
                     } else if (event === LedgerConnectionEvent.VERIFY_CONNECTION) {
                         // Stay in CONNECTED, but will trigger app check
                         nextState = LedgerConnectionState.WAITING_FOR_APP;
+                        console.log('Transitioning from CONNECTED to WAITING_FOR_APP for verification');
                     } else if (event === LedgerConnectionEvent.HEARTBEAT_FAILED ||
                         event === LedgerConnectionEvent.DISCONNECT) {
                         nextState = LedgerConnectionState.DISCONNECTED;
+                        console.log(`Transitioning from CONNECTED to DISCONNECTED due to ${event}`);
                     }
                     break;
 
                 case LedgerConnectionState.WAITING_FOR_APP:
                     if (event === LedgerConnectionEvent.APP_OPEN_DETECTED) {
                         nextState = LedgerConnectionState.APP_OPEN;
+                        console.log('Transitioning from WAITING_FOR_APP to APP_OPEN');
                     } else if (event === LedgerConnectionEvent.APP_CLOSED_DETECTED) {
                         nextState = LedgerConnectionState.CONNECTED;
+                        console.log('Transitioning from WAITING_FOR_APP to CONNECTED');
                     } else if (event === LedgerConnectionEvent.HEARTBEAT_FAILED ||
                         event === LedgerConnectionEvent.DISCONNECT) {
                         nextState = LedgerConnectionState.DISCONNECTED;
+                        console.log(`Transitioning from WAITING_FOR_APP to DISCONNECTED due to ${event}`);
                     }
                     break;
 
                 case LedgerConnectionState.APP_OPEN:
                     if (event === LedgerConnectionEvent.APP_CLOSED_DETECTED) {
                         nextState = LedgerConnectionState.CONNECTED;
+                        console.log('Transitioning from APP_OPEN to CONNECTED');
                     } else if (event === LedgerConnectionEvent.HEARTBEAT_FAILED ||
                         event === LedgerConnectionEvent.DISCONNECT) {
                         nextState = LedgerConnectionState.DISCONNECTED;
+                        console.log(`Transitioning from APP_OPEN to DISCONNECTED due to ${event}`);
                     }
                     break;
 
                 case LedgerConnectionState.ERROR:
                     if (event === LedgerConnectionEvent.CONNECT) {
                         nextState = LedgerConnectionState.CONNECTING;
+                        console.log('Transitioning from ERROR to CONNECTING');
                         this.connectionInfo.error = null;
                     }
                     break;
@@ -301,14 +313,34 @@ export class LedgerConnectionManager {
                 this.connectionInfo.state = nextState;
                 this.connectionInfo.lastStateChange = Date.now();
 
+                // Notify listeners before handle effects
+                // This ensures UI gets fresh state before side effects run
+                this.notifyListeners();
+
                 // Handle side effects of state transitions
                 await this.handleStateTransitionEffects(prevState, nextState);
 
-                // Notify listeners
-                this.notifyListeners();
+                // Special handling for APP_OPEN_DETECTED event to ensure it propagates
+                if (event === LedgerConnectionEvent.APP_OPEN_DETECTED) {
+                    console.log('Re-notifying listeners after APP_OPEN_DETECTED event');
+                    // Force another notification to ensure APP_OPEN state is captured
+                    this.notifyListeners();
+                }
+            } else {
+                console.log(`State remained ${prevState} after event ${event}`);
 
-                // Store state in session storage
-                this.persistStateToStorage();
+                // Even if state didn't change, we might need to update some info
+                if (event === LedgerConnectionEvent.APP_OPEN_DETECTED) {
+                    this.connectionInfo.appOpen = true;
+                    this.connectionInfo.lastAppCheck = Date.now();
+                    console.log('Updated appOpen status without state change');
+                    this.notifyListeners();
+                } else if (event === LedgerConnectionEvent.APP_CLOSED_DETECTED) {
+                    this.connectionInfo.appOpen = false;
+                    this.connectionInfo.lastAppCheck = Date.now();
+                    console.log('Updated appOpen status without state change');
+                    this.notifyListeners();
+                }
             }
         });
     }
@@ -322,6 +354,8 @@ export class LedgerConnectionManager {
         prevState: LedgerConnectionState,
         nextState: LedgerConnectionState
     ): Promise<void> {
+        console.log(`Handling state transition effects: ${prevState} -> ${nextState}`);
+
         // Start heartbeat when connected
         if (nextState === LedgerConnectionState.CONNECTED ||
             nextState === LedgerConnectionState.WAITING_FOR_APP ||
@@ -341,19 +375,51 @@ export class LedgerConnectionManager {
             this.retryCount = 0;
 
             try {
-                const appOpen = await ledgerBridge.verifyEthereumAppOpen(true);
+                console.log('Checking if Ethereum app is open...');
+                const appOpen = await this._checkEthereumApp();
+
                 if (appOpen) {
+                    console.log('Ethereum app is open, will transition to APP_OPEN');
                     this.connectionInfo.appOpen = true;
                     this.connectionInfo.lastAppCheck = Date.now();
-                    await this.transition(LedgerConnectionEvent.APP_OPEN_DETECTED);
+
+                    // Force a session storage update with app status info
+                    await this.persistAppStatus(true);
+
+                    // Explicitly set state to APP_OPEN directly instead of using transition
+                    // This avoids possible race conditions with multiple transitions
+                    this.state = LedgerConnectionState.APP_OPEN;
+                    this.connectionInfo.state = LedgerConnectionState.APP_OPEN;
+                    this.connectionInfo.lastStateChange = Date.now();
+
+                    // Force notification about the APP_OPEN state
+                    this.notifyListeners(true);
+
+                    console.log('Directly transitioned to APP_OPEN state');
                 } else {
+                    console.log('Ethereum app is not open');
                     this.connectionInfo.appOpen = false;
-                    this.connectionInfo.lastAppCheck = Date.now();
+
+                    // Force a session storage update with app status info
+                    await this.persistAppStatus(false);
                 }
             } catch (error) {
-                log.debug('Error checking for Ethereum app:', error);
+                console.log(`Error checking for Ethereum app: ${error.message}`);
                 this.connectionInfo.appOpen = false;
+                await this.persistAppStatus(false);
             }
+        }
+
+        // When entering APP_OPEN state, update app info
+        if (nextState === LedgerConnectionState.APP_OPEN && prevState !== LedgerConnectionState.APP_OPEN) {
+            // Update app status
+            this.connectionInfo.appOpen = true;
+            this.connectionInfo.lastAppCheck = Date.now();
+
+            // Store app status explicitly
+            await this.persistAppStatus(true);
+
+            console.log('Successfully entered APP_OPEN state');
         }
 
         // Clear error when leaving ERROR state
@@ -364,54 +430,160 @@ export class LedgerConnectionManager {
     }
 
     /**
+     * Persist app status to storage
+     * @param isOpen Whether the Ethereum app is open
+     */
+    private async persistAppStatus(isOpen: boolean): Promise<void> {
+        if (!chrome.storage?.session) return;
+
+        const appStatusKey = this.config.storageKeys?.ethereumAppStatus || 'ledger_eth_app_status';
+
+        try {
+            await chrome.storage.session.set({
+                [appStatusKey]: {
+                    open: isOpen,
+                    timestamp: Date.now(),
+                    device: 'LEDGER',
+                    source: 'offscreen_verification_success',
+                    message: isOpen
+                        ? 'Ethereum app is open and ready'
+                        : 'Please open the Ethereum app on your Ledger device'
+                }
+            });
+            console.log(`Stored Ethereum app status (open: ${isOpen}) in session storage`);
+        } catch (e) {
+            console.warn(`Failed to store app status: ${e.message}`);
+        }
+    }
+
+    /**
+     * Helper method to check if the Ethereum app is open
+     * Retries up to 3 times with short timeouts to handle app startup delay
+     */
+    private async _checkEthereumApp(): Promise<boolean> {
+        const MAX_RETRIES = 3;
+        const RETRY_DELAY = 1000; // 1 second
+
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+            try {
+                if (attempt > 0) {
+                    console.log(`Retry attempt ${attempt + 1}/${MAX_RETRIES} to check Ethereum app...`);
+                }
+
+                const appOpen = await ledgerBridge.verifyEthereumAppOpen(true);
+
+                if (appOpen) {
+                    console.log('Successfully detected Ethereum app is open');
+                    return true;
+                } else if (attempt < MAX_RETRIES - 1) {
+                    console.log('Ethereum app not detected yet, waiting before retry...');
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                }
+            } catch (error) {
+                console.log(`Error during Ethereum app check (attempt ${attempt + 1}): ${error.message}`);
+
+                if (attempt < MAX_RETRIES - 1) {
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                }
+            }
+        }
+
+        console.log('Failed to detect Ethereum app after multiple attempts');
+        return false;
+    }
+
+    /**
      * Performs a heartbeat check to verify the connection is still active
      */
     private async performHeartbeat(): Promise<void> {
+        // Skip heartbeat if in disconnect or error states
+        if (this.state === LedgerConnectionState.DISCONNECTED ||
+            this.state === LedgerConnectionState.ERROR) {
+            return;
+        }
+
+        console.log(`Performing Ledger connection heartbeat check (current state: ${this.state})`);
+
         try {
-            if (this.state === LedgerConnectionState.DISCONNECTED ||
-                this.state === LedgerConnectionState.ERROR) {
-                return;
-            }
-
-            log.debug('Performing Ledger connection heartbeat check');
-
             // Check connection status
             const isConnected = await ledgerBridge.checkWebHIDStatus();
 
             if (!isConnected) {
-                log.debug('Heartbeat failed: device no longer connected');
+                console.log('Heartbeat failed: device no longer connected');
                 await this.transition(LedgerConnectionEvent.HEARTBEAT_FAILED);
                 return;
             }
 
-            // If in APP_OPEN state, verify app is still open
-            if (this.state === LedgerConnectionState.APP_OPEN) {
-                const now = Date.now();
-                const lastAppCheck = this.connectionInfo.lastAppCheck || 0;
+            const now = Date.now();
+            const lastAppCheck = this.connectionInfo.lastAppCheck || 0;
+            const timeSinceLastCheck = now - lastAppCheck;
 
-                // Only check every 2 minutes to avoid excessive checks
-                if (now - lastAppCheck > 2 * 60 * 1000) {
-                    const appOpen = await ledgerBridge.verifyEthereumAppOpen(true);
-                    this.connectionInfo.lastAppCheck = now;
+            // Device is connected, now handle state-specific checks
+            switch (this.state) {
+                case LedgerConnectionState.APP_OPEN:
+                    // If in APP_OPEN state, verify app is still open (less frequently)
+                    // Only check every 2 minutes to avoid excessive checks
+                    if (timeSinceLastCheck > 2 * 60 * 1000) {
+                        try {
+                            console.log('Verifying Ethereum app is still open...');
+                            const appOpen = await ledgerBridge.verifyEthereumAppOpen(true);
+                            this.connectionInfo.lastAppCheck = now;
 
-                    if (!appOpen) {
-                        log.debug('Heartbeat detected Ethereum app was closed');
-                        this.connectionInfo.appOpen = false;
-                        await this.transition(LedgerConnectionEvent.APP_CLOSED_DETECTED);
-                    } else {
-                        this.connectionInfo.appOpen = true;
+                            if (!appOpen) {
+                                console.log('Heartbeat detected Ethereum app was closed');
+                                this.connectionInfo.appOpen = false;
+                                await this.transition(LedgerConnectionEvent.APP_CLOSED_DETECTED);
+                            } else {
+                                console.log('Confirmed Ethereum app is still open');
+                                this.connectionInfo.appOpen = true;
+                            }
+                        } catch (error) {
+                            // Don't change state on verification error, just log it
+                            console.log(`Error verifying app status: ${error.message}`);
+                        }
                     }
-                }
+                    break;
+
+                case LedgerConnectionState.CONNECTED:
+                case LedgerConnectionState.WAITING_FOR_APP:
+                    // Optionally check if app is open now
+                    // but less aggressively than the regular check
+                    if (timeSinceLastCheck > 5 * 60 * 1000) { // 5 minutes
+                        try {
+                            console.log('Checking if Ethereum app has been opened...');
+                            const appOpen = await ledgerBridge.verifyEthereumAppOpen(true);
+                            this.connectionInfo.lastAppCheck = now;
+
+                            if (appOpen && !this.connectionInfo.appOpen) {
+                                console.log('Heartbeat detected Ethereum app was opened');
+                                this.connectionInfo.appOpen = true;
+                                await this.transition(LedgerConnectionEvent.APP_OPEN_DETECTED);
+                            } else {
+                                this.connectionInfo.appOpen = appOpen;
+                            }
+                        } catch (error) {
+                            console.log(`Error checking app in heartbeat: ${error.message}`);
+                        }
+                    }
+                    break;
             }
 
+            // Heartbeat succeeded
+            console.log('Heartbeat successful, connection still active');
             await this.transition(LedgerConnectionEvent.HEARTBEAT_SUCCEEDED);
         } catch (error) {
-            log.error('Error during Ledger heartbeat:', error);
+            log.error(`Error during Ledger heartbeat: ${error.message}`);
+
             // Only transition to failed state if we had a critical error
-            if (error.message && (error.message.includes('device disconnected') ||
+            if (error.message && (
+                error.message.includes('device disconnected') ||
                 error.message.includes('timeout') ||
                 error.message.includes('permission') ||
-                error.message.includes('not found'))) {
+                error.message.includes('not found') ||
+                error.message.includes('transfer') || // USB transfer errors
+                error.message.includes('claim')       // Interface claim errors
+            )) {
+                console.log('Critical connection error detected, marking heartbeat as failed');
                 await this.transition(LedgerConnectionEvent.HEARTBEAT_FAILED);
             }
         }
@@ -449,35 +621,52 @@ export class LedgerConnectionManager {
      */
     private async persistStateToStorage(): Promise<void> {
         try {
-            if (!chrome.storage?.session) return;
+            if (!chrome.storage) return;
 
             const statusKey = this.config.storageKeys?.connectionStatus || 'ledger_connection_status';
             const appStatusKey = this.config.storageKeys?.ethereumAppStatus || 'ledger_eth_app_status';
 
-            // Store connection status
-            await chrome.storage.session.set({
-                [statusKey]: {
-                    connected: this.state === LedgerConnectionState.CONNECTED ||
-                        this.state === LedgerConnectionState.WAITING_FOR_APP ||
-                        this.state === LedgerConnectionState.APP_OPEN,
-                    appOpen: this.state === LedgerConnectionState.APP_OPEN,
-                    state: this.state,
-                    timestamp: Date.now(),
-                    transportType: this.connectionInfo.transportType,
-                    error: this.connectionInfo.error,
-                }
-            });
-
-            // Store Ethereum app status
-            if (this.connectionInfo.appOpen !== undefined) {
+            // Store connection status in session storage (temporary)
+            if (chrome.storage.session) {
                 await chrome.storage.session.set({
-                    [appStatusKey]: {
-                        open: this.connectionInfo.appOpen,
-                        timestamp: this.connectionInfo.lastAppCheck || Date.now(),
-                        device: 'LEDGER',
-                        message: this.connectionInfo.appOpen
-                            ? 'Ethereum app is open and ready'
-                            : 'Please open the Ethereum app on your Ledger device'
+                    [statusKey]: {
+                        connected: this.state === LedgerConnectionState.CONNECTED ||
+                            this.state === LedgerConnectionState.WAITING_FOR_APP ||
+                            this.state === LedgerConnectionState.APP_OPEN,
+                        appOpen: this.state === LedgerConnectionState.APP_OPEN,
+                        state: this.state,
+                        timestamp: Date.now(),
+                        transportType: this.connectionInfo.transportType,
+                        error: this.connectionInfo.error,
+                    }
+                });
+
+                // Store Ethereum app status
+                if (this.connectionInfo.appOpen !== undefined) {
+                    await chrome.storage.session.set({
+                        [appStatusKey]: {
+                            open: this.connectionInfo.appOpen,
+                            timestamp: this.connectionInfo.lastAppCheck || Date.now(),
+                            device: 'LEDGER',
+                            message: this.connectionInfo.appOpen
+                                ? 'Ethereum app is open and ready'
+                                : 'Please open the Ethereum app on your Ledger device'
+                        }
+                    });
+                }
+            }
+
+            // Also store critical data in local storage for persistence across restarts
+            if (chrome.storage.local) {
+                await chrome.storage.local.set({
+                    [`${statusKey}_persistent`]: {
+                        connected: this.state === LedgerConnectionState.CONNECTED ||
+                            this.state === LedgerConnectionState.WAITING_FOR_APP ||
+                            this.state === LedgerConnectionState.APP_OPEN,
+                        appOpen: this.state === LedgerConnectionState.APP_OPEN,
+                        state: this.state,
+                        timestamp: Date.now(),
+                        transportType: this.connectionInfo.transportType,
                     }
                 });
             }
@@ -488,14 +677,32 @@ export class LedgerConnectionManager {
 
     /**
      * Notifies all registered listeners of state changes
+     * @param forceUpdate Force update even if state hasn't changed
      */
-    private notifyListeners(): void {
+    private notifyListeners(forceUpdate = false): void {
+        console.log(`Notifying ${this.listeners.size} listeners of state: ${this.state}, appOpen: ${this.connectionInfo.appOpen}, forceUpdate: ${forceUpdate}`);
+
         for (const listener of this.listeners) {
             try {
-                listener(this.state, { ...this.connectionInfo });
+                // Create a copy of connection info to avoid modification by listeners
+                const connectionInfoCopy = {
+                    ...this.connectionInfo,
+                    // Ensure appOpen is properly set based on state
+                    appOpen: this.state === LedgerConnectionState.APP_OPEN ? true : this.connectionInfo.appOpen
+                };
+
+                listener(this.state, connectionInfoCopy);
             } catch (error) {
-                log.error('Error in Ledger connection listener:', error);
+                console.error('Error in Ledger connection listener:', error);
             }
+        }
+
+        // Also publish state to session storage for UI components
+        this.persistStateToStorage();
+
+        // For APP_OPEN state, ensure the app status is explicitly stored
+        if (this.state === LedgerConnectionState.APP_OPEN) {
+            this.persistAppStatus(true);
         }
     }
 
@@ -509,9 +716,16 @@ export class LedgerConnectionManager {
 
         // Call the listener immediately with current state
         try {
-            listener(this.state, { ...this.connectionInfo });
+            // Create a copy of connection info to avoid modification by listeners
+            const connectionInfoCopy = {
+                ...this.connectionInfo,
+                // Ensure appOpen is properly set based on state
+                appOpen: this.state === LedgerConnectionState.APP_OPEN ? true : this.connectionInfo.appOpen
+            };
+
+            listener(this.state, connectionInfoCopy);
         } catch (error) {
-            log.error('Error in Ledger connection listener:', error);
+            console.error('Error in Ledger connection listener:', error);
         }
 
         // Return function to remove the listener
@@ -565,10 +779,17 @@ export class LedgerConnectionManager {
             // Set default transport type
             this.connectionInfo.transportType = 'webhid';
 
-            log.debug('Attempting to connect to Ledger device...');
+            console.log('Attempting to connect to Ledger device...');
 
             // Use the ledgerBridge to connect to the device and explicitly type the result
             const result = await ledgerBridge.connectUsingWebHID() as LedgerBridgeConnectionResult;
+
+            console.log(`Connection result received: ${JSON.stringify({
+                success: result.success,
+                needsUserGesture: result.needsUserGesture,
+                needsEthereumApp: result.needsEthereumApp,
+                transportType: result.transportType
+            })}`);
 
             if (result.success) {
                 // Update connection info with result data
@@ -576,10 +797,14 @@ export class LedgerConnectionManager {
                     this.connectionInfo.transportType = result.transportType;
                 }
 
+                // IMPORTANT: Ensure we actually transition to the CONNECTION_SUCCESS state
+                console.log('Connection successful, transitioning to CONNECTION_SUCCESS state');
+                await this.transition(LedgerConnectionEvent.CONNECTION_SUCCESS);
+
                 if (result.needsEthereumApp) {
                     // Device connected but Ethereum app not open
                     this.connectionInfo.appOpen = false;
-                    await this.transition(LedgerConnectionEvent.CONNECTION_SUCCESS);
+                    console.log('Ethereum app not open, returning success with app closed status');
                     return {
                         success: true,
                         state: this.state,
@@ -590,7 +815,7 @@ export class LedgerConnectionManager {
 
                 // Success - device connected and Ethereum app detected
                 this.connectionInfo.appOpen = true;
-                await this.transition(LedgerConnectionEvent.CONNECTION_SUCCESS);
+                console.log('Ethereum app is open, transitioning to APP_OPEN_DETECTED state');
                 await this.transition(LedgerConnectionEvent.APP_OPEN_DETECTED);
 
                 return {
@@ -606,6 +831,7 @@ export class LedgerConnectionManager {
                     timestamp: Date.now()
                 };
 
+                console.log('User gesture required, transitioning to USER_REJECTED state');
                 await this.transition(LedgerConnectionEvent.USER_REJECTED, { error });
 
                 return {
@@ -624,13 +850,14 @@ export class LedgerConnectionManager {
                     timestamp: Date.now()
                 };
 
+                console.log(`Connection failed: ${error.message}, transitioning to CONNECTION_FAILURE state`);
                 await this.transition(LedgerConnectionEvent.CONNECTION_FAILURE, { error });
 
                 // If configured, attempt to retry
                 if (this.retryCount < (this.config.maxRetries || 3)) {
                     this.retryCount++;
 
-                    log.debug(`Connection failed, retrying (${this.retryCount}/${this.config.maxRetries})...`);
+                    console.log(`Connection failed, retrying (${this.retryCount}/${this.config.maxRetries})...`);
 
                     // Wait before retrying
                     await new Promise(resolve => setTimeout(resolve, this.config.reconnectDelay || 1000));
@@ -655,6 +882,7 @@ export class LedgerConnectionManager {
                 timestamp: Date.now()
             };
 
+            console.log('Unhandled error occurred, transitioning to ERROR_OCCURRED state');
             await this.transition(LedgerConnectionEvent.ERROR_OCCURRED, { error: ledgerError });
 
             return {
@@ -764,13 +992,13 @@ export class LedgerConnectionManager {
                 return;
             }
 
-            log.debug('Disconnecting from Ledger device');
+            console.log('Disconnecting from Ledger device');
 
             // Close offscreen document
             try {
                 await ledgerBridge.closeOffscreenDocument();
             } catch (error) {
-                log.debug('Error closing offscreen document:', error);
+                console.log('Error closing offscreen document:', error);
             }
 
             await this.transition(LedgerConnectionEvent.DISCONNECT);
@@ -792,6 +1020,24 @@ export class LedgerConnectionManager {
         this.stopHeartbeat();
         this.listeners.clear();
         this.connectionPromise = null;
+
+        // Clean up storage references
+        if (chrome.storage?.session) {
+            try {
+                const keys = [
+                    this.config.storageKeys?.connectionStatus || 'ledger_connection_status',
+                    this.config.storageKeys?.ethereumAppStatus || 'ledger_eth_app_status',
+                    this.config.storageKeys?.pendingOperations || 'ledger_pending_operations'
+                ];
+
+                chrome.storage.session.remove(keys)
+                    .catch(e => console.log('Error cleaning up session storage:', e));
+            } catch (e) {
+                console.log('Error during session storage cleanup:', e);
+            }
+        }
+
+        console.log('LedgerConnectionManager resources cleaned up');
     }
 
     /**
@@ -804,7 +1050,7 @@ export class LedgerConnectionManager {
                 throw new Error('HD path is required');
             }
 
-            log.debug(`Setting HD path for Ledger to ${hdPath}`);
+            console.log(`Setting HD path for Ledger to ${hdPath}`);
 
             // Store the HD path
             this.connectionInfo.hdPath = hdPath;
@@ -813,14 +1059,14 @@ export class LedgerConnectionManager {
                 // Try to set the HD path if already connected
                 try {
                     await ledgerBridge.proxyLedgerOperation('setHdPath', { hdPath });
-                    log.debug(`Successfully set HD path to ${hdPath}`);
+                    console.log(`Successfully set HD path to ${hdPath}`);
                 } catch (error) {
                     log.warn(`Failed to set HD path: ${error.message}`);
                     // Continue anyway - we'll store it for later use
                 }
             }
 
-            // Store HD path in session storage
+            // Store HD path in session storage for quick access
             if (chrome.storage?.session) {
                 const hdPathKey = this.config.storageKeys?.hdPath || 'ledger_hd_path';
 
@@ -833,13 +1079,17 @@ export class LedgerConnectionManager {
                 });
             }
 
-            // Also store in local storage for persistence
-            try {
-                const ledgerPaths = JSON.parse(localStorage.getItem('ledger_hd_paths') || '{}');
-                ledgerPaths['LEDGER'] = hdPath;
-                localStorage.setItem('ledger_hd_paths', JSON.stringify(ledgerPaths));
-            } catch (e) {
-                log.warn(`Failed to persist HD path to local storage: ${e.message}`);
+            // Store HD path in local storage for persistence across restarts
+            if (chrome.storage?.local) {
+                const hdPathKey = this.config.storageKeys?.hdPath || 'ledger_hd_path';
+
+                await chrome.storage.local.set({
+                    [hdPathKey]: {
+                        path: hdPath,
+                        timestamp: Date.now(),
+                        status: 'success'
+                    }
+                });
             }
         } catch (error) {
             log.error('Error setting HD path:', error);
@@ -858,7 +1108,7 @@ export class LedgerConnectionManager {
         }
 
         try {
-            // Try session storage
+            // Try session storage first (faster)
             if (chrome.storage?.session) {
                 const hdPathKey = this.config.storageKeys?.hdPath || 'ledger_hd_path';
                 const result = await chrome.storage.session.get(hdPathKey);
@@ -869,15 +1119,15 @@ export class LedgerConnectionManager {
                 }
             }
 
-            // Try local storage
-            try {
-                const ledgerPaths = JSON.parse(localStorage.getItem('ledger_hd_paths') || '{}');
-                if (ledgerPaths['LEDGER']) {
-                    this.connectionInfo.hdPath = ledgerPaths['LEDGER'];
-                    return ledgerPaths['LEDGER'];
+            // Try local storage (more persistent)
+            if (chrome.storage?.local) {
+                const hdPathKey = this.config.storageKeys?.hdPath || 'ledger_hd_path';
+                const result = await chrome.storage.local.get(hdPathKey);
+
+                if (result[hdPathKey] && result[hdPathKey].path) {
+                    this.connectionInfo.hdPath = result[hdPathKey].path;
+                    return result[hdPathKey].path;
                 }
-            } catch (e) {
-                log.warn(`Failed to read HD path from local storage: ${e.message}`);
             }
 
             // Default path as fallback

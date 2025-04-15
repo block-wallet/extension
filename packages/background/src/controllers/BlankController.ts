@@ -2713,65 +2713,87 @@ export default class BlankController extends EventEmitter {
         // BIP44 seed phrase are always lowercase
         seedPhrase = seedPhrase.toLowerCase();
 
-        // Create new vault
-        await this.keyringController.createNewVaultAndRestore(
-            password,
-            seedPhrase
-        );
+        // NEW: Add try...catch around critical import and setup steps
+        try {
+            // Create new vault
+            await this.keyringController.createNewVaultAndRestore(
+                password,
+                seedPhrase
+            );
 
-        if (!reImport) {
+            if (!reImport) {
+                // Show the welcome to the wallet message
+                this.preferencesController.setShowWelcomeMessage(true);
+
+                // Show the default wallet preferences
+                this.preferencesController.setShowDefaultWalletPreferences(true);
+            }
+
+            // Set Seed Phrase Backed up
+            this.onboardingController.isSeedPhraseBackedUp = true;
+
+            // Get account
+            const account = (await this.keyringController.getAccounts())[0];
+
+            // Set selected address
+            this.preferencesController.setSelectedAddress(account);
+
             // Show the welcome to the wallet message
             this.preferencesController.setShowWelcomeMessage(true);
 
             // Show the default wallet preferences
             this.preferencesController.setShowDefaultWalletPreferences(true);
-        }
 
-        // Set Seed Phrase Backed up
-        this.onboardingController.isSeedPhraseBackedUp = true;
+            // Get manifest version and init the release notes settings
+            const appVersion = getVersion();
+            this.preferencesController.initReleaseNotesSettings(appVersion);
 
-        // Get account
-        const account = (await this.keyringController.getAccounts())[0];
+            // Set account tracker
+            this.accountTrackerController.addPrimaryAccount(account);
 
-        // Set selected address
-        this.preferencesController.setSelectedAddress(account);
+            // Unlock when account is created so vault will be ready after onboarding
+            await this.appStateController.unlock(password);
 
-        // Show the welcome to the wallet message
-        this.preferencesController.setShowWelcomeMessage(true);
+            // Force network to be mainnet if it is not provided
+            let network: string = AvailableNetworks.MAINNET;
 
-        // Show the default wallet preferences
-        this.preferencesController.setShowDefaultWalletPreferences(true);
-
-        // Get manifest version and init the release notes settings
-        const appVersion = getVersion();
-        this.preferencesController.initReleaseNotesSettings(appVersion);
-
-        // Set account tracker
-        this.accountTrackerController.addPrimaryAccount(account);
-
-        // Unlock when account is created so vault will be ready after onboarding
-        await this.appStateController.unlock(password);
-
-        // Force network to be mainnet if it is not provided
-        let network: string = AvailableNetworks.MAINNET;
-
-        if (defaultNetwork) {
-            const fullNetwork =
-                this.networkController.searchNetworkByName(defaultNetwork);
-            //only allow test networks
-            if (fullNetwork && fullNetwork.test) {
-                network = defaultNetwork;
+            if (defaultNetwork) {
+                const fullNetwork =
+                    this.networkController.searchNetworkByName(defaultNetwork);
+                //only allow test networks
+                if (fullNetwork && fullNetwork.test) {
+                    network = defaultNetwork;
+                }
             }
+            await this.networkController.setNetwork(network);
+
+            // reconstruct past erc20 transfers
+            this.transactionWatcherController.fetchAccountOnChainEvents();
+
+            // Create and assign to the Wallet an anti phishing image
+            this.preferencesController.assignNewPhishingPreventionImage(
+                antiPhishingImage
+            );
+        } catch (error) {
+            log.error("Error during wallet import process:", error);
+
+            // Check error message for known issues (example)
+            if (error instanceof Error) {
+                if (error.message.toLowerCase().includes("invalid mnemonic")) {
+                    throw new Error(
+                        "Invalid seed phrase. Please double-check your words and their order."
+                    );
+                } else if (error.message.toLowerCase().includes("password")) {
+                    // Example: Handle potential password-related errors during unlock/restore
+                    throw new Error(
+                        "There was an issue with the password during import."
+                    );
+                } // Add more specific error checks if keyringController throws distinct errors
+            }
+
+            // Fallback for unexpected errors
+            throw new Error("An unexpected error occurred during wallet import.");
         }
-        await this.networkController.setNetwork(network);
-
-        // reconstruct past erc20 transfers
-        this.transactionWatcherController.fetchAccountOnChainEvents();
-
-        // Create and assign to the Wallet an anti phishing image
-        this.preferencesController.assignNewPhishingPreventionImage(
-            antiPhishingImage
-        );
 
         return true;
     }

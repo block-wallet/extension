@@ -47,6 +47,11 @@ import {
 } from '../utils/LedgerConnectionManager';
 import { HardwareWalletHandlerFactory } from '../utils/hardware/HardwareWalletHandlerFactory';
 import { hasDomAccess } from '../utils/environment';
+// NEW: Use require for SimpleHDKeyring due to missing types
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const SimpleHDKeyring = require('@metamask/eth-hd-keyring');
+// NEW: Import communication types for the response
+import { DiscoveredAccountInfo, ResponseDiscoverAccountsFromSeed } from '../utils/types/communication';
 
 /**
  * Events emitted by the KeyringController
@@ -148,7 +153,7 @@ export default class KeyringControllerDerivated extends KeyringController {
     /**
      * The default hdPath to use for new hardware wallets
      */
-    private DEFAULT_HD_PATH = "m/44'/60'/0'/0/0";
+    private readonly DEFAULT_BIP44_HD_PATH = "m/44'/60'/0'/0"; // Standard path prefix
 
     /**
      * Name of the controller for logging purposes
@@ -1299,5 +1304,68 @@ export default class KeyringControllerDerivated extends KeyringController {
             log.warn(`Could not update existing Ledger keyring transport: ${e.message}`);
             console.warn(`[LEDGER] Could not update existing keyring transport: ${e.message}`);
         }
+    }
+
+    // NEW: Method to get accounts from a seed phrase without saving the keyring
+    public async getAccountsFromSeed(
+        seedPhrase: string,
+        password: string, // Password might be needed if seed is encrypted, or for future BIP39 passphrase use
+        accountsToDiscover = 10 // Remove redundant type annotation
+    ): Promise<ResponseDiscoverAccountsFromSeed> {
+        log.debug(`Attempting to derive ${accountsToDiscover} accounts from provided seed`);
+
+        if (!seedPhrase || seedPhrase.trim() === '') {
+            log.error('getAccountsFromSeed: Seed phrase cannot be empty');
+            throw new Error('Seed phrase cannot be empty');
+        }
+
+        // Note: The password isn't strictly needed for *derivation* from a standard mnemonic
+        // unless it's used as a BIP39 passphrase, which SimpleHDKeyring doesn't directly support
+        // in its constructor AFAIK. We keep it for potential future use or if underlying mechanisms change.
+        // We *could* use the password to *verify* it against the *current* vault if unlocked,
+        // as a security measure before proceeding, but the request implies we are in an import flow
+        // where the vault might not exist or be locked with a different password.
+
+        try {
+            // Create a temporary, in-memory keyring instance
+            const temporaryKeyring = new SimpleHDKeyring();
+            // Initialize it with the provided mnemonic
+            await temporaryKeyring.deserialize({
+                mnemonic: seedPhrase,
+                numberOfAccounts: accountsToDiscover, // Ensure we ask for enough
+                hdPath: this.DEFAULT_BIP44_HD_PATH, // Use the standard path prefix
+            });
+
+            // Retrieve the derived accounts
+            const accounts = await temporaryKeyring.getAccounts();
+
+            if (accounts.length === 0) {
+                log.warn('getAccountsFromSeed: No accounts derived from the seed phrase.');
+                // This shouldn't happen with a valid mnemonic unless accountsToDiscover is 0
+                return [];
+            }
+
+            // Format the result
+            const discoveredAccounts: DiscoveredAccountInfo[] = accounts.map(
+                (address: string, index: number) => ({
+                    address: address.toLowerCase(), // Ensure consistent casing
+                    index: index, // The index within the derived batch (0 to accountsToDiscover-1)
+                })
+            );
+
+            log.debug(`Successfully derived ${discoveredAccounts.length} accounts from seed`);
+            return discoveredAccounts;
+
+        } catch (error) {
+            log.error('getAccountsFromSeed: Error during temporary keyring creation or derivation:', error);
+            // Check for specific errors if SimpleHDKeyring throws them
+            if (error instanceof Error && error.message.toLowerCase().includes('invalid mnemonic')) {
+                throw new Error('Invalid mnemonic provided.');
+            }
+            // Re-throw a generic error
+            throw new Error('Failed to derive accounts from seed phrase.');
+        }
+        // Note: temporaryKeyring instance goes out of scope and is garbage collected,
+        // it is never added to the main controller's keyrings array.
     }
 }

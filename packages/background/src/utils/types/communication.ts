@@ -254,6 +254,7 @@ enum WALLET {
     //onramp
     GET_ONRAMP_CURRENCIES = 'GET_ONRAMP_CURRENCIES',
     SET_HIDESMALLBALANCES = 'SET_HIDESMALLBALANCES',
+    DISCOVER_ACCOUNTS_FROM_SEED = 'DISCOVER_ACCOUNTS_FROM_SEED',
 }
 
 enum TOKEN {
@@ -620,6 +621,7 @@ export interface RequestSignatures {
         RequestSetHideSmallBalances,
         void
     ];
+    [Messages.WALLET.DISCOVER_ACCOUNTS_FROM_SEED]: [RequestDiscoverAccountsFromSeed, ResponseDiscoverAccountsFromSeed];
 }
 
 export type MessageTypes = keyof RequestSignatures;
@@ -921,6 +923,7 @@ export interface RequestWalletImport {
     antiPhishingImage: string;
     reImport?: boolean;
     defaultNetwork?: string;
+    accountIndicesToImport?: number[];
 }
 
 export interface RequestWalletReset {
@@ -1284,3 +1287,17 @@ export interface RequestOrderAccounts {
 export interface RequestSetHideSmallBalances {
     enabled: boolean;
 }
+
+export interface RequestDiscoverAccountsFromSeed {
+    seedPhrase: string;
+    password: string;
+    // Optional: Add pageSize, pageIndex, derivationPath later if needed
+}
+
+export interface DiscoveredAccountInfo {
+    address: string;
+    index: number; // The derivation index (e.g., 0, 1, 2...)
+    // balance?: string; // Keep balance optional for now or add later
+}
+
+export type ResponseDiscoverAccountsFromSeed = DiscoveredAccountInfo[];

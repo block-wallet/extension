@@ -67,6 +67,9 @@ import { GetOnRampCurrencies } from "@block-wallet/background/controllers/Onramp
 import log from "loglevel"
 import { URParameter } from "../components/qr/QRReader"
 import { SwapTxMeta } from "@block-wallet/background/utils/swaps/1inch"
+import {
+    DiscoveredAccountInfo,
+} from "@block-wallet/background/utils/types/communication"
 
 let requestId = 0
 
@@ -776,7 +779,8 @@ export const createWallet = async (password: string): Promise<void> => {
 export const importWallet = async (
     password: string,
     seedPhrase: string,
-    defaultNetwork?: string
+    defaultNetwork?: string,
+    accountIndicesToImport?: number[]
 ): Promise<boolean> => {
     const antiPhishingImage = await generatePhishingPreventionBase64()
     return sendMessage(Messages.WALLET.IMPORT, {
@@ -784,6 +788,7 @@ export const importWallet = async (
         seedPhrase,
         defaultNetwork,
         antiPhishingImage,
+        accountIndicesToImport,
     })
 }
 
@@ -1825,3 +1830,20 @@ export const getHardwareWalletAccountsWithFallback = async (
     // Return empty accounts array for now - the UI will handle retrying with different HD paths
     return accounts
 }
+
+/**
+ * Discovers accounts from a seed phrase without importing.
+ *
+ * @param seedPhrase vault seed phrase
+ * @param password user password (may be needed for validation or future BIP39 passphrase)
+ * @returns Array of discovered accounts with address and index
+ */
+export const discoverAccountsFromSeed = async (
+    seedPhrase: string,
+    password: string
+): Promise<DiscoveredAccountInfo[]> => {
+    return sendMessage(Messages.WALLET.DISCOVER_ACCOUNTS_FROM_SEED, {
+        seedPhrase,
+        password,
+    });
+};

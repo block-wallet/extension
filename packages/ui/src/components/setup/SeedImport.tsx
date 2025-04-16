@@ -190,73 +190,63 @@ const useSeedImportForm = ({
     const onSeedPhrasePaste = useCallback(
         (pastedSP: string) => {
             const parsedSP =
-                pastedSP.trim().toLowerCase().match(/[a-z]+/g)?.join(" ") || "" // Match only words, removed 'u' flag
+                pastedSP.trim().toLowerCase().match(/[a-z]+/g)?.join(" ") || ""
 
             if (!parsedSP) {
                 setSeedPhraseError("Pasted text does not contain a valid phrase.")
                 return
             }
 
-            let newSP = parsedSP.split(" ")
-            let newNumberOfWords = numberOfWordsOptions[0] // Default to 12
+            let tempSPArray = parsedSP.split(" ")
+            let newNumberOfWords = numberOfWordsOptions[0] // Default
+            let errorMsg = ""
 
             // Determine the correct number of words based on pasted length
             const validLengths = numberOfWordsOptions
             let foundLength = false
             for (const len of validLengths) {
-                if (newSP.length === len) {
+                if (tempSPArray.length === len) {
                     newNumberOfWords = len
                     foundLength = true
                     break
                 }
             }
 
-            // If length is not standard (12, 15, 18, 21, 24), try to find nearest valid length > length
-            // Or handle as error / provide feedback? For now, let's default to nearest valid length or 12
             if (!foundLength) {
-                if (newSP.length < 12) {
+                if (tempSPArray.length < 12) {
                     newNumberOfWords = 12;
-                    setSeedPhraseError("Pasted phrase is too short. Expected 12, 15, 18, 21, or 24 words.");
-                } else if (newSP.length > 24) {
-                    newSP = newSP.slice(0, 24); // Truncate if too long
+                    errorMsg = "Pasted phrase is too short. Expected 12, 15, 18, 21, or 24 words.";
+                } else if (tempSPArray.length > 24) {
                     newNumberOfWords = 24;
-                    setSeedPhraseError("Pasted phrase is too long. Truncated to 24 words.");
+                    errorMsg = "Pasted phrase is too long. Limited to 24 words.";
                 } else {
-                    // Find the next valid length up
                     for (const len of validLengths) {
-                        if (len > newSP.length) {
+                        if (len > tempSPArray.length) {
                             newNumberOfWords = len;
                             break;
                         }
                     }
-                    // Default to 24 if somehow still not found (shouldn't happen)
-                    if (!newNumberOfWords) newNumberOfWords = 24;
-                    setSeedPhraseError(`Pasted phrase has ${newSP.length} words. Adjusted to ${newNumberOfWords} words.`);
+                    if (!newNumberOfWords) newNumberOfWords = 24; // Fallback
+                    errorMsg = `Pasted phrase has ${tempSPArray.length} words. Adjusted field count to ${newNumberOfWords}.`;
                 }
+            }
+            setSeedPhraseError(errorMsg) // Set error message based on length adjustment
 
-            } else {
-                setSeedPhraseError("") // Clear error if length is valid
+            // Prepare the final array: Pad or truncate the pasted phrase
+            let processedSP = new Array(newNumberOfWords).fill("")
+            for (let i = 0; i < newNumberOfWords; i++) {
+                if (i < tempSPArray.length) {
+                    processedSP[i] = tempSPArray[i];
+                } else {
+                    processedSP[i] = ""; // Ensure padding
+                }
             }
 
-
-            // Update the number of words state, which will trigger useEffect to resize array
+            // Update state directly and simultaneously
             setNumberOfWords(newNumberOfWords)
-
-            // Pad or truncate the pasted phrase to match the determined number of words
-            if (newSP.length < newNumberOfWords) {
-                newSP = newSP.concat(
-                    new Array(newNumberOfWords - newSP.length).fill("")
-                )
-            } else if (newSP.length > newNumberOfWords) {
-                newSP = newSP.slice(0, newNumberOfWords)
-            }
-
-
-            // Call onSeedPhraseChange with the processed array
-            // Use timeout to ensure numberOfWords state update happens first
-            setTimeout(() => onSeedPhraseChange(newSP), 0)
+            onSeedPhraseChange(processedSP) // Call validation/update with the final array
         },
-        [onSeedPhraseChange, setNumberOfWords]
+        [onSeedPhraseChange, setNumberOfWords, setSeedPhraseError] // Added setSeedPhraseError dependency
     )
 
 
@@ -385,10 +375,33 @@ const SeedImport: FunctionComponent<SeedImportProps> = ({
         isImportDisabled, // Needed for button state
         onSubmit, // Use the hook's onSubmit
         onSeedPhraseWordChange, // Needed for input onChange
-        onSeedPhrasePaste, // Needed for input onPaste
+        onSeedPhrasePaste, // Needed for textarea onPaste
         numberOfWordsOptions, // Needed for Select options
         wordErrors, // Get the word error state from hook
     } = useSeedImportForm({ action })
+
+    // State for the paste textarea
+    const [pasteAreaValue, setPasteAreaValue] = useState("");
+
+    // NEW: Handler for the dedicated paste textarea
+    const handlePasteAreaPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const pastedText = e.clipboardData.getData("text");
+        if (pastedText) {
+            e.preventDefault(); // Prevent pasting into the textarea itself
+            onSeedPhrasePaste(pastedText); // Process the paste using the hook's logic
+            setPasteAreaValue(""); // Clear the textarea after processing
+        }
+    };
+
+    const handlePasteAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        // We can allow typing, but pasting is handled separately
+        // Alternatively, make it read-only and only handle paste
+        setPasteAreaValue(e.target.value);
+        // Optional: If user types multiple words here, trigger paste logic?
+        // if (e.target.value.trim().includes(" ")) {
+        //    onSeedPhrasePaste(e.target.value);
+        // }
+    };
 
     const passwordConfirmationWatch = watch("passwordConfirmation") // Still needed for immediate feedback? Hook handles trigger.
 
@@ -426,12 +439,29 @@ const SeedImport: FunctionComponent<SeedImportProps> = ({
                     </Select>
                 </div>
 
+                {/* NEW: Dedicated Paste Area */}
+                <div className="flex flex-col space-y-1">
+                    <label htmlFor="pasteArea" className="text-xs font-medium text-primary-grey-dark">
+                        Paste full seed phrase here (optional):
+                    </label>
+                    {/* Use standard HTML textarea with Tailwind classes */}
+                    <textarea
+                        id="pasteArea"
+                        rows={3} // Adjust rows as needed
+                        placeholder="Paste your 12, 15, 18, 21, or 24 words here..."
+                        value={pasteAreaValue} // Control the component
+                        onChange={handlePasteAreaChange}
+                        onPaste={handlePasteAreaPaste} // Use dedicated paste handler
+                        className={classnames(
+                            "text-sm w-full p-2 border rounded",
+                            "bg-white border-gray-300 focus:border-primary-blue-default focus:ring focus:ring-primary-blue-default focus:ring-opacity-50",
+                            "placeholder-gray-400 text-primary-grey-dark"
+                        )}
+                    />
+                </div>
+
                 {/* Seed Phrase Input Area */}
                 <div className="flex flex-col space-y-2">
-                    <InfoTip
-                        text="You can paste your entire seed phrase into any field."
-                        fontSize="text-xs"
-                    />
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2"> {/* Adjusted grid for responsiveness */}
                         {Array.from({ length: numberOfWords }, (_, i) => {
                             const wordNumber = i + 1
@@ -445,17 +475,8 @@ const SeedImport: FunctionComponent<SeedImportProps> = ({
                                         // No preventDefault needed unless it causes issues
                                         onSeedPhraseWordChange(i, e.target.value)
                                     }}
-                                    onPaste={(e: any) => {
-                                        const pastedText =
-                                            e.clipboardData.getData("text")
-                                        // Basic check if pasted text contains spaces (likely multi-word)
-                                        if (pastedText.trim().includes(" ")) {
-                                            e.preventDefault() // Prevent default paste into single field
-                                            onSeedPhrasePaste(pastedText)
-                                        }
-                                        // Allow single word paste without prevention
-                                    }}
-                                    // Pass the phrase-level error message only if this specific word is invalid
+                                    // REMOVED onPaste handler from individual inputs
+                                    // onPaste={(e: any) => { ... }}
                                     error={wordErrors[i] ? seedPhraseError : undefined}
                                 // Removed register as we handle seed phrase state separately
                                 // inputClassName="text-center" // Removed invalid prop

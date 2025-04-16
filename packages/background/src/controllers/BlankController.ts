@@ -124,6 +124,10 @@ import {
     RequestOrderAccounts,
     RequestSetHideSmallBalances,
     RequestCompleteHardwareConnection,
+    // NEW: Import new request/response types
+    RequestDiscoverAccountsFromSeed,
+    ResponseDiscoverAccountsFromSeed,
+    DiscoveredAccountInfo,
 } from '../utils/types/communication';
 
 import EventEmitter from 'events';
@@ -162,8 +166,10 @@ import {
     AccountInfo,
     AccountTrackerController,
     DeviceAccountInfo,
+    AccountType, // Import AccountType
+    AccountTrackerEvents, // Import event type
+    AccountStatus, // Import AccountStatus
 } from './AccountTrackerController';
-
 import { GasPricesController } from './GasPricesController';
 import {
     TokenController,
@@ -248,6 +254,8 @@ import CampaignsController from './CampaignsController';
 import { NotificationController } from './NotificationController';
 import OnrampController from './OnrampController';
 import { Devices } from '../utils/types/hardware';
+// Import KeyringTypes
+import { KeyringTypes } from './KeyringControllerDerivated';
 
 export interface BlankControllerProps {
     initState: BlankAppState;
@@ -1223,6 +1231,11 @@ export default class BlankController extends EventEmitter {
             case Messages.WALLET.HARDWARE_COMPLETE_CONNECTION:
                 return this.completeHardwareConnection(
                     request as RequestCompleteHardwareConnection
+                );
+            // NEW: Handle account discovery from seed
+            case Messages.WALLET.DISCOVER_ACCOUNTS_FROM_SEED:
+                return this.discoverAccountsFromSeed(
+                    request as RequestDiscoverAccountsFromSeed
                 );
             default:
                 throw new Error(`Unable to handle message of type ${type}`);
@@ -2697,83 +2710,129 @@ export default class BlankController extends EventEmitter {
         antiPhishingImage,
         reImport,
         defaultNetwork,
+        accountIndicesToImport, // Destructure new parameter
     }: RequestWalletImport): Promise<boolean> {
-        // Clear accounts in accountTracker
+        // Clear existing state first
         this.accountTrackerController.clearAccounts();
-
-        // Clear unapproved transactions
         this.transactionController.clearUnapprovedTransactions();
-
-        // Clear all activities
         this.activityListController.clearActivities();
-
-        // Clear all tokens
         this.tokenController.clearTokens();
 
-        // BIP44 seed phrase are always lowercase
         seedPhrase = seedPhrase.toLowerCase();
 
-        // NEW: Add try...catch around critical import and setup steps
         try {
-            // Create new vault
+            // Restore vault using the provided seed phrase
             await this.keyringController.createNewVaultAndRestore(
                 password,
                 seedPhrase
             );
 
-            if (!reImport) {
-                // Show the welcome to the wallet message
-                this.preferencesController.setShowWelcomeMessage(true);
+            // Get the primary HD keyring (should exist after restore)
+            const primaryKeyring = this.keyringController.getKeyringsByType(
+                KeyringTypes.HD_KEY_TREE
+            )[0];
+            if (!primaryKeyring) {
+                throw new Error('Primary HD keyring not found after restore.');
+            }
 
-                // Show the default wallet preferences
+            // Determine which account indices to actually import
+            const indicesToImport = accountIndicesToImport && accountIndicesToImport.length > 0
+                ? [...new Set(accountIndicesToImport)].sort((a, b) => a - b) // Ensure unique and sorted
+                : [0]; // Default to importing only the first account (index 0)
+
+            if (indicesToImport.length === 0) {
+                throw new Error("No accounts selected for import.");
+            }
+
+            const maxIndex = Math.max(...indicesToImport);
+            const requiredNumberOfAccounts = maxIndex + 1;
+
+            // Ensure the keyring has derived enough accounts
+            const currentKeyringAccounts = await primaryKeyring.getAccounts();
+            const accountsToAddCount = requiredNumberOfAccounts - currentKeyringAccounts.length;
+            if (accountsToAddCount > 0) {
+                log.debug(`Deriving ${accountsToAddCount} additional accounts in keyring (up to index ${maxIndex})`);
+                await primaryKeyring.addAccounts(accountsToAddCount);
+            }
+
+            // Get all derived accounts up to the required number
+            const allDerivedAccounts = await primaryKeyring.getAccounts();
+
+            // Filter the derived accounts to get the ones we need to import
+            const accountsToImport: { address: string; index: number }[] = indicesToImport
+                .map(index => ({
+                    address: allDerivedAccounts[index],
+                    index
+                }))
+                .filter(acc => !!acc.address); // Filter out any potential undefined addresses
+
+            if (accountsToImport.length === 0) {
+                throw new Error("Could not derive selected accounts.");
+            }
+
+            // Manually construct the AccountInfo objects for the state
+            const newAccountsState: { [address: string]: AccountInfo } = {};
+            for (const acc of accountsToImport) {
+                const address = acc.address.toLowerCase();
+                newAccountsState[address] = {
+                    address: address,
+                    name: `Account ${acc.index + 1}`, // Default naming convention
+                    index: acc.index, // Store derivation index
+                    accountType: AccountType.HD_ACCOUNT,
+                    balances: {}, // Initialize empty balances
+                    allowances: {}, // Initialize empty allowances
+                    status: AccountStatus.ACTIVE, // Default to active
+                };
+            }
+
+            // Directly update the AccountTrackerController state
+            log.debug(`Adding ${Object.keys(newAccountsState).length} accounts to AccountTracker state`);
+            this.accountTrackerController.store.updateState({
+                accounts: newAccountsState,
+                hiddenAccounts: {}, // Ensure hidden accounts are cleared
+            });
+            // Emit event manually if needed (might be handled by store subscription elsewhere)
+            this.accountTrackerController.emit(AccountTrackerEvents.ACCOUNT_ADDED);
+
+            // --- Post Import Setup ---
+
+            // Set selected address (use the lowest indexed imported account)
+            const firstImportedAddress = accountsToImport[0].address.toLowerCase();
+            this.preferencesController.setSelectedAddress(firstImportedAddress);
+            log.debug(`Set selected address to: ${firstImportedAddress}`);
+
+            if (!reImport) {
+                this.preferencesController.setShowWelcomeMessage(true);
                 this.preferencesController.setShowDefaultWalletPreferences(true);
             }
 
-            // Set Seed Phrase Backed up
             this.onboardingController.isSeedPhraseBackedUp = true;
 
-            // Get account
-            const account = (await this.keyringController.getAccounts())[0];
-
-            // Set selected address
-            this.preferencesController.setSelectedAddress(account);
-
-            // Show the welcome to the wallet message
-            this.preferencesController.setShowWelcomeMessage(true);
-
-            // Show the default wallet preferences
-            this.preferencesController.setShowDefaultWalletPreferences(true);
-
-            // Get manifest version and init the release notes settings
             const appVersion = getVersion();
             this.preferencesController.initReleaseNotesSettings(appVersion);
 
-            // Set account tracker
-            this.accountTrackerController.addPrimaryAccount(account);
-
-            // Unlock when account is created so vault will be ready after onboarding
+            // Unlock the app
             await this.appStateController.unlock(password);
 
-            // Force network to be mainnet if it is not provided
+            // Set network (default or from param)
             let network: string = AvailableNetworks.MAINNET;
-
             if (defaultNetwork) {
                 const fullNetwork =
                     this.networkController.searchNetworkByName(defaultNetwork);
-                //only allow test networks
                 if (fullNetwork && fullNetwork.test) {
                     network = defaultNetwork;
                 }
             }
             await this.networkController.setNetwork(network);
 
-            // reconstruct past erc20 transfers
+            // Fetch history/events for the *newly selected* account
             this.transactionWatcherController.fetchAccountOnChainEvents();
 
-            // Create and assign to the Wallet an anti phishing image
+            // Set anti-phishing image
             this.preferencesController.assignNewPhishingPreventionImage(
                 antiPhishingImage
             );
+
         } catch (error) {
             log.error("Error during wallet import process:", error);
 
@@ -3635,5 +3694,32 @@ export default class BlankController extends EventEmitter {
      */
     private setHideSmallBalances({ enabled }: RequestSetHideSmallBalances) {
         this.preferencesController.hideSmallBalances = enabled;
+    }
+
+    // NEW: Method to discover accounts from a seed phrase
+    private async discoverAccountsFromSeed({
+        seedPhrase,
+        password,
+    }: RequestDiscoverAccountsFromSeed): Promise<ResponseDiscoverAccountsFromSeed> {
+        log.debug('Attempting to discover accounts from seed phrase');
+        try {
+            // Call the new method on KeyringController
+            // We expect KeyringControllerDerivated to have this method added
+            const accounts = await this.keyringController.getAccountsFromSeed(
+                seedPhrase,
+                password
+            );
+            log.debug(`Discovered ${accounts.length} accounts from seed`);
+            return accounts;
+        } catch (error) {
+            log.error('Error discovering accounts from seed:', error);
+            // Re-throw specific errors if needed, or a generic one
+            if (error instanceof Error && error.message.toLowerCase().includes("invalid mnemonic")) {
+                throw new Error("Invalid seed phrase provided for discovery.");
+            } else if (error instanceof Error && error.message.toLowerCase().includes("password")) {
+                throw new Error("Incorrect password provided for discovery.");
+            }
+            throw new Error("Failed to discover accounts from the provided seed phrase.");
+        }
     }
 }

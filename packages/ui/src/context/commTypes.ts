@@ -186,6 +186,7 @@ enum WALLET {
     //onramp
     GET_ONRAMP_CURRENCIES = "GET_ONRAMP_CURRENCIES",
     SET_HIDESMALLBALANCES = "SET_HIDESMALLBALANCES",
+    DISCOVER_ACCOUNTS_FROM_SEED = "DISCOVER_ACCOUNTS_FROM_SEED",
 }
 
 enum ADDRESS_BOOK {
@@ -444,4 +445,13 @@ export enum QuoteFeeStatus {
 export enum TokenAllowanceStatus {
     UPDATED = "UPDATED",
     AWAITING_TRANSACTION_RESULT = "AWAITING_TRANSACTION_RESULT",
+}
+
+/**
+ * Information about a discovered account from seed phrase
+ */
+export interface DiscoveredAccountInfo {
+    address: string;
+    index: number; // The derivation index (e.g., 0, 1, 2...)
+    // balance?: string; // Optional balance field that could be added later
 }

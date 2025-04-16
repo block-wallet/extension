@@ -215,7 +215,7 @@ const SeedImportPage = () => {
                                 disabled={isImporting || discoveryLoading || addressesToImport.length === 0}
                             >
                                 {isImporting ? (
-                                    <Spinner size="sm" />
+                                    <Spinner />
                                 ) : (
                                     "Import Selected Accounts"
                                 )}

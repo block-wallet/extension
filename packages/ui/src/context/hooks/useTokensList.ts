@@ -95,8 +95,8 @@ export const useTokensList = (account?: AccountInfo): TokenListInfo => {
                 return firstNumber.gt(a.balance)
                     ? 1
                     : firstNumber.eq(a.balance)
-                    ? 0
-                    : -1
+                        ? 0
+                        : -1
             })
 
         return {

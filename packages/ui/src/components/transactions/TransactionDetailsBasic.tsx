@@ -48,15 +48,15 @@ export const TransactionDetailsBasic: FunctionComponent<
         const value = bnOr0(transaction.transactionParams.value)
         const gasPrice = bnOr0(
             transaction.transactionReceipt?.effectiveGasPrice ||
-                transaction.transactionParams.gasPrice
+            transaction.transactionParams.gasPrice
         )
         const gasLimit = bnOr0(
             transaction.transactionReceipt?.gasUsed ||
-                transaction.transactionParams.gasLimit
+            transaction.transactionParams.gasLimit
         )
         const maxFeePerGas = bnOr0(
             transaction.transactionReceipt?.effectiveGasPrice ||
-                transaction.transactionParams.maxFeePerGas
+            transaction.transactionParams.maxFeePerGas
         )
         const maxPriorityFeePerGas = bnOr0(
             transaction.transactionParams.maxPriorityFeePerGas
@@ -64,14 +64,14 @@ export const TransactionDetailsBasic: FunctionComponent<
 
         const details: (
             | {
-                  label: string
-                  value: string
-                  noSpace?: boolean
-                  expandable?: boolean
-                  decimals?: number
-                  unitName?: string
-                  link?: string
-              }
+                label: string
+                value: string
+                noSpace?: boolean
+                expandable?: boolean
+                decimals?: number
+                unitName?: string
+                link?: string
+            }
             | undefined
         )[] = []
 
@@ -98,9 +98,9 @@ export const TransactionDetailsBasic: FunctionComponent<
                     value: isUnlimited
                         ? "Unlimited"
                         : formatUnits(
-                              bnOr0(transaction.advancedData?.allowance),
-                              transaction.advancedData?.decimals
-                          ),
+                            bnOr0(transaction.advancedData?.allowance),
+                            transaction.advancedData?.decimals
+                        ),
                     decimals: transaction.advancedData?.decimals,
                     unitName: tokenData && tokenData?.symbol,
                 })
@@ -161,7 +161,7 @@ export const TransactionDetailsBasic: FunctionComponent<
         // Swap details
         if (
             transaction.transactionCategory ===
-                TransactionCategories.EXCHANGE &&
+            TransactionCategories.EXCHANGE &&
             transaction.exchangeParams !== undefined
         ) {
             if (transaction.transactionParams.hash !== undefined) {
@@ -267,7 +267,7 @@ export const TransactionDetailsBasic: FunctionComponent<
             // Check if it's a withdraw
             if (
                 transaction.transactionCategory ===
-                    TransactionCategories.BLANK_WITHDRAWAL &&
+                TransactionCategories.BLANK_WITHDRAWAL &&
                 transaction.advancedData?.withdrawFee
             ) {
                 details.push({
@@ -437,7 +437,7 @@ export const TransactionDetailsBasic: FunctionComponent<
                 >
                     <div>
                         {transaction.transactionCategory !==
-                        TransactionCategories.CONTRACT_DEPLOYMENT ? (
+                            TransactionCategories.CONTRACT_DEPLOYMENT ? (
                             <AccountIcon
                                 className="h-6 w-6"
                                 fill={getAccountColor(transactionTo!)}
@@ -451,7 +451,7 @@ export const TransactionDetailsBasic: FunctionComponent<
                         className="pl-2 font-semibold text-sm truncate"
                     >
                         {transaction.transactionCategory !==
-                        TransactionCategories.CONTRACT_DEPLOYMENT
+                            TransactionCategories.CONTRACT_DEPLOYMENT
                             ? toName
                                 ? formatName(toName, 12)
                                 : formatHash(transactionTo!, 2)

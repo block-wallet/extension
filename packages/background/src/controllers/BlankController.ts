@@ -2721,13 +2721,13 @@ export default class BlankController extends EventEmitter {
         seedPhrase = seedPhrase.toLowerCase();
 
         try {
-            // Restore vault using the provided seed phrase
+            // 1. Restore vault using the provided seed phrase
             await this.keyringController.createNewVaultAndRestore(
                 password,
                 seedPhrase
             );
 
-            // Get the primary HD keyring (should exist after restore)
+            // 2. Get the primary HD keyring (should exist after restore)
             const primaryKeyring = this.keyringController.getKeyringsByType(
                 KeyringTypes.HD_KEY_TREE
             )[0];
@@ -2735,72 +2735,83 @@ export default class BlankController extends EventEmitter {
                 throw new Error('Primary HD keyring not found after restore.');
             }
 
-            // Determine which account indices to actually import
+            // 3. Determine which account indices to actually import
             const indicesToImport = accountIndicesToImport && accountIndicesToImport.length > 0
                 ? [...new Set(accountIndicesToImport)].sort((a, b) => a - b) // Ensure unique and sorted
                 : [0]; // Default to importing only the first account (index 0)
 
             if (indicesToImport.length === 0) {
-                throw new Error("No accounts selected for import.");
+                throw new Error("Internal error: No accounts selected for import after defaulting.");
             }
 
             const maxIndex = Math.max(...indicesToImport);
             const requiredNumberOfAccounts = maxIndex + 1;
 
-            // Ensure the keyring has derived enough accounts
+            // 4. Ensure the keyring has derived enough accounts
             const currentKeyringAccounts = await primaryKeyring.getAccounts();
             const accountsToAddCount = requiredNumberOfAccounts - currentKeyringAccounts.length;
             if (accountsToAddCount > 0) {
                 log.debug(`Deriving ${accountsToAddCount} additional accounts in keyring (up to index ${maxIndex})`);
                 await primaryKeyring.addAccounts(accountsToAddCount);
+                // Persist the keyring state after adding accounts
+                // Corrected method name
+                await this.keyringController.persistAllKeyrings();
             }
 
-            // Get all derived accounts up to the required number
+            // 5. Get all derived accounts up to the required number
             const allDerivedAccounts = await primaryKeyring.getAccounts();
 
-            // Filter the derived accounts to get the ones we need to import
-            const accountsToImport: { address: string; index: number }[] = indicesToImport
-                .map(index => ({
-                    address: allDerivedAccounts[index],
-                    index
-                }))
-                .filter(acc => !!acc.address); // Filter out any potential undefined addresses
-
-            if (accountsToImport.length === 0) {
-                throw new Error("Could not derive selected accounts.");
+            if (allDerivedAccounts.length < requiredNumberOfAccounts) {
+                throw new Error(`Failed to derive sufficient accounts. Expected ${requiredNumberOfAccounts}, got ${allDerivedAccounts.length}`);
             }
 
-            // Manually construct the AccountInfo objects for the state
+            // 6. Construct the AccountInfo objects for the state for *selected* accounts
             const newAccountsState: { [address: string]: AccountInfo } = {};
-            for (const acc of accountsToImport) {
-                const address = acc.address.toLowerCase();
-                newAccountsState[address] = {
-                    address: address,
-                    name: `Account ${acc.index + 1}`, // Default naming convention
-                    index: acc.index, // Store derivation index
+            const importedAddressesInOrder: string[] = []; // Keep track of addresses in import order
+
+            for (const index of indicesToImport) {
+                const address = allDerivedAccounts[index];
+                if (!address) {
+                    log.warn(`Could not get address for derived index ${index}. Skipping.`);
+                    continue;
+                }
+                const addressLower = address.toLowerCase();
+                importedAddressesInOrder.push(addressLower);
+                newAccountsState[addressLower] = {
+                    address: addressLower,
+                    name: `Account ${index + 1}`, // Naming based on derivation index
+                    index: index, // Store derivation index
                     accountType: AccountType.HD_ACCOUNT,
                     balances: {}, // Initialize empty balances
                     allowances: {}, // Initialize empty allowances
-                    status: AccountStatus.ACTIVE, // Default to active
+                    status: AccountStatus.ACTIVE,
                 };
             }
 
-            // Directly update the AccountTrackerController state
+            if (Object.keys(newAccountsState).length === 0) {
+                throw new Error("Failed to prepare any selected accounts for import.");
+            }
+
+            // 7. Directly update the AccountTrackerController state
             log.debug(`Adding ${Object.keys(newAccountsState).length} accounts to AccountTracker state`);
             this.accountTrackerController.store.updateState({
                 accounts: newAccountsState,
                 hiddenAccounts: {}, // Ensure hidden accounts are cleared
             });
-            // Emit event manually if needed (might be handled by store subscription elsewhere)
+            // Emit event manually
             this.accountTrackerController.emit(AccountTrackerEvents.ACCOUNT_ADDED);
 
             // --- Post Import Setup ---
 
-            // Set selected address (use the lowest indexed imported account)
-            const firstImportedAddress = accountsToImport[0].address.toLowerCase();
-            this.preferencesController.setSelectedAddress(firstImportedAddress);
-            log.debug(`Set selected address to: ${firstImportedAddress}`);
+            // 8. Set selected address (use the lowest indexed imported account's address)
+            const addressToSelect = importedAddressesInOrder[0]; // Since indicesToImport was sorted
+            if (!addressToSelect) {
+                throw new Error("Could not determine address to select after import.");
+            }
+            this.preferencesController.setSelectedAddress(addressToSelect);
+            log.debug(`Set selected address to: ${addressToSelect}`);
 
+            // 9. Unlock and Initialize
             if (!reImport) {
                 this.preferencesController.setShowWelcomeMessage(true);
                 this.preferencesController.setShowDefaultWalletPreferences(true);
@@ -2811,10 +2822,8 @@ export default class BlankController extends EventEmitter {
             const appVersion = getVersion();
             this.preferencesController.initReleaseNotesSettings(appVersion);
 
-            // Unlock the app
             await this.appStateController.unlock(password);
 
-            // Set network (default or from param)
             let network: string = AvailableNetworks.MAINNET;
             if (defaultNetwork) {
                 const fullNetwork =
@@ -2828,14 +2837,12 @@ export default class BlankController extends EventEmitter {
             // Fetch history/events for the *newly selected* account
             this.transactionWatcherController.fetchAccountOnChainEvents();
 
-            // Set anti-phishing image
             this.preferencesController.assignNewPhishingPreventionImage(
                 antiPhishingImage
             );
 
         } catch (error) {
             log.error("Error during wallet import process:", error);
-
             // Check error message for known issues (example)
             if (error instanceof Error) {
                 if (error.message.toLowerCase().includes("invalid mnemonic")) {
@@ -2847,11 +2854,11 @@ export default class BlankController extends EventEmitter {
                     throw new Error(
                         "There was an issue with the password during import."
                     );
-                } // Add more specific error checks if keyringController throws distinct errors
+                }
             }
-
-            // Fallback for unexpected errors
-            throw new Error("An unexpected error occurred during wallet import.");
+            // Fallback for unexpected errors - use original error message if available
+            const message = error instanceof Error ? error.message : "An unexpected error occurred during wallet import.";
+            throw new Error(message);
         }
 
         return true;

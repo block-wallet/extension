@@ -210,7 +210,7 @@ const AccountSelect: FunctionComponent<AccountSelectProps> = ({
                                 onClickAccount={() => {
                                     if (
                                         selectedAccount.address !==
-                                            currentAccount.address &&
+                                        currentAccount.address &&
                                         onAccountChange
                                     )
                                         onAccountChange(currentAccount)

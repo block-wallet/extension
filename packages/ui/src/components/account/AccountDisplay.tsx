@@ -90,7 +90,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                 className={classnames(
                     "flex flex-row items-center justify-between w-full rounded-lg",
                     hoverStyle &&
-                        "hover:bg-primary-grey-default cursor-pointer",
+                    "hover:bg-primary-grey-default cursor-pointer",
                     confirmationDialog.open && "!cursor-default",
                     className
                 )}
@@ -120,7 +120,7 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                                     className={classnames(
                                         "font-semibold",
                                         truncateName &&
-                                            "truncate max-w-[140px]",
+                                        "truncate max-w-[140px]",
                                         hoverStyle && "cursor-pointer"
                                     )}
                                     title={account.name}
@@ -161,20 +161,20 @@ const AccountDisplay: FunctionComponent<AccountDisplayProps> = ({
                         </div>
                         {(!isInternalAccount(account.accountType) ||
                             showConnected) && (
-                            <div className="flex flex-row space-x-1 text-xxs text-white pt-1">
-                                {account.accountType && (
-                                    <Tag profile="dark">
-                                        <span className="font-semibold">
-                                            {account.accountType.toString()}
-                                        </span>
-                                    </Tag>
-                                )}
+                                <div className="flex flex-row space-x-1 text-xxs text-white pt-1">
+                                    {account.accountType && (
+                                        <Tag profile="dark">
+                                            <span className="font-semibold">
+                                                {account.accountType.toString()}
+                                            </span>
+                                        </Tag>
+                                    )}
 
-                                {showConnected && (
-                                    <Tag profile="success">Connected</Tag>
-                                )}
-                            </div>
-                        )}
+                                    {showConnected && (
+                                        <Tag profile="success">Connected</Tag>
+                                    )}
+                                </div>
+                            )}
                     </div>
                 </div>
                 <div className="flex flex-row items-center space-x-2">

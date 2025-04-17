@@ -90,20 +90,22 @@ export class PreferencesController extends BaseController<PreferencesControllerS
      * @param address One of the user's address
      */
     public setSelectedAddress(address: string): void {
-        // Checksum address
+        // Checksum address for display purposes
         if (address) {
-            address = toChecksumAddress(address);
-        }
+            const checksumAddress = toChecksumAddress(address);
+            const lowercaseAddress = checksumAddress.toLowerCase();
 
-        if (address != this.store.getState().selectedAddress) {
-            this.emit(
-                PreferencesControllerEvents.SELECTED_ACCOUNT_CHANGED,
-                address
-            );
-        }
+            if (lowercaseAddress !== this.store.getState().selectedAddress.toLowerCase()) {
+                this.emit(
+                    PreferencesControllerEvents.SELECTED_ACCOUNT_CHANGED,
+                    checksumAddress
+                );
+            }
 
-        // Update state
-        this.store.updateState({ selectedAddress: address });
+            // Store checksummed address for display purposes,
+            // but ensure we're comparing lowercase addresses for consistency
+            this.store.updateState({ selectedAddress: checksumAddress });
+        }
     }
 
     /**

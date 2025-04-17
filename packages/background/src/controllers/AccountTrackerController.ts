@@ -1100,8 +1100,11 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         // Create the account in vault
         const account = await this._keyringController.createAccount();
 
-        // Get new created account
+        // Get new created account with checksum format (for display purposes)
         const newAccount = toChecksumAddress(account);
+
+        // Also store the lowercase version for object key consistency
+        const newAccountLowerCase = newAccount.toLowerCase();
 
         // Get current accounts
         const trackedAccounts = this.store.getState().accounts;
@@ -1119,7 +1122,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             status: AccountStatus.ACTIVE,
             allowances: {},
         };
-        trackedAccounts[newAccount] = accountInfo;
+        trackedAccounts[newAccountLowerCase] = accountInfo;
 
         // Update state
         this.store.updateState({
@@ -1187,13 +1190,16 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
 
         const updatedAccounts: AccountInfo[] = [];
         for (const { address, name } of deviceAccounts) {
-            // Skip already imported accounts
-            if (address in trackedAccounts) {
-                continue;
-            }
-
             // Checksum received account address
             const newAccount = toChecksumAddress(address);
+
+            // Store lowercase version for object key consistency
+            const newAccountLowerCase = newAccount.toLowerCase();
+
+            // Skip already imported accounts
+            if (newAccountLowerCase in trackedAccounts) {
+                continue;
+            }
 
             // Calculates new account index
             const accountIndex = this._getNewAccountIndex(trackedAccounts);
@@ -1214,7 +1220,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             updatedAccounts.push(accountInfo);
 
             // Set account in trackedAccount object
-            trackedAccounts[newAccount] = accountInfo;
+            trackedAccounts[newAccountLowerCase] = accountInfo;
         }
 
         // Update state
@@ -1256,6 +1262,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             await this._keyringController.importAccount(privateKey)
         );
 
+        // Store lowercase version for object key consistency
+        const newAccountLowerCase = newAccount.toLowerCase();
+
         // Get current tracked accounts
         const trackedAccounts = this.store.getState().accounts;
 
@@ -1272,7 +1281,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             status: AccountStatus.ACTIVE,
             allowances: {},
         };
-        trackedAccounts[newAccount] = accountInfo;
+        trackedAccounts[newAccountLowerCase] = accountInfo;
 
         // Update state
         this.store.updateState({

@@ -45,8 +45,8 @@ const useGetAccountNetworkTokensBalances = (
     let balances = account
         ? isHiddenAccount(account)
             ? hiddenAccounts[account.address].balances
-            : accounts[account.address].balances
-        : accounts[selectedAddress].balances
+            : accounts[account.address.toLowerCase()].balances
+        : accounts[selectedAddress.toLowerCase()].balances
 
     const { nativeCurrency, defaultNetworkLogo, chainId } = useSelectedNetwork()
 
@@ -61,8 +61,9 @@ const useGetAccountNetworkTokensBalances = (
     }
 
     let arrAccountTokensOrder: AccountTokenOrder = {}
-    if (accountTokensOrder[selectedAddress])
-        arrAccountTokensOrder = accountTokensOrder[selectedAddress][chainId]
+    const normalizedSelectedAddress = selectedAddress.toLowerCase()
+    if (accountTokensOrder[normalizedSelectedAddress])
+        arrAccountTokensOrder = accountTokensOrder[normalizedSelectedAddress][chainId]
 
     return {
         nativeToken: nativeToken,

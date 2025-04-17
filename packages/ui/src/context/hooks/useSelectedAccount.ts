@@ -3,5 +3,7 @@ import { useBlankState } from "../background/backgroundHooks"
 
 export const useSelectedAccount = (): AccountInfo => {
     const { accounts, selectedAddress } = useBlankState()!
-    return accounts[selectedAddress]
+    // Normalize the address to lowercase for object key lookup
+    const normalizedAddress = selectedAddress.toLowerCase()
+    return accounts[normalizedAddress]
 }

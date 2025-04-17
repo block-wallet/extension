@@ -70,7 +70,9 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
     } = dappReqData as DappRequestParams[DappReq.ASSET]
 
     // Default to selected account if no active account is found for the dapp
-    const accountData = accounts[activeAccount ?? selectedAccount.address]
+    const accountData = accounts[
+        (activeAccount ?? selectedAccount.address).toLowerCase()
+    ]
 
     const isBase64Image = token.image === IS_BASE64_IMAGE
 
@@ -233,8 +235,7 @@ const WatchAsset: FunctionComponent<DappRequestProps> = ({
                         `You've ${isUpdate ? "updated" : "added"} the asset.`,
                     error:
                         texts?.error ||
-                        `There was an error ${
-                            isUpdate ? "updating" : "adding"
+                        `There was an error ${isUpdate ? "updating" : "adding"
                         } the asset.`,
                 }}
                 onDone={() => {

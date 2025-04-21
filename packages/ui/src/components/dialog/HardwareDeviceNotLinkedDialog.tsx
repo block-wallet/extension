@@ -3,16 +3,19 @@ import { DEVICE_RECONNECTION_WARNING_STEPS } from "../../util/connectionStepUtil
 import WarningDialog from "./WarningDialog"
 import ClickableText from "../../components/button/ClickableText"
 import Divider from "../Divider"
-import { Devices } from "../../context/commTypes"
+import { Devices, AccountType } from "../../context/commTypes"
+import { isHardwareWallet } from "../../util/account"
 import useHardwareWalletConnect from "../../util/hooks/useHardwareWalletConnect"
 import { classnames } from "../../styles"
 import { AiFillInfoCircle } from "react-icons/ai"
 import Tooltip from "../label/Tooltip"
+import log from "loglevel"
 
 const HardwareDeviceNotLinkedDialog: React.FC<{
     isOpen: boolean
     onDone: () => void
     vendor?: Devices
+    accountType?: AccountType
     fullScreen?: boolean
     showReconnect?: boolean
     address?: string
@@ -23,6 +26,7 @@ const HardwareDeviceNotLinkedDialog: React.FC<{
     isOpen,
     onDone,
     vendor,
+    accountType,
     address,
     showReconnect = true,
     fullScreen = false,
@@ -30,88 +34,108 @@ const HardwareDeviceNotLinkedDialog: React.FC<{
     cancelButton = false,
     onCancel,
 }) => {
-    const steps = vendor ? DEVICE_RECONNECTION_WARNING_STEPS[vendor] : []
-    const { connect } = useHardwareWalletConnect()
-    const connectAndClose = async () => {
-        try {
-            const resultOk = await connect(vendor!)
-            if (resultOk) {
-                onDone()
+        // Always call hooks unconditionally
+        const { connect } = useHardwareWalletConnect()
+
+        // Double-check that we're dealing with a hardware wallet account
+        const isHwWallet = accountType ? isHardwareWallet(accountType) : !!vendor;
+
+        // Early return if no vendor specified (indicates it's not a hardware wallet)
+        // or if the dialog shouldn't be open or if it's not a hardware wallet account
+        if (!isOpen || !vendor || !isHwWallet) {
+            if (isOpen && (!vendor || !isHwWallet)) {
+                log.warn('HardwareDeviceNotLinkedDialog opened for a non-hardware wallet account');
+                // Close dialog if it somehow got opened for a non-hardware wallet
+                setTimeout(onDone, 0);
             }
-        } catch (error) {}
-    }
-    return (
-        <WarningDialog
-            open={isOpen}
-            onDone={onDone}
-            title="Hardware device is not detected"
-            fullScreen={fullScreen}
-            wideMargins={fullScreen}
-            message={
-                <div>
-                    <p className="pb-3">
-                        We're having trouble connecting with your hardware
-                        device.
-                    </p>
-                    <Divider />
-                    <div className="text-left">
-                        <p className={!fullScreen ? "pt-3" : "pt-4"}>
-                            Please ensure that you have:
+            return null;
+        }
+
+        const steps = vendor ? DEVICE_RECONNECTION_WARNING_STEPS[vendor] : []
+
+        const connectAndClose = async () => {
+            try {
+                const resultOk = await connect(vendor)
+                if (resultOk) {
+                    onDone()
+                }
+            } catch (error) {
+                log.error('Error connecting hardware wallet:', error)
+            }
+        }
+
+        return (
+            <WarningDialog
+                open={isOpen}
+                onDone={onDone}
+                title="Hardware device is not detected"
+                fullScreen={fullScreen}
+                wideMargins={fullScreen}
+                message={
+                    <div>
+                        <p className="pb-3">
+                            We're having trouble connecting with your hardware
+                            device.
                         </p>
-                        <div
-                            className={classnames(
-                                "w-full px-2",
-                                !fullScreen
-                                    ? "py-2 pb-1 space-y-1"
-                                    : "py-4 space-y-2"
+                        <Divider />
+                        <div className="text-left">
+                            <p className={!fullScreen ? "pt-3" : "pt-4"}>
+                                Please ensure that you have:
+                            </p>
+                            <div
+                                className={classnames(
+                                    "w-full px-2",
+                                    !fullScreen
+                                        ? "py-2 pb-1 space-y-1"
+                                        : "py-4 space-y-2"
+                                )}
+                            >
+                                {steps.map((step, index) => (
+                                    <div
+                                        className="flex flex-row items-center h-7"
+                                        key={index}
+                                    >
+                                        <span className="text-sm">
+                                            {index + 1}.&nbsp;{step.label}
+                                        </span>
+                                        {step.info && (
+                                            <div className="group relative">
+                                                <AiFillInfoCircle
+                                                    size={26}
+                                                    className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
+                                                />
+                                                <Tooltip
+                                                    className="!-translate-x-48 !w-60 !break-word !whitespace-normal"
+                                                    content={step.info}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            {showReconnect && (
+                                <span className="text-xs">
+                                    Issue persists?{" "}
+                                    <ClickableText
+                                        onClick={() =>
+                                            address
+                                                ? openHardwareReconnect(address)
+                                                : connectAndClose()
+                                        }
+                                    >
+                                        reconnect your device
+                                    </ClickableText>
+                                </span>
                             )}
-                        >
-                            {steps.map((step, index) => (
-                                <div
-                                    className="flex flex-row items-center h-7"
-                                    key={index}
-                                >
-                                    <span className="text-sm">
-                                        {index + 1}.&nbsp;{step.label}
-                                    </span>
-                                    {step.info && (
-                                        <div className="group relative">
-                                            <AiFillInfoCircle
-                                                size={26}
-                                                className="pl-2 text-primary-grey-dark cursor-pointer hover:text-primary-blue-default"
-                                            />
-                                            <Tooltip
-                                                className="!-translate-x-48 !w-60 !break-word !whitespace-normal"
-                                                content={step.info}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
                         </div>
-                        {showReconnect && (
-                            <span className="text-xs">
-                                Issue persists?{" "}
-                                <ClickableText
-                                    onClick={() =>
-                                        address
-                                            ? openHardwareReconnect(address)
-                                            : connectAndClose()
-                                    }
-                                >
-                                    reconnect your device
-                                </ClickableText>
-                            </span>
-                        )}
                     </div>
-                </div>
-            }
-            buttonLabel={"Try again"}
-            useClickOutside={useClickOutside}
-            cancelButton={cancelButton}
-            onCancel={onCancel}
-        />
-    )
-}
+                }
+                buttonLabel={"Try again"}
+                useClickOutside={useClickOutside}
+                cancelButton={cancelButton}
+                onCancel={onCancel}
+            />
+        )
+    }
 
 export default HardwareDeviceNotLinkedDialog

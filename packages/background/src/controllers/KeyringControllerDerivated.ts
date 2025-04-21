@@ -771,6 +771,29 @@ export default class KeyringControllerDerivated extends KeyringController {
     public async getKeyringDeviceFromAccount(address: string): Promise<Devices | null> {
         log.debug(`Checking device for account ${address}`);
         try {
+            // First check if the account exists in a non-hardware keyring
+            // This prevents hardware dialogs from appearing for software wallets
+            const simpleKeyrings = await this.getKeyringsByType(KeyringTypes.SIMPLE_KEY_PAIR);
+            const hdKeyrings = await this.getKeyringsByType(KeyringTypes.HD_KEY_TREE);
+
+            // Check simple key pair keyrings (imported private keys)
+            for (const keyring of simpleKeyrings) {
+                const accounts = await keyring.getAccounts();
+                if (accounts.map((a: string) => a.toLowerCase()).includes(address.toLowerCase())) {
+                    log.debug(`Account ${address} found in Simple Key Pair keyring`);
+                    return null; // Not a hardware wallet
+                }
+            }
+
+            // Check HD key tree keyrings (seed phrase wallets)
+            for (const keyring of hdKeyrings) {
+                const accounts = await keyring.getAccounts();
+                if (accounts.map((a: string) => a.toLowerCase()).includes(address.toLowerCase())) {
+                    log.debug(`Account ${address} found in HD Key Tree keyring (seed phrase)`);
+                    return null; // Not a hardware wallet
+                }
+            }
+
             // Search each hardware wallet type
             const keyringTypes = [
                 { type: KeyringTypes.LEDGER, device: Devices.LEDGER },

@@ -310,12 +310,12 @@ const SendConfirmPage = () => {
         useTransactionWaitingDialog(
             currentTransaction
                 ? {
-                      id: currentTransaction?.id,
-                      status: currentTransaction?.status,
-                      error: currentTransaction?.error as Error,
-                      epochTime: currentTransaction?.approveTime,
-                      qrParams: currentTransaction.qrParams,
-                  }
+                    id: currentTransaction?.id,
+                    status: currentTransaction?.status,
+                    error: currentTransaction?.error as Error,
+                    epochTime: currentTransaction?.approveTime,
+                    qrParams: currentTransaction.qrParams,
+                }
                 : undefined,
             HardwareWalletOpTypes.SIGN_TRANSACTION,
             accountType,
@@ -351,7 +351,7 @@ const SendConfirmPage = () => {
                     decimals
                 )
             )
-        } catch {}
+        } catch { }
     }
 
     const schema = GetAmountYupSchema(
@@ -385,15 +385,19 @@ const SendConfirmPage = () => {
         const value = usingMax
             ? getMaxTransactionAmount()
             : parseUnits(
-                  data.amount.toString(),
-                  selectedToken!.token.decimals || DEFAULT_DECIMALS // Default to eth decimals
-              )
+                data.amount.toString(),
+                selectedToken!.token.decimals || DEFAULT_DECIMALS // Default to eth decimals
+            )
         dispatch({ type: "open", payload: { status: "loading" } })
 
-        const isLinked = await checkDeviceIsLinked()
-        if (!isLinked) {
-            closeDialog()
-            return
+        // Only check for hardware wallet connection for hardware wallet accounts
+        // This prevents unnecessary hardware wallet dialogs for seed-imported wallets
+        if (isHardwareWallet(accountType)) {
+            const isLinked = await checkDeviceIsLinked()
+            if (!isLinked) {
+                closeDialog()
+                return
+            }
         }
 
         // Validation
@@ -537,9 +541,9 @@ const SendConfirmPage = () => {
     const handleChangeAmount = (newAmount: string) => {
         let value = newAmount
             ? newAmount
-                  .replace(/[^0-9.,]/g, "")
-                  .replace(",", ".")
-                  .replace(/(\..*?)\..*/g, "$1")
+                .replace(/[^0-9.,]/g, "")
+                .replace(",", ".")
+                .replace(/(\..*?)\..*/g, "$1")
             : ""
 
         if (value === ".") {
@@ -749,6 +753,7 @@ const SendConfirmPage = () => {
                 onDone={resetDeviceLinkStatus}
                 isOpen={isDeviceUnlinked}
                 vendor={getDeviceFromAccountType(accountType)}
+                accountType={accountType}
                 address={address}
             />
             <div className="w-full h-full">
@@ -825,11 +830,10 @@ const SendConfirmPage = () => {
                                         className={classnames(
                                             Classes.blueSectionInput
                                         )}
-                                        placeholder={`0 ${
-                                            selectedToken
-                                                ? selectedToken.token.symbol
-                                                : ""
-                                        }`}
+                                        placeholder={`0 ${selectedToken
+                                            ? selectedToken.token.symbol
+                                            : ""
+                                            }`}
                                         autoComplete="off"
                                         autoFocus={true}
                                         onFocus={() => setInputFocus(true)}
@@ -871,7 +875,7 @@ const SendConfirmPage = () => {
                                                 ? "bg-gray-500 border-gray-500 text-white hover:bg-gray-400 hover:border-gray-400"
                                                 : "bg-gray-300 border-gray-300 hover:bg-gray-400 hover:border-gray-400",
                                             !HasBalance(selectedToken) &&
-                                                "pointer-events-none text-primary-grey-dark"
+                                            "pointer-events-none text-primary-grey-dark"
                                         )}
                                         title="Use all the available funds"
                                         onClick={() => {
@@ -889,11 +893,10 @@ const SendConfirmPage = () => {
                             </div>
                             {!error && (
                                 <div
-                                    className={`${
-                                        errors.amount?.message
-                                            ? "pl-1 my-2"
-                                            : null
-                                    }`}
+                                    className={`${errors.amount?.message
+                                        ? "pl-1 my-2"
+                                        : null
+                                        }`}
                                 >
                                     <ErrorMessage>
                                         {errors.amount?.message}

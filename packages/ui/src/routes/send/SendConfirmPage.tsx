@@ -7,7 +7,7 @@ import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
 import {
     AssetListType,
-    AssetSelection,
+    MemoizedAssetSelection as AssetSelection,
 } from "../../components/assets/AssetSelection"
 import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import ErrorMessage from "../../components/error/ErrorMessage"
@@ -68,6 +68,23 @@ import { getValueByKey } from "../../util/objectUtils"
 import { AddressDisplay } from "../../components/addressBook/AddressDisplay"
 import { useAccountNameByAddress } from "../../context/hooks/useAccountNameByAddress"
 import log from "loglevel"
+
+// Debounce utility
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const debounce = <F extends (...args: any[]) => any>(
+    func: F,
+    waitFor: number
+) => {
+    let timeout: NodeJS.Timeout
+    return (...args: Parameters<F>): Promise<ReturnType<F>> =>
+        new Promise((resolve) => {
+            if (timeout) {
+                clearTimeout(timeout)
+            }
+
+            timeout = setTimeout(() => resolve(func(...args)), waitFor)
+        })
+}
 
 // Schema
 const GetAmountYupSchema = (
@@ -594,71 +611,100 @@ const SendConfirmPage = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const fetchGasLimit = useCallback(async () => {
-        try {
-            setIsGasLoading(true)
-
-            const amount = watch("amount")
-
-            const hasTokenBalance = BigNumber.from(selectedToken.balance).gt(
-                Zero
-            )
-
-            let estimateValue = hasTokenBalance
-                ? parseUnits(amount || "1", selectedToken.token.decimals)
-                : Zero
-
-            //send a value bigger than the account's balance will make the request to fail
-            if (estimateValue.gt(selectedToken.balance)) {
-                estimateValue = BigNumber.from(selectedToken.balance)
-            }
-
-            let { gasLimit, estimationSucceeded } =
-                await getSendTransactionGasLimit(
-                    selectedToken.token.address,
-                    receivingAddress,
-                    estimateValue
+    // Debounced gas limit fetcher
+    const debouncedFetchGasLimit = useCallback(
+        debounce(async (
+            token: TokenWithBalance,
+            recipient: string,
+            amountValue: string,
+            eip1559Compatible: boolean,
+            _setGasEstimationFailed: (failed: boolean) => void,
+            _setDefaultGas: (gas: TransactionFeeData) => void,
+            _setSelectedGas: (updater: (prev: TransactionFeeData) => TransactionFeeData) => void,
+            _setAllowAmountZero: (allow: boolean) => void
+        ) => {
+            if (!token) return;
+            try {
+                const hasTokenBalance = BigNumber.from(token.balance).gt(
+                    Zero
                 )
 
-            // In case the estimation failed but user has no balance on the selected token, we won't display the estimation error.
-            if (!hasTokenBalance && !estimationSucceeded) {
-                estimationSucceeded = true
+                let estimateValue = hasTokenBalance
+                    ? parseUnits(amountValue || "1", token.token.decimals)
+                    : Zero
+
+                //send a value bigger than the account's balance will make the request to fail
+                if (estimateValue.gt(token.balance)) {
+                    estimateValue = BigNumber.from(token.balance)
+                }
+
+                let { gasLimit, estimationSucceeded } =
+                    await getSendTransactionGasLimit(
+                        token.token.address,
+                        recipient,
+                        estimateValue
+                    )
+
+                // In case the estimation failed but user has no balance on the selected token, we won't display the estimation error.
+                if (!hasTokenBalance && !estimationSucceeded) {
+                    estimationSucceeded = true
+                }
+
+                _setGasEstimationFailed(!estimationSucceeded)
+
+                let gasPrice
+                if (!eip1559Compatible) {
+                    gasPrice = await getLatestGasPrice()
+                }
+
+                const newGasLimit = BigNumber.from(gasLimit);
+
+                _setDefaultGas({
+                    gasLimit: newGasLimit,
+                    gasPrice: eip1559Compatible
+                        ? undefined
+                        : BigNumber.from(gasPrice),
+                })
+
+                _setSelectedGas((prevGas) => ({
+                    ...prevGas,
+                    gasLimit: newGasLimit,
+                }));
+
+            } catch (error: any) {
+                log.error("Error estimating gas limit: ", error)
+                if (error.message.match(/bigger than zero/gi)) {
+                    _setAllowAmountZero(false)
+                }
             }
+        }, 500), // Debounce for 500ms
+        [getSendTransactionGasLimit, getLatestGasPrice] // Dependencies for the debounced function itself
+    );
 
-            setGasEstimationFailed(!estimationSucceeded)
+    // Get the current amount value for the effect dependency
+    const watchedAmount = watch("amount");
 
-            let gasPrice
-            if (!isEIP1559Compatible) {
-                gasPrice = await getLatestGasPrice()
-            }
-
-            setDefaultGas({
-                gasLimit: BigNumber.from(gasLimit),
-                gasPrice: isEIP1559Compatible
-                    ? undefined
-                    : BigNumber.from(gasPrice),
-            })
-
-            setSelectedGas({
-                ...selectedGas,
-                gasLimit: BigNumber.from(gasLimit),
-            })
-        } catch (error) {
-            log.error("error ", error)
-            if (error.message.match(/bigger than zero/gi)) {
-                setAllowAmountZero(false)
-            }
-        } finally {
-            setIsGasLoading(false)
+    // Effect to trigger debounced gas fetch
+    useEffect(() => {
+        // Only run if we have the necessary data
+        if (selectedToken && receivingAddress) {
+            setIsGasLoading(true); // Set loading state immediately
+            debouncedFetchGasLimit(
+                selectedToken,
+                receivingAddress,
+                watchedAmount, // Get current amount value
+                isEIP1559Compatible,
+                setGasEstimationFailed,
+                setDefaultGas,
+                setSelectedGas,
+                setAllowAmountZero
+            ).finally(() => {
+                setIsGasLoading(false); // Turn off loading after debounce + fetch completes
+            });
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        setIsGasLoading,
-        setSelectedGas,
-        selectedToken,
-        receivingAddress,
-        isEIP1559Compatible,
-    ])
+        // Dependencies: trigger when token, recipient, or amount changes
+        // Use the watchedAmount variable instead of the watch function itself
+    }, [selectedToken, receivingAddress, watchedAmount, isEIP1559Compatible, debouncedFetchGasLimit]);
 
     useEffect(() => {
         const checkIfSendingToTokenAddress = async () => {
@@ -670,17 +716,21 @@ const SendConfirmPage = () => {
             }
         }
 
-        fetchGasLimit()
         checkIfSendingToTokenAddress()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedToken, fetchGasLimit])
+    }, [selectedToken])
 
     // Effect triggered on selected gas change to update max amount if needed and recalculate validations.
     useEffect(() => {
         usingMax && setMaxTransactionAmount(usingMax)
-        getValues().amount && trigger("amount")
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedGas])
+        // Only trigger validation if amount field has a value
+        if (getValues().amount) {
+            trigger("amount")
+        }
+        // Dependencies are usingMax state and the selectedGas object.
+        // Make sure setMaxTransactionAmount and trigger are stable (e.g., wrapped in useCallback if defined in component)
+        // Since they come from react-hook-form and useState, they should be stable.
+    }, [selectedGas, usingMax, trigger, getValues /* Add getValues as dependency if necessary */])
 
     const [inputFocus, setInputFocus] = useState(false)
     return (
@@ -839,7 +889,6 @@ const SendConfirmPage = () => {
                                         onFocus={() => setInputFocus(true)}
                                         onBlur={() => {
                                             setInputFocus(false)
-                                            fetchGasLimit()
                                         }}
                                         onKeyDown={(e) => {
                                             setUsingMax(false)
@@ -883,7 +932,6 @@ const SendConfirmPage = () => {
                                                 setMaxTransactionAmount(
                                                     !usingMax
                                                 )
-                                                fetchGasLimit()
                                             }
                                         }}
                                     >

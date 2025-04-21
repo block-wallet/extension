@@ -7,6 +7,7 @@ import {
     SetStateAction,
     useEffect,
     useState,
+    memo,
 } from "react"
 import {
     TokenWithBalance,
@@ -271,12 +272,12 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
 
     const assetBalance: string | undefined = selectedAsset?.balance
         ? formatRounded(
-              formatUnits(
-                  selectedAsset.balance || 0,
-                  selectedAsset.token.decimals
-              ),
-              4
-          )
+            formatUnits(
+                selectedAsset.balance || 0,
+                selectedAsset.token.decimals
+            ),
+            4
+        )
         : undefined
 
     return (
@@ -317,3 +318,24 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
         </DropDownSelector>
     )
 }
+
+// Memoize the AssetSelection component
+export const MemoizedAssetSelection = memo(
+    AssetSelection,
+    (prevProps, nextProps) => {
+        // Only re-render if key props change
+        // Note: Comparing functions like onAssetChange might be tricky if they are not stable (useCallback)
+        // For now, we compare critical data points.
+        return (
+            prevProps.selectedAssetList === nextProps.selectedAssetList &&
+            prevProps.selectedAsset?.token.address ===
+            nextProps.selectedAsset?.token.address &&
+            prevProps.selectedAsset?.balance?.toString() ===
+            nextProps.selectedAsset?.balance?.toString() &&
+            prevProps.error === nextProps.error &&
+            prevProps.customAmount?.toString() ===
+            nextProps.customAmount?.toString() &&
+            prevProps.displayIcon === nextProps.displayIcon
+        )
+    }
+)

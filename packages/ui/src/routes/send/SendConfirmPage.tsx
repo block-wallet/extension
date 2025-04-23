@@ -567,89 +567,75 @@ const SendConfirmPage = () => {
                 accountType={accountType}
                 address={address}
             />
-            <div className="w-full h-full">
-                <div
-                    className="flex flex-col w-full h-full"
-                    style={{ maxHeight: "452px" }}
-                >
-                    <AddressDisplay
-                        receivingAddress={history.location.state.address}
-                        selectedAccountName={selectedAccountName}
-                    />
-
+            <div className="w-full h-full flex flex-col overflow-y-auto pb-4">
+                <AddressDisplay
+                    receivingAddress={history.location.state.address}
+                    selectedAccountName={selectedAccountName}
+                />
+                <div className="flex flex-col px-4 sm:px-6 flex-grow">
                     <div
-                        className="flex flex-col px-6"
-                        style={{ maxWidth: "100vw" }}
+                        className={classnames(
+                            "mb-3"
+                        )}
                     >
-                        {/* Asset */}
-                        <div
-                            className={classnames(
-                                !errors.asset?.message && "mb-3"
-                            )}
-                        >
-                            <p className="ml-1 mb-2 text-[13px] font-medium text-primary-grey-dark">
-                                Asset
-                            </p>
-                            <AssetSelection
-                                register={register}
-                                selectedAssetList={AssetListType.DEFAULT}
-                                selectedAsset={selectedToken}
-                                onAssetChange={handleChangeAsset}
-                                error={errors.asset?.message}
-                                topMargin={100}
-                                bottomMargin={45}
-                            />
-                            {errors.asset?.message && (
-                                <div className="pl-1 my-2">
-                                    <ErrorMessage>
-                                        {errors.asset?.message}
-                                    </ErrorMessage>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Amount - Use the new component */}
-                        <AmountInput
-                            control={control}
+                        <p className="ml-1 mb-2 text-[13px] font-medium text-primary-grey-dark">
+                            Asset
+                        </p>
+                        <AssetSelection
                             register={register}
-                            setValue={setValue}
-                            getValues={getValues}
-                            clearErrors={clearErrors}
-                            errors={errors}
-                            selectedToken={selectedToken}
-                            getMaxTransactionAmount={getMaxTransactionAmount}
-                            onAmountChange={(amount) => {
-                                setPersistedData((prev) => ({ ...prev, amount }))
-                            }}
-                            onMaxClick={(isUsingMax) => {
-                                setUsingMax(isUsingMax)
-                            }}
-                            blankState={blankState!}
-                            nativeToken={nativeToken}
-                            balance={balance}
-                            selectedGas={selectedGas}
-                            isEIP1559Compatible={isEIP1559Compatible}
-                            disabled={isLoading || isGasLoading}
+                            selectedAssetList={AssetListType.DEFAULT}
+                            selectedAsset={selectedToken}
+                            onAssetChange={handleChangeAsset}
+                            error={errors.asset?.message}
+                            topMargin={100}
+                            bottomMargin={45}
                         />
-
-                        {/* Gas Settings Section - Use the new component */}
-                        <GasSettings
-                            isEIP1559Compatible={isEIP1559Compatible}
-                            blankState={blankState!}
-                            defaultGas={defaultGas}
-                            selectedGas={selectedGas}
-                            setSelectedGas={setSelectedGas}
-                            isGasLoading={isGasLoading}
-                            gasEstimationFailed={gasEstimationFailed}
-                            address={address}
-                            transactionAdvancedData={transactionAdvancedData}
-                            setTransactionAdvancedData={setTransactionAdvancedData}
-                        />
-
-                        {/* General Error Display */}
-                        <div className={`${error ? "pl-1 my-2" : null}`}>
-                            <ErrorMessage>{error}</ErrorMessage>
-                        </div>
+                        {errors.asset?.message && (
+                            <div className="pl-1 my-1 h-5">
+                                <ErrorMessage>
+                                    {errors.asset?.message}
+                                </ErrorMessage>
+                            </div>
+                        )}
+                    </div>
+                    <AmountInput
+                        control={control}
+                        register={register}
+                        setValue={setValue}
+                        getValues={getValues}
+                        clearErrors={clearErrors}
+                        errors={errors}
+                        selectedToken={selectedToken}
+                        getMaxTransactionAmount={getMaxTransactionAmount}
+                        onAmountChange={(amount) => {
+                            setPersistedData((prev) => ({ ...prev, amount }))
+                        }}
+                        onMaxClick={(isUsingMax) => {
+                            setUsingMax(isUsingMax)
+                        }}
+                        blankState={blankState!}
+                        nativeToken={nativeToken}
+                        balance={balance}
+                        selectedGas={selectedGas}
+                        isEIP1559Compatible={isEIP1559Compatible}
+                        disabled={isLoading || isGasLoading}
+                        className="mb-3"
+                    />
+                    <GasSettings
+                        isEIP1559Compatible={isEIP1559Compatible}
+                        blankState={blankState!}
+                        defaultGas={defaultGas}
+                        selectedGas={selectedGas}
+                        setSelectedGas={setSelectedGas}
+                        isGasLoading={isGasLoading}
+                        gasEstimationFailed={gasEstimationFailed}
+                        address={address}
+                        transactionAdvancedData={transactionAdvancedData}
+                        setTransactionAdvancedData={setTransactionAdvancedData}
+                        className="mb-3"
+                    />
+                    <div className={`${effectiveError ? "pl-1 my-1 h-5" : "h-5"}`}>
+                        <ErrorMessage>{effectiveError}</ErrorMessage>
                     </div>
                 </div>
             </div>

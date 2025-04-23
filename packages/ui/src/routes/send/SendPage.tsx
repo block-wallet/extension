@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useMergeRefs } from "../../context/hooks/useMergeRefs"
-import { addressBookSet } from "../../context/commActions"
+import { addressBookSet, addressBookGetRecentAddresses } from "../../context/commActions"
 
 import PopupFooter from "../../components/popup/PopupFooter"
 import PopupHeader from "../../components/popup/PopupHeader"
@@ -26,6 +26,16 @@ import AccountSearchResults, {
 import Checkbox from "../../components/input/Checkbox"
 import { isValidAddress, toChecksumAddress } from "ethereumjs-util"
 import { formatHashLastChars } from "../../util/formatAccount"
+import AccountsList from "../../components/account/AccountsList"
+import AccountDisplay from "../../components/account/AccountDisplay"
+import { AccountInfo } from "@block-wallet/background/controllers/AccountTrackerController"
+import { AccountType } from "../../context/commTypes"
+
+// Simple type for recent addresses
+type RecentAddressInfo = {
+    address: string;
+    name: string;
+}
 
 // Schema
 const schema = yup.object().shape({
@@ -63,6 +73,8 @@ const SendPage = () => {
 
     const searchInputRef = useRef<HTMLInputElement>(null)
     const [showSearchSkeleton, setShowSearchSkeleton] = useState<boolean>(false)
+    const [recentAddresses, setRecentAddresses] = useState<RecentAddressInfo[]>([])
+    const [showRecents, setShowRecents] = useState<boolean>(true)
 
     const {
         register,
@@ -78,6 +90,22 @@ const SendPage = () => {
     useEffect(() => {
         defaultAsset && setPreSelectedAsset(defaultAsset)
         // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    useEffect(() => {
+        const fetchRecents = async () => {
+            try {
+                const recents = await addressBookGetRecentAddresses(5)
+                const formattedRecents: RecentAddressInfo[] = Object.entries(recents).map(([address, entry]) => ({
+                    address: address,
+                    name: entry.name || `Account ${formatHashLastChars(address)}`,
+                }));
+                setRecentAddresses(formattedRecents);
+            } catch (error) {
+                console.error("Error fetching recent addresses:", error)
+            }
+        };
+        fetchRecents();
     }, [])
 
     // Handlers
@@ -101,13 +129,13 @@ const SendPage = () => {
     })
     const { ref } = register("address")
 
-    const onChangeHandler = async (event: any) => {
-        // Bind
+    const onChangeHandler = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value
         setValue("address", value)
         setSearchString(value)
         setAddContact(false)
-    }
+        setShowRecents(value === "")
+    }, [setValue, setSearchString, setAddContact, setShowRecents])
 
     useEffect(() => {
         const checkAddress = () => {
@@ -146,14 +174,17 @@ const SendPage = () => {
         checkAddress()
     }, [addressBookAccounts, currentAccount.address, myAccounts, searchString])
 
-    const onAccountSelect = (account: any) => {
-        setSelectedAccount(account)
-        setValue("address", account.address, {
-            shouldValidate: true,
-        })
-        setSearchString(account.address)
-        setIsAddress(true)
-    }
+    const onAccountSelect = useCallback((account: AccountInfo | AccountResult | RecentAddressInfo) => {
+        if (account && account.address) {
+            setSelectedAccount({ address: account.address, name: account.name });
+            setValue("address", account.address, {
+                shouldValidate: true,
+            })
+            setSearchString(account.address)
+            setIsAddress(true)
+            setShowRecents(false)
+        }
+    }, [setValue, setSelectedAccount, setSearchString, setIsAddress, setShowRecents])
 
     const goToSide = () => {
         if (!searchInputRef.current) return
@@ -173,12 +204,12 @@ const SendPage = () => {
                         history.push(
                             fromAssetPage
                                 ? {
-                                      pathname: "/asset/details",
-                                      state: {
-                                          address: defaultAsset.token.address,
-                                          transitionDirection: "right",
-                                      },
-                                  }
+                                    pathname: "/asset/details",
+                                    state: {
+                                        address: defaultAsset.token.address,
+                                        transitionDirection: "right",
+                                    },
+                                }
                                 : { pathname: "/home" }
                         )
                     }}
@@ -238,12 +269,28 @@ const SendPage = () => {
                         : "mt-1"
                 )}
             >
-                <AccountSearchResults
-                    filter={searchString}
-                    onSelect={onAccountSelect}
-                    showSearchSkeleton={showSearchSkeleton}
-                    setShowSearchSkeleton={setShowSearchSkeleton}
-                />
+                {showRecents && recentAddresses.length > 0 ? (
+                    <div className="flex flex-col px-6">
+                        <AccountsList title="RECENT ADDRESSES">
+                            {recentAddresses.map((account) => (
+                                <AccountDisplay
+                                    key={account.address}
+                                    account={account as any}
+                                    selected={false}
+                                    showAddress={true}
+                                    onClickAccount={() => onAccountSelect(account)}
+                                />
+                            ))}
+                        </AccountsList>
+                    </div>
+                ) : (
+                    <AccountSearchResults
+                        filter={searchString}
+                        onSelect={onAccountSelect}
+                        showSearchSkeleton={showSearchSkeleton}
+                        setShowSearchSkeleton={setShowSearchSkeleton}
+                    />
+                )}
             </div>
         </PopupLayout>
     )

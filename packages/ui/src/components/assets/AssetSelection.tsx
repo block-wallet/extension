@@ -8,6 +8,8 @@ import {
     useEffect,
     useState,
     memo,
+    useRef,
+    useLayoutEffect,
 } from "react"
 import {
     TokenWithBalance,
@@ -88,6 +90,22 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
         tokensSortValue as AssetsSortOptions,
         hideSmallBalances
     )
+
+    // Ref to get the dropdown width/height container
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [listWidth, setListWidth] = useState<number | string>("100%");
+    const [listHeight, setListHeight] = useState<number>(250); // Default height
+
+    useLayoutEffect(() => {
+        if (contentRef.current) {
+            setListWidth(contentRef.current.clientWidth);
+            // Height calculation remains tricky without knowing DropDownSelector structure
+            // Let's keep a fixed height for now, or adjust based on available space approx.
+            const searchInputHeight = 50; // Approximate height of search input + padding
+            const availableHeight = window.innerHeight - (contentRef.current.getBoundingClientRect().top + searchInputHeight) - 80; // Approx
+            setListHeight(Math.max(150, Math.min(availableHeight, 300)));
+        }
+    }, []); // Run once on layout
 
     const swappedAssetList = useSwappedTokenList()
 
@@ -297,24 +315,28 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
             popupMargin={popupMargin || 16}
             customWidth={dropdownWidth}
         >
-            <div className="w-full p-3">
-                <SearchInput
-                    name="tokenName"
-                    placeholder="Search tokens by name or address"
-                    disabled={false}
-                    autoFocus={true}
-                    onChange={onSearchInputChange}
-                    defaultValue={search ?? ""}
+            <div ref={contentRef} className="flex flex-col">
+                <div className="w-full p-3">
+                    <SearchInput
+                        name="tokenName"
+                        placeholder="Search tokens by name or address"
+                        disabled={false}
+                        autoFocus={true}
+                        onChange={onSearchInputChange}
+                        defaultValue={search ?? ""}
+                    />
+                </div>
+                <AssetList
+                    addTokenState={addTokenState}
+                    assets={searchResult}
+                    onAssetClick={onAssetClick}
+                    register={register}
+                    searchValue={search}
+                    selectedAddress={selectedAsset?.token.address}
+                    dropdownWidth={listWidth}
+                    dropdownHeight={listHeight}
                 />
             </div>
-            <AssetList
-                addTokenState={addTokenState}
-                assets={searchResult}
-                onAssetClick={onAssetClick}
-                register={register}
-                searchValue={search}
-                selectedAddress={selectedAsset?.token.address}
-            />
         </DropDownSelector>
     )
 }

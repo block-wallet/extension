@@ -28,6 +28,7 @@ interface AmountInputProps {
     onMaxClick: (useMax: boolean) => void // Callback for parent state
     blankState: ResponseGetState // Use the imported type
     disabled?: boolean
+    className?: string // Add className prop
 }
 
 export const AmountInput: React.FC<AmountInputProps> = ({
@@ -42,6 +43,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
     onMaxClick,
     blankState,
     disabled,
+    className, // Destructure className
 }) => {
     const [inputFocus, setInputFocus] = useState(false)
     const [usingMax, setUsingMax] = useState(false)
@@ -140,7 +142,8 @@ export const AmountInput: React.FC<AmountInputProps> = ({
         <div
             className={classnames(
                 "flex flex-col",
-                !errors.amount && "mb-3"
+                !errors.amount && "mb-3", // Remove margin logic from here, apply passed className
+                className // Apply the passed className
             )}
         >
             <div className="flex flex-row justify-between items-center">
@@ -161,10 +164,11 @@ export const AmountInput: React.FC<AmountInputProps> = ({
                     Classes.greySection,
                     inputFocus && "bg-primary-grey-hover",
                     errors.amount && "border border-red-400", // Add border for error state
-                    disabled && "opacity-50 cursor-not-allowed"
+                    disabled && "opacity-50 cursor-not-allowed",
+                    "p-2" // Add base padding
                 )}
             >
-                <div className="flex flex-col items-start flex-grow"> {/* Use flex-grow */}
+                <div className="flex flex-col items-start flex-grow mr-2"> {/* Add margin-right */}
                     <input
                         id="amount"
                         type="text"
@@ -173,7 +177,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
                         {...register("amount")} // Register comes from props
                         className={classnames(
                             Classes.blueSectionInput,
-                            "py-1" // Adjust padding if needed
+                            "py-2 sm:py-1" // Adjust vertical padding for touch
                         )}
                         placeholder={`0 ${selectedToken
                             ? selectedToken.token.symbol
@@ -207,11 +211,11 @@ export const AmountInput: React.FC<AmountInputProps> = ({
                         })}
                     </span>
                 </div>
-                <div className="w-1/5 flex items-center justify-end"> {/* Adjust layout */}
+                <div className="w-auto flex items-center justify-end"> {/* Use w-auto */}
                     <button // Change span to button for accessibility
                         type="button" // Prevent form submission
                         className={classnames(
-                            "float-right rounded-md cursor-pointer border p-1 text-xs font-medium", // Adjusted styling
+                            "float-right rounded-md cursor-pointer border p-2 text-xs font-medium", // Increase padding
                             usingMax
                                 ? "bg-blue-100 border-blue-300 text-blue-700 hover:bg-blue-200" // Theme consistent colors
                                 : "bg-gray-200 border-gray-300 text-gray-700 hover:bg-gray-300",

@@ -19,6 +19,7 @@ interface GasSettingsProps {
     address: string; // Current account address for AdvancedSettings
     transactionAdvancedData: TransactionAdvancedData;
     setTransactionAdvancedData: (data: TransactionAdvancedData) => void;
+    className?: string; // Add className prop
 }
 
 export const GasSettings: React.FC<GasSettingsProps> = ({
@@ -32,9 +33,10 @@ export const GasSettings: React.FC<GasSettingsProps> = ({
     address,
     transactionAdvancedData,
     setTransactionAdvancedData,
+    className, // Destructure className
 }) => {
     return (
-        <div className="flex flex-col w-full">
+        <div className={classnames("flex flex-col w-full", className)}> {/* Apply className */}
             {/* Speed Label */}
             <label className="ml-1 mb-2 text-[13px] font-medium text-primary-grey-dark">
                 Gas Price

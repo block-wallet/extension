@@ -102,7 +102,7 @@ export interface FeeMarketEIP1559Values {
     /**
      * Users set this. Represents the maximum amount that a user is willing to pay for
      * their tx (inclusive of baseFeePerGas and maxPriorityFeePerGas).
-     * The difference between maxFeePerGas and baseFeePerGas + maxPriorityFeePerGas is “refunded” to the user.
+     * The difference between maxFeePerGas and baseFeePerGas + maxPriorityFeePerGas is "refunded" to the user.
      */
     maxFeePerGas: BigNumber;
 
@@ -294,8 +294,8 @@ export class TransactionController extends BaseController<
         public config: {
             txHistoryLimit: number;
         } = {
-            txHistoryLimit: 40,
-        }
+                txHistoryLimit: 40,
+            }
     ) {
         super(initialState);
 
@@ -401,6 +401,8 @@ export class TransactionController extends BaseController<
         this._transactionStatusesUpdateIntervalController.tick(
             interval,
             async () => {
+                // Log when status query is triggered
+                console.log(`[TxCtrl] Triggering queryTransactionStatuses for chain ${chainId}, block ${newBlockNumber}`);
                 await this.update(newBlockNumber);
             }
         );
@@ -839,8 +841,7 @@ export class TransactionController extends BaseController<
 
                     // Subscribe confirmation and rejection listeners
                     this.hub.once(
-                        `${transactionMetaId}:${
-                            waitForConfirmation ? 'confirmed' : 'submitted'
+                        `${transactionMetaId}:${waitForConfirmation ? 'confirmed' : 'submitted'
                         }`,
                         confirmationListener
                     );
@@ -855,8 +856,7 @@ export class TransactionController extends BaseController<
             // Remove confirmation and rejection listeners on promise completion
             confirmationListener &&
                 this.hub.removeListener(
-                    `${transactionMetaId}:${
-                        !waitForConfirmation ? 'submitted' : 'confirmed'
+                    `${transactionMetaId}:${!waitForConfirmation ? 'submitted' : 'confirmed'
                     }`,
                     confirmationListener
                 );
@@ -987,13 +987,13 @@ export class TransactionController extends BaseController<
 
             const txParams = isEIP1559
                 ? {
-                      ...baseTxParams,
-                      maxFeePerGas:
-                          transactionMeta.transactionParams.maxFeePerGas,
-                      maxPriorityFeePerGas:
-                          transactionMeta.transactionParams
-                              .maxPriorityFeePerGas,
-                  }
+                    ...baseTxParams,
+                    maxFeePerGas:
+                        transactionMeta.transactionParams.maxFeePerGas,
+                    maxPriorityFeePerGas:
+                        transactionMeta.transactionParams
+                            .maxPriorityFeePerGas,
+                }
                 : baseTxParams;
 
             // delete gasPrice if maxFeePerGas and maxPriorityFeePerGas are set
@@ -1794,8 +1794,10 @@ export class TransactionController extends BaseController<
                 return meta.chainId === chainId && !meta.verifiedOnBlockchain;
             });
 
+        console.log(`[TxCtrl] Querying status for ${transactions.length} unverified txs on chain ${chainId}`);
         for (let i = 0; i < transactions.length; i++) {
             const meta = transactions[i];
+            console.log(`[TxCtrl] Checking Tx ID: ${meta.id}, Hash: ${meta.transactionParams.hash}, Status: ${meta.status}`);
             const result = await runPromiseSafely(
                 this.blockchainTransactionStateReconciler(
                     meta,
@@ -1850,7 +1852,7 @@ export class TransactionController extends BaseController<
         // Check for token allowance update
         if (
             transactionMeta.transactionCategory ===
-                TransactionCategories.TOKEN_METHOD_APPROVE &&
+            TransactionCategories.TOKEN_METHOD_APPROVE &&
             transactionMeta.advancedData?.allowance &&
             advancedData?.allowance !== transactionMeta.advancedData?.allowance
         ) {
@@ -2013,7 +2015,7 @@ export class TransactionController extends BaseController<
         return !!transactions.find(
             (t) =>
                 t.transactionParams.nonce ===
-                    transaction.transactionParams.nonce &&
+                transaction.transactionParams.nonce &&
                 compareAddresses(
                     t.transactionParams.from,
                     transaction.transactionParams.from
@@ -2052,6 +2054,7 @@ export class TransactionController extends BaseController<
     ): Promise<[TransactionMeta, boolean]> {
         const { status, flashbots } = meta;
         const { hash: transactionHash } = meta.transactionParams;
+        console.log(`[TxCtrl] Reconciling Tx ID: ${meta.id}, Hash: ${transactionHash}, Current Status: ${status}`);
         const provider = this._networkController.getProvider();
 
         // Tornado deposit confirmations for current network
@@ -2062,8 +2065,7 @@ export class TransactionController extends BaseController<
         switch (status) {
             case TransactionStatus.FAILED:
             case TransactionStatus.CONFIRMED:
-                // Here we check again up to the default confirmation number after the transaction
-                // was confirmed or failed for the first time, that its status remains the same.
+                console.log(`[TxCtrl] Verifying already final state for Tx ID: ${meta.id}`);
                 return this.verifyConfirmedTransactionOnBlockchain(
                     meta,
                     provider,
@@ -2078,12 +2080,87 @@ export class TransactionController extends BaseController<
                     );
                 }
 
+                // --- Start: Check Receipt Early --- //
+                let earlyReceipt: TransactionReceipt | null = null;
+                let earlyReceiptSuccess: boolean | undefined = undefined;
+                try {
+                    console.log(`[TxCtrl] Tx ID: ${meta.id} - Checking receipt early...`);
+                    [earlyReceipt, earlyReceiptSuccess] = await this.checkTransactionReceiptStatus(
+                        transactionHash,
+                        provider
+                    );
+                    console.log(`[TxCtrl] Tx ID: ${meta.id} - Early receipt check result: Receipt=${!!earlyReceipt}, Success=${earlyReceiptSuccess}`);
+                } catch (e) {
+                    log.warn(`Error checking receipt early for ${transactionHash}:`, e);
+                }
+
+                // If receipt found and successful, confirm immediately
+                if (earlyReceipt && earlyReceiptSuccess) {
+                    console.log(`[TxCtrl] Tx ID: ${meta.id} - Confirmed via early receipt check.`);
+                    meta.status = TransactionStatus.CONFIRMED;
+                    meta.transactionReceipt = earlyReceipt;
+                    let unixTimestamp: number | undefined;
+                    try {
+                        const txObjForTimestamp = await provider.getTransaction(transactionHash!);
+                        unixTimestamp = txObjForTimestamp?.timestamp;
+                        if (!unixTimestamp && earlyReceipt.blockNumber) {
+                            const block = await fetchBlockWithRetries(earlyReceipt.blockNumber, provider);
+                            unixTimestamp = block?.timestamp;
+                        }
+                    } catch (e) { log.warn("Error fetching tx/block for timestamp:", e); }
+
+                    meta.confirmationTime = unixTimestampToJSTimestamp(unixTimestamp);
+                    this.emit(TransactionEvents.STATUS_UPDATE, meta);
+                    this.hub.emit(`${meta.id}:confirmed`, meta);
+                    return [meta, true];
+                }
+                // If receipt found and FAILED, fail immediately
+                if (earlyReceipt && earlyReceiptSuccess === false) {
+                    console.log(`[TxCtrl] Tx ID: ${meta.id} - Failed via early receipt check.`);
+                    meta.transactionReceipt = earlyReceipt;
+                    const error: Error = new Error('Transaction failed. The transaction was reverted by the EVM');
+                    this.failTransaction(meta, error);
+                    return [meta, false];
+                }
+                // --- End: Check Receipt Early --- //
+
+                console.log(`[TxCtrl] Tx ID: ${meta.id} - Checking getTransaction...`);
                 const txObj = await provider.getTransaction(transactionHash!);
+                console.log(`[TxCtrl] Tx ID: ${meta.id} - getTransaction result: ${txObj ? `Block #${txObj.blockNumber}` : 'null'}`);
 
                 if (txObj?.blockNumber) {
+                    // Transaction found, but maybe receipt wasn't available yet or failed above
+                    // Double-check receipt status here if not already checked
+                    if (!earlyReceipt) { // Only check if not already done
+                        const [txReceipt, success] =
+                            await this.checkTransactionReceiptStatus(
+                                transactionHash,
+                                provider
+                            );
+                        earlyReceipt = txReceipt; // Store for later use
+                        earlyReceiptSuccess = success;
+                    }
+
+                    // Use the potentially updated earlyReceipt and earlyReceiptSuccess
+                    if (earlyReceipt) {
+                        meta.transactionReceipt = earlyReceipt;
+                        if (earlyReceiptSuccess === false) {
+                            const error: Error = new Error(
+                                'Transaction failed. The transaction was reverted by the EVM'
+                            );
+                            this.failTransaction(meta, error);
+                            return [meta, false];
+                        }
+                        // If successful or status unknown, proceed to confirm
+                    } else {
+                        // If receipt is STILL null here, but tx has blockNumber, something is odd.
+                        // Log warning, but proceed cautiously to confirm? Or wait?
+                        // Let's log and proceed to confirm for now.
+                        log.warn(`Transaction ${transactionHash} has blockNumber but no receipt yet.`);
+                    }
+
                     // If transaction is a Blank deposit, wait for the N confirmations required
-                    // and treat them a bit different than the rest of the transactions, checking
-                    // if it was reverted right after the confirmation amount is reached
+                    // ... (existing Blank Deposit logic using earlyReceipt if available)
                     if (meta.blankDepositId) {
                         const confirmedBlocks =
                             currentBlockNumber - txObj.blockNumber;
@@ -2151,6 +2228,8 @@ export class TransactionController extends BaseController<
                     return [meta, true];
                 }
 
+                // --- Transaction NOT found by getTransaction --- //
+                console.log(`[TxCtrl] Tx ID: ${meta.id} - Tx not found by getTransaction. Checking nonce/drop.`);
                 // Double check if transaction was dropped and receipt keeps returning null
                 const networkNonce = await this._nonceTracker.getNetworkNonce(
                     meta.transactionParams.from!
@@ -2191,6 +2270,7 @@ export class TransactionController extends BaseController<
                     return [meta, false];
                 }
             default:
+                console.log(`[TxCtrl] Tx ID: ${meta.id} - No status change in reconciler for status ${status}`);
                 return [meta, false];
         }
     }
@@ -2210,12 +2290,14 @@ export class TransactionController extends BaseController<
         transactionHash: string,
         currentBlockNumber: number
     ): Promise<[TransactionMeta, boolean]> => {
+        console.log(`[TxCtrl] Verifying confirmed Tx ID: ${meta.id}`);
         const [txReceipt, success] = await this.checkTransactionReceiptStatus(
             transactionHash,
             provider
         );
 
         if (!txReceipt) {
+            console.log(`[TxCtrl] Tx ID: ${meta.id} - Verification failed: No receipt found. Reverting status to SUBMITTED.`);
             // If this is not a deposit transaction and the originally confirmed transaction
             // was marked as confirmed, but at this instance we do not have a txReceipt we have got
             // to mark the transaction as pending again, as it could have been put back to the mempool
@@ -2224,7 +2306,7 @@ export class TransactionController extends BaseController<
                 meta.confirmationTime = undefined;
                 return [meta, true];
             }
-            return [meta, false];
+            return [meta, true];
         }
 
         // If this is not a deposit transaction that we want to explicitly
@@ -2247,6 +2329,7 @@ export class TransactionController extends BaseController<
         // According to the Web3 docs:
         // TRUE if the transaction was successful, FALSE if the EVM reverted the transaction.
         if (!success) {
+            console.log(`[TxCtrl] Tx ID: ${meta.id} - Verification failed: Tx reverted on chain.`);
             const error: Error = new Error(
                 'Transaction failed. The transaction was reverted by the EVM'
             );
@@ -2522,7 +2605,7 @@ export class TransactionController extends BaseController<
             .transactions.filter(
                 (t) =>
                     t.transactionCategory ===
-                        TransactionCategories.BLANK_DEPOSIT &&
+                    TransactionCategories.BLANK_DEPOSIT &&
                     t.status !== TransactionStatus.UNAPPROVED &&
                     t.chainId === fromChainId
             );

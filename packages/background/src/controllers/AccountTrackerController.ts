@@ -342,6 +342,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                 address: string,
                 transactionType: WatchedTransactionType
             ) => {
+                console.log(`[AccTrk] Incoming ${transactionType} transaction detected for ${address} on chain ${chainId}. Triggering balance update.`);
                 if (transactionType === WatchedTransactionType.Native) {
                     await this.updateAccounts(
                         {
@@ -357,6 +358,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         this._transactionWatcherController.on(
             TransactionWatcherControllerEvents.NEW_ERC20_TRANSACTIONS,
             async (chainId: number, accountAddress: string) => {
+                console.log(`[AccTrk] New ERC20 transactions detected for ${accountAddress} on chain ${chainId}. Triggering balance update.`);
                 const assetAddresses: string[] = [];
 
                 assetAddresses.push(
@@ -425,13 +427,21 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         this._transactionController.on(
             TransactionEvents.STATUS_UPDATE,
             (transactionMeta: TransactionMeta) => {
+                console.log(`[AccTrk] Received STATUS_UPDATE for Tx ID: ${transactionMeta.id}, Status: ${transactionMeta.status}`);
+                // Existing allowance handling
                 if (
-                    transactionMeta.transactionCategory !==
+                    transactionMeta.transactionCategory ===
                     TransactionCategories.TOKEN_METHOD_APPROVE
                 ) {
-                    return;
+                    console.log(`[AccTrk] Handling approval tx update for ${transactionMeta.id}`);
+                    this._onApprovalTransactionUpdate(transactionMeta);
                 }
-                return this._onApprovalTransactionUpdate(transactionMeta);
+
+                // Handle confirmed transactions for balance update
+                if (transactionMeta.status === TransactionStatus.CONFIRMED) {
+                    console.log(`[AccTrk] Handling confirmed tx update for ${transactionMeta.id}`);
+                    this._onTransactionConfirmed(transactionMeta);
+                }
             }
         );
     }
@@ -1477,6 +1487,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         chainId: number = this._networkController.network.chainId
     ): Promise<void> {
         const { addresses, assetAddresses } = updateAccountsOptions;
+        console.log(`[AccTrk] updateAccounts called for Chain: ${chainId}, Addrs: ${addresses?.join(', ') || 'All'}, Assets: ${assetAddresses.join(', ') || 'All'}`);
         const release = !addresses
             ? await this._mutex.acquire()
             : () => {
@@ -1497,6 +1508,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             if (provider) {
                 for (let i = 0; i < _addresses.length; i++) {
                     const address = _addresses[i];
+                    console.log(`[AccTrk] Updating balances for account: ${address}`);
 
                     // If the chain changed we abort these operations
                     // Set $BLANK as visible on network change if available
@@ -1542,6 +1554,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         accountAddress: string,
         assetAddressToGetBalance: string[]
     ) {
+        console.log(`[AccTrk] _updateAccountBalance for ${accountAddress} on chain ${chainId}, assets: ${assetAddressToGetBalance.join(', ')}`);
         // We try to fetch the balances from the SingleBalancesContract and fallback
         // to the regular getBalances call in case it fails or it is not available.
         try {
@@ -1681,6 +1694,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         assetAddressToGetBalance: string[],
         deletedUserTokens: string[]
     ): void {
+        console.log(`[AccTrk] _updateAccountBalanceState for ${accountAddress} on chain ${chainId}`);
         const stateAccounts = this.store.getState().accounts;
 
         const finalNativeTokenBalance = assetAddressToGetBalance.includes(
@@ -1715,7 +1729,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
             }
         }
 
-        this.store.updateState({
+        const newState = {
             accounts: {
                 ...this.store.getState().accounts,
                 [accountAddress]: {
@@ -1730,8 +1744,11 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
                     },
                 },
             },
-        });
+        };
+        console.log(`[AccTrk] Updating state for ${accountAddress}. New balances[${chainId}]:`, newState.accounts[accountAddress].balances[chainId]);
+        this.store.updateState(newState);
 
+        console.log(`[AccTrk] Emitting BALANCE_UPDATED for ${accountAddress}, chain ${chainId}`);
         this.emit(
             AccountTrackerEvents.BALANCE_UPDATED,
             chainId,
@@ -2574,6 +2591,84 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         } catch (error) {
             log.error(`Error in getHardwareWalletAccountsWithFallback:`, error);
             throw error;
+        }
+    }
+
+    /**
+     * Handles confirmed transactions to trigger balance updates.
+     * @param transactionMeta - The metadata of the confirmed transaction.
+     */
+    private _onTransactionConfirmed(transactionMeta: TransactionMeta): void {
+        console.log(`[AccTrk] _onTransactionConfirmed called for Tx ID: ${transactionMeta.id}`);
+        const { accounts, hiddenAccounts } = this.store.getState();
+        const txChainId = transactionMeta.chainId;
+        const txFrom = transactionMeta.transactionParams.from?.toLowerCase();
+        const txTo = transactionMeta.transactionParams.to?.toLowerCase();
+
+        if (!txFrom || !txChainId) {
+            log.warn("Confirmed transaction missing sender or chainId", transactionMeta);
+            return;
+        }
+
+        // Determine which tracked account(s) are involved
+        const involvedAddresses: string[] = [];
+        if (txFrom && (accounts[txFrom] || hiddenAccounts[txFrom])) {
+            involvedAddresses.push(txFrom);
+        }
+        if (txTo && txTo !== txFrom && (accounts[txTo] || hiddenAccounts[txTo])) {
+            involvedAddresses.push(txTo);
+        }
+
+        if (involvedAddresses.length === 0) {
+            return; // Transaction doesn't involve tracked accounts
+        }
+
+        // Determine which asset(s) need updating
+        const assetAddressesToUpdate: string[] = [];
+        const category = transactionMeta.transactionCategory;
+
+        if (
+            category === TransactionCategories.SENT_ETHER ||
+            category === TransactionCategories.INCOMING
+        ) {
+            assetAddressesToUpdate.push(NATIVE_TOKEN_ADDRESS);
+        } else if (
+            category === TransactionCategories.TOKEN_METHOD_TRANSFER ||
+            category === TransactionCategories.TOKEN_METHOD_TRANSFER_FROM ||
+            category === TransactionCategories.TOKEN_METHOD_INCOMING_TRANSFER
+        ) {
+            const tokenAddress = transactionMeta.transactionParams.to;
+            if (tokenAddress) {
+                assetAddressesToUpdate.push(tokenAddress);
+                if (involvedAddresses.includes(txFrom)) {
+                    assetAddressesToUpdate.push(NATIVE_TOKEN_ADDRESS);
+                }
+            }
+        } else if (category === TransactionCategories.CONTRACT_INTERACTION) {
+            if (involvedAddresses.includes(txFrom)) {
+                assetAddressesToUpdate.push(NATIVE_TOKEN_ADDRESS);
+            }
+        }
+        // Add more category checks if needed
+
+        if (assetAddressesToUpdate.length > 0) {
+            log.debug(`[AccTrk] Transaction confirmed, planning balance update for accounts: ${involvedAddresses.join(", ")}, assets: ${assetAddressesToUpdate.join(", ")}`);
+            // Use Promise.allSettled to avoid one failure stopping others
+            Promise.allSettled(involvedAddresses.map(addr => {
+                console.log(`[AccTrk] Calling updateAccounts for ${addr} on chain ${txChainId} due to confirmed Tx ${transactionMeta.id}`);
+                return this.updateAccounts(
+                    {
+                        addresses: [addr], // Update one account at a time
+                        assetAddresses: assetAddressesToUpdate,
+                    },
+                    txChainId
+                );
+            }
+            )).catch(err => {
+                log.error("[AccTrk] Error during post-confirmation balance update:", err);
+            });
+        } else {
+            console.log(`[AccTrk] Tx ID: ${transactionMeta.id} confirmed, but no relevant assets/accounts found for immediate balance update.`);
         }
     }
 }

@@ -72,6 +72,8 @@ import { AmountInput } from "../../components/send/AmountInput"
 import { useGasEstimation } from "../../context/hooks/useGasEstimation"
 import { GasSettings } from "../../components/send/GasSettings"
 import { useSendTransaction } from "../../context/hooks/useSendTransaction"
+import { useNetworkCongestion, CongestionLevel } from "../../context/hooks/useNetworkCongestion"
+import { AiFillInfoCircle } from "react-icons/ai"
 
 // Debounce utility
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -218,6 +220,30 @@ const INITIAL_VALUE_PERSISTED_DATA = {
     submitted: false,
     txId: "",
 }
+
+// Helper to get message and style based on congestion level
+const getCongestionInfo = (level: CongestionLevel): { message: string; className: string } | null => {
+    switch (level) {
+        case 'medium':
+            return {
+                message: "Network traffic is slightly high. Transactions may take longer or require higher fees.",
+                className: "bg-yellow-100 text-yellow-800 border-yellow-300",
+            };
+        case 'high':
+            return {
+                message: "Network is experiencing high congestion. Fees are elevated and transactions may be delayed significantly.",
+                className: "bg-orange-100 text-orange-800 border-orange-300",
+            };
+        case 'extreme':
+            return {
+                message: "Network congestion is extreme! Fees are very high and transactions may fail or be severely delayed. Consider waiting unless urgent.",
+                className: "bg-red-100 text-red-800 border-red-300",
+            };
+        case 'normal':
+        default:
+            return null;
+    }
+};
 
 // Page
 const SendConfirmPage = () => {
@@ -493,6 +519,9 @@ const SendConfirmPage = () => {
         // Since they come from react-hook-form and useState, they should be stable.
     }, [selectedGas, usingMax, trigger, getValues])
 
+    const congestionLevel = useNetworkCongestion();
+    const congestionInfo = getCongestionInfo(congestionLevel);
+
     // const [inputFocus, setInputFocus] = useState(false) // Managed by AmountInput now
     return (
         <PopupLayout
@@ -573,6 +602,22 @@ const SendConfirmPage = () => {
                     selectedAccountName={selectedAccountName}
                 />
                 <div className="flex flex-col px-4 sm:px-6 flex-grow">
+                    {congestionInfo && (
+                        <div
+                            className={classnames(
+                                "border rounded-md p-3 mb-4 flex items-start space-x-2",
+                                congestionInfo.className
+                            )}
+                        >
+                            <AiFillInfoCircle className={classnames(
+                                "w-5 h-5 mt-0.5 flex-shrink-0",
+                                congestionLevel === 'medium' && "text-yellow-600",
+                                congestionLevel === 'high' && "text-orange-600",
+                                congestionLevel === 'extreme' && "text-red-600"
+                            )} />
+                            <p className="text-xs">{congestionInfo.message}</p>
+                        </div>
+                    )}
                     <div
                         className={classnames(
                             "mb-3"

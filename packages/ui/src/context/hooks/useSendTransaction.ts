@@ -54,6 +54,7 @@ interface UseSendTransactionResult {
     clearSubmissionError: () => void;
     // Expose dialog state/dispatch if needed, or handle dialog within the hook
     dialogState: ReturnType<typeof useTransactionWaitingDialog>;
+    showContractAddressWarning: boolean;
 }
 
 // Validation helpers (could be moved to utils)
@@ -111,6 +112,7 @@ export const useSendTransaction = ({
 }: UseSendTransactionProps): UseSendTransactionResult => {
     const [submissionError, setSubmissionError] = useState<string | null>(null);
     const [isCheckingDevice, setIsCheckingDevice] = useState(false);
+    const [showContractAddressWarning, setShowContractAddressWarning] = useState(false);
     const { clear: clearLocationRecovery } = useLocationRecovery();
     const { checkDeviceIsLinked } = useCheckAccountDeviceLinked(); // Destructure default export
 
@@ -154,16 +156,29 @@ export const useSendTransaction = ({
     // Combined submitting state
     const isSubmitting = isCheckingDevice || isSending;
 
-    const clearSubmissionError = () => setSubmissionError(null);
+    const clearSubmissionError = () => {
+        setSubmissionError(null);
+        setShowContractAddressWarning(false);
+        setPersistedData((prev) => ({ ...prev, submitted: false, txId: "" }));
+        clearLocationRecovery();
+    }
 
     const submitTransaction = useCallback(async () => {
-        setSubmissionError(null); // Clear previous errors
+        clearSubmissionError();
         if (!selectedToken) {
             setSubmissionError("Select a token first.");
             return;
         }
 
-        // Value Calculation
+        if (
+            selectedToken.token.address !== nativeToken.token.address &&
+            selectedToken.token.address.toLowerCase() === receivingAddress.toLowerCase()
+        ) {
+            setSubmissionError("Warning: Sending tokens to the token contract address itself can result in loss of funds.");
+            setShowContractAddressWarning(true);
+            return;
+        }
+
         const value = usingMax
             ? getMaxTransactionAmount()
             : parseUnits(
@@ -173,19 +188,16 @@ export const useSendTransaction = ({
 
         dispatchDialog({ type: "open", payload: { status: "loading" } });
 
-        // Hardware Wallet Check
         if (isHardwareWallet(accountType)) {
             setIsCheckingDevice(true);
             const isLinked = await checkDeviceIsLinked();
             setIsCheckingDevice(false);
             if (!isLinked) {
-                // Error is handled by isDeviceUnlinked state and dialog in parent
-                closeDialog(); // Close sending dialog if device isn't linked
+                closeDialog();
                 return;
             }
         }
 
-        // Balance Validation
         let balanceValidation: boolean = false;
         let errorMessage: string = "";
         if (selectedToken.token.address === nativeToken.token.address) {
@@ -195,7 +207,7 @@ export const useSendTransaction = ({
                 selectedGas,
                 isEIP1559Compatible
             );
-            errorMessage = `Insufficient funds for amount + gas.`; // Simplified error
+            errorMessage = `Insufficient funds for amount + gas.`;
         } else {
             balanceValidation = GasCostBalanceValidation(
                 balance,
@@ -212,7 +224,7 @@ export const useSendTransaction = ({
             }
         }
 
-        if (!balanceValidation) {
+        if (!showContractAddressWarning && !balanceValidation) {
             setSubmissionError(errorMessage);
             dispatchDialog({
                 type: "setStatus",
@@ -221,7 +233,6 @@ export const useSendTransaction = ({
             return;
         }
 
-        // Transaction Sending
         try {
             let sendPromise = null;
             if (selectedToken.token.address === nativeToken.token.address) {
@@ -241,18 +252,9 @@ export const useSendTransaction = ({
                 );
             }
 
-            // Update persisted state BEFORE awaiting
             setPersistedData((prev) => ({ ...prev, submitted: true }));
 
-            // Clear recovery state only for non-HW wallets immediately
-            if (!isHardwareWallet(accountType)) {
-                clearLocationRecovery();
-                setPersistedData(INITIAL_VALUE_PERSISTED_DATA);
-            }
-
-            await sendPromise; // Await the transaction hash/submission
-
-            // Dialog will transition to success/error based on background events
+            await sendPromise;
 
         } catch (error: any) {
             log.error("Send transaction error:", error);
@@ -262,9 +264,8 @@ export const useSendTransaction = ({
                 type: "setStatus",
                 payload: { status: "error", texts: { error: errMsg } },
             });
-            // Reset submitted state on error
             setPersistedData((prev) => ({ ...prev, submitted: false, txId: "" }));
-            clearTransaction(); // Clear any in-progress transaction state
+            clearTransaction();
         }
     }, [
         selectedToken,
@@ -284,6 +285,7 @@ export const useSendTransaction = ({
         setPersistedData,
         clearLocationRecovery,
         clearTransaction,
+        showContractAddressWarning,
     ]);
 
     return {
@@ -292,5 +294,6 @@ export const useSendTransaction = ({
         submissionError,
         clearSubmissionError,
         dialogState,
+        showContractAddressWarning,
     };
 }; 

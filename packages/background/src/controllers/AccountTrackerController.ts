@@ -1078,6 +1078,9 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         // Checksum address
         address = toChecksumAddress(address);
 
+        // Also store the lowercase version for object key consistency
+        const addressLowerCase = address.toLowerCase();
+
         const primaryAccountInfo: AccountInfo = {
             address,
             name: 'Account 1',
@@ -1089,7 +1092,7 @@ export class AccountTrackerController extends BaseController<AccountTrackerState
         };
 
         this.store.updateState({
-            accounts: { [address]: primaryAccountInfo },
+            accounts: { [addressLowerCase]: primaryAccountInfo },
         });
 
         // Emit account update

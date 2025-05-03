@@ -328,7 +328,7 @@ export const AssetSelection: FC<AssetSelectionProps> = ({
                 </div>
                 <AssetList
                     addTokenState={addTokenState}
-                    assets={searchResult}
+                    assets={searchResult || []}
                     onAssetClick={onAssetClick}
                     register={register}
                     searchValue={search}

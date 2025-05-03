@@ -4,6 +4,7 @@ import TokenDisplay from "../token/TokenDisplay"
 import plusIcon from "../../assets/images/icons/plus.svg"
 import { ActionButton } from "../button/ActionButton"
 import { FixedSizeList as List } from 'react-window';
+import React from 'react';
 
 const ROW_HEIGHT = 56;
 
@@ -30,6 +31,9 @@ const AssetList: FC<{
 }) => {
 
         const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+            // Safety check: ensure assets array has items and index is valid
+            if (!assets || index < 0 || index >= assets.length) return null;
+
             const asset = assets[index];
             if (!asset) return null;
             return (
@@ -67,7 +71,7 @@ const AssetList: FC<{
                         itemCount={assets.length}
                         itemSize={ROW_HEIGHT}
                         width={dropdownWidth}
-                        itemKey={(index, data) => data[index].token.address}
+                        itemKey={(index) => assets[index]?.token?.address || `asset-${index}`}
                     >
                         {Row}
                     </List>

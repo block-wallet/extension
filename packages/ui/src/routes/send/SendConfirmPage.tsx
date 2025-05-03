@@ -494,6 +494,11 @@ const SendConfirmPage = () => {
     )
 
     const handleChangeAsset = (asset: TokenWithBalance, cleanAmount = true) => {
+        if (!asset || !asset.token) {
+            console.error("Invalid asset received in handleChangeAsset");
+            return;
+        }
+
         setUsingMax(false)
         if (cleanAmount) {
             handleChangeAmount("") // Call the reintroduced function

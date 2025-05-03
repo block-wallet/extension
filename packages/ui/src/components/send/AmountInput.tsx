@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react"
 import classnames from "classnames"
-import { UseFormRegister, FieldError, Control, UseFormSetValue, UseFormClearErrors, UseFormGetValues } from "react-hook-form"
+import { UseFormRegister, FieldError, Control, UseFormSetValue, UseFormClearErrors, UseFormGetValues, useWatch, Controller } from "react-hook-form"
 import { BigNumber } from "@ethersproject/bignumber"
 import { formatUnits, parseUnits } from "@ethersproject/units"
 import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
@@ -11,35 +11,36 @@ import ErrorMessage from "../error/ErrorMessage"
 import { getValueByKey } from "../../util/objectUtils"
 import { ResponseGetState } from "@block-wallet/background/utils/types/communication"
 
-// Debounce utility
-const useDebounce = <T extends (...args: any[]) => any>(
-    callback: T,
-    delay: number
-): T => {
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+// Improved debounce hook that returns both the debounced value and a setter
+const useDebouncedValue = <T,>(initialValue: T, delay: number = 300): [T, (value: T) => void, boolean] => {
+    const [value, setValue] = useState<T>(initialValue);
+    const [debouncedValue, setDebouncedValue] = useState<T>(initialValue);
+    const [isDebouncing, setIsDebouncing] = useState(false);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    const debounced = useCallback(
-        (...args: Parameters<T>) => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
-            }
+    const setValueWithDebounce = useCallback((newValue: T) => {
+        setValue(newValue);
+        setIsDebouncing(true);
 
-            timeoutRef.current = setTimeout(() => {
-                callback(...args);
-            }, delay);
-        },
-        [callback, delay]
-    ) as T;
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+        }
+
+        timerRef.current = setTimeout(() => {
+            setDebouncedValue(newValue);
+            setIsDebouncing(false);
+        }, delay);
+    }, [delay]);
 
     useEffect(() => {
         return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
             }
         };
     }, []);
 
-    return debounced;
+    return [debouncedValue, setValueWithDebounce, isDebouncing];
 };
 
 interface AmountInputProps {
@@ -65,7 +66,7 @@ interface AmountInputProps {
 export const AmountInput: React.FC<AmountInputProps> = ({
     register,
     setValue,
-    getValues,
+    control,
     clearErrors,
     errors,
     selectedToken,
@@ -74,139 +75,102 @@ export const AmountInput: React.FC<AmountInputProps> = ({
     onMaxClick,
     blankState,
     disabled,
-    className, // Destructure className
+    className,
 }) => {
-    const [inputFocus, setInputFocus] = useState(false)
-    const [usingMax, setUsingMax] = useState(false)
-    const [nativeCurrencyAmt, setNativeCurrency] = useState(0)
-    const [userIsTyping, setUserIsTyping] = useState(false)
-    const prevAmountRef = useRef<string>("");
+    const [inputFocus, setInputFocus] = useState(false);
+    const [usingMax, setUsingMax] = useState(false);
+    const [nativeCurrencyAmt, setNativeCurrency, isCalculatingCurrency] = useDebouncedValue(0, 300);
 
-    const calcNativeCurrency = useCallback(() => {
+    // Create a single decimals constant for consistent use
+    const decimals = selectedToken?.token.decimals ?? DEFAULT_DECIMALS;
+    const symbol = selectedToken?.token.symbol.toUpperCase() ?? blankState.networkNativeCurrency.symbol;
+
+    const calcNativeCurrency = useCallback((amountStr: string) => {
         if (!selectedToken) return 0;
         try {
-            const amountStr = getValues().amount || "0";
-            const amount: number = Number(amountStr);
+            const amount: number = Number(amountStr || "0");
             const assetAmount: number = !isNaN(amount) && amount ? amount : 0;
-            const decimals = selectedToken?.token.decimals || DEFAULT_DECIMALS;
-            const symbol =
-                selectedToken?.token.symbol.toUpperCase() ||
-                blankState.networkNativeCurrency.symbol; // Use network native symbol
             const txAmount: BigNumber = parseUnits(
                 assetAmount.toString(),
                 decimals
             );
             const rate = getValueByKey(blankState.exchangeRates, symbol, 0);
             const nativeAmount = toCurrencyAmount(txAmount, rate, decimals);
-            setNativeCurrency(nativeAmount);
             return nativeAmount;
         } catch {
-            setNativeCurrency(0);
             return 0;
         }
-    }, [selectedToken, getValues, blankState.exchangeRates, blankState.networkNativeCurrency.symbol]);
+    }, [selectedToken, decimals, symbol, blankState.exchangeRates]);
 
-    // Debounced version of the native currency calculation
-    const debouncedCalcNativeCurrency = useDebounce(calcNativeCurrency, 300);
+    // Update currency calculation when form value changes
+    const watchedAmount = useWatch({
+        control,
+        name: "amount",
+        defaultValue: "",
+    });
 
-    // Calculate initial native currency amount on token/exchange rate change only
     useEffect(() => {
-        // Only recalculate if not actively typing
-        if (!userIsTyping) {
-            calcNativeCurrency();
-        }
-    }, [calcNativeCurrency, selectedToken, blankState.exchangeRates, userIsTyping]);
+        const newNativeAmount = calcNativeCurrency(watchedAmount);
+        setNativeCurrency(newNativeAmount);
+    }, [watchedAmount, calcNativeCurrency, setNativeCurrency]);
 
-    // Actual input change handler with improved typing experience
-    const handleAmountInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setUserIsTyping(true);
+    // Format and validate input value
+    const formatAndValidateInput = (value: string) => {
+        if (!value) return "";
 
-        // If user is typing, disable max mode
-        if (usingMax) {
-            setUsingMax(false);
-            onMaxClick(false);
-        }
+        // Handle formatting
+        let formattedValue = value
+            .replace(/[^0-9.,]/g, "")
+            .replace(",", ".")
+            .replace(/(\..*?)\..*/g, "$1");
 
-        let value = e.target.value
-            ? e.target.value
-                .replace(/[^0-9.,]/g, "")
-                .replace(",", ".")
-                .replace(/(\..*?)\..*/g, "$1")
-            : "";
-
-        if (value === ".") {
-            value = "";
+        if (formattedValue === ".") {
+            return "";
         }
 
-        // Store current value for comparison
-        prevAmountRef.current = value;
-
-        if (value === "") {
-            setValue("amount", "");
-            clearErrors("amount");
-        } else {
-            // Basic validation before setting state
-            const decimals = selectedToken?.token.decimals || DEFAULT_DECIMALS;
-            if (value.includes(".") && value.split(".")[1].length > decimals) {
-                value = value.substring(0, value.indexOf(".") + decimals + 1);
-            }
-
-            setValue("amount", value, {
-                shouldValidate: true, // Trigger validation
-            });
+        // Decimal validation
+        if (formattedValue.includes(".") && formattedValue.split(".")[1].length > decimals) {
+            formattedValue = formattedValue.substring(0, formattedValue.indexOf(".") + decimals + 1);
         }
 
-        // Notify parent right away for interface responsiveness
-        onAmountChange(value);
-
-        // Schedule debounced calculation for currency conversion
-        debouncedCalcNativeCurrency();
-
-        // Reset typing state after a delay
-        setTimeout(() => {
-            setUserIsTyping(false);
-        }, 500);
+        return formattedValue;
     };
 
-    // Max button handling improved to prevent conflicts with manual input
+    // Max button handling with functional state updates
     const handleMaxClick = () => {
-        const newUsingMax = !usingMax;
-        setUsingMax(newUsingMax);
+        setUsingMax(prevUsingMax => {
+            const newUsingMax = !prevUsingMax;
 
-        if (newUsingMax) {
-            const maxTransactionAmount = getMaxTransactionAmount();
-            const decimals = selectedToken?.token.decimals || DEFAULT_DECIMALS;
-            const formatAmount = formatUnits(
-                BigNumber.from(maxTransactionAmount),
-                decimals
-            );
+            if (newUsingMax) {
+                const maxTransactionAmount = getMaxTransactionAmount();
+                const formatAmount = formatUnits(
+                    maxTransactionAmount,
+                    decimals
+                );
 
-            setValue("amount", formatAmount, {
-                shouldValidate: true,
-            });
-            onAmountChange(formatAmount);
-            prevAmountRef.current = formatAmount;
-        } else {
-            setValue("amount", "", {
-                shouldValidate: false,
-            });
-            clearErrors("amount");
-            onAmountChange("");
-            prevAmountRef.current = "";
-        }
+                setValue("amount", formatAmount, {
+                    shouldValidate: true,
+                });
+                onAmountChange(formatAmount);
+            } else {
+                setValue("amount", "", {
+                    shouldValidate: false,
+                });
+                clearErrors("amount");
+                onAmountChange("");
+            }
 
-        // Calculate native currency without debounce for immediate feedback
-        calcNativeCurrency();
-        onMaxClick(newUsingMax);
+            // Call the parent's onMaxClick callback
+            onMaxClick(newUsingMax);
+
+            return newUsingMax;
+        });
     };
 
     const hasBalance = useMemo(() =>
         selectedToken && !BigNumber.from(selectedToken.balance).isZero(),
         [selectedToken]
     );
-
-    // Memoize the input value to prevent rerenders
-    const inputValue = useMemo(() => getValues().amount || "", [getValues().amount]);
 
     return (
         <div
@@ -225,7 +189,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
                 </label>
                 {/* Optional: Display token balance here */}
                 {/* <span className="text-xs text-primary-grey-dark">
-                    Balance: {formatUnits(selectedToken?.balance || 0, selectedToken?.token.decimals || DEFAULT_DECIMALS)} {selectedToken?.token.symbol}
+                    Balance: {formatUnits(selectedToken?.balance || 0, decimals)} {selectedToken?.token.symbol}
                  </span> */}
             </div>
 
@@ -239,42 +203,59 @@ export const AmountInput: React.FC<AmountInputProps> = ({
                 )}
             >
                 <div className="flex flex-col items-start flex-grow mr-2">
-                    <input
-                        id="amount"
-                        type="text"
-                        inputMode="decimal"
-                        pattern="[0-9.]*"
-                        {...register("amount")}
-                        className={classnames(
-                            Classes.blueSectionInput,
-                            "py-2 sm:py-1"
+                    <Controller
+                        name="amount"
+                        control={control}
+                        render={({ field }) => (
+                            <input
+                                id="amount"
+                                type="text"
+                                inputMode="decimal"
+                                pattern="[0-9.]*"
+                                className={classnames(
+                                    Classes.blueSectionInput,
+                                    "py-2 sm:py-1"
+                                )}
+                                placeholder={`0 ${selectedToken
+                                    ? selectedToken.token.symbol
+                                    : ""
+                                    }`}
+                                autoComplete="off"
+                                disabled={disabled}
+                                onFocus={() => !disabled && setInputFocus(true)}
+                                onBlur={() => {
+                                    setInputFocus(false);
+                                    field.onBlur();
+                                }}
+                                onKeyDown={(e) => {
+                                    if (disabled) return;
+                                    // Prevent excessive numbers
+                                    const amt = Number(e.currentTarget.value + e.key);
+                                    if (
+                                        !isNaN(Number(e.key)) &&
+                                        !isNaN(Number(e.currentTarget.value)) &&
+                                        Number(e.currentTarget.value) >= Number.MAX_SAFE_INTEGER / 10
+                                    ) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }
+                                }}
+                                value={field.value || ""}
+                                onChange={(e) => {
+                                    // Disable max mode if typing
+                                    if (usingMax) {
+                                        setUsingMax(false);
+                                        onMaxClick(false);
+                                    }
+
+                                    const formattedValue = formatAndValidateInput(e.target.value);
+                                    field.onChange(formattedValue);
+
+                                    // Notify parent
+                                    onAmountChange(formattedValue);
+                                }}
+                            />
                         )}
-                        placeholder={`0 ${selectedToken
-                            ? selectedToken.token.symbol
-                            : ""
-                            }`}
-                        autoComplete="off"
-                        value={inputValue}
-                        onFocus={() => !disabled && setInputFocus(true)}
-                        onBlur={() => {
-                            setInputFocus(false);
-                            setUserIsTyping(false);
-                        }}
-                        onKeyDown={(e) => {
-                            if (disabled) return;
-                            // Prevent excessive numbers
-                            const amt = Number(e.currentTarget.value + e.key);
-                            if (
-                                !isNaN(Number(e.key)) &&
-                                !isNaN(Number(e.currentTarget.value)) &&
-                                Number(e.currentTarget.value) >= Number.MAX_SAFE_INTEGER / 10
-                            ) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                            }
-                        }}
-                        onChange={handleAmountInputChange}
-                        disabled={disabled}
                     />
                     <span className="text-xs text-primary-grey-dark mt-1 h-4">
                         {!disabled && formatCurrency(nativeCurrencyAmt, {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useState, useMemo } from "react"
+import { useCallback, useEffect, useLayoutEffect, useState, useMemo, useRef } from "react"
 
 import { useForm } from "react-hook-form"
 
@@ -228,6 +228,35 @@ const getCongestionInfo = (level: CongestionLevel): { message: string; className
     }
 };
 
+// Create a custom debounced watch hook
+const useDebouncedWatch = (
+    watch: (name: string) => string,
+    name: string,
+    delay = 500
+): string => {
+    const [debouncedValue, setDebouncedValue] = useState("");
+    const watchedValue = watch(name);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+            setDebouncedValue(watchedValue);
+        }, delay);
+
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, [watchedValue, delay]);
+
+    return debouncedValue;
+};
+
 // Page
 const SendConfirmPage = () => {
     // Blank Hooks
@@ -320,6 +349,17 @@ const SendConfirmPage = () => {
         [gasPricesLevels.average.gasPrice]
     )
 
+    // Use useMemo to prevent unnecessary recreation of validation schema
+    const validationSchema = useMemo(() => {
+        return yupResolver(GetAmountYupSchema(
+            balance,
+            selectedToken,
+            { gasLimit: BigNumber.from(0), gasPrice: BigNumber.from(0) },
+            isEIP1559Compatible,
+            true
+        ));
+    }, [balance, selectedToken, isEIP1559Compatible]);
+
     const {
         register,
         handleSubmit,
@@ -331,19 +371,15 @@ const SendConfirmPage = () => {
         control,
         formState: { errors },
     } = useForm<AmountFormData>({
-        resolver: yupResolver(GetAmountYupSchema(
-            balance,
-            selectedToken,
-            { gasLimit: BigNumber.from(0), gasPrice: BigNumber.from(0) },
-            isEIP1559Compatible,
-            true
-        )),
+        resolver: validationSchema,
         defaultValues: { asset: selectedToken.token.address },
     })
     const { checkDeviceIsLinked, isDeviceUnlinked, resetDeviceLinkStatus } =
         useCheckAccountDeviceLinked()
 
+    // Use our debounced watch instead of direct watch for gas estimation
     const watchedAmount = watch("amount");
+    const debouncedWatchedAmount = useDebouncedWatch(watch, "amount", 500);
 
     // Define getMaxTransactionAmount *before* useSendTransaction hook
     const getMaxTransactionAmount = (): BigNumber => {
@@ -366,7 +402,7 @@ const SendConfirmPage = () => {
         return maxTransactionAmount
     }
 
-    // Use the gas estimation hook
+    // Use the gas estimation hook with the debounced amount
     const {
         isGasLoading,
         gasEstimationFailed,
@@ -377,7 +413,7 @@ const SendConfirmPage = () => {
     } = useGasEstimation({
         selectedToken,
         recipientAddress: receivingAddress,
-        amountValue: watchedAmount,
+        amountValue: debouncedWatchedAmount, // Use debounced value here
         isEIP1559Compatible,
         initialDefaultGasPrice,
     });

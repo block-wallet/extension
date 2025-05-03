@@ -9,7 +9,6 @@ import {
     AssetListType,
     MemoizedAssetSelection as AssetSelection,
 } from "../../components/assets/AssetSelection"
-import { GasPriceSelector } from "../../components/transactions/GasPriceSelector"
 import ErrorMessage from "../../components/error/ErrorMessage"
 
 // Style
@@ -20,19 +19,11 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import { InferType } from "yup"
 import { BigNumber } from "@ethersproject/bignumber"
-import { formatUnits, parseUnits } from "@ethersproject/units"
-import { Zero } from "@ethersproject/constants"
-import { formatCurrency, toCurrencyAmount } from "../../util/formatCurrency"
-import { DEFAULT_DECIMALS, SEND_GAS_COST } from "../../util/constants"
+import { formatUnits } from "@ethersproject/units"
+import { DEFAULT_DECIMALS } from "../../util/constants"
 
 // Hooks
 import { useBlankState } from "../../context/background/backgroundHooks"
-import {
-    getLatestGasPrice,
-    getSendTransactionGasLimit,
-    sendEther,
-    sendToken,
-} from "../../context/commActions"
 
 import { useSelectedAccountBalance } from "../../context/hooks/useSelectedAccountBalance"
 import { useOnMountHistory } from "../../context/hooks/useOnMount"
@@ -40,18 +31,15 @@ import {
     TokenWithBalance,
     useTokensList,
 } from "../../context/hooks/useTokensList"
-import GasPriceComponent from "../../components/transactions/GasPriceComponent"
 
 // Types
 import PopupLayout from "../../components/popup/PopupLayout"
 import { useSelectedNetwork } from "../../context/hooks/useSelectedNetwork"
 import { useGasPriceData } from "../../context/hooks/useGasPriceData"
 import { ButtonWithLoading } from "../../components/button/ButtonWithLoading"
-import { Classes } from "../../styles"
 import WaitingDialog from "../../components/dialog/WaitingDialog"
 import WarningDialog from "../../components/dialog/WarningDialog"
 import HardwareDeviceNotLinkedDialog from "../../components/dialog/HardwareDeviceNotLinkedDialog"
-import { AdvancedSettings } from "../../components/transactions/AdvancedSettings"
 import { TransactionFeeData } from "@block-wallet/background/controllers/erc-20/transactions/SignedTransaction"
 import { TransactionAdvancedData } from "@block-wallet/background/controllers/transactions/utils/types"
 import { useSelectedAccount } from "../../context/hooks/useSelectedAccount"
@@ -60,14 +48,9 @@ import useLocalStorageState from "../../util/hooks/useLocalStorageState"
 import useCheckAccountDeviceLinked from "../../util/hooks/useCheckAccountDeviceLinked"
 import { getDeviceFromAccountType } from "../../util/hardwareDevice"
 import { isHardwareWallet } from "../../util/account"
-import { useTransactionWaitingDialog } from "../../context/hooks/useTransactionWaitingDialog"
-import { HardwareWalletOpTypes } from "../../context/commTypes"
 import { useInProgressInternalTransaction } from "../../context/hooks/useInProgressInternalTransaction"
-import { rejectTransaction } from "../../context/commActions"
-import { getValueByKey } from "../../util/objectUtils"
 import { AddressDisplay } from "../../components/addressBook/AddressDisplay"
 import { useAccountNameByAddress } from "../../context/hooks/useAccountNameByAddress"
-import log from "loglevel"
 import { AmountInput } from "../../components/send/AmountInput"
 import { useGasEstimation } from "../../context/hooks/useGasEstimation"
 import { GasSettings } from "../../components/send/GasSettings"
@@ -433,7 +416,7 @@ const SendConfirmPage = () => {
         submitTransaction();
     });
 
-    const setMaxTransactionAmount = (_usingMax: boolean = usingMax) => {
+    const setMaxTransactionAmount = useCallback((_usingMax: boolean = usingMax) => {
         setUsingMax(_usingMax)
         if (_usingMax) {
             const maxTransactionAmount = getMaxTransactionAmount()
@@ -445,13 +428,17 @@ const SendConfirmPage = () => {
             setValue("amount", formatAmount, {
                 shouldValidate: true,
             })
+            // Update the persisted data
+            setPersistedData((prev) => ({ ...prev, amount: formatAmount }))
         } else {
             setValue("amount", "", {
                 shouldValidate: false,
             })
             clearErrors("amount")
+            // Clear the persisted amount
+            setPersistedData((prev) => ({ ...prev, amount: "" }))
         }
-    }
+    }, [usingMax, getMaxTransactionAmount, setValue, selectedToken, clearErrors, setPersistedData])
 
     const handleChangeAmount = useCallback(
         (newAmount: string) => {
@@ -461,8 +448,11 @@ const SendConfirmPage = () => {
             if (newAmount === "") {
                 clearErrors("amount")
             }
-            // Update persisted data
-            setPersistedData((prev) => ({ ...prev, amount: newAmount }))
+            // Update persisted data with debounce to prevent excessive storage operations
+            const timer = setTimeout(() => {
+                setPersistedData((prev) => ({ ...prev, amount: newAmount }))
+            }, 300);
+            return () => clearTimeout(timer);
         },
         [setValue, clearErrors, setPersistedData]
     )
@@ -510,14 +500,24 @@ const SendConfirmPage = () => {
 
     // Effect triggered on selected gas change to update max amount if needed and recalculate validations.
     useEffect(() => {
-        usingMax && setMaxTransactionAmount(usingMax)
-        if (getValues().amount) {
-            trigger("amount")
+        // Only update max amount if user has explicitly chosen to use max
+        if (usingMax) {
+            // Prevent excessive calculation when gas changes
+            const timer = setTimeout(() => {
+                setMaxTransactionAmount(true);
+            }, 300);
+            return () => clearTimeout(timer);
         }
-        // Dependencies are usingMax state and the selectedGas object.
-        // Make sure setMaxTransactionAmount and trigger are stable (e.g., wrapped in useCallback if defined in component)
-        // Since they come from react-hook-form and useState, they should be stable.
-    }, [selectedGas, usingMax, trigger, getValues])
+        // Only trigger validation if we already have an amount entered
+        else if (getValues().amount) {
+            // Debounce validation to prevent rapid recalculations
+            const timer = setTimeout(() => {
+                trigger("amount");
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+        // Skip effect when there's no amount and max isn't selected
+    }, [selectedGas, usingMax]);
 
     const congestionLevel = useNetworkCongestion();
     const congestionInfo = getCongestionInfo(congestionLevel);

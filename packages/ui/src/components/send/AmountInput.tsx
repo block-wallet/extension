@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useMemo, useRef } from "react"
 import classnames from "classnames"
 import { UseFormRegister, FieldError, Control, UseFormSetValue, UseFormClearErrors, UseFormGetValues } from "react-hook-form"
 import { BigNumber } from "@ethersproject/bignumber"
@@ -10,6 +10,37 @@ import { Classes } from "../../styles"
 import ErrorMessage from "../error/ErrorMessage"
 import { getValueByKey } from "../../util/objectUtils"
 import { ResponseGetState } from "@block-wallet/background/utils/types/communication"
+
+// Debounce utility
+const useDebounce = <T extends (...args: any[]) => any>(
+    callback: T,
+    delay: number
+): T => {
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const debounced = useCallback(
+        (...args: Parameters<T>) => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+
+            timeoutRef.current = setTimeout(() => {
+                callback(...args);
+            }, delay);
+        },
+        [callback, delay]
+    ) as T;
+
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
+    return debounced;
+};
 
 interface AmountInputProps {
     control: Control<any> // Use specific form data type if available
@@ -48,6 +79,8 @@ export const AmountInput: React.FC<AmountInputProps> = ({
     const [inputFocus, setInputFocus] = useState(false)
     const [usingMax, setUsingMax] = useState(false)
     const [nativeCurrencyAmt, setNativeCurrency] = useState(0)
+    const [userIsTyping, setUserIsTyping] = useState(false)
+    const prevAmountRef = useRef<string>("");
 
     const calcNativeCurrency = useCallback(() => {
         if (!selectedToken) return 0;
@@ -73,14 +106,27 @@ export const AmountInput: React.FC<AmountInputProps> = ({
         }
     }, [selectedToken, getValues, blankState.exchangeRates, blankState.networkNativeCurrency.symbol]);
 
-    // Calculate initial native currency amount
+    // Debounced version of the native currency calculation
+    const debouncedCalcNativeCurrency = useDebounce(calcNativeCurrency, 300);
+
+    // Calculate initial native currency amount on token/exchange rate change only
     useEffect(() => {
-        calcNativeCurrency();
-    }, [calcNativeCurrency]);
+        // Only recalculate if not actively typing
+        if (!userIsTyping) {
+            calcNativeCurrency();
+        }
+    }, [calcNativeCurrency, selectedToken, blankState.exchangeRates, userIsTyping]);
 
-
+    // Actual input change handler with improved typing experience
     const handleAmountInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setUsingMax(false); // Disable max if user types
+        setUserIsTyping(true);
+
+        // If user is typing, disable max mode
+        if (usingMax) {
+            setUsingMax(false);
+            onMaxClick(false);
+        }
+
         let value = e.target.value
             ? e.target.value
                 .replace(/[^0-9.,]/g, "")
@@ -91,6 +137,9 @@ export const AmountInput: React.FC<AmountInputProps> = ({
         if (value === ".") {
             value = "";
         }
+
+        // Store current value for comparison
+        prevAmountRef.current = value;
 
         if (value === "") {
             setValue("amount", "");
@@ -107,13 +156,23 @@ export const AmountInput: React.FC<AmountInputProps> = ({
             });
         }
 
-        const nativeAmt = calcNativeCurrency();
-        onAmountChange(value); // Notify parent
+        // Notify parent right away for interface responsiveness
+        onAmountChange(value);
+
+        // Schedule debounced calculation for currency conversion
+        debouncedCalcNativeCurrency();
+
+        // Reset typing state after a delay
+        setTimeout(() => {
+            setUserIsTyping(false);
+        }, 500);
     };
 
+    // Max button handling improved to prevent conflicts with manual input
     const handleMaxClick = () => {
         const newUsingMax = !usingMax;
         setUsingMax(newUsingMax);
+
         if (newUsingMax) {
             const maxTransactionAmount = getMaxTransactionAmount();
             const decimals = selectedToken?.token.decimals || DEFAULT_DECIMALS;
@@ -121,29 +180,40 @@ export const AmountInput: React.FC<AmountInputProps> = ({
                 BigNumber.from(maxTransactionAmount),
                 decimals
             );
+
             setValue("amount", formatAmount, {
                 shouldValidate: true,
             });
-            onAmountChange(formatAmount); // Notify parent
+            onAmountChange(formatAmount);
+            prevAmountRef.current = formatAmount;
         } else {
             setValue("amount", "", {
-                shouldValidate: false, // Don't validate empty string immediately
+                shouldValidate: false,
             });
             clearErrors("amount");
-            onAmountChange(""); // Notify parent
+            onAmountChange("");
+            prevAmountRef.current = "";
         }
+
+        // Calculate native currency without debounce for immediate feedback
         calcNativeCurrency();
-        onMaxClick(newUsingMax); // Notify parent about the state change
+        onMaxClick(newUsingMax);
     };
 
-    const hasBalance = selectedToken && !BigNumber.from(selectedToken.balance).isZero();
+    const hasBalance = useMemo(() =>
+        selectedToken && !BigNumber.from(selectedToken.balance).isZero(),
+        [selectedToken]
+    );
+
+    // Memoize the input value to prevent rerenders
+    const inputValue = useMemo(() => getValues().amount || "", [getValues().amount]);
 
     return (
         <div
             className={classnames(
                 "flex flex-col",
-                !errors.amount && "mb-3", // Remove margin logic from here, apply passed className
-                className // Apply the passed className
+                !errors.amount && "mb-3",
+                className
             )}
         >
             <div className="flex flex-row justify-between items-center">
@@ -163,69 +233,72 @@ export const AmountInput: React.FC<AmountInputProps> = ({
                 className={classnames(
                     Classes.greySection,
                     inputFocus && "bg-primary-grey-hover",
-                    errors.amount && "border border-red-400", // Add border for error state
+                    errors.amount && "border border-red-400",
                     disabled && "opacity-50 cursor-not-allowed",
-                    "p-2" // Add base padding
+                    "p-2"
                 )}
             >
-                <div className="flex flex-col items-start flex-grow mr-2"> {/* Add margin-right */}
+                <div className="flex flex-col items-start flex-grow mr-2">
                     <input
                         id="amount"
                         type="text"
                         inputMode="decimal"
                         pattern="[0-9.]*"
-                        {...register("amount")} // Register comes from props
+                        {...register("amount")}
                         className={classnames(
                             Classes.blueSectionInput,
-                            "py-2 sm:py-1" // Adjust vertical padding for touch
+                            "py-2 sm:py-1"
                         )}
                         placeholder={`0 ${selectedToken
                             ? selectedToken.token.symbol
                             : ""
                             }`}
                         autoComplete="off"
-                        // autoFocus={true} // Maybe disable autoFocus here, let parent decide
+                        value={inputValue}
                         onFocus={() => !disabled && setInputFocus(true)}
-                        onBlur={() => setInputFocus(false)}
+                        onBlur={() => {
+                            setInputFocus(false);
+                            setUserIsTyping(false);
+                        }}
                         onKeyDown={(e) => {
                             if (disabled) return;
                             // Prevent excessive numbers
-                            const amt = Number(e.currentTarget.value + e.key); // Check potential value
+                            const amt = Number(e.currentTarget.value + e.key);
                             if (
-                                !isNaN(Number(e.key)) && // Check if key is number
-                                !isNaN(Number(e.currentTarget.value)) && // Check if current value is number
-                                Number(e.currentTarget.value) >= Number.MAX_SAFE_INTEGER / 10 // Check if close to max safe integer
+                                !isNaN(Number(e.key)) &&
+                                !isNaN(Number(e.currentTarget.value)) &&
+                                Number(e.currentTarget.value) >= Number.MAX_SAFE_INTEGER / 10
                             ) {
                                 e.preventDefault();
                                 e.stopPropagation();
                             }
                         }}
-                        onInput={handleAmountInputChange}
+                        onChange={handleAmountInputChange}
                         disabled={disabled}
                     />
-                    <span className="text-xs text-primary-grey-dark mt-1 h-4"> {/* Ensure height */}
+                    <span className="text-xs text-primary-grey-dark mt-1 h-4">
                         {!disabled && formatCurrency(nativeCurrencyAmt, {
                             currency: blankState.nativeCurrency,
                             locale_info: blankState.localeInfo,
-                            showSymbol: true, // Show currency symbol
+                            showSymbol: true,
                         })}
                     </span>
                 </div>
-                <div className="w-auto flex items-center justify-end"> {/* Use w-auto */}
-                    <button // Change span to button for accessibility
-                        type="button" // Prevent form submission
+                <div className="w-auto flex items-center justify-end">
+                    <button
+                        type="button"
                         className={classnames(
-                            "float-right rounded-md cursor-pointer border p-2 text-xs font-medium", // Increase padding
+                            "float-right rounded-md cursor-pointer border p-2 text-xs font-medium",
                             usingMax
-                                ? "bg-blue-100 border-blue-300 text-blue-700 hover:bg-blue-200" // Theme consistent colors
+                                ? "bg-blue-100 border-blue-300 text-blue-700 hover:bg-blue-200"
                                 : "bg-gray-200 border-gray-300 text-gray-700 hover:bg-gray-300",
-                            (!hasBalance || disabled) && // Check disabled prop
+                            (!hasBalance || disabled) &&
                             "pointer-events-none opacity-50 text-primary-grey-dark",
 
                         )}
                         title={disabled ? "Amount locked" : "Use all available funds"}
-                        onClick={!disabled ? handleMaxClick : undefined} // Prevent click if disabled
-                        disabled={!hasBalance || disabled} // Disable button if no balance or parent disabled
+                        onClick={!disabled ? handleMaxClick : undefined}
+                        disabled={!hasBalance || disabled}
                     >
                         max
                     </button>
@@ -234,7 +307,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
             {/* Error Message Display */}
             <div
                 className={classnames(
-                    "h-5 mt-1", // Reserve space for error message
+                    "h-5 mt-1",
                     errors.amount?.message ? "pl-1" : null
                 )}
             >

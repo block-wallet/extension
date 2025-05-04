@@ -248,13 +248,21 @@ const getCongestionInfo = (level: CongestionLevel): { message: string; className
 const useDebouncedWatch = (
     watch: (name: string) => string,
     name: string,
-    delay = 500
+    delay = 800
 ): string => {
     const [debouncedValue, setDebouncedValue] = useState("");
     const watchedValue = watch(name);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const lastValueRef = useRef<string>(watchedValue);
 
     useEffect(() => {
+        // Skip debounce if value hasn't changed
+        if (watchedValue === lastValueRef.current) {
+            return;
+        }
+
+        lastValueRef.current = watchedValue;
+
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
         }
@@ -395,7 +403,7 @@ const SendConfirmPage = () => {
 
     // Use our debounced watch instead of direct watch for gas estimation
     const watchedAmount = watch("amount");
-    const debouncedWatchedAmount = useDebouncedWatch(watch, "amount", 500);
+    const debouncedWatchedAmount = useDebouncedWatch(watch, "amount", 800);
 
     // Define getMaxTransactionAmount *before* useSendTransaction hook
     const getMaxTransactionAmount = (): BigNumber => {

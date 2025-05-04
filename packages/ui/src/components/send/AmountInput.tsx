@@ -95,8 +95,9 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
 }) => {
     const [inputFocus, setInputFocus] = useState(false);
     const [usingMax, setUsingMax] = useState(false);
-    const [nativeCurrencyAmt, setNativeCurrency, isCalculatingCurrency] = useDebouncedValue(0, 300);
+    const [nativeCurrencyAmt, setNativeCurrency, isCalculatingCurrency] = useDebouncedValue(0, 800);
     const inputRef = useRef<HTMLInputElement | null>(null);
+    const lastInputValueRef = useRef<string>("");
 
     // Create a single decimals constant for consistent use
     const decimals = selectedToken?.token.decimals ?? DEFAULT_DECIMALS;
@@ -129,9 +130,22 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
         defaultValue: "",
     });
 
+    // Use a debounced effect to prevent excessive currency calculations
     useEffect(() => {
-        const newNativeAmount = calcNativeCurrency(watchedAmount);
-        setNativeCurrency(newNativeAmount);
+        // Skip unnecessary calculations if the value hasn't changed
+        if (watchedAmount === lastInputValueRef.current) {
+            return;
+        }
+
+        lastInputValueRef.current = watchedAmount;
+
+        // Add additional debounce to prevent excessive calculations
+        const timer = setTimeout(() => {
+            const newNativeAmount = calcNativeCurrency(watchedAmount);
+            setNativeCurrency(newNativeAmount);
+        }, 200); // Small additional debounce
+
+        return () => clearTimeout(timer);
     }, [watchedAmount, calcNativeCurrency, setNativeCurrency]);
 
     // Preserve input focus when component re-renders
@@ -173,6 +187,22 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
         return formattedValue;
     };
 
+    // Debounce the parent notification to reduce state updates
+    const debouncedOnAmountChange = useCallback(
+        (() => {
+            let timer: NodeJS.Timeout | null = null;
+            return (amount: string) => {
+                if (timer) {
+                    clearTimeout(timer);
+                }
+                timer = setTimeout(() => {
+                    onAmountChange(amount);
+                }, 500); // Increased debounce for parent updates
+            };
+        })(),
+        [onAmountChange]
+    );
+
     // Max button handling with functional state updates
     const handleMaxClick = () => {
         setUsingMax(prevUsingMax => {
@@ -188,13 +218,13 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
                 setValue("amount", formatAmount, {
                     shouldValidate: true,
                 });
-                onAmountChange(formatAmount);
+                debouncedOnAmountChange(formatAmount);
             } else {
                 setValue("amount", "", {
                     shouldValidate: false,
                 });
                 clearErrors("amount");
-                onAmountChange("");
+                debouncedOnAmountChange("");
             }
 
             // Call the parent's onMaxClick callback
@@ -295,8 +325,8 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
                                     const formattedValue = formatAndValidateInput(e.target.value);
                                     field.onChange(formattedValue);
 
-                                    // Notify parent
-                                    onAmountChange(formattedValue);
+                                    // Notify parent with debounce
+                                    debouncedOnAmountChange(formattedValue);
                                 }}
                             />
                         )}

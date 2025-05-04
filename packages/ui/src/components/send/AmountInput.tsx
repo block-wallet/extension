@@ -86,7 +86,11 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
     clearErrors,
     errors,
     selectedToken,
+    nativeToken,
     getMaxTransactionAmount,
+    balance,
+    selectedGas,
+    isEIP1559Compatible,
     onAmountChange,
     onMaxClick,
     blankState,
@@ -98,6 +102,7 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
     const [nativeCurrencyAmt, setNativeCurrency, isCalculatingCurrency] = useDebouncedValue(0, 800);
     const inputRef = useRef<HTMLInputElement | null>(null);
     const lastInputValueRef = useRef<string>("");
+    const [balanceError, setBalanceError] = useState<string | null>(null);
 
     // Create a single decimals constant for consistent use
     const decimals = selectedToken?.token.decimals ?? DEFAULT_DECIMALS;
@@ -105,6 +110,48 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
     // Ensure token symbol is consistent
     const tokenAddress = selectedToken?.token.address ? normalizeAddress(selectedToken.token.address) : '';
     const symbol = selectedToken?.token.symbol.toUpperCase() ?? blankState.networkNativeCurrency.symbol;
+
+    // Check if amount exceeds balance
+    const validateBalance = useCallback((amountStr: string) => {
+        if (!amountStr || amountStr === "0" || !selectedToken) {
+            setBalanceError(null);
+            return true;
+        }
+
+        try {
+            // For the native token (ETH/etc.), we need to account for gas costs
+            if (selectedToken.token.address === nativeToken.token.address) {
+                const amountBN = parseUnits(amountStr, decimals);
+                const gasCost = BigNumber.from(
+                    isEIP1559Compatible ?
+                        selectedGas.maxFeePerGas :
+                        selectedGas.gasPrice
+                ).mul(selectedGas.gasLimit);
+
+                const totalCost = amountBN.add(gasCost);
+
+                if (totalCost.gt(balance)) {
+                    setBalanceError(`Insufficient funds for this transaction including gas costs (${formatUnits(balance, decimals)} ${symbol} available)`);
+                    return false;
+                }
+            }
+            // For ERC-20 tokens, simply compare to token balance
+            else {
+                const amountBN = parseUnits(amountStr, decimals);
+
+                if (amountBN.gt(selectedToken.balance)) {
+                    setBalanceError(`Amount exceeds your balance (${formatUnits(selectedToken.balance, decimals)} ${symbol} available)`);
+                    return false;
+                }
+            }
+
+            setBalanceError(null);
+            return true;
+        } catch (e) {
+            console.error("Error validating balance:", e);
+            return false;
+        }
+    }, [selectedToken, nativeToken, decimals, balance, selectedGas, isEIP1559Compatible, symbol]);
 
     const calcNativeCurrency = useCallback((amountStr: string) => {
         if (!selectedToken) return 0;
@@ -129,6 +176,11 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
         name: "amount",
         defaultValue: "",
     });
+
+    // Validate balance whenever amount or token changes
+    useEffect(() => {
+        validateBalance(watchedAmount);
+    }, [watchedAmount, validateBalance, selectedToken, selectedGas]);
 
     // Use a debounced effect to prevent excessive currency calculations
     useEffect(() => {
@@ -239,11 +291,14 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
         [selectedToken]
     );
 
+    // Combine all errors for display
+    const displayError = errors.amount?.message || balanceError;
+
     return (
         <div
             className={classnames(
                 "flex flex-col",
-                !errors.amount && "mb-3",
+                !displayError && "mb-3",
                 className
             )}
         >
@@ -255,16 +310,16 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
                     Amount
                 </label>
                 {/* Optional: Display token balance here */}
-                {/* <span className="text-xs text-primary-grey-dark">
-                    Balance: {formatUnits(selectedToken?.balance || 0, decimals)} {selectedToken?.token.symbol}
-                 </span> */}
+                <span className="text-xs text-primary-grey-dark">
+                    Balance: {selectedToken ? formatUnits(selectedToken.balance || 0, decimals) : '0'} {symbol}
+                </span>
             </div>
 
             <div
                 className={classnames(
                     Classes.greySection,
                     inputFocus && "bg-primary-grey-hover",
-                    errors.amount && "border border-red-400",
+                    displayError && "border border-red-400",
                     disabled && "opacity-50 cursor-not-allowed",
                     "p-2"
                 )}
@@ -363,11 +418,11 @@ export const AmountInput: React.FC<AmountInputProps> = React.memo(({
             <div
                 className={classnames(
                     "h-5 mt-1",
-                    errors.amount?.message ? "pl-1" : null
+                    displayError ? "pl-1" : null
                 )}
             >
                 <ErrorMessage>
-                    {errors.amount?.message}
+                    {displayError}
                 </ErrorMessage>
             </div>
         </div>

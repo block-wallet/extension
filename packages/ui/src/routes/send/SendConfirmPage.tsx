@@ -556,24 +556,30 @@ const SendConfirmPage = () => {
 
     // Effect triggered on selected gas change to update max amount if needed and recalculate validations.
     useEffect(() => {
+        let timer: NodeJS.Timeout | null = null;
+
         // Only update max amount if user has explicitly chosen to use max
         if (usingMax) {
             // Prevent excessive calculation when gas changes
-            const timer = setTimeout(() => {
+            timer = setTimeout(() => {
+                // Use functional update to ensure we're working with the latest state
+                // This prevents issues with multiple rapid gas updates
                 setMaxTransactionAmount(true);
-            }, 300);
-            return () => clearTimeout(timer);
+            }, 500);
         }
         // Only trigger validation if we already have an amount entered
         else if (getValues().amount) {
             // Debounce validation to prevent rapid recalculations
-            const timer = setTimeout(() => {
+            timer = setTimeout(() => {
+                // Use trigger instead of setValue to avoid refreshing the input
                 trigger("amount");
-            }, 300);
-            return () => clearTimeout(timer);
+            }, 500);
         }
-        // Skip effect when there's no amount and max isn't selected
-    }, [selectedGas, usingMax]);
+
+        return () => {
+            if (timer) clearTimeout(timer);
+        };
+    }, [selectedGas]); // React to gas changes only, not usingMax which would cause double executions
 
     const congestionLevel = useNetworkCongestion();
     const congestionInfo = getCongestionInfo(congestionLevel);

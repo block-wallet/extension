@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from "react"
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react"
 import classnames from "classnames"
 import { UseFormRegister, FieldError, Control, UseFormSetValue, UseFormClearErrors, UseFormGetValues, useWatch, Controller } from "react-hook-form"
 import { BigNumber } from "@ethersproject/bignumber"
@@ -79,7 +79,7 @@ interface AmountInputProps {
     className?: string // Add className prop
 }
 
-export const AmountInput: React.FC<AmountInputProps> = ({
+export const AmountInput: React.FC<AmountInputProps> = React.memo(({
     register,
     setValue,
     control,
@@ -96,6 +96,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
     const [inputFocus, setInputFocus] = useState(false);
     const [usingMax, setUsingMax] = useState(false);
     const [nativeCurrencyAmt, setNativeCurrency, isCalculatingCurrency] = useDebouncedValue(0, 300);
+    const inputRef = useRef<HTMLInputElement | null>(null);
 
     // Create a single decimals constant for consistent use
     const decimals = selectedToken?.token.decimals ?? DEFAULT_DECIMALS;
@@ -132,6 +133,23 @@ export const AmountInput: React.FC<AmountInputProps> = ({
         const newNativeAmount = calcNativeCurrency(watchedAmount);
         setNativeCurrency(newNativeAmount);
     }, [watchedAmount, calcNativeCurrency, setNativeCurrency]);
+
+    // Preserve input focus when component re-renders
+    useEffect(() => {
+        if (inputFocus && inputRef.current && document.activeElement !== inputRef.current) {
+            inputRef.current.focus();
+
+            // Preserve cursor position if possible
+            const cursorPosition = inputRef.current.selectionStart;
+            if (cursorPosition !== null) {
+                setTimeout(() => {
+                    if (inputRef.current) {
+                        inputRef.current.setSelectionRange(cursorPosition, cursorPosition);
+                    }
+                }, 0);
+            }
+        }
+    });
 
     // Format and validate input value
     const formatAndValidateInput = (value: string) => {
@@ -241,6 +259,13 @@ export const AmountInput: React.FC<AmountInputProps> = ({
                                     }`}
                                 autoComplete="off"
                                 disabled={disabled}
+                                ref={(el) => {
+                                    inputRef.current = el;
+                                    // Handle ref from react-hook-form if needed
+                                    if (typeof field.ref === 'function') {
+                                        field.ref(el);
+                                    }
+                                }}
                                 onFocus={() => !disabled && setInputFocus(true)}
                                 onBlur={() => {
                                     setInputFocus(false);
@@ -317,4 +342,35 @@ export const AmountInput: React.FC<AmountInputProps> = ({
             </div>
         </div>
     )
-} 
+}, (prevProps, nextProps) => {
+    // Custom comparison function to prevent unnecessary re-renders
+    // Only re-render for specific changes that should affect the UI
+
+    // Safe balance comparison helper
+    const compareBalances = () => {
+        // Check if both balances exist and are BigNumber objects with eq method
+        if (prevProps.selectedToken?.balance && nextProps.selectedToken?.balance) {
+            try {
+                // Check if eq method exists (it's a BigNumber)
+                if (typeof prevProps.selectedToken.balance.eq === 'function') {
+                    return prevProps.selectedToken.balance.eq(nextProps.selectedToken.balance);
+                }
+            } catch (e) {
+                console.error('Error comparing balances:', e);
+            }
+        }
+
+        // Fallback to string comparison if BigNumber comparison isn't possible
+        return String(prevProps.selectedToken?.balance) === String(nextProps.selectedToken?.balance);
+    };
+
+    return (
+        prevProps.disabled === nextProps.disabled &&
+        prevProps.errors?.amount?.message === nextProps.errors?.amount?.message &&
+        prevProps.selectedToken?.token.address === nextProps.selectedToken?.token.address &&
+        prevProps.selectedToken?.token.symbol === nextProps.selectedToken?.token.symbol &&
+        compareBalances() &&
+        JSON.stringify(prevProps.blankState.exchangeRates) === JSON.stringify(nextProps.blankState.exchangeRates)
+        // Note: We intentionally don't check selectedGas here as we want to prevent re-renders from gas changes
+    );
+}); 
